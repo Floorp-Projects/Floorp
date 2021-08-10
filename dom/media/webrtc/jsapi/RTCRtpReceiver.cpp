@@ -83,21 +83,30 @@ static already_AddRefed<dom::MediaStreamTrack> CreateTrack(
   return track.forget();
 }
 
-RTCRtpReceiver::RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-                               const std::string& aPCHandle,
-                               MediaTransportHandler* aTransportHandler,
-                               JsepTransceiver* aJsepTransceiver,
-                               nsISerialEventTarget* aMainThread,
-                               nsISerialEventTarget* aStsThread,
-                               MediaSessionConduit* aConduit,
-                               TransceiverImpl* aTransceiverImpl)
+#define INIT_CANONICAL(name, val)         \
+  name(AbstractThread::MainThread(), val, \
+       "RTCRtpReceiver::" #name " (Canonical)")
+
+RTCRtpReceiver::RTCRtpReceiver(
+    nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
+    const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
+    JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
+    AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
+    MediaSessionConduit* aConduit, TransceiverImpl* aTransceiverImpl)
     : mWindow(aWindow),
       mPCHandle(aPCHandle),
       mJsepTransceiver(aJsepTransceiver),
       mMainThread(aMainThread),
+      mCallThread(aCallThread),
       mStsThread(aStsThread),
       mTransportHandler(aTransportHandler),
-      mTransceiverImpl(aTransceiverImpl) {
+      mTransceiverImpl(aTransceiverImpl),
+      INIT_CANONICAL(mSsrc, 0),
+      INIT_CANONICAL(mVideoRtxSsrc, 0),
+      INIT_CANONICAL(mLocalRtpExtensions, RtpExtList()),
+      INIT_CANONICAL(mAudioCodecs, std::vector<AudioCodecConfig>()),
+      INIT_CANONICAL(mVideoCodecs, std::vector<VideoCodecConfig>()),
+      INIT_CANONICAL(mVideoRtpRtcpConfig, Nothing()) {
   PrincipalHandle principalHandle = GetPrincipalHandle(aWindow, aPrivacyNeeded);
   mTrack = CreateTrack(aWindow, aConduit->type() == MediaSessionConduit::AUDIO,
                        principalHandle.get());
@@ -109,14 +118,18 @@ RTCRtpReceiver::RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
   }
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
     mPipeline = new MediaPipelineReceiveAudio(
-        mPCHandle, aTransportHandler, mMainThread.get(), mStsThread.get(),
-        *aConduit->AsAudioSessionConduit(), mTrack, principalHandle);
+        mPCHandle, aTransportHandler, mMainThread.get(), aCallThread,
+        mStsThread.get(), *aConduit->AsAudioSessionConduit(), mTrack,
+        principalHandle);
   } else {
     mPipeline = new MediaPipelineReceiveVideo(
-        mPCHandle, aTransportHandler, mMainThread.get(), mStsThread.get(),
-        *aConduit->AsVideoSessionConduit(), mTrack, principalHandle);
+        mPCHandle, aTransportHandler, mMainThread.get(), aCallThread,
+        mStsThread.get(), *aConduit->AsVideoSessionConduit(), mTrack,
+        principalHandle);
   }
 }
+
+#undef INIT_CANONICAL
 
 RTCRtpReceiver::~RTCRtpReceiver() { MOZ_ASSERT(!mPipeline); }
 
@@ -181,21 +194,27 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
 
   {
     // Add bandwidth estimation stats
-    auto report = MakeUnique<dom::RTCStatsCollection>();
-    if (dom::RTCBandwidthEstimationInternal* bw =
-            report->mBandwidthEstimations.AppendElement(fallible)) {
-      const auto& stats = mPipeline->mConduit->GetCallStats();
-      bw->mTrackIdentifier = recvTrackId;
-      bw->mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
-      bw->mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
-      bw->mReceiveBandwidthBps.Construct(stats.recv_bandwidth_bps / 8);
-      bw->mPacerDelayMs.Construct(stats.pacer_delay_ms);
-      if (stats.rtt_ms >= 0) {
-        bw->mRttMs.Construct(stats.rtt_ms);
-      }
-      promises.AppendElement(
-          RTCStatsPromise::CreateAndResolve(std::move(report), __func__));
-    }
+    promises.AppendElement(InvokeAsync(
+        mCallThread, __func__,
+        [conduit = mPipeline->mConduit, recvTrackId]() mutable {
+          dom::RTCBandwidthEstimationInternal bw;
+          const auto& stats = conduit->GetCallStats();
+          bw.mTrackIdentifier = recvTrackId;
+          bw.mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
+          bw.mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
+          bw.mReceiveBandwidthBps.Construct(stats.recv_bandwidth_bps / 8);
+          bw.mPacerDelayMs.Construct(stats.pacer_delay_ms);
+          if (stats.rtt_ms >= 0) {
+            bw.mRttMs.Construct(stats.rtt_ms);
+          }
+
+          auto report = MakeUnique<dom::RTCStatsCollection>();
+          if (!report->mBandwidthEstimations.AppendElement(std::move(bw),
+                                                           fallible)) {
+            mozalloc_handle_oom(0);
+          }
+          return RTCStatsPromise::CreateAndResolve(std::move(report), __func__);
+        }));
   }
 
   using TimeStampPromise = MozPromise<Maybe<DOMHighResTimeStamp>, bool, true>;
@@ -206,7 +225,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                         conduit->LastRtcpReceived(), __func__);
                   })
           ->Then(
-              mMainThread, __func__,
+              mCallThread, __func__,
               [pipeline = mPipeline,
                recvTrackId](TimeStampPromise::ResolveOrRejectValue&& aValue) {
                 MOZ_ASSERT(aValue.IsResolve());
@@ -504,6 +523,7 @@ void RTCRtpReceiver::Shutdown() {
     mPipeline = nullptr;
   }
   mTransceiverImpl = nullptr;
+  mCallThread = nullptr;
 }
 
 void RTCRtpReceiver::UpdateTransport() {
@@ -573,8 +593,8 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
     uint32_t rtxSsrc = mJsepTransceiver->mRecvTrack.GetRtxSsrcs().empty()
                            ? 0
                            : mJsepTransceiver->mRecvTrack.GetRtxSsrcs().front();
-    conduit->SetRemoteSSRC(mJsepTransceiver->mRecvTrack.GetSsrcs().front(),
-                           rtxSsrc);
+    mSsrc = mJsepTransceiver->mRecvTrack.GetSsrcs().front();
+    mVideoRtxSsrc = rtxSsrc;
   }
 
   // TODO (bug 1423041) once we pay attention to receiving MID's in RTP
@@ -593,8 +613,15 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
       mJsepTransceiver->mRecvTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mRecvTrack.GetNegotiatedDetails());
 
-    TransceiverImpl::UpdateConduitRtpExtmap(
-        *conduit, details, MediaSessionConduitLocalDirection::kRecv);
+    {
+      std::vector<webrtc::RtpExtension> extmaps;
+      // @@NG read extmap from track
+      details.ForEachRTPHeaderExtension(
+          [&extmaps](const SdpExtmapAttributeList::Extmap& extmap) {
+            extmaps.emplace_back(extmap.extensionname, extmap.entry);
+          });
+      mLocalRtpExtensions = extmaps;
+    }
 
     std::vector<VideoCodecConfig> configs;
     nsresult rv = TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(
@@ -608,16 +635,8 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
       return rv;
     }
 
-    auto error =
-        conduit->ConfigureRecvMediaCodecs(configs, details.GetRtpRtcpConfig());
-
-    if (error) {
-      MOZ_LOG(gReceiverLog, LogLevel::Error,
-              ("%s[%s]: %s "
-               "ConfigureRecvMediaCodecs failed: %u",
-               mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__, error));
-      return NS_ERROR_FAILURE;
-    }
+    mVideoCodecs = configs;
+    mVideoRtpRtcpConfig = Some(details.GetRtpRtcpConfig());
   }
 
   return NS_OK;
@@ -632,11 +651,7 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
             ("%s[%s]: %s Setting remote SSRC %u", mPCHandle.c_str(),
              GetMid().c_str(), __FUNCTION__,
              mJsepTransceiver->mRecvTrack.GetSsrcs().front()));
-    uint32_t rtxSsrc = mJsepTransceiver->mRecvTrack.GetRtxSsrcs().empty()
-                           ? 0
-                           : mJsepTransceiver->mRecvTrack.GetRtxSsrcs().front();
-    conduit->SetRemoteSSRC(mJsepTransceiver->mRecvTrack.GetSsrcs().front(),
-                           rtxSsrc);
+    mSsrc = mJsepTransceiver->mRecvTrack.GetSsrcs().front();
   }
 
   if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&
@@ -655,18 +670,17 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
     }
 
     // Ensure conduit knows about extensions prior to creating streams
-    TransceiverImpl::UpdateConduitRtpExtmap(
-        *conduit, details, MediaSessionConduitLocalDirection::kRecv);
-
-    auto error = conduit->ConfigureRecvMediaCodecs(configs);
-
-    if (error) {
-      MOZ_LOG(gReceiverLog, LogLevel::Error,
-              ("%s[%s]: %s "
-               "ConfigureRecvMediaCodecs failed: %u",
-               mPCHandle.c_str(), GetMid().c_str(), __FUNCTION__, error));
-      return NS_ERROR_FAILURE;
+    {
+      std::vector<webrtc::RtpExtension> extmaps;
+      // @@NG read extmap from track
+      details.ForEachRTPHeaderExtension(
+          [&extmaps](const SdpExtmapAttributeList::Extmap& extmap) {
+            extmaps.emplace_back(extmap.extensionname, extmap.entry);
+          });
+      mLocalRtpExtensions = extmaps;
     }
+
+    mAudioCodecs = configs;
   }
 
   return NS_OK;
@@ -733,9 +747,7 @@ void RTCRtpReceiver::MozInsertAudioLevelForContributingSource(
   if (!mPipeline || mPipeline->IsVideo() || !mPipeline->mConduit) {
     return;
   }
-  WebrtcAudioConduit* audio_conduit =
-      static_cast<WebrtcAudioConduit*>(mPipeline->mConduit.get());
-  audio_conduit->InsertAudioLevelForContributingSource(
+  mPipeline->mConduit->InsertAudioLevelForContributingSource(
       aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
 }
 

@@ -30,6 +30,7 @@
 
 #include "libwebrtcglue/AudioConduit.h"
 #include "libwebrtcglue/VideoConduit.h"
+#include "libwebrtcglue/WebrtcCallWrapper.h"
 #include "MediaTrackGraph.h"
 #include "transport/runnable_utils.h"
 #include "IPeerConnection.h"
@@ -2569,21 +2570,27 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
 
   {
     // Add bandwidth estimation stats
-    auto report = MakeUnique<dom::RTCStatsCollection>();
-    if (dom::RTCBandwidthEstimationInternal* bw =
-            report->mBandwidthEstimations.AppendElement(fallible)) {
-      const auto& stats = aPipeline->mConduit->GetCallStats();
-      bw->mTrackIdentifier = trackName;
-      bw->mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
-      bw->mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
-      bw->mReceiveBandwidthBps.Construct(stats.recv_bandwidth_bps / 8);
-      bw->mPacerDelayMs.Construct(stats.pacer_delay_ms);
-      if (stats.rtt_ms >= 0) {
-        bw->mRttMs.Construct(stats.rtt_ms);
-      }
-      promises.AppendElement(
-          RTCStatsPromise::CreateAndResolve(std::move(report), __func__));
-    }
+    promises.AppendElement(InvokeAsync(
+        aPipeline->mCallThread, __func__,
+        [conduit = aPipeline->mConduit, trackName]() mutable {
+          dom::RTCBandwidthEstimationInternal bw;
+          const auto& stats = conduit->GetCallStats();
+          bw.mTrackIdentifier = trackName;
+          bw.mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
+          bw.mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
+          bw.mReceiveBandwidthBps.Construct(stats.recv_bandwidth_bps / 8);
+          bw.mPacerDelayMs.Construct(stats.pacer_delay_ms);
+          if (stats.rtt_ms >= 0) {
+            bw.mRttMs.Construct(stats.rtt_ms);
+          }
+
+          auto report = MakeUnique<dom::RTCStatsCollection>();
+          if (!report->mBandwidthEstimations.AppendElement(std::move(bw),
+                                                           fallible)) {
+            mozalloc_handle_oom(0);
+          }
+          return RTCStatsPromise::CreateAndResolve(std::move(report), __func__);
+        }));
   }
 
   using TimeStampPromise = MozPromise<Maybe<DOMHighResTimeStamp>, bool, true>;
@@ -2594,7 +2601,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
                         conduit->LastRtcpReceived(), __func__);
                   })
           ->Then(
-              GetMainThreadSerialEventTarget(), __func__,
+              aPipeline->mCallThread, __func__,
               [aPipeline](TimeStampPromise::ResolveOrRejectValue&& aValue) {
                 MOZ_ASSERT(aValue.IsResolve());
                 Maybe<DOMHighResTimeStamp> lastRtcpReceivedTimestamp =
@@ -2872,8 +2879,13 @@ void PeerConnectionImpl::CollectConduitTelemetryData() {
     }
   }
 
-  for (const auto& conduit : conduits) {
-    conduit->CollectTelemetryData();
+  if (!conduits.IsEmpty()) {
+    mMedia->mCall->mCallThread->Dispatch(
+        NS_NewRunnableFunction(__func__, [conduits = std::move(conduits)] {
+          for (const auto& conduit : conduits) {
+            conduit->CollectTelemetryData();
+          }
+        }));
   }
 }
 
