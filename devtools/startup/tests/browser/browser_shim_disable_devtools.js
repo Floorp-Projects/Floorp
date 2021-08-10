@@ -12,6 +12,22 @@ const { CustomizableUI } = ChromeUtils.import(
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
+async function simulateMenuOpen(menu) {
+  return new Promise(resolve => {
+    menu.addEventListener("popupshown", resolve, { once: true });
+    menu.dispatchEvent(new MouseEvent("popupshowing"));
+    menu.dispatchEvent(new MouseEvent("popupshown"));
+  });
+}
+
+async function simulateMenuClosed(menu) {
+  return new Promise(resolve => {
+    menu.addEventListener("popuphidden", resolve, { once: true });
+    menu.dispatchEvent(new MouseEvent("popuphiding"));
+    menu.dispatchEvent(new MouseEvent("popuphidden"));
+  });
+}
+
 /**
  * Test that the preference devtools.policy.disabled disables entry points for devtools.
  */
@@ -92,14 +108,37 @@ add_task(async function() {
   contextMenu.hidePopup();
   await onContextMenuHidden;
 
-  const toolsMenu = win.document.getElementById("webDeveloperMenu");
-  ok(toolsMenu.hidden, "The Web Developer item of the tools menu is hidden");
-  const hamburgerMenu = win.document.getElementById("appMenu-developer-button");
-  is(
-    hamburgerMenu,
-    null,
-    "The Web Developer item of the hamburger menu should not be available"
+  info("Open the menubar Tools menu");
+  const toolsMenuPopup = win.document.getElementById("menu_ToolsPopup");
+  // The "Browser Tools" menu still uses the id `webDeveloperMenu` even though it
+  // is no longer DevTools-specific.
+  const browserToolsMenu = win.document.getElementById("webDeveloperMenu");
+  ok(
+    !browserToolsMenu.hidden,
+    "The Web Developer item of the tools menu is visible"
   );
+
+  await simulateMenuOpen(toolsMenuPopup);
+  const subMenu = win.document.getElementById("menuWebDeveloperPopup");
+
+  info("Open the Browser Tools sub-menu");
+  await simulateMenuOpen(subMenu);
+
+  const visibleMenuItems = Array.from(
+    subMenu.querySelectorAll("menuitem")
+  ).filter(item => !item.hidden);
+
+  const { menuitems } = require("devtools/client/menus");
+  for (const devtoolsItem of menuitems) {
+    ok(
+      !visibleMenuItems.some(item => item.id === devtoolsItem.id),
+      "DevTools menu item is not visible in the Browser Tools menu"
+    );
+  }
+
+  info("Close out the menu popups");
+  await simulateMenuClosed(subMenu);
+  await simulateMenuClosed(toolsMenuPopup);
 
   win.gBrowser.removeTab(tab);
 

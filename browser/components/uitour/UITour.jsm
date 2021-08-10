@@ -143,13 +143,6 @@ var UITour = {
     ["backForward", { query: "#back-button" }],
     ["bookmarks", { query: "#bookmarks-menu-button" }],
     [
-      "devtools",
-      {
-        query: "#appMenu-developer-button",
-        widgetName: "appMenu-developer-button",
-      },
-    ],
-    [
       "forget",
       {
         allowAdd: true,
