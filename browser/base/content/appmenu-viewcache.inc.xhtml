@@ -11,18 +11,6 @@
                      hidden="true"
                      closemenu="none"
                      oncommand="PanelUI.showSubView('PanelUI-whatsNew', this)"/>
-#ifndef XP_MACOSX
-      <toolbarseparator/>
-      <toolbarbutton id="appMenu-quit-button"
-                     class="subviewbutton subviewbutton-iconic"
-#ifdef XP_WIN
-                     data-l10n-id="menu-quit-button-win"
-#else
-                     data-l10n-id="menu-quit-button"
-#endif
-                     key="key_quitApplication"
-                     command="cmd_quitApplication"/>
-#endif
     </vbox>
   </panelview>
 

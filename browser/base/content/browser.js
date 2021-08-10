@@ -1828,10 +1828,6 @@ var gBrowserInit = {
         document,
         "appMenu-quit-button2"
       )?.removeAttribute("key");
-      PanelMultiView.getViewNode(
-        document,
-        "appMenu-quit-button"
-      )?.removeAttribute("key");
     }
 
     this._loadHandled = true;
