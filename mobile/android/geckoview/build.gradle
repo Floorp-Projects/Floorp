@@ -231,6 +231,7 @@ configurations {
   // No need to include libglean_ffi.so here or for GeckoView consumers.
   // If those consumers use Glean, they'll get the FFI through GeckoView anyway.
   all*.exclude group: 'org.mozilla.telemetry', module: 'glean-native'
+  all*.exclude group: 'net.java.dev.jna', module: 'jna'
 }
 
 dependencies {
