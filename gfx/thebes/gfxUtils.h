@@ -193,6 +193,8 @@ class gfxUtils {
    */
   static Matrix4x4 SnapTransformTranslation(const Matrix4x4& aTransform,
                                             Matrix* aResidualTransform);
+  static Matrix SnapTransformTranslation(const Matrix& aTransform,
+                                         Matrix* aResidualTransform);
   static Matrix4x4 SnapTransformTranslation3D(const Matrix4x4& aTransform,
                                               Matrix* aResidualTransform);
   /**
@@ -209,6 +211,9 @@ class gfxUtils {
   static Matrix4x4 SnapTransform(const Matrix4x4& aTransform,
                                  const gfxRect& aSnapRect,
                                  Matrix* aResidualTransform);
+  static Matrix SnapTransform(const Matrix& aTransform,
+                              const gfxRect& aSnapRect,
+                              Matrix* aResidualTransform);
 
   /**
    * Clears surface to aColor (which defaults to transparent black).
