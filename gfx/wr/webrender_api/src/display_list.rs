@@ -26,7 +26,6 @@ use crate::color::ColorF;
 use crate::font::{FontInstanceKey, GlyphInstance, GlyphOptions};
 use crate::image::{ColorDepth, ImageKey};
 use crate::units::*;
-use crate::util::{RectHelpers, ScaleOffset};
 
 
 // We don't want to push a long text-run. If a text-run is too long, split it into several parts.
@@ -1017,26 +1016,6 @@ pub enum DisplayListSection {
     Chunk,
 }
 
-/// A small portion of a normal spatial node that we store during DL construction to
-/// enable snapping and reference frame <-> stacking context coord mapping. In future
-/// we'll aim to remove this and have the full spatial tree available during DL build.
-#[derive(Clone)]
-pub struct SpatialNodeInfo {
-    /// The total external scroll offset applicable at this node
-    accumulated_external_scroll_offset: LayoutVector2D,
-    /// The 2d-axis-aligned snapping transform, if this node is in the root coord space
-    snapping_transform: Option<ScaleOffset>,
-}
-
-impl SpatialNodeInfo {
-    fn identity() -> Self {
-        SpatialNodeInfo {
-            accumulated_external_scroll_offset: LayoutVector2D::zero(),
-            snapping_transform: Some(ScaleOffset::identity()),
-        }
-    }
-}
-
 #[derive(Clone)]
 pub struct DisplayListBuilder {
     payload: DisplayListPayload,
@@ -1054,12 +1033,6 @@ pub struct DisplayListBuilder {
 
     cache_size: usize,
     serialized_content_buffer: Option<String>,
-
-    /// Helper struct to map stacking context coords <-> reference frame coords.
-    rf_mapper: ReferenceFrameMapper,
-
-    /// Minimal info about encountered spatial nodes to allow snapping during DL building
-    spatial_nodes: Vec<SpatialNodeInfo>,
 }
 
 #[repr(C)]
@@ -1105,9 +1078,6 @@ impl DisplayListBuilder {
             save_state: None,
             cache_size: 0,
             serialized_content_buffer: None,
-
-            rf_mapper: ReferenceFrameMapper::new(),
-            spatial_nodes: vec![SpatialNodeInfo::identity(); FIRST_SPATIAL_NODE_INDEX + 1],
         }
     }
 
@@ -1290,61 +1260,14 @@ impl DisplayListBuilder {
         Self::push_iter_impl(&mut buffer, iter);
     }
 
-    /// Apply snapping and coord space mapping to item props
-    fn process_common_props(
-        &mut self,
-        common: &di::CommonItemProperties,
-    ) -> di::CommonItemProperties {
-        let current_offset = self.current_offset(common.spatial_id);
-
-        let clip_rect = self.snap_rect(
-            &common.clip_rect.translate(current_offset),
-            common.spatial_id,
-        );
-
-        di::CommonItemProperties {
-            clip_rect,
-            ..*common
-        }
-    }
-
-    /// Apply snapping and coord space mapping to item props + prim bounds
-    fn process_common_props_with_bounds(
-        &mut self,
-        bounds: &LayoutRect,
-        common: &di::CommonItemProperties,
-    ) -> (LayoutRect, di::CommonItemProperties) {
-        let current_offset = self.current_offset(common.spatial_id);
-
-        let clip_rect = self.snap_rect(
-            &common.clip_rect.translate(current_offset),
-            common.spatial_id,
-        );
-
-        let bounds = self.snap_rect(
-            &bounds.translate(current_offset),
-            common.spatial_id,
-        );
-
-        (
-            bounds,
-            di::CommonItemProperties {
-                clip_rect,
-                ..*common
-            }
-        )
-    }
-
     pub fn push_rect(
         &mut self,
         common: &di::CommonItemProperties,
         bounds: LayoutRect,
         color: ColorF,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&bounds, common);
-
         let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
-            common,
+            common: *common,
             color: PropertyBinding::Value(color),
             bounds,
         });
@@ -1357,10 +1280,8 @@ impl DisplayListBuilder {
         bounds: LayoutRect,
         color: PropertyBinding<ColorF>,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&bounds, common);
-
         let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
-            common,
+            common: *common,
             color,
             bounds,
         });
@@ -1372,10 +1293,8 @@ impl DisplayListBuilder {
         common: &di::CommonItemProperties,
         bounds: LayoutRect,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&bounds, common);
-
         let item = di::DisplayItem::ClearRectangle(di::ClearRectangleDisplayItem {
-            common,
+            common: *common,
             bounds,
         });
         self.push_item(&item);
@@ -1386,10 +1305,8 @@ impl DisplayListBuilder {
         common: &di::CommonItemProperties,
         tag: di::ItemTag,
     ) {
-        let common = self.process_common_props(common);
-
         let item = di::DisplayItem::HitTest(di::HitTestDisplayItem {
-            common,
+            common: *common,
             tag,
         });
         self.push_item(&item);
@@ -1404,10 +1321,8 @@ impl DisplayListBuilder {
         color: &ColorF,
         style: di::LineStyle,
     ) {
-        let common = self.process_common_props(common);
-
         let item = di::DisplayItem::Line(di::LineDisplayItem {
-            common,
+            common: *common,
             area: *area,
             wavy_line_thickness,
             orientation,
@@ -1427,10 +1342,8 @@ impl DisplayListBuilder {
         key: ImageKey,
         color: ColorF,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&bounds, common);
-
         let item = di::DisplayItem::Image(di::ImageDisplayItem {
-            common,
+            common: *common,
             bounds,
             image_key: key,
             image_rendering,
@@ -1444,7 +1357,7 @@ impl DisplayListBuilder {
     pub fn push_repeating_image(
         &mut self,
         common: &di::CommonItemProperties,
-        rect: LayoutRect,
+        bounds: LayoutRect,
         stretch_size: LayoutSize,
         tile_spacing: LayoutSize,
         image_rendering: di::ImageRendering,
@@ -1452,10 +1365,8 @@ impl DisplayListBuilder {
         key: ImageKey,
         color: ColorF,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&rect, common);
-
         let item = di::DisplayItem::RepeatingImage(di::RepeatingImageDisplayItem {
-            common,
+            common: *common,
             bounds,
             image_key: key,
             stretch_size,
@@ -1463,7 +1374,6 @@ impl DisplayListBuilder {
             image_rendering,
             alpha_type,
             color,
-            unsnapped_rect: rect,
         });
 
         self.push_item(&item);
@@ -1480,10 +1390,8 @@ impl DisplayListBuilder {
         color_range: di::ColorRange,
         image_rendering: di::ImageRendering,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&bounds, common);
-
         let item = di::DisplayItem::YuvImage(di::YuvImageDisplayItem {
-            common,
+            common: *common,
             bounds,
             yuv_data,
             color_depth,
@@ -1503,29 +1411,17 @@ impl DisplayListBuilder {
         color: ColorF,
         glyph_options: Option<GlyphOptions>,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&bounds, common);
-
-        let current_offset = self.current_offset(common.spatial_id);
-
         let item = di::DisplayItem::Text(di::TextDisplayItem {
-            common,
+            common: *common,
             bounds,
             color,
             font_key,
             glyph_options,
-            reference_frame_relative_offset: current_offset,
         });
-
-        let prim_offset = bounds.min.to_vector() - current_offset;
 
         for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
             self.push_item(&item);
-            self.push_iter(split_glyphs.iter().map(|glyph| {
-                GlyphInstance {
-                    index: glyph.index,
-                    point: glyph.point - prim_offset,
-                }
-            }));
+            self.push_iter(split_glyphs);
         }
     }
 
@@ -1581,10 +1477,8 @@ impl DisplayListBuilder {
         widths: LayoutSideOffsets,
         details: di::BorderDetails,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&bounds, common);
-
         let item = di::DisplayItem::Border(di::BorderDisplayItem {
-            common,
+            common: *common,
             bounds,
             details,
             widths,
@@ -1604,10 +1498,8 @@ impl DisplayListBuilder {
         border_radius: di::BorderRadius,
         clip_mode: di::BoxShadowClipMode,
     ) {
-        let (box_bounds, common) = self.process_common_props_with_bounds(&box_bounds, common);
-
         let item = di::DisplayItem::BoxShadow(di::BoxShadowDisplayItem {
-            common,
+            common: *common,
             box_bounds,
             offset,
             color,
@@ -1637,20 +1529,17 @@ impl DisplayListBuilder {
     pub fn push_gradient(
         &mut self,
         common: &di::CommonItemProperties,
-        rect: LayoutRect,
+        bounds: LayoutRect,
         gradient: di::Gradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&rect, common);
-
         let item = di::DisplayItem::Gradient(di::GradientDisplayItem {
-            common,
+            common: *common,
             bounds,
             gradient,
             tile_size,
             tile_spacing,
-            unsnapped_rect: rect,
         });
 
         self.push_item(&item);
@@ -1662,20 +1551,17 @@ impl DisplayListBuilder {
     pub fn push_radial_gradient(
         &mut self,
         common: &di::CommonItemProperties,
-        rect: LayoutRect,
+        bounds: LayoutRect,
         gradient: di::RadialGradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&rect, common);
-
         let item = di::DisplayItem::RadialGradient(di::RadialGradientDisplayItem {
-            common,
+            common: *common,
             bounds,
             gradient,
             tile_size,
             tile_spacing,
-            unsnapped_rect: rect,
         });
 
         self.push_item(&item);
@@ -1687,20 +1573,17 @@ impl DisplayListBuilder {
     pub fn push_conic_gradient(
         &mut self,
         common: &di::CommonItemProperties,
-        rect: LayoutRect,
+        bounds: LayoutRect,
         gradient: di::ConicGradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
     ) {
-        let (bounds, common) = self.process_common_props_with_bounds(&rect, common);
-
         let item = di::DisplayItem::ConicGradient(di::ConicGradientDisplayItem {
-            common,
+            common: *common,
             bounds,
             gradient,
             tile_size,
             tile_spacing,
-            unsnapped_rect: rect,
         });
 
         self.push_item(&item);
@@ -1716,39 +1599,6 @@ impl DisplayListBuilder {
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
 
-        let current_offset = self.current_offset(parent_spatial_id);
-        let origin = origin + current_offset;
-
-        let parent = &self.spatial_nodes[parent_spatial_id.0];
-
-        let snapping_transform = parent.snapping_transform.and_then(|parent| {
-            let snapping_transform = match transform {
-                PropertyBinding::Value(ref value) => {
-                    // We can only get a ScaleOffset if the transform is 2d axis
-                    // aligned.
-                    ScaleOffset::from_transform(value).map(|scale_offset| {
-                        ScaleOffset::from_offset(origin.to_vector().to_untyped())
-                            .accumulate(&scale_offset)
-                    })
-                }
-
-                // Assume animations start at the identity transform for snapping purposes.
-                // We still want to incorporate the reference frame offset however.
-                // TODO(aosmond): Is there a better known starting point?
-                PropertyBinding::Binding(..) => {
-                    Some(ScaleOffset::from_offset(origin.to_vector().to_untyped()))
-                }
-            };
-
-            snapping_transform.map(|ref s| parent.accumulate(s))
-        });
-
-        self.add_spatial_node_info(
-            id,
-            LayoutVector2D::zero(),
-            snapping_transform,
-        );
-
         let item = di::DisplayItem::PushReferenceFrame(di::ReferenceFrameDisplayListItem {
             parent_spatial_id,
             origin,
@@ -1762,7 +1612,6 @@ impl DisplayListBuilder {
             },
         });
 
-        self.rf_mapper.push_scope();
         self.push_item(&item);
         id
     }
@@ -1776,9 +1625,6 @@ impl DisplayListBuilder {
         rotation: di::Rotation,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
-
-        let current_offset = self.current_offset(parent_spatial_id);
-        let origin = origin + current_offset;
 
         let item = di::DisplayItem::PushReferenceFrame(di::ReferenceFrameDisplayListItem {
             parent_spatial_id,
@@ -1803,7 +1649,6 @@ impl DisplayListBuilder {
     }
 
     pub fn pop_reference_frame(&mut self) {
-        self.rf_mapper.pop_scope();
         self.push_item(&di::DisplayItem::PopReferenceFrame);
     }
 
@@ -1823,10 +1668,8 @@ impl DisplayListBuilder {
     ) {
         self.push_filters(filters, filter_datas, filter_primitives);
 
-        let current_offset = self.current_offset(spatial_id);
-
         let item = di::DisplayItem::PushStackingContext(di::PushStackingContextDisplayItem {
-            origin: origin + current_offset,
+            origin,
             spatial_id,
             prim_flags,
             stacking_context: di::StackingContext {
@@ -1837,8 +1680,6 @@ impl DisplayListBuilder {
                 flags,
             },
         });
-
-        self.rf_mapper.push_offset(origin.to_vector());
 
         self.push_item(&item);
     }
@@ -1886,7 +1727,6 @@ impl DisplayListBuilder {
     }
 
     pub fn pop_stacking_context(&mut self) {
-        self.rf_mapper.pop_offset();
         self.push_item(&di::DisplayItem::PopStackingContext);
     }
 
@@ -1905,12 +1745,10 @@ impl DisplayListBuilder {
         filter_datas: &[di::FilterData],
         filter_primitives: &[di::FilterPrimitive],
     ) {
-        let common = self.process_common_props(common);
-
         self.push_filters(filters, filter_datas, filter_primitives);
 
         let item = di::DisplayItem::BackdropFilter(di::BackdropFilterDisplayItem {
-            common,
+            common: *common,
         });
         self.push_item(&item);
     }
@@ -1969,19 +1807,6 @@ impl DisplayListBuilder {
         external_scroll_offset: LayoutVector2D,
     ) -> di::SpatialId {
         let scroll_frame_id = self.generate_spatial_index();
-
-        let current_offset = self.current_offset(parent_space);
-        let content_rect = content_rect.translate(current_offset);
-        let frame_rect = frame_rect.translate(current_offset);
-
-        let parent = self.spatial_nodes[parent_space.0].clone();
-
-        self.add_spatial_node_info(
-            scroll_frame_id,
-            parent.accumulated_external_scroll_offset + external_scroll_offset,
-            parent.snapping_transform,
-        );
-
         let item = di::DisplayItem::ScrollFrame(di::ScrollFrameDisplayItem {
             content_rect,
             frame_rect,
@@ -2015,18 +1840,11 @@ impl DisplayListBuilder {
     pub fn define_clip_image_mask(
         &mut self,
         parent_space_and_clip: &di::SpaceAndClipInfo,
-        mut image_mask: di::ImageMask,
+        image_mask: di::ImageMask,
         points: &[LayoutPoint],
         fill_rule: di::FillRule,
     ) -> di::ClipId {
         let id = self.generate_clip_index();
-
-        let current_offset = self.current_offset(parent_space_and_clip.spatial_id);
-        image_mask.rect = self.snap_rect(
-            &image_mask.rect.translate(current_offset),
-            parent_space_and_clip.spatial_id,
-        );
-
         let item = di::DisplayItem::ImageMaskClip(di::ImageMaskClipDisplayItem {
             id,
             parent_space_and_clip: *parent_space_and_clip,
@@ -2052,14 +1870,6 @@ impl DisplayListBuilder {
         clip_rect: LayoutRect,
     ) -> di::ClipId {
         let id = self.generate_clip_index();
-
-        let current_offset = self.current_offset(parent_space_and_clip.spatial_id);
-
-        let clip_rect = self.snap_rect(
-            &clip_rect.translate(current_offset),
-            parent_space_and_clip.spatial_id,
-        );
-
         let item = di::DisplayItem::RectClip(di::RectClipDisplayItem {
             id,
             parent_space_and_clip: *parent_space_and_clip,
@@ -2073,16 +1883,9 @@ impl DisplayListBuilder {
     pub fn define_clip_rounded_rect(
         &mut self,
         parent_space_and_clip: &di::SpaceAndClipInfo,
-        mut clip: di::ComplexClipRegion,
+        clip: di::ComplexClipRegion,
     ) -> di::ClipId {
         let id = self.generate_clip_index();
-
-        let current_offset = self.current_offset(parent_space_and_clip.spatial_id);
-        clip.rect = self.snap_rect(
-            &clip.rect.translate(current_offset),
-            parent_space_and_clip.spatial_id,
-        );
-
         let item = di::DisplayItem::RoundedRectClip(di::RoundedRectClipDisplayItem {
             id,
             parent_space_and_clip: *parent_space_and_clip,
@@ -2103,18 +1906,6 @@ impl DisplayListBuilder {
         previously_applied_offset: LayoutVector2D,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
-
-        let current_offset = self.current_offset(parent_spatial_id);
-        let frame_rect = frame_rect.translate(current_offset);
-
-        let parent = self.spatial_nodes[parent_spatial_id.0].clone();
-
-        self.add_spatial_node_info(
-            id,
-            parent.accumulated_external_scroll_offset,
-            parent.snapping_transform,
-        );
-
         let item = di::DisplayItem::StickyFrame(di::StickyFrameDisplayItem {
             parent_spatial_id,
             id,
@@ -2137,18 +1928,6 @@ impl DisplayListBuilder {
         pipeline_id: PipelineId,
         ignore_missing_pipeline: bool
     ) {
-        let current_offset = self.current_offset(space_and_clip.spatial_id);
-
-        let bounds = self.snap_rect(
-            &bounds.translate(current_offset),
-            space_and_clip.spatial_id,
-        );
-
-        let clip_rect = self.snap_rect(
-            &clip_rect.translate(current_offset),
-            space_and_clip.spatial_id,
-        );
-
         let item = di::DisplayItem::Iframe(di::IframeDisplayItem {
             bounds,
             clip_rect,
@@ -2267,125 +2046,5 @@ impl DisplayListBuilder {
                 payload: self.payload,
             },
         )
-    }
-
-    /// Retrieve the current offset to allow converting a stacking context
-    /// relative coordinate to be relative to the owing reference frame,
-    /// also considering any external scroll offset on the provided
-    /// spatial node.
-    fn current_offset(
-        &mut self,
-        spatial_id: di::SpatialId,
-    ) -> LayoutVector2D {
-        // Get the current offset from stacking context <-> reference frame space.
-        let rf_offset = self.rf_mapper.current_offset();
-
-        // Get the external scroll offset, if applicable.
-        let scroll_offset = self.spatial_nodes[spatial_id.0].accumulated_external_scroll_offset;
-
-        rf_offset + scroll_offset
-    }
-
-    /// Add info about a spatial node that is needed during DL building.
-    fn add_spatial_node_info(
-        &mut self,
-        id: di::SpatialId,
-        accumulated_external_scroll_offset: LayoutVector2D,
-        snapping_transform: Option<ScaleOffset>,
-    ) {
-        self.spatial_nodes.resize(id.0 + 1, SpatialNodeInfo::identity());
-
-        let info = &mut self.spatial_nodes[id.0];
-        info.accumulated_external_scroll_offset = accumulated_external_scroll_offset;
-        info.snapping_transform = snapping_transform;
-    }
-
-    /// Snap a local rect, if applicable
-    fn snap_rect(
-        &self,
-        rect: &LayoutRect,
-        spatial_id: di::SpatialId,
-    ) -> LayoutRect {
-        match self.spatial_nodes[spatial_id.0].snapping_transform {
-            Some(ref scale_offset) => {
-                let snapped_device_rect: LayoutRect = scale_offset.map_rect(rect).snap();
-                scale_offset.unmap_rect(&snapped_device_rect)
-            }
-            None => *rect,
-        }
-    }
-}
-
-/// The offset stack for a given reference frame.
-#[derive(Clone)]
-struct ReferenceFrameState {
-    /// A stack of current offsets from the current reference frame scope.
-    offsets: Vec<LayoutVector2D>,
-}
-
-/// Maps from stacking context layout coordinates into reference frame
-/// relative coordinates.
-#[derive(Clone)]
-struct ReferenceFrameMapper {
-    /// A stack of reference frame scopes.
-    frames: Vec<ReferenceFrameState>,
-}
-
-impl ReferenceFrameMapper {
-    fn new() -> Self {
-        ReferenceFrameMapper {
-            frames: vec![
-                ReferenceFrameState {
-                    offsets: vec![
-                        LayoutVector2D::zero(),
-                    ],
-                }
-            ],
-        }
-    }
-
-    /// Push a new scope. This resets the current offset to zero, and is
-    /// used when a new reference frame or iframe is pushed.
-    fn push_scope(&mut self) {
-        self.frames.push(ReferenceFrameState {
-            offsets: vec![
-                LayoutVector2D::zero(),
-            ],
-        });
-    }
-
-    /// Pop a reference frame scope off the stack.
-    fn pop_scope(&mut self) {
-        self.frames.pop().unwrap();
-    }
-
-    /// Push a new offset for the current scope. This is used when
-    /// a new stacking context is pushed.
-    fn push_offset(&mut self, offset: LayoutVector2D) {
-        let frame = self.frames.last_mut().unwrap();
-        let current_offset = *frame.offsets.last().unwrap();
-        frame.offsets.push(current_offset + offset);
-    }
-
-    /// Pop a local stacking context offset from the current scope.
-    fn pop_offset(&mut self) {
-        let frame = self.frames.last_mut().unwrap();
-        frame.offsets.pop().unwrap();
-    }
-
-    /// Retrieve the current offset to allow converting a stacking context
-    /// relative coordinate to be relative to the owing reference frame.
-    /// TODO(gw): We could perhaps have separate coordinate spaces for this,
-    ///           however that's going to either mean a lot of changes to
-    ///           public API code, or a lot of changes to internal code.
-    ///           Before doing that, we should revisit how Gecko would
-    ///           prefer to provide coordinates.
-    /// TODO(gw): For now, this includes only the reference frame relative
-    ///           offset. Soon, we will expand this to include the initial
-    ///           scroll offsets that are now available on scroll nodes. This
-    ///           will allow normalizing the coordinates even between display
-    ///           lists where APZ has scrolled the content.
-    fn current_offset(&self) -> LayoutVector2D {
-        *self.frames.last().unwrap().offsets.last().unwrap()
     }
 }
