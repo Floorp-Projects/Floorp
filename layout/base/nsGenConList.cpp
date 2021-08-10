@@ -10,6 +10,29 @@
 #include "nsLayoutUtils.h"
 #include "nsIContent.h"
 
+void nsGenConNode::CheckFrameAssertions() {
+  NS_ASSERTION(
+      mContentIndex < int32_t(mPseudoFrame->StyleContent()->ContentCount()) ||
+          // Special-case for the USE node created for the legacy markers,
+          // which don't use the content property.
+          mContentIndex == 0,
+      "index out of range");
+  // We allow negative values of mContentIndex for 'counter-reset' and
+  // 'counter-increment'.
+
+  NS_ASSERTION(mContentIndex < 0 ||
+                   mPseudoFrame->Style()->GetPseudoType() ==
+                       mozilla::PseudoStyleType::before ||
+                   mPseudoFrame->Style()->GetPseudoType() ==
+                       mozilla::PseudoStyleType::after ||
+                   mPseudoFrame->Style()->GetPseudoType() ==
+                       mozilla::PseudoStyleType::marker,
+               "not CSS generated content and not counter change");
+  NS_ASSERTION(mContentIndex < 0 ||
+                   mPseudoFrame->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT),
+               "not generated content and not counter change");
+}
+
 void nsGenConList::Clear() {
   // Delete entire list.
   mNodes.Clear();

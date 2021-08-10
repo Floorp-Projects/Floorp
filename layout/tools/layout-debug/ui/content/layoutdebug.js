@@ -38,6 +38,7 @@ const COMMANDS = [
   "dumpFramesInCSSPixels",
   "dumpTextRuns",
   "dumpViews",
+  "dumpCounterManager",
   "dumpStyleSheets",
   "dumpMatchedRules",
   "dumpComputedStyles",
