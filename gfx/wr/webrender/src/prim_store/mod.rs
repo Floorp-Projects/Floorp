@@ -650,6 +650,7 @@ impl InternablePrimitive for PrimitiveKeyKind {
         key: PrimitiveKey,
         data_handle: PrimitiveDataHandle,
         prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         match key.kind {
             PrimitiveKeyKind::Clear => {
@@ -1452,6 +1453,7 @@ pub trait InternablePrimitive: intern::Internable<InternData = ()> + Sized {
         key: Self::Key,
         data_handle: intern::Handle<Self>,
         prim_store: &mut PrimitiveStore,
+        reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind;
 }
 
