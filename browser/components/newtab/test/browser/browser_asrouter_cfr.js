@@ -36,13 +36,15 @@ const createDummyRecommendation = ({
         label: { attributes: { tooltiptext: "Why am I seeing this" } },
         sumo_path: "extensionrecommendations",
       },
-      icon: "foo",
-      icon_dark_theme: "bar",
+      icon:
+        "chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg",
+      icon_dark_theme:
+        "chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg",
       learn_more: "extensionrecommendations",
       addon: {
         id: "addon-id",
         title: "Addon name",
-        icon: "foo",
+        icon: "chrome://browser/skin/addons/addon-install-downloading.svg",
         author: "Author name",
         amo_url: "https://example.com",
       },
