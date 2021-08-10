@@ -137,7 +137,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
    */
   bool SendRtcp(const uint8_t* data, size_t len) override;
 
-  bool HasCodecPluginID(uint64_t aPluginID) override { return false; }
+  bool HasCodecPluginID(uint64_t aPluginID) const override { return false; }
 
   void DeliverPacket(rtc::CopyOnWriteBuffer packet, PacketType type) override;
 
@@ -155,10 +155,10 @@ class WebrtcAudioConduit : public AudioSessionConduit,
    */
   bool SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
                      const std::vector<uint32_t>& aRtxSSRCs) override;
-  std::vector<uint32_t> GetLocalSSRCs() override;
+  std::vector<uint32_t> GetLocalSSRCs() const override;
   bool SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) override;
   bool UnsetRemoteSSRC(uint32_t ssrc) override { return true; }
-  bool GetRemoteSSRC(uint32_t* ssrc) override;
+  bool GetRemoteSSRC(uint32_t* ssrc) const override;
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
 
@@ -240,7 +240,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Accessed only on the Call thread.
   bool mDtmfEnabled;
 
-  Mutex mMutex;
+  mutable Mutex mMutex;
 
   // Call worker thread. All access to mCall->Call() happens here.
   const RefPtr<AbstractThread> mCallThread;

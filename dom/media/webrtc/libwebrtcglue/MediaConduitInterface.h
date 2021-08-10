@@ -201,7 +201,7 @@ class MediaSessionConduit {
    * Note: this is an ordered list and {a,b,c} != {b,a,c}
    */
   virtual bool SetLocalSSRCs(const Ssrcs& aSSRCs, const Ssrcs& aRtxSSRCs) = 0;
-  virtual Ssrcs GetLocalSSRCs() = 0;
+  virtual Ssrcs GetLocalSSRCs() const = 0;
 
   /**
    * Adds negotiated RTP header extensions to the the conduit. Unknown
@@ -217,7 +217,7 @@ class MediaSessionConduit {
       MediaSessionConduitLocalDirection aDirection,
       const RtpExtList& aExtensions) = 0;
 
-  virtual bool GetRemoteSSRC(Ssrc* ssrc) = 0;
+  virtual bool GetRemoteSSRC(Ssrc* ssrc) const = 0;
   virtual bool SetRemoteSSRC(Ssrc ssrc, Ssrc rtxSsrc) = 0;
   virtual bool UnsetRemoteSSRC(Ssrc ssrc) = 0;
   virtual bool SetLocalCNAME(const char* cname) = 0;
@@ -226,7 +226,7 @@ class MediaSessionConduit {
 
   virtual void SetSyncGroup(const std::string& group) = 0;
 
-  virtual bool HasCodecPluginID(uint64_t aPluginID) = 0;
+  virtual bool HasCodecPluginID(uint64_t aPluginID) const = 0;
 
   virtual void DeliverPacket(rtc::CopyOnWriteBuffer packet,
                              PacketType type) = 0;
