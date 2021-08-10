@@ -33,6 +33,7 @@ object PhotonColors {
     val Green80 = Color(0xff006504)
     val Green90 = Color(0xff003706)
 
+    val Red30 = Color(0xffff848b)
     val Red50 = Color(0xffff0039)
     val Red60 = Color(0xffd70022)
     val Red70 = Color(0xffa4000f)
@@ -63,6 +64,7 @@ object PhotonColors {
     val Orange80 = Color(0xff712b00)
     val Orange90 = Color(0xff3e1300)
 
+    val Ink10 = Color(0xff342f6d)
     val Ink20 = Color(0xff312A65)
     val Ink20A48 = Color(0x7A312A65)
     val Ink30 = Color(0xff2E255D)
