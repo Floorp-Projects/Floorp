@@ -389,11 +389,12 @@ class CDMStorageTest {
         GeckoMediaPluginService::GetGeckoMediaPluginService();
     EXPECT_TRUE(service);
 
-    nsCString keySystem{"fake"_ns};
+    nsTArray<nsCString> tags;
+    tags.AppendElement("fake"_ns);
 
     RefPtr<CDMStorageTest> self = this;
     RefPtr<gmp::GetCDMParentPromise> promise =
-        service->GetCDM(aNodeId, keySystem, nullptr);
+        service->GetCDM(aNodeId, std::move(tags), nullptr);
     nsCOMPtr<nsISerialEventTarget> thread = GetGMPThread();
     promise->Then(
         thread, __func__,

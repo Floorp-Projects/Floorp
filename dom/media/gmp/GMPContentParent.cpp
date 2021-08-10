@@ -148,13 +148,11 @@ nsCOMPtr<nsISerialEventTarget> GMPContentParent::GMPEventTarget() {
   return mGMPEventTarget;
 }
 
-already_AddRefed<ChromiumCDMParent> GMPContentParent::GetChromiumCDM(
-    const nsCString& aKeySystem) {
-  GMP_LOG_DEBUG("GMPContentParent::GetChromiumCDM(this=%p aKeySystem=%s)", this,
-                aKeySystem.get());
+already_AddRefed<ChromiumCDMParent> GMPContentParent::GetChromiumCDM() {
+  GMP_LOG_DEBUG("GMPContentParent::GetChromiumCDM(this=%p)", this);
 
   RefPtr<ChromiumCDMParent> parent = new ChromiumCDMParent(this, GetPluginId());
-  if (!SendPChromiumCDMConstructor(parent, aKeySystem)) {
+  if (!SendPChromiumCDMConstructor(parent)) {
     return nullptr;
   }
 

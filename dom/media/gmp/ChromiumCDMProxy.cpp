@@ -83,7 +83,7 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
           return;
         }
         RefPtr<gmp::GetCDMParentPromise> promise =
-            service->GetCDM(nodeIdParts, keySystem, helper);
+            service->GetCDM(nodeIdParts, {keySystem}, helper);
         promise->Then(
             thread, __func__,
             [self, aPromiseId, thread](RefPtr<gmp::ChromiumCDMParent> cdm) {
