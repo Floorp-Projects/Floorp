@@ -2395,6 +2395,46 @@
   alias_set: custom
   possibly_calls: true
 
+- name: MapObjectGetNonBigInt
+  operands:
+    map: Object
+    value: Value
+    hash: Int32
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
+- name: MapObjectGetBigInt
+  operands:
+    map: Object
+    value: Value
+    hash: Int32
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
+- name: MapObjectGetValue
+  operands:
+    map: Object
+    value: Value
+    hash: Int32
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
+- name: MapObjectGetValueVMCall
+  operands:
+    map: Object
+    value: Value
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  possibly_calls: true
+
 - name: WasmNeg
   gen_boilerplate: false
 
