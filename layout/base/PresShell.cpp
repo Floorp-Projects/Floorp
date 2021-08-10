@@ -11472,8 +11472,10 @@ bool PresShell::DetermineFontSizeInflationState() {
       PixelCastJustification::LayoutDeviceIsScreenForBounds);
   nsViewportInfo vInf = GetDocument()->GetViewportInfo(screenSize);
 
-  if (vInf.GetDefaultZoom() >= CSSToScreenScale(1.0f) ||
-      vInf.IsAutoSizeEnabled()) {
+  CSSToScreenScale defaultScale =
+      mPresContext->CSSToDevPixelScale() * LayoutDeviceToScreenScale(1.0);
+
+  if (vInf.GetDefaultZoom() >= defaultScale || vInf.IsAutoSizeEnabled()) {
     return false;
   }
 
