@@ -698,62 +698,28 @@ void MacroAssembler::popcnt64(Register64 src, Register64 dest, Register tmp) {
 
 void MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val,
                               Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
+  MOZ_ASSERT(cond == Assembler::NotEqual,
              "other condition codes not supported");
 
-  Label done;
-
-  if (cond == Assembler::Equal) {
-    branch32(Assembler::NotEqual, lhs, val.firstHalf(), &done);
-  } else {
-    branch32(Assembler::NotEqual, lhs, val.firstHalf(), label);
-  }
+  branch32(cond, lhs, val.firstHalf(), label);
   branch32(cond, Address(lhs.base, lhs.offset + sizeof(uint32_t)),
            val.secondHalf(), label);
-
-  bind(&done);
-}
-
-void MacroAssembler::branch64(Condition cond, const Address& lhs,
-                              Register64 rhs, Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
-             "other condition codes not supported");
-
-  Label done;
-
-  if (cond == Assembler::Equal) {
-    branch32(Assembler::NotEqual, lhs, rhs.low, &done);
-  } else {
-    branch32(Assembler::NotEqual, lhs, rhs.low, label);
-  }
-  branch32(cond, Address(lhs.base, lhs.offset + sizeof(uint32_t)), rhs.high,
-           label);
-
-  bind(&done);
 }
 
 void MacroAssembler::branch64(Condition cond, const Address& lhs,
                               const Address& rhs, Register scratch,
                               Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
+  MOZ_ASSERT(cond == Assembler::NotEqual,
              "other condition codes not supported");
   MOZ_ASSERT(lhs.base != scratch);
   MOZ_ASSERT(rhs.base != scratch);
 
-  Label done;
-
   load32(rhs, scratch);
-  if (cond == Assembler::Equal) {
-    branch32(Assembler::NotEqual, lhs, scratch, &done);
-  } else {
-    branch32(Assembler::NotEqual, lhs, scratch, label);
-  }
+  branch32(cond, lhs, scratch, label);
 
   load32(Address(rhs.base, rhs.offset + sizeof(uint32_t)), scratch);
   branch32(cond, Address(lhs.base, lhs.offset + sizeof(uint32_t)), scratch,
            label);
-
-  bind(&done);
 }
 
 void MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val,

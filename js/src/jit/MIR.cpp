@@ -5902,66 +5902,6 @@ MDefinition* MGuardInt32IsNonNegative::foldsTo(TempAllocator& alloc) {
   return input;
 }
 
-MDefinition* MGuardNonGCThing::foldsTo(TempAllocator& alloc) {
-  if (!input()->isBox()) {
-    return this;
-  }
-
-  MDefinition* unboxed = input()->getOperand(0);
-  if (!IsNonGCThing(unboxed->type())) {
-    return this;
-  }
-  return input();
-}
-
-AliasSet MSetObjectHasNonBigInt::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MSetObjectHasBigInt::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MSetObjectHasValue::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MSetObjectHasValueVMCall::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MMapObjectHasNonBigInt::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MMapObjectHasBigInt::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MMapObjectHasValue::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MMapObjectHasValueVMCall::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MMapObjectGetNonBigInt::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MMapObjectGetBigInt::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MMapObjectGetValue::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
-AliasSet MMapObjectGetValueVMCall::getAliasSet() const {
-  return AliasSet::Load(AliasSet::MapOrSetHashTable);
-}
-
 MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
                                     WasmInstanceObject* instanceObj,
                                     const wasm::FuncExport& funcExport) {

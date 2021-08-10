@@ -487,24 +487,16 @@ void MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs,
 
 void MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val,
                               Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
+  MOZ_ASSERT(cond == Assembler::NotEqual,
              "other condition codes not supported");
 
   branchPtr(cond, lhs, ImmWord(val.value), label);
 }
 
 void MacroAssembler::branch64(Condition cond, const Address& lhs,
-                              Register64 rhs, Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
-             "other condition codes not supported");
-
-  branchPtr(cond, lhs, rhs.reg, label);
-}
-
-void MacroAssembler::branch64(Condition cond, const Address& lhs,
                               const Address& rhs, Register scratch,
                               Label* label) {
-  MOZ_ASSERT(cond == Assembler::NotEqual || cond == Assembler::Equal,
+  MOZ_ASSERT(cond == Assembler::NotEqual,
              "other condition codes not supported");
   MOZ_ASSERT(lhs.base != scratch);
   MOZ_ASSERT(rhs.base != scratch);
