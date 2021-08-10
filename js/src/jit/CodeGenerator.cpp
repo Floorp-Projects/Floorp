@@ -15400,6 +15400,20 @@ void CodeGenerator::visitToHashableString(LToHashableString* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitToHashableValue(LToHashableValue* ins) {
+  ValueOperand input = ToValue(ins, LToHashableValue::Input);
+  FloatRegister tempFloat = ToFloatRegister(ins->tempFloat());
+  ValueOperand output = ToOutValue(ins);
+
+  Register str = output.scratchReg();
+
+  using Fn = JSAtom* (*)(JSContext*, JSString*, PinningBehavior);
+  auto* ool = oolCallVM<Fn, js::AtomizeString>(
+      ins, ArgList(str, Imm32(DoNotPinAtom)), StoreRegisterTo(str));
+
+  masm.toHashableValue(input, output, tempFloat, ool->entry(), ool->rejoin());
+}
+
 void CodeGenerator::visitHashNonGCThing(LHashNonGCThing* ins) {
   ValueOperand input = ToValue(ins, LHashNonGCThing::Input);
   Register temp = ToRegister(ins->temp());
@@ -15445,6 +15459,18 @@ void CodeGenerator::visitHashObject(LHashObject* ins) {
   masm.prepareHashObject(setObj, input, output, temp1, temp2, temp3, temp4);
 }
 
+void CodeGenerator::visitHashValue(LHashValue* ins) {
+  Register setObj = ToRegister(ins->setObject());
+  ValueOperand input = ToValue(ins, LHashValue::Input);
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register temp3 = ToRegister(ins->temp3());
+  Register temp4 = ToRegister(ins->temp4());
+  Register output = ToRegister(ins->output());
+
+  masm.prepareHashValue(setObj, input, output, temp1, temp2, temp3, temp4);
+}
+
 void CodeGenerator::visitSetObjectHasNonBigInt(LSetObjectHasNonBigInt* ins) {
   Register setObj = ToRegister(ins->setObject());
   ValueOperand input = ToValue(ins, LSetObjectHasNonBigInt::Input);
@@ -15468,6 +15494,29 @@ void CodeGenerator::visitSetObjectHasBigInt(LSetObjectHasBigInt* ins) {
 
   masm.setObjectHasBigInt(setObj, input, hash, output, temp1, temp2, temp3,
                           temp4);
+}
+
+void CodeGenerator::visitSetObjectHasValue(LSetObjectHasValue* ins) {
+  Register setObj = ToRegister(ins->setObject());
+  ValueOperand input = ToValue(ins, LSetObjectHasValue::Input);
+  Register hash = ToRegister(ins->hash());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+  Register temp3 = ToRegister(ins->temp3());
+  Register temp4 = ToRegister(ins->temp4());
+  Register output = ToRegister(ins->output());
+
+  masm.setObjectHasValue(setObj, input, hash, output, temp1, temp2, temp3,
+                         temp4);
+}
+
+void CodeGenerator::visitSetObjectHasValueVMCall(
+    LSetObjectHasValueVMCall* ins) {
+  pushArg(ToValue(ins, LSetObjectHasValueVMCall::Input));
+  pushArg(ToRegister(ins->setObject()));
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
+  callVM<Fn, jit::SetObjectHas>(ins);
 }
 
 template <size_t NumDefs>
