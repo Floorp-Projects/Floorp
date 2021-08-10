@@ -19,6 +19,7 @@
  */
 
 const global = this;
+const globalThis = this;
 
 var EXPORTED_SYMBOLS = ["KintoHttpClient"];
 
@@ -27,28 +28,28 @@ const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm
 XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
 
 /*
- * Version 5.1.1 - 30c540a
+ * Version 5.3.0 - 284d97d
  */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
-    (global = global || self, global.KintoHttpClient = factory());
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.KintoHttpClient = factory());
 }(this, (function () { 'use strict';
 
     /*! *****************************************************************************
-    Copyright (c) Microsoft Corporation. All rights reserved.
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain a copy of the
-    License at http://www.apache.org/licenses/LICENSE-2.0
+    Copyright (c) Microsoft Corporation.
 
-    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-    MERCHANTABLITY OR NON-INFRINGEMENT.
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
 
-    See the Apache Version 2.0 License for specific language governing permissions
-    and limitations under the License.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
     ***************************************************************************** */
     function __decorate(decorators, target, key, desc) {
         var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -499,6 +500,11 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
              * @type {Number}
              */
             this.timeout = options.timeout || HTTP.defaultOptions.timeout;
+            /**
+             * The fetch() function.
+             * @type {Function}
+             */
+            this.fetchFunc = options.fetchFunc || globalThis.fetch.bind(globalThis);
         }
         /**
          * Default HTTP request headers applied to each outgoing request.
@@ -546,7 +552,7 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
                         }
                     };
                 }
-                fetch(url, options)
+                this.fetchFunc(url, options)
                     .then(proceedWithHandler(resolve))
                     .catch(proceedWithHandler(reject));
             });
@@ -847,15 +853,25 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
     // Unique ID creation requires a high quality random # generator. In the browser we therefore
     // require the crypto API and do not support built-in fallback to lower quality random number
     // generators (like Math.random()).
-    // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation. Also,
-    // find the complete implementation of crypto (msCrypto) on IE11.
-    var getRandomValues = typeof crypto != 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto) || typeof msCrypto != 'undefined' && typeof msCrypto.getRandomValues == 'function' && msCrypto.getRandomValues.bind(msCrypto);
-    var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
+    var getRandomValues;
+    var rnds8 = new Uint8Array(16);
     function rng() {
+        // lazy load so that environments that need to polyfill have a chance to do so
         if (!getRandomValues) {
-            throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+            // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation. Also,
+            // find the complete implementation of crypto (msCrypto) on IE11.
+            getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto) || typeof msCrypto !== 'undefined' && typeof msCrypto.getRandomValues === 'function' && msCrypto.getRandomValues.bind(msCrypto);
+            if (!getRandomValues) {
+                throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+            }
         }
         return getRandomValues(rnds8);
+    }
+
+    var REGEX = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
+
+    function validate(uuid) {
+        return typeof uuid === 'string' && REGEX.test(uuid);
     }
 
     /**
@@ -864,30 +880,36 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
      */
     var byteToHex = [];
     for (var i = 0; i < 256; ++i) {
-        byteToHex[i] = (i + 0x100).toString(16).substr(1);
+        byteToHex.push((i + 0x100).toString(16).substr(1));
     }
-    function bytesToUuid(buf, offset) {
-        var i = offset || 0;
-        var bth = byteToHex; // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
-        return [bth[buf[i++]], bth[buf[i++]], bth[buf[i++]], bth[buf[i++]], '-', bth[buf[i++]], bth[buf[i++]], '-', bth[buf[i++]], bth[buf[i++]], '-', bth[buf[i++]], bth[buf[i++]], '-', bth[buf[i++]], bth[buf[i++]], bth[buf[i++]], bth[buf[i++]], bth[buf[i++]], bth[buf[i++]]].join('');
+    function stringify(arr) {
+        var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        // Note: Be careful editing this code!  It's been tuned for performance
+        // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
+        var uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
+        // of the following:
+        // - One or more input array values don't map to a hex octet (leading to
+        // "undefined" in the uuid)
+        // - Invalid input values for the RFC `version` or `variant` fields
+        if (!validate(uuid)) {
+            throw TypeError('Stringified UUID is invalid');
+        }
+        return uuid;
     }
 
     function v4(options, buf, offset) {
-        var i = buf && offset || 0;
-        if (typeof options == 'string') {
-            buf = options === 'binary' ? new Array(16) : null;
-            options = null;
-        }
         options = options || {};
         var rnds = options.random || (options.rng || rng)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
         rnds[6] = rnds[6] & 0x0f | 0x40;
         rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
         if (buf) {
-            for (var ii = 0; ii < 16; ++ii) {
-                buf[i + ii] = rnds[ii];
+            offset = offset || 0;
+            for (var i = 0; i < 16; ++i) {
+                buf[offset + i] = rnds[i];
             }
+            return buf;
         }
-        return buf || bytesToUuid(rnds);
+        return stringify(rnds);
     }
 
     /**
@@ -1301,6 +1323,46 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
             });
         }
         /**
+         * Deletes records from the current collection.
+         *
+         * Sorting is done by passing a `sort` string option:
+         *
+         * - The field to order the results by, prefixed with `-` for descending.
+         * Default: `-last_modified`.
+         *
+         * @see http://kinto.readthedocs.io/en/stable/api/1.x/sorting.html
+         *
+         * Filtering is done by passing a `filters` option object:
+         *
+         * - `{fieldname: "value"}`
+         * - `{min_fieldname: 4000}`
+         * - `{in_fieldname: "1,2,3"}`
+         * - `{not_fieldname: 0}`
+         * - `{exclude_fieldname: "0,1"}`
+         *
+         * @see http://kinto.readthedocs.io/en/stable/api/1.x/filtering.html
+         *
+         * @param  {Object}   [options={}]                    The options object.
+         * @param  {Object}   [options.headers]               The headers object option.
+         * @param  {Number}   [options.retry=0]               Number of retries to make
+         *     when faced with transient errors.
+         * @param  {Object}   [options.filters={}]            The filters object.
+         * @param  {String}   [options.sort="-last_modified"] The sort field.
+         * @param  {String}   [options.at]                    The timestamp to get a snapshot at.
+         * @param  {String}   [options.limit=null]            The limit field.
+         * @param  {String}   [options.pages=1]               The number of result pages to aggregate.
+         * @param  {Number}   [options.since=null]            Only retrieve records modified since the provided timestamp.
+         * @param  {Array}    [options.fields]                Limit response to just some fields.
+         * @return {Promise<Object, Error>}
+         */
+        async deleteRecords(options = {}) {
+            const path = this._endpoints.record(this.bucket.name, this.name);
+            return this.client.paginatedDelete(path, options, {
+                headers: this._getHeaders(options),
+                retry: this._getRetry(options),
+            });
+        }
+        /**
          * Retrieves a record from the current collection.
          *
          * @param  {String} id                The record id to retrieve.
@@ -1391,7 +1453,11 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
         /**
          * @private
          */
-        async listChangesBackTo(at) {
+        async getSnapshot(at) {
+            if (!at || !Number.isInteger(at) || at <= 0) {
+                throw new Error("Invalid argument, expected a positive integer.");
+            }
+            // Retrieve history and check it covers the required time range.
             // Ensure we have enough history data to retrieve the complete list of
             // changes.
             if (!(await this.isHistoryComplete())) {
@@ -1399,47 +1465,64 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
                     "collection is available. Here, the history plugin seems to have " +
                     "been enabled after the creation of the collection.");
             }
-            const { data: changes } = await this.bucket.listHistory({
+            // Because of https://github.com/Kinto/kinto-http.js/issues/963
+            // we cannot simply rely on the history endpoint.
+            // Our strategy here is to clean-up the history entries from the
+            // records that were deleted via the plural endpoint.
+            // We will detect them by comparing the current state of the collection
+            // and the full history of the collection since its genesis.
+            // List full history of collection.
+            const { data: fullHistory } = await this.bucket.listHistory({
                 pages: Infinity,
-                sort: "-target.data.last_modified",
+                sort: "last_modified",
                 filters: {
                     resource_name: "record",
                     collection_id: this.name,
-                    "max_target.data.last_modified": String(at),
                 },
             });
-            return changes;
-        }
-        /**
-         * @private
-         */
-        async getSnapshot(at) {
-            if (!at || !Number.isInteger(at) || at <= 0) {
-                throw new Error("Invalid argument, expected a positive integer.");
-            }
-            // Retrieve history and check it covers the required time range.
-            const changes = await this.listChangesBackTo(at);
-            // Replay changes to compute the requested snapshot.
-            const seenIds = new Set();
-            let snapshot = [];
-            for (const { action, target: { data: record }, } of changes) {
-                if (action == "delete") {
-                    seenIds.add(record.id); // ensure not reprocessing deleted entries
-                    snapshot = snapshot.filter((r) => r.id !== record.id);
+            // Keep latest entry ever, and latest within snapshot window.
+            // (history is sorted chronologically)
+            const latestEver = new Map();
+            const latestInSnapshot = new Map();
+            for (const entry of fullHistory) {
+                if (entry.target.data.last_modified <= at) {
+                    // Snapshot includes changes right on timestamp.
+                    latestInSnapshot.set(entry.record_id, entry);
                 }
-                else if (!seenIds.has(record.id)) {
-                    seenIds.add(record.id);
-                    snapshot.push(record);
+                latestEver.set(entry.record_id, entry);
+            }
+            // Current records ids in the collection.
+            const { data: current } = await this.listRecords({
+                pages: Infinity,
+                fields: ["id"], // we don't need attributes.
+            });
+            const currentIds = new Set(current.map((record) => record.id));
+            // If a record is not in the current collection, and its
+            // latest history entry isn't a delete then this means that
+            // it was deleted via the plural endpoint (and that we lost track
+            // of this deletion because of bug #963)
+            const deletedViaPlural = new Set();
+            for (const entry of latestEver.values()) {
+                if (entry.action != "delete" && !currentIds.has(entry.record_id)) {
+                    deletedViaPlural.add(entry.record_id);
+                }
+            }
+            // Now reconstruct the collection based on latest version in snapshot
+            // filtering all deleted records.
+            const reconstructed = [];
+            for (const entry of latestInSnapshot.values()) {
+                if (entry.action != "delete" && !deletedViaPlural.has(entry.record_id)) {
+                    reconstructed.push(entry.target.data);
                 }
             }
             return {
                 last_modified: String(at),
-                data: snapshot.sort((a, b) => b.last_modified - a.last_modified),
+                data: Array.from(reconstructed).sort((a, b) => b.last_modified - a.last_modified),
                 next: () => {
                     throw new Error("Snapshots don't support pagination");
                 },
                 hasNextPage: false,
-                totalRecords: snapshot.length,
+                totalRecords: reconstructed.length,
             };
         }
         /**
@@ -1755,6 +1838,25 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
             });
         }
         /**
+         * Deletes collections from the current bucket.
+         *
+         * @param  {Object} [options={}]      The options object.
+         * @param  {Object} [options.filters={}] The filters object.
+         * @param  {Object} [options.headers] The headers object option.
+         * @param  {Number} [options.retry=0] Number of retries to make
+         *     when faced with transient errors.
+         * @param  {Array}  [options.fields]  Limit response to
+         *     just some fields.
+         * @return {Promise<Array<Object>, Error>}
+         */
+        async deleteCollections(options = {}) {
+            const path = this._endpoints.collection(this.name);
+            return this.client.paginatedDelete(path, options, {
+                headers: this._getHeaders(options),
+                retry: this._getRetry(options),
+            });
+        }
+        /**
          * Retrieves the list of groups in the current bucket.
          *
          * @param  {Object} [options={}]      The options object.
@@ -1885,6 +1987,25 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
                 safe: this._getSafe(options),
             });
             return this.client.execute(request, {
+                retry: this._getRetry(options),
+            });
+        }
+        /**
+         * Deletes groups from the current bucket.
+         *
+         * @param  {Object} [options={}]          The options object.
+         * @param  {Object} [options.filters={}]  The filters object.
+         * @param  {Object} [options.headers]     The headers object option.
+         * @param  {Number} [options.retry=0]     Number of retries to make
+         *     when faced with transient errors.
+         * @param  {Array}  [options.fields]      Limit response to
+         *     just some fields.
+         * @return {Promise<Array<Object>, Error>}
+         */
+        async deleteGroups(options = {}) {
+            const path = this._endpoints.group(this.name);
+            return this.client.paginatedDelete(path, options, {
+                headers: this._getHeaders(options),
                 retry: this._getRetry(options),
             });
         }
@@ -2042,6 +2163,7 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
          * @param  {String}       [options.bucket="default"]    The default bucket to use.
          * @param  {String}       [options.requestMode="cors"]  The HTTP request mode (from ES6 fetch spec).
          * @param  {Number}       [options.timeout=null]        The request timeout in ms, if any.
+         * @param  {Function}     [options.fetchFunc=fetch]     The function to be used to execute HTTP requests.
          */
         constructor(remote, options) {
             if (typeof remote !== "string" || !remote.length) {
@@ -2076,13 +2198,13 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
              */
             this.events = options.events;
             this.endpoints = ENDPOINTS;
-            const { requestMode, timeout } = options;
+            const { fetchFunc, requestMode, timeout } = options;
             /**
              * The HTTP instance.
              * @ignore
              * @type {HTTP}
              */
-            this.http = new HTTP(this.events, { requestMode, timeout });
+            this.http = new HTTP(this.events, { fetchFunc, requestMode, timeout });
             this._registerHTTPEvents();
         }
         /**
@@ -2410,10 +2532,11 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
             return raw ? result : result.json;
         }
         /**
-         * Fetch some pages from a paginated list, following the `next-page`
-         * header automatically until we have fetched the requested number
-         * of pages. Return a response with a `.next()` method that can be
-         * called to fetch more results.
+         * Perform an operation with a given HTTP method on some pages from
+         * a paginated list, following the `next-page` header automatically
+         * until we have processed the requested number of pages. Return a
+         * response with a `.next()` method that can be called to perform
+         * the requested HTTP method on more results.
          *
          * @private
          * @param  {String}  path
@@ -2421,16 +2544,16 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
          * @param  {Object}  params
          *     The parameters to use when making the request.
          * @param  {String}  [params.sort="-last_modified"]
-         *     The sorting order to use when fetching.
+         *     The sorting order to use when doing operation on pages.
          * @param  {Object}  [params.filters={}]
          *     The filters to send in the request.
          * @param  {Number}  [params.limit=undefined]
          *     The limit to send in the request. Undefined means no limit.
          * @param  {Number}  [params.pages=undefined]
-         *     The number of pages to fetch. Undefined means one page. Pass
-         *     Infinity to fetch everything.
+         *     The number of pages to operate on. Undefined means one page. Pass
+         *     Infinity to operate on everything.
          * @param  {String}  [params.since=undefined]
-         *     The ETag from which to start fetching.
+         *     The ETag from which to start doing operation on pages.
          * @param  {Array}   [params.fields]
          *     Limit response to just some fields.
          * @param  {Object}  [options={}]
@@ -2440,8 +2563,10 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
          * @param  {Number}  [options.retry=0]
          *     Number of times to retry each request if the server responds
          *     with Retry-After.
+         * @param  {String}  [options.method="GET"]
+         *     The method to use in the request.
          */
-        async paginatedList(path, params = {}, options = {}) {
+        async paginatedOperation(path, params = {}, options = {}) {
             // FIXME: this is called even in batch requests, which doesn't
             // make any sense (since all batch requests get a "dummy"
             // response; see execute() above).
@@ -2477,7 +2602,7 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
                     totalRecords: -1,
                 };
             };
-            const handleResponse = async function ({ headers, json, }) {
+            const handleResponse = async function ({ headers = new Headers(), json = {}, }) {
                 const nextPage = headers.get("Next-Page");
                 const etag = headers.get("ETag");
                 if (!pages) {
@@ -2500,11 +2625,88 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
             {
                 headers: options.headers ? options.headers : {},
                 path: path + "?" + querystring,
-            },
+                method: options.method,
+            }, 
             // N.B. This doesn't use _getRetry, because all calls to
             // `paginatedList` are assumed to come from calls that already
             // used `_getRetry` at e.g. the bucket or collection level.
             { raw: true, retry: options.retry || 0 })));
+        }
+        /**
+         * Fetch some pages from a paginated list, following the `next-page`
+         * header automatically until we have fetched the requested number
+         * of pages. Return a response with a `.next()` method that can be
+         * called to fetch more results.
+         *
+         * @private
+         * @param  {String}  path
+         *     The path to make the request to.
+         * @param  {Object}  params
+         *     The parameters to use when making the request.
+         * @param  {String}  [params.sort="-last_modified"]
+         *     The sorting order to use when fetching.
+         * @param  {Object}  [params.filters={}]
+         *     The filters to send in the request.
+         * @param  {Number}  [params.limit=undefined]
+         *     The limit to send in the request. Undefined means no limit.
+         * @param  {Number}  [params.pages=undefined]
+         *     The number of pages to fetch. Undefined means one page. Pass
+         *     Infinity to fetch everything.
+         * @param  {String}  [params.since=undefined]
+         *     The ETag from which to start fetching.
+         * @param  {Array}   [params.fields]
+         *     Limit response to just some fields.
+         * @param  {Object}  [options={}]
+         *     Additional request-level parameters to use in all requests.
+         * @param  {Object}  [options.headers={}]
+         *     Headers to use during all requests.
+         * @param  {Number}  [options.retry=0]
+         *     Number of times to retry each request if the server responds
+         *     with Retry-After.
+         */
+        async paginatedList(path, params = {}, options = {}) {
+            return this.paginatedOperation(path, params, options);
+        }
+        /**
+         * Delete multiple objects, following the pagination if the number of
+         * objects exceeds the page limit until we have deleted the requested
+         * number of pages. Return a response with a `.next()` method that can
+         * be called to delete more results.
+         *
+         * @private
+         * @param  {String}  path
+         *     The path to make the request to.
+         * @param  {Object}  params
+         *     The parameters to use when making the request.
+         * @param  {String}  [params.sort="-last_modified"]
+         *     The sorting order to use when deleting.
+         * @param  {Object}  [params.filters={}]
+         *     The filters to send in the request.
+         * @param  {Number}  [params.limit=undefined]
+         *     The limit to send in the request. Undefined means no limit.
+         * @param  {Number}  [params.pages=undefined]
+         *     The number of pages to delete. Undefined means one page. Pass
+         *     Infinity to delete everything.
+         * @param  {String}  [params.since=undefined]
+         *     The ETag from which to start deleting.
+         * @param  {Array}   [params.fields]
+         *     Limit response to just some fields.
+         * @param  {Object}  [options={}]
+         *     Additional request-level parameters to use in all requests.
+         * @param  {Object}  [options.headers={}]
+         *     Headers to use during all requests.
+         * @param  {Number}  [options.retry=0]
+         *     Number of times to retry each request if the server responds
+         *     with Retry-After.
+         */
+        paginatedDelete(path, params = {}, options = {}) {
+            const { headers, safe, last_modified } = options;
+            const deleteRequest$1 = deleteRequest(path, {
+                headers,
+                safe: safe ? safe : false,
+                last_modified,
+            });
+            return this.paginatedOperation(path, params, Object.assign(Object.assign({}, options), { headers: deleteRequest$1.headers, method: "DELETE" }));
         }
         /**
          * Lists all permissions.
@@ -2594,22 +2796,28 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
             }), { retry: this._getRetry(options) });
         }
         /**
-         * Deletes all buckets on the server.
+         * Deletes buckets.
          *
-         * @ignore
-         * @param  {Object}  [options={}]            The options object.
+         * @param  {Object} [options={}]             The options object.
          * @param  {Boolean} [options.safe]          The safe option.
-         * @param  {Object}  [options.headers]       The headers object option.
+         * @param  {Object} [options.headers={}]     Headers to use when making
+         *     this request.
+         * @param  {Number} [options.retry=0]        Number of retries to make
+         *     when faced with transient errors.
+         * @param  {Object} [options.filters={}]     The filters object.
+         * @param  {Array}  [options.fields]         Limit response to
+         *     just some fields.
          * @param  {Number}  [options.last_modified] The last_modified option.
-         * @return {Promise<Object, Error>}
+         * @return {Promise<Object[], Error>}
          */
         async deleteBuckets(options = {}) {
             const path = ENDPOINTS.bucket();
-            return this.execute(deleteRequest(path, {
-                last_modified: options.last_modified,
+            return this.paginatedDelete(path, options, {
                 headers: this._getHeaders(options),
-                safe: this._getSafe(options),
-            }), { retry: this._getRetry(options) });
+                retry: this._getRetry(options),
+                safe: options.safe,
+                last_modified: options.last_modified,
+            });
         }
         async createAccount(username, password) {
             return this.execute(createRequest(`/accounts/${username}`, { data: { password } }, { method: "PUT" }));
