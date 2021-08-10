@@ -807,22 +807,36 @@ Matrix4x4 gfxUtils::SnapTransformTranslation(const Matrix4x4& aTransform,
   Matrix matrix2D;
   if (aTransform.CanDraw2D(&matrix2D) && !matrix2D.HasNonTranslation() &&
       matrix2D.HasNonIntegerTranslation()) {
-    auto snappedTranslation = IntPoint::Round(matrix2D.GetTranslation());
+    return Matrix4x4::From2D(
+        SnapTransformTranslation(matrix2D, aResidualTransform));
+  }
+
+  return SnapTransformTranslation3D(aTransform, aResidualTransform);
+}
+
+Matrix gfxUtils::SnapTransformTranslation(const Matrix& aTransform,
+                                          Matrix* aResidualTransform) {
+  if (aResidualTransform) {
+    *aResidualTransform = Matrix();
+  }
+
+  if (!aTransform.HasNonTranslation() &&
+      aTransform.HasNonIntegerTranslation()) {
+    auto snappedTranslation = IntPoint::Round(aTransform.GetTranslation());
     Matrix snappedMatrix =
         Matrix::Translation(snappedTranslation.x, snappedTranslation.y);
-    Matrix4x4 result = Matrix4x4::From2D(snappedMatrix);
     if (aResidualTransform) {
       // set aResidualTransform so that aResidual * snappedMatrix == matrix2D.
       // (I.e., appying snappedMatrix after aResidualTransform gives the
       // ideal transform.)
       *aResidualTransform =
-          Matrix::Translation(matrix2D._31 - snappedTranslation.x,
-                              matrix2D._32 - snappedTranslation.y);
+          Matrix::Translation(aTransform._31 - snappedTranslation.x,
+                              aTransform._32 - snappedTranslation.y);
     }
-    return result;
+    return snappedMatrix;
   }
 
-  return SnapTransformTranslation3D(aTransform, aResidualTransform);
+  return aTransform;
 }
 
 Matrix4x4 gfxUtils::SnapTransformTranslation3D(const Matrix4x4& aTransform,
@@ -895,33 +909,44 @@ Matrix4x4 gfxUtils::SnapTransform(const Matrix4x4& aTransform,
   }
 
   Matrix matrix2D;
-  Matrix4x4 result;
-  if (aTransform.Is2D(&matrix2D) && gfxSize(1.0, 1.0) <= aSnapRect.Size() &&
-      matrix2D.PreservesAxisAlignedRectangles()) {
-    auto transformedTopLeft =
-        IntPoint::Round(matrix2D.TransformPoint(ToPoint(aSnapRect.TopLeft())));
-    auto transformedTopRight =
-        IntPoint::Round(matrix2D.TransformPoint(ToPoint(aSnapRect.TopRight())));
+  if (aTransform.Is2D(&matrix2D)) {
+    return Matrix4x4::From2D(
+        SnapTransform(matrix2D, aSnapRect, aResidualTransform));
+  }
+  return aTransform;
+}
+
+Matrix gfxUtils::SnapTransform(const Matrix& aTransform,
+                               const gfxRect& aSnapRect,
+                               Matrix* aResidualTransform) {
+  if (aResidualTransform) {
+    *aResidualTransform = Matrix();
+  }
+
+  if (gfxSize(1.0, 1.0) <= aSnapRect.Size() &&
+      aTransform.PreservesAxisAlignedRectangles()) {
+    auto transformedTopLeft = IntPoint::Round(
+        aTransform.TransformPoint(ToPoint(aSnapRect.TopLeft())));
+    auto transformedTopRight = IntPoint::Round(
+        aTransform.TransformPoint(ToPoint(aSnapRect.TopRight())));
     auto transformedBottomRight = IntPoint::Round(
-        matrix2D.TransformPoint(ToPoint(aSnapRect.BottomRight())));
+        aTransform.TransformPoint(ToPoint(aSnapRect.BottomRight())));
 
     Matrix snappedMatrix = gfxUtils::TransformRectToRect(
         aSnapRect, transformedTopLeft, transformedTopRight,
         transformedBottomRight);
 
-    result = Matrix4x4::From2D(snappedMatrix);
     if (aResidualTransform && !snappedMatrix.IsSingular()) {
       // set aResidualTransform so that aResidual * snappedMatrix == matrix2D.
       // (i.e., appying snappedMatrix after aResidualTransform gives the
       // ideal transform.
       Matrix snappedMatrixInverse = snappedMatrix;
       snappedMatrixInverse.Invert();
-      *aResidualTransform = matrix2D * snappedMatrixInverse;
+      *aResidualTransform = aTransform * snappedMatrixInverse;
     }
-  } else {
-    result = aTransform;
+    return snappedMatrix;
   }
-  return result;
+  return aTransform;
 }
 
 /* static */
