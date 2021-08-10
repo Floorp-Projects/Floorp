@@ -82,7 +82,12 @@ async function step2(event)
   // get duplicate events, simultaneously, so we need to register our
   // next listener after a zero timeout.
   await SpecialPowers.pushPrefEnv({'set': [['dom.send_after_paint_to_content', false]]});
-  await SpecialPowers.promiseTimeout(0);
+
+  // Wait for a double-rAF, to ensure we get a refresh driver tick (which, for
+  // this pref, is what actually makes the pref-adjustment take effect).
+  await new Promise(resolve  => requestAnimationFrame(resolve));
+  await new Promise(resolve  => requestAnimationFrame(resolve));
+
   setTimeout(step3, 0, timeout);
 }
 function step3(timeout)
