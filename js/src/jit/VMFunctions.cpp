@@ -10,6 +10,7 @@
 
 #include "builtin/MapObject.h"
 #include "builtin/String.h"
+#include "ds/OrderedHashTable.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Cell.h"
 #include "jit/arm/Simulator-arm.h"
@@ -2831,6 +2832,32 @@ bool MapObjectHas(JSContext* cx, HandleObject obj, HandleValue key,
 bool MapObjectGet(JSContext* cx, HandleObject obj, HandleValue key,
                   MutableHandleValue rval) {
   return MapObject::get(cx, obj, key, rval);
+}
+
+#ifdef DEBUG
+template <class OrderedHashTable>
+static mozilla::HashNumber HashValue(JSContext* cx, OrderedHashTable* hashTable,
+                                     const Value* value) {
+  RootedValue rootedValue(cx, *value);
+  HashableValue hashable;
+  MOZ_ALWAYS_TRUE(hashable.setValue(cx, rootedValue));
+
+  return hashTable->hash(hashable);
+}
+#endif
+
+void AssertSetObjectHash(JSContext* cx, SetObject* obj, const Value* value,
+                         mozilla::HashNumber actualHash) {
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(actualHash == HashValue(cx, obj->getData(), value));
+}
+
+void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
+                         mozilla::HashNumber actualHash) {
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(actualHash == HashValue(cx, obj->getData(), value));
 }
 
 void AssumeUnreachable(const char* output) {
