@@ -1,41 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.preference.Preference
-        android:icon="@drawable/ic_settings"
+        app:iconSpaceReserved="false"
         android:key="@string/pref_key_general_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_general_summary"
         android:title="@string/preference_category_general" />
 
     <androidx.preference.Preference
-        android:icon="@drawable/ic_lock"
+        app:iconSpaceReserved="false"
         android:key="@string/pref_key_privacy_security_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_privacy_and_security_summary"
         android:title="@string/preference_privacy_and_security_header" />
 
     <androidx.preference.Preference
-        android:icon="@drawable/ic_search"
+        app:iconSpaceReserved="false"
         android:key="@string/pref_key_search_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_search_summary"
         android:title="@string/preference_category_search" />
 
     <androidx.preference.Preference
-        android:icon="@drawable/ic_developer"
+        app:iconSpaceReserved="false"
         android:key="@string/pref_key_advanced_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_advanced_summary"
         android:title="@string/preference_category_advanced" />
 
     <org.mozilla.focus.widget.MozillaPreference
-        android:icon="@drawable/ic_mozilla"
+        app:iconSpaceReserved="false"
         android:key="@string/pref_key_mozilla_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_mozilla_summary"
-        android:title="@string/preference_category_mozilla" />
+        android:title="@string/preference_category_mozilla"
+        app:allowDividerAbove="false"/>
 
 </androidx.preference.PreferenceScreen>

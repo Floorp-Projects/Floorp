@@ -13,14 +13,14 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/photonInk90"/>
+        android:background="@color/settings_background"/>
 
     <FrameLayout
         android:id="@android:id/list_container"
         android:layout_width="match_parent"
         android:layout_height="0px"
         android:layout_weight="1"
-        android:background="@color/photonInk80"
+        android:background="@color/settings_background"
         tools:targetApi="n" />
 
 </LinearLayout>

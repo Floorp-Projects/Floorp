@@ -116,4 +116,10 @@
 
     <color name="settings_summary_text">#ffbbbcc5</color>
     <color name="settings_whats_new">#FFFF1AD9</color>
+
+    <!-- Preferences -->
+    <color name="preference_title_text">#FBFBFE</color>
+    <color name="preference_summary_text">#BFBFC9</color>
+    <color name="settings_background">#1D1133</color>
+
 </resources>
