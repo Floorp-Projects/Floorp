@@ -1095,6 +1095,31 @@ class nsDocShell final : public nsDocLoader,
   }
   void MaybeDisconnectChildListenersOnPageHide();
 
+  /**
+   * Helper for addState and document.open that does just the
+   * history-manipulation guts.
+   *
+   * Arguments the spec defines:
+   *
+   * @param aDocument the document we're manipulating.  This will get the new
+   * URI.
+   * @param aNewURI the new URI.
+   * @param aData The serialized state data.  May be null.
+   * @param aTitle The new title.  May be empty.
+   * @param aReplace whether this should replace the exising SHEntry.
+   *
+   * Arguments we need internally because deriving them from the
+   * others is a bit complicated:
+   *
+   * @param aCurrentURI the current URI we're working with.  Might be null.
+   * @param aEqualURIs whether the two URIs involved are equal.
+   */
+  nsresult UpdateURLAndHistory(mozilla::dom::Document* aDocument,
+                               nsIURI* aNewURI,
+                               nsIStructuredCloneContainer* aData,
+                               const nsAString& aTitle, bool aReplace,
+                               nsIURI* aCurrentURI, bool aEqualURIs);
+
  private:  // data members
   nsString mTitle;
   nsCString mOriginalUriString;
@@ -1307,5 +1332,9 @@ class nsDocShell final : public nsDocLoader,
   // menu for all encodings.
   bool mForcedAutodetection : 1;
 };
+
+inline nsISupports* ToSupports(nsDocShell* aDocShell) {
+  return static_cast<nsIDocumentLoader*>(aDocShell);
+}
 
 #endif /* nsDocShell_h__ */
