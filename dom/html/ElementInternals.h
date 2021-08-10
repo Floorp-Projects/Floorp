@@ -14,6 +14,7 @@
 
 namespace mozilla {
 namespace dom {
+class ShadowRoot;
 
 class ElementInternals final : public nsISupports, public nsWrapperCache {
  public:
@@ -26,6 +27,8 @@ class ElementInternals final : public nsISupports, public nsWrapperCache {
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  ShadowRoot* GetShadowRoot() const;
 
  private:
   ~ElementInternals() = default;

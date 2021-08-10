@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ElementInternals.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla::dom {
@@ -26,6 +27,18 @@ nsISupports* ElementInternals::GetParentObject() { return ToSupports(mTarget); }
 JSObject* ElementInternals::WrapObject(JSContext* aCx,
                                        JS::Handle<JSObject*> aGivenProto) {
   return ElementInternals_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+// https://html.spec.whatwg.org/#dom-elementinternals-shadowroot
+ShadowRoot* ElementInternals::GetShadowRoot() const {
+  MOZ_ASSERT(mTarget);
+
+  ShadowRoot* shadowRoot = mTarget->GetShadowRoot();
+  if (shadowRoot && !shadowRoot->IsAvailableToElementInternals()) {
+    return nullptr;
+  }
+
+  return shadowRoot;
 }
 
 }  // namespace mozilla::dom
