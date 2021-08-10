@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef UNSAFE_FUZZER_MODE  // See Bug 1709750
-
 #include <memory>
 #include "blapi.h"
 #include "gtest/gtest.h"
@@ -15,8 +13,9 @@
 #include "pk11pub.h"
 #include "secerr.h"
 #include "sechash.h"
-#include "testvectors/hpke-vectors.h"
 #include "util.h"
+
+extern std::string g_source_dir;
 
 namespace nss_test {
 
@@ -75,8 +74,9 @@ class HpkeTest {
     CheckEquality(expected_vec, actual);
   }
 
-  void Seal(const ScopedHpkeContext &cx, std::vector<uint8_t> &aad_vec,
-            std::vector<uint8_t> &pt_vec, std::vector<uint8_t> &out_sealed) {
+  void Seal(const ScopedHpkeContext &cx, const std::vector<uint8_t> &aad_vec,
+            const std::vector<uint8_t> &pt_vec,
+            std::vector<uint8_t> *out_sealed) {
     SECItem aad_item = {siBuffer, toUcharPtr(aad_vec.data()),
                         static_cast<unsigned int>(aad_vec.size())};
     SECItem pt_item = {siBuffer, toUcharPtr(pt_vec.data()),
@@ -87,11 +87,12 @@ class HpkeTest {
               PK11_HPKE_Seal(cx.get(), &aad_item, &pt_item, &sealed_item));
     ASSERT_NE(nullptr, sealed_item);
     ScopedSECItem sealed(sealed_item);
-    out_sealed.assign(sealed->data, sealed->data + sealed->len);
+    out_sealed->assign(sealed->data, sealed->data + sealed->len);
   }
 
-  void Open(const ScopedHpkeContext &cx, std::vector<uint8_t> &aad_vec,
-            std::vector<uint8_t> &ct_vec, std::vector<uint8_t> &out_opened) {
+  void Open(const ScopedHpkeContext &cx, const std::vector<uint8_t> &aad_vec,
+            const std::vector<uint8_t> &ct_vec,
+            std::vector<uint8_t> *out_opened) {
     SECItem aad_item = {siBuffer, toUcharPtr(aad_vec.data()),
                         static_cast<unsigned int>(aad_vec.size())};
     SECItem ct_item = {siBuffer, toUcharPtr(ct_vec.data()),
@@ -101,19 +102,21 @@ class HpkeTest {
               PK11_HPKE_Open(cx.get(), &aad_item, &ct_item, &opened_item));
     ASSERT_NE(nullptr, opened_item);
     ScopedSECItem opened(opened_item);
-    out_opened.assign(opened->data, opened->data + opened->len);
+    out_opened->assign(opened->data, opened->data + opened->len);
   }
 
   void SealOpen(const ScopedHpkeContext &sender,
-                const ScopedHpkeContext &receiver, std::vector<uint8_t> &msg,
-                std::vector<uint8_t> &aad, const std::vector<uint8_t> *expect) {
+                const ScopedHpkeContext &receiver,
+                const std::vector<uint8_t> &msg,
+                const std::vector<uint8_t> &aad,
+                const std::vector<uint8_t> *expect) {
     std::vector<uint8_t> sealed;
     std::vector<uint8_t> opened;
-    Seal(sender, aad, msg, sealed);
+    Seal(sender, aad, msg, &sealed);
     if (expect) {
       EXPECT_EQ(*expect, sealed);
     }
-    Open(receiver, aad, sealed, opened);
+    Open(receiver, aad, sealed, &opened);
     EXPECT_EQ(msg, opened);
   }
 
@@ -221,105 +224,441 @@ class HpkeTest {
   }
 };
 
-class TestVectors : public HpkeTest,
-                    public ::testing::TestWithParam<hpke_vector> {
- protected:
-  void ReadVector(const hpke_vector &vec) {
-    ScopedPK11SymKey vec_psk;
-    if (!vec.psk.empty()) {
-      ASSERT_FALSE(vec.psk_id.empty());
-      vec_psk_id = hex_string_to_bytes(vec.psk_id);
-
-      std::vector<uint8_t> psk_bytes = hex_string_to_bytes(vec.psk);
-      SECItem psk_item = {siBuffer, toUcharPtr(psk_bytes.data()),
-                          static_cast<unsigned int>(psk_bytes.size())};
-      ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-      ASSERT_TRUE(slot);
-      PK11SymKey *psk_key =
-          PK11_ImportSymKey(slot.get(), CKM_HKDF_KEY_GEN, PK11_OriginUnwrap,
-                            CKA_WRAP, &psk_item, nullptr);
-      ASSERT_NE(nullptr, psk_key);
-      vec_psk_key.reset(psk_key);
-    }
-
-    vec_pkcs8_r = hex_string_to_bytes(vec.pkcs8_r);
-    vec_pkcs8_e = hex_string_to_bytes(vec.pkcs8_e);
-    vec_key = hex_string_to_bytes(vec.key);
-    vec_nonce = hex_string_to_bytes(vec.nonce);
-    vec_enc = hex_string_to_bytes(vec.enc);
-    vec_info = hex_string_to_bytes(vec.info);
-    vec_encryptions = vec.encrypt_vecs;
-    vec_exports = vec.export_vecs;
+// If we make a few assumptions about the file, parsing JSON can be easy.
+// This is not a full parser, it only works on a narrow set of inputs.
+class JsonReader {
+ public:
+  JsonReader(const std::string &n) : buf_(), available_(0), i_(0) {
+    f_.reset(PR_Open(n.c_str(), PR_RDONLY, 00600));
+    EXPECT_TRUE(f_) << "error opening vectors from: " << n;
+    buf_[0] = 0;
   }
 
-  void TestExports(const ScopedHpkeContext &sender,
-                   const ScopedHpkeContext &receiver) {
-    for (auto &vec : vec_exports) {
-      std::vector<uint8_t> context = hex_string_to_bytes(vec.ctxt);
-      std::vector<uint8_t> expected = hex_string_to_bytes(vec.exported);
-      SECItem context_item = {siBuffer, toUcharPtr(context.data()),
-                              static_cast<unsigned int>(context.size())};
-      PK11SymKey *actual_r = nullptr;
-      PK11SymKey *actual_s = nullptr;
-      ASSERT_EQ(SECSuccess, PK11_HPKE_ExportSecret(sender.get(), &context_item,
-                                                   vec.len, &actual_s));
-      ASSERT_EQ(SECSuccess,
-                PK11_HPKE_ExportSecret(receiver.get(), &context_item, vec.len,
-                                       &actual_r));
-      ScopedPK11SymKey scoped_act_s(actual_s);
-      ScopedPK11SymKey scoped_act_r(actual_r);
-      CheckEquality(expected, scoped_act_s.get());
-      CheckEquality(expected, scoped_act_r.get());
+  void next() { i_++; }
+  uint8_t peek() {
+    TopUp();
+    return buf_[i_];
+  }
+  uint8_t take() {
+    uint8_t v = peek();
+    next();
+    return v;
+  }
+
+  // No input checking, overflow protection, or any safety.
+  // Returns 0 if there isn't a number here rather than aborting.
+  uint64_t ReadInt() {
+    SkipWhitespace();
+    uint8_t c = peek();
+    uint64_t v = 0;
+    while (c >= '0' && c <= '9') {
+      v = v * 10 + c - '0';
+      next();
+      c = peek();
+    }
+    return v;
+  }
+
+  // No input checking, no unicode, no escaping (not even \"), just read ASCII.
+  std::string ReadLabel() {
+    SkipWhitespace();
+    if (peek() != '"') {
+      return "";
+    }
+    next();
+
+    std::string s;
+    uint8_t c = take();
+    while (c != '"') {
+      s.push_back(c);
+      c = take();
+    }
+    SkipWhitespace();
+    EXPECT_EQ(take(), ':');
+    return s;
+  }
+
+  std::vector<uint8_t> ReadHex() {
+    SkipWhitespace();
+    uint8_t c = take();
+    EXPECT_EQ(c, '"');
+    std::vector<uint8_t> v;
+    c = take();
+    while (c != '"') {
+      v.push_back(JsonReader::Hex(c) << 4 | JsonReader::Hex(take()));
+      c = take();
+    }
+    return v;
+  }
+
+  bool NextItem(uint8_t h = '{', uint8_t t = '}') {
+    SkipWhitespace();
+    switch (uint8_t c = take()) {
+      case ',':
+        return true;
+      case '{':
+      case '[':
+        EXPECT_EQ(c, h);
+        SkipWhitespace();
+        if (peek() == t) {
+          next();
+          return false;
+        }
+        return true;
+      case '}':
+      case ']':
+        EXPECT_EQ(c, t);
+        return false;
+      default:
+        ADD_FAILURE() << "Unexpected '" << c << "'";
+    }
+    return false;
+  }
+
+  void SkipValue() {
+    uint8_t c = take();
+    if (c == '"') {
+      do {
+        c = take();
+      } while (c != '"');
+    } else if (c >= '0' && c <= '9') {
+      c = peek();
+      while (c >= '0' && c <= '9') {
+        next();
+        c = peek();
+      }
+    } else {
+      ADD_FAILURE() << "No idea how to skip'" << c << "'";
     }
   }
 
-  void TestEncryptions(const ScopedHpkeContext &sender,
-                       const ScopedHpkeContext &receiver) {
-    for (auto &enc_vec : vec_encryptions) {
-      std::vector<uint8_t> msg = hex_string_to_bytes(enc_vec.pt);
-      std::vector<uint8_t> aad = hex_string_to_bytes(enc_vec.aad);
-      std::vector<uint8_t> expect_ct = hex_string_to_bytes(enc_vec.ct);
-      SealOpen(sender, receiver, msg, aad, &expect_ct);
-    }
-  }
-
-  void ImportKeyPairs(const ScopedHpkeContext &sender,
-                      const ScopedHpkeContext &receiver) {
-    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-    if (!slot) {
-      ADD_FAILURE() << "No slot";
+ private:
+  void TopUp() {
+    if (available_ > i_) {
       return;
     }
+    i_ = 0;
+    if (!f_) {
+      return;
+    }
+    PRInt32 res = PR_Read(f_.get(), buf_, sizeof(buf_));
+    if (res > 0) {
+      available_ = static_cast<size_t>(res);
+    } else {
+      available_ = 1;
+      f_.reset(nullptr);
+      buf_[0] = 0;
+    }
+  }
 
-    SECItem pkcs8_e_item = {siBuffer, toUcharPtr(vec_pkcs8_e.data()),
-                            static_cast<unsigned int>(vec_pkcs8_e.size())};
-    SECKEYPrivateKey *sk_e = nullptr;
-    EXPECT_EQ(SECSuccess, PK11_ImportDERPrivateKeyInfoAndReturnKey(
-                              slot.get(), &pkcs8_e_item, nullptr, nullptr,
-                              false, false, KU_ALL, &sk_e, nullptr));
-    skE_derived.reset(sk_e);
-    SECKEYPublicKey *pk_e = SECKEY_ConvertToPublicKey(skE_derived.get());
-    ASSERT_NE(nullptr, pk_e);
-    pkE_derived.reset(pk_e);
+  void SkipWhitespace() {
+    uint8_t c = peek();
+    while (c && (c == ' ' || c == '\t' || c == '\r' || c == '\n')) {
+      next();
+      c = peek();
+    }
+  }
 
-    SECItem pkcs8_r_item = {siBuffer, toUcharPtr(vec_pkcs8_r.data()),
-                            static_cast<unsigned int>(vec_pkcs8_r.size())};
-    SECKEYPrivateKey *sk_r = nullptr;
-    EXPECT_EQ(SECSuccess, PK11_ImportDERPrivateKeyInfoAndReturnKey(
-                              slot.get(), &pkcs8_r_item, nullptr, nullptr,
-                              false, false, KU_ALL, &sk_r, nullptr));
-    skR_derived.reset(sk_r);
-    SECKEYPublicKey *pk_r = SECKEY_ConvertToPublicKey(skR_derived.get());
-    ASSERT_NE(nullptr, pk_r);
-    pkR_derived.reset(pk_r);
+  // This only handles lowercase.
+  uint8_t Hex(uint8_t c) {
+    if (c >= '0' && c <= '9') {
+      return c - '0';
+    }
+    EXPECT_TRUE(c >= 'a' && c <= 'f');
+    return c - 'a' + 10;
+  }
+
+  ScopedPRFileDesc f_;
+  uint8_t buf_[4096];
+  size_t available_;
+  size_t i_;
+};
+
+struct HpkeEncryptVector {
+  std::vector<uint8_t> pt;
+  std::vector<uint8_t> aad;
+  std::vector<uint8_t> ct;
+
+  static std::vector<HpkeEncryptVector> ReadVec(JsonReader &r) {
+    std::vector<HpkeEncryptVector> all;
+
+    while (r.NextItem('[', ']')) {
+      HpkeEncryptVector enc;
+      while (r.NextItem()) {
+        std::string n = r.ReadLabel();
+        if (n == "") {
+          break;
+        }
+        if (n == "plaintext") {
+          enc.pt = r.ReadHex();
+        } else if (n == "aad") {
+          enc.aad = r.ReadHex();
+        } else if (n == "ciphertext") {
+          enc.ct = r.ReadHex();
+        } else {
+          r.SkipValue();
+        }
+      }
+      all.push_back(enc);
+    }
+
+    return all;
+  }
+};
+
+struct HpkeExportVector {
+  std::vector<uint8_t> ctxt;
+  size_t len;
+  std::vector<uint8_t> exported;
+
+  static std::vector<HpkeExportVector> ReadVec(JsonReader &r) {
+    std::vector<HpkeExportVector> all;
+
+    while (r.NextItem('[', ']')) {
+      HpkeExportVector exp;
+      while (r.NextItem()) {
+        std::string n = r.ReadLabel();
+        if (n == "") {
+          break;
+        }
+        if (n == "exporter_context") {
+          exp.ctxt = r.ReadHex();
+        } else if (n == "L") {
+          exp.len = r.ReadInt();
+        } else if (n == "exported_value") {
+          exp.exported = r.ReadHex();
+        } else {
+          r.SkipValue();
+        }
+      }
+      all.push_back(exp);
+    }
+
+    return all;
+  }
+};
+
+struct HpkeVector {
+  uint32_t test_id;
+  HpkeModeId mode;
+  HpkeKemId kem_id;
+  HpkeKdfId kdf_id;
+  HpkeAeadId aead_id;
+  std::vector<uint8_t> info;
+  std::vector<uint8_t> pkcs8_e;
+  std::vector<uint8_t> pkcs8_r;
+  std::vector<uint8_t> psk;
+  std::vector<uint8_t> psk_id;
+  std::vector<uint8_t> enc;
+  std::vector<uint8_t> key;
+  std::vector<uint8_t> nonce;
+  std::vector<HpkeEncryptVector> encryptions;
+  std::vector<HpkeExportVector> exports;
+
+  static std::vector<uint8_t> Pkcs8(const std::vector<uint8_t> &sk,
+                                    const std::vector<uint8_t> &pk) {
+    // Only X25519 format.
+    std::vector<uint8_t> v(105);
+    v.assign({
+        0x30, 0x67, 0x02, 0x01, 0x00, 0x30, 0x14, 0x06, 0x07, 0x2a, 0x86, 0x48,
+        0xce, 0x3d, 0x02, 0x01, 0x06, 0x09, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xda,
+        0x47, 0x0f, 0x01, 0x04, 0x4c, 0x30, 0x4a, 0x02, 0x01, 0x01, 0x04, 0x20,
+    });
+    v.insert(v.end(), sk.begin(), sk.end());
+    v.insert(v.end(), {
+                          0xa1, 0x23, 0x03, 0x21, 0x00,
+                      });
+    v.insert(v.end(), pk.begin(), pk.end());
+    return v;
+  }
+
+  static std::vector<HpkeVector> Read(JsonReader &r) {
+    std::vector<HpkeVector> all_tests;
+    uint32_t test_id = 0;
+
+    while (r.NextItem('[', ']')) {
+      HpkeVector vec = { 0 };
+      uint32_t fields = 0;
+      enum class RequiredFields {
+        mode,
+        kem,
+        kdf,
+        aead,
+        skEm,
+        skRm,
+        pkEm,
+        pkRm,
+        all
+      };
+      std::vector<uint8_t> sk_e, pk_e, sk_r, pk_r;
+      test_id++;
+
+      while (r.NextItem()) {
+        std::string n = r.ReadLabel();
+        if (n == "") {
+          break;
+        }
+        if (n == "mode") {
+          vec.mode = static_cast<HpkeModeId>(r.ReadInt());
+          fields |= 1 << static_cast<uint32_t>(RequiredFields::mode);
+        } else if (n == "kem_id") {
+          vec.kem_id = static_cast<HpkeKemId>(r.ReadInt());
+          fields |= 1 << static_cast<uint32_t>(RequiredFields::kem);
+        } else if (n == "kdf_id") {
+          vec.kdf_id = static_cast<HpkeKdfId>(r.ReadInt());
+          fields |= 1 << static_cast<uint32_t>(RequiredFields::kdf);
+        } else if (n == "aead_id") {
+          vec.aead_id = static_cast<HpkeAeadId>(r.ReadInt());
+          fields |= 1 << static_cast<uint32_t>(RequiredFields::aead);
+        } else if (n == "info") {
+          vec.info = r.ReadHex();
+        } else if (n == "skEm") {
+          sk_e = r.ReadHex();
+          fields |= 1 << static_cast<uint32_t>(RequiredFields::skEm);
+        } else if (n == "pkEm") {
+          pk_e = r.ReadHex();
+          fields |= 1 << static_cast<uint32_t>(RequiredFields::pkEm);
+        } else if (n == "skRm") {
+          sk_r = r.ReadHex();
+          fields |= 1 << static_cast<uint32_t>(RequiredFields::skRm);
+        } else if (n == "pkRm") {
+          pk_r = r.ReadHex();
+          fields |= 1 << static_cast<uint32_t>(RequiredFields::pkRm);
+        } else if (n == "psk") {
+          vec.psk = r.ReadHex();
+        } else if (n == "psk_id") {
+          vec.psk_id = r.ReadHex();
+        } else if (n == "enc") {
+          vec.enc = r.ReadHex();
+        } else if (n == "key") {
+          vec.key = r.ReadHex();
+        } else if (n == "base_nonce") {
+          vec.nonce = r.ReadHex();
+        } else if (n == "encryptions") {
+          vec.encryptions = HpkeEncryptVector::ReadVec(r);
+        } else if (n == "exports") {
+          vec.exports = HpkeExportVector::ReadVec(r);
+        } else {
+          r.SkipValue();
+        }
+      }
+
+      if (fields != (1 << static_cast<uint32_t>(RequiredFields::all)) - 1) {
+        std::cerr << "Skipping entry " << test_id << " for missing fields"
+                  << std::endl;
+        continue;
+      }
+      // Skip modes and configurations we don't support.
+      if (vec.mode != HpkeModeBase && vec.mode != HpkeModePsk) {
+        continue;
+      }
+      SECStatus rv =
+          PK11_HPKE_ValidateParameters(vec.kem_id, vec.kdf_id, vec.aead_id);
+      if (rv != SECSuccess) {
+        continue;
+      }
+
+      vec.test_id = test_id;
+      vec.pkcs8_e = HpkeVector::Pkcs8(sk_e, pk_e);
+      vec.pkcs8_r = HpkeVector::Pkcs8(sk_r, pk_r);
+      all_tests.push_back(vec);
+    }
+
+    return all_tests;
+  }
+};
+
+class TestVectors : public HpkeTest, public ::testing::Test {
+  struct Endpoint {
+    bool init(const HpkeVector &vec, const std::vector<uint8_t> &sk_data) {
+      ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+      if (!slot) {
+        ADD_FAILURE() << "No slot";
+        return false;
+      }
+
+      cx_ = Endpoint::MakeContext(slot, vec);
+
+      SECItem item = {siBuffer, toUcharPtr(sk_data.data()),
+                      static_cast<unsigned int>(sk_data.size())};
+      SECKEYPrivateKey *sk = nullptr;
+      SECStatus rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
+          slot.get(), &item, nullptr, nullptr, false, false, KU_ALL, &sk,
+          nullptr);
+      if (rv != SECSuccess) {
+        ADD_FAILURE() << "Failed to import secret";
+        return false;
+      }
+      sk_.reset(sk);
+      SECKEYPublicKey *pk = SECKEY_ConvertToPublicKey(sk_.get());
+      pk_.reset(pk);
+      return cx_ && sk_ && pk_;
+    }
+
+    static ScopedHpkeContext MakeContext(const ScopedPK11SlotInfo &slot,
+                                         const HpkeVector &vec) {
+      ScopedPK11SymKey psk = Endpoint::ReadPsk(slot, vec);
+      SECItem psk_id_item = {siBuffer, toUcharPtr(vec.psk_id.data()),
+                             static_cast<unsigned int>(vec.psk_id.size())};
+      SECItem *psk_id = psk ? &psk_id_item : nullptr;
+      return ScopedHpkeContext(PK11_HPKE_NewContext(
+          vec.kem_id, vec.kdf_id, vec.aead_id, psk.get(), psk_id));
+    }
+
+    static ScopedPK11SymKey ReadPsk(const ScopedPK11SlotInfo &slot,
+                                    const HpkeVector &vec) {
+      ScopedPK11SymKey psk;
+      if (!vec.psk.empty()) {
+        SECItem psk_item = {siBuffer, toUcharPtr(vec.psk.data()),
+                            static_cast<unsigned int>(vec.psk.size())};
+        PK11SymKey *psk_key =
+            PK11_ImportSymKey(slot.get(), CKM_HKDF_KEY_GEN, PK11_OriginUnwrap,
+                              CKA_WRAP, &psk_item, nullptr);
+        EXPECT_NE(nullptr, psk_key);
+        psk.reset(psk_key);
+      }
+      return psk;
+    }
+
+    ScopedHpkeContext cx_;
+    ScopedSECKEYPublicKey pk_;
+    ScopedSECKEYPrivateKey sk_;
+  };
+
+ protected:
+  void TestExports(const HpkeVector &vec, const Endpoint &sender,
+                   const Endpoint &receiver) {
+    for (auto &exp : vec.exports) {
+      SECItem context_item = {siBuffer, toUcharPtr(exp.ctxt.data()),
+                              static_cast<unsigned int>(exp.ctxt.size())};
+      PK11SymKey *actual_r = nullptr;
+      PK11SymKey *actual_s = nullptr;
+      ASSERT_EQ(SECSuccess,
+                PK11_HPKE_ExportSecret(sender.cx_.get(), &context_item, exp.len,
+                                       &actual_s));
+      ASSERT_EQ(SECSuccess,
+                PK11_HPKE_ExportSecret(receiver.cx_.get(), &context_item,
+                                       exp.len, &actual_r));
+      ScopedPK11SymKey scoped_act_s(actual_s);
+      ScopedPK11SymKey scoped_act_r(actual_r);
+      CheckEquality(exp.exported, scoped_act_s.get());
+      CheckEquality(exp.exported, scoped_act_r.get());
+    }
+  }
+
+  void TestEncryptions(const HpkeVector &vec, const Endpoint &sender,
+                       const Endpoint &receiver) {
+    for (auto &enc : vec.encryptions) {
+      SealOpen(sender.cx_, receiver.cx_, enc.pt, enc.aad, &enc.ct);
+    }
   }
 
   void SetupS(const ScopedHpkeContext &cx, const ScopedSECKEYPublicKey &pkE,
               const ScopedSECKEYPrivateKey &skE,
               const ScopedSECKEYPublicKey &pkR,
               const std::vector<uint8_t> &info) {
-    SECItem info_item = {siBuffer, toUcharPtr(vec_info.data()),
-                         static_cast<unsigned int>(vec_info.size())};
+    SECItem info_item = {siBuffer, toUcharPtr(info.data()),
+                         static_cast<unsigned int>(info.size())};
     EXPECT_EQ(SECSuccess, PK11_HPKE_SetupS(cx.get(), pkE.get(), skE.get(),
                                            pkR.get(), &info_item));
   }
@@ -330,65 +669,43 @@ class TestVectors : public HpkeTest,
               const std::vector<uint8_t> &info) {
     SECItem enc_item = {siBuffer, toUcharPtr(enc.data()),
                         static_cast<unsigned int>(enc.size())};
-    SECItem info_item = {siBuffer, toUcharPtr(vec_info.data()),
-                         static_cast<unsigned int>(vec_info.size())};
+    SECItem info_item = {siBuffer, toUcharPtr(info.data()),
+                         static_cast<unsigned int>(info.size())};
     EXPECT_EQ(SECSuccess, PK11_HPKE_SetupR(cx.get(), pkR.get(), skR.get(),
                                            &enc_item, &info_item));
   }
 
-  void SetupSenderReceiver(const ScopedHpkeContext &sender,
-                           const ScopedHpkeContext &receiver) {
-    SetupS(sender, pkE_derived, skE_derived, pkR_derived, vec_info);
+  void SetupSenderReceiver(const HpkeVector &vec, const Endpoint &sender,
+                           const Endpoint &receiver) {
+    SetupS(sender.cx_, sender.pk_, sender.sk_, receiver.pk_, vec.info);
     uint8_t buf[32];  // Curve25519 only, fixed size.
     SECItem encap_item = {siBuffer, const_cast<uint8_t *>(buf), sizeof(buf)};
-    ASSERT_EQ(SECSuccess,
-              PK11_HPKE_Serialize(pkE_derived.get(), encap_item.data,
-                                  &encap_item.len, encap_item.len));
-    CheckEquality(vec_enc, &encap_item);
-    SetupR(receiver, pkR_derived, skR_derived, vec_enc, vec_info);
+    ASSERT_EQ(SECSuccess, PK11_HPKE_Serialize(sender.pk_.get(), encap_item.data,
+                                              &encap_item.len, encap_item.len));
+    CheckEquality(vec.enc, &encap_item);
+    SetupR(receiver.cx_, receiver.pk_, receiver.sk_, vec.enc, vec.info);
   }
 
-  void RunTestVector(const hpke_vector &vec) {
-    ReadVector(vec);
-    SECItem psk_id_item = {siBuffer, toUcharPtr(vec_psk_id.data()),
-                           static_cast<unsigned int>(vec_psk_id.size())};
-    PK11SymKey *psk = vec_psk_key ? vec_psk_key.get() : nullptr;
-    SECItem *psk_id = psk ? &psk_id_item : nullptr;
+  void RunTestVector(const HpkeVector &vec) {
+    Endpoint sender;
+    ASSERT_TRUE(sender.init(vec, vec.pkcs8_e));
+    Endpoint receiver;
+    ASSERT_TRUE(receiver.init(vec, vec.pkcs8_r));
 
-    ScopedHpkeContext sender(
-        PK11_HPKE_NewContext(vec.kem_id, vec.kdf_id, vec.aead_id, psk, psk_id));
-    ScopedHpkeContext receiver(
-        PK11_HPKE_NewContext(vec.kem_id, vec.kdf_id, vec.aead_id, psk, psk_id));
-    ASSERT_TRUE(sender);
-    ASSERT_TRUE(receiver);
-
-    ImportKeyPairs(sender, receiver);
-    SetupSenderReceiver(sender, receiver);
-    TestEncryptions(sender, receiver);
-    TestExports(sender, receiver);
+    SetupSenderReceiver(vec, sender, receiver);
+    TestEncryptions(vec, sender, receiver);
+    TestExports(vec, sender, receiver);
   }
-
- private:
-  ScopedPK11SymKey vec_psk_key;
-  std::vector<uint8_t> vec_psk_id;
-  std::vector<uint8_t> vec_pkcs8_e;
-  std::vector<uint8_t> vec_pkcs8_r;
-  std::vector<uint8_t> vec_enc;
-  std::vector<uint8_t> vec_info;
-  std::vector<uint8_t> vec_key;
-  std::vector<uint8_t> vec_nonce;
-  std::vector<hpke_encrypt_vector> vec_encryptions;
-  std::vector<hpke_export_vector> vec_exports;
-  ScopedSECKEYPublicKey pkE_derived;
-  ScopedSECKEYPublicKey pkR_derived;
-  ScopedSECKEYPrivateKey skE_derived;
-  ScopedSECKEYPrivateKey skR_derived;
 };
 
-TEST_P(TestVectors, TestVectors) { RunTestVector(GetParam()); }
-
-INSTANTIATE_TEST_SUITE_P(Pk11Hpke, TestVectors,
-                         ::testing::ValuesIn(kHpkeTestVectors));
+TEST_F(TestVectors, HpkeVectors) {
+  JsonReader r(::g_source_dir + "/hpke-vectors.json");
+  auto all_tests = HpkeVector::Read(r);
+  for (auto &vec : all_tests) {
+    std::cout << "HPKE vector " << vec.test_id << std::endl;
+    RunTestVector(vec);
+  }
+}
 
 class ModeParameterizedTest
     : public HpkeTest,
@@ -685,5 +1002,3 @@ TEST_F(ModeParameterizedTest, InvalidReceiverKeyType) {
 }
 
 }  // namespace nss_test
-
-#endif

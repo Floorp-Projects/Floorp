@@ -75,6 +75,7 @@ Echo()
     echo "| $*"
     echo "---------------------------------------------------------------"
 }
+
 dbtest_main()
 {
     cd ${HOSTDIR}
@@ -249,9 +250,9 @@ dbtest_main()
     ${BINDIR}/certutil -L -n bob -d ${CONFLICT_DIR}
     ret=$?
     if [ $ret -ne 0 ]; then
-      html_failed "Nicknane conflict test-setting nickname conflict incorrectly worked"
+      html_failed "Nickname conflict test-setting nickname conflict incorrectly worked"
     else
-      html_passed "Nicknane conflict test-setting nickname conflict was correctly rejected"
+      html_passed "Nickname conflict test-setting nickname conflict was correctly rejected"
     fi
     # import a token private key and make sure the corresponding public key is
     # created
@@ -261,6 +262,71 @@ dbtest_main()
       html_failed "Importing Token Private Key does not create the corrresponding Public Key"
     else
       html_passed "Importing Token Private Key correctly creates the corrresponding Public Key"
+    fi
+    #
+    # If we are testing an sqlite db, make sure we detect corrupted attributes.
+    # This test only runs if 1) we have sqlite3 (the command line sqlite diagnostic
+    # tool) and 2) we are using the sql database (rather than the dbm).
+    #
+    which sqlite3
+    ret=$?
+    KEYDB=${CONFLICT_DIR}/key4.db
+    # make sure sql database is bing used.
+    if [ ! -f ${KEYDB} ]; then
+      Echo "skipping key corruption test: requires sql database"
+    # make sure sqlite3 is installed.
+    elif [ $ret -ne 0 ]; then
+      Echo "skipping key corruption test: sqlite3 command not installed"
+    else
+      # we are going to mangle this key database in multiple tests, save a copy
+      # so that we can restore it later.
+      cp ${KEYDB} ${KEYDB}.save
+      # dump the keys in the log for diagnostic purposes
+      ${BINDIR}/certutil -K -d ${CONFLICT_DIR} -f ${R_PWFILE}
+      # fetch the rsa and ec key ids
+      rsa_id=$(${BINDIR}/certutil -K -d ${CONFLICT_DIR} -f ${R_PWFILE} | grep rsa | awk '{ print $4}')
+      ec_id=$(${BINDIR}/certutil -K -d ${CONFLICT_DIR} -f ${R_PWFILE} | grep ' ec ' | awk '{ print $4}')
+      # now loop through all the private attributes and mangle them one at a time
+      for i in 120 122 123 124 125 126 127 128 011
+      do
+        Echo "testing if key corruption is detected in attribute $i"
+        cp ${KEYDB}.save ${KEYDB}  # restore the saved keydb
+        # find all the hmacs for this key attribute and mangle each entry
+        sqlite3 ${KEYDB} ".dump metadata" |  sed -e "/sig_key_.*_00000$i/{s/.*VALUES('\\(.*\\)',X'\\(.*\\)',NULL.*/\\1 \\2/;p;};d" | while read sig data
+        do
+          # mangle the last byte of the hmac
+          # The following increments the last nibble by 1 with both F and f
+          # mapping to 0. This mangles both upper and lower case results, so 
+          # it will work on the mac.
+          last=$((${#data}-1))
+          newbyte=$(echo "${data:${last}}" | tr A-Fa-f0-9 B-F0b-f0-9a)
+          mangle=${data::${last}}${newbyte}
+          echo "  amending ${sig} from ${data} to ${mangle}"
+          # write the mangled entry, inserting with a key matching an existing
+          # entry will overwrite the existing entry with the same key (${sig})
+          sqlite3 ${KEYDB} "BEGIN TRANSACTION; INSERT INTO metaData VALUES('${sig}',X'${mangle}',NULL); COMMIT"
+        done
+        # pick the key based on the attribute we are mangling,
+        # only CKA_VALUE (0x011) is not an RSA attribute, so we choose
+        # ec for 0x011 and rsa for all the rest. We could use the dsa
+        # key here, both CKA_VALUE attributes will be modifed in the loop above, but
+        # ec is more common than dsa these days.
+        if [ "$i" = "011" ]; then
+            key_id=$ec_id
+        else
+            key_id=$rsa_id
+        fi
+        # now try to use the mangled key (try to create a cert request with the key).
+        echo "${BINDIR}/certutil -R -k ${key_id} -s 'CN=BadTest, E=bad@mozilla.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US' -d ${CONFLICT_DIR} -f ${R_PWFILE} -a"
+        ${BINDIR}/certutil -R -k ${key_id} -s 'CN=BadTest, E=bad@mozilla.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US' -d ${CONFLICT_DIR} -f ${R_PWFILE} -a
+        ret=$?
+        if [ ${ret} -eq 0 ]; then
+          html_failed "Key attribute $i corruption not detected"
+        else
+          html_passed "Corrupted key attribute $i correctly disabled key"
+        fi
+      done
+      cp ${KEYDB}.save ${KEYDB}  # restore the saved keydb
     fi
 
 

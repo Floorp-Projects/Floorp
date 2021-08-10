@@ -287,9 +287,12 @@ sftkdb_DecryptAttribute(SFTKDBHandle *handle, SECItem *passKey,
     }
 
     /* If we are using aes 256, we need to check authentication as well.*/
-    if ((type != CKT_INVALID_TYPE) && (cipherValue.alg == SEC_OID_AES_256_CBC)) {
+    if ((type != CKT_INVALID_TYPE) &&
+        (cipherValue.alg == SEC_OID_PKCS5_PBES2) &&
+        (cipherValue.param->encAlg == SEC_OID_AES_256_CBC)) {
         SECItem signature;
         unsigned char signData[SDB_MAX_META_DATA_LEN];
+        CK_RV crv;
 
         /* if we get here from the old legacy db, there is clearly an
          * error, don't return the plaintext */
@@ -301,15 +304,28 @@ sftkdb_DecryptAttribute(SFTKDBHandle *handle, SECItem *passKey,
 
         signature.data = signData;
         signature.len = sizeof(signData);
-        rv = sftkdb_GetAttributeSignature(handle, handle, id, type,
-                                          &signature);
-        if (rv != SECSuccess) {
-            goto loser;
+        rv = SECFailure;
+        /* sign sftkdb_GetAttriibuteSignature returns a crv, not an rv */
+        crv = sftkdb_GetAttributeSignature(handle, handle, id, type,
+                                           &signature);
+        if (crv == CKR_OK) {
+            rv = sftkdb_VerifyAttribute(handle, passKey, CK_INVALID_HANDLE,
+                                        type, *plain, &signature);
         }
-        rv = sftkdb_VerifyAttribute(handle, passKey, CK_INVALID_HANDLE, type,
-                                    *plain, &signature);
         if (rv != SECSuccess) {
-            goto loser;
+            /*  handle bug 1720226 where old versions of NSS misfiled the signature
+             *  attribute on password update */
+            id |= SFTK_KEYDB_TYPE | SFTK_TOKEN_TYPE;
+            signature.len = sizeof(signData);
+            crv = sftkdb_GetAttributeSignature(handle, handle, id, type,
+                                               &signature);
+            if (crv != CKR_OK) {
+                rv = SECFailure;
+                PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+                goto loser;
+            }
+            rv = sftkdb_VerifyAttribute(handle, passKey, CK_INVALID_HANDLE,
+                                        type, *plain, &signature);
         }
     }
 
@@ -1198,6 +1214,7 @@ sftk_updateEncrypted(PLArenaPool *arena, SFTKDBHandle *keydb,
     unsigned int i;
     for (i = 0; i < privAttrCount; i++) {
         // Read the old attribute in the clear.
+        CK_OBJECT_HANDLE sdbId = id & SFTK_OBJ_ID_MASK;
         CK_ATTRIBUTE privAttr = { privAttrTypes[i], NULL, 0 };
         CK_RV crv = sftkdb_GetAttributeValue(keydb, id, &privAttr, 1);
         if (crv != CKR_OK) {
@@ -1222,7 +1239,7 @@ sftk_updateEncrypted(PLArenaPool *arena, SFTKDBHandle *keydb,
         plainText.data = privAttr.pValue;
         plainText.len = privAttr.ulValueLen;
         if (sftkdb_EncryptAttribute(arena, keydb, keydb->db, newKey,
-                                    iterationCount, id, privAttr.type,
+                                    iterationCount, sdbId, privAttr.type,
                                     &plainText, &result) != SECSuccess) {
             return CKR_GENERAL_ERROR;
         }
@@ -1232,10 +1249,9 @@ sftk_updateEncrypted(PLArenaPool *arena, SFTKDBHandle *keydb,
         PORT_Memset(plainText.data, 0, plainText.len);
 
         // Write the newly encrypted attributes out directly.
-        CK_OBJECT_HANDLE newId = id & SFTK_OBJ_ID_MASK;
         keydb->newKey = newKey;
         keydb->newDefaultIterationCount = iterationCount;
-        crv = (*keydb->db->sdb_SetAttributeValue)(keydb->db, newId, &privAttr, 1);
+        crv = (*keydb->db->sdb_SetAttributeValue)(keydb->db, sdbId, &privAttr, 1);
         keydb->newKey = NULL;
         if (crv != CKR_OK) {
             return crv;

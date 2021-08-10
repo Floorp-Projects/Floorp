@@ -6,6 +6,15 @@
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
+// Tests are passed the location of their source directory
+// so that they can load extra resources from there.
+std::string g_source_dir;
+
+void usage(const char *progname) {
+  PR_fprintf(PR_STDERR, "Usage: %s [-s <dir>] [-d <dir> [-w]]\n", progname);
+  exit(2);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
 
@@ -13,13 +22,18 @@ int main(int argc, char **argv) {
   uint32_t flags = NSS_INIT_READONLY;
 
   for (int i = 0; i < argc; i++) {
-    if (!strcmp(argv[i], "-d")) {
+    if (!strcmp(argv[i], "-s")) {
       if (i + 1 >= argc) {
-        PR_fprintf(PR_STDERR, "Usage: %s [-d <dir> [-w]]\n", argv[0]);
-        exit(2);
+        usage(argv[0]);
       }
-      workdir = argv[i + 1];
       i++;
+      g_source_dir = argv[i];
+    } else if (!strcmp(argv[i], "-d")) {
+      if (i + 1 >= argc) {
+        usage(argv[0]);
+      }
+      i++;
+      workdir = argv[i];
     } else if (!strcmp(argv[i], "-w")) {
       flags &= ~NSS_INIT_READONLY;
     }

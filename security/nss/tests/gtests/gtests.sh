@@ -24,6 +24,8 @@ gtest_init()
 {
   cd "$(dirname "$1")"
   pwd
+  SOURCE_DIR="$PWD"/../..
+
   if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
       cd ../common
       . ./init.sh
@@ -77,7 +79,7 @@ gtest_start()
     fi
     echo "executing $i"
     ASAN_OPTIONS="$ASAN_OPTIONS:$EXTRA_ASAN_OPTIONS" "${BINDIR}/$i" \
-                 "${SOURCE_DIR}/gtests/freebl_gtest/kat/Hash_DRBG.rsp" \
+                 -s "${SOURCE_DIR}/gtests/$i" \
                  -d "$DIR" -w --gtest_output=xml:"${GTESTREPORT}" \
                               --gtest_filter="${GTESTFILTER:-*}"
     html_msg $? 0 "$i run successfully"
@@ -99,8 +101,7 @@ gtest_cleanup()
 }
 
 ################## main #################################################
-GTESTS="${GTESTS:-prng_gtest certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest softoken_gtest sysinit_gtest blake2b_gtest smime_gtest mozpkix_gtest}"
-SOURCE_DIR="$PWD"/../..
+GTESTS="${GTESTS:-certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest softoken_gtest sysinit_gtest smime_gtest mozpkix_gtest}"
 gtest_init "$0"
 gtest_start
 gtest_cleanup
