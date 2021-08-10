@@ -61,6 +61,13 @@ interface nsIEditorSpellCheck : nsISupports
   boolean       CheckCurrentWord(in AString suggestedWord);
 
   /**
+   * Check a given word then returns suggestion words via Promise if a given
+   * word is misspelled. If not misspelled, returns empty string array.
+   */
+  [implicit_jscontext]
+  Promise       suggest(in AString aCheckingWorkd, in unsigned long aMaxCount);
+
+  /**
    * Use when modally checking the document to replace a word.
    *
    * @see mozSpellChecker::CheckCurrentWord

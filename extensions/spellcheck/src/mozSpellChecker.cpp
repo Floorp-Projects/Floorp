@@ -172,6 +172,46 @@ nsresult mozSpellChecker::CheckWord(const nsAString& aWord, bool* aIsMisspelled,
   return NS_OK;
 }
 
+RefPtr<mozilla::SuggestionsPromise> mozSpellChecker::Suggest(
+    const nsAString& aWord, uint32_t aMaxCount) {
+  if (XRE_IsContentProcess()) {
+    return mEngine->SendSuggest(nsString(aWord), aMaxCount)
+        ->Then(
+            mozilla::GetCurrentSerialEventTarget(), __func__,
+            [](nsTArray<nsString>&& aSuggestions) {
+              return mozilla::SuggestionsPromise::CreateAndResolve(
+                  std::move(aSuggestions), __func__);
+            },
+            [](mozilla::ipc::ResponseRejectReason&& aReason) {
+              return mozilla::SuggestionsPromise::CreateAndReject(
+                  NS_ERROR_NOT_AVAILABLE, __func__);
+            });
+  }
+
+  if (!mSpellCheckingEngine) {
+    return mozilla::SuggestionsPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                        __func__);
+  }
+
+  bool correct;
+  nsresult rv = mSpellCheckingEngine->Check(aWord, &correct);
+  if (NS_FAILED(rv)) {
+    return mozilla::SuggestionsPromise::CreateAndReject(rv, __func__);
+  }
+  nsTArray<nsString> suggestions;
+  if (!correct) {
+    rv = mSpellCheckingEngine->Suggest(aWord, suggestions);
+    if (NS_FAILED(rv)) {
+      return mozilla::SuggestionsPromise::CreateAndReject(rv, __func__);
+    }
+    if (suggestions.Length() > aMaxCount) {
+      suggestions.TruncateLength(aMaxCount);
+    }
+  }
+  return mozilla::SuggestionsPromise::CreateAndResolve(std::move(suggestions),
+                                                       __func__);
+}
+
 nsresult mozSpellChecker::Replace(const nsAString& aOldWord,
                                   const nsAString& aNewWord,
                                   bool aAllOccurrences) {
