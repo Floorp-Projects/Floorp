@@ -32,6 +32,38 @@ namespace dom {
 
 class Element;
 
+// The logical size in pixels.
+// Note: if LogicalPixelSize have usages other than ResizeObserver in the
+// future, it might be better to change LogicalSize into a template class, and
+// use it to implement LogicalPixelSize.
+class LogicalPixelSize {
+ public:
+  LogicalPixelSize() = default;
+  LogicalPixelSize(WritingMode aWM, const gfx::Size& aSize) {
+    mSize = aSize;
+    if (aWM.IsVertical()) {
+      std::swap(mSize.width, mSize.height);
+    }
+  }
+
+  bool operator==(const LogicalPixelSize& aOther) const {
+    return mSize == aOther.mSize;
+  }
+  bool operator!=(const LogicalPixelSize& aOther) const {
+    return !(*this == aOther);
+  }
+
+  float ISize() const { return mSize.width; }
+  float BSize() const { return mSize.height; }
+  float& ISize() { return mSize.width; }
+  float& BSize() { return mSize.height; }
+
+ private:
+  // |mSize.width| represents inline-size and |mSize.height| represents
+  // block-size.
+  gfx::Size mSize;
+};
+
 // For the internal implementation in ResizeObserver. Normally, this is owned by
 // ResizeObserver.
 class ResizeObservation final : public LinkedListElement<ResizeObservation> {
@@ -55,7 +87,7 @@ class ResizeObservation final : public LinkedListElement<ResizeObservation> {
   /**
    * Update current mLastReportedSize with size from aSize.
    */
-  void UpdateLastReportedSize(const nsSize& aSize);
+  void UpdateLastReportedSize(const gfx::Size& aSize);
 
   enum class RemoveFromObserver : bool { No, Yes };
   void Unlink(RemoveFromObserver);
@@ -70,12 +102,12 @@ class ResizeObservation final : public LinkedListElement<ResizeObservation> {
 
   const ResizeObserverBoxOptions mObservedBox;
 
-  // The latest recorded size of observed target.
-  // Per the spec, observation.lastReportedSize should be entry.borderBoxSize
-  // or entry.contentBoxSize (i.e. logical size), instead of entry.contentRect
-  // (i.e. physical rect), so we store this as LogicalSize.
-  LogicalSize mLastReportedSize;
-  WritingMode mLastReportedWM;
+  // The latest recorded of observed target.
+  // This will be CSS pixels for border-box/content-box, or device pixels for
+  // device-pixel-content-box.
+  // Note: We use default constructor for this because we want to start with a
+  // (0, 0) size, per the spec.
+  LogicalPixelSize mLastReportedSize;
 };
 
 /**
@@ -179,8 +211,8 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ResizeObserverEntry)
 
   ResizeObserverEntry(nsISupports* aOwner, Element& aTarget,
-                      const nsSize& aBorderBoxSize,
-                      const nsSize& aContentBoxSize)
+                      const gfx::Size& aBorderBoxSize,
+                      const gfx::Size& aContentBoxSize)
       : mOwner(aOwner), mTarget(&aTarget) {
     MOZ_ASSERT(mOwner, "Need a non-null owner");
     MOZ_ASSERT(mTarget, "Need a non-null target element");
@@ -215,9 +247,9 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
   ~ResizeObserverEntry() = default;
 
   // Set borderBoxSize.
-  void SetBorderBoxSize(const nsSize& aSize);
+  void SetBorderBoxSize(const gfx::Size& aSize);
   // Set contentRect and contentBoxSize.
-  void SetContentRectAndSize(const nsSize& aSize);
+  void SetContentRectAndSize(const gfx::Size& aSize);
 
   nsCOMPtr<nsISupports> mOwner;
   nsCOMPtr<Element> mTarget;
@@ -234,7 +266,7 @@ class ResizeObserverSize final : public nsISupports, public nsWrapperCache {
 
   ResizeObserverSize(nsISupports* aOwner, const gfx::Size& aSize,
                      const WritingMode aWM)
-      : mOwner(aOwner), mSize(aSize), mWM(aWM) {
+      : mOwner(aOwner), mSize(aWM, aSize) {
     MOZ_ASSERT(mOwner, "Need a non-null owner");
   }
 
@@ -245,24 +277,17 @@ class ResizeObserverSize final : public nsISupports, public nsWrapperCache {
     return ResizeObserverSize_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  double InlineSize() const {
-    return mWM.IsVertical() ? mSize.Height() : mSize.Width();
-  }
-
-  double BlockSize() const {
-    return mWM.IsVertical() ? mSize.Width() : mSize.Height();
-  }
+  double InlineSize() const { return mSize.ISize(); }
+  double BlockSize() const { return mSize.BSize(); }
 
  protected:
   ~ResizeObserverSize() = default;
 
   nsCOMPtr<nsISupports> mOwner;
-  // The physical size value:
+  // The logical size value:
   // 1. content-box/border-box: in CSS pixels.
   // 2. device-pixel-content-box: in device pixels.
-  const gfx::Size mSize;
-  // The writing mode of |mSize|.
-  const WritingMode mWM;
+  const LogicalPixelSize mSize;
 };
 
 }  // namespace dom
