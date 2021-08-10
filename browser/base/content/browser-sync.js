@@ -982,10 +982,6 @@ var gSync = {
       document,
       "appMenu-fxa-label2"
     );
-    const appMenuAvatar = PanelMultiView.getViewNode(
-      document,
-      "appMenu-fxa-avatar"
-    );
     const appMenuHeaderText = PanelMultiView.getViewNode(
       document,
       "appMenu-fxa-text"
@@ -1008,7 +1004,6 @@ var gSync = {
     appMenuLabel.setAttribute("label", defaultLabel);
     appMenuLabel.removeAttribute("aria-labelledby");
     appMenuStatus.removeAttribute("fxastatus");
-    appMenuAvatar.style.removeProperty("list-style-image");
 
     if (status == UIState.STATUS_NOT_CONFIGURED) {
       appMenuHeaderText.hidden = false;
