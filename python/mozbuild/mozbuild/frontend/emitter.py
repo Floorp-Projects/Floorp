@@ -361,10 +361,7 @@ class TreeMetadataEmitter(LoggingMixin):
         "wasm": "SANDBOXED_WASM_LIBRARY_NAME",
     }
 
-    LIBSTDCXX_VAR = {
-        "host": "MOZ_LIBSTDCXX_HOST_VERSION",
-        "target": "MOZ_LIBSTDCXX_TARGET_VERSION",
-    }
+    ARCH_VAR = {"host": "HOST_OS_ARCH", "target": "OS_TARGET"}
 
     STDCXXCOMPAT_NAME = {"host": "host_stdc++compat", "target": "stdc++compat"}
 
@@ -394,7 +391,10 @@ class TreeMetadataEmitter(LoggingMixin):
             )
             and obj.cxx_link
         ):
-            if context.config.substs.get(self.LIBSTDCXX_VAR.get(obj.KIND)):
+            if (
+                context.config.substs.get("MOZ_STDCXX_COMPAT")
+                and context.config.substs.get(self.ARCH_VAR.get(obj.KIND)) == "Linux"
+            ):
                 self._link_library(
                     context, obj, variable, self.STDCXXCOMPAT_NAME[obj.KIND]
                 )
