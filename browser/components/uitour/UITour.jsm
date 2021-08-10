@@ -117,7 +117,7 @@ var UITour = {
         query: "#appMenu-fxa-label2",
         // This is a fake widgetName starting with the "appMenu-" prefix so we know
         // to automatically open the appMenu when annotating this target.
-        widgetName: "appMenu-fxa-label",
+        widgetName: "appMenu-fxa-label2",
       },
     ],
     [

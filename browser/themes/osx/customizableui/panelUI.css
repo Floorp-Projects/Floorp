@@ -50,16 +50,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   padding-inline-start: 18px;
 }
 
-#appMenu-fxa-status[fxastatus="signedin"] > #appMenu-fxa-label {
-  /* 18px space before the avatar, then 16px for the avatar */
-  padding-inline-start: 34px;
-  margin-inline-start: -34px;
-}
-
-#appMenu-fxa-status[fxastatus="signedin"] > #appMenu-fxa-avatar {
-  margin-inline-start: 18px;
-}
-
 .subviewbutton:not([image],[targetURI],.bookmark-item) > .menu-iconic-left {
   display: none;
 }
