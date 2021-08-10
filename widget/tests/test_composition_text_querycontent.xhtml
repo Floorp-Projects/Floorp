@@ -24,8 +24,7 @@
 // '!(GetStateBits() & NS_FRAME_FIRST_REFLOW) || (GetParent()->GetStateBits() &
 // NS_FRAME_TOO_DEEP_IN_FRAME_TREE)'" in nsTextFrame.cpp.
 // Strangely, this doesn't occur with RDP on Windows.
-// 16 assertions are: assertions in WSRunScanner::TextFragmentData::GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace()
-SimpleTest.expectAssertions(0, 3 + 16);
+SimpleTest.expectAssertions(0, 3);
 SimpleTest.waitForExplicitFinish();
 window.openDialog("window_composition_text_querycontent.xhtml", "_blank", 
                   "chrome,width=600,height=600,noopener", window);
