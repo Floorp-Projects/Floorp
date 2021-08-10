@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1723124.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1723124.</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1723124.">Mozilla Bug 1723124.</a>
+
+<iframe id="frame" src="http://example.org/chrome/dom/promise/tests/file_promise_job_with_bind_from_discarded_iframe.html"></iframe>
+
+<pre id="test">
+<script type="text/javascript">
+/** Test for Bug 1723124. **/
+SimpleTest.waitForExplicitFinish();
+
+var frame = document.getElementById("frame");
+
+SimpleTest.waitForCondition(() => {
+  var result = frame.contentDocument.getElementById("result");
+  if (!result) {
+    return false;
+  }
+  // Wait for the iframe's script to check if it has no access to SpecialPowers.
+  return result.textContent == "ok";
+}, () => {
+  var iframe_bind = frame.contentWindow.Function.prototype.bind;
+  // Removing iframe from the tree discards the browsing context,
+  // and promise jobs in the iframe global stops working.
+  frame.remove();
+
+  Promise.resolve(10)
+    .then(function (v) {
+      // Handler in top-level realm, without bind.
+      //
+      // This job is created with the top-level realm, and should be called.
+      is(v, 10, "normal function should get the value from promise");
+      return 20;
+    }, function () {
+      ok(false, "unexpectedly rejected");
+    })
+    .then(iframe_bind.call(function (bound_arg, v) {
+      // Handler in top-level realm, with bind in discarded iframe.
+      //
+      // This job is also created with the top-level realm, and should be
+      // called.
+      is(v, 20, "bound function should get the value from promise");
+      is(bound_arg, 30, "bound function should get the arguments from bind");
+      SimpleTest.finish();
+    }, this, 30), function () {
+      ok(false, "unexpectedly rejected");
+    });
+});
+</script>
+</pre>
+</body>
+</html>
