@@ -237,7 +237,6 @@ windows-tests:
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
-    - mochitest-devtools-chrome
     - mochitest-remote
     - telemetry-tests-client
     - test-verify
@@ -255,6 +254,7 @@ windows10-tests:
 
 windows10-2004-tests:
     - mochitest-chrome-gpu
+    - mochitest-devtools-chrome
     - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu

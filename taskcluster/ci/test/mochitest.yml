@@ -297,7 +297,7 @@ mochitest-devtools-chrome:
             fission:
                 by-test-platform:
                     linux.*64(-shippable)?-qr/(opt|debug): ['trunk']
-                    windows10-64(-shippable)?-qr/(opt|debug): ['trunk']
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): ['trunk']
                     default: []
             default:
                 by-test-platform:
@@ -308,7 +308,7 @@ mochitest-devtools-chrome:
             fission:
                 by-test-platform:
                     linux.*64(-shippable)?-qr/(opt|debug): 1
-                    windows10-64(-shippable)?-qr/(opt|debug): 1
+                    windows10-64-2004(-shippable)?-qr/(opt|debug): 1
                     default: 2
             default: default
     max-run-time:
