@@ -4,9 +4,9 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["TestModule"];
+const EXPORTED_SYMBOLS = ["command"];
 
-class TestModule {
+class Command {
   constructor(messageHandler) {
     this.messageHandler = messageHandler;
   }
@@ -23,10 +23,12 @@ class TestModule {
 
   async testInterceptAndForwardModule(params, destination) {
     const windowGlobalValue = await this.messageHandler.handleCommand({
-      moduleName: "TestModule",
+      moduleName: "command",
       commandName: "testForwardToWindowGlobal",
       destination,
     });
     return "intercepted-and-forward+" + windowGlobalValue;
   }
 }
+
+const command = Command;

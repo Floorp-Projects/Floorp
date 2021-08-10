@@ -14,7 +14,7 @@ const { WindowGlobalMessageHandler } = ChromeUtils.import(
 add_task(async function test_rootModule_command() {
   const rootMessageHandler = createRootMessageHandler("session-id-rootModule");
   const rootValue = await rootMessageHandler.handleCommand({
-    moduleName: "TestModule",
+    moduleName: "command",
     commandName: "testRootModule",
     destination: {
       type: RootMessageHandler.type,
@@ -39,7 +39,7 @@ add_task(async function test_windowglobalInRootModule_command() {
     "session-id-windowglobalInRootModule"
   );
   const interceptedValue = await rootMessageHandler.handleCommand({
-    moduleName: "TestModule",
+    moduleName: "command",
     commandName: "testInterceptModule",
     destination: {
       type: WindowGlobalMessageHandler.type,
@@ -65,7 +65,7 @@ add_task(async function test_windowglobalModule_command() {
     "session-id-windowglobalModule"
   );
   const windowGlobalValue = await rootMessageHandler.handleCommand({
-    moduleName: "TestModule",
+    moduleName: "command",
     commandName: "testWindowGlobalModule",
     destination: {
       type: WindowGlobalMessageHandler.type,
@@ -92,7 +92,7 @@ add_task(async function test_windowglobalOnlyModule_command() {
     "session-id-windowglobalOnlyModule"
   );
   const windowGlobalOnlyValue = await rootMessageHandler.handleCommand({
-    moduleName: "TestOnlyInWindowGlobalModule",
+    moduleName: "commandwindowglobalonly",
     commandName: "testOnlyInWindowGlobal",
     destination: {
       type: WindowGlobalMessageHandler.type,
@@ -125,7 +125,7 @@ add_task(async function test_multisession() {
 
   info("Set value for session 1");
   await rootMessageHandler1.handleCommand({
-    moduleName: "TestModule",
+    moduleName: "command",
     commandName: "testSetValue",
     destination: {
       type: WindowGlobalMessageHandler.type,
@@ -136,7 +136,7 @@ add_task(async function test_multisession() {
 
   info("Set value for session 2");
   await rootMessageHandler2.handleCommand({
-    moduleName: "TestModule",
+    moduleName: "command",
     commandName: "testSetValue",
     destination: {
       type: WindowGlobalMessageHandler.type,
@@ -146,7 +146,7 @@ add_task(async function test_multisession() {
   });
 
   const session1Value = await rootMessageHandler1.handleCommand({
-    moduleName: "TestModule",
+    moduleName: "command",
     commandName: "testGetValue",
     destination: {
       type: WindowGlobalMessageHandler.type,
@@ -161,7 +161,7 @@ add_task(async function test_multisession() {
   );
 
   const session2Value = await rootMessageHandler2.handleCommand({
-    moduleName: "TestModule",
+    moduleName: "command",
     commandName: "testGetValue",
     destination: {
       type: WindowGlobalMessageHandler.type,
@@ -187,7 +187,7 @@ add_task(async function test_forwarding_command() {
 
   const rootMessageHandler = createRootMessageHandler("session-id-forwarding");
   const interceptAndForwardValue = await rootMessageHandler.handleCommand({
-    moduleName: "TestModule",
+    moduleName: "command",
     commandName: "testInterceptAndForwardModule",
     destination: {
       type: WindowGlobalMessageHandler.type,

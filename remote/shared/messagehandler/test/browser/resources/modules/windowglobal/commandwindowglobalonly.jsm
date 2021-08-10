@@ -4,9 +4,9 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["TestOnlyInWindowGlobalModule"];
+const EXPORTED_SYMBOLS = ["commandwindowglobalonly"];
 
-class TestOnlyInWindowGlobalModule {
+class CommandWindowGlobalOnly {
   constructor(messageHandler) {
     this.messageHandler = messageHandler;
   }
@@ -33,3 +33,5 @@ class TestOnlyInWindowGlobalModule {
     throw new Error("error-from-module");
   }
 }
+
+const commandwindowglobalonly = CommandWindowGlobalOnly;

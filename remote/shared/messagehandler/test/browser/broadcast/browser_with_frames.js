@@ -15,7 +15,7 @@ add_task(async function test_broadcasting_with_frames() {
     "session-id-broadcasting_with_frames"
   );
   const broadcastValue = await sendTestBroadcastCommand(
-    "TestOnlyInWindowGlobalModule",
+    "commandwindowglobalonly",
     "testBroadcast",
     {},
     rootMessageHandler

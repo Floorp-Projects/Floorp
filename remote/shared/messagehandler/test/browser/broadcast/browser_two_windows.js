@@ -21,7 +21,7 @@ add_task(async function test_broadcasting_two_windows_command() {
     "session-id-broadcasting_two_windows_command"
   );
   const broadcastValue = await sendTestBroadcastCommand(
-    "TestOnlyInWindowGlobalModule",
+    "commandwindowglobalonly",
     "testBroadcast",
     {},
     rootMessageHandler
