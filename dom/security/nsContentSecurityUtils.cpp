@@ -498,34 +498,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
     return true;
   }
 
-  // We can only perform the check of this preference on the Main Thread
-  // (because a String-based preference check is only safe on Main Thread.)
-  // In theory, it would be possible that a separate thread could get here
-  // before the main thread, resulting in the other thread not being able to
-  // perform this check, but the odds of that are small (and probably zero.)
-  if (MOZ_UNLIKELY(!sJSHacksChecked) && NS_IsMainThread()) {
-    // This preference is a file used for autoconfiguration of Firefox
-    // by administrators. It has also been (ab)used by the userChromeJS
-    // project to run legacy-style 'extensions', some of which use eval,
-    // all of which run in the System Principal context.
-    nsAutoString jsConfigPref;
-    Preferences::GetString("general.config.filename", jsConfigPref);
-    if (!jsConfigPref.IsEmpty()) {
-      sJSHacksPresent = true;
-    }
-
-    // This preference is required by bootstrapLoader.xpi, which is an
-    // alternate way to load legacy-style extensions. It only works on
-    // DevEdition/Nightly.
-    bool xpinstallSignatures;
-    Preferences::GetBool("xpinstall.signatures.required", &xpinstallSignatures);
-    if (!xpinstallSignatures) {
-      sJSHacksPresent = true;
-    }
-
-    sJSHacksChecked = true;
-  }
-
+  DetectJsHacks();
   if (MOZ_UNLIKELY(sJSHacksPresent)) {
     MOZ_LOG(
         sCSMLog, LogLevel::Debug,
@@ -684,6 +657,42 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
     return;
   }
   console->LogMessage(error);
+}
+
+/* static */
+void nsContentSecurityUtils::DetectJsHacks() {
+  // We can only perform the check of this preference on the Main Thread
+  // (because a String-based preference check is only safe on Main Thread.)
+  // In theory, it would be possible that a separate thread could get here
+  // before the main thread, resulting in the other thread not being able to
+  // perform this check, but the odds of that are small (and probably zero.)
+  if (!NS_IsMainThread()) {
+    return;
+  }
+  // No need to check again.
+  if (MOZ_LIKELY(sJSHacksChecked)) {
+    return;
+  }
+  // This preference is a file used for autoconfiguration of Firefox
+  // by administrators. It has also been (ab)used by the userChromeJS
+  // project to run legacy-style 'extensions', some of which use eval,
+  // all of which run in the System Principal context.
+  nsAutoString jsConfigPref;
+  Preferences::GetString("general.config.filename", jsConfigPref);
+  if (!jsConfigPref.IsEmpty()) {
+    sJSHacksPresent = true;
+  }
+
+  // This preference is required by bootstrapLoader.xpi, which is an
+  // alternate way to load legacy-style extensions. It only works on
+  // DevEdition/Nightly.
+  bool xpinstallSignatures;
+  Preferences::GetBool("xpinstall.signatures.required", &xpinstallSignatures);
+  if (!xpinstallSignatures) {
+    sJSHacksPresent = true;
+  }
+
+  sJSHacksChecked = true;
 }
 
 /* static */
@@ -1022,33 +1031,7 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
-  // We can only perform the check of this preference on the Main Thread
-  // (because a String-based preference check is only safe on Main Thread.)
-  // In theory, it would be possible that a separate thread could get here
-  // before the main thread, resulting in the other thread not being able to
-  // perform this check, but the odds of that are small (and probably zero.)
-  if (MOZ_UNLIKELY(!sJSHacksChecked) && NS_IsMainThread()) {
-    // This preference is a file used for autoconfiguration of Firefox
-    // by administrators. It has also been (ab)used by the userChromeJS
-    // project to run legacy-style 'extensions', some of which use eval,
-    // all of which run in the System Principal context.
-    nsAutoString jsConfigPref;
-    Preferences::GetString("general.config.filename", jsConfigPref);
-    if (!jsConfigPref.IsEmpty()) {
-      sJSHacksPresent = true;
-    }
-
-    // This preference is required by bootstrapLoader.xpi, which is an
-    // alternate way to load legacy-style extensions. It only works on
-    // DevEdition/Nightly.
-    bool xpinstallSignatures;
-    Preferences::GetBool("xpinstall.signatures.required", &xpinstallSignatures);
-    if (!xpinstallSignatures) {
-      sJSHacksPresent = true;
-    }
-
-    sJSHacksChecked = true;
-  }
+  DetectJsHacks();
 
   if (MOZ_UNLIKELY(sJSHacksPresent)) {
     MOZ_LOG(sCSMLog, LogLevel::Debug,

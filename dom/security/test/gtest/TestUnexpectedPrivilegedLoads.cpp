@@ -31,7 +31,17 @@
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
 
+extern Atomic<bool, mozilla::Relaxed> sJSHacksChecked;
+extern Atomic<bool, mozilla::Relaxed> sJSHacksPresent;
+
 TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
+  // Disable JS Hacks Detection, which would consider this current profile as
+  // uninteresting for our measurements:
+  bool hacksPresent = sJSHacksPresent;
+  bool hacksChecked = sJSHacksChecked;
+  sJSHacksPresent = false;
+  sJSHacksChecked = true;
+
   struct testResults {
     nsCString fileinfo;
     nsCString extraValueContenttype;
@@ -285,4 +295,8 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
         << "' should equals supplied value: "
         << currentTest.expected.extraValueRedirects.get();
   }
+
+  // Re-enable JS hacks detection
+  sJSHacksPresent = hacksPresent;
+  sJSHacksChecked = hacksChecked;
 }
