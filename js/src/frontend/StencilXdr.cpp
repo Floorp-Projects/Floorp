@@ -257,18 +257,23 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
 
   JSContext* cx = xdr->cx();
 
-  if (mode == XDR_DECODE) {
-    sisd = SharedImmutableScriptData::create(cx);
-    if (!sisd) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-  }
-
   uint32_t size;
   if (mode == XDR_ENCODE) {
-    size = sisd->immutableDataLength();
+    if (sisd) {
+      size = sisd->immutableDataLength();
+    } else {
+      size = 0;
+    }
   }
   MOZ_TRY(xdr->codeUint32(&size));
+
+  // A size of zero is used when the `sisd` is nullptr. This can occur for
+  // certain outer container modes. In this case, there is no further
+  // transcoding to do.
+  if (!size) {
+    MOZ_ASSERT(!sisd);
+    return Ok();
+  }
 
   MOZ_TRY(xdr->align32());
   static_assert(alignof(ImmutableScriptData) <= alignof(uint32_t));
@@ -279,7 +284,10 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
                "Decode below relies on the data placement");
     MOZ_TRY(xdr->codeBytes(data, size));
   } else {
-    MOZ_ASSERT(!sisd->get());
+    sisd = SharedImmutableScriptData::create(cx);
+    if (!sisd) {
+      return xdr->fail(JS::TranscodeResult::Throw);
+    }
 
     if (xdr->hasOptions() && xdr->options().usePinnedBytecode) {
       ImmutableScriptData* isd;
@@ -362,16 +370,7 @@ template <XDRMode mode>
       for (auto& entry : vec) {
         // NOTE: There can be nullptr, even if we don't perform syntax parsing,
         //       because of constant folding.
-        uint8_t exists;
-        if (mode == XDR_ENCODE) {
-          exists = !!entry;
-        }
-
-        MOZ_TRY(xdr->codeUint8(&exists));
-
-        if (exists) {
-          MOZ_TRY(codeSharedData<mode>(xdr, entry));
-        }
+        MOZ_TRY(codeSharedData<mode>(xdr, entry));
       }
       break;
     }
