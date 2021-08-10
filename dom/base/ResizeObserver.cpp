@@ -62,9 +62,19 @@ static gfx::Size GetTargetSize(Element* aTarget,
     // Per the spec, SVG size is always its bounding box size no matter what
     // box option you choose, because SVG elements do not use standard CSS box
     // model.
-    gfxRect bbox = SVGUtils::GetBBox(frame);
+    const gfxRect bbox = SVGUtils::GetBBox(frame);
     size.width = static_cast<float>(bbox.width);
     size.height = static_cast<float>(bbox.height);
+    if (aBox == ResizeObserverBoxOptions::Device_pixel_content_box) {
+      // Per spec, we calculate the inline/block sizes to target’s bounding box
+      // {inline|block} length, in integral device pixels, so we round the final
+      // result.
+      // https://drafts.csswg.org/resize-observer/#dom-resizeobserverboxoptions-device-pixel-content-box
+      const LayoutDeviceIntSize snappedSize =
+          RoundedToInt(CSSSize::FromUnknownSize(size) *
+                       frame->PresContext()->CSSToDevPixelScale());
+      size = gfx::Size(snappedSize.ToUnknownSize());
+    }
   } else {
     // Per the spec, non-replaced inline Elements will always have an empty
     // content rect. Therefore, we always use the same trivially-empty size
@@ -80,6 +90,21 @@ static gfx::Size GetTargetSize(Element* aTarget,
         // GetSize() includes the content area, borders, and padding.
         size = CSSPixel::FromAppUnits(frame->GetSize()).ToUnknownSize();
         break;
+      case ResizeObserverBoxOptions::Device_pixel_content_box: {
+        // This is a implementation-dependent for subpixel snapping algorithm.
+        // Gecko relys on LayoutDevicePixel to convert (and snap) the app units
+        // into device pixels in painting and gfx code, so here we simply
+        // convert it into dev pixels and round it.
+        //
+        // Note: This size must contain integer values.
+        // https://drafts.csswg.org/resize-observer/#dom-resizeobserverboxoptions-device-pixel-content-box
+        const LayoutDeviceIntSize snappedSize =
+            LayoutDevicePixel::FromAppUnitsRounded(
+                frame->GetContentRectRelativeToSelf().Size(),
+                frame->PresContext()->AppUnitsPerDevPixel());
+        size = gfx::Size(snappedSize.ToUnknownSize());
+        break;
+      }
       case ResizeObserverBoxOptions::Content_box:
       default:
         size =
@@ -295,8 +320,11 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
         GetTargetSize(target, ResizeObserverBoxOptions::Border_box);
     gfx::Size contentBoxSize =
         GetTargetSize(target, ResizeObserverBoxOptions::Content_box);
+    gfx::Size devicePixelContentBoxSize = GetTargetSize(
+        target, ResizeObserverBoxOptions::Device_pixel_content_box);
     RefPtr<ResizeObserverEntry> entry =
-        new ResizeObserverEntry(this, *target, borderBoxSize, contentBoxSize);
+        new ResizeObserverEntry(this, *target, borderBoxSize, contentBoxSize,
+                                devicePixelContentBoxSize);
 
     if (!entries.AppendElement(entry.forget(), fallible)) {
       // Out of memory.
@@ -308,6 +336,9 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
     switch (observation->BoxOptions()) {
       case ResizeObserverBoxOptions::Border_box:
         observation->UpdateLastReportedSize(borderBoxSize);
+        break;
+      case ResizeObserverBoxOptions::Device_pixel_content_box:
+        observation->UpdateLastReportedSize(devicePixelContentBoxSize);
         break;
       case ResizeObserverBoxOptions::Content_box:
       default:
@@ -332,7 +363,8 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ResizeObserverEntry, mOwner, mTarget,
                                       mContentRect, mBorderBoxSize,
-                                      mContentBoxSize)
+                                      mContentBoxSize,
+                                      mDevicePixelContentBoxSize)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ResizeObserverEntry)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ResizeObserverEntry)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ResizeObserverEntry)
@@ -364,6 +396,18 @@ void ResizeObserverEntry::GetContentBoxSize(
   aRetVal.AppendElement(mContentBoxSize);
 }
 
+void ResizeObserverEntry::GetDevicePixelContentBoxSize(
+    nsTArray<RefPtr<ResizeObserverSize>>& aRetVal) const {
+  // In the resize-observer-1 spec, there will only be a single
+  // ResizeObserverSize returned in the FrozenArray for now.
+  //
+  // Note: the usage of FrozenArray is to support elements that have multiple
+  // fragments, which occur in multi-column scenarios.
+  // https://drafts.csswg.org/resize-observer/#resize-observer-entry-interface
+  aRetVal.Clear();
+  aRetVal.AppendElement(mDevicePixelContentBoxSize);
+}
+
 void ResizeObserverEntry::SetBorderBoxSize(const gfx::Size& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
@@ -386,6 +430,12 @@ void ResizeObserverEntry::SetContentRectAndSize(const gfx::Size& aSize) {
   // 2. Update mContentBoxSize.
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
   mContentBoxSize = new ResizeObserverSize(this, aSize, wm);
+}
+
+void ResizeObserverEntry::SetDevicePixelContentSize(const gfx::Size& aSize) {
+  nsIFrame* frame = mTarget->GetPrimaryFrame();
+  const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
+  mDevicePixelContentBoxSize = new ResizeObserverSize(this, aSize, wm);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ResizeObserverSize, mOwner)
