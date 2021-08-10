@@ -68,8 +68,8 @@ bool PrivateOpEmitter::emitBrandCheck() {
       return false;
     }
   } else {
-    bool assigning = isSimpleAssignment() || isFieldInit() ||
-                     isCompoundAssignment() || isIncDec();
+    bool assigning =
+        isSimpleAssignment() || isCompoundAssignment() || isIncDec();
     if (!bce_->emitCheckPrivateField(ThrowCondition::ThrowHasNot,
                                      assigning
                                          ? ThrowMsgKind::MissingPrivateOnSet
