@@ -1,3 +1,7 @@
+import org.tomlj.Toml
+import org.tomlj.TomlParseResult
+import org.tomlj.TomlTable
+
 def tryInt = { string ->
     if (string == null) {
         return string
@@ -8,12 +12,35 @@ def tryInt = { string ->
     return string
 }
 
+// Parses the Cargo.lock and returns the version for the given package name.
+def getRustVersionFor(packageName) {
+    String version = null;
+    TomlParseResult result = Toml.parse(file("Cargo.lock").getText());
+    for (object in result.getArray("package").toList()) {
+        def table = (TomlTable) object
+        if (table.getString("name") == packageName) {
+            if (version != null) {
+                throw new StopExecutionException("Multiple versions for '${packageName}' found." +
+                        " Ensure '${packageName}' is only included once.")
+            }
+            version = table.getString("version")
+        }
+    }
+    return version
+}
+
 allprojects {
     // Expose the per-object-directory configuration to all projects.
     ext {
         mozconfig = gradle.mozconfig
         topsrcdir = gradle.mozconfig.topsrcdir
         topobjdir = gradle.mozconfig.topobjdir
+
+        gleanVersion = "40.0.0"
+        if (gleanVersion != getRustVersionFor("glean")) {
+          throw new StopExecutionException("Mismatched Glean version, expected: ${gleanVersion}," +
+              " found ${getRustVersionFor("glean")}")
+        }
 
         buildToolsVersion = mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
         compileSdkVersion = tryInt(mozconfig.substs.ANDROID_TARGET_SDK)
@@ -78,6 +105,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.4.2'
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
         classpath 'org.apache.commons:commons-exec:1.3'
+        classpath 'org.tomlj:tomlj:1.0.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
