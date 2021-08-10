@@ -44,7 +44,7 @@ def get_decision_parameters(graph_config, parameters):
     parameters.setdefault("next_version", None)
 
     if parameters["tasks_for"] == "github-release":
-        head_tag = parameters["head_tag"].decode("utf-8")
+        head_tag = parameters["head_tag"]
         if not head_tag:
             raise ValueError(
                 "Cannot run github-release if `head_tag` is not defined. Got {}".format(
@@ -65,4 +65,4 @@ def get_decision_parameters(graph_config, parameters):
         else:
             raise ValueError(f"Unsupported version type: {version.version_type}")
 
-        parameters["next_version"] = str(next_version).decode("utf-8")
+        parameters["next_version"] = str(next_version)
