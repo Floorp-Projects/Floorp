@@ -977,6 +977,9 @@ pub struct Capabilities {
     /// Whether we must perform a full unscissored glClear on alpha targets
     /// prior to rendering.
     pub requires_alpha_target_full_clear: bool,
+    /// Whether the driver can correctly invalidate render targets. This can be
+    /// a worthwhile optimization, but is buggy on some devices.
+    pub supports_render_target_invalidate: bool,
     /// Whether the driver can reliably upload data to R8 format textures.
     pub supports_r8_texture_upload: bool,
     /// Whether clip-masking is supported natively by the GL implementation
@@ -1715,6 +1718,12 @@ impl Device {
         let is_adreno_4xx = renderer_name.starts_with("Adreno (TM) 4");
         let requires_alpha_target_full_clear = is_adreno_4xx;
 
+        // On PowerVR Rogue devices we have seen that invalidating render targets after we are done
+        // with them can incorrectly cause pending renders to be written to different targets
+        // instead. See bug 1719345.
+        let is_powervr_rogue = renderer_name.starts_with("PowerVR Rogue");
+        let supports_render_target_invalidate = !is_powervr_rogue;
+
         // On Linux we we have seen uploads to R8 format textures result in
         // corruption on some AMD cards.
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=1687554#c13
@@ -1759,6 +1768,7 @@ impl Device {
                 requires_batched_texture_uploads,
                 supports_alpha_target_clears,
                 requires_alpha_target_full_clear,
+                supports_render_target_invalidate,
                 supports_r8_texture_upload,
                 uses_native_clip_mask,
                 uses_native_antialiasing,
@@ -2595,21 +2605,23 @@ impl Device {
     /// Notifies the device that the contents of a render target are no longer
     /// needed.
     pub fn invalidate_render_target(&mut self, texture: &Texture) {
-        let (fbo, attachments) = if texture.supports_depth() {
-            (&texture.fbo_with_depth,
-             &[gl::COLOR_ATTACHMENT0, gl::DEPTH_ATTACHMENT] as &[gl::GLenum])
-        } else {
-            (&texture.fbo, &[gl::COLOR_ATTACHMENT0] as &[gl::GLenum])
-        };
+        if self.capabilities.supports_render_target_invalidate {
+            let (fbo, attachments) = if texture.supports_depth() {
+                (&texture.fbo_with_depth,
+                 &[gl::COLOR_ATTACHMENT0, gl::DEPTH_ATTACHMENT] as &[gl::GLenum])
+            } else {
+                (&texture.fbo, &[gl::COLOR_ATTACHMENT0] as &[gl::GLenum])
+            };
 
-        if let Some(fbo_id) = fbo {
-            let original_bound_fbo = self.bound_draw_fbo;
-            // Note: The invalidate extension may not be supported, in which
-            // case this is a no-op. That's ok though, because it's just a
-            // hint.
-            self.bind_external_draw_target(*fbo_id);
-            self.gl.invalidate_framebuffer(gl::FRAMEBUFFER, attachments);
-            self.bind_external_draw_target(original_bound_fbo);
+            if let Some(fbo_id) = fbo {
+                let original_bound_fbo = self.bound_draw_fbo;
+                // Note: The invalidate extension may not be supported, in which
+                // case this is a no-op. That's ok though, because it's just a
+                // hint.
+                self.bind_external_draw_target(*fbo_id);
+                self.gl.invalidate_framebuffer(gl::FRAMEBUFFER, attachments);
+                self.bind_external_draw_target(original_bound_fbo);
+            }
         }
     }
 
