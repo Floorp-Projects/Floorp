@@ -2287,6 +2287,17 @@
   congruent_to: if_operands_equal
   alias_set: none
 
+- name: HashObject
+  operands:
+    set: Object
+    input: Value
+  result_type: Int32
+  # In contrast to the previous hash operations, we can't move this
+  # instruction, because the hashcode is computed from the object's address,
+  # which can change when the object is moved by the GC.
+  movable: false
+  alias_set: none
+
 - name: SetObjectHasNonBigInt
   operands:
     set: Object
