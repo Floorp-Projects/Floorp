@@ -4709,6 +4709,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                     Register result, Register temp1, Register temp2,
                     Register temp3, Register temp4, IsBigInt isBigInt);
 
+  void mapObjectHas(Register mapObj, ValueOperand value, Register hash,
+                    Register result, Register temp1, Register temp2,
+                    Register temp3, Register temp4, IsBigInt isBigInt);
+
  public:
   void setObjectHasNonBigInt(Register setObj, ValueOperand value, Register hash,
                              Register result, Register temp1, Register temp2) {
@@ -4725,6 +4729,24 @@ class MacroAssembler : public MacroAssemblerSpecific {
                          Register result, Register temp1, Register temp2,
                          Register temp3, Register temp4) {
     return setObjectHas(setObj, value, hash, result, temp1, temp2, temp3, temp4,
+                        IsBigInt::Maybe);
+  }
+
+  void mapObjectHasNonBigInt(Register mapObj, ValueOperand value, Register hash,
+                             Register result, Register temp1, Register temp2) {
+    return mapObjectHas(mapObj, value, hash, result, temp1, temp2, InvalidReg,
+                        InvalidReg, IsBigInt::No);
+  }
+  void mapObjectHasBigInt(Register mapObj, ValueOperand value, Register hash,
+                          Register result, Register temp1, Register temp2,
+                          Register temp3, Register temp4) {
+    return mapObjectHas(mapObj, value, hash, result, temp1, temp2, temp3, temp4,
+                        IsBigInt::Yes);
+  }
+  void mapObjectHasValue(Register mapObj, ValueOperand value, Register hash,
+                         Register result, Register temp1, Register temp2,
+                         Register temp3, Register temp4) {
+    return mapObjectHas(mapObj, value, hash, result, temp1, temp2, temp3, temp4,
                         IsBigInt::Maybe);
   }
 
