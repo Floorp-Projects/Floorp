@@ -15,8 +15,10 @@ class InlineSpellCheckerParent extends JSWindowActorParent {
     });
   }
 
-  replaceMisspelling({ index }) {
-    this.sendAsyncMessage("InlineSpellChecker:replaceMisspelling", { index });
+  replaceMisspelling({ suggestion }) {
+    this.sendAsyncMessage("InlineSpellChecker:replaceMisspelling", {
+      suggestion,
+    });
   }
 
   toggleEnabled() {

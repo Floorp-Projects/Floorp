@@ -144,7 +144,7 @@
 
       // suggestion list
       var suggestionsSeparator = this.getMenuItem("spell-no-suggestions");
-      var numsug = spellui.addSuggestionsToMenu(
+      var numsug = spellui.addSuggestionsToMenuOnParent(
         event.target,
         suggestionsSeparator,
         5
