@@ -3939,6 +3939,21 @@ bool WarpCacheIRTranspiler::emitSetHasSymbolResult(ObjOperandId setId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitSetHasBigIntResult(ObjOperandId setId,
+                                                   BigIntOperandId bigIntId) {
+  MDefinition* set = getOperand(setId);
+  MDefinition* bigInt = getOperand(bigIntId);
+
+  auto* hash = MHashBigInt::New(alloc(), bigInt);
+  add(hash);
+
+  auto* ins = MSetObjectHasBigInt::New(alloc(), set, bigInt, hash);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTruthyResult(OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
