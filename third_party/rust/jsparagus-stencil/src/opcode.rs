@@ -168,7 +168,7 @@ macro_rules! using_opcode_database {
                 (GetRval, get_rval, NULL, 1, 0, 1, JOF_BYTE),
                 (SetRval, set_rval, NULL, 1, 1, 0, JOF_BYTE),
                 (RetRval, ret_rval, NULL, 1, 0, 0, JOF_BYTE),
-                (CheckReturn, check_return, NULL, 1, 1, 0, JOF_BYTE),
+                (CheckReturn, check_return, NULL, 1, 1, 1, JOF_BYTE),
                 (Throw, throw_, NULL, 1, 1, 0, JOF_BYTE),
                 (ThrowMsg, throw_msg, NULL, 2, 0, 0, JOF_UINT8),
                 (ThrowSetConst, throw_set_const, NULL, 5, 0, 0, JOF_ATOM|JOF_NAME),
