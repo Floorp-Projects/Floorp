@@ -1147,6 +1147,12 @@ class XPCShellTests(object):
         }
 
         profile = Profile(profile=self.tempDir, restore=False)
+        prefsFile = os.path.join(profile.profile, "user.js")
+
+        # Empty the user.js file in case the file existed before.
+        with open(prefsFile, "w"):
+            pass
+
         for name in base_profiles:
             path = os.path.join(profile_data_dir, name)
             profile.merge(path, interpolation=interpolation)
@@ -1155,7 +1161,7 @@ class XPCShellTests(object):
         prefs = parse_preferences(extraPrefs)
         profile.set_preferences(prefs)
 
-        self.prefsFile = os.path.join(profile.profile, "user.js")
+        self.prefsFile = prefsFile
         return prefs
 
     def buildCoreEnvironment(self):
