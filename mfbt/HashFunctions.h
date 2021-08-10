@@ -79,8 +79,6 @@ static const HashNumber kGoldenRatioU32 = 0x9E3779B9U;
  * Since the leftmost bits of the result are best, the hash bucket index is
  * computed by doing ScrambleHashCode(h) / (2^32/N) or the equivalent
  * right-shift, not ScrambleHashCode(h) % N or the equivalent bit-mask.
- *
- * FIXME: OrderedHashTable uses a bit-mask; see bug 775896.
  */
 constexpr HashNumber ScrambleHashCode(HashNumber h) {
   /*
