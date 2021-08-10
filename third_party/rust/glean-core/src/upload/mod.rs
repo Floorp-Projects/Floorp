@@ -306,7 +306,7 @@ impl PingUploadManager {
             Ok(request) => Some(request),
             Err(e) => {
                 log::warn!("Error trying to build ping request: {}", e);
-                self.directory_manager.delete_file(&document_id);
+                self.directory_manager.delete_file(document_id);
 
                 // Record the error.
                 // Currently the only possible error is PingBodyOverflow.
@@ -420,7 +420,7 @@ impl PingUploadManager {
                     deleting = true;
                 }
 
-                if deleting && self.directory_manager.delete_file(&document_id) {
+                if deleting && self.directory_manager.delete_file(document_id) {
                     self.upload_metrics
                         .deleted_pings_after_quota_hit
                         .add(glean, 1);
@@ -668,7 +668,7 @@ impl PingUploadManager {
                     document_id,
                     status
                 );
-                self.enqueue_ping_from_file(glean, &document_id);
+                self.enqueue_ping_from_file(glean, document_id);
                 self.recoverable_failure_count
                     .fetch_add(1, Ordering::SeqCst);
             }

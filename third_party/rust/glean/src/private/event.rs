@@ -87,7 +87,7 @@ impl<K: traits::ExtraKeys> traits::Event for EventMetric<K> {
 
         crate::with_glean_mut(|glean| {
             glean_core::test_get_num_recorded_errors(
-                &glean,
+                glean,
                 self.inner.meta(),
                 error,
                 ping_name.into(),

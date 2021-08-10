@@ -136,7 +136,7 @@ where
 
         crate::with_glean_mut(|glean| {
             glean_core::test_get_num_recorded_errors(
-                &glean,
+                glean,
                 self.0.get_submetric().meta(),
                 error,
                 ping_name.into(),

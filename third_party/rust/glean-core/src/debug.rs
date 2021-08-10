@@ -234,7 +234,7 @@ fn validate_source_tags(tags: &Vec<String>) -> bool {
         return false;
     }
 
-    tags.iter().all(|x| validate_tag(&x))
+    tags.iter().all(|x| validate_tag(x))
 }
 
 #[cfg(test)]
