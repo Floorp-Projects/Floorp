@@ -1108,7 +1108,7 @@ cairo_cff_font_read_cid_fontdict (cairo_cff_font_t *font, unsigned char *ptr)
             goto fail;
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    status = CAIRO_STATUS_SUCCESS;
 
 fail:
     cff_index_fini (&index);
