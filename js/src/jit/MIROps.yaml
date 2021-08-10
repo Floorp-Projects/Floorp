@@ -2246,9 +2246,26 @@
   congruent_to: if_operands_equal
   alias_set: none
 
+- name: ToHashableString
+  operands:
+    input: String
+  result_type: String
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  possibly_calls: true
+
 - name: HashNonGCThing
   operands:
     input: Value
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
+- name: HashString
+  operands:
+    input: String
   result_type: Int32
   movable: true
   congruent_to: if_operands_equal
