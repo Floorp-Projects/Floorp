@@ -4710,6 +4710,48 @@ void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
   mul32(Imm32(mozilla::kGoldenRatioU32 * mozilla::kGoldenRatioU32), result);
 }
 
+void MacroAssembler::prepareHashString(Register str, Register result,
+                                       Register temp) {
+  // Inline implementation of |OrderedHashTable::prepareHash()| and
+  // |JSAtom::hash()|.
+
+#ifdef DEBUG
+  Label ok;
+  branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+               Imm32(JSString::ATOM_BIT), &ok);
+  assumeUnreachable("Unexpected non-atom string");
+  bind(&ok);
+#endif
+
+  move32(Imm32(JSString::FAT_INLINE_MASK), temp);
+  and32(Address(str, JSString::offsetOfFlags()), temp);
+
+  // Set |result| to 1 for FatInlineAtoms.
+  move32(Imm32(0), result);
+  cmp32Set(Assembler::Equal, temp, Imm32(JSString::FAT_INLINE_MASK), result);
+
+  // Use a computed load for branch-free code.
+
+  static_assert(FatInlineAtom::offsetOfHash() > NormalAtom::offsetOfHash());
+
+  constexpr size_t offsetDiff =
+      FatInlineAtom::offsetOfHash() - NormalAtom::offsetOfHash();
+  static_assert(mozilla::IsPowerOfTwo(offsetDiff));
+
+  uint8_t shift = mozilla::FloorLog2Size(offsetDiff);
+  if (IsShiftInScaleRange(shift)) {
+    load32(
+        BaseIndex(str, result, ShiftToScale(shift), NormalAtom::offsetOfHash()),
+        result);
+  } else {
+    lshift32(Imm32(shift), result);
+    load32(BaseIndex(str, result, TimesOne, NormalAtom::offsetOfHash()),
+           result);
+  }
+
+  scrambleHashCode(result);
+}
+
 template <typename OrderedHashTable>
 void MacroAssembler::orderedHashTableLookup(Register setOrMapObj,
                                             ValueOperand value, Register hash,
