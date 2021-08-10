@@ -1070,6 +1070,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void subDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
   inline void mul32(Register rhs, Register srcDest) PER_SHARED_ARCH;
+  inline void mul32(Imm32 imm, Register srcDest) PER_SHARED_ARCH;
 
   inline void mul32(Register src1, Register src2, Register dest, Label* onOver)
       DEFINED_ON(arm64);
