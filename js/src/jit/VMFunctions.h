@@ -663,6 +663,8 @@ BigInt* AtomicsSub64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
 BigInt* AtomicsXor64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
                      BigInt* value);
 
+bool SetObjectHas(JSContext* cx, HandleObject obj, HandleValue key, bool* rval);
+
 // Functions used when JS_MASM_VERBOSE is enabled.
 void AssumeUnreachable(const char* output);
 void Printf0(const char* output);
