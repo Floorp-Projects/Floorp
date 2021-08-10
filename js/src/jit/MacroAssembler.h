@@ -1404,6 +1404,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // variants with Address as lhs.
   inline void branch64(Condition cond, const Address& lhs, Imm64 val,
                        Label* label) PER_ARCH;
+  inline void branch64(Condition cond, const Address& lhs, Register64 rhs,
+                       Label* label) PER_ARCH;
 
   // Compare the value at |lhs| with the value at |rhs|.  The scratch
   // register *must not* be the base of |lhs| or |rhs|.
