@@ -17,7 +17,7 @@ add_task(async function test_module_error() {
   info("Call a module method which will throw");
   try {
     await rootMessageHandler.handleCommand({
-      moduleName: "TestOnlyInWindowGlobalModule",
+      moduleName: "commandwindowglobalonly",
       commandName: "testError",
       destination: {
         type: WindowGlobalMessageHandler.type,
@@ -45,7 +45,7 @@ add_task(async function test_destination_error() {
       "No browsing context matches fakeBrowsingContextId"
     );
     await rootMessageHandler.handleCommand({
-      moduleName: "TestOnlyInWindowGlobalModule",
+      moduleName: "commandwindowglobalonly",
       commandName: "testOnlyInWindowGlobal",
       destination: {
         type: WindowGlobalMessageHandler.type,

@@ -20,7 +20,7 @@ add_task(async function test_broadcasting_two_tabs_command() {
   );
 
   const broadcastValue = await sendTestBroadcastCommand(
-    "TestOnlyInWindowGlobalModule",
+    "commandwindowglobalonly",
     "testBroadcast",
     {},
     rootMessageHandler
