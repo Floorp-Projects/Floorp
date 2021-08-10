@@ -9336,16 +9336,24 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     }
 
     if (privateName->privateNameKind() == PrivateNameKind::Setter) {
+      if (!emitDupAt(1)) {
+        //          [stack] CTOR OBJ CTOR
+        return false;
+      }
       if (!emitGetPrivateName(privateName)) {
-        //          [stack] CTOR OBJ NAME
+        //          [stack] CTOR OBJ CTOR NAME
         return false;
       }
       if (!emitAtomOp(JSOp::GetIntrinsic,
                       TaggedParserAtomIndex::WellKnown::NoPrivateGetter())) {
-        //          [stack] CTOR OBJ NAME FUN
+        //          [stack] CTOR OBJ CTOR NAME FUN
         return false;
       }
       if (!emit1(JSOp::InitHiddenElemGetter)) {
+        //          [stack] CTOR OBJ CTOR
+        return false;
+      }
+      if (!emit1(JSOp::Pop)) {
         //          [stack] CTOR OBJ
         return false;
       }
