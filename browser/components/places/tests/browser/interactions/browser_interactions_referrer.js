@@ -6,8 +6,8 @@
  * Tests page view time recording for interactions.
  */
 
-const TEST_REFERRER_URL = "http://example.org/browser";
-const TEST_URL = "http://example.org/browser/browser";
+const TEST_REFERRER_URL = "https://example.org/browser";
+const TEST_URL = "https://example.org/browser/browser";
 
 add_task(async function test_interactions_referrer() {
   await Interactions.reset();
