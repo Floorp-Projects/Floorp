@@ -9313,26 +9313,25 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       continue;
     }
 
-    //              [stack] CTOR? OBJ
+    MOZ_ASSERT(kind == PropertyEmitter::Kind::Static);
 
-    if (!pe.prepareForComputedPropKey(Some(propdef->pn_pos.begin), kind)) {
-      //            [stack] CTOR? OBJ CTOR?
+    //              [stack] CTOR OBJ
+
+    if (!pe.prepareForPrivateStaticMethod(Some(propdef->pn_pos.begin))) {
+      //            [stack] CTOR OBJ CTOR
       return false;
     }
     if (!emitGetPrivateName(privateName)) {
-      //            [stack] CTOR? OBJ CTOR? KEY
-      return false;
-    }
-    if (!pe.prepareForComputedPropValue()) {
-      //            [stack] CTOR? OBJ CTOR? KEY
+      //            [stack] CTOR OBJ CTOR KEY
       return false;
     }
     if (!emitValue()) {
-      //            [stack] CTOR? OBJ CTOR? KEY VAL
+      //            [stack] CTOR OBJ CTOR KEY VAL
       return false;
     }
 
-    if (!pe.emitInitIndexOrComputed(accessorType)) {
+    if (!pe.emitPrivateStaticMethod(accessorType)) {
+      //            [stack] CTOR OBJ
       return false;
     }
 

@@ -104,7 +104,27 @@ class MOZ_STACK_CLASS PropertyEmitter {
   //    |    |                                                       |
   //    |    | skipInit                                              |
   //    |    +------------------------------------------------------>+
-  //    |                                                            |
+  //    |                                                            ^
+  //    | [private static method]                                    |
+  //    |   prepareForPrivateStaticMethod  +---------------------+   |
+  //    +--------------------------------->| PrivateStaticMethod |-+ |
+  //    |                                  +---------------------+ | |
+  //    |                                                          | |
+  //    |  +-------------------------------------------------------+ |
+  //    |  |                                                         |
+  //    |  +-+-------------------------------------------------+     |
+  //    |    |                                                 |     |
+  //    |    | [method with super                              |     |
+  //    |    | emitInitHomeObject   +---------------------+    v     |
+  //    |    +--------------------->| InitHomeObjFor-     |----+     |
+  //    |                           | PrivateStaticMethod |    |     |
+  //    |                           +---------------------+    |     |
+  //    |                                                      |     |
+  //    |      +-----------------------------------------------+     |
+  //    |      |                                                     |
+  //    |      | emitPrivateStaticMethod                             |
+  //    |      +---------------------------------------------------->+
+  //    |                                                            ^
   //    | [index property/method/accessor]                           |
   //    |   prepareForIndexPropKey  +----------+                     |
   //    +-------------------------->| IndexKey |-+                   |
@@ -129,7 +149,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
   //    |      |                                                     |
   //    |      | emitInitIndexOrComputed                             |
   //    |      +---------------------------------------------------->+
-  //    |                                                            |
+  //    |                                                            ^
   //    | [computed property/method/accessor]                        |
   //    |   prepareForComputedPropKey  +-------------+               |
   //    +----------------------------->| ComputedKey |-+             |
@@ -180,6 +200,12 @@ class MOZ_STACK_CLASS PropertyEmitter {
 
     // After calling emitInitHomeObject, from PrivateMethod.
     InitHomeObjForPrivateMethod,
+
+    // After calling prepareForPrivateStaticMethod.
+    PrivateStaticMethod,
+
+    // After calling emitInitHomeObject, from PrivateStaticMethod.
+    InitHomeObjForPrivateStaticMethod,
 
     // After calling prepareForIndexPropKey.
     IndexKey,
@@ -242,6 +268,9 @@ class MOZ_STACK_CLASS PropertyEmitter {
 
   [[nodiscard]] bool prepareForPrivateMethod();
 
+  [[nodiscard]] bool prepareForPrivateStaticMethod(
+      const mozilla::Maybe<uint32_t>& keyPos);
+
   // { 1: value }
   //   ^
   //   |
@@ -266,6 +295,8 @@ class MOZ_STACK_CLASS PropertyEmitter {
                               TaggedParserAtomIndex key);
 
   [[nodiscard]] bool emitInitIndexOrComputed(AccessorType accessorType);
+
+  [[nodiscard]] bool emitPrivateStaticMethod(AccessorType accessorType);
 
   [[nodiscard]] bool skipInit();
 
