@@ -5,16 +5,17 @@ function test() {
   var iteration = 1;
   const uris = ["", "about:blank"];
   var uri;
-  var origDoc;
+  var origWgp;
 
   function testLoad() {
-    if (w.document == origDoc) {
+    let wgp = w.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
+    if (wgp == origWgp) {
       // Go back to polling
       // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
       setTimeout(testLoad, 10);
       return;
     }
-    var prin = w.document.nodePrincipal;
+    var prin = wgp.documentPrincipal;
     isnot(prin, null, "Loaded principal must not be null when adding " + uri);
     isnot(
       prin,
@@ -39,8 +40,9 @@ function test() {
   function doTest() {
     uri = uris[iteration - 1];
     window.open(uri, "_blank", "width=10,height=10,noopener");
-    w = Services.wm.getMostRecentWindow("navigator:browser").content;
-    var prin = w.document.nodePrincipal;
+    w = Services.wm.getMostRecentWindow("navigator:browser");
+    origWgp = w.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
+    var prin = origWgp.documentPrincipal;
     if (!uri) {
       uri = undefined;
     }
@@ -61,7 +63,6 @@ function test() {
       ++iteration;
       doTest();
     } else {
-      origDoc = w.document;
       // Need to poll, because load listeners on the content window won't
       // survive the load.
       // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
