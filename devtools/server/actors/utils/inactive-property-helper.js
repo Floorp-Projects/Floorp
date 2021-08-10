@@ -155,7 +155,7 @@ class InactivePropertyHelper {
         invalidProperties: ["align-self", "place-self", "order"],
         when: () =>
           !this.gridItem && !this.flexItem && !this.isAbsPosGridElement(),
-        fixId: "inactive-css-not-grid-or-flex-item-fix-2",
+        fixId: "inactive-css-not-grid-or-flex-item-fix-3",
         msgId: "inactive-css-not-grid-or-flex-item",
         numFixProps: 4,
       },
