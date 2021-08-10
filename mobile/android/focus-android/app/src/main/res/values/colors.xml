@@ -82,6 +82,13 @@
     <color name="add_to_homescreen_text">#B3FFFFFF</color>
     <color name="add_to_homescreen_icon_background">#4C0074</color>
 
+    <color name="find_in_page_background">#FFFFFF</color>
+    <color name="find_in_page_buttons_tint">#000000</color>
+    <color name="find_in_page_no_matches_color">#ff000000</color>
+    <color name="find_in_page_query_color">#ff000000</color>
+    <color name="find_in_page_query_hint_color">#ff000000</color>
+    <color name="find_in_page_results_color">#ff000000</color>
+
     <color name="firefoxInstallHint">@color/focusContrastPink</color>
 
     <color name="preference_row_selected">#353852</color>

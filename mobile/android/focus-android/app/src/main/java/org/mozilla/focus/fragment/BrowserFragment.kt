@@ -21,6 +21,7 @@ import android.view.accessibility.AccessibilityManager
 import android.webkit.MimeTypeMap
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.appbar.AppBarLayout
@@ -149,7 +150,7 @@ class BrowserFragment :
 
         findInPageIntegration.set(FindInPageIntegration(
             components.store,
-            view.findViewById<FindInPageBar>(R.id.find_in_page),
+            view.findViewById(R.id.find_in_page),
             engineView!!
         ), this, view)
 
@@ -235,6 +236,9 @@ class BrowserFragment :
         )
 
         customizeToolbar(view)
+        if (FeatureFlags.isMvp) {
+            customizeFindInPage(view)
+        }
 
         val customTabConfig = tab.ifCustomTab()?.config
         if (customTabConfig != null) {
@@ -242,6 +246,13 @@ class BrowserFragment :
         } else {
             initialiseNormalBrowserUi(view)
         }
+    }
+
+    private fun customizeFindInPage(view: View) {
+        val findInPageBar = view.findViewById<FindInPageBar>(R.id.find_in_page)
+        val newParams = findInPageBar.layoutParams as CoordinatorLayout.LayoutParams
+        newParams.gravity = Gravity.BOTTOM
+        findInPageBar.layoutParams = newParams
     }
 
     private fun customizeToolbar(view: View) {

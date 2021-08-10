@@ -85,14 +85,15 @@
             <mozilla.components.feature.findinpage.view.FindInPageBar
                 android:id="@+id/find_in_page"
                 android:layout_width="match_parent"
-                android:background="#FFFFFFFF"
                 android:elevation="10dp"
                 android:layout_height="56dp"
                 android:padding="4dp"
-                mozac:findInPageNoMatchesTextColor="#ff000000"
-                mozac:findInPageQueryTextColor="#ff000000"
-                mozac:findInPageQueryHintTextColor="#ff000000"
-                mozac:findInPageResultCountTextColor="#ff000000"
+                android:background="@color/find_in_page_background"
+                mozac:findInPageNoMatchesTextColor="@color/find_in_page_no_matches_color"
+                mozac:findInPageQueryTextColor="@color/find_in_page_query_color"
+                mozac:findInPageQueryHintTextColor="@color/find_in_page_query_hint_color"
+                mozac:findInPageResultCountTextColor="@color/find_in_page_results_color"
+                app:findInPageButtonsTint="@color/find_in_page_buttons_tint"
                 android:visibility="gone" />
 
         </org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout>
