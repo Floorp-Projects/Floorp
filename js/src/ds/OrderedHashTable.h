@@ -862,10 +862,22 @@ class OrderedHashMap {
   static size_t offsetOfEntryKey() { return Entry::offsetOfKey(); }
   static size_t offsetOfImplDataLength() { return Impl::offsetOfDataLength(); }
   static size_t offsetOfImplData() { return Impl::offsetOfData(); }
+  static constexpr size_t offsetOfImplHashTable() {
+    return Impl::offsetOfHashTable();
+  }
+  static constexpr size_t offsetOfImplHashShift() {
+    return Impl::offsetOfHashShift();
+  }
   static constexpr size_t offsetOfImplDataElement() {
     return Impl::offsetOfDataElement();
   }
+  static constexpr size_t offsetOfImplDataChain() {
+    return Impl::offsetOfDataChain();
+  }
   static constexpr size_t sizeofImplData() { return Impl::sizeofData(); }
+
+  static constexpr size_t offsetOfImplHcsK0() { return Impl::offsetOfHcsK0(); }
+  static constexpr size_t offsetOfImplHcsK1() { return Impl::offsetOfHcsK1(); }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return impl.sizeOfExcludingThis(mallocSizeOf);
