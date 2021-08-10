@@ -93,7 +93,9 @@ class WebDriverBiDiConnection extends WebSocketConnection {
    * @param {Object} params
    *     A JSON-serializable object, which is the payload of this event.
    */
-  sendEvent(method, params) {}
+  sendEvent(method, params) {
+    this.send({ method, params });
+  }
 
   /**
    * Send the result of a call to a module's method back to the

@@ -89,6 +89,28 @@ class MessageHandler extends EventEmitter {
   }
 
   /**
+   * Emit a message-handler-event. Such events should bubble up to the root of
+   * a MessageHandler network.
+   *
+   * @param {String} method
+   *     A string literal of the form [module name].[event name]. This is the
+   *     event name.
+   * @param {Object} params
+   *     The event parameters.
+   */
+  emitMessageHandlerEvent(method, params) {
+    this.emit("message-handler-event", {
+      // TODO: The messageHandlerInfo needs to be wrapped in the event so
+      // that consumers can check the type/context. Once MessageHandlerRegistry
+      // becomes context-specific (Bug 1722659), only the sessionId will be
+      // required.
+      messageHandlerInfo: this._messageHandlerInfo,
+      method,
+      params,
+    });
+  }
+
+  /**
    * @typedef {Object} CommandDestination
    * @property {String} type - One of MessageHandler.type.
    * @property {String} id - Unique context identifier, format depends on the
