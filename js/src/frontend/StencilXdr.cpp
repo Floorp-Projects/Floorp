@@ -241,6 +241,60 @@ template <XDRMode mode>
 }
 
 template <XDRMode mode>
+static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
+                                        SharedImmutableScriptData& sisd) {
+  static_assert(frontend::CanCopyDataToDisk<ImmutableScriptData>::value,
+                "ImmutableScriptData cannot be bulk-copied to disk");
+  static_assert(frontend::CanCopyDataToDisk<jsbytecode>::value,
+                "jsbytecode cannot be bulk-copied to disk");
+  static_assert(frontend::CanCopyDataToDisk<SrcNote>::value,
+                "SrcNote cannot be bulk-copied to disk");
+  static_assert(frontend::CanCopyDataToDisk<ScopeNote>::value,
+                "ScopeNote cannot be bulk-copied to disk");
+  static_assert(frontend::CanCopyDataToDisk<TryNote>::value,
+                "TryNote cannot be bulk-copied to disk");
+
+  uint32_t size;
+  if (mode == XDR_ENCODE) {
+    size = sisd.immutableDataLength();
+  }
+  MOZ_TRY(xdr->codeUint32(&size));
+
+  MOZ_TRY(xdr->align32());
+  static_assert(alignof(ImmutableScriptData) <= alignof(uint32_t));
+
+  if (mode == XDR_ENCODE) {
+    uint8_t* data = const_cast<uint8_t*>(sisd.get()->immutableData().data());
+    MOZ_ASSERT(data == reinterpret_cast<const uint8_t*>(sisd.get()),
+               "Decode below relies on the data placement");
+    MOZ_TRY(xdr->codeBytes(data, size));
+  } else {
+    MOZ_ASSERT(!sisd.get());
+
+    if (xdr->hasOptions() && xdr->options().usePinnedBytecode) {
+      ImmutableScriptData* isd;
+      MOZ_TRY(xdr->borrowedData(&isd, size));
+      sisd.setExternal(isd);
+    } else {
+      auto isd = ImmutableScriptData::new_(xdr->cx(), size);
+      if (!isd) {
+        return xdr->fail(JS::TranscodeResult::Throw);
+      }
+      uint8_t* data = reinterpret_cast<uint8_t*>(isd.get());
+      MOZ_TRY(xdr->codeBytes(data, size));
+      sisd.setOwn(std::move(isd));
+    }
+
+    if (size != sisd.get()->computedSize()) {
+      MOZ_ASSERT(false, "Bad ImmutableScriptData");
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
+    }
+  }
+
+  return Ok();
+}
+
+template <XDRMode mode>
 /* static */
 XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
                                      RefPtr<SharedImmutableScriptData>& sisd) {
