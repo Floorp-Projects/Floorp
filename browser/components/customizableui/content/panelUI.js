@@ -972,7 +972,7 @@ const PanelUI = {
 
   _addedShortcuts: false,
   _formatPrintButtonShortcuts() {
-    let printButton = this.mainView.querySelector("#appMenu-print-button");
+    let printButton = this.mainView.querySelector("#appMenu-print-button2");
     if (printButton) {
       if (
         !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
