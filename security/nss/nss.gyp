@@ -209,8 +209,6 @@
             'gtests/cryptohi_gtest/cryptohi_gtest.gyp:cryptohi_gtest',
             'gtests/der_gtest/der_gtest.gyp:der_gtest',
             'gtests/certdb_gtest/certdb_gtest.gyp:certdb_gtest',
-            'gtests/freebl_gtest/freebl_gtest.gyp:prng_gtest',
-            'gtests/freebl_gtest/freebl_gtest.gyp:blake2b_gtest',
             'gtests/freebl_gtest/freebl_gtest.gyp:freebl_gtest',
             'gtests/mozpkix_gtest/mozpkix_gtest.gyp:mozpkix_gtest',
             'gtests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim',

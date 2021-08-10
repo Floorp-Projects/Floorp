@@ -271,19 +271,3 @@ TEST_F(Blake2BTests, EmptyKeyTest) {
   EXPECT_EQ(SECFailure, rv);
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 }
-
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-
-  if (NSS_NoDB_Init(nullptr) != SECSuccess) {
-    return 1;
-  }
-
-  int rv = RUN_ALL_TESTS();
-
-  if (NSS_Shutdown() != SECSuccess) {
-    return 1;
-  }
-
-  return rv;
-}
