@@ -51,6 +51,7 @@
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/layers/RenderRootStateManager.h"
+#include "mozilla/layers/StackingContextHelper.h"  // for StackingContextHelper
 #include "mozilla/ProfilerLabels.h"
 
 using namespace mozilla;
@@ -1421,9 +1422,10 @@ bool nsDisplayRemote::CreateWebRenderCommands(
     visibleRect -= contentRect.TopLeft();
 
     // Generate an effects update notifying the browser it is visible
-    // TODO - Gather scaling factors
+    gfx::Size scale = aSc.GetInheritedScale();
     aDisplayListBuilder->AddEffectUpdate(
-        remoteBrowser, EffectsInfo::VisibleWithinRect(visibleRect, 1.0f, 1.0f));
+        remoteBrowser,
+        EffectsInfo::VisibleWithinRect(visibleRect, scale.width, scale.height));
 
     // Create a WebRenderRemoteData to notify the RemoteBrowser when it is no
     // longer visible
