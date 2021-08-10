@@ -9981,6 +9981,15 @@ bool BytecodeEmitter::emitInitializeInstanceMembers() {
       //            [stack] THIS BRAND
       return false;
     }
+    if (!emitCheckPrivateField(ThrowCondition::ThrowHas,
+                               ThrowMsgKind::PrivateBrandDoubleInit)) {
+      //            [stack] THIS BRAND BOOL
+      return false;
+    }
+    if (!emit1(JSOp::Pop)) {
+      //            [stack] THIS BRAND
+      return false;
+    }
     if (!emitBuiltinObject(BuiltinObjectKind::FunctionPrototype)) {
       //            [stack] THIS BRAND GETTER
       return false;

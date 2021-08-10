@@ -578,6 +578,7 @@ inline void GetCheckPrivateFieldOperands(jsbytecode* pc,
              *throwCondition == ThrowCondition::OnlyCheckRhs);
 
   MOZ_ASSERT(*throwKind == ThrowMsgKind::PrivateDoubleInit ||
+             *throwKind == ThrowMsgKind::PrivateBrandDoubleInit ||
              *throwKind == ThrowMsgKind::MissingPrivateOnGet ||
              *throwKind == ThrowMsgKind::MissingPrivateOnSet);
 }
