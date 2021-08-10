@@ -27,10 +27,10 @@ add_UITour_task(async function test_highlight_help_and_show_help_subview() {
   is(
     getShowHighlightTargetName(),
     "help",
-    "Should highlight the library button on the app menu"
+    "Should highlight the help button on the app menu"
   );
 
-  // Click the library button to show the subview
+  // Click the help button to show the subview
   let ViewShownPromise = new Promise(resolve => {
     appMenu.addEventListener("ViewShown", resolve, { once: true });
   });
