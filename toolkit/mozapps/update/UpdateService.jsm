@@ -1475,6 +1475,7 @@ function writeStringToFile(file, text) {
     fos.write(text, text.length);
     FileUtils.closeSafeFileOutputStream(fos);
   } catch (e) {
+    LOG(`writeStringToFile - Failed to write to file: "${file}". Error: ${e}"`);
     return false;
   }
   return true;
