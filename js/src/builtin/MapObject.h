@@ -147,6 +147,10 @@ class MapObject : public NativeObject {
 
   size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf);
 
+  static constexpr size_t getDataSlotOffset() {
+    return getFixedSlotOffset(DataSlot);
+  }
+
  private:
   static const ClassSpec classSpec_;
   static const JSClassOps classOps_;
