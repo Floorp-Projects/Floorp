@@ -8,21 +8,17 @@
 #define MOZSTORAGESERVICE_H
 
 #include "nsCOMPtr.h"
+#include "nsICollation.h"
 #include "nsIFile.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/intl/Collator.h"
 
 #include "mozIStorageService.h"
 
 class nsIMemoryReporter;
 struct sqlite3_vfs;
-namespace mozilla::intl {
-class Collator;
-}
 
 namespace mozilla {
 namespace storage {
@@ -44,14 +40,14 @@ class Service : public mozIStorageService,
    *         The string to be compared against aStr2.
    * @param  aStr2
    *         The string to be compared against aStr1.
-   * @param  aSensitivity
-   *         The sorting sensitivity.
+   * @param  aComparisonStrength
+   *         The sorting strength, one of the nsICollation constants.
    * @return aStr1 - aStr2.  That is, if aStr1 < aStr2, returns a negative
    *         number.  If aStr1 > aStr2, returns a positive number.  If
    *         aStr1 == aStr2, returns 0.
    */
   int localeCompareStrings(const nsAString& aStr1, const nsAString& aStr2,
-                           mozilla::intl::Collator::Sensitivity aSensitivity);
+                           int32_t aComparisonStrength);
 
   static already_AddRefed<Service> getSingleton();
 
@@ -151,30 +147,28 @@ class Service : public mozIStorageService,
   void minimizeMemory();
 
   /**
-   * Lazily creates and returns a collator created from the application's
+   * Lazily creates and returns a collation created from the application's
    * locale that all statements of all Connections of this Service may use.
-   * Since the collator's lifetime is that of the Service and no statement may
+   * Since the collation's lifetime is that of the Service and no statement may
    * execute outside the lifetime of the Service, this method returns a raw
    * pointer.
    */
-  mozilla::intl::Collator* getCollator();
+  nsICollation* getLocaleCollation();
 
   /**
-   * Lazily created collator that all statements of all Connections of this
-   * Service may use.  The collator is created from the application's locale.
+   * Lazily created collation that all statements of all Connections of this
+   * Service may use.  The collation is created from the application's locale.
    *
-   * @note The collator is not thread-safe since the options can be changed
-   * between calls. Access should be synchronized.
+   * @note Collation implementations are platform-dependent and in general not
+   *       thread-safe.  Access to this collation should be synchronized.
    */
-  mozilla::UniquePtr<mozilla::intl::Collator> mCollator = nullptr;
+  nsCOMPtr<nsICollation> mLocaleCollation;
 
   nsCOMPtr<nsIFile> mProfileStorageFile;
 
   nsCOMPtr<nsIMemoryReporter> mStorageSQLiteReporter;
 
   static Service* gService;
-
-  mozilla::intl::Collator::Sensitivity mLastSensitivity;
 };
 
 }  // namespace storage

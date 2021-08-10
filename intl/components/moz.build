@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 EXPORTS.mozilla.intl = [
     "src/Calendar.h",
-    "src/Collator.h",
     "src/DateTimeFormat.h",
     "src/DateTimePatternGenerator.h",
     "src/ICU4CGlue.h",
@@ -15,10 +14,8 @@ EXPORTS.mozilla.intl = [
 
 UNIFIED_SOURCES += [
     "src/Calendar.cpp",
-    "src/Collator.cpp",
     "src/DateTimeFormat.cpp",
     "src/DateTimePatternGenerator.cpp",
-    "src/ICU4CGlue.cpp",
     "src/NumberFormat.cpp",
     "src/NumberFormatFields.cpp",
     "src/NumberFormatterSkeleton.cpp",

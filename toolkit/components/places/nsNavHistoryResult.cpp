@@ -950,10 +950,11 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_StringLess(
     const nsAString& a, const nsAString& b) {
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, 0);
-  const mozilla::intl::Collator* collator = history->GetCollator();
-  NS_ENSURE_TRUE(collator, 0);
+  nsICollation* collation = history->GetCollation();
+  NS_ENSURE_TRUE(collation, 0);
 
-  int32_t res = collator->CompareStrings(a, b);
+  int32_t res = 0;
+  collation->CompareString(nsICollation::kCollationCaseInSensitive, a, b, &res);
   return res;
 }
 

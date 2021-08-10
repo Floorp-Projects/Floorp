@@ -8,6 +8,7 @@
 
 #include "nsINavHistoryService.h"
 
+#include "nsICollation.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
 #include "nsMaybeWeakPtr.h"
@@ -22,8 +23,6 @@
 #include "Database.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/intl/Collator.h"
-#include "mozilla/UniquePtr.h"
 #include "mozIStorageVacuumParticipant.h"
 
 #ifdef XP_WIN
@@ -168,7 +167,7 @@ class nsNavHistory final : public nsSupportsWeakReference,
    * objects for places components.
    */
   nsIStringBundle* GetBundle();
-  const mozilla::intl::Collator* GetCollator();
+  nsICollation* GetCollation();
   void GetStringFromName(const char* aName, nsACString& aResult);
   void GetAgeInDaysString(int32_t aInt, const char* aName, nsACString& aResult);
   static void GetMonthName(const PRExplodedTime& aTime, nsACString& aResult);
@@ -433,7 +432,7 @@ class nsNavHistory final : public nsSupportsWeakReference,
 
   // localization
   nsCOMPtr<nsIStringBundle> mBundle;
-  mozilla::UniquePtr<const mozilla::intl::Collator> mCollator;
+  nsCOMPtr<nsICollation> mCollation;
 
   // recent events
   typedef nsTHashMap<nsCStringHashKey, int64_t> RecentEventHash;
