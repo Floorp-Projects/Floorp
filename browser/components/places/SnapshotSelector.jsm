@@ -107,6 +107,11 @@ class SnapshotSelector extends EventEmitter {
   }
 
   rebuild() {
+    // If this instance has been destroyed then do nothing.
+    if (!this.#task) {
+      return;
+    }
+
     this.#task.arm();
   }
 
@@ -116,6 +121,11 @@ class SnapshotSelector extends EventEmitter {
    * @param {Snapshot[]} snapshots
    */
   #snapshotsGenerated(snapshots) {
+    // If this instance has been destroyed then do nothing.
+    if (!this.#task) {
+      return;
+    }
+
     logConsole.debug(
       "Generated snapshots",
       snapshots.map(s => s.url)
@@ -127,6 +137,11 @@ class SnapshotSelector extends EventEmitter {
    * Starts the process of building snapshots.
    */
   async #buildSnapshots() {
+    // If this instance has been destroyed then do nothing.
+    if (!this.#task) {
+      return;
+    }
+
     // Task a copy of the context to avoid it changing while we are generating
     // the list.
     let context = { ...this.#context };
