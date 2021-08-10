@@ -612,6 +612,15 @@ class OrderedHashTable {
   static constexpr size_t offsetOfDataChain() { return offsetof(Data, chain); }
   static constexpr size_t sizeofData() { return sizeof(Data); }
 
+  static constexpr size_t offsetOfHcsK0() {
+    return offsetof(OrderedHashTable, hcs) +
+           mozilla::HashCodeScrambler::offsetOfMK0();
+  }
+  static constexpr size_t offsetOfHcsK1() {
+    return offsetof(OrderedHashTable, hcs) +
+           mozilla::HashCodeScrambler::offsetOfMK1();
+  }
+
  private:
   /* Logarithm base 2 of the number of buckets in the hash table initially. */
   static uint32_t initialBucketsLog2() { return 1; }
@@ -921,6 +930,9 @@ class OrderedHashSet {
     return Impl::offsetOfDataChain();
   }
   static constexpr size_t sizeofImplData() { return Impl::sizeofData(); }
+
+  static constexpr size_t offsetOfImplHcsK0() { return Impl::offsetOfHcsK0(); }
+  static constexpr size_t offsetOfImplHcsK1() { return Impl::offsetOfHcsK1(); }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return impl.sizeOfExcludingThis(mallocSizeOf);

@@ -4680,6 +4680,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void prepareHashSymbol(Register sym, Register result);
   void prepareHashBigInt(Register bigInt, Register result, Register temp1,
                          Register temp2, Register temp3);
+  void prepareHashObject(Register setObj, ValueOperand value, Register result,
+                         Register temp1, Register temp2, Register temp3,
+                         Register temp4);
 
  private:
   enum class IsBigInt { No, Yes, Maybe };
