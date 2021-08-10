@@ -307,6 +307,51 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override {
+    nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(Frame());
+    HTMLCanvasElement* canvas = HTMLCanvasElement::FromNode(f->GetContent());
+
+    nsRect area = f->GetContentRectRelativeToSelf() + ToReferenceFrame();
+    nsIntSize canvasSizeInPx = f->GetCanvasSize();
+
+    nsPresContext* presContext = f->PresContext();
+    canvas->HandlePrintCallback(presContext);
+
+    if (canvasSizeInPx.width <= 0 || canvasSizeInPx.height <= 0 ||
+        area.IsEmpty()) {
+      return;
+    }
+
+    IntrinsicSize intrinsicSize = IntrinsicSizeFromCanvasSize(canvasSizeInPx);
+    AspectRatio intrinsicRatio = IntrinsicRatioFromCanvasSize(canvasSizeInPx);
+
+    nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
+        area, intrinsicSize, intrinsicRatio, f->StylePosition());
+
+    gfxRect destGFXRect = presContext->AppUnitsToGfxUnits(dest);
+
+    // Transform the canvas into the right place
+    gfxPoint p = destGFXRect.TopLeft();
+    Matrix transform = Matrix::Translation(p.x, p.y);
+    transform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
+                       destGFXRect.Height() / canvasSizeInPx.height);
+
+    if (RefPtr<layers::Image> image = canvas->GetAsImage()) {
+      RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
+      if (!surface || !surface->IsValid()) {
+        return;
+      }
+
+      gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
+      aCtx->Multiply(transform);
+
+      gfx::IntSize size = surface->GetSize();
+      aCtx->GetDrawTarget()->FillRect(
+          Rect(0, 0, size.width, size.height),
+          SurfacePattern(surface, ExtendMode::CLAMP, Matrix(),
+                         nsLayoutUtils::GetSamplingFilterForFrame(f)));
+      return;
+    }
+
     // This currently uses BasicLayerManager to re-use the code for extracting
     // the current CanvasRenderer/Image and generating DrawTarget rendering
     // commands for it.

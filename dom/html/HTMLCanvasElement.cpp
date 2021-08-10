@@ -1142,6 +1142,18 @@ already_AddRefed<Layer> HTMLCanvasElement::GetCanvasLayer(
   return nullptr;
 }
 
+already_AddRefed<Image> HTMLCanvasElement::GetAsImage() {
+  if (mCurrentContext) {
+    return mCurrentContext->GetAsImage();
+  }
+
+  if (mOffscreenCanvas) {
+    MOZ_CRASH("todo");
+  }
+
+  return nullptr;
+}
+
 bool HTMLCanvasElement::UpdateWebRenderCanvasData(
     nsDisplayListBuilder* aBuilder, WebRenderCanvasData* aCanvasData) {
   if (mCurrentContext) {
