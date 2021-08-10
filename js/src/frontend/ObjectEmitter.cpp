@@ -145,6 +145,26 @@ bool PropertyEmitter::prepareForPrivateMethod() {
   return true;
 }
 
+bool PropertyEmitter::prepareForPrivateStaticMethod(
+    const mozilla::Maybe<uint32_t>& keyPos) {
+  MOZ_ASSERT(propertyState_ == PropertyState::Start ||
+             propertyState_ == PropertyState::Init);
+
+  //                [stack] CTOR OBJ
+
+  if (!prepareForProp(keyPos,
+                      /* isStatic_ = */ true,
+                      /* isIndexOrComputed = */ true)) {
+    //              [stack] CTOR OBJ CTOR
+    return false;
+  }
+
+#ifdef DEBUG
+  propertyState_ = PropertyState::PrivateStaticMethod;
+#endif
+  return true;
+}
+
 bool PropertyEmitter::prepareForPropValue(const Maybe<uint32_t>& keyPos,
                                           Kind kind /* = Kind::Prototype */) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start ||
@@ -235,6 +255,7 @@ bool PropertyEmitter::prepareForComputedPropValue() {
 bool PropertyEmitter::emitInitHomeObject() {
   MOZ_ASSERT(propertyState_ == PropertyState::PropValue ||
              propertyState_ == PropertyState::PrivateMethodValue ||
+             propertyState_ == PropertyState::PrivateStaticMethod ||
              propertyState_ == PropertyState::IndexValue ||
              propertyState_ == PropertyState::ComputedValue);
 
@@ -267,6 +288,8 @@ bool PropertyEmitter::emitInitHomeObject() {
     propertyState_ = PropertyState::InitHomeObj;
   } else if (propertyState_ == PropertyState::PrivateMethodValue) {
     propertyState_ = PropertyState::InitHomeObjForPrivateMethod;
+  } else if (propertyState_ == PropertyState::PrivateStaticMethod) {
+    propertyState_ = PropertyState::InitHomeObjForPrivateStaticMethod;
   } else if (propertyState_ == PropertyState::IndexValue) {
     propertyState_ = PropertyState::InitHomeObjForIndex;
   } else {
@@ -287,9 +310,8 @@ bool PropertyEmitter::emitInit(AccessorType accessorType,
     case AccessorType::Setter:
       return emitInit(
           isClass_ ? JSOp::InitHiddenPropSetter : JSOp::InitPropSetter, key);
-    default:
-      MOZ_CRASH("Invalid op");
   }
+  MOZ_CRASH("Invalid op");
 }
 
 bool PropertyEmitter::emitInitIndexOrComputed(AccessorType accessorType) {
@@ -303,9 +325,22 @@ bool PropertyEmitter::emitInitIndexOrComputed(AccessorType accessorType) {
     case AccessorType::Setter:
       return emitInitIndexOrComputed(isClass_ ? JSOp::InitHiddenElemSetter
                                               : JSOp::InitElemSetter);
-    default:
-      MOZ_CRASH("Invalid op");
   }
+  MOZ_CRASH("Invalid op");
+}
+
+bool PropertyEmitter::emitPrivateStaticMethod(AccessorType accessorType) {
+  MOZ_ASSERT(isClass_);
+
+  switch (accessorType) {
+    case AccessorType::None:
+      return emitInitIndexOrComputed(JSOp::InitLockedElem);
+    case AccessorType::Getter:
+      return emitInitIndexOrComputed(JSOp::InitHiddenElemGetter);
+    case AccessorType::Setter:
+      return emitInitIndexOrComputed(JSOp::InitHiddenElemSetter);
+  }
+  MOZ_CRASH("Invalid op");
 }
 
 bool PropertyEmitter::emitInit(JSOp op, TaggedParserAtomIndex key) {
@@ -346,11 +381,15 @@ bool PropertyEmitter::emitInitIndexOrComputed(JSOp op) {
   MOZ_ASSERT(propertyState_ == PropertyState::IndexValue ||
              propertyState_ == PropertyState::InitHomeObjForIndex ||
              propertyState_ == PropertyState::ComputedValue ||
-             propertyState_ == PropertyState::InitHomeObjForComputed);
+             propertyState_ == PropertyState::InitHomeObjForComputed ||
+             propertyState_ == PropertyState::PrivateStaticMethod ||
+             propertyState_ ==
+                 PropertyState::InitHomeObjForPrivateStaticMethod);
 
   MOZ_ASSERT(op == JSOp::InitElem || op == JSOp::InitHiddenElem ||
-             op == JSOp::InitElemGetter || op == JSOp::InitHiddenElemGetter ||
-             op == JSOp::InitElemSetter || op == JSOp::InitHiddenElemSetter);
+             op == JSOp::InitLockedElem || op == JSOp::InitElemGetter ||
+             op == JSOp::InitHiddenElemGetter || op == JSOp::InitElemSetter ||
+             op == JSOp::InitHiddenElemSetter);
 
   //                [stack] CTOR? OBJ CTOR? KEY VAL
 
