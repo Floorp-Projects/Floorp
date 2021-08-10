@@ -195,8 +195,18 @@ add_task(async function test_webnav_unresolved_uri_on_expected_URI_scheme() {
   for (let data of testFilterScenarios) {
     info(`Prepare the new test scenario: ${JSON.stringify(data)}`);
 
-    // Bug 1589102: using plain "about:blank" crashes here in fission+debug.
-    win.location = "about:blank?2";
+    win.location = "about:blank";
+
+    // Wait for the about:blank load to finish before continuing, in case this
+    // load is causing a process switch back into our process.
+    await SimpleTest.promiseWaitForCondition(() => {
+      try {
+        return win.location.href == "about:blank" &&
+          win.document.readyState == "complete";
+      } catch (e) {
+        return false;
+      }
+    });
 
     extension.sendMessage("test-filters", EVENTS, data);
     await extension.awaitMessage("test-filter-ready");
