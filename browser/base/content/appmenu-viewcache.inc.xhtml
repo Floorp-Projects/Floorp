@@ -6,57 +6,6 @@
   <panelview id="appMenu-mainView" class="PanelUI-subView"
              descriptionheightworkaround="true">
     <vbox class="panel-subview-body">
-      <toolbaritem id="appMenu-zoom-controls" class="toolbaritem-combined-buttons" closemenu="none">
-        <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
-        <spacer class="before-label"/>
-        <label value="&fullZoom.label;"/>
-        <!-- This spacer keeps the scrollbar from overlapping the view. -->
-        <spacer class="after-label"/>
-        <toolbarbutton id="appMenu-zoomReduce-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       command="cmd_fullZoomReduce"
-                       data-l10n-id="appmenuitem-zoom-reduce"
-                       tooltip="dynamic-shortcut-tooltip"/>
-        <toolbarbutton id="appMenu-zoomReset-button"
-                       class="subviewbutton"
-                       command="cmd_fullZoomReset"
-                       tooltip="dynamic-shortcut-tooltip"/>
-        <toolbarbutton id="appMenu-zoomEnlarge-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       command="cmd_fullZoomEnlarge"
-                       data-l10n-id="appmenuitem-zoom-enlarge"
-                       tooltip="dynamic-shortcut-tooltip"/>
-        <toolbarseparator orient="vertical"/>
-        <toolbarbutton id="appMenu-fullscreen-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-fullscreen"
-                       observes="View:FullScreen"
-                       type="checkbox"
-                       closemenu="auto"
-                       onclick="if (event.button == 0) this.closest('panel').hidePopup();"
-                       tooltip="dynamic-shortcut-tooltip"/>
-      </toolbaritem>
-      <toolbarseparator/>
-      <toolbaritem id="appMenu-edit-controls" class="toolbaritem-combined-buttons" closemenu="none">
-        <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
-        <spacer class="before-label"/>
-        <label value="&editMenu.label;"/>
-        <!-- This spacer keeps the scrollbar from overlapping the view. -->
-        <spacer class="after-label"/>
-        <toolbarbutton id="appMenu-cut-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       command="cmd_cut"
-                       tooltip="dynamic-shortcut-tooltip"/>
-        <toolbarbutton id="appMenu-copy-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       command="cmd_copy"
-                       tooltip="dynamic-shortcut-tooltip"/>
-        <toolbarbutton id="appMenu-paste-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       command="cmd_paste"
-                       tooltip="dynamic-shortcut-tooltip"/>
-      </toolbaritem>
-      <toolbarseparator/>
       <toolbarbutton id="appMenu-library-button"
                      class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                      label="&places.library.title;"

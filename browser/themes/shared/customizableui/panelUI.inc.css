@@ -1234,15 +1234,6 @@ panelmultiview .toolbaritem-combined-buttons > label {
   padding: 4px 0;
 }
 
-panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
-  width: 36px; /* 12px toolbarbutton padding + 16px icon + 8px label padding start */
-}
-
-panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
-  -moz-box-flex: 1;
-  width: 20px; /* a little bigger than the width of the scrollbar */
-}
-
 .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton {
   -moz-box-flex: 0;
   height: auto;
@@ -1251,36 +1242,9 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   padding: 4px 5px;
 }
 
-#appMenu-zoom-controls > .subviewbutton {
-  margin-inline-start: 10px;
-}
-
-/* Unset the min-height constraint, because that works better for a text-only button. */
-#appMenu-zoomReset-button {
-  min-height: unset;
-  border: 1px solid var(--panel-separator-color);
-  border-radius: 10000px;
-  padding: 1px 8px;
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#appMenu-zoomReset-button@buttonStateHoverOrFocus@ {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-#appMenu-zoomReset-button@buttonStateActive@ {
-  background-color: var(--arrowpanel-dimmed-even-further);
-}
-
-#appMenu-zoomReset-button > .toolbarbutton-text,
 #appMenu-zoomReset-button2 > .toolbarbutton-text {
   min-width: calc(4ch + 8px);
   text-align: center;
-}
-
-#appMenu-zoom-controls > toolbarseparator[orient="vertical"] + .subviewbutton,
-#appMenu-zoom-controls2 > toolbarseparator[orient="vertical"] + .subviewbutton {
-  margin-inline-start: 0;
 }
 
 .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton-iconic > .toolbarbutton-text,
@@ -1412,14 +1376,6 @@ menuitem.subviewbutton@menuStateActive@,
 
 .cui-widget-panelview menuseparator.small-separator {
   margin-inline: 10px;
-}
-
-.PanelUI-subView toolbarseparator[orient="vertical"] {
-  height: 24px;
-  border-inline-start: 1px solid var(--panel-separator-color);
-  border-top: none;
-  margin: 0;
-  margin-inline: 6px 7px;
 }
 
 .subviewbutton > .menu-accel-container {
