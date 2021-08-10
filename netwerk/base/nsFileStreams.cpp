@@ -5,7 +5,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX)
 #  include <unistd.h>
 #elif defined(XP_WIN)
 #  include <windows.h>
@@ -88,14 +88,14 @@ nsFileStreamBase::SetEOF() {
   nsresult rv = DoPendingOpen();
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX)
   // Some system calls require an EOF offset.
   int64_t offset;
   rv = Tell(&offset);
   if (NS_FAILED(rv)) return rv;
 #endif
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX)
   if (ftruncate(PR_FileDesc2NativeHandle(mFD), offset) != 0) {
     NS_ERROR("ftruncate failed");
     return NS_ERROR_FAILURE;
