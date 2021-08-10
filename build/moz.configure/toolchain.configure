@@ -2475,6 +2475,11 @@ option(
     "--enable-stdcxx-compat",
     env="MOZ_STDCXX_COMPAT",
     help="Enable compatibility with older libstdc++",
+    when=depends(target, host)(
+        lambda target, host: any(
+            t.os == "GNU" and t.kernel == "Linux" for t in (target, host)
+        )
+    ),
 )
 
 
