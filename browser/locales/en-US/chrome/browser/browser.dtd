@@ -12,7 +12,6 @@
 <!ENTITY  listAllTabs.label      "List all tabs">
 
 <!ENTITY tabCmd.label "New Tab">
-<!ENTITY openFileCmd.label "Open File…">
 <!ENTITY printCmd.label "Print…">
 
 <!ENTITY menubarCmd.label "Menu Bar">
@@ -124,8 +123,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY editPopupSettings.label "Edit Pop-up Blocker Options…">
 <!ENTITY editPopupSettings.accesskey "E">
 <!ENTITY dontShowMessage.accesskey "D">
-
-<!ENTITY findOnCmd.label     "Find in This Page…">
 
 <!ENTITY spellAddDictionaries.label "Add Dictionaries…">
 <!ENTITY spellAddDictionaries.accesskey "A">
