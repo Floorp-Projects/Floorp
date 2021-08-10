@@ -3718,6 +3718,12 @@
   value: true
   mirror: always
 
+# Is support for custom element elementInternals enabled?
+- name: dom.webcomponents.elementInternals.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for form-associated custom element enabled?
 - name: dom.webcomponents.formAssociatedCustomElement.enabled
   type: bool
