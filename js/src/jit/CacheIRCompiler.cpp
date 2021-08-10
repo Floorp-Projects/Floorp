@@ -8179,6 +8179,28 @@ bool CacheIRCompiler::emitSetHasNonGCThingResult(ObjOperandId setId,
   return true;
 }
 
+bool CacheIRCompiler::emitSetHasSymbolResult(ObjOperandId setId,
+                                             SymbolOperandId symId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register set = allocator.useRegister(masm, setId);
+  Register sym = allocator.useRegister(masm, symId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+
+  masm.prepareHashSymbol(sym, scratch1);
+
+  masm.tagValue(JSVAL_TYPE_SYMBOL, sym, output.valueReg());
+  masm.setObjectHasNonBigInt(set, output.valueReg(), scratch1, scratch2,
+                             scratch3, scratch4);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitBailout() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
