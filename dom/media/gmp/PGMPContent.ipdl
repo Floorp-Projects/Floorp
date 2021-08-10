@@ -23,7 +23,7 @@ namespace gmp {
 child:
   async PGMPVideoDecoder();
   async PGMPVideoEncoder();
-  async PChromiumCDM();
+  async PChromiumCDM(nsCString aKeySystem);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
   async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
