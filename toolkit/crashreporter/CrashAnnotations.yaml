@@ -578,7 +578,7 @@ MacMemoryPressureSysctl:
     The value of the memory pressure sysctl
     'kern.memorystatus_vm_pressure_level'. Indicates which memory
     pressure level the system is in at the time of the crash. The expected
-    values are one of 4 (Critical), 2 (Warning), or 0 (Normal).
+    values are one of 4 (Critical), 2 (Warning), or 1 (Normal).
   type: integer
 
 MacAvailableMemorySysctl:
