@@ -4678,6 +4678,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              Register temp);
   void prepareHashString(Register str, Register result, Register temp);
   void prepareHashSymbol(Register sym, Register result);
+  void prepareHashBigInt(Register bigInt, Register result, Register temp1,
+                         Register temp2, Register temp3);
 
  private:
   enum class IsBigInt { No, Yes, Maybe };
@@ -4702,6 +4704,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              Register result, Register temp1, Register temp2) {
     return setObjectHas(setObj, value, hash, result, temp1, temp2, InvalidReg,
                         InvalidReg, IsBigInt::No);
+  }
+  void setObjectHasBigInt(Register setObj, ValueOperand value, Register hash,
+                          Register result, Register temp1, Register temp2,
+                          Register temp3, Register temp4) {
+    return setObjectHas(setObj, value, hash, result, temp1, temp2, temp3, temp4,
+                        IsBigInt::Yes);
   }
 
   // Inline version of js_TypedArray_uint8_clamp_double.

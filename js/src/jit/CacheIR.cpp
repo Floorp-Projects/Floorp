@@ -7815,7 +7815,11 @@ AttachDecision CallIRGenerator::tryAttachSetHas(HandleFunction callee) {
         writer.setHasSymbolResult(objId, symId);
         break;
       }
-      case ValueType::BigInt:
+      case ValueType::BigInt: {
+        BigIntOperandId bigIntId = writer.guardToBigInt(argId);
+        writer.setHasBigIntResult(objId, bigIntId);
+        break;
+      }
       case ValueType::Object:
         writer.setHasResult(objId, argId);
         break;
