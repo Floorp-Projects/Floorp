@@ -25,7 +25,12 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import kotlin.coroutines.CoroutineContext
 
-abstract class SearchEngineListPreference : Preference, CoroutineScope {
+abstract class SearchEngineListPreference @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : Preference(context, attrs, defStyleAttr), CoroutineScope {
+
     private val job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -34,11 +39,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
 
     protected abstract val itemResId: Int
 
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        layoutResource = R.layout.preference_search_engine_chooser
-    }
-
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
+    init {
         layoutResource = R.layout.preference_search_engine_chooser
     }
 
@@ -72,14 +73,16 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
             return
         }
 
-        val defaultSearchEngine = context.components.store.state.search.selectedOrDefaultSearchEngine?.id
+        val defaultSearchEngine =
+            context.components.store.state.search.selectedOrDefaultSearchEngine?.id
 
         searchEngineGroup!!.removeAllViews()
 
         val layoutInflater = LayoutInflater.from(context)
         val layoutParams = RecyclerView.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT)
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
 
         for (i in searchEngines.indices) {
             val engine = searchEngines[i]

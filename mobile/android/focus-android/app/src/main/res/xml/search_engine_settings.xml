@@ -5,10 +5,17 @@
 
 <!-- This preffed off by feature flag FLAG_MANUAL_SEARCH_ENGINE and corresponds to
 search_engine_settings.xml -->
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <org.mozilla.focus.search.RadioSearchEngineListPreference
-        android:key="@string/pref_key_radio_search_engine_list"/>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginStart="32dp">
     <androidx.preference.Preference
-        android:title="@string/preference_search_add2"
-        android:key="@string/pref_key_manual_add_search_engine"/>
+        android:title="@string/preference_select_preferred_engine"
+        app:iconSpaceReserved="false"
+        app:allowDividerBelow="false"/>
+    <org.mozilla.focus.search.RadioSearchEngineListPreference
+        android:key="@string/pref_key_radio_search_engine_list" />
+    <androidx.preference.Preference
+        android:icon="@drawable/ic_tab_new"
+        android:key="@string/pref_key_manual_add_search_engine"
+        android:title="@string/preference_search_add3" />
 </androidx.preference.PreferenceScreen>

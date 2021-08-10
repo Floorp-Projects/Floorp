@@ -333,6 +333,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Installed search engines</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Choose search engine</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Restore default search engines</string>
 
@@ -341,6 +344,10 @@
     <string name="preference_search_add2">+ Add another search engine</string>
     <string name="preference_search_remove_title">Remove search engines</string>
     <string name="preference_search_remove">Remove</string>
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Add another search engine</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Select your preferred engine:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->

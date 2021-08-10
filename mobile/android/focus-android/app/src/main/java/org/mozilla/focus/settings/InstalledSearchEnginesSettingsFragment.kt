@@ -34,7 +34,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onResume() {
         super.onResume()
 
-        updateTitle(R.string.preference_search_installed_search_engines)
+        updateTitle(R.string.preference_choose_search_engine)
 
         if (languageChanged)
             restoreSearchEngines()
