@@ -2652,9 +2652,8 @@ nsresult nsHttpChannel::ProxyFailover() {
       return rv;
     }
     // If this request used a failed proxy and there is no failover available,
-    // fallback to DIRECT connections for system principal requests.
-    if (mLoadInfo->GetLoadingPrincipal() &&
-        mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()) {
+    // fallback to DIRECT connections for conservative requests.
+    if (LoadBeConservative()) {
       rv = pps->NewProxyInfo("direct"_ns, ""_ns, 0, ""_ns, ""_ns, 0, UINT32_MAX,
                              nullptr, getter_AddRefs(pi));
     }
