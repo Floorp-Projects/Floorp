@@ -160,13 +160,15 @@ describe("Top Sites Feed", () => {
   }
 
   describe("#constructor", () => {
-    it("should defineLazyGetter for _currentSearchHostname", () => {
-      assert.calledOnce(global.XPCOMUtils.defineLazyGetter);
-      assert.calledWith(
-        global.XPCOMUtils.defineLazyGetter,
-        feed,
-        "_currentSearchHostname",
-        sinon.match.func
+    it("should defineLazyGetter for log and _currentSearchHostname", () => {
+      assert.calledTwice(global.XPCOMUtils.defineLazyGetter);
+
+      let spyCall = global.XPCOMUtils.defineLazyGetter.getCall(0);
+      assert.ok(spyCall.calledWith(sinon.match.any, "log", sinon.match.func));
+
+      spyCall = global.XPCOMUtils.defineLazyGetter.getCall(1);
+      assert.ok(
+        spyCall.calledWith(feed, "_currentSearchHostname", sinon.match.func)
       );
     });
   });

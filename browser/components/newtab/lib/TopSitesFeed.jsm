@@ -74,6 +74,13 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  const { Logger } = ChromeUtils.import(
+    "resource://messaging-system/lib/Logger.jsm"
+  );
+  return new Logger("TopSitesFeed");
+});
+
 const DEFAULT_SITES_PREF = "default.sites";
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const DEFAULT_TOP_SITES = [];
@@ -171,7 +178,7 @@ class ContileIntegration {
       let url = Services.prefs.getStringPref(CONTILE_ENDPOINT_PREF);
       const response = await fetch(url, { credentials: "omit" });
       if (!response.ok) {
-        Cu.reportError(
+        log.warn(
           `Contile endpoint returned unexpected status: ${response.status}`
         );
       }
@@ -188,7 +195,7 @@ class ContileIntegration {
         let { tiles } = body;
         tiles = this._filterBlockedSponsors(tiles);
         if (tiles.length > MAX_NUM_SPONSORED) {
-          Cu.reportError(
+          log.warn(
             `Contile provided more links than permitted. (${tiles.length} received, limit is ${MAX_NUM_SPONSORED})`
           );
           tiles.length = MAX_NUM_SPONSORED;
@@ -197,9 +204,7 @@ class ContileIntegration {
         return true;
       }
     } catch (error) {
-      Cu.reportError(
-        `Failed to fetch data from Contile server: ${error.message}`
-      );
+      log.warn(`Failed to fetch data from Contile server: ${error.message}`);
     }
     return false;
   }
