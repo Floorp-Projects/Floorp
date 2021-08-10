@@ -103,12 +103,27 @@ TEST(DOM_Quota_QMResult, ToResult)
   }
 }
 
+TEST(DOM_Quota_QMResult, ToResult_Macro)
+{
+  auto okOrErr = QM_TO_RESULT(NS_ERROR_FAILURE);
+  static_assert(std::is_same_v<decltype(okOrErr), OkOrErr>);
+  ASSERT_TRUE(okOrErr.isErr());
+  auto err = okOrErr.unwrapErr();
+#ifdef QM_ERROR_STACKS_ENABLED
+  ASSERT_EQ(err.StackId(), 7u);
+  ASSERT_EQ(err.FrameId(), 1u);
+  ASSERT_EQ(err.NSResult(), NS_ERROR_FAILURE);
+#else
+  ASSERT_EQ(err, NS_ERROR_FAILURE);
+#endif
+}
+
 TEST(DOM_Quota_QMResult, ErrorPropagation)
 {
   OkOrErr okOrErr1 = ToResult(ToQMResult(NS_ERROR_FAILURE));
   const auto& err1 = okOrErr1.inspectErr();
 #ifdef QM_ERROR_STACKS_ENABLED
-  ASSERT_EQ(err1.StackId(), 7u);
+  ASSERT_EQ(err1.StackId(), 8u);
   ASSERT_EQ(err1.FrameId(), 1u);
   ASSERT_EQ(err1.NSResult(), NS_ERROR_FAILURE);
 #else
@@ -118,7 +133,7 @@ TEST(DOM_Quota_QMResult, ErrorPropagation)
   OkOrErr okOrErr2 = okOrErr1.propagateErr();
   const auto& err2 = okOrErr2.inspectErr();
 #ifdef QM_ERROR_STACKS_ENABLED
-  ASSERT_EQ(err2.StackId(), 7u);
+  ASSERT_EQ(err2.StackId(), 8u);
   ASSERT_EQ(err2.FrameId(), 2u);
   ASSERT_EQ(err2.NSResult(), NS_ERROR_FAILURE);
 #else
@@ -128,7 +143,7 @@ TEST(DOM_Quota_QMResult, ErrorPropagation)
   OkOrErr okOrErr3 = okOrErr2.propagateErr();
   const auto& err3 = okOrErr3.inspectErr();
 #ifdef QM_ERROR_STACKS_ENABLED
-  ASSERT_EQ(err3.StackId(), 7u);
+  ASSERT_EQ(err3.StackId(), 8u);
   ASSERT_EQ(err3.FrameId(), 3u);
   ASSERT_EQ(err3.NSResult(), NS_ERROR_FAILURE);
 #else
