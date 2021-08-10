@@ -15,18 +15,18 @@
 #include "nsISupports.h"
 
 class nsAtom;
-class nsICollation;
 class nsIContent;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Element;
 }
-}  // namespace mozilla
+namespace mozilla::intl {
+class Collator;
+}
 
 class nsXULContentUtils {
  protected:
-  static nsICollation* gCollation;
+  const static mozilla::intl::Collator* gCollator;
 
   static bool gDisableXULCache;
 
@@ -39,7 +39,7 @@ class nsXULContentUtils {
   static nsresult FindChildByTag(nsIContent* aElement, int32_t aNameSpaceID,
                                  nsAtom* aTag, mozilla::dom::Element** aResult);
 
-  static nsICollation* GetCollation();
+  static const mozilla::intl::Collator* GetCollator();
 };
 
 #endif  // nsXULContentUtils_h__
