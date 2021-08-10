@@ -212,13 +212,15 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
 
   ResizeObserverEntry(nsISupports* aOwner, Element& aTarget,
                       const gfx::Size& aBorderBoxSize,
-                      const gfx::Size& aContentBoxSize)
+                      const gfx::Size& aContentBoxSize,
+                      const gfx::Size& aDevicePixelContentBoxSize)
       : mOwner(aOwner), mTarget(&aTarget) {
     MOZ_ASSERT(mOwner, "Need a non-null owner");
     MOZ_ASSERT(mTarget, "Need a non-null target element");
 
     SetBorderBoxSize(aBorderBoxSize);
     SetContentRectAndSize(aContentBoxSize);
+    SetDevicePixelContentSize(aDevicePixelContentBoxSize);
   }
 
   nsISupports* GetParentObject() const { return mOwner; }
@@ -237,11 +239,13 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
   DOMRectReadOnly* ContentRect() const { return mContentRect; }
 
   /**
-   * Returns target's logical border-box size and content-box size as
-   * ResizeObserverSize.
+   * Returns target's logical border-box size, content-box size, and
+   * device-pixel-content-box as an array of ResizeObserverSize.
    */
   void GetBorderBoxSize(nsTArray<RefPtr<ResizeObserverSize>>& aRetVal) const;
   void GetContentBoxSize(nsTArray<RefPtr<ResizeObserverSize>>& aRetVal) const;
+  void GetDevicePixelContentBoxSize(
+      nsTArray<RefPtr<ResizeObserverSize>>& aRetVal) const;
 
  private:
   ~ResizeObserverEntry() = default;
@@ -250,6 +254,8 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
   void SetBorderBoxSize(const gfx::Size& aSize);
   // Set contentRect and contentBoxSize.
   void SetContentRectAndSize(const gfx::Size& aSize);
+  // Set devicePixelContentBoxSize.
+  void SetDevicePixelContentSize(const gfx::Size& aSize);
 
   nsCOMPtr<nsISupports> mOwner;
   nsCOMPtr<Element> mTarget;
@@ -257,6 +263,7 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
   RefPtr<DOMRectReadOnly> mContentRect;
   RefPtr<ResizeObserverSize> mBorderBoxSize;
   RefPtr<ResizeObserverSize> mContentBoxSize;
+  RefPtr<ResizeObserverSize> mDevicePixelContentBoxSize;
 };
 
 class ResizeObserverSize final : public nsISupports, public nsWrapperCache {

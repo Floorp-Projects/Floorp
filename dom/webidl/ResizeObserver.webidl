@@ -9,7 +9,8 @@
 
 enum ResizeObserverBoxOptions {
     "border-box",
-    "content-box"
+    "content-box",
+    "device-pixel-content-box"
 };
 
 dictionary ResizeObserverOptions {
@@ -42,6 +43,8 @@ interface ResizeObserverEntry {
     readonly attribute sequence<ResizeObserverSize> borderBoxSize;
     [Frozen, Cached, Pure]
     readonly attribute sequence<ResizeObserverSize> contentBoxSize;
+    [Frozen, Cached, Pure]
+    readonly attribute sequence<ResizeObserverSize> devicePixelContentBoxSize;
 };
 
 [Pref="layout.css.resizeobserver.enabled",
