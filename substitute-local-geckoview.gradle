@@ -28,6 +28,10 @@ def log(message) {
     logger.lifecycle("[substitute-local-geckoview] ${message}")
 }
 
+def warn(message) {
+    logger.warn("[substitute-local-geckoview] Warning: ${message}")
+}
+
 if (!project.ext.has('topsrcdir')) {
     throw new GradleException("ext.topsrcdir must be specified to substitute for a local GeckoView")
 }
@@ -59,7 +63,7 @@ if (!ext.has('topobjdir')) {
 }
 
 if (mozconfig.substs.MOZ_BUILD_APP != 'mobile/android') {
-    throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.")
+    throw new GradleException("Building with Gradle is only supported for GeckoView, i.e., MOZ_BUILD_APP == 'mobile/android'.")
 }
 
 log("Will substitute GeckoView (geckoview-{nightly,beta}) with local GeckoView (geckoview-default) from ${topobjdir}/gradle/build/mobile/android/geckoview/maven")
@@ -124,11 +128,22 @@ configurations.all { config ->
                     if (group == 'org.mozilla.geckoview'
                           && (geckoviewModules.contains(module) || geckoviewOmniModules.contains(module))) {
                         def name = ''
-                        if (geckoviewOmniModules.contains(module)) {
-                          name = 'geckoview-default-omni'
-                        } else {
+                        def isLite = mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE
+
+                        if (isLite) {
                           name = 'geckoview-default'
+                        } else {
+                          name = 'geckoview-default-omni'
                         }
+
+                        if (geckoviewModules.contains(module) && !isLite) {
+                          warn("Substituting a geckoview omni build into a lite dependency. Add ac_add_options --enable-geckoview-lite to ${mozconfig.mozconfig.path} to fix this.")
+                        } else if (geckoviewOmniModules.contains(module) && isLite) {
+                          // Substituting lite into omni is unlikely to work at
+                          // all so we just error out here.
+                          throw new GradleException("Substituting a geckoview lite build into an omni dependency. Remove ac_add_options --enable-geckoview-lite in ${mozconfig.mozconfig.path} to fix this.")
+                        }
+
                         log("Substituting ${group}:${dependency.requested.module} with local GeckoView ${group}:${name} in ${config}")
 
                         dependency.useTarget([group: group, name: name, version: '+'])
