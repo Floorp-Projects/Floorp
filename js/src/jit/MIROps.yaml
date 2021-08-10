@@ -2228,6 +2228,42 @@
   can_recover: true
   clone: true
 
+- name: GuardNonGCThing
+  operands:
+    input: Value
+  result_type: Value
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
+
+- name: ToHashableNonGCThing
+  operands:
+    input: Value
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
+- name: HashNonGCThing
+  operands:
+    input: Value
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
+- name: SetObjectHasNonBigInt
+  operands:
+    set: Object
+    value: Value
+    hash: Int32
+  result_type: Boolean
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
 - name: WasmNeg
   gen_boilerplate: false
 

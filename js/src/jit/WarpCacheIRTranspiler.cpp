@@ -3875,6 +3875,37 @@ bool WarpCacheIRTranspiler::emitBigIntAsUintNResult(Int32OperandId bitsId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardToNonGCThing(ValOperandId inputId) {
+  MDefinition* def = getOperand(inputId);
+  if (IsNonGCThing(def->type())) {
+    return true;
+  }
+
+  auto* ins = MGuardNonGCThing::New(alloc(), def);
+  add(ins);
+
+  setOperand(inputId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitSetHasNonGCThingResult(ObjOperandId setId,
+                                                       ValOperandId valId) {
+  MDefinition* set = getOperand(setId);
+  MDefinition* val = getOperand(valId);
+
+  auto* hashValue = MToHashableNonGCThing::New(alloc(), val);
+  add(hashValue);
+
+  auto* hash = MHashNonGCThing::New(alloc(), hashValue);
+  add(hash);
+
+  auto* ins = MSetObjectHasNonBigInt::New(alloc(), set, hashValue, hash);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTruthyResult(OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
