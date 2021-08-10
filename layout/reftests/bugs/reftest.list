@@ -1379,7 +1379,7 @@ fuzzy-if(Android,0-5,0-1656) fuzzy-if(skiaContent,0-1,0-1200) == 512410.html 512
 == 512631-1.html 512631-1-ref.html
 fuzzy-if(Android,0-1,0-2) fuzzy-if(!nativeThemePref,0-1,0-4) == 513153-1a.html 513153-1-ref.html
 fuzzy-if(Android,0-1,0-2) fuzzy-if(!nativeThemePref,0-1,0-4) == 513153-1b.html 513153-1-ref.html
-fuzzy-if(winWidget&&nativeThemePref&&webrender,82-82,84-84) fuzzy-if(cocoaWidget&&nativeThemePref&&webrender,46-46,58-58) fuzzy-if(appleSilicon&&nativeThemePref&&webrender,100-100,108-108) == 513153-2a.html 513153-2-ref.html # appleSilicon: bug 1724583
+pref(widget.non-native-theme.webrender,true) fuzzy-if(winWidget&&nativeThemePref&&webrender,82-82,84-84) fuzzy-if(cocoaWidget&&nativeThemePref&&webrender,46-46,58-58) fuzzy-if(appleSilicon&&nativeThemePref&&webrender,100-100,108-108) == 513153-2a.html 513153-2-ref.html # appleSilicon: bug 1724583
 fuzzy-if(cocoaWidget&&nativeThemePref&&webrender,46-46,116-116) fuzzy-if(cocoaWidget&&!nativeThemePref&&webrender,0-112,0-108) == 513153-2b.html 513153-2-ref.html # !nativeThemePref and webrender only fuzzy when widget.non-native-theme.webrender=false, snapping difference
 == chrome://reftest/content/bugs/513318-1.xhtml chrome://reftest/content/bugs/513318-1-ref.xhtml
 fails-if(Android&&(!asyncPan)) != chrome://reftest/content/bugs/513318-2.xhtml chrome://reftest/content/bugs/513318-2-ref.xhtml
