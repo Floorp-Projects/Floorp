@@ -5635,8 +5635,19 @@ void LIRGenerator::visitToHashableNonGCThing(MToHashableNonGCThing* ins) {
   defineBox(lir, ins);
 }
 
+void LIRGenerator::visitToHashableString(MToHashableString* ins) {
+  auto* lir = new (alloc()) LToHashableString(useRegister(ins->input()));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitHashNonGCThing(MHashNonGCThing* ins) {
   auto* lir = new (alloc()) LHashNonGCThing(useBox(ins->input()), temp());
+  define(lir, ins);
+}
+
+void LIRGenerator::visitHashString(MHashString* ins) {
+  auto* lir = new (alloc()) LHashString(useRegister(ins->input()), temp());
   define(lir, ins);
 }
 
