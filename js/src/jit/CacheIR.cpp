@@ -7849,6 +7849,90 @@ AttachDecision CallIRGenerator::tryAttachSetHas(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachMapHas(HandleFunction callee) {
+  // Ensure |this| is a MapObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<MapObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need a single argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'has' native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard |this| is a MapObject.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardClass(objId, GuardClassKind::Map);
+
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+
+#ifndef JS_CODEGEN_X86
+  // Assume the hash key will likely always have the same type when attaching
+  // the first stub. If the call is polymorphic on the hash key, attach a stub
+  // which handles any value.
+  if (isFirstStub_) {
+    switch (args_[0].type()) {
+      case ValueType::Double:
+      case ValueType::Int32:
+      case ValueType::Boolean:
+      case ValueType::Undefined:
+      case ValueType::Null: {
+        writer.guardToNonGCThing(argId);
+        writer.mapHasNonGCThingResult(objId, argId);
+        break;
+      }
+      case ValueType::String: {
+        StringOperandId strId = writer.guardToString(argId);
+        writer.mapHasStringResult(objId, strId);
+        break;
+      }
+      case ValueType::Symbol: {
+        SymbolOperandId symId = writer.guardToSymbol(argId);
+        writer.mapHasSymbolResult(objId, symId);
+        break;
+      }
+      case ValueType::BigInt: {
+        BigIntOperandId bigIntId = writer.guardToBigInt(argId);
+        writer.mapHasBigIntResult(objId, bigIntId);
+        break;
+      }
+      case ValueType::Object: {
+        // Currently only supported on 64-bit platforms.
+#  ifdef JS_PUNBOX64
+        ObjOperandId valId = writer.guardToObject(argId);
+        writer.mapHasObjectResult(objId, valId);
+#  else
+        writer.mapHasResult(objId, argId);
+#  endif
+        break;
+      }
+
+      case ValueType::Magic:
+      case ValueType::PrivateGCThing:
+        MOZ_CRASH("Unexpected type");
+    }
+  } else {
+    writer.mapHasResult(objId, argId);
+  }
+#else
+  // The optimized versions require too many registers on x86.
+  writer.mapHasResult(objId, argId);
+#endif
+
+  writer.returnFromIC();
+
+  trackAttached("MapHas");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   if (!callee->isNativeWithoutJitEntry() || callee->native() != fun_call) {
     return AttachDecision::NoAction;
@@ -9109,6 +9193,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Set natives.
     case InlinableNative::SetHas:
       return tryAttachSetHas(callee);
+
+    // Map natives.
+    case InlinableNative::MapHas:
+      return tryAttachMapHas(callee);
 
     // Testing functions.
     case InlinableNative::TestBailout:
