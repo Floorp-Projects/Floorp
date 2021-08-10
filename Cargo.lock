@@ -30,6 +30,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "android_log-sys"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85965b6739a430150bdd138e2374a98af0c3ee0d030b3bb7fc3bddff58d0102e"
+
+[[package]]
+name = "android_logger"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9ed09b18365ed295d722d0b5ed59c01b79a826ff2d2a8f73d5ecca8e6fb2f66"
+dependencies = [
+ "android_log-sys",
+ "env_logger",
+ "lazy_static",
+ "log",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1092,6 +1110,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dashmap"
+version = "4.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e77a43b28d0668df09411cb0bc9a8c2adc40f9a048afe863e05fd43251e8e39c"
+dependencies = [
+ "cfg-if 1.0.0",
+ "num_cpus",
+]
+
+[[package]]
 name = "data-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1563,6 +1591,7 @@ dependencies = [
  "cstr",
  "fog",
  "glean",
+ "glean-ffi",
  "log",
  "nserror",
  "nsstring",
@@ -2074,9 +2103,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "39.0.0"
+version = "40.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8e24825d3123194a212e3daf8ddac150713cec4f1e126dc3c12ba207f0b5d77"
+checksum = "4467acdfed9d396d5c8c1f47c658c6781476cfbb2e73a3c985e40204a9f4d350"
 dependencies = [
  "chrono",
  "crossbeam-channel 0.5.1",
@@ -2094,9 +2123,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "39.0.0"
+version = "40.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1a31d189a28ffde9bfcc7ab26586ee2b81705f0b95bf7a090b67fab1f378782"
+checksum = "a78e1fedc285fbf042f8f4f48281799c87f7715ad1ad9dabbfb57b09094cbaf5"
 dependencies = [
  "bincode",
  "chrono",
@@ -2110,6 +2139,25 @@ dependencies = [
  "time",
  "uuid",
  "zeitstempel",
+]
+
+[[package]]
+name = "glean-ffi"
+version = "40.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0da7ce4e6115c834a8da23c9978e007c047284eb136689d76538ecb0ef6ff69c"
+dependencies = [
+ "android_logger",
+ "env_logger",
+ "ffi-support",
+ "glean-core",
+ "libc",
+ "log",
+ "once_cell",
+ "oslog",
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]
@@ -3619,6 +3667,17 @@ dependencies = [
  "rsclientcerts",
  "sha2",
  "winapi",
+]
+
+[[package]]
+name = "oslog"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8343ce955f18e7e68c0207dd0ea776ec453035685395ababd2ea651c569728b3"
+dependencies = [
+ "cc",
+ "dashmap",
+ "log",
 ]
 
 [[package]]

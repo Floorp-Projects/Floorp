@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "glean"
-version = "39.0.0"
+version = "40.0.0"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
 include = ["/README.md", "/LICENSE", "/src", "/tests", "/Cargo.toml"]
 description = "Glean SDK Rust language bindings"
@@ -29,7 +29,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "39.0.0"
+version = "40.0.0"
 
 [dependencies.inherent]
 version = "0.1.4"
@@ -60,7 +60,7 @@ features = ["v4"]
 [dependencies.whatsys]
 version = "0.1.2"
 [dev-dependencies.env_logger]
-version = "0.7.1"
+version = "0.8.0"
 features = ["termcolor", "atty", "humantime"]
 default-features = false
 
