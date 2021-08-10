@@ -9337,6 +9337,20 @@ static bool TransplantableObject(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#ifdef DEBUG
+static bool DebugGetQueuedJobs(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  JSObject* jobs = js::GetJobsInInternalJobQueue(cx);
+  if (!jobs) {
+    return false;
+  }
+
+  args.rval().setObject(*jobs);
+  return true;
+}
+#endif
+
 // clang-format off
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("options", Options, 0, 0,
@@ -10092,6 +10106,12 @@ TestAssertRecoveredOnBailout,
   JS_FN_HELP("cacheIRHealthReport", CacheIRHealthReport, 0, 0,
 "cacheIRHealthReport()",
 "  Show health rating of CacheIR stubs."),
+#endif
+
+#ifdef DEBUG
+  JS_FN_HELP("debugGetQueuedJobs", DebugGetQueuedJobs, 0, 0,
+"debugGetQueuedJobs()",
+"  Returns an array of queued jobs."),
 #endif
 
     JS_FS_HELP_END
