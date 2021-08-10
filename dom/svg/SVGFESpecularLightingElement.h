@@ -34,6 +34,8 @@ class SVGFESpecularLightingElement : public SVGFESpecularLightingElementBase {
  public:
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
+
   virtual FilterPrimitiveDescription GetPrimitiveDescription(
       SVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
       const nsTArray<bool>& aInputsAreTainted,
