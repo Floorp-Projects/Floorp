@@ -9006,19 +9006,19 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
                 ? TaggedParserAtomIndex::WellKnown::dotStaticFieldKeys()
                 : TaggedParserAtomIndex::WellKnown::dotFieldKeys();
         if (!emitGetName(fieldKeys)) {
-          //        [stack] CTOR? OBJ ARRAY
+          //        [stack] CTOR OBJ ARRAY
           return false;
         }
 
         ParseNode* nameExpr = field->name().as<UnaryNode>().kid();
 
         if (!emitTree(nameExpr, ValueUsage::WantValue, EMIT_LINENOTE)) {
-          //        [stack] CTOR? OBJ ARRAY KEY
+          //        [stack] CTOR OBJ ARRAY KEY
           return false;
         }
 
         if (!emit1(JSOp::ToPropertyKey)) {
-          //        [stack] CTOR? OBJ ARRAY KEY
+          //        [stack] CTOR OBJ ARRAY KEY
           return false;
         }
 
@@ -9030,12 +9030,12 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         }
 
         if (!emitUint32Operand(JSOp::InitElemArray, fieldKeysIndex)) {
-          //        [stack] CTOR? OBJ ARRAY
+          //        [stack] CTOR OBJ ARRAY
           return false;
         }
 
         if (!emit1(JSOp::Pop)) {
-          //        [stack] CTOR? OBJ
+          //        [stack] CTOR OBJ
           return false;
         }
       }
@@ -9211,6 +9211,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       }
 
       if (!pe.emitInitIndexOrComputed(accessorType)) {
+        //          [stack] CTOR? OBJ
         return false;
       }
 
@@ -9241,6 +9242,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       }
 
       if (!pe.emitInit(accessorType, keyAtom)) {
+        //          [stack] CTOR? OBJ
         return false;
       }
 
@@ -9268,6 +9270,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       }
 
       if (!pe.emitInitIndexOrComputed(accessorType)) {
+        //          [stack] CTOR? OBJ
         return false;
       }
 
@@ -9275,35 +9278,36 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     }
 
     MOZ_ASSERT(key->isKind(ParseNodeKind::PrivateName));
+    MOZ_ASSERT(type == ClassBody);
 
     auto* privateName = &key->as<NameNode>();
 
-    if (!prop->as<ClassMethod>().isStatic()) {
+    if (kind == PropertyEmitter::Kind::Prototype) {
       MOZ_ASSERT(accessorType == AccessorType::None);
       if (!pe.prepareForPrivateMethod()) {
-        //          [stack] CTOR? OBJ
+        //          [stack] CTOR OBJ
         return false;
       }
       NameOpEmitter noe(this, privateName->atom(),
                         NameOpEmitter::Kind::SimpleAssignment);
       if (!noe.prepareForRhs()) {
-        //          [stack] CTOR? OBJ
+        //          [stack] CTOR OBJ
         return false;
       }
       if (!emitValue()) {
-        //          [stack] CTOR? OBJ METHOD
+        //          [stack] CTOR OBJ METHOD
         return false;
       }
       if (!noe.emitAssignment()) {
-        //          [stack] CTOR? OBJ METHOD
+        //          [stack] CTOR OBJ METHOD
         return false;
       }
       if (!emit1(JSOp::Pop)) {
-        //          [stack] CTOR? OBJ
+        //          [stack] CTOR OBJ
         return false;
       }
       if (!pe.skipInit()) {
-        //          [stack] CTOR? OBJ
+        //          [stack] CTOR OBJ
         return false;
       }
       continue;
@@ -9334,16 +9338,16 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
     if (privateName->privateNameKind() == PrivateNameKind::Setter) {
       if (!emitGetPrivateName(privateName)) {
-        //          [stack] THIS NAME
+        //          [stack] CTOR OBJ NAME
         return false;
       }
       if (!emitAtomOp(JSOp::GetIntrinsic,
                       TaggedParserAtomIndex::WellKnown::NoPrivateGetter())) {
-        //          [stack] THIS NAME FUN
+        //          [stack] CTOR OBJ NAME FUN
         return false;
       }
       if (!emit1(JSOp::InitHiddenElemGetter)) {
-        //          [stack] THIS
+        //          [stack] CTOR OBJ
         return false;
       }
     }
