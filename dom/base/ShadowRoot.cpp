@@ -54,7 +54,8 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
       DocumentOrShadowRoot(this),
       mMode(aMode),
       mSlotAssignment(aSlotAssignment),
-      mIsUAWidget(false) {
+      mIsUAWidget(false),
+      mIsAvailableToElementInternals(false) {
   SetHost(aElement);
 
   // Nodes in a shadow tree should never store a value
