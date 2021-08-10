@@ -232,13 +232,14 @@ RefPtr<GetCDMParentPromise> GeckoMediaPluginService::GetCDM(
                    nsLiteralCString(CHROMIUM_CDM_API), tags)
       ->Then(
           thread, __func__,
-          [rawHolder, helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
+          [rawHolder, helper, keySystem = nsCString{aKeySystem}](
+              RefPtr<GMPContentParent::CloseBlocker> wrapper) {
             RefPtr<GMPContentParent> parent = wrapper->mParent;
             MOZ_ASSERT(
                 parent,
                 "Wrapper should wrap a valid parent if we're in this path.");
             UniquePtr<PromiseHolder> holder(rawHolder);
-            RefPtr<ChromiumCDMParent> cdm = parent->GetChromiumCDM();
+            RefPtr<ChromiumCDMParent> cdm = parent->GetChromiumCDM(keySystem);
             if (!cdm) {
               nsPrintfCString reason(
                   "%s::%s failed since GetChromiumCDM returns nullptr.",
