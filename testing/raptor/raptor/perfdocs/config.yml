@@ -10,6 +10,7 @@ suites:
         description: "Tests for page-load performance. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium)"
         tests:
             amazon: "BT, FF, CH, CU"
+            amazon-sec: "BT, FF, CH, CU"
             bing-search: "BT, FF, CH, CU"
             buzzfeed: "BT, FF, CH, CU"
             cnn: "BT, FF, CH, CU"
