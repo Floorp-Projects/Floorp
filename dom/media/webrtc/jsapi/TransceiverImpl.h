@@ -5,6 +5,7 @@
 #define _TRANSCEIVERIMPL_H_
 
 #include <string>
+#include "libwebrtcglue/MediaConduitControl.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISerialEventTarget.h"
@@ -19,7 +20,6 @@ class nsIPrincipal;
 namespace mozilla {
 class PeerIdentity;
 class JsepTransceiver;
-enum class MediaSessionConduitLocalDirection : int;
 class MediaSessionConduit;
 class VideoSessionConduit;
 class AudioSessionConduit;
@@ -141,24 +141,45 @@ class TransceiverImpl : public nsISupports,
       const JsepTrackNegotiatedDetails& aDetails,
       std::vector<VideoCodecConfig>* aConfigs);
 
-  static void UpdateConduitRtpExtmap(
-      MediaSessionConduit& aConduit, const JsepTrackNegotiatedDetails& aDetails,
-      const MediaSessionConduitLocalDirection aDir);
+  AbstractCanonical<bool>* CanonicalReceiving() { return &mReceiving; }
+  AbstractCanonical<bool>* CanonicalTransmitting() { return &mTransmitting; }
+  AbstractCanonical<Ssrcs>* CanonicalLocalSsrcs() { return &mLocalSsrcs; }
+  AbstractCanonical<std::string>* CanonicalLocalCname() { return &mLocalCname; }
+  AbstractCanonical<std::string>* CanonicalLocalMid() { return &mLocalMid; }
+  AbstractCanonical<std::string>* CanonicalSyncGroup() { return &mSyncGroup; }
+  AbstractCanonical<RtpExtList>* CanonicalLocalSendRtpExtensions() {
+    return &mLocalSendRtpExtensions;
+  }
+  AbstractCanonical<Maybe<AudioCodecConfig>>* CanonicalAudioSendCodec() {
+    return &mAudioSendCodec;
+  }
+  AbstractCanonical<Ssrcs>* CanonicalLocalVideoRtxSsrcs() {
+    return &mLocalVideoRtxSsrcs;
+  }
+  AbstractCanonical<Maybe<VideoCodecConfig>>* CanonicalVideoSendCodec() {
+    return &mVideoSendCodec;
+  }
+  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoSendRtpRtcpConfig() {
+    return &mVideoSendRtpRtcpConfig;
+  }
+  AbstractCanonical<webrtc::VideoCodecMode>* CanonicalVideoCodecMode() {
+    return &mVideoCodecMode;
+  }
 
  private:
   virtual ~TransceiverImpl();
   void InitAudio();
   void InitVideo();
+  void InitConduitControl();
   nsresult UpdateAudioConduit();
   nsresult UpdateVideoConduit();
-  nsresult ConfigureVideoCodecMode(VideoSessionConduit& aConduit);
+  nsresult ConfigureVideoCodecMode();
   void Stop();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   const std::string mPCHandle;
   RefPtr<MediaTransportHandler> mTransportHandler;
   RefPtr<JsepTransceiver> mJsepTransceiver;
-  std::string mMid;
   bool mHaveSetupTransport;
   nsCOMPtr<nsISerialEventTarget> mMainThread;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
@@ -166,6 +187,8 @@ class TransceiverImpl : public nsISupports,
   // state for webrtc.org that is shared between all transceivers
   RefPtr<WebrtcCallWrapper> mCallWrapper;
   RefPtr<MediaSessionConduit> mConduit;
+  // Call thread only.
+  RefPtr<MediaConduitController> mConduitController;
   RefPtr<MediaPipelineTransmit> mTransmitPipeline;
   // The spec says both RTCRtpReceiver and RTCRtpSender have a slot for
   // an RTCDtlsTransport.  They are always the same, so we'll store it
@@ -178,6 +201,21 @@ class TransceiverImpl : public nsISupports,
   RefPtr<dom::RTCRtpReceiver> mReceiver;
   // TODO(bug 1616937): Move this to RTCRtpSender
   RefPtr<dom::RTCDTMFSender> mDtmf;
+
+  Canonical<bool> mReceiving;
+  Canonical<bool> mTransmitting;
+  Canonical<Ssrcs> mLocalSsrcs;
+  Canonical<Ssrcs> mLocalVideoRtxSsrcs;
+  Canonical<std::string> mLocalCname;
+  Canonical<std::string> mLocalMid;
+  Canonical<std::string> mSyncGroup;
+  Canonical<RtpExtList> mLocalSendRtpExtensions;
+
+  Canonical<Maybe<AudioCodecConfig>> mAudioSendCodec;
+
+  Canonical<Maybe<VideoCodecConfig>> mVideoSendCodec;
+  Canonical<Maybe<RtpRtcpConfig>> mVideoSendRtpRtcpConfig;
+  Canonical<webrtc::VideoCodecMode> mVideoCodecMode;
 };
 
 }  // namespace mozilla

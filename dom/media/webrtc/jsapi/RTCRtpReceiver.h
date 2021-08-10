@@ -8,8 +8,11 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StateMirroring.h"
 #include "mozilla/Maybe.h"
 #include "js/RootingAPI.h"
+#include "libwebrtcglue/MediaConduitInterface.h"
+#include "libwebrtcglue/RtpRtcpConfig.h"
 #include "nsTArray.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "RTCStatsReport.h"
@@ -36,14 +39,14 @@ class RTCRtpReceiver : public nsISupports,
                        public nsWrapperCache,
                        public RtcpEventObserver {
  public:
-  explicit RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-                          const std::string& aPCHandle,
-                          MediaTransportHandler* aTransportHandler,
-                          JsepTransceiver* aJsepTransceiver,
-                          nsISerialEventTarget* aMainThread,
-                          nsISerialEventTarget* aStsThread,
-                          MediaSessionConduit* aConduit,
-                          TransceiverImpl* aTransceiverImpl);
+  RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
+                 const std::string& aPCHandle,
+                 MediaTransportHandler* aTransportHandler,
+                 JsepTransceiver* aJsepTransceiver,
+                 nsISerialEventTarget* aMainThread, AbstractThread* aCallThread,
+                 nsISerialEventTarget* aStsThread,
+                 MediaSessionConduit* aConduit,
+                 TransceiverImpl* aTransceiverImpl);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -103,6 +106,23 @@ class RTCRtpReceiver : public nsISupports,
 
   void SetReceiveTrackMuted(bool aMuted);
 
+  AbstractCanonical<Ssrc>* CanonicalSsrc() { return &mSsrc; }
+  AbstractCanonical<Ssrc>* CanonicalVideoRtxSsrc() { return &mVideoRtxSsrc; }
+  AbstractCanonical<RtpExtList>* CanonicalLocalRtpExtensions() {
+    return &mLocalRtpExtensions;
+  }
+
+  AbstractCanonical<std::vector<AudioCodecConfig>>* CanonicalAudioCodecs() {
+    return &mAudioCodecs;
+  }
+
+  AbstractCanonical<std::vector<VideoCodecConfig>>* CanonicalVideoCodecs() {
+    return &mVideoCodecs;
+  }
+  AbstractCanonical<Maybe<RtpRtcpConfig>>* CanonicalVideoRtpRtcpConfig() {
+    return &mVideoRtpRtcpConfig;
+  }
+
  private:
   virtual ~RTCRtpReceiver();
 
@@ -117,6 +137,7 @@ class RTCRtpReceiver : public nsISupports,
   bool mHaveStartedReceiving = false;
   bool mHaveSetupTransport = false;
   nsCOMPtr<nsISerialEventTarget> mMainThread;
+  RefPtr<AbstractThread> mCallThread;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
   RefPtr<dom::MediaStreamTrack> mTrack;
   RefPtr<MediaPipelineReceive> mPipeline;
@@ -127,6 +148,15 @@ class RTCRtpReceiver : public nsISupports,
   // where the stream list for the whole RTCPeerConnection lives..
   std::vector<std::string> mStreamIds;
   bool mRemoteSetSendBit = false;
+
+  Canonical<Ssrc> mSsrc;
+  Canonical<Ssrc> mVideoRtxSsrc;
+  Canonical<RtpExtList> mLocalRtpExtensions;
+
+  Canonical<std::vector<AudioCodecConfig>> mAudioCodecs;
+
+  Canonical<std::vector<VideoCodecConfig>> mVideoCodecs;
+  Canonical<Maybe<RtpRtcpConfig>> mVideoRtpRtcpConfig;
 };
 
 }  // namespace dom
