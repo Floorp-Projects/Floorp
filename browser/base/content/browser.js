@@ -4560,8 +4560,10 @@ function FillHistoryMenu(aParent) {
     }
   }
 
+  // If session history in parent is available, use it. Otherwise, get the session history
+  // from session store.
   let sessionHistory = gBrowser.selectedBrowser.browsingContext.sessionHistory;
-  if (sessionHistory) {
+  if (sessionHistory?.count) {
     // Don't show the context menu if there is only one item.
     if (sessionHistory.count <= 1) {
       return false;
