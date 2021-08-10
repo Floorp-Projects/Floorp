@@ -4,9 +4,9 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["TestModule"];
+const EXPORTED_SYMBOLS = ["command"];
 
-class TestModule {
+class Command {
   constructor(messageHandler) {
     this.messageHandler = messageHandler;
   }
@@ -21,3 +21,5 @@ class TestModule {
     return "root-value";
   }
 }
+
+const command = Command;
