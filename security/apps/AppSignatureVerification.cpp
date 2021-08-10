@@ -37,7 +37,6 @@
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixnss.h"
 #include "mozpkix/pkixutil.h"
-#include "plstr.h"
 #include "secerr.h"
 #include "secmime.h"
 
@@ -277,7 +276,7 @@ nsresult ReadLine(/*in/out*/ const char*& nextLineStart,
   size_t previousLength = 0;
   size_t currentLength = 0;
   for (;;) {
-    const char* eol = PL_strpbrk(nextLineStart, "\r\n");
+    const char* eol = strpbrk(nextLineStart, "\r\n");
 
     if (!eol) {  // Reached end of file before newline
       eol = nextLineStart + strlen(nextLineStart);

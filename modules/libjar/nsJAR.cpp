@@ -350,7 +350,7 @@ int32_t nsJAR::ReadLine(const char** src) {
   //--Moves pointer to beginning of next line and returns line length
   //  not including CR/LF.
   int32_t length;
-  char* eol = PL_strpbrk(*src, "\r\n");
+  const char* eol = strpbrk(*src, "\r\n");
 
   if (eol == nullptr)  // Probably reached end of file before newline
   {
