@@ -3,8 +3,13 @@
 
 "use strict";
 
-const ORIGINAL_URL = "about:home";
-const OTHER_URL = "about:blank";
+// FIXME(bug 1709267): This test used to test navigations between `about:home`
+// and `about:blank`. Some process switch changes during Fission (bug 1650089)
+// meant that this navigation now leads to a process switch. Unfortunately,
+// about:debugging is not resillient to process switches, so the URLs were
+// changed to both load within the same content process.
+const ORIGINAL_URL = "http://example.com/document-builder.sjs?html=page1";
+const OTHER_URL = "http://example.com/document-builder.sjs?html=page2";
 
 async function waitForUrl(url, toolbox, browserTab, win) {
   const {
