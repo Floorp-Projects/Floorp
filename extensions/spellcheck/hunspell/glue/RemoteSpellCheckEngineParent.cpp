@@ -64,6 +64,23 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheckAndSuggest(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSuggest(
+    const nsString& aWord, uint32_t aCount, SuggestResolver&& aResolve) {
+  nsTArray<nsString> suggestions;
+  mSpellChecker->Suggest(aWord, aCount)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [aResolve](CopyableTArray<nsString> aSuggestions) {
+            aResolve(std::move(aSuggestions));
+          },
+          [aResolve](nsresult aError) {
+            // No suggestions due to error
+            nsTArray<nsString> suggestions;
+            aResolve(std::move(suggestions));
+          });
+  return IPC_OK();
+}
+
 void RemoteSpellcheckEngineParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
 }  // namespace mozilla
