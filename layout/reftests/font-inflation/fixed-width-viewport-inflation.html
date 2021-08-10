@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+In a 450px container, the minimum font size at 15em per line is 30px.
+This means we map 0px-45px into 30px-45px, so 12px gets mapped to 34px.
+-->
+<html>
+  <head>
+    <meta name="viewport" content="width=801"/>
+    <style>
+      div { width: 450px; font-size: 12px; line-height: 1.0; }
+    </style>
+  </head>
+  <body>
+    <div id="outer">
+      <div>Some inflated text.</div>
+    </div>
+  </body>
+</html>
