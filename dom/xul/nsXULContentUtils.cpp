@@ -11,12 +11,12 @@
  */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/Collator.h"
 
-#include "nsCollationCID.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIContent.h"
-#include "nsICollation.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsXULContentUtils.h"
@@ -28,30 +28,46 @@ using namespace mozilla;
 
 //------------------------------------------------------------------------
 
-nsICollation* nsXULContentUtils::gCollation;
+const mozilla::intl::Collator* nsXULContentUtils::gCollator;
 
 //------------------------------------------------------------------------
 // Constructors n' stuff
 //
 
 nsresult nsXULContentUtils::Finish() {
-  NS_IF_RELEASE(gCollation);
+  if (gCollator) {
+    delete gCollator;
+    gCollator = nullptr;
+  }
 
   return NS_OK;
 }
 
-nsICollation* nsXULContentUtils::GetCollation() {
-  if (!gCollation) {
-    nsCOMPtr<nsICollationFactory> colFactory =
-        do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
-    if (colFactory) {
-      DebugOnly<nsresult> rv = colFactory->CreateCollation(&gCollation);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create collation instance");
-    } else
-      NS_ERROR("couldn't create instance of collation factory");
+const mozilla::intl::Collator* nsXULContentUtils::GetCollator() {
+  if (!gCollator) {
+    // Lazily initialize the Collator.
+    auto result = mozilla::intl::LocaleService::TryCreateComponent<
+        mozilla::intl::Collator>();
+    if (result.isErr()) {
+      NS_ERROR("couldn't create a mozilla::intl::Collator");
+      return nullptr;
+    }
+
+    auto collator = result.unwrap();
+
+    // Sort in a case-insensitive way, where "base" letters are considered
+    // equal, e.g: a = á, a = A, a ≠ b.
+    mozilla::intl::Collator::Options options{};
+    options.sensitivity = mozilla::intl::Collator::Sensitivity::Base;
+    auto optResult = collator->SetOptions(options);
+    if (optResult.isErr()) {
+      NS_ERROR("couldn't set options for mozilla::intl::Collator");
+      return nullptr;
+    }
+    gCollator = collator.release();
   }
 
-  return gCollation;
+  return gCollator;
 }
 
 //------------------------------------------------------------------------
