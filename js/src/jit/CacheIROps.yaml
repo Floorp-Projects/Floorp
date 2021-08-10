@@ -2637,6 +2637,14 @@
     set: ObjId
     str: StringId
 
+- name: SetHasSymbolResult
+  shared: true
+  transpile: false
+  cost_estimate: 3
+  args:
+    set: ObjId
+    sym: SymbolId
+
 - name: CallPrintString
   shared: true
   transpile: false
