@@ -49,13 +49,14 @@ class MachCommands(MachCommandBase):
             return 1
 
         if ide == "vscode":
-            # Verify if platform has VSCode installed
-            vscode_cmd = self.found_vscode_path(command_context)
+            # Check if platform has VSCode installed
+            vscode_cmd = self.find_vscode_cmd(command_context)
             if vscode_cmd is None:
-                command_context.log(
-                    logging.ERROR, "ide", {}, "VSCode cannot be found, aborting!"
+                choice = prompt_bool(
+                    "VSCode cannot be found, and may not be installed. Proceed?"
                 )
-                return 1
+                if not choice:
+                    return 1
 
             # Create the Build environment to configure the tree
             builder = Build(command_context._mach_context, None)
@@ -124,8 +125,18 @@ class MachCommands(MachCommandBase):
     def get_visualstudio_workspace_path(self, command_context):
         return os.path.join(command_context.topobjdir, "msvc", "mozilla.sln")
 
-    def found_vscode_path(self, command_context):
+    def find_vscode_cmd(self, command_context):
+        import shutil
 
+        # Try to look up the `code` binary on $PATH, and use it if present. This
+        # should catch cases like being run from within a vscode-remote shell,
+        # even if vscode itself is also installed on the remote host.
+        path = shutil.which("code")
+        if path is not None:
+            return [path]
+
+        # If the binary wasn't on $PATH, try to find it in a variety of other
+        # well-known install locations based on the current platform.
         if "linux" in command_context.platform[0]:
             cmd_and_path = [
                 {"path": "/usr/local/bin/code", "cmd": ["/usr/local/bin/code"]},
@@ -178,13 +189,6 @@ class MachCommands(MachCommandBase):
             if os.path.exists(element["path"]):
                 return element["cmd"]
 
-        for _ in range(5):
-            vscode_path = input(
-                "Could not find the VSCode binary. Please provide the full path to it:\n"
-            )
-            if os.path.exists(vscode_path):
-                return [vscode_path]
-
         # Path cannot be found
         return None
 
@@ -220,19 +224,18 @@ class MachCommands(MachCommandBase):
 
         import multiprocessing
         import json
+        import difflib
         from mozbuild.code_analysis.utils import ClangTidyConfig
 
         clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
 
-        clangd_json = json.loads(
-            """
-        {
-            "clangd.path": "%s",
+        clangd_json = {
+            "clangd.path": clangd_path,
             "clangd.arguments": [
                 "--compile-commands-dir",
-                "%s",
+                clangd_cc_path,
                 "-j",
-                "%s",
+                str(multiprocessing.cpu_count() // 2),
                 "--limit-results",
                 "0",
                 "--completion-style",
@@ -245,61 +248,77 @@ class MachCommands(MachCommandBase):
                 "memory",
                 "--clang-tidy",
                 "--clang-tidy-checks",
-                "%s"
-            ]
-        }
-        """
-            % (
-                clangd_path,
-                clangd_cc_path,
-                int(multiprocessing.cpu_count() / 2),
                 ",".join(clang_tidy_cfg.checks),
-            )
-        )
+            ],
+        }
 
-        # Create an empty settings dictionary
-        settings = {}
-
-        # Modify the .vscode/settings.json configuration file
-        if os.path.exists(vscode_settings):
-            # If exists prompt for a configuration change
-            choice = prompt_bool(
-                "Configuration for {settings} must change. "
-                "Do you want to proceed?".format(settings=vscode_settings)
-            )
-            if not choice:
-                return 1
-
-            # Read the original vscode settings
+        # Load the existing .vscode/settings.json file, to check if if needs to
+        # be created or updated.
+        try:
             with open(vscode_settings) as fh:
-                try:
-                    settings = json.load(fh)
-                    print(
-                        "The following modifications will occur:\nOriginal:\n{orig}\n"
-                        "New:\n{new}".format(
-                            orig=json.dumps(
-                                {
-                                    key: settings[key] if key in settings else ""
-                                    for key in ["clangd.path", "clangd.arguments"]
-                                },
-                                indent=4,
-                            ),
-                            new=json.dumps(clangd_json, indent=4),
-                        )
+                old_settings_str = fh.read()
+        except FileNotFoundError:
+            print("Configuration for {} will be created.".format(vscode_settings))
+            old_settings_str = None
+
+        if old_settings_str is None:
+            # No old settings exist
+            with open(vscode_settings, "w") as fh:
+                json.dump(clangd_json, fh, indent=4)
+        else:
+            # Merge our new settings with the existing settings, and check if we
+            # need to make changes. Only prompt & write out the updated config
+            # file if settings actually changed.
+            try:
+                old_settings = json.loads(old_settings_str)
+                prompt_prefix = ""
+            except ValueError:
+                old_settings = {}
+                prompt_prefix = (
+                    "\n**WARNING**: Parsing of existing settings file failed. "
+                    "Existing settings will be lost!"
+                )
+
+            settings = {**old_settings, **clangd_json}
+
+            if old_settings != settings:
+                # Prompt the user with a diff of the changes we're going to make
+                new_settings_str = json.dumps(settings, indent=4)
+                print(
+                    "\nThe following modifications to {settings} will occur:\n{diff}".format(
+                        settings=vscode_settings,
+                        diff="".join(
+                            difflib.unified_diff(
+                                old_settings_str.splitlines(keepends=True),
+                                new_settings_str.splitlines(keepends=True),
+                                "a/.vscode/settings.json",
+                                "b/.vscode/settings.json",
+                                n=30,
+                            )
+                        ),
                     )
+                )
+                choice = prompt_bool(
+                    "{}\nProceed with modifications to {}?".format(
+                        prompt_prefix, vscode_settings
+                    )
+                )
+                if not choice:
+                    return 1
 
-                except ValueError:
-                    # Decoding has failed, work with an empty dict
-                    settings = {}
+                with open(vscode_settings, "w") as fh:
+                    fh.write(new_settings_str)
 
-        # Write our own Configuration
-        settings["clangd.path"] = clangd_json["clangd.path"]
-        settings["clangd.arguments"] = clangd_json["clangd.arguments"]
+        # Open vscode with new configuration, or ask the user to do so if the
+        # binary was not found.
+        if vscode_cmd is None:
+            print(
+                "Please open VS Code manually and load directory: {}".format(
+                    command_context.topsrcdir
+                )
+            )
+            return 0
 
-        with open(vscode_settings, "w") as fh:
-            fh.write(json.dumps(settings, indent=4))
-
-        # Open vscode with new configuration
         rc = subprocess.call(vscode_cmd + [command_context.topsrcdir])
 
         if rc != 0:
