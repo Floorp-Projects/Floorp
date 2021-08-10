@@ -2645,6 +2645,14 @@
     set: ObjId
     sym: SymbolId
 
+- name: SetHasBigIntResult
+  shared: true
+  transpile: false
+  cost_estimate: 3
+  args:
+    set: ObjId
+    bigInt: BigIntId
+
 - name: CallPrintString
   shared: true
   transpile: false
