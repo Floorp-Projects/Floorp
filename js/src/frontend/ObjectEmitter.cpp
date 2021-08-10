@@ -138,6 +138,10 @@ MOZ_ALWAYS_INLINE bool PropertyEmitter::prepareForProp(
 bool PropertyEmitter::prepareForPrivateMethod() {
   MOZ_ASSERT(propertyState_ == PropertyState::Start ||
              propertyState_ == PropertyState::Init);
+  MOZ_ASSERT(isClass_);
+
+  isStatic_ = false;
+  isIndexOrComputed_ = false;
 
 #ifdef DEBUG
   propertyState_ = PropertyState::PrivateMethodValue;
@@ -149,6 +153,7 @@ bool PropertyEmitter::prepareForPrivateStaticMethod(
     const mozilla::Maybe<uint32_t>& keyPos) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start ||
              propertyState_ == PropertyState::Init);
+  MOZ_ASSERT(isClass_);
 
   //                [stack] CTOR OBJ
 
