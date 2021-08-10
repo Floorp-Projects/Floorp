@@ -55,17 +55,11 @@
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 
 #include <stddef.h>  // size_t
-#include <stdint.h>  // uint8_t
+#include <stdint.h>  // uint8_t, uint32_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/RootingAPI.h"  // JS::PersistentRooted, JS::Rooted
-#include "js/Value.h"
-
-struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSObject;
-class JS_PUBLIC_API JSScript;
-class JS_PUBLIC_API JSString;
+#include "js/TypeDecls.h"  // JS::MutableHandle (fwd)
 
 namespace JS {
 
