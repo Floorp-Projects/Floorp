@@ -1295,7 +1295,7 @@ svcparam.keyToNumber = function(keyName) {
     case 'ipv4hint' : return 4
     case 'echconfig' : return 5
     case 'ipv6hint' : return 6
-    case 'odohconfig' : return 32769
+    case 'odoh' : return 32769
     case 'key65535' : return 65535
   }
   if (!keyName.startsWith('key')) {
@@ -1314,7 +1314,7 @@ svcparam.numberToKeyName = function(number) {
     case 4 : return 'ipv4hint'
     case 5 : return 'echconfig'
     case 6 : return 'ipv6hint'
-    case 32769 : return 'odohconfig'
+    case 32769 : return 'odoh'
   }
 
   return `key${number}`;
@@ -1423,16 +1423,16 @@ svcparam.encode = function(param, buf, offset) {
       offset += 16;
       svcparam.encode.bytes += 16;
     }
-   } else if (key == 32769) { //odohconfig
-      if (svcparam.odohconfig) {
-        buf.writeUInt16BE(svcparam.odohconfig.length, offset);
+   } else if (key == 32769) { //odoh
+      if (svcparam.odoh) {
+        buf.writeUInt16BE(svcparam.odoh.length, offset);
         offset += 2;
         svcparam.encode.bytes += 2;
-        for (let i = 0; i < svcparam.odohconfig.length; i++) {
-          buf.writeUInt8(svcparam.odohconfig[i], offset);
+        for (let i = 0; i < svcparam.odoh.length; i++) {
+          buf.writeUInt8(svcparam.odoh[i], offset);
           offset++;
         }
-        svcparam.encode.bytes += svcparam.odohconfig.length;
+        svcparam.encode.bytes += svcparam.odoh.length;
       } else {
         buf.writeUInt16BE(param.value.length, offset);
         offset += 2;
@@ -1496,10 +1496,10 @@ svcparam.encodingLength = function (param) {
       return 4 + param.value.length
     }
     case 'ipv6hint' : return 4 + 16 * (Array.isArray(param.value) ? param.value.length : 1)
-    case 'odohconfig' : {
+    case 'odoh' : {
       if (param.needBase64Decode) {
-        svcparam.odohconfig = Buffer.from(param.value, "base64");
-        return 4 + svcparam.odohconfig.length;
+        svcparam.odoh = Buffer.from(param.value, "base64");
+        return 4 + svcparam.odoh.length;
       }
       return 4 + param.value.length
     }

@@ -555,7 +555,7 @@ function displayHTTPSRRLookup(data) {
         ? `echConfig="${record.echConfig.echConfig}" `
         : "";
       let ODoHConfig = record.ODoHConfig
-        ? `ODoHConfig="${record.ODoHConfig.ODoHConfig}" `
+        ? `odoh="${record.ODoHConfig.ODoHConfig}" `
         : "";
       let ipv4hint = "";
       let ipv6hint = "";
