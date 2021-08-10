@@ -11,12 +11,12 @@
  */
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/intl/LocaleService.h"
-#include "mozilla/intl/Collator.h"
 
+#include "nsCollationCID.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIContent.h"
+#include "nsICollation.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsXULContentUtils.h"
@@ -28,45 +28,30 @@ using namespace mozilla;
 
 //------------------------------------------------------------------------
 
-const mozilla::intl::Collator* nsXULContentUtils::gCollator;
+nsICollation* nsXULContentUtils::gCollation;
 
 //------------------------------------------------------------------------
 // Constructors n' stuff
 //
 
 nsresult nsXULContentUtils::Finish() {
-  if (gCollator) {
-    delete gCollator;
-    gCollator = nullptr;
-  }
+  NS_IF_RELEASE(gCollation);
 
   return NS_OK;
 }
 
-const mozilla::intl::Collator* nsXULContentUtils::GetCollator() {
-  if (!gCollator) {
-    // Lazily initialize the Collator.
-    auto result = mozilla::intl::LocaleService::TryCreateComponent<
-        mozilla::intl::Collator>();
-    if (result.isErr()) {
-      NS_ERROR("couldn't create a mozilla::intl::Collator");
-      return nullptr;
-    }
-
-    auto collator = result.unwrap();
-
-    // Sort in a case-insensitive way, where "base" letters are considered
-    // equal, e.g: a = á, a = A, a ≠ b.
-    auto optResult = collator->SetOptions(mozilla::intl::Collator::Options{
-        .sensitivity = mozilla::intl::Collator::Sensitivity::Base});
-    if (optResult.isErr()) {
-      NS_ERROR("couldn't set options for mozilla::intl::Collator");
-      return nullptr;
-    }
-    gCollator = collator.release();
+nsICollation* nsXULContentUtils::GetCollation() {
+  if (!gCollation) {
+    nsCOMPtr<nsICollationFactory> colFactory =
+        do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
+    if (colFactory) {
+      DebugOnly<nsresult> rv = colFactory->CreateCollation(&gCollation);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create collation instance");
+    } else
+      NS_ERROR("couldn't create instance of collation factory");
   }
 
-  return gCollator;
+  return gCollation;
 }
 
 //------------------------------------------------------------------------

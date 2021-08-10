@@ -18,11 +18,11 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsXULSortService.h"
 #include "nsXULElement.h"
+#include "nsICollation.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/intl/Collator.h"
 
 using mozilla::dom::Element;
 const unsigned long SORT_COMPARECASE = 0x0001;
@@ -177,10 +177,12 @@ static int32_t CompareValues(const nsAString& aLeft, const nsAString& aRight,
     return ::Compare(aLeft, aRight);
   }
 
-  using mozilla::intl::Collator;
-  const Collator* collator = nsXULContentUtils::GetCollator();
-  if (collator) {
-    return collator->CompareStrings(aLeft, aRight);
+  nsICollation* collation = nsXULContentUtils::GetCollation();
+  if (collation) {
+    int32_t result;
+    collation->CompareString(nsICollation::kCollationCaseInSensitive, aLeft,
+                             aRight, &result);
+    return result;
   }
 
   return ::Compare(aLeft, aRight, nsCaseInsensitiveStringComparator);

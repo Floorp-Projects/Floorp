@@ -7,11 +7,10 @@
 #define TRANSFRMX_XPATHRESULTCOMPARATOR_H
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/intl/Collator.h"
 #include "mozilla/UniquePtr.h"
 #include "txCore.h"
 #include "nsCOMPtr.h"
+#include "nsICollation.h"
 #include "nsString.h"
 
 class Expr;
@@ -50,8 +49,10 @@ class txResultStringComparator : public txXPathResultComparator {
                                txObject*& aResult) override;
 
  private:
-  mozilla::UniquePtr<const mozilla::intl::Collator> mCollator;
+  nsCOMPtr<nsICollation> mCollation;
   nsresult init(const nsString& aLanguage);
+  nsresult createRawSortKey(const int32_t aStrength, const nsString& aString,
+                            uint8_t** aKey, uint32_t* aLength);
   int mSorting;
 
   class StringValue : public txObject {
@@ -59,7 +60,7 @@ class txResultStringComparator : public txXPathResultComparator {
     StringValue();
     ~StringValue();
 
-    nsresult initCaseKey(const mozilla::intl::Collator& aCollator);
+    nsresult initCaseKey(nsICollation* aCollation);
 
     nsTArray<uint8_t> mKey;
     // Either mCaseKeyString is non-null, or we have a usable key in mCaseKey
