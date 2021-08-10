@@ -246,8 +246,8 @@ class nsCounterManager {
   void GetSpokenCounterText(nsIFrame* aFrame, nsAString& aText) const;
 #endif
 
-#ifdef DEBUG
-  void Dump();
+#if defined(DEBUG) || defined(MOZ_LAYOUT_DEBUGGER)
+  void Dump() const;
 #endif
 
   static int32_t IncrementCounter(int32_t aOldValue, int32_t aIncrement) {

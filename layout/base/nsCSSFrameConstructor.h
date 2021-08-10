@@ -334,8 +334,9 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
-#ifdef ACCESSIBILITY
-  // Exposed only for nsLayoutUtils::GetMarkerSpokenText to use.
+#if defined(ACCESSIBILITY) || defined(MOZ_LAYOUT_DEBUGGER)
+  // Exposed only for nsLayoutUtils::GetMarkerSpokenText and
+  // nsLayoutDebuggingTools to use.
   const nsCounterManager* CounterManager() const { return &mCounterManager; }
 #endif
 

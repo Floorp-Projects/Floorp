@@ -49,6 +49,8 @@
 <!ENTITY ldb.dumpTextRuns.accesskey "T">
 <!ENTITY ldb.dumpViews.label "Views and Widgets">
 <!ENTITY ldb.dumpViews.accesskey "V">
+<!ENTITY ldb.dumpCounterManager.label "CSS Counters">
+<!ENTITY ldb.dumpCounterManager.accesskey "N">
 <!ENTITY ldb.dumpStyleSheets.label "Style Sheets">
 <!ENTITY ldb.dumpStyleSheets.accesskey "S">
 <!ENTITY ldb.dumpMatchedRules.label "Matched CSS Rules">
