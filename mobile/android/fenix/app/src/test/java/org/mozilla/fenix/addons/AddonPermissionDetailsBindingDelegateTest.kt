@@ -9,21 +9,21 @@ import android.view.View
 import androidx.core.net.toUri
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.fragment_add_on_permissions.*
 import mozilla.components.feature.addons.Addon
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentAddOnPermissionsBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
-class AddonPermissionsDetailsViewTest {
+class AddonPermissionDetailsBindingDelegateTest {
 
     private lateinit var view: View
+    private lateinit var binding: FragmentAddOnPermissionsBinding
     private lateinit var interactor: AddonPermissionsDetailsInteractor
-    private lateinit var permissionsDetailsView: AddonPermissionsDetailsView
+    private lateinit var permissionDetailsBindingDelegate: AddonPermissionDetailsBindingDelegate
     private val addon = Addon(
         id = "",
         translatableName = mapOf(
@@ -35,20 +35,21 @@ class AddonPermissionsDetailsViewTest {
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext).inflate(R.layout.fragment_add_on_permissions, null)
+        binding = FragmentAddOnPermissionsBinding.inflate(LayoutInflater.from(testContext))
+        view = binding.root
         interactor = mockk(relaxed = true)
-        permissionsDetailsView = AddonPermissionsDetailsView(view, interactor)
+        permissionDetailsBindingDelegate = AddonPermissionDetailsBindingDelegate(binding, interactor)
     }
 
     @Test
     fun `clicking learn more opens learn more page in browser`() {
-        permissionsDetailsView.bind(
+        permissionDetailsBindingDelegate.bind(
             addon.copy(
                 rating = null
             )
         )
 
-        permissionsDetailsView.learn_more_label.performClick()
+        permissionDetailsBindingDelegate.binding.learnMoreLabel.performClick()
 
         verify { interactor.openWebsite(learnMoreUrl.toUri()) }
     }

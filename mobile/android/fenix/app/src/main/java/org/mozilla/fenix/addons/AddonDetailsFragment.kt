@@ -21,6 +21,7 @@ import mozilla.components.feature.addons.update.DefaultAddonUpdater.UpdateAttemp
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentAddOnDetailsBinding
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -38,7 +39,8 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details), AddonDe
             showToolbar(title = args.addon.translateName(it))
         }
 
-        AddonDetailsView(view, interactor = this).bind(args.addon)
+        val binding = FragmentAddOnDetailsBinding.bind(view)
+        AddonDetailsView(binding, interactor = this).bind(args.addon)
     }
 
     override fun openWebsite(addonSiteUrl: Uri) {

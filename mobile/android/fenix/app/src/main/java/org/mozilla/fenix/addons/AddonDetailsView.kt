@@ -13,12 +13,11 @@ import android.view.View
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.core.text.getSpans
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.fragment_add_on_details.*
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translateDescription
 import mozilla.components.feature.addons.ui.updatedAtDate
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentAddOnDetailsBinding
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Locale
@@ -40,9 +39,9 @@ interface AddonDetailsInteractor {
  * Shows the details of an add-on.
  */
 class AddonDetailsView(
-    override val containerView: View,
+    private val binding: FragmentAddOnDetailsBinding,
     private val interactor: AddonDetailsInteractor
-) : LayoutContainer {
+) {
 
     private val dateFormatter = DateFormat.getDateInstance()
     private val numberFormatter = NumberFormat.getNumberInstance(Locale.getDefault())
@@ -58,24 +57,24 @@ class AddonDetailsView(
 
     private fun bindRating(addon: Addon) {
         addon.rating?.let { rating ->
-            val resources = containerView.resources
+            val resources = binding.root.resources
             val ratingContentDescription =
                 resources.getString(R.string.mozac_feature_addons_rating_content_description)
-            rating_view.contentDescription = String.format(ratingContentDescription, rating.average)
-            rating_view.rating = rating.average
+            binding.ratingView.contentDescription = String.format(ratingContentDescription, rating.average)
+            binding.ratingView.rating = rating.average
 
-            users_count.text = numberFormatter.format(rating.reviews)
+            binding.usersCount.text = numberFormatter.format(rating.reviews)
         }
     }
 
     private fun bindWebsite(addon: Addon) {
-        home_page_label.setOnClickListener {
+        binding.homePageLabel.setOnClickListener {
             interactor.openWebsite(addon.siteUrl.toUri())
         }
     }
 
     private fun bindLastUpdated(addon: Addon) {
-        last_updated_text.text = dateFormatter.format(addon.updatedAtDate)
+        binding.lastUpdatedText.text = dateFormatter.format(addon.updatedAtDate)
     }
 
     private fun bindVersion(addon: Addon) {
@@ -83,24 +82,24 @@ class AddonDetailsView(
         if (version.isNullOrEmpty()) {
             version = addon.version
         }
-        version_text.text = version
+        binding.versionText.text = version
 
         if (addon.isInstalled()) {
-            version_text.setOnLongClickListener {
+            binding.versionText.setOnLongClickListener {
                 interactor.showUpdaterDialog(addon)
                 true
             }
         } else {
-            version_text.setOnLongClickListener(null)
+            binding.versionText.setOnLongClickListener(null)
         }
     }
 
     private fun bindAuthors(addon: Addon) {
-        author_text.text = addon.authors.joinToString { author -> author.name }.trim()
+        binding.authorText.text = addon.authors.joinToString { author -> author.name }.trim()
     }
 
     private fun bindDetails(addon: Addon) {
-        val detailsText = addon.translateDescription(containerView.context)
+        val detailsText = addon.translateDescription(binding.root.context)
 
         val parsedText = detailsText.replace("\n", "<br/>")
         val text = HtmlCompat.fromHtml(parsedText, HtmlCompat.FROM_HTML_MODE_COMPACT)
@@ -110,8 +109,8 @@ class AddonDetailsView(
         for (link in links) {
             addActionToLinks(spannableStringBuilder, link)
         }
-        details.text = spannableStringBuilder
-        details.movementMethod = LinkMovementMethod.getInstance()
+        binding.details.text = spannableStringBuilder
+        binding.details.movementMethod = LinkMovementMethod.getInstance()
     }
 
     private fun addActionToLinks(

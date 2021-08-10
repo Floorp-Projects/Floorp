@@ -5,14 +5,12 @@
 package org.mozilla.fenix.addons
 
 import android.net.Uri
-import android.view.View
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.fragment_add_on_permissions.*
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.AddonPermissionsAdapter
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentAddOnPermissionsBinding
 import org.mozilla.fenix.theme.ThemeManager
 
 interface AddonPermissionsDetailsInteractor {
@@ -26,10 +24,10 @@ interface AddonPermissionsDetailsInteractor {
 /**
  * Shows the permission details of an add-on.
  */
-class AddonPermissionsDetailsView(
-    override val containerView: View,
+class AddonPermissionDetailsBindingDelegate(
+    val binding: FragmentAddOnPermissionsBinding,
     private val interactor: AddonPermissionsDetailsInteractor
-) : LayoutContainer {
+) {
 
     fun bind(addon: Addon) {
         bindPermissions(addon)
@@ -37,7 +35,7 @@ class AddonPermissionsDetailsView(
     }
 
     private fun bindPermissions(addon: Addon) {
-        add_ons_permissions.apply {
+        binding.addOnsPermissions.apply {
             layoutManager = LinearLayoutManager(context)
             val sortedPermissions = addon.translatePermissions(context).sorted()
             adapter = AddonPermissionsAdapter(
@@ -50,7 +48,7 @@ class AddonPermissionsDetailsView(
     }
 
     private fun bindLearnMore() {
-        learn_more_label.setOnClickListener {
+        binding.learnMoreLabel.setOnClickListener {
             interactor.openWebsite(LEARN_MORE_URL.toUri())
         }
     }

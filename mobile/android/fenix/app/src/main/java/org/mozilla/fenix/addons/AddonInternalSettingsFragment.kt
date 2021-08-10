@@ -10,9 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_add_on_internal_settings.*
 import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentAddOnInternalSettingsBinding
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -40,10 +40,10 @@ class AddonInternalSettingsFragment : AddonPopupBaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        val binding = FragmentAddOnInternalSettingsBinding.bind(view)
         args.addon.installedState?.optionsPageUrl?.let {
             engineSession?.let { engineSession ->
-                addonSettingsEngineView.render(engineSession)
+                binding.addonSettingsEngineView.render(engineSession)
                 engineSession.loadUrl(it)
             }
         } ?: findNavController().navigateUp()

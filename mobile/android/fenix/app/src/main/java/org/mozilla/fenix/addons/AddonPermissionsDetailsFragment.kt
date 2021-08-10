@@ -13,6 +13,7 @@ import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentAddOnPermissionsBinding
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -29,7 +30,8 @@ class AddonPermissionsDetailsFragment :
         context?.let {
             showToolbar(args.addon.translateName(it))
         }
-        AddonPermissionsDetailsView(view, interactor = this).bind(args.addon)
+        val binding = FragmentAddOnPermissionsBinding.bind(view)
+        AddonPermissionDetailsBindingDelegate(binding, interactor = this).bind(args.addon)
     }
 
     override fun openWebsite(addonSiteUrl: Uri) {
