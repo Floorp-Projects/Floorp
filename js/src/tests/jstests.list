@@ -139,9 +139,13 @@ skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/wait/jstests.list
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1629803
 skip script test262/built-ins/Object/keys/order-after-define-property.js
 skip script test262/built-ins/Object/entries/order-after-define-property.js
-skip script test262/language/computed-property-names/class/static/method-number.js
-skip script test262/language/computed-property-names/class/static/method-string.js
-skip script test262/language/computed-property-names/class/static/method-symbol.js
+skip script test262/language/computed-property-names/class/static/method-number-order.js
+skip script test262/language/computed-property-names/class/static/method-string-order.js
+skip script test262/language/computed-property-names/class/static/method-symbol-order.js
+skip script test262/language/statements/class/definition/fn-length-static-precedence-order.js
+skip script test262/language/statements/class/definition/fn-name-static-precedence-order.js
+skip script test262/built-ins/Object/keys/order-after-define-property-with-function.js
+skip script test262/built-ins/Object/entries/order-after-define-property-with-function.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1286997
 # Bug 1286997 probably doesn't cover all spec violations.
@@ -258,9 +262,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Proxy/setPrototypeOf/t
 ignore-flag(--more-compartments) script test262/built-ins/Array/length/define-own-prop-length-overflow-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-return-val-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
-skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317378
 skip script test262/language/statements/do-while/cptn-abrupt-empty.js
@@ -605,13 +606,6 @@ fails-if(!xulRuntime.shell) script test262/language/statements/class/subclass-bu
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1648202
 skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1686052
-skip script test262/intl402/Locale/likely-subtags-grandfathered.js
-skip script test262/intl402/Locale/extensions-grandfathered.js
-skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
-skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
-skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -642,11 +636,8 @@ skip script test262/built-ins/AsyncFunction/is-not-a-global.js
 # https://github.com/tc39/ecma402/issues/402
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
 
-# Tests not yet updated for https://github.com/tc39/intl-displaynames-v2
-skip script test262/intl402/DisplayNames/prototype/resolvedOptions/return-object.js
-
-# https://github.com/tc39/test262/pull/3055
-skip script test262/language/expressions/delete/super-property-null-base.js
+# https://github.com/tc39/test262/issues/3139
+skip script test262/intl402/DisplayNames/prototype/of/type-calendar-valid.js
 
 
 ##############################################
