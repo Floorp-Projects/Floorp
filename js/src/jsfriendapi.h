@@ -224,6 +224,14 @@ namespace js {
  */
 extern JS_PUBLIC_API bool UseInternalJobQueues(JSContext* cx);
 
+#ifdef DEBUG
+/**
+ * Given internal job queues are used, return currently queued jobs as an
+ * array of job objects.
+ */
+extern JS_PUBLIC_API JSObject* GetJobsInInternalJobQueue(JSContext* cx);
+#endif
+
 /**
  * Enqueue |job| on the internal job queue.
  *
