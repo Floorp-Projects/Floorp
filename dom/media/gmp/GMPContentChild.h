@@ -33,13 +33,14 @@ class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
   mozilla::ipc::IPCResult RecvPGMPVideoEncoderConstructor(
       PGMPVideoEncoderChild* aActor) override;
   mozilla::ipc::IPCResult RecvPChromiumCDMConstructor(
-      PChromiumCDMChild* aActor) override;
+      PChromiumCDMChild* aActor, const nsCString& aKeySystem) override;
 
   already_AddRefed<PGMPVideoDecoderChild> AllocPGMPVideoDecoderChild();
 
   already_AddRefed<PGMPVideoEncoderChild> AllocPGMPVideoEncoderChild();
 
-  already_AddRefed<PChromiumCDMChild> AllocPChromiumCDMChild();
+  already_AddRefed<PChromiumCDMChild> AllocPChromiumCDMChild(
+      const nsCString& aKeySystem);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
   mozilla::ipc::IPCResult RecvInitSandboxTesting(
