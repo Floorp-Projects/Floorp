@@ -69,6 +69,10 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == form-button-fixed-height.html form-button-fixed-height-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == form-button-fixed-width.html form-button-fixed-width-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == form-button.html form-button-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-no-inflation.html fixed-width-viewport-no-inflation.html
+fails asserts(0-2) pref(layout.css.devPixelsPerPx,"0.5") test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-no-inflation.html fixed-width-viewport-no-inflation.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-inflation.html fixed-width-viewport-inflation-ref.html
+fails skip-if(Android&&webrender||cocoaWidget) asserts(0-2) pref(layout.css.devPixelsPerPx,"2.0") test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-inflation.html fixed-width-viewport-inflation-ref.html
 
 # Ordinarily, reftests use a browser.viewport.desktopWidth of 800px, same as the
 # size of the reftest document.  The failure condition of the test below however
