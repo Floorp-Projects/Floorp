@@ -63,6 +63,8 @@
   _(IntlGuardToPluralRules)                        \
   _(IntlGuardToRelativeTimeFormat)                 \
                                                    \
+  _(MapHas)                                        \
+                                                   \
   _(MathAbs)                                       \
   _(MathFloor)                                     \
   _(MathCeil)                                      \

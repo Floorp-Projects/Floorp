@@ -4880,10 +4880,14 @@ void MacroAssembler::prepareHashObject(Register setObj, ValueOperand value,
   // Inline implementation of |OrderedHashTable::prepareHash()| and
   // |HashCodeScrambler::scramble(v.asRawBits())|.
 
-  // Load the |ValueSet|.
+  // Load the |ValueSet| or |ValueMap|.
+  static_assert(SetObject::getDataSlotOffset() ==
+                MapObject::getDataSlotOffset());
   loadPrivate(Address(setObj, SetObject::getDataSlotOffset()), temp1);
 
   // Load |HashCodeScrambler::mK0| and |HashCodeScrambler::mK0|.
+  static_assert(ValueSet::offsetOfImplHcsK0() == ValueMap::offsetOfImplHcsK0());
+  static_assert(ValueSet::offsetOfImplHcsK1() == ValueMap::offsetOfImplHcsK1());
   auto k0 = Register64(temp1);
   auto k1 = Register64(temp2);
   load64(Address(temp1, ValueSet::offsetOfImplHcsK1()), k1);
@@ -5065,7 +5069,9 @@ void MacroAssembler::orderedHashTableLookup(Register setOrMapObj,
   bind(&ok);
 #endif
 
-  // Load the |ValueSet|.
+  // Load the |ValueSet| or |ValueMap|.
+  static_assert(SetObject::getDataSlotOffset() ==
+                MapObject::getDataSlotOffset());
   loadPrivate(Address(setOrMapObj, SetObject::getDataSlotOffset()), temp1);
 
   // Load the bucket.
@@ -5131,6 +5137,24 @@ void MacroAssembler::setObjectHas(Register setObj, ValueOperand value,
                                   IsBigInt isBigInt) {
   Label found;
   orderedHashTableLookup<ValueSet>(setObj, value, hash, result, temp1, temp2,
+                                   temp3, temp4, &found, isBigInt);
+
+  Label done;
+  move32(Imm32(0), result);
+  jump(&done);
+
+  bind(&found);
+  move32(Imm32(1), result);
+  bind(&done);
+}
+
+void MacroAssembler::mapObjectHas(Register mapObj, ValueOperand value,
+                                  Register hash, Register result,
+                                  Register temp1, Register temp2,
+                                  Register temp3, Register temp4,
+                                  IsBigInt isBigInt) {
+  Label found;
+  orderedHashTableLookup<ValueMap>(mapObj, value, hash, result, temp1, temp2,
                                    temp3, temp4, &found, isBigInt);
 
   Label done;

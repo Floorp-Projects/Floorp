@@ -373,6 +373,9 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
     case GuardClassKind::Set:
       classp = &SetObject::class_;
       break;
+    case GuardClassKind::Map:
+      classp = &MapObject::class_;
+      break;
     default:
       MOZ_CRASH("not yet supported");
   }

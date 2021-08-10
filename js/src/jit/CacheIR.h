@@ -522,6 +522,7 @@ enum class GuardClassKind : uint8_t {
   WindowProxy,
   JSFunction,
   Set,
+  Map,
 };
 
 // Some ops refer to shapes that might be in other zones. Instead of putting
@@ -1770,6 +1771,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachBigIntAsIntN(HandleFunction callee);
   AttachDecision tryAttachBigIntAsUintN(HandleFunction callee);
   AttachDecision tryAttachSetHas(HandleFunction callee);
+  AttachDecision tryAttachMapHas(HandleFunction callee);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
