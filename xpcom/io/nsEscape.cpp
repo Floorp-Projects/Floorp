@@ -12,7 +12,6 @@
 #include "mozilla/TextUtils.h"
 #include "nsTArray.h"
 #include "nsCRT.h"
-#include "plstr.h"
 #include "nsASCIIMask.h"
 
 static const char hexCharsUpper[] = "0123456789ABCDEF";
@@ -181,8 +180,8 @@ int32_t nsUnescapeCount(char* aStr)
       c2[0] = *(src + 2);
     }
 
-    if (*src != HEX_ESCAPE || PL_strpbrk(pc1, hexCharsUpperLower) == 0 ||
-        PL_strpbrk(pc2, hexCharsUpperLower) == 0) {
+    if (*src != HEX_ESCAPE || strpbrk(pc1, hexCharsUpperLower) == nullptr ||
+        strpbrk(pc2, hexCharsUpperLower) == nullptr) {
       *dst++ = *src++;
     } else {
       src++; /* walk over escape */
