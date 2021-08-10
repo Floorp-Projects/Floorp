@@ -13,9 +13,7 @@
 #include "js/Class.h"
 #include "vm/NativeObject.h"
 
-namespace mozilla::intl {
-class Collator;
-}
+struct UCollator;
 
 namespace js {
 
@@ -27,7 +25,7 @@ class CollatorObject : public NativeObject {
   static const JSClass& protoClass_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
-  static constexpr uint32_t INTL_COLLATOR_SLOT = 1;
+  static constexpr uint32_t UCOLLATOR_SLOT = 1;
   static constexpr uint32_t SLOT_COUNT = 2;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
@@ -37,16 +35,16 @@ class CollatorObject : public NativeObject {
   // Estimated memory use for UCollator (see IcuMemoryUsage).
   static constexpr size_t EstimatedMemoryUse = 1128;
 
-  mozilla::intl::Collator* getCollator() const {
-    const auto& slot = getFixedSlot(INTL_COLLATOR_SLOT);
+  UCollator* getCollator() const {
+    const auto& slot = getFixedSlot(UCOLLATOR_SLOT);
     if (slot.isUndefined()) {
       return nullptr;
     }
-    return static_cast<mozilla::intl::Collator*>(slot.toPrivate());
+    return static_cast<UCollator*>(slot.toPrivate());
   }
 
-  void setCollator(mozilla::intl::Collator* collator) {
-    setFixedSlot(INTL_COLLATOR_SLOT, PrivateValue(collator));
+  void setCollator(UCollator* collator) {
+    setFixedSlot(UCOLLATOR_SLOT, PrivateValue(collator));
   }
 
  private:
