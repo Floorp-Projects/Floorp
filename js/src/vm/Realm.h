@@ -869,6 +869,25 @@ class AutoRealmUnchecked : protected AutoRealm {
   inline AutoRealmUnchecked(JSContext* cx, JS::Realm* target);
 };
 
+// Similar to AutoRealm, but this uses GetFunctionRealm in the spec, and
+// handles both bound functions and proxies.
+//
+// If GetFunctionRealm fails for the following reasons, this does nothing:
+//   * `fun` is revoked proxy
+//   * unwrapping failed because of a security wrapper
+class AutoFunctionOrCurrentRealm {
+  mozilla::Maybe<AutoRealmUnchecked> ar_;
+
+ public:
+  inline AutoFunctionOrCurrentRealm(JSContext* cx, js::HandleObject fun);
+  ~AutoFunctionOrCurrentRealm() = default;
+
+ private:
+  AutoFunctionOrCurrentRealm(const AutoFunctionOrCurrentRealm&) = delete;
+  AutoFunctionOrCurrentRealm& operator=(const AutoFunctionOrCurrentRealm&) =
+      delete;
+};
+
 /*
  * Use this to change the behavior of an AutoRealm slightly on error. If
  * the exception happens to be an Error object, copy it to the origin
