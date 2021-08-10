@@ -1629,6 +1629,54 @@ void MacroAssembler::compareBigIntAndInt32(JSOp op, Register bigInt,
   }
 }
 
+void MacroAssembler::equalBigInts(Register left, Register right, Register temp1,
+                                  Register temp2, Register temp3,
+                                  Register temp4, Label* notSameSign,
+                                  Label* notSameLength, Label* notSameDigit) {
+  MOZ_ASSERT(left != temp1);
+  MOZ_ASSERT(right != temp1);
+  MOZ_ASSERT(right != temp2);
+
+  // Jump to |notSameSign| when the sign aren't the same.
+  load32(Address(left, BigInt::offsetOfFlags()), temp1);
+  xor32(Address(right, BigInt::offsetOfFlags()), temp1);
+  branchTest32(Assembler::NonZero, temp1, Imm32(BigInt::signBitMask()),
+               notSameSign);
+
+  // Jump to |notSameLength| when the digits length is different.
+  load32(Address(right, BigInt::offsetOfLength()), temp1);
+  branch32(Assembler::NotEqual, Address(left, BigInt::offsetOfLength()), temp1,
+           notSameLength);
+
+  // Both BigInts have the same sign and the same number of digits. Loop
+  // over each digit, starting with the left-most one, and break from the
+  // loop when the first non-matching digit was found.
+
+  loadBigIntDigits(left, temp2);
+  loadBigIntDigits(right, temp3);
+
+  static_assert(sizeof(BigInt::Digit) == sizeof(void*),
+                "BigInt::Digit is pointer sized");
+
+  computeEffectiveAddress(BaseIndex(temp2, temp1, ScalePointer), temp2);
+  computeEffectiveAddress(BaseIndex(temp3, temp1, ScalePointer), temp3);
+
+  Label start, loop;
+  jump(&start);
+  bind(&loop);
+
+  subPtr(Imm32(sizeof(BigInt::Digit)), temp2);
+  subPtr(Imm32(sizeof(BigInt::Digit)), temp3);
+
+  loadPtr(Address(temp3, 0), temp4);
+  branchPtr(Assembler::NotEqual, Address(temp2, 0), temp4, notSameDigit);
+
+  bind(&start);
+  branchSub32(Assembler::NotSigned, Imm32(1), temp1, &loop);
+
+  // No different digits were found, both BigInts are equal to each other.
+}
+
 void MacroAssembler::typeOfObject(Register obj, Register scratch, Label* slow,
                                   Label* isObject, Label* isCallable,
                                   Label* isUndefined) {

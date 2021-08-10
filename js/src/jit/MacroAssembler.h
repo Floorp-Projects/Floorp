@@ -4413,6 +4413,21 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              Register scratch1, Register scratch2,
                              Label* ifTrue, Label* ifFalse);
 
+  /**
+   * Compare two BigInts for equality. Falls through if both BigInts are equal
+   * to each other.
+   *
+   * - When we jump to |notSameLength|, |temp1| holds the length of the right
+   *   operand.
+   * - When we jump to |notSameDigit|, |temp2| points to the current digit of
+   *   the left operand and |temp4| holds the current digit of the right
+   *   operand.
+   */
+  void equalBigInts(Register left, Register right, Register temp1,
+                    Register temp2, Register temp3, Register temp4,
+                    Label* notSameSign, Label* notSameLength,
+                    Label* notSameDigit);
+
   void loadJSContext(Register dest);
 
   void switchToRealm(Register realm);
