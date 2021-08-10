@@ -3969,6 +3969,29 @@ bool WarpCacheIRTranspiler::emitSetHasObjectResult(ObjOperandId setId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitSetHasResult(ObjOperandId setId,
+                                             ValOperandId valId) {
+  MDefinition* set = getOperand(setId);
+  MDefinition* val = getOperand(valId);
+
+#ifdef JS_PUNBOX64
+  auto* hashValue = MToHashableValue::New(alloc(), val);
+  add(hashValue);
+
+  auto* hash = MHashValue::New(alloc(), set, hashValue);
+  add(hash);
+
+  auto* ins = MSetObjectHasValue::New(alloc(), set, hashValue, hash);
+  add(ins);
+#else
+  auto* ins = MSetObjectHasValueVMCall::New(alloc(), set, val);
+  add(ins);
+#endif
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTruthyResult(OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 

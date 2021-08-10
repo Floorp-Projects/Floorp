@@ -4670,6 +4670,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void toHashableNonGCThing(ValueOperand value, ValueOperand result,
                             FloatRegister tempFloat);
 
+  void toHashableValue(ValueOperand value, ValueOperand result,
+                       FloatRegister tempFloat, Label* atomizeString,
+                       Label* tagString);
+
  private:
   void scrambleHashCode(Register result);
 
@@ -4683,6 +4687,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void prepareHashObject(Register setObj, ValueOperand value, Register result,
                          Register temp1, Register temp2, Register temp3,
                          Register temp4);
+  void prepareHashValue(Register setObj, ValueOperand value, Register result,
+                        Register temp1, Register temp2, Register temp3,
+                        Register temp4);
 
  private:
   enum class IsBigInt { No, Yes, Maybe };
@@ -4713,6 +4720,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
                           Register temp3, Register temp4) {
     return setObjectHas(setObj, value, hash, result, temp1, temp2, temp3, temp4,
                         IsBigInt::Yes);
+  }
+  void setObjectHasValue(Register setObj, ValueOperand value, Register hash,
+                         Register result, Register temp1, Register temp2,
+                         Register temp3, Register temp4) {
+    return setObjectHas(setObj, value, hash, result, temp1, temp2, temp3, temp4,
+                        IsBigInt::Maybe);
   }
 
   // Inline version of js_TypedArray_uint8_clamp_double.
