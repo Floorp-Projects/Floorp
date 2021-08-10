@@ -201,8 +201,6 @@ appmenu-help-not-deceptive =
 
 appmenu-customizetoolbar =
     .label = Customize toolbar…
-appmenu-taskmanager =
-    .label = Task Manager
 
 appmenu-developer-tools-subheader = Browser tools
 appmenu-developer-tools-extensions =
