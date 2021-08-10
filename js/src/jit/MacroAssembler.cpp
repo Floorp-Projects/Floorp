@@ -5166,6 +5166,26 @@ void MacroAssembler::mapObjectHas(Register mapObj, ValueOperand value,
   bind(&done);
 }
 
+void MacroAssembler::mapObjectGet(Register mapObj, ValueOperand value,
+                                  Register hash, ValueOperand result,
+                                  Register temp1, Register temp2,
+                                  Register temp3, Register temp4,
+                                  Register temp5, IsBigInt isBigInt) {
+  Label found;
+  orderedHashTableLookup<ValueMap>(mapObj, value, hash, temp1, temp2, temp3,
+                                   temp4, temp5, &found, isBigInt);
+
+  Label done;
+  moveValue(UndefinedValue(), result);
+  jump(&done);
+
+  // |temp1| holds the found entry.
+  bind(&found);
+  loadValue(Address(temp1, ValueMap::Entry::offsetOfValue()), result);
+
+  bind(&done);
+}
+
 // Can't push large frames blindly on windows, so we must touch frame memory
 // incrementally, with no more than 4096 - 1 bytes between touches.
 //

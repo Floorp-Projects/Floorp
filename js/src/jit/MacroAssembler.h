@@ -4713,6 +4713,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
                     Register result, Register temp1, Register temp2,
                     Register temp3, Register temp4, IsBigInt isBigInt);
 
+  void mapObjectGet(Register mapObj, ValueOperand value, Register hash,
+                    ValueOperand result, Register temp1, Register temp2,
+                    Register temp3, Register temp4, Register temp5,
+                    IsBigInt isBigInt);
+
  public:
   void setObjectHasNonBigInt(Register setObj, ValueOperand value, Register hash,
                              Register result, Register temp1, Register temp2) {
@@ -4748,6 +4753,25 @@ class MacroAssembler : public MacroAssemblerSpecific {
                          Register temp3, Register temp4) {
     return mapObjectHas(mapObj, value, hash, result, temp1, temp2, temp3, temp4,
                         IsBigInt::Maybe);
+  }
+
+  void mapObjectGetNonBigInt(Register mapObj, ValueOperand value, Register hash,
+                             ValueOperand result, Register temp1,
+                             Register temp2, Register temp3) {
+    return mapObjectGet(mapObj, value, hash, result, temp1, temp2, temp3,
+                        InvalidReg, InvalidReg, IsBigInt::No);
+  }
+  void mapObjectGetBigInt(Register mapObj, ValueOperand value, Register hash,
+                          ValueOperand result, Register temp1, Register temp2,
+                          Register temp3, Register temp4, Register temp5) {
+    return mapObjectGet(mapObj, value, hash, result, temp1, temp2, temp3, temp4,
+                        temp5, IsBigInt::Yes);
+  }
+  void mapObjectGetValue(Register mapObj, ValueOperand value, Register hash,
+                         ValueOperand result, Register temp1, Register temp2,
+                         Register temp3, Register temp4, Register temp5) {
+    return mapObjectGet(mapObj, value, hash, result, temp1, temp2, temp3, temp4,
+                        temp5, IsBigInt::Maybe);
   }
 
   // Inline version of js_TypedArray_uint8_clamp_double.

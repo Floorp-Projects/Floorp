@@ -2709,6 +2709,54 @@
     map: ObjId
     obj: ObjId
 
+- name: MapGetResult
+  shared: true
+  transpile: false
+  cost_estimate: 5
+  args:
+    map: ObjId
+    val: ValId
+
+- name: MapGetNonGCThingResult
+  shared: true
+  transpile: false
+  cost_estimate: 3
+  args:
+    map: ObjId
+    val: ValId
+
+- name: MapGetStringResult
+  shared: false
+  transpile: false
+  cost_estimate: 5
+  args:
+    map: ObjId
+    str: StringId
+
+- name: MapGetSymbolResult
+  shared: true
+  transpile: false
+  cost_estimate: 3
+  args:
+    map: ObjId
+    sym: SymbolId
+
+- name: MapGetBigIntResult
+  shared: true
+  transpile: false
+  cost_estimate: 3
+  args:
+    map: ObjId
+    bigInt: BigIntId
+
+- name: MapGetObjectResult
+  shared: true
+  transpile: false
+  cost_estimate: 3
+  args:
+    map: ObjId
+    obj: ObjId
+
 - name: CallPrintString
   shared: true
   transpile: false
