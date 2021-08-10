@@ -159,7 +159,7 @@ where
                 let label = self.static_label(label);
                 self.new_metric_with_name(combine_base_identifier_and_label(
                     &self.submetric.meta().name,
-                    &label,
+                    label,
                 ))
             }
             None => self.new_metric_with_dynamic_label(label.to_string()),
@@ -222,7 +222,7 @@ pub fn validate_dynamic_label(
     for store in &meta.send_in_pings {
         glean
             .storage()
-            .iter_store_from(lifetime, store, Some(&prefix), &mut snapshotter);
+            .iter_store_from(lifetime, store, Some(prefix), &mut snapshotter);
     }
 
     let error = if label_count >= MAX_LABELS {

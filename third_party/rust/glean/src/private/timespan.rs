@@ -114,7 +114,7 @@ impl glean_core::traits::Timespan for TimespanMetric {
             .expect("Lock poisoned for timespan metric on test_get_value.");
 
         crate::with_glean_mut(|glean| {
-            glean_core::test_get_num_recorded_errors(&glean, metric.meta(), error, ping_name.into())
+            glean_core::test_get_num_recorded_errors(glean, metric.meta(), error, ping_name.into())
                 .unwrap_or(0)
         })
     }

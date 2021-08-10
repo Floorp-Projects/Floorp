@@ -117,7 +117,7 @@ impl DatetimeMetric {
             return;
         }
 
-        let value = value.unwrap_or_else(|| local_now_with_offset_and_record(&glean));
+        let value = value.unwrap_or_else(|| local_now_with_offset_and_record(glean));
         let value = Metric::Datetime(value, self.time_unit);
         glean.storage().record(glean, &self.meta, &value)
     }
