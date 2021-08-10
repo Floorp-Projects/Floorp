@@ -185,6 +185,7 @@ class ContentPage {
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
     browser.setAttribute("messagemanagergroup", "webext-browsers");
+    browser.setAttribute("nodefaultsrc", "true");
     if (this.userContextId) {
       browser.setAttribute("usercontextid", this.userContextId);
     }
