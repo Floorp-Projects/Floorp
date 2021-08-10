@@ -38,18 +38,6 @@ add_task(async function test_updates_post_policy() {
     false
   );
 
-  info("Check that devtools menu items are hidden");
-  let toolsMenu = window.document.getElementById("webDeveloperMenu");
-  ok(toolsMenu.hidden, "The Web Developer item of the tools menu is hidden");
-  let hamburgerMenu = window.document.getElementById(
-    "appMenu-developer-button"
-  );
-  is(
-    hamburgerMenu,
-    null,
-    "The Web Developer item of the hamburger menu should not be available."
-  );
-
   let menuButton = document.getElementById("PanelUI-menu-button");
   menuButton.click();
   await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");

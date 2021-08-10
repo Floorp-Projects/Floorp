@@ -469,7 +469,6 @@ DevToolsStartup.prototype = {
    */
   onWindowReady(window) {
     if (this.isDisabledByPolicy()) {
-      this.removeDevToolsMenus(window);
       return;
     }
 
@@ -483,16 +482,6 @@ DevToolsStartup.prototype = {
     }
 
     JsonView.initialize();
-  },
-
-  removeDevToolsMenus(window) {
-    // This will hide the "Tools > Web Developer" menu.
-    window.document.getElementById("webDeveloperMenu").hidden = true;
-    // This will hide the "Web Developer" item in the hamburger menu.
-    PanelMultiView.getViewNode(
-      window.document,
-      "appMenu-developer-button"
-    ).hidden = true;
   },
 
   onFirstWindowReady(window) {

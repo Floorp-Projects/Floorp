@@ -14,7 +14,6 @@ function getExpectedTargets() {
     "addons",
     "appMenu",
     "backForward",
-    "devtools",
     "help",
     "logins",
     "pageAction-bookmark",
