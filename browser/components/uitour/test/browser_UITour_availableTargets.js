@@ -16,7 +16,6 @@ function getExpectedTargets() {
     "backForward",
     "devtools",
     "help",
-    "library",
     "logins",
     "pageAction-bookmark",
     ...(hasPocket ? ["pocket"] : []),
