@@ -192,10 +192,7 @@ class EmitterScope : public Nestable<EmitterScope> {
   // shadowing. If `name` refers to a name that is actually stamped onto the
   // target object (anything other than a non-static private method), then
   // `brandLoc` is set to Nothing.
-  //
-  // To handle cases where it's not possible to find the private brand, this
-  // method has to be fallible.
-  bool lookupPrivate(BytecodeEmitter* bce, TaggedParserAtomIndex name,
+  void lookupPrivate(BytecodeEmitter* bce, TaggedParserAtomIndex name,
                      NameLocation& loc, mozilla::Maybe<NameLocation>& brandLoc);
 
   mozilla::Maybe<NameLocation> locationBoundInScope(TaggedParserAtomIndex name,
