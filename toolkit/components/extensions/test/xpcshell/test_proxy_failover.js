@@ -42,8 +42,9 @@ function getBadProxyPort() {
 
 function xhr(url) {
   return new Promise((resolve, reject) => {
-    let req = new XMLHttpRequest({ mozSystem: true });
+    let req = new XMLHttpRequest();
     req.open("GET", `${url}?t=${Math.random()}`);
+    req.channel.QueryInterface(Ci.nsIHttpChannelInternal).beConservative = true;
     req.onload = () => {
       resolve(req.responseText);
     };
