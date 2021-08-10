@@ -7805,7 +7805,11 @@ AttachDecision CallIRGenerator::tryAttachSetHas(HandleFunction callee) {
         writer.setHasNonGCThingResult(objId, argId);
         break;
       }
-      case ValueType::String:
+      case ValueType::String: {
+        StringOperandId strId = writer.guardToString(argId);
+        writer.setHasStringResult(objId, strId);
+        break;
+      }
       case ValueType::Symbol:
       case ValueType::BigInt:
       case ValueType::Object:
