@@ -1876,10 +1876,14 @@ void gfxFontGroup::BuildFontList() {
                       fonts);
     } else {
       MOZ_ASSERT(name.IsGeneric());
-      if (mFirstGeneric == StyleGenericFontFamily::None) {
-        mFirstGeneric = name.AsGeneric();
+      const StyleGenericFontFamily generic = name.AsGeneric();
+      // system-ui is usually a single family, so it doesn't work great as
+      // fallback. Prefer the following generic or the language default instead.
+      if (mFallbackGeneric == StyleGenericFontFamily::None &&
+          generic != StyleGenericFontFamily::SystemUi) {
+        mFallbackGeneric = generic;
       }
-      pfl->AddGenericFonts(name.AsGeneric(), mLanguage, fonts);
+      pfl->AddGenericFonts(generic, mLanguage, fonts);
       if (mTextPerf) {
         mTextPerf->current.genericLookups++;
       }
@@ -3690,8 +3694,8 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(
   for (i = 0; i < numLangs; i++) {
     eFontPrefLang currentLang = prefLangs[i];
     StyleGenericFontFamily generic =
-        mFirstGeneric != StyleGenericFontFamily::None
-            ? mFirstGeneric
+        mFallbackGeneric != StyleGenericFontFamily::None
+            ? mFallbackGeneric
             : pfl->GetDefaultGeneric(currentLang);
     gfxPlatformFontList::PrefFontList* families =
         pfl->GetPrefFontsLangGroup(generic, currentLang);
