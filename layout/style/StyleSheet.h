@@ -86,8 +86,9 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StyleSheetState)
 
 class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentSheetToUse,
+             dom::CSSImportRule* aOwnerRuleToUse,
              dom::DocumentOrShadowRoot* aDocOrShadowRootToUse,
-             dom::Document* aConstructorDocToUse);
+             dom::Document* aConstructorDocToUse, nsINode* aOwningNodeToUse);
 
   virtual ~StyleSheet();
 
@@ -201,8 +202,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   bool IsApplicable() const { return !Disabled() && IsComplete(); }
 
   already_AddRefed<StyleSheet> Clone(
-      StyleSheet* aCloneParent,
-      dom::DocumentOrShadowRoot* aCloneDocumentOrShadowRoot) const;
+      StyleSheet* aCloneParent, dom::CSSImportRule* aCloneOwnerRule,
+      dom::DocumentOrShadowRoot* aCloneDocumentOrShadowRoot,
+      nsINode* aCloneOwningNode) const;
 
   /**
    * Creates a clone of the adopted style sheet as though it were constructed
@@ -254,21 +256,10 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   StyleSheet* GetParentSheet() const { return mParentSheet; }
 
-  void AddReferencingRule(dom::CSSImportRule& aRule) {
-    MOZ_ASSERT(!mReferencingRules.Contains(&aRule));
-    mReferencingRules.AppendElement(&aRule);
+  void SetOwnerRule(dom::CSSImportRule* aOwnerRule) {
+    mOwnerRule = aOwnerRule; /* Not ref counted */
   }
-
-  void RemoveReferencingRule(dom::CSSImportRule& aRule) {
-    MOZ_ASSERT(mReferencingRules.Contains(&aRule));
-    mReferencingRules.RemoveElement(&aRule);
-  }
-
-  // Note that when exposed to script, this should always have a <= 1 length.
-  // CSSImportRule::GetStyleSheetForBindings takes care of that.
-  dom::CSSImportRule* GetOwnerRule() const {
-    return mReferencingRules.SafeElementAt(0);
-  }
+  dom::CSSImportRule* GetOwnerRule() const { return mOwnerRule; }
 
   void AppendStyleSheet(StyleSheet&);
 
@@ -510,7 +501,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   // Take the recently cloned sheets from the `@import` rules, and reparent them
   // correctly to `aPrimarySheet`.
-  void FixUpAfterInnerClone();
+  void BuildChildListAfterInnerClone();
 
   void DropRuleList();
 
@@ -566,8 +557,8 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   // weak ref; parents maintain this for their children
   dom::DocumentOrShadowRoot* mDocumentOrShadowRoot;
-  nsINode* mOwningNode = nullptr;                   // weak ref
-  nsTArray<dom::CSSImportRule*> mReferencingRules;  // weak ref
+  nsINode* mOwningNode;            // weak ref
+  dom::CSSImportRule* mOwnerRule;  // weak ref
 
   RefPtr<dom::MediaList> mMedia;
 
