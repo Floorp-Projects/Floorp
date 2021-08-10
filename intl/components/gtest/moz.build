@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     "TestCalendar.cpp",
+    "TestCollator.cpp",
     "TestDateTimeFormat.cpp",
     "TestNumberFormat.cpp",
     "TestPluralRules.cpp",
