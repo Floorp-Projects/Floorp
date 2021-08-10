@@ -182,6 +182,7 @@ namespace jit {
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
   _(LoadAliasedDebugVar, js::LoadAliasedDebugVar)                              \
+  _(MapObjectGet, js::jit::MapObjectGet)                                       \
   _(MapObjectHas, js::jit::MapObjectHas)                                       \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NamedLambdaObjectCreateTemplateObject,                                     \
