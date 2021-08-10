@@ -645,23 +645,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 /* Tracking Protection Button & Toggle */
 
-#appMenu-protection-report-text {
-  -moz-context-properties: fill;
-  fill: currentColor;
-  -moz-box-flex: 1;
-  padding: 0;
-  padding-inline-start: 8px;
-  margin: 0;
-}
-
-#appMenu-protection-report-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/dashboard.svg);
-}
-
-#appMenu-protection-report-button {
-  -moz-box-flex: 1;
-}
-
 .addon-banner-item > .toolbarbutton-text,
 .panel-banner-item > .toolbarbutton-text {
   text-align: start;
