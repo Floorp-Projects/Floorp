@@ -4605,6 +4605,212 @@ void MacroAssembler::iteratorClose(Register obj, Register temp1, Register temp2,
 #endif
 }
 
+void MacroAssembler::toHashableNonGCThing(ValueOperand value,
+                                          ValueOperand result,
+                                          FloatRegister tempFloat) {
+  // Inline implementation of |HashableValue::setValue()|.
+
+#ifdef DEBUG
+  Label ok;
+  branchTestGCThing(Assembler::NotEqual, value, &ok);
+  assumeUnreachable("Unexpected GC thing");
+  bind(&ok);
+#endif
+
+  Label useInput, done;
+  branchTestDouble(Assembler::NotEqual, value, &useInput);
+  {
+    Register int32 = result.scratchReg();
+    unboxDouble(value, tempFloat);
+
+    // Normalize int32-valued doubles to int32 and negative zero to +0.
+    Label canonicalize;
+    convertDoubleToInt32(tempFloat, int32, &canonicalize, false);
+    {
+      tagValue(JSVAL_TYPE_INT32, int32, result);
+      jump(&done);
+    }
+    bind(&canonicalize);
+    {
+      // Normalize the sign bit of a NaN.
+      branchDouble(Assembler::DoubleOrdered, tempFloat, tempFloat, &useInput);
+      moveValue(JS::NaNValue(), result);
+      jump(&done);
+    }
+  }
+
+  bind(&useInput);
+  moveValue(value, result);
+
+  bind(&done);
+}
+
+void MacroAssembler::scrambleHashCode(Register result) {
+  // Inline implementation of |mozilla::ScrambleHashCode()|.
+
+  mul32(Imm32(mozilla::kGoldenRatioU32), result);
+}
+
+void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
+                                           Register temp) {
+  // Inline implementation of |OrderedHashTable::prepareHash()| and
+  // |mozilla::HashGeneric(v.asRawBits())|.
+
+#ifdef DEBUG
+  Label ok;
+  branchTestGCThing(Assembler::NotEqual, value, &ok);
+  assumeUnreachable("Unexpected GC thing");
+  bind(&ok);
+#endif
+
+  // uint32_t v1 = static_cast<uint32_t>(aValue);
+#ifdef JS_PUNBOX64
+  move64To32(value.toRegister64(), result);
+#else
+  move32(value.payloadReg(), result);
+#endif
+
+  // uint32_t v2 = static_cast<uint32_t>(static_cast<uint64_t>(aValue) >> 32);
+#ifdef JS_PUNBOX64
+  auto r64 = Register64(temp);
+  move64(value.toRegister64(), r64);
+  rshift64(Imm32(32), r64);
+#else
+  // TODO: This seems like a bug in mozilla::detail::AddUintptrToHash().
+  // The uint64_t input is first converted to uintptr_t and then back to
+  // uint64_t. But |uint64_t(uintptr_t(bits))| actually only clears the high
+  // bits, so this computation:
+  //
+  // aValue = uintptr_t(bits)
+  // v2 = static_cast<uint32_t>(static_cast<uint64_t>(aValue) >> 32)
+  //
+  // really just sets |v2 = 0|. And that means the xor-operation in AddU32ToHash
+  // can be optimized away, because |x ^ 0 = x|.
+  //
+  // Filed as bug 1718516.
+#endif
+
+  // mozilla::WrappingMultiply(kGoldenRatioU32, RotateLeft5(aHash) ^ aValue);
+  // with |aHash = 0| and |aValue = v1|.
+  mul32(Imm32(mozilla::kGoldenRatioU32), result);
+
+  // mozilla::WrappingMultiply(kGoldenRatioU32, RotateLeft5(aHash) ^ aValue);
+  // with |aHash = <above hash>| and |aValue = v2|.
+  rotateLeft(Imm32(5), result, result);
+#ifdef JS_PUNBOX64
+  xor32(temp, result);
+#endif
+
+  // Combine |mul32| and |scrambleHashCode| by directly multiplying with
+  // |kGoldenRatioU32 * kGoldenRatioU32|.
+  //
+  // mul32(Imm32(mozilla::kGoldenRatioU32), result);
+  //
+  // scrambleHashCode(result);
+  mul32(Imm32(mozilla::kGoldenRatioU32 * mozilla::kGoldenRatioU32), result);
+}
+
+template <typename OrderedHashTable>
+void MacroAssembler::orderedHashTableLookup(Register setOrMapObj,
+                                            ValueOperand value, Register hash,
+                                            Register entryTemp, Register temp1,
+                                            Register temp2, Register temp3,
+                                            Register temp4, Label* found,
+                                            IsBigInt isBigInt) {
+  // Inline implementation of |OrderedHashTable::lookup()|.
+
+  MOZ_ASSERT_IF(isBigInt == IsBigInt::No, temp3 == InvalidReg);
+  MOZ_ASSERT_IF(isBigInt == IsBigInt::No, temp4 == InvalidReg);
+
+#ifdef DEBUG
+  Label ok;
+  if (isBigInt == IsBigInt::No) {
+    branchTestBigInt(Assembler::NotEqual, value, &ok);
+    assumeUnreachable("Unexpected BigInt");
+  } else if (isBigInt == IsBigInt::Yes) {
+    branchTestBigInt(Assembler::Equal, value, &ok);
+    assumeUnreachable("Unexpected non-BigInt");
+  }
+  bind(&ok);
+#endif
+
+  // Load the |ValueSet|.
+  loadPrivate(Address(setOrMapObj, SetObject::getDataSlotOffset()), temp1);
+
+  // Load the bucket.
+  move32(hash, entryTemp);
+  load32(Address(temp1, OrderedHashTable::offsetOfImplHashShift()), temp2);
+  flexibleRshift32(temp2, entryTemp);
+
+  loadPtr(Address(temp1, OrderedHashTable::offsetOfImplHashTable()), temp2);
+  loadPtr(BaseIndex(temp2, entryTemp, ScalePointer), entryTemp);
+
+  // Search for a match in this bucket.
+  Label start, loop;
+  jump(&start);
+  bind(&loop);
+  {
+    // Inline implementation of |HashableValue::operator==|.
+
+    static_assert(OrderedHashTable::offsetOfImplDataElement() == 0,
+                  "offsetof(Data, element) is 0");
+    auto keyAddr = Address(entryTemp, OrderedHashTable::offsetOfEntryKey());
+
+    if (isBigInt == IsBigInt::No) {
+      // Two HashableValues are equal if they have equal bits.
+      branch64(Assembler::Equal, keyAddr, value.toRegister64(), found);
+    } else {
+#ifdef JS_PUNBOX64
+      auto key = ValueOperand(temp1);
+#else
+      auto key = ValueOperand(temp1, temp2);
+#endif
+
+      loadValue(keyAddr, key);
+
+      // Two HashableValues are equal if they have equal bits.
+      branch64(Assembler::Equal, key.toRegister64(), value.toRegister64(),
+               found);
+
+      // BigInt values are considered equal if they represent the same
+      // mathematical value.
+      Label next;
+      fallibleUnboxBigInt(key, temp2, &next);
+      if (isBigInt == IsBigInt::Yes) {
+        unboxBigInt(value, temp1);
+      } else {
+        fallibleUnboxBigInt(value, temp1, &next);
+      }
+      equalBigInts(temp1, temp2, temp3, temp4, temp1, temp2, &next, &next,
+                   &next);
+      jump(found);
+      bind(&next);
+    }
+  }
+  loadPtr(Address(entryTemp, OrderedHashTable::offsetOfImplDataChain()),
+          entryTemp);
+  bind(&start);
+  branchTestPtr(Assembler::NonZero, entryTemp, entryTemp, &loop);
+}
+
+void MacroAssembler::setObjectHas(Register setObj, ValueOperand value,
+                                  Register hash, Register result,
+                                  Register temp1, Register temp2,
+                                  Register temp3, Register temp4,
+                                  IsBigInt isBigInt) {
+  Label found;
+  orderedHashTableLookup<ValueSet>(setObj, value, hash, result, temp1, temp2,
+                                   temp3, temp4, &found, isBigInt);
+
+  Label done;
+  move32(Imm32(0), result);
+  jump(&done);
+
+  bind(&found);
+  move32(Imm32(1), result);
+  bind(&done);
+}
+
 // Can't push large frames blindly on windows, so we must touch frame memory
 // incrementally, with no more than 4096 - 1 bytes between touches.
 //
