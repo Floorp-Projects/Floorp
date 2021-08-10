@@ -114,7 +114,7 @@ bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
   return RecreateSendStreamIfExists();
 }
 
-std::vector<uint32_t> WebrtcAudioConduit::GetLocalSSRCs() {
+std::vector<uint32_t> WebrtcAudioConduit::GetLocalSSRCs() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   return std::vector<uint32_t>(1, mRecvStreamConfig.rtp.local_ssrc);
 }
@@ -131,7 +131,7 @@ bool WebrtcAudioConduit::SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) {
   return RecreateRecvStreamIfExists();
 }
 
-bool WebrtcAudioConduit::GetRemoteSSRC(uint32_t* ssrc) {
+bool WebrtcAudioConduit::GetRemoteSSRC(uint32_t* ssrc) const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   if (!mRecvStream) {
     return false;

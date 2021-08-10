@@ -379,7 +379,7 @@ bool WebrtcVideoConduit::SetLocalSSRCs(
   return true;
 }
 
-std::vector<unsigned int> WebrtcVideoConduit::GetLocalSSRCs() {
+std::vector<unsigned int> WebrtcVideoConduit::GetLocalSSRCs() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   return mSendStreamConfig.rtp.ssrcs;
 }
@@ -792,7 +792,7 @@ bool WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
   return true;
 }
 
-bool WebrtcVideoConduit::GetRemoteSSRC(uint32_t* ssrc) {
+bool WebrtcVideoConduit::GetRemoteSSRC(uint32_t* ssrc) const {
   if (mCallThread->IsOnCurrentThread()) {
     if (!mRecvStream) {
       return false;
@@ -1761,7 +1761,7 @@ void WebrtcVideoConduit::SetRtcpEventObserver(
   mRtcpEventObserver = observer;
 }
 
-bool WebrtcVideoConduit::HasCodecPluginID(uint64_t aPluginID) {
+bool WebrtcVideoConduit::HasCodecPluginID(uint64_t aPluginID) const {
   MOZ_ASSERT(NS_IsMainThread());
 
   return mSendCodecPluginIDs.Contains(aPluginID) ||
