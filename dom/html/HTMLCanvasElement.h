@@ -301,6 +301,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          Layer* aOldLayer,
                                          LayerManager* aManager);
+  already_AddRefed<layers::Image> GetAsImage();
   bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
                                  WebRenderCanvasData* aCanvasData);
   bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,

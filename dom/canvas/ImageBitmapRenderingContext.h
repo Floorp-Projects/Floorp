@@ -81,6 +81,9 @@ class ImageBitmapRenderingContext final
   virtual already_AddRefed<Layer> GetCanvasLayer(
       nsDisplayListBuilder* aBuilder, Layer* aOldLayer,
       LayerManager* aManager) override;
+  virtual already_AddRefed<layers::Image> GetAsImage() override {
+    return ClipToIntrinsicSize();
+  }
   bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
                                  WebRenderCanvasData* aCanvasData) override;
   virtual void MarkContextClean() override;

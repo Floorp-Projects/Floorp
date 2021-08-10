@@ -39,6 +39,7 @@ class CanvasLayer;
 class CanvasRenderer;
 class CompositableHandle;
 class Layer;
+class Image;
 class LayerManager;
 class LayerTransactionChild;
 class PersistentBufferProvider;
@@ -146,6 +147,9 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   virtual already_AddRefed<Layer> GetCanvasLayer(
       mozilla::nsDisplayListBuilder* builder, Layer* oldLayer,
       LayerManager* manager) = 0;
+  virtual already_AddRefed<mozilla::layers::Image> GetAsImage() {
+    return nullptr;
+  }
   virtual bool UpdateWebRenderCanvasData(
       mozilla::nsDisplayListBuilder* aBuilder,
       WebRenderCanvasData* aCanvasData) {
