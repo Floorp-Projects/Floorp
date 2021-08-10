@@ -80,6 +80,10 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace net {
 
+static ContentParentId GetContentProcessId(ContentParent* aContentParent) {
+  return aContentParent ? aContentParent->ChildID() : ContentParentId{0};
+}
+
 static void SetNeedToAddURIVisit(nsIChannel* aChannel,
                                  bool aNeedToAddURIVisit) {
   nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aChannel));
@@ -517,8 +521,8 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
                                 const TimeStamp& aAsyncOpenTime,
                                 nsDOMNavigationTiming* aTiming,
                                 Maybe<ClientInfo>&& aInfo, bool aUrgentStart,
-                                base::ProcessId aPid, nsresult* aRv)
-    -> RefPtr<OpenPromise> {
+                                dom::ContentParent* aContentParent,
+                                nsresult* aRv) -> RefPtr<OpenPromise> {
   auto* loadingContext = GetLoadingBrowsingContext();
 
   MOZ_DIAGNOSTIC_ASSERT_IF(loadingContext->GetParent(),
@@ -552,6 +556,29 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     }
 
     mRemoteTypeOverride = aLoadState->GetRemoteTypeOverride();
+  }
+
+  if (NS_WARN_IF(!loadingContext->IsOwnedByProcess(
+          GetContentProcessId(aContentParent)))) {
+    LOG(
+        ("DocumentLoadListener::Open called from non-current content process "
+         "[this=%p, current=%" PRIu64 ", caller=%" PRIu64 "]",
+         this, loadingContext->OwnerProcessId(),
+         uint64_t(GetContentProcessId(aContentParent))));
+    *aRv = NS_BINDING_ABORTED;
+    mParentChannelListener = nullptr;
+    return nullptr;
+  }
+
+  if (mIsDocumentLoad && loadingContext->IsContent() &&
+      NS_WARN_IF(loadingContext->IsReplaced())) {
+    LOG(
+        ("DocumentLoadListener::Open called from replaced BrowsingContext "
+         "[this=%p, browserid=%" PRIx64 ", bcid=%" PRIx64 "]",
+         this, loadingContext->BrowserId(), loadingContext->Id()));
+    *aRv = NS_BINDING_ABORTED;
+    mParentChannelListener = nullptr;
+    return nullptr;
   }
 
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
@@ -713,7 +740,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   // after opening the document channel we have to kick off countermeasures.
   nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(this);
 
-  mOtherPid = aPid;
+  mContentParent = aContentParent;
   mChannelCreationURI = aLoadState->URI();
   mLoadStateExternalLoadFlags = aLoadState->LoadFlags();
   mLoadStateInternalLoadFlags = aLoadState->InternalLoadFlags();
@@ -744,8 +771,8 @@ auto DocumentLoadListener::OpenDocument(
     nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
     const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
     nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
-    Maybe<bool> aUriModified, Maybe<bool> aIsXFOError, base::ProcessId aPid,
-    nsresult* aRv) -> RefPtr<OpenPromise> {
+    Maybe<bool> aUriModified, Maybe<bool> aIsXFOError,
+    dom::ContentParent* aContentParent, nsresult* aRv) -> RefPtr<OpenPromise> {
   LOG(("DocumentLoadListener [%p] OpenDocument [uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 
@@ -764,7 +791,8 @@ auto DocumentLoadListener::OpenDocument(
       browsingContext, std::move(aUriModified), std::move(aIsXFOError));
 
   return Open(aLoadState, loadInfo, loadFlags, aCacheKey, aChannelId,
-              aAsyncOpenTime, aTiming, std::move(aInfo), false, aPid, aRv);
+              aAsyncOpenTime, aTiming, std::move(aInfo), false, aContentParent,
+              aRv);
 }
 
 auto DocumentLoadListener::OpenObject(
@@ -773,8 +801,9 @@ auto DocumentLoadListener::OpenObject(
     nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
     uint64_t aInnerWindowId, nsLoadFlags aLoadFlags,
     nsContentPolicyType aContentPolicyType, bool aUrgentStart,
-    base::ProcessId aPid, ObjectUpgradeHandler* aObjectUpgradeHandler,
-    nsresult* aRv) -> RefPtr<OpenPromise> {
+    dom::ContentParent* aContentParent,
+    ObjectUpgradeHandler* aObjectUpgradeHandler, nsresult* aRv)
+    -> RefPtr<OpenPromise> {
   LOG(("DocumentLoadListener [%p] OpenObject [uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 
@@ -788,8 +817,8 @@ auto DocumentLoadListener::OpenObject(
   mObjectUpgradeHandler = aObjectUpgradeHandler;
 
   return Open(aLoadState, loadInfo, aLoadFlags, aCacheKey, aChannelId,
-              aAsyncOpenTime, aTiming, std::move(aInfo), aUrgentStart, aPid,
-              aRv);
+              aAsyncOpenTime, aTiming, std::move(aInfo), aUrgentStart,
+              aContentParent, aRv);
 }
 
 auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
@@ -868,7 +897,11 @@ auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
   nsresult rv;
   return Open(loadState, loadInfo, loadFlags, cacheKey, channelId,
               TimeStamp::Now(), timing, std::move(initialClientInfo), false,
-              browsingContext->GetContentParent()->OtherPid(), &rv);
+              browsingContext->GetContentParent(), &rv);
+}
+
+base::ProcessId DocumentLoadListener::OtherPid() const {
+  return mContentParent ? mContentParent->OtherPid() : base::ProcessId{0};
 }
 
 void DocumentLoadListener::FireStateChange(uint32_t aStateFlags,
@@ -1792,11 +1825,13 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 void DocumentLoadListener::TriggerProcessSwitch(
     CanonicalBrowsingContext* aContext,
     const RemotenessChangeOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      aContext->IsOwnedByProcess(GetContentProcessId(mContentParent)),
+      "not owned by creator process anymore?");
   nsAutoCString currentRemoteType(NOT_REMOTE_TYPE);
-  if (RefPtr<ContentParent> contentParent = aContext->GetContentParent()) {
-    currentRemoteType = contentParent->GetRemoteType();
+  if (mContentParent) {
+    currentRemoteType = mContentParent->GetRemoteType();
   }
-  MOZ_ASSERT_IF(currentRemoteType.IsEmpty(), !OtherPid());
 
   LOG(("Process Switch: Changing Remoteness from '%s' to '%s'",
        currentRemoteType.get(), aOptions.mRemoteType.get()));
@@ -1814,8 +1849,8 @@ void DocumentLoadListener::TriggerProcessSwitch(
           [self = RefPtr{this}](BrowserParent* aBrowserParent) {
             MOZ_ASSERT(self->mChannel,
                        "Something went wrong, channel got cancelled");
-            self->TriggerRedirectToRealChannel(Some(
-                aBrowserParent ? aBrowserParent->Manager()->ChildID() : 0));
+            self->TriggerRedirectToRealChannel(
+                Some(aBrowserParent ? aBrowserParent->Manager() : nullptr));
           },
           [self = RefPtr{this}](nsresult aStatusCode) {
             MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
@@ -1863,7 +1898,7 @@ DocumentLoadListener::RedirectToParentProcess(uint32_t aRedirectFlags,
 RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
 DocumentLoadListener::RedirectToRealChannel(
     uint32_t aRedirectFlags, uint32_t aLoadFlags,
-    const Maybe<uint64_t>& aDestinationProcess,
+    const Maybe<ContentParent*>& aDestinationProcess,
     nsTArray<ParentEndpoint>&& aStreamFilterEndpoints) {
   LOG(
       ("DocumentLoadListener RedirectToRealChannel [this=%p] "
@@ -1895,20 +1930,19 @@ DocumentLoadListener::RedirectToRealChannel(
   MOZ_ALWAYS_SUCCEEDS(registrar->RegisterChannel(chan, mRedirectChannelId));
 
   if (aDestinationProcess) {
-    if (!*aDestinationProcess) {
+    RefPtr<ContentParent> cp = *aDestinationProcess;
+    if (!cp) {
       MOZ_ASSERT(aStreamFilterEndpoints.IsEmpty());
       return RedirectToParentProcess(aRedirectFlags, aLoadFlags);
     }
-    dom::ContentParent* cp =
-        dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
-            ContentParentId{*aDestinationProcess});
-    if (!cp) {
+
+    if (!cp->CanSend()) {
       return PDocumentChannelParent::RedirectToRealChannelPromise::
           CreateAndReject(ipc::ResponseRejectReason::SendError, __func__);
     }
 
     RedirectToRealChannelArgs args;
-    SerializeRedirectData(args, !!aDestinationProcess, aRedirectFlags,
+    SerializeRedirectData(args, /* aIsCrossProcess */ true, aRedirectFlags,
                           aLoadFlags, cp);
     if (mTiming) {
       mTiming->Anonymize(args.uri());
@@ -1959,7 +1993,7 @@ DocumentLoadListener::RedirectToRealChannel(
 }
 
 void DocumentLoadListener::TriggerRedirectToRealChannel(
-    const Maybe<uint64_t>& aDestinationProcess) {
+    const Maybe<ContentParent*>& aDestinationProcess) {
   LOG((
       "DocumentLoadListener::TriggerRedirectToRealChannel [this=%p] "
       "aDestinationProcess=%" PRId64,
@@ -1977,19 +2011,8 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
 
   nsTArray<ParentEndpoint> parentEndpoints(mStreamFilterRequests.Length());
   if (!mStreamFilterRequests.IsEmpty()) {
-    base::ProcessId pid = OtherPid();
-    if (aDestinationProcess) {
-      if (*aDestinationProcess) {
-        dom::ContentParent* cp =
-            dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
-                ContentParentId(*aDestinationProcess));
-        if (cp) {
-          pid = cp->OtherPid();
-        }
-      } else {
-        pid = 0;
-      }
-    }
+    ContentParent* cp = aDestinationProcess.valueOr(mContentParent);
+    base::ProcessId pid = cp ? cp->OtherPid() : base::ProcessId{0};
 
     for (StreamFilterRequest& request : mStreamFilterRequests) {
       if (!pid) {
@@ -2256,17 +2279,22 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   if (!DocShellWillDisplayContent(status) ||
       !MaybeTriggerProcessSwitch(&willBeRemote)) {
     if (!mSupportsRedirectToRealChannel) {
+      RefPtr<BrowserParent> browserParent = loadingContext->GetBrowserParent();
+      if (browserParent->Manager() != mContentParent) {
+        LOG(
+            ("DocumentLoadListener::RedirectToRealChannel failed because "
+             "browsingContext no longer owned by creator"));
+        Cancel(NS_BINDING_ABORTED);
+        return NS_OK;
+      }
+      MOZ_DIAGNOSTIC_ASSERT(
+          browserParent->GetBrowsingContext() == loadingContext,
+          "make sure the load is going to the right place");
+
       // If the existing process is right for this load, but the bridge doesn't
       // support redirects, then we need to do it manually, by faking a process
       // switch.
       mDoingProcessSwitch = true;
-
-      // If we're not going to process switch, then we must have an existing
-      // window global, right?
-      MOZ_ASSERT(loadingContext->GetCurrentWindowGlobal());
-
-      RefPtr<BrowserParent> browserParent =
-          loadingContext->GetCurrentWindowGlobal()->GetBrowserParent();
 
       // XXX(anny) This is currently a dead code path because parent-controlled
       // DC pref is off. When we enable the pref, we might get extra STATE_START
@@ -2278,13 +2306,13 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
 
       // Use the current process ID to run the 'process switch' path and connect
       // the channel into the current process.
-      TriggerRedirectToRealChannel(Some(loadingContext->OwnerProcessId()));
+      TriggerRedirectToRealChannel(Some(mContentParent));
     } else {
       TriggerRedirectToRealChannel(Nothing());
     }
 
     // If we're not switching, then check if we're currently remote.
-    if (loadingContext->GetContentParent()) {
+    if (mContentParent) {
       willBeRemote = true;
     }
   }
