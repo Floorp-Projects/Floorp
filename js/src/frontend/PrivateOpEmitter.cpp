@@ -29,11 +29,9 @@ bool PrivateOpEmitter::init() {
 
   // Static analysis needs us to initialise this to something, so use Dynamic()
   NameLocation loc = NameLocation::Dynamic();
-  bool result = bce_->lookupPrivate(name_, loc, brandLoc_);
-  if (result) {
-    loc_ = mozilla::Some(loc);
-  }
-  return result;
+  bce_->lookupPrivate(name_, loc, brandLoc_);
+  loc_ = mozilla::Some(loc);
+  return true;
 }
 
 bool PrivateOpEmitter::emitLoad(TaggedParserAtomIndex name,
