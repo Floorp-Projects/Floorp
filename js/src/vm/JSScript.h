@@ -1707,10 +1707,6 @@ XDRResult XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
 template <XDRMode mode>
 XDRResult XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent);
 
-template <XDRMode mode>
-XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
-                                 SharedImmutableScriptData& sisd);
-
 /*
  * Code any constant value.
  */
