@@ -303,7 +303,7 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
       sisd->setOwn(std::move(isd));
     }
 
-    if (size != sisd->get()->computedSize()) {
+    if (!sisd->get()->validateLayout(size)) {
       MOZ_ASSERT(false, "Bad ImmutableScriptData");
       return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
     }
