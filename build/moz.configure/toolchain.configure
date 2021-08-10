@@ -2471,50 +2471,35 @@ add_old_configure_assignment(
 # Libstdc++ compatibility hacks
 # ==============================================================
 #
+@depends(target, host)
+def target_or_host_is_linux(target, host):
+    return any(t.os == "GNU" and t.kernel == "Linux" for t in (target, host))
+
+
 option(
     "--enable-stdcxx-compat",
     env="MOZ_STDCXX_COMPAT",
     help="Enable compatibility with older libstdc++",
-    when=depends(target, host)(
-        lambda target, host: any(
-            t.os == "GNU" and t.kernel == "Linux" for t in (target, host)
-        )
-    ),
+    when=target_or_host_is_linux,
 )
 
 
-@template
-def libstdcxx_version(var, compiler):
-    @depends(compiler, when="--enable-stdcxx-compat")
-    @checking(var, lambda v: v and "GLIBCXX_%s" % v.dotted)
-    @imports(_from="mozbuild.configure.libstdcxx", _import="find_version")
-    @imports(_from="__builtin__", _import="Exception")
-    def version(compiler):
-        try:
-            result = find_version(
-                compiler.wrapper + [compiler.compiler] + compiler.flags
-            )
-        except Exception:
-            die("Couldn't determine libstdc++ version")
-        if result:
-            return namespace(
-                dotted=result[0],
-                encoded=str(result[1]),
-            )
-
-    set_config(var, version.encoded)
-    return version
+@depends("--enable-stdcxx-compat", when=target_or_host_is_linux)
+def stdcxx_compat(value):
+    if value:
+        return True
 
 
+set_config("MOZ_STDCXX_COMPAT", True, when=stdcxx_compat)
 add_gcc_flag(
     "-D_GLIBCXX_USE_CXX11_ABI=0",
     cxx_compiler,
-    when=libstdcxx_version("MOZ_LIBSTDCXX_TARGET_VERSION", cxx_compiler),
+    when=stdcxx_compat,
 )
 add_gcc_flag(
     "-D_GLIBCXX_USE_CXX11_ABI=0",
     host_cxx_compiler,
-    when=libstdcxx_version("MOZ_LIBSTDCXX_HOST_VERSION", host_cxx_compiler),
+    when=stdcxx_compat,
 )
 
 
