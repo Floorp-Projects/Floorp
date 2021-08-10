@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>iframe in http</title>
+</head>
+<body>
+<div id="result"></div>
+<script type="text/javascript">
+if (typeof SpecialPowers !== "undefined") {
+  document.getElementById("result").textContent = "ok";
+}
+</script>
+</body>
+</html>

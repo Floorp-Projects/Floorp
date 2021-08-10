@@ -1175,19 +1175,35 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
   RootedValue reactionVal(cx, ObjectValue(*reaction));
   RootedValue handler(cx, reaction->handler());
 
-  // If we have a handler callback, we enter that handler's compartment so
-  // that the promise reaction job function is created in that compartment.
+  // If we have a handler callback, we enter the realm returned by
+  // GetFunctionRealm(handler) so that the promise reaction job function is
+  // created in that compartment.
   // That guarantees that the embedding ends up with the right entry global.
   // This is relevant for some html APIs like fetch that derive information
   // from said global.
-  mozilla::Maybe<AutoRealm> ar2;
+  //
+  // GetFunctionRealm performed inside AutoFunctionOrCurrentRealm uses checked
+  // unwrap and it can hit permission error if there's a security wrapper, and
+  // in that case the reaction job is created in the current realm, instead of
+  // the target function's realm.
+  //
+  // If this reaction crosses chrome/content boundary, and the security
+  // wrapper would allow "call" operation, it still works inside the
+  // reaction job.
+  //
+  // This behavior is observable only when the job belonging to the content
+  // realm stops working (*1, *2), and it won't matter in practice.
+  //
+  // *1: "we can run script" performed inside HostEnqueuePromiseJob
+  //     in HTML spec
+  //       https://html.spec.whatwg.org/#hostenqueuepromisejob
+  //       https://html.spec.whatwg.org/#check-if-we-can-run-script
+  //       https://html.spec.whatwg.org/#fully-active
+  // *2: nsIGlobalObject::IsDying performed inside PromiseJobRunnable::Run
+  //     in our implementation
+  mozilla::Maybe<AutoFunctionOrCurrentRealm> ar2;
   if (handler.isObject()) {
-    // The unwrapping has to be unchecked because we specifically want to
-    // be able to use handlers with wrappers that would only allow calls.
-    // E.g., it's ok to have a handler from a chrome compartment in a
-    // reaction to a content compartment's Promise instance.
-    JSObject* handlerObj = UncheckedUnwrap(&handler.toObject());
-    MOZ_ASSERT(handlerObj);
+    RootedObject handlerObj(cx, &handler.toObject());
     ar2.emplace(cx, handlerObj);
 
     // We need to wrap the reaction to store it on the job function.
@@ -1949,7 +1965,6 @@ static bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp) {
   RootedFunction job(cx, &args.callee().as<JSFunction>());
   RootedValue then(cx, job->getExtendedSlot(ThenableJobSlot_Handler));
   MOZ_ASSERT(then.isObject());
-  MOZ_ASSERT(!IsWrapper(&then.toObject()));
   RootedNativeObject jobArgs(cx, &job->getExtendedSlot(ThenableJobSlot_JobData)
                                       .toObject()
                                       .as<NativeObject>());
@@ -2061,13 +2076,27 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
   RootedValue promiseToResolve(cx, promiseToResolve_);
   RootedValue thenable(cx, thenable_);
 
-  // We enter the `then` callable's compartment so that the job function is
-  // created in that compartment.
+  // We enter the realm returned by GetFunctionRealm(then) so that the job
+  // function is created in the right realm.
   // That guarantees that the embedding ends up with the right entry global.
   // This is relevant for some html APIs like fetch that derive information
   // from said global.
-  RootedObject then(cx, CheckedUnwrapStatic(&thenVal.toObject()));
-  AutoRealm ar(cx, then);
+  //
+  // GetFunctionRealm performed inside AutoFunctionOrCurrentRealm uses checked
+  // unwrap and this is fine given the behavior difference (see the comment
+  // around AutoFunctionOrCurrentRealm usage in EnqueuePromiseReactionJob for
+  // more details) is observable only when the `thenable` is from content realm
+  // and `then` is from chrome realm, that shouldn't happen in practice.
+  //
+  // NOTE: If `thenable` is also from chrome realm, accessing `then` silently
+  //       fails and it returns `undefined`, and that case doesn't reach here.
+  RootedObject then(cx, &thenVal.toObject());
+  AutoFunctionOrCurrentRealm ar(cx, then);
+  if (then->maybeCCWRealm() != cx->realm()) {
+    if (!cx->compartment()->wrap(cx, &then)) {
+      return false;
+    }
+  }
 
   // Wrap the `promiseToResolve` and `thenable` arguments.
   if (!cx->compartment()->wrap(cx, &promiseToResolve)) {
