@@ -1108,7 +1108,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 
     case nsIAccessibleEvent::EVENT_FOCUS: {
       a11y::RootAccessible* rootAccWrap = accWrap->RootAccessible();
-      if (rootAccWrap && rootAccWrap->mActivated) {
+      if (rootAccWrap && rootAccWrap->IsActivated()) {
         atk_focus_tracker_notify(atkObj);
         // Fire state change event for focus
         atk_object_notify_state_change(atkObj, ATK_STATE_FOCUSED, true);
@@ -1267,7 +1267,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE: {
-      accessible->AsRoot()->mActivated = true;
       guint id = g_signal_lookup("activate", MAI_TYPE_ATK_OBJECT);
       g_signal_emit(atkObj, id, 0);
 
@@ -1276,7 +1275,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE: {
-      accessible->AsRoot()->mActivated = false;
       guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
       g_signal_emit(atkObj, id, 0);
     } break;
