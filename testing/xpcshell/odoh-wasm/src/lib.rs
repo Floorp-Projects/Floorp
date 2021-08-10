@@ -21,7 +21,7 @@ pub type Kem = X25519HkdfSha256;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-pub const ODOH_VERSION: u16 = 0xff06;
+pub const ODOH_VERSION: u16 = 0x0001;
 const KEM_ID: u16 = 0x0020;
 const KDF_ID: u16 = 0x0001;
 const AEAD_ID: u16 = 0x0001;
