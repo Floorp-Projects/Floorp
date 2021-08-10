@@ -35,7 +35,7 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
         learnMoreLink.setOnClickListener {
             val tabId = context.components.tabsUseCases.addTab(
                 getLearnMoreUrl(),
-                source = SessionState.Source.MENU,
+                source = SessionState.Source.Internal.Menu,
                 selectTab = true,
                 private = true
             )

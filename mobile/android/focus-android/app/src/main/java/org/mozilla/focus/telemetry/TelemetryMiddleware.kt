@@ -30,13 +30,13 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
 
     private fun collectTelemetry(tab: SessionState) {
         when (tab.source) {
-            SessionState.Source.ACTION_VIEW -> TelemetryWrapper.browseIntentEvent()
-            SessionState.Source.ACTION_SEND -> {
+            is SessionState.Source.External.ActionView -> TelemetryWrapper.browseIntentEvent()
+            is SessionState.Source.External.ActionSend -> {
                 TelemetryWrapper.shareIntentEvent(tab.content.searchTerms.isNotEmpty())
             }
-            SessionState.Source.TEXT_SELECTION -> TelemetryWrapper.textSelectionIntentEvent()
-            SessionState.Source.HOME_SCREEN -> TelemetryWrapper.openHomescreenShortcutEvent()
-            SessionState.Source.CUSTOM_TAB -> if (tab is CustomTabSessionState) {
+            SessionState.Source.Internal.TextSelection -> TelemetryWrapper.textSelectionIntentEvent()
+            SessionState.Source.Internal.HomeScreen -> TelemetryWrapper.openHomescreenShortcutEvent()
+            is SessionState.Source.External.CustomTab -> if (tab is CustomTabSessionState) {
                 TelemetryWrapper.customTabsIntentEvent(generateOptions(tab.config))
             }
             else -> {

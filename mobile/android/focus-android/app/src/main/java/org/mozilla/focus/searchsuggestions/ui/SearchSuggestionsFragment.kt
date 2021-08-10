@@ -160,7 +160,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
                 requireComponents.tabsUseCases.addTab(
                     url,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )

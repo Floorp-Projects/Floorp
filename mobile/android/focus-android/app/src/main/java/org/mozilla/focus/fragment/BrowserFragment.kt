@@ -483,7 +483,7 @@ class BrowserFragment :
         } else if (sessionFeature.get()?.onBackPressed() == true) {
             return true
         } else {
-            if (tab.source == SessionState.Source.ACTION_VIEW || tab.isCustomTab()) {
+            if (tab.source is SessionState.Source.External || tab.isCustomTab()) {
                 TelemetryWrapper.eraseBackToAppEvent()
 
                 // This session has been started from a VIEW intent. Go back to the previous app
@@ -619,7 +619,7 @@ class BrowserFragment :
             R.id.help -> {
                 requireComponents.tabsUseCases.addTab(
                     SupportUtils.HELP_URL,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -641,7 +641,7 @@ class BrowserFragment :
                 val url = SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.TRACKERS)
                 requireComponents.tabsUseCases.addTab(
                     url,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -657,7 +657,7 @@ class BrowserFragment :
                 val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, tab.content.url)
                 requireComponents.tabsUseCases.addTab(
                     reportUrl,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )

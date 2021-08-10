@@ -34,7 +34,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val deepLink = {
                 context.components.tabsUseCases.addTab(
                     url,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -78,7 +78,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val deepLinkAddToHomescreen = {
                 context.components.tabsUseCases.addTab(
                     homescreenURL,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -130,7 +130,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val deepLinkAutocompleteUrl = {
                 context.components.tabsUseCases.addTab(
                     autocompleteURL,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -154,7 +154,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val deepLinkOpenInNewTab = {
                 context.components.tabsUseCases.addTab(
                     newTabURL,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -178,7 +178,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val deepLinkRequestDesktop = {
                 context.components.tabsUseCases.addTab(
                     requestDesktopURL,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )

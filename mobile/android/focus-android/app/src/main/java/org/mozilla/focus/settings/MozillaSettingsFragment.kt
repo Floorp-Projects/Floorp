@@ -46,7 +46,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
             resources.getString(R.string.pref_key_about) -> run {
                 val tabId = activity.components.tabsUseCases.addTab(
                     LocalizedContent.URL_ABOUT,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -55,7 +55,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
             resources.getString(R.string.pref_key_help) -> run {
                 val tabId = activity.components.tabsUseCases.addTab(
                     SupportUtils.HELP_URL,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -64,7 +64,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
             resources.getString(R.string.pref_key_rights) -> run {
                 val tabId = activity.components.tabsUseCases.addTab(
                     LocalizedContent.URL_RIGHTS,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )
@@ -78,7 +78,7 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
 
                 val tabId = activity.components.tabsUseCases.addTab(
                     url,
-                    source = SessionState.Source.MENU,
+                    source = SessionState.Source.Internal.Menu,
                     selectTab = true,
                     private = true
                 )

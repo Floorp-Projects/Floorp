@@ -84,19 +84,19 @@ class IntentProcessor(
                         // HomeScreen.BLOCKING_ENABLED
 
                         createSession(
-                            SessionState.Source.HOME_SCREEN,
+                            SessionState.Source.Internal.HomeScreen,
                             intent,
                             intent.dataString ?: "",
                             requestDesktop
                         )
                     }
                     intent.hasExtra(TextActionActivity.EXTRA_TEXT_SELECTION) -> createSession(
-                        SessionState.Source.TEXT_SELECTION,
+                        SessionState.Source.Internal.TextSelection,
                         intent,
                         intent.dataString ?: ""
                     )
                     else -> createSession(
-                        SessionState.Source.ACTION_VIEW,
+                        SessionState.Source.External.ActionView(null),
                         intent,
                         intent.dataString ?: ""
                     )
@@ -112,15 +112,15 @@ class IntentProcessor(
                 return if (!UrlUtils.isUrl(dataString)) {
                     val bestURL = WebURLFinder(dataString).bestWebURL()
                     if (!TextUtils.isEmpty(bestURL)) {
-                        createSession(SessionState.Source.ACTION_SEND, bestURL ?: "")
+                        createSession(SessionState.Source.External.ActionSend(null), bestURL ?: "")
                     } else {
                         createSearchSession(
-                            SessionState.Source.ACTION_SEND,
+                            SessionState.Source.External.ActionSend(null),
                             SearchUtils.createSearchUrl(context, dataString ?: ""),
                             dataString ?: "")
                     }
                 } else {
-                    createSession(SessionState.Source.ACTION_SEND, dataString ?: "")
+                    createSession(SessionState.Source.External.ActionSend(null), dataString ?: "")
                 }
             }
 
@@ -151,7 +151,8 @@ class IntentProcessor(
             Result.CustomTab(customTabsUseCases.add(
                 url,
                 createCustomTabConfigFromIntent(intent.unsafe, context.resources),
-                private = true
+                private = true,
+                source = source
             ))
         } else {
             Result.Tab(tabsUseCases.addTab(
@@ -173,7 +174,8 @@ class IntentProcessor(
             val tabId = customTabsUseCases.add(
                 url,
                 createCustomTabConfigFromIntent(intent.unsafe, context.resources),
-                private = true
+                private = true,
+                source = source
             )
             Pair(Result.CustomTab(tabId), tabId)
         } else {

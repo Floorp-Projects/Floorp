@@ -81,7 +81,7 @@ object SupportUtils {
     fun openDefaultBrowserSumoPage(context: Context) {
         val tabId = context.components.tabsUseCases.addTab(
             DEFAULT_BROWSER_URL,
-            source = SessionState.Source.MENU,
+            source = SessionState.Source.Internal.Menu,
             selectTab = true,
             private = true
         )

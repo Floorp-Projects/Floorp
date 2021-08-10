@@ -86,7 +86,7 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
         WhatsNew.userViewedWhatsNew(context)
 
         val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.WHATS_NEW)
-        requireComponents.tabsUseCases.addTab(url, source = SessionState.Source.MENU, private = true)
+        requireComponents.tabsUseCases.addTab(url, source = SessionState.Source.Internal.Menu, private = true)
     }
 
     companion object {
