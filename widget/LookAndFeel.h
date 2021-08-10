@@ -46,6 +46,8 @@ class LookAndFeel {
   enum class IntID {
     // default, may be overriden by OS
     CaretBlinkTime,
+    // Amount of blinks that happen before the caret stops blinking.
+    CaretBlinkCount,
     // pixel width of caret
     CaretWidth,
     // show the caret when text is selected?

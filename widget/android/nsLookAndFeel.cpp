@@ -294,6 +294,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 500;
       break;
 
+    case IntID::CaretBlinkCount:
+      aResult = 10;
+      break;
+
     case IntID::CaretWidth:
       aResult = 1;
       break;

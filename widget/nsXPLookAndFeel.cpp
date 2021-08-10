@@ -110,6 +110,7 @@ static EnumeratedCache<FontID, widget::LookAndFeelFont, FontID::End> sFontCache;
 // LookAndFeel::IntID values.
 static const char sIntPrefs[][42] = {
     "ui.caretBlinkTime",
+    "ui.caretBlinkCount",
     "ui.caretWidth",
     "ui.caretVisibleWithSelection",
     "ui.selectTextfieldsOnKeyFocus",

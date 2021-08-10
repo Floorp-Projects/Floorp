@@ -147,6 +147,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   }
 
   int32_t mCaretBlinkTime = 0;
+  int32_t mCaretBlinkCount = -1;
   bool mCSDAvailable = false;
   bool mCSDHideTitlebarByDefault = false;
   bool mCSDMaximizeButton = false;
