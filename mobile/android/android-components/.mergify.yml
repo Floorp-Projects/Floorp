@@ -16,10 +16,7 @@ pull_request_rules:
         message: MickeyMoz 💪
       merge:
         method: rebase
-        # These PRs are just bumping version or updating suffixes,
-        # and very unlikely to break anything. It's not worth the delay
-        # of rebasing them (sometimes multiple times) before merging.
-        strict: false
+        strict: smart
   - name: L10N - Auto Merge
     conditions:
       - author=mozilla-l10n-automation-bot
@@ -31,10 +28,7 @@ pull_request_rules:
         message: LGTM 😎
       merge:
         method: rebase
-        # These PRs are just bumping version or updating suffixes,
-        # and very unlikely to break anything. It's not worth the delay
-        # of rebasing them (sometimes multiple times) before merging.
-        strict: false
+        strict: smart
   - name: Release automation
     conditions:
       - author=github-actions[bot]
