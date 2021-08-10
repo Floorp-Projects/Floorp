@@ -5844,7 +5844,7 @@ OkOrErr QuotaManager::MaybeRemoveLocalStorageArchiveTmpFile() {
       MOZ_TO_RESULT_INVOKE(lsArchiveTmpFile, Exists).mapErr(ToQMResult));
 
   if (exists) {
-    QM_TRY(ToQMResult(lsArchiveTmpFile->Remove(false)));
+    QM_TRY(QM_TO_RESULT(lsArchiveTmpFile->Remove(false)));
   }
 
   return Ok{};
