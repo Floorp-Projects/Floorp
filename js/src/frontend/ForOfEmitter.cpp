@@ -18,7 +18,6 @@
 using namespace js;
 using namespace js::frontend;
 
-using mozilla::Maybe;
 using mozilla::Nothing;
 
 ForOfEmitter::ForOfEmitter(BytecodeEmitter* bce,
@@ -43,7 +42,7 @@ bool ForOfEmitter::emitIterated() {
   return true;
 }
 
-bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
+bool ForOfEmitter::emitInitialize(uint32_t forPos) {
   MOZ_ASSERT(state_ == State::Iterated);
 
   tdzCacheForIteratedValue_.reset();
@@ -101,10 +100,8 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
 #endif
 
   // Make sure this code is attributed to the "for".
-  if (forPos) {
-    if (!bce_->updateSourceCoordNotes(*forPos)) {
-      return false;
-    }
+  if (!bce_->updateSourceCoordNotes(forPos)) {
+    return false;
   }
 
   if (!bce_->emit1(JSOp::Dup2)) {
@@ -112,7 +109,8 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     return false;
   }
 
-  if (!bce_->emitIteratorNext(forPos, iterKind_, allowSelfHostedIter_)) {
+  if (!bce_->emitIteratorNext(mozilla::Some(forPos), iterKind_,
+                              allowSelfHostedIter_)) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
@@ -168,7 +166,7 @@ bool ForOfEmitter::emitBody() {
   return true;
 }
 
-bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
+bool ForOfEmitter::emitEnd(uint32_t iteratedPos) {
   MOZ_ASSERT(state_ == State::Body);
 
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_ + 1,
@@ -188,10 +186,8 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
   // which corresponds to the iteration protocol.
   // This is a bit misleading for 2nd and later iterations and might need
   // some fix (bug 1482003).
-  if (iteratedPos) {
-    if (!bce_->updateSourceCoordNotes(*iteratedPos)) {
-      return false;
-    }
+  if (!bce_->updateSourceCoordNotes(iteratedPos)) {
+    return false;
   }
 
   if (!bce_->emit1(JSOp::Pop)) {
