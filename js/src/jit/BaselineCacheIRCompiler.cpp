@@ -18,6 +18,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 #include "util/Unicode.h"
+#include "vm/JSAtom.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
@@ -1350,6 +1351,59 @@ bool BaselineCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
   masm.loadObjClassUnsafe(obj, scratch);
   masm.cmpPtrSet(Assembler::Equal, claspAddr, scratch.get(), scratch);
   masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  return true;
+}
+
+void BaselineCacheIRCompiler::emitAtomizeString(Register str, Register temp,
+                                                LiveGeneralRegisterSet save) {
+  allocator.discardStack(masm);
+
+  Label isAtom;
+  masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                    Imm32(JSString::ATOM_BIT), &isAtom);
+  {
+    masm.PushRegsInMask(save);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, temp);
+
+    masm.Push(str);
+
+    using Fn = JSAtom* (*)(JSContext*, JSString*);
+    callVM<Fn, jit::AtomizeStringNoGC>(masm);
+
+    stubFrame.leave(masm);
+
+    masm.storeCallPointerResult(str);
+    masm.PopRegsInMask(save);
+  }
+  masm.bind(&isAtom);
+}
+
+bool BaselineCacheIRCompiler::emitSetHasStringResult(ObjOperandId setId,
+                                                     StringOperandId strId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register set = allocator.useRegister(masm, setId);
+  Register str = allocator.useRegister(masm, strId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+
+  LiveGeneralRegisterSet save;
+  save.add(set);
+  save.add(ICStubReg);
+
+  emitAtomizeString(str, scratch1, save);
+  masm.prepareHashString(str, scratch1, scratch2);
+
+  masm.tagValue(JSVAL_TYPE_STRING, str, output.valueReg());
+  masm.setObjectHasNonBigInt(set, output.valueReg(), scratch1, scratch2,
+                             scratch3, scratch4);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
   return true;
 }
 
