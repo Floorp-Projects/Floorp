@@ -14,10 +14,10 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
 #include "mozilla/Likely.h"      // MOZ_LIKELY
-#include "mozilla/Maybe.h"
-#include "mozilla/Range.h"
-#include "mozilla/Span.h"
-#include "mozilla/Tuple.h"
+#include "mozilla/Maybe.h"       // mozilla::Maybe
+#include "mozilla/Range.h"       // mozilla::Range
+#include "mozilla/Span.h"        // mozilla::Span
+#include "mozilla/Tuple.h"       // mozilla::Tuple
 
 #include <algorithm>  // std::copy_n
 #include <stddef.h>   // size_t
@@ -25,11 +25,24 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/TypeDecls.h"  // JS::Latin1Char
+#include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::ConstUTF8CharsZ
+#include "js/Id.h"                 // jsid, JSID_IS_STRING, JSID_TO_STRING
+#include "js/RootingAPI.h"         // JS::Handle
+#include "js/TypeDecls.h"          // JS::Latin1Char
+#include "js/UniquePtr.h"          // JS::UniquePtr
+#include "js/Utility.h"            // JS::FreePolicy, JS::UniqueTwoByteChars
+#include "js/Value.h"              // JS::Value
 
+struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSAtom;
 class JSLinearString;
 class JS_PUBLIC_API JSString;
+
+namespace JS {
+
+class JS_PUBLIC_API AutoRequireNoGC;
+
+}  // namespace JS
 
 extern JS_PUBLIC_API JSString* JS_GetEmptyString(JSContext* cx);
 
@@ -233,7 +246,7 @@ extern JS_PUBLIC_API size_t JS_PutEscapedLinearString(char* buffer, size_t size,
  * are mutable by definition, so the thread safety comments above apply.
  */
 extern JS_PUBLIC_API JSString* JS_NewDependentString(JSContext* cx,
-                                                     JS::HandleString str,
+                                                     JS::Handle<JSString*> str,
                                                      size_t start,
                                                      size_t length);
 
@@ -242,8 +255,8 @@ extern JS_PUBLIC_API JSString* JS_NewDependentString(JSContext* cx,
  * See above for thread safety comments.
  */
 extern JS_PUBLIC_API JSString* JS_ConcatStrings(JSContext* cx,
-                                                JS::HandleString left,
-                                                JS::HandleString right);
+                                                JS::Handle<JSString*> left,
+                                                JS::Handle<JSString*> right);
 
 /**
  * For JS_DecodeBytes, set *dstlenp to the size of the destination buffer before
@@ -310,8 +323,6 @@ JS_EncodeStringToUTF8BufferPartial(JSContext* cx, JSString* str,
                                    mozilla::Span<char> buffer);
 
 namespace JS {
-
-class JS_PUBLIC_API AutoRequireNoGC;
 
 /**
  * Maximum length of a JS string. This is chosen so that the number of bytes
