@@ -1143,6 +1143,10 @@ static void DoUpgrade(Element* aElement, CustomElementDefinition* aDefinition,
     return;
   }
 
+  RefPtr<CustomElementData> data = aElement->GetCustomElementData();
+  MOZ_ASSERT(data, "CustomElementData should exist");
+  data->mState = CustomElementData::State::ePrecustomized;
+
   JS::Rooted<JS::Value> constructResult(RootingCx());
   // Rethrow the exception since it might actually throw the exception from the
   // upgrade steps back out to the caller of document.createElement.
@@ -1223,7 +1227,13 @@ void CustomElementRegistry::Upgrade(Element* aElement,
   DoUpgrade(aElement, aDefinition, MOZ_KnownLive(aDefinition->mConstructor),
             aRv);
   if (aRv.Failed()) {
-    MOZ_ASSERT(data->mState == CustomElementData::State::eFailed);
+    MOZ_ASSERT(data->mState == CustomElementData::State::eFailed ||
+               data->mState == CustomElementData::State::ePrecustomized);
+    // Spec doesn't set custom element state to failed here, but without this we
+    // would have inconsistent state on a custom elemet that is failed to
+    // upgrade, see https://github.com/whatwg/html/issues/6929, and
+    // https://github.com/web-platform-tests/wpt/pull/29911 for the test.
+    data->mState = CustomElementData::State::eFailed;
     aElement->SetCustomElementDefinition(nullptr);
     // Empty element's custom element reaction queue.
     data->mReactionQueue.Clear();
