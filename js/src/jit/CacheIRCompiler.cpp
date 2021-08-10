@@ -8236,6 +8236,30 @@ bool CacheIRCompiler::emitSetHasBigIntResult(ObjOperandId setId,
   return true;
 }
 
+bool CacheIRCompiler::emitSetHasObjectResult(ObjOperandId setId,
+                                             ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register set = allocator.useRegister(masm, setId);
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+  AutoScratchRegister scratch4(allocator, masm);
+  AutoScratchRegister scratch5(allocator, masm);
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+  masm.prepareHashObject(set, output.valueReg(), scratch1, scratch2, scratch3,
+                         scratch4, scratch5);
+
+  masm.setObjectHasNonBigInt(set, output.valueReg(), scratch1, scratch2,
+                             scratch3, scratch4);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch2, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitBailout() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
