@@ -12,7 +12,6 @@
 <div contenteditable id="editor"><p><br></p></div>
 <script>
 SimpleTest.waitForExplicitFinish();
-SimpleTest.expectAssertions(2);  // Assertions in WSRunScanner::TextFragmentData::GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace()
 SimpleTest.waitForFocus(function doTests() {
   for (let editorId of ["input", "textarea", "editor"]) {
     let editor = document.getElementById(editorId);

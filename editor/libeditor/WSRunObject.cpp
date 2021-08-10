@@ -831,7 +831,7 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
       EditorDOMPointInText atNBSPReplacedWithASCIIWhiteSpace =
           textFragmentDataAtEnd
               .GetInclusiveNextNBSPPointIfNeedToReplaceWithASCIIWhiteSpace(
-                  pointToInsert);
+                  aRangeToBeReplaced.EndRef());
       if (atNBSPReplacedWithASCIIWhiteSpace.IsSet()) {
         AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
         nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
