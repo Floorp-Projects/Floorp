@@ -725,6 +725,33 @@ JS_PUBLIC_API bool js::UseInternalJobQueues(JSContext* cx) {
   return true;
 }
 
+#ifdef DEBUG
+JSObject* InternalJobQueue::copyJobs(JSContext* cx) {
+  RootedArrayObject jobs(cx, NewDenseEmptyArray(cx));
+  if (!jobs) {
+    return nullptr;
+  }
+
+  for (const JSObject* unwrappedJob : queue.get()) {
+    RootedObject job(cx, const_cast<JSObject*>(unwrappedJob));
+    if (!cx->compartment()->wrap(cx, &job)) {
+      return nullptr;
+    }
+
+    if (!NewbornArrayPush(cx, jobs, ObjectValue(*job))) {
+      return nullptr;
+    }
+  }
+
+  return jobs;
+}
+
+JS_PUBLIC_API JSObject* js::GetJobsInInternalJobQueue(JSContext* cx) {
+  MOZ_ASSERT(cx->internalJobQueue.ref());
+  return cx->internalJobQueue->copyJobs(cx);
+}
+#endif
+
 JS_PUBLIC_API bool js::EnqueueJob(JSContext* cx, JS::HandleObject job) {
   MOZ_ASSERT(cx->jobQueue);
   return cx->jobQueue->enqueuePromiseJob(cx, nullptr, job, nullptr, nullptr);
