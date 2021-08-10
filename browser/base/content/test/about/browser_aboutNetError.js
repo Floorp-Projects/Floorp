@@ -6,6 +6,7 @@
 const SSL3_PAGE = "https://ssl3.example.com/";
 const TLS10_PAGE = "https://tls1.example.com/";
 const TLS12_PAGE = "https://tls12.example.com/";
+const TRIPLEDES_PAGE = "https://3des.example.com/";
 
 // This includes all the cipher suite prefs we have.
 const CIPHER_SUITE_PREFS = [
@@ -25,7 +26,7 @@ const CIPHER_SUITE_PREFS = [
   "security.ssl3.rsa_aes_256_sha",
   "security.ssl3.rsa_aes_128_gcm_sha256",
   "security.ssl3.rsa_aes_256_gcm_sha384",
-  "security.ssl3.rsa_des_ede3_sha",
+  "security.ssl3.deprecated.rsa_des_ede3_sha",
   "security.tls13.aes_128_gcm_sha256",
   "security.tls13.aes_256_gcm_sha384",
   "security.tls13.chacha20_poly1305_sha256",
@@ -36,6 +37,9 @@ function resetPrefs() {
   Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
   Services.prefs.clearUserPref("security.certerrors.tls.version.show-override");
+  CIPHER_SUITE_PREFS.forEach(suitePref => {
+    Services.prefs.clearUserPref(suitePref);
+  });
 }
 
 add_task(async function resetToDefaultConfig() {
@@ -316,4 +320,42 @@ add_task(async function overrideUIPref() {
 
   resetPrefs();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// Test that ciphersuites that use 3DES (namely, TLS_RSA_WITH_3DES_EDE_CBC_SHA)
+// can only be enabled when deprecated TLS is enabled.
+add_task(async function onlyAllow3DESWithDeprecatedTLS() {
+  // By default, connecting to a server that only uses 3DES should fail.
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
+    async browser => {
+      BrowserTestUtils.loadURI(browser, TRIPLEDES_PAGE);
+      await BrowserTestUtils.waitForErrorPage(browser);
+    }
+  );
+
+  // Enabling deprecated TLS should also enable 3DES.
+  Services.prefs.setBoolPref("security.tls.version.enable-deprecated", true);
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
+    async browser => {
+      BrowserTestUtils.loadURI(browser, TRIPLEDES_PAGE);
+      await BrowserTestUtils.browserLoaded(browser, false, TRIPLEDES_PAGE);
+    }
+  );
+
+  // 3DES can be disabled separately.
+  Services.prefs.setBoolPref(
+    "security.ssl3.deprecated.rsa_des_ede3_sha",
+    false
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
+    async browser => {
+      BrowserTestUtils.loadURI(browser, TRIPLEDES_PAGE);
+      await BrowserTestUtils.waitForErrorPage(browser);
+    }
+  );
+
+  resetPrefs();
 });
