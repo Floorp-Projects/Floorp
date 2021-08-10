@@ -6,4 +6,7 @@
 
 # This is a list of directories containing tests to run, separated by spaces.
 # Most likely, tho, you won't use more than one directory here.
-XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += [
+    "unit/xpcshell-with-prefs.ini",
+    "unit/xpcshell.ini",
+]
