@@ -31,6 +31,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
 #include "jit/Simulator.h"
+#include "jit/VMFunctions.h"
 #include "js/Conversions.h"
 #include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
 #include "js/ScalarType.h"       // js::Scalar::Type
@@ -5067,6 +5068,33 @@ void MacroAssembler::orderedHashTableLookup(Register setOrMapObj,
     assumeUnreachable("Unexpected non-BigInt");
   }
   bind(&ok);
+#endif
+
+#ifdef DEBUG
+  PushRegsInMask(LiveRegisterSet(RegisterSet::Volatile()));
+
+  pushValue(value);
+  moveStackPtrTo(temp2);
+
+  setupUnalignedABICall(temp1);
+  loadJSContext(temp1);
+  passABIArg(temp1);
+  passABIArg(setOrMapObj);
+  passABIArg(temp2);
+  passABIArg(hash);
+
+  if constexpr (std::is_same_v<OrderedHashTable, ValueSet>) {
+    using Fn =
+        void (*)(JSContext*, SetObject*, const Value*, mozilla::HashNumber);
+    callWithABI<Fn, jit::AssertSetObjectHash>();
+  } else {
+    using Fn =
+        void (*)(JSContext*, MapObject*, const Value*, mozilla::HashNumber);
+    callWithABI<Fn, jit::AssertMapObjectHash>();
+  }
+
+  popValue(value);
+  PopRegsInMask(LiveRegisterSet(RegisterSet::Volatile()));
 #endif
 
   // Load the |ValueSet| or |ValueMap|.
