@@ -370,7 +370,8 @@ void ResizeObserverEntry::GetContentBoxSize(
 void ResizeObserverEntry::SetBorderBoxSize(const nsSize& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mBorderBoxSize = new ResizeObserverSize(this, aSize, wm);
+  mBorderBoxSize = new ResizeObserverSize(
+      this, CSSSize::FromAppUnits(aSize).ToUnknownSize(), wm);
 }
 
 void ResizeObserverEntry::SetContentRectAndSize(const nsSize& aSize) {
@@ -387,7 +388,8 @@ void ResizeObserverEntry::SetContentRectAndSize(const nsSize& aSize) {
 
   // 2. Update mContentBoxSize.
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mContentBoxSize = new ResizeObserverSize(this, aSize, wm);
+  mContentBoxSize = new ResizeObserverSize(
+      this, CSSSize::FromAppUnits(aSize).ToUnknownSize(), wm);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ResizeObserverSize, mOwner)
