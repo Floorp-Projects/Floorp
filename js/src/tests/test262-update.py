@@ -28,8 +28,11 @@ UNSUPPORTED_FEATURES = set(
         "Atomics.waitAsync",
         "legacy-regexp",
         "import-assertions",
+        "json-modules",
         "resizable-arraybuffer",
         "Temporal",
+        "callable-boundary-realms",
+        "array-find-from-last",
     ]
 )
 FEATURE_CHECK_NEEDED = {
