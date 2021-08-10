@@ -56,15 +56,8 @@ impl GeckoStyleSheet {
     /// already holds a strong reference.
     #[inline]
     pub unsafe fn from_addrefed(s: *const DomStyleSheet) -> Self {
-        assert!(!s.is_null());
+        debug_assert!(!s.is_null());
         GeckoStyleSheet(s)
-    }
-
-    /// HACK(emilio): This is so that we can avoid crashing release due to
-    /// bug 1719963 and can hopefully get a useful report from fuzzers.
-    #[inline]
-    pub fn hack_is_null(&self) -> bool {
-        self.0.is_null()
     }
 
     /// Get the raw `StyleSheet` that we're wrapping.

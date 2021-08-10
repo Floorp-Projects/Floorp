@@ -40,7 +40,6 @@ class CSSNamespaceRule final : public css::Rule {
   uint16_t Type() const final { return CSSRule_Binding::NAMESPACE_RULE; }
 
   const RawServoNamespaceRule* Raw() const { return mRawRule.get(); }
-  void SetRawAfterClone(RefPtr<RawServoNamespaceRule>);
 
   void GetNamespaceURI(nsString& aNamespaceURI) { GetURLSpec(aNamespaceURI); }
 

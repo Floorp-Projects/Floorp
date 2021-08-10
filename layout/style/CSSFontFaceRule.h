@@ -43,7 +43,6 @@ class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
   inline const CSSFontFaceRule* ContainingRule() const;
 
   RefPtr<RawServoFontFaceRule> mRawRule;
-  void SetRawAfterClone(RefPtr<RawServoFontFaceRule>);
 
  private:
   void* operator new(size_t size) noexcept(true) = delete;
@@ -65,7 +64,6 @@ class CSSFontFaceRule final : public css::Rule {
   bool IsCCLeaf() const final;
 
   RawServoFontFaceRule* Raw() const { return mDecl.mRawRule; }
-  void SetRawAfterClone(RefPtr<RawServoFontFaceRule>);
 
   // WebIDL interface
   uint16_t Type() const final;
