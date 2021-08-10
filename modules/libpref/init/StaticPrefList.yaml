@@ -3269,13 +3269,10 @@
   mirror: always
 
 # Whether or not LSNG (Next Generation Local Storage) is enabled.
-# See bug 1517090 for enabling this on Nightly.
-# See bug 1534736 for changing it to EARLY_BETA_OR_EARLIER.
-# See bug 1539835 for enabling this unconditionally.
-# See bug 1619948 for changing it back to EARLY_BETA_OR_EARLIER.
+# See bug 1599979 for enabling this unconditionally (second attempt).
 - name: dom.storage.next_gen
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
   do_not_use_directly: true
 
