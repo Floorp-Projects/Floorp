@@ -4,11 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_LIBSTDCXX_TARGET_VERSION"]:
+if CONFIG["OS_TARGET"] == "Linux":
     Library("stdc++compat")
     SOURCES += ["stdc++compat.cpp"]
 
-if CONFIG["MOZ_LIBSTDCXX_HOST_VERSION"]:
+if CONFIG["HOST_OS_ARCH"] == "Linux":
     HostLibrary("host_stdc++compat")
     HOST_SOURCES += [
         "stdc++compat.cpp",

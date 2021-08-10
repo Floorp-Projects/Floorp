@@ -18,7 +18,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 else:
     DIRS += ["unix"]
 
-if CONFIG["MOZ_LIBSTDCXX_TARGET_VERSION"] or CONFIG["MOZ_LIBSTDCXX_HOST_VERSION"]:
+if CONFIG["MOZ_STDCXX_COMPAT"]:
     DIRS += ["unix/stdc++compat"]
 
 CRAMTEST_MANIFESTS += [
