@@ -12765,6 +12765,12 @@ int main(int argc, char** argv) {
   //   order.  For example: --wasm-compiler=optimizing --wasm-compiler=baseline.
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  // The flags were computed by InitWithFailureDiagnostics().
+  MOZ_ASSERT(js::jit::CPUFlagsHaveBeenComputed());
+
+  // Reset the SSE flags; they are recomputed below.
+  js::jit::CPUInfo::ResetSSEFlagsForTesting();
+
   if (op.getBoolOption("no-sse3")) {
     js::jit::CPUInfo::SetSSE3Disabled();
     if (!sCompilerProcessFlags.append("--no-sse3")) {
@@ -12799,6 +12805,14 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Error: AVX encodings are currently disabled\n");
     return EXIT_FAILURE;
   }
+
+  // Recompute flags.
+  js::jit::CPUInfo::GetSSEVersion();
+#endif
+
+#ifndef JS_CODEGEN_NONE
+  // At this point the flags must definitely be set.
+  MOZ_ASSERT(js::jit::CPUFlagsHaveBeenComputed());
 #endif
 
 #ifndef __wasi__

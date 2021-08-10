@@ -147,6 +147,10 @@ inline bool IsIonEnabled(JSContext* cx) {
   return false;
 }
 
+// Implemented per-platform.  Returns true if the flags will not require
+// further (lazy) computation.
+bool CPUFlagsHaveBeenComputed();
+
 }  // namespace jit
 }  // namespace js
 

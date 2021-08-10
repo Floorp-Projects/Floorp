@@ -210,6 +210,12 @@ bool CPUInfo::bmi1Present = false;
 bool CPUInfo::bmi2Present = false;
 bool CPUInfo::lzcntPresent = false;
 
+namespace js {
+namespace jit {
+bool CPUFlagsHaveBeenComputed() { return CPUInfo::FlagsHaveBeenComputed(); }
+}  // namespace jit
+}  // namespace js
+
 static uintptr_t ReadXGETBV() {
   // We use a variety of low-level mechanisms to get at the xgetbv
   // instruction, including spelling out the xgetbv instruction as bytes,

@@ -220,6 +220,11 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(JS::InitTraceLogger());
 #endif
 
+#ifndef JS_CODEGEN_NONE
+  // Normally this is forced by the compilation of atomic operations.
+  MOZ_ASSERT(js::jit::CPUFlagsHaveBeenComputed());
+#endif
+
   libraryInitState = InitState::Running;
   return nullptr;
 }
