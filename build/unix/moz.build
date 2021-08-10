@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_LIBSTDCXX_TARGET_VERSION"] or CONFIG["MOZ_LIBSTDCXX_HOST_VERSION"]:
-    DIRS += ["stdc++compat"]
-
 if CONFIG["USE_ELF_HACK"]:
     DIRS += ["elfhack"]
 
