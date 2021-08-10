@@ -125,12 +125,6 @@ struct Module;
 #define XRE_USER_SYS_EXTENSION_DIR "XREUSysExt"
 
 /**
- * A directory service key which specifies a directory where temporary
- * system extensions can be loaded from during development.
- */
-#define XRE_USER_SYS_EXTENSION_DEV_DIR "XRESysExtDev"
-
-/**
  * A directory service key which specifies the distribution specific files for
  * the application.
  */

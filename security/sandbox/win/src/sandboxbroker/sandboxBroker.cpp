@@ -52,7 +52,6 @@ static UniquePtr<nsString> sProfileDir;
 static UniquePtr<nsString> sContentTempDir;
 static UniquePtr<nsString> sRoamingAppDataDir;
 static UniquePtr<nsString> sLocalAppDataDir;
-static UniquePtr<nsString> sUserExtensionsDevDir;
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
 static UniquePtr<nsString> sUserExtensionsDir;
 #endif
@@ -159,8 +158,6 @@ void SandboxBroker::GeckoDependentInitialize() {
                          &sContentTempDir);
     CacheDirAndAutoClear(dirSvc, NS_WIN_APPDATA_DIR, &sRoamingAppDataDir);
     CacheDirAndAutoClear(dirSvc, NS_WIN_LOCAL_APPDATA_DIR, &sLocalAppDataDir);
-    CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DEV_DIR,
-                         &sUserExtensionsDevDir);
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DIR,
                          &sUserExtensionsDir);
@@ -717,10 +714,6 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     // Add rule to allow read access to the extensions directory within profile.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
                      sProfileDir, u"\\extensions\\*"_ns);
-
-    // Read access to a directory for system extension dev (see bug 1393805)
-    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
-                     sUserExtensionsDevDir, u"\\*"_ns);
 
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     // Add rule to allow read access to the per-user extensions directory.
