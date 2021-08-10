@@ -734,6 +734,8 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
                       Some(padding.ConvertTo(kidWM, wm)));
   kidReflowInput.mFlags.mAssumingHScrollbar = aAssumeHScroll;
   kidReflowInput.mFlags.mAssumingVScrollbar = aAssumeVScroll;
+  kidReflowInput.mFlags.mTreatBSizeAsIndefinite =
+      aState->mReflowInput.mFlags.mTreatBSizeAsIndefinite;
   kidReflowInput.SetComputedBSize(computedBSize);
   kidReflowInput.ComputedMinBSize() = computedMinBSize;
   kidReflowInput.ComputedMaxBSize() = computedMaxBSize;
