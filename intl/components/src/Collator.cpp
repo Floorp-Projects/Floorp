@@ -250,4 +250,27 @@ ICUResult Collator::SetOptions(const Options& aOptions,
 
 #undef FEATURE_TO_ICU
 
+/* static */
+Result<Collator::Bcp47ExtEnumeration, InternalError>
+Collator::GetBcp47KeywordValuesForLocale(const char* aLocale) {
+  UErrorCode status = U_ZERO_ERROR;
+  UEnumeration* enumeration = ucol_getKeywordValuesForLocale(
+      "collator", aLocale, /* commonlyUsed */ false, &status);
+
+  if (U_SUCCESS(status)) {
+    return Bcp47ExtEnumeration(enumeration);
+  }
+
+  return Err(InternalError{});
+}
+
+/* static */
+SpanResult<char> Collator::KeywordValueToBcp47Extension(const char* aKeyword,
+                                                        int32_t aLength) {
+  if (aKeyword == nullptr) {
+    return Err(InternalError{});
+  }
+  return MakeStringSpan(uloc_toUnicodeLocaleType("co", aKeyword));
+}
+
 }  // namespace mozilla::intl
