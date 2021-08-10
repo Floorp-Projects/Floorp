@@ -44,7 +44,6 @@ using namespace js;
 using namespace js::frontend;
 
 using mozilla::Maybe;
-using mozilla::Nothing;
 using mozilla::Utf8Unit;
 
 using JS::CompileOptions;

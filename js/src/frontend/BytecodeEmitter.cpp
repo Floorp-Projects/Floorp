@@ -635,11 +635,7 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   return true;
 }
 
-Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
-  if (!nextpn) {
-    return Nothing();
-  }
-
+uint32_t BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
   // Try to give the JSOp::LoopHead the same line number as the next
   // instruction. nextpn is often a block, in which case the next instruction
   // typically comes from the first statement inside.
@@ -652,7 +648,7 @@ Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
     }
   }
 
-  return Some(nextpn->pn_pos.begin);
+  return nextpn->pn_pos.begin;
 }
 
 bool BytecodeEmitter::emitUint16Operand(JSOp op, uint32_t operand) {
@@ -1661,10 +1657,7 @@ void BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...) {
   va_end(args);
 }
 
-void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
-                                  unsigned errorNumber, ...) {
-  uint32_t offset = maybeOffset ? *maybeOffset : *scriptStartOffset;
-
+void BytecodeEmitter::reportError(uint32_t offset, unsigned errorNumber, ...) {
   va_list args;
   va_start(args, errorNumber);
 
@@ -2161,7 +2154,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitSwitch(SwitchStatement* switchStmt) {
   MOZ_ASSERT(cases->isKind(ParseNodeKind::StatementList));
 
   SwitchEmitter se(this);
-  if (!se.emitDiscriminant(Some(switchStmt->discriminant().pn_pos.begin))) {
+  if (!se.emitDiscriminant(switchStmt->discriminant().pn_pos.begin)) {
     return false;
   }
 
@@ -5699,7 +5692,7 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
                forOfTarget->isKind(ParseNodeKind::ConstDecl));
   }
 
-  if (!forOf.emitInitialize(Some(forOfHead->pn_pos.begin))) {
+  if (!forOf.emitInitialize(forOfHead->pn_pos.begin)) {
     //              [stack] NEXT ITER VALUE
     return false;
   }
@@ -5721,7 +5714,7 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
     return false;
   }
 
-  if (!forOf.emitEnd(Some(forHeadExpr->pn_pos.begin))) {
+  if (!forOf.emitEnd(forHeadExpr->pn_pos.begin)) {
     //              [stack]
     return false;
   }
@@ -5823,7 +5816,7 @@ bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
     return false;
   }
 
-  if (!forIn.emitEnd(Some(forInHead->pn_pos.begin))) {
+  if (!forIn.emitEnd(forInHead->pn_pos.begin)) {
     //              [stack]
     return false;
   }
@@ -5932,7 +5925,7 @@ bool BytecodeEmitter::emitCStyleFor(
     }
   }
 
-  if (!cfor.emitEnd(Some(forNode->pn_pos.begin))) {
+  if (!cfor.emitEnd(forNode->pn_pos.begin)) {
     //              [stack]
     return false;
   }
@@ -6031,8 +6024,7 @@ bool BytecodeEmitter::emitDo(BinaryNode* doNode) {
   ParseNode* bodyNode = doNode->left();
 
   DoWhileEmitter doWhile(this);
-  if (!doWhile.emitBody(Some(doNode->pn_pos.begin),
-                        getOffsetForLoop(bodyNode))) {
+  if (!doWhile.emitBody(doNode->pn_pos.begin, getOffsetForLoop(bodyNode))) {
     return false;
   }
 
@@ -6068,8 +6060,8 @@ bool BytecodeEmitter::emitWhile(BinaryNode* whileNode) {
   WhileEmitter wh(this);
 
   ParseNode* condNode = whileNode->left();
-  if (!wh.emitCond(Some(whileNode->pn_pos.begin), getOffsetForLoop(condNode),
-                   Some(whileNode->pn_pos.end))) {
+  if (!wh.emitCond(whileNode->pn_pos.begin, getOffsetForLoop(condNode),
+                   whileNode->pn_pos.end)) {
     return false;
   }
 
@@ -6137,15 +6129,8 @@ bool BytecodeEmitter::emitGetFunctionThis(NameNode* thisName) {
   MOZ_ASSERT(sc->hasFunctionThisBinding());
   MOZ_ASSERT(thisName->isName(TaggedParserAtomIndex::WellKnown::dotThis()));
 
-  return emitGetFunctionThis(Some(thisName->pn_pos.begin));
-}
-
-bool BytecodeEmitter::emitGetFunctionThis(
-    const mozilla::Maybe<uint32_t>& offset) {
-  if (offset) {
-    if (!updateLineNumberNotes(*offset)) {
-      return false;
-    }
+  if (!updateLineNumberNotes(thisName->pn_pos.begin)) {
+    return false;
   }
 
   if (!emitGetName(TaggedParserAtomIndex::WellKnown::dotThis())) {
@@ -7038,7 +7023,7 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
     ValueUsage valueUsage =
         wantval ? ValueUsage::WantValue : ValueUsage::IgnoreValue;
     ExpressionStatementEmitter ese(this, valueUsage);
-    if (!ese.prepareForExpr(Some(exprStmt->pn_pos.begin))) {
+    if (!ese.prepareForExpr(exprStmt->pn_pos.begin)) {
       return false;
     }
     if (!markStepBreakpoint()) {
@@ -8184,7 +8169,7 @@ bool BytecodeEmitter::emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
     return false;
   }
 
-  if (!cone.emitEnd(argc, Some(coordNode->pn_pos.begin))) {
+  if (!cone.emitEnd(argc, coordNode->pn_pos.begin)) {
     //              [stack] RVAL
     return false;
   }
@@ -8321,7 +8306,7 @@ bool BytecodeEmitter::emitCallOrNew(
 
   ParseNode* coordNode = getCoordNode(callNode, calleeNode, op, argsList);
 
-  if (!cone.emitEnd(argc, Some(coordNode->pn_pos.begin))) {
+  if (!cone.emitEnd(argc, coordNode->pn_pos.begin)) {
     //              [stack] RVAL
     return false;
   }
@@ -9061,7 +9046,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     if (propdef->isKind(ParseNodeKind::MutateProto)) {
       //            [stack] OBJ
       MOZ_ASSERT(type == ObjectLiteral);
-      if (!pe.prepareForProtoValue(Some(propdef->pn_pos.begin))) {
+      if (!pe.prepareForProtoValue(propdef->pn_pos.begin)) {
         //          [stack] OBJ
         return false;
       }
@@ -9079,7 +9064,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     if (propdef->isKind(ParseNodeKind::Spread)) {
       MOZ_ASSERT(type == ObjectLiteral);
       //            [stack] OBJ
-      if (!pe.prepareForSpreadOperand(Some(propdef->pn_pos.begin))) {
+      if (!pe.prepareForSpreadOperand(propdef->pn_pos.begin)) {
         //          [stack] OBJ OBJ
         return false;
       }
@@ -9186,7 +9171,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     if (key->isKind(ParseNodeKind::NumberExpr) ||
         key->isKind(ParseNodeKind::BigIntExpr)) {
       //            [stack] CTOR? OBJ
-      if (!pe.prepareForIndexPropKey(Some(propdef->pn_pos.begin), kind)) {
+      if (!pe.prepareForIndexPropKey(propdef->pn_pos.begin, kind)) {
         //          [stack] CTOR? OBJ CTOR?
         return false;
       }
@@ -9231,7 +9216,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         continue;
       }
 
-      if (!pe.prepareForPropValue(Some(propdef->pn_pos.begin), kind)) {
+      if (!pe.prepareForPropValue(propdef->pn_pos.begin, kind)) {
         //          [stack] CTOR? OBJ CTOR?
         return false;
       }
@@ -9252,7 +9237,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     if (key->isKind(ParseNodeKind::ComputedName)) {
       //            [stack] CTOR? OBJ
 
-      if (!pe.prepareForComputedPropKey(Some(propdef->pn_pos.begin), kind)) {
+      if (!pe.prepareForComputedPropKey(propdef->pn_pos.begin, kind)) {
         //          [stack] CTOR? OBJ CTOR?
         return false;
       }
@@ -9323,7 +9308,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
     //              [stack] CTOR OBJ
 
-    if (!pe.prepareForPrivateStaticMethod(Some(propdef->pn_pos.begin))) {
+    if (!pe.prepareForPrivateStaticMethod(propdef->pn_pos.begin)) {
       //            [stack] CTOR OBJ CTOR
       return false;
     }

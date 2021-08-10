@@ -16,7 +16,6 @@
 using namespace js;
 using namespace js::frontend;
 
-using mozilla::Maybe;
 using mozilla::Nothing;
 
 ForInEmitter::ForInEmitter(BytecodeEmitter* bce,
@@ -111,14 +110,12 @@ bool ForInEmitter::emitBody() {
   return true;
 }
 
-bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
+bool ForInEmitter::emitEnd(uint32_t forPos) {
   MOZ_ASSERT(state_ == State::Body);
 
-  if (forPos) {
-    // Make sure this code is attributed to the "for".
-    if (!bce_->updateSourceCoordNotes(*forPos)) {
-      return false;
-    }
+  // Make sure this code is attributed to the "for".
+  if (!bce_->updateSourceCoordNotes(forPos)) {
+    return false;
   }
 
   if (!loopInfo_->emitContinueTarget(bce_)) {

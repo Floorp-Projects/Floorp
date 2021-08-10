@@ -78,7 +78,7 @@ struct BytecodeEmitter;
 //     oe.emitShortCircuitForCall();
 //     cone.prepareForNonSpreadArguments();
 //     emit(arg);
-//     cone.emitEnd(1, Some(offset_of_callee));
+//     cone.emitEnd(1, offset_of_callee);
 //     oe.emitOptionalJumpTarget(JSOp::Undefined);
 //
 //   `callee.prop?.(arg1, arg2);`
@@ -93,7 +93,7 @@ struct BytecodeEmitter;
 //     cone.prepareForNonSpreadArguments();
 //     emit(arg1);
 //     emit(arg2);
-//     cone.emitEnd(2, Some(offset_of_callee));
+//     cone.emitEnd(2, offset_of_callee);
 //     oe.emitOptionalJumpTarget(JSOp::Undefined);
 //
 //   `callee[key]?.(arg);`
@@ -107,7 +107,7 @@ struct BytecodeEmitter;
 //     oe.emitShortCircuitForCall();
 //     cone.prepareForNonSpreadArguments();
 //     emit(arg);
-//     cone.emitEnd(1, Some(offset_of_callee));
+//     cone.emitEnd(1, offset_of_callee);
 //     oe.emitOptionalJumpTarget(JSOp::Undefined);
 //
 //   `(function() { ... })?.(arg);`
@@ -121,7 +121,7 @@ struct BytecodeEmitter;
 //     oe.emitShortCircuitForCall();
 //     cone.prepareForNonSpreadArguments();
 //     emit(arg);
-//     cone.emitEnd(1, Some(offset_of_callee));
+//     cone.emitEnd(1, offset_of_callee);
 //     oe.emitOptionalJumpTarget(JSOp::Undefined);
 //
 //   `(a?b)();`
@@ -137,7 +137,7 @@ struct BytecodeEmitter;
 //     oe.emitShortCircuitForCall();
 //     cone.prepareForNonSpreadArguments();
 //     emit(arg);
-//     cone.emitEnd(1, Some(offset_of_callee));
+//     cone.emitEnd(1, offset_of_callee);
 //     oe.emitOptionalJumpTarget(JSOp::Undefined);
 //
 class MOZ_RAII OptionalEmitter {
