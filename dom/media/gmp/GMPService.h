@@ -52,7 +52,7 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
   NS_DECL_THREADSAFE_ISUPPORTS
 
   RefPtr<GetCDMParentPromise> GetCDM(const NodeIdParts& aNodeIdParts,
-                                     nsTArray<nsCString> aTags,
+                                     const nsACString& aKeySystem,
                                      GMPCrashHelper* aHelper);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
