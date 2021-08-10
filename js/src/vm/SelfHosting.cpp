@@ -2047,19 +2047,6 @@ static bool intrinsic_NewWrapForValidIterator(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_NewPrivateName(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  RootedString desc(cx, args[0].toString());
-  auto* symbol = JS::Symbol::new_(cx, JS::SymbolCode::PrivateNameSymbol, desc);
-  if (!symbol) {
-    return false;
-  }
-  args.rval().setSymbol(symbol);
-  return true;
-}
-
 static bool intrinsic_NewIteratorHelper(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2284,7 +2271,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("NewAsyncIteratorHelper", intrinsic_NewAsyncIteratorHelper, 0, 0),
     JS_FN("NewIteratorHelper", intrinsic_NewIteratorHelper, 0, 0),
     JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
-    JS_FN("NewPrivateName", intrinsic_NewPrivateName, 1, 0),
     JS_INLINABLE_FN("NewRegExpStringIterator",
                     intrinsic_NewRegExpStringIterator, 0, 0,
                     IntrinsicNewRegExpStringIterator),

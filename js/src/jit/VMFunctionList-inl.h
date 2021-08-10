@@ -199,6 +199,7 @@ namespace jit {
   _(NewObjectOperationWithTemplate, js::NewObjectOperationWithTemplate)        \
   _(NewPlainObjectBaselineFallback, js::NewPlainObjectBaselineFallback)        \
   _(NewPlainObjectOptimizedFallback, js::NewPlainObjectOptimizedFallback)      \
+  _(NewPrivateName, js::NewPrivateName)                                        \
   _(NewRegExpStringIterator, js::NewRegExpStringIterator)                      \
   _(NewStringIterator, js::NewStringIterator)                                  \
   _(NewStringObject, js::jit::NewStringObject)                                 \
