@@ -106,6 +106,10 @@ class InternalJobQueue : public JS::JobQueue {
   // This is only used by shell testing functions.
   JSObject* maybeFront() const;
 
+#ifdef DEBUG
+  JSObject* copyJobs(JSContext* cx);
+#endif
+
  private:
   using Queue = js::TraceableFifo<JSObject*, 0, SystemAllocPolicy>;
 
