@@ -12,6 +12,35 @@ add_task(async function contextmenu_back() {
   await testBackForwardMenu(true);
 });
 
+async function openHistoryMenu(useContextMenu) {
+  let backButton = document.getElementById("back-button");
+  let rect = backButton.getBoundingClientRect();
+
+  info("waiting for the history menu to open");
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    useContextMenu ? document.getElementById("backForwardMenu") : backButton,
+    "popupshown"
+  );
+  if (useContextMenu) {
+    EventUtils.synthesizeMouseAtCenter(backButton, {
+      type: "contextmenu",
+      button: 2,
+    });
+  } else {
+    EventUtils.synthesizeMouseAtCenter(backButton, { type: "mousedown" });
+  }
+
+  EventUtils.synthesizeMouse(backButton, rect.width / 2, rect.height, {
+    type: "mouseup",
+  });
+  let popupEvent = await popupShownPromise;
+
+  ok(true, "history menu opened");
+
+  return popupEvent;
+}
+
 async function testBackForwardMenu(useContextMenu) {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -40,30 +69,7 @@ async function testBackForwardMenu(useContextMenu) {
       SessionStore.getSessionHistory(gBrowser.selectedTab, resolve)
     );
 
-    let backButton = document.getElementById("back-button");
-    let rect = backButton.getBoundingClientRect();
-
-    info("waiting for the history menu to open");
-
-    let popupShownPromise = BrowserTestUtils.waitForEvent(
-      useContextMenu ? document.getElementById("backForwardMenu") : backButton,
-      "popupshown"
-    );
-    if (useContextMenu) {
-      EventUtils.synthesizeMouseAtCenter(backButton, {
-        type: "contextmenu",
-        button: 2,
-      });
-    } else {
-      EventUtils.synthesizeMouseAtCenter(backButton, { type: "mousedown" });
-    }
-
-    EventUtils.synthesizeMouse(backButton, rect.width / 2, rect.height, {
-      type: "mouseup",
-    });
-    let popupEvent = await popupShownPromise;
-
-    ok(true, "history menu opened");
+    let popupEvent = await openHistoryMenu(useContextMenu);
 
     // Wait for the session data to be flushed before continuing the test
     await new Promise(resolve =>
@@ -133,3 +139,25 @@ async function testBackForwardMenu(useContextMenu) {
 
   gBrowser.removeTab(tab);
 }
+
+// Make sure that the history popup appears after navigating around in a preferences page.
+add_task(async function test_preferences_page() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:preferences"
+  );
+
+  openPreferences("search");
+  let popupEvent = await openHistoryMenu(true);
+
+  is(popupEvent.target.children.length, 2, "Correct number of history items");
+
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    popupEvent.target,
+    "popuphidden"
+  );
+  popupEvent.target.hidePopup();
+  await popupHiddenPromise;
+
+  gBrowser.removeTab(tab);
+});
