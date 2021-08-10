@@ -157,7 +157,7 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   }
   virtual bool InitializeCanvasRenderer(mozilla::nsDisplayListBuilder* aBuilder,
                                         CanvasRenderer* aRenderer) {
-    return true;
+    return false;
   }
 
   // Return true if the canvas should be forced to be "inactive" to ensure
