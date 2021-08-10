@@ -11,7 +11,8 @@ use audio_thread_priority::get_current_thread_info;
 #[cfg(not(target_os = "linux"))]
 use audio_thread_priority::promote_current_thread_to_real_time;
 use audioipc::codec::LengthDelimitedCodec;
-use audioipc::framing::{framed, Framed};
+use audioipc::frame::{framed, Framed};
+use audioipc::platformhandle_passing::{framed_with_platformhandles, FramedWithPlatformHandles};
 use audioipc::{core, rpc};
 use audioipc::{
     messages, messages::DeviceCollectionReq, messages::DeviceCollectionResp, ClientMessage,
@@ -37,8 +38,10 @@ struct CubebClient;
 impl rpc::Client for CubebClient {
     type Request = ServerMessage;
     type Response = ClientMessage;
-    type Transport =
-        Framed<audioipc::AsyncMessageStream, LengthDelimitedCodec<Self::Request, Self::Response>>;
+    type Transport = FramedWithPlatformHandles<
+        audioipc::AsyncMessageStream,
+        LengthDelimitedCodec<Self::Request, Self::Response>,
+    >;
 }
 
 pub const CLIENT_OPS: Ops = capi_new!(ClientContext, ClientStream);
@@ -187,7 +190,7 @@ impl ContextOps for ClientContext {
             stream: audioipc::AsyncMessageStream,
             tx_rpc: &mpsc::Sender<rpc::ClientProxy<ServerMessage, ClientMessage>>,
         ) {
-            let transport = framed(stream, Default::default());
+            let transport = framed_with_platformhandles(stream, Default::default());
             let rpc = rpc::bind_client::<CubebClient>(transport);
             // If send fails then the rx end has closed
             // which is unlikely here.
@@ -203,7 +206,7 @@ impl ContextOps for ClientContext {
         let thread_destroy_callback = params.thread_destroy_callback;
 
         let server_stream =
-            unsafe { audioipc::MessageStream::from_raw_handle(params.server_connection) };
+            unsafe { audioipc::MessageStream::from_raw_fd(params.server_connection) };
 
         let core = core::spawn_thread(
             "AudioIPC Client RPC",
@@ -365,15 +368,15 @@ impl ContextOps for ClientContext {
         assert_not_in_callback();
 
         if !self.device_collection_rpc {
-            let mut fd = send_recv!(self.rpc(),
+            let fds = send_recv!(self.rpc(),
                                  ContextSetupDeviceCollectionCallback =>
                                  ContextSetupDeviceCollectionCallback())?;
 
-            let stream = unsafe {
-                audioipc::MessageStream::from_raw_handle(
-                    fd.platform_handle.take_handle().into_raw(),
-                )
-            };
+            // TODO: The lowest comms layer expects exactly 3 PlatformHandles, but we only
+            // need one here.  The server sent two dummy valid handles, ignore those (closed on drop)
+            // and use the one we need.
+            let stream =
+                unsafe { audioipc::MessageStream::from_raw_fd(fds.platform_handles[0].into_raw()) };
 
             let server = DeviceCollectionServer {
                 input_device_callback: self.input_device_callback.clone(),

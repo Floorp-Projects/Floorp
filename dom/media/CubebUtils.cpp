@@ -43,8 +43,6 @@
 
 #define AUDIOIPC_POOL_SIZE_DEFAULT 1
 #define AUDIOIPC_STACK_SIZE_DEFAULT (64 * 4096)
-// See also: https://github.com/mozilla/audioipc-2/issues/124
-#define AUDIOIPC_SHM_AREA_SIZE_DEFAULT (512 * 4096)
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"
@@ -61,7 +59,6 @@
 #define PREF_CUBEB_SANDBOX "media.cubeb.sandbox"
 #define PREF_AUDIOIPC_POOL_SIZE "media.audioipc.pool_size"
 #define PREF_AUDIOIPC_STACK_SIZE "media.audioipc.stack_size"
-#define PREF_AUDIOIPC_SHM_AREA_SIZE "media.audioipc.shm_area_size"
 
 #if (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)) || \
     defined(XP_MACOSX) || (defined(XP_WIN) && !defined(_ARM64_))
@@ -111,7 +108,6 @@ bool sRouteOutputAsVoice = false;
 bool sCubebSandbox = false;
 size_t sAudioIPCPoolSize;
 size_t sAudioIPCStackSize;
-size_t sAudioIPCShmAreaSize;
 #endif
 StaticAutoPtr<char> sBrandName;
 StaticAutoPtr<char> sCubebBackendName;
@@ -273,10 +269,6 @@ void PrefChanged(const char* aPref, void* aClosure) {
     StaticMutexAutoLock lock(sMutex);
     sAudioIPCStackSize = Preferences::GetUint(PREF_AUDIOIPC_STACK_SIZE,
                                               AUDIOIPC_STACK_SIZE_DEFAULT);
-  } else if (strcmp(aPref, PREF_AUDIOIPC_SHM_AREA_SIZE) == 0) {
-    StaticMutexAutoLock lock(sMutex);
-    sAudioIPCShmAreaSize = Preferences::GetUint(PREF_AUDIOIPC_SHM_AREA_SIZE,
-                                                AUDIOIPC_SHM_AREA_SIZE_DEFAULT);
   }
 #endif
   else if (strcmp(aPref, PREF_CUBEB_OUTPUT_VOICE_ROUTING) == 0) {
@@ -417,7 +409,6 @@ void InitAudioIPCConnection() {
 
 ipc::FileDescriptor CreateAudioIPCConnection() {
 #ifdef MOZ_CUBEB_REMOTING
-  StaticMutexAutoLock lock(sMutex);
   MOZ_ASSERT(sCubebSandbox && XRE_IsParentProcess());
   if (!sServerHandle) {
     MOZ_LOG(gCubebLog, LogLevel::Debug, ("Starting cubeb server..."));
@@ -426,11 +417,9 @@ ipc::FileDescriptor CreateAudioIPCConnection() {
       return ipc::FileDescriptor();
     }
   }
-  MOZ_LOG(gCubebLog, LogLevel::Debug,
-          ("%s: %d", PREF_AUDIOIPC_SHM_AREA_SIZE, (int)sAudioIPCShmAreaSize));
   MOZ_ASSERT(sServerHandle);
   ipc::FileDescriptor::PlatformHandleType rawFD =
-      audioipc::audioipc_server_new_client(sServerHandle, sAudioIPCShmAreaSize);
+      audioipc::audioipc_server_new_client(sServerHandle);
   ipc::FileDescriptor fd(rawFD);
   if (!fd.IsValid()) {
     MOZ_LOG(gCubebLog, LogLevel::Error, ("audioipc_server_new_client failed"));
@@ -593,17 +582,11 @@ uint32_t GetCubebMTGLatencyInFrames(cubeb_stream_params* params) {
 }
 
 static const char* gInitCallbackPrefs[] = {
-    PREF_VOLUME_SCALE,
-    PREF_CUBEB_OUTPUT_DEVICE,
-    PREF_CUBEB_LATENCY_PLAYBACK,
-    PREF_CUBEB_LATENCY_MTG,
-    PREF_CUBEB_BACKEND,
-    PREF_CUBEB_FORCE_NULL_CONTEXT,
-    PREF_CUBEB_SANDBOX,
-    PREF_AUDIOIPC_POOL_SIZE,
-    PREF_AUDIOIPC_STACK_SIZE,
-    PREF_AUDIOIPC_SHM_AREA_SIZE,
-    nullptr,
+    PREF_VOLUME_SCALE,           PREF_CUBEB_OUTPUT_DEVICE,
+    PREF_CUBEB_LATENCY_PLAYBACK, PREF_CUBEB_LATENCY_MTG,
+    PREF_CUBEB_BACKEND,          PREF_CUBEB_FORCE_NULL_CONTEXT,
+    PREF_CUBEB_SANDBOX,          PREF_AUDIOIPC_POOL_SIZE,
+    PREF_AUDIOIPC_STACK_SIZE,    nullptr,
 };
 static const char* gCallbackPrefs[] = {
     PREF_CUBEB_FORCE_SAMPLE_RATE,
