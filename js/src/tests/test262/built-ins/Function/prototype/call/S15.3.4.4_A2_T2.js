@@ -11,17 +11,17 @@ var f = new Function;
 
 //CHECK#1
 if (typeof f.call !== "function") {
-  $ERROR('#1: call method accessed');
+  throw new Test262Error('#1: call method accessed');
 }
 
 //CHECK#2
 if (typeof f.call.length === "undefined") {
-  $ERROR('#2: length property of call method defined');
+  throw new Test262Error('#2: length property of call method defined');
 }
 
 //CHECK#3
 if (f.call.length !== 1) {
-  $ERROR('#3: The length property of the call method is 1');
+  throw new Test262Error('#3: The length property of the call method is 1');
 }
 
 reportCompare(0, 0);

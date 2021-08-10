@@ -11,7 +11,7 @@ description: Block statement
 
 //CHECK#1
 if (eval("{}") !== undefined) {
-  $ERROR('#1: eval("{}") === undefined. Actual: ' + (eval("{}")));
+  throw new Test262Error('#1: eval("{}") === undefined. Actual: ' + (eval("{}")));
 }
 
 reportCompare(0, 0);

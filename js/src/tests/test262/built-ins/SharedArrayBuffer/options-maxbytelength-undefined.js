@@ -21,7 +21,7 @@ info: |
 features: [resizable-arraybuffer]
 ---*/
 
-assert.sameValue(new SharedArrayBuffer(0, {}).resizable, false);
-assert.sameValue(new SharedArrayBuffer(0, {maxByteLength: undefined}).resizable, false);
+assert.sameValue(new SharedArrayBuffer(0, {}).growable, false);
+assert.sameValue(new SharedArrayBuffer(0, {maxByteLength: undefined}).growable, false);
 
 reportCompare(0, 0);

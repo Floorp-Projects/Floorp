@@ -13,7 +13,7 @@ includes: [propertyHelper.js]
 var x = Date.prototype.constructor.length;
 verifyNotWritable(Date.prototype.constructor, "length", null, 1);
 if (Date.prototype.constructor.length !== x) {
-  $ERROR('#1: The Date.prototype.constructor.length has the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.constructor.length has the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

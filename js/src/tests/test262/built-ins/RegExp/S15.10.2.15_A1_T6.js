@@ -18,10 +18,10 @@ description: >
 
 //CHECK#1
 try {
-  $ERROR('#1.1: /[\\Sb-G]/.exec("a") throw SyntaxError. Actual: ' + (new RegExp("[\\Sb-G]").exec("a")));
+  throw new Test262Error('#1.1: /[\\Sb-G]/.exec("a") throw SyntaxError. Actual: ' + (new RegExp("[\\Sb-G]").exec("a")));
 } catch (e) {
   if((e instanceof SyntaxError) !== true){
-    $ERROR('#1.2: /[\\Sb-G]/.exec("a") throw SyntaxError. Actual: ' + (e));
+    throw new Test262Error('#1.2: /[\\Sb-G]/.exec("a") throw SyntaxError. Actual: ' + (e));
   }
 }
 

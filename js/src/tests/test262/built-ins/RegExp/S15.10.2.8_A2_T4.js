@@ -16,7 +16,7 @@ var __executed = /Java(?!Script)([A-Z]\w*)/.test("i'm a JavaScripter ");
 
 //CHECK#1
 if (__executed) {
-	$ERROR('#1: /Java(?!Script)([A-Z]\\w*)/.test("i\'m a JavaScripter ") === false');
+	throw new Test262Error('#1: /Java(?!Script)([A-Z]\\w*)/.test("i\'m a JavaScripter ") === false');
 }
 
 reportCompare(0, 0);

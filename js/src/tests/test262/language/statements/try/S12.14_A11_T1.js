@@ -16,7 +16,7 @@ try{
   }
 }
 catch(e){
-  if(e!==5)$ERROR('#1: Exception === 5. Actual:  Exception ==='+ e  );
+  if(e!==5)throw new Test262Error('#1: Exception === 5. Actual:  Exception ==='+ e  );
 }
 
 reportCompare(0, 0);

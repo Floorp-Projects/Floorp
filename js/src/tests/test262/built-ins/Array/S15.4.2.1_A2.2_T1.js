@@ -34,7 +34,7 @@ for (var i = 0; i < 100; i++) {
 }
 
 if (result !== true) {
-  $ERROR('#1: x[i] === i. Actual: ' + (x[i]));
+  throw new Test262Error('#1: x[i] === i. Actual: ' + (x[i]));
 }
 
 reportCompare(0, 0);

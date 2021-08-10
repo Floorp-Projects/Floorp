@@ -18,7 +18,7 @@ bases[5] = +Infinity;
 
 for (var i = 0; i < bases.length; i++) {
   if ((bases[i] ** exponent) !== +Infinity) {
-    $ERROR("(" + bases[i] + " **  " + exponent + ") !== +Infinity");
+    throw new Test262Error("(" + bases[i] + " **  " + exponent + ") !== +Infinity");
   }
 }
 

@@ -13,7 +13,7 @@ if (x === 1)
 else
   Date.prototype.setTime = 1;
 if (Date.prototype.setTime === x) {
-  $ERROR('#1: The Date.prototype.setTime has not the attribute ReadOnly');
+  throw new Test262Error('#1: The Date.prototype.setTime has not the attribute ReadOnly');
 }
 
 reportCompare(0, 0);

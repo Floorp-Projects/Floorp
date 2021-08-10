@@ -152,7 +152,7 @@ do{
 
 //CHECK#1
 if (__matched !== ALL_THE_HOPELESS_MORE) {
-	$ERROR('#1: __re = /([Nn]?ever|([Nn]othing\\s{1,}))more/g; __executed = __re.exec(__the__raven)'+__matched);
+	throw new Test262Error('#1: __re = /([Nn]?ever|([Nn]othing\\s{1,}))more/g; __executed = __re.exec(__the__raven)'+__matched);
 }
 
 reportCompare(0, 0);

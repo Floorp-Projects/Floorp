@@ -1,4 +1,4 @@
-// |reftest| skip module async -- import-assertions is not supported
+// |reftest| skip module async -- import-assertions,json-modules is not supported
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

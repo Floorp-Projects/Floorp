@@ -8,7 +8,7 @@ description: The Date.prototype has the property "toUTCString"
 ---*/
 
 if (Date.prototype.hasOwnProperty("toUTCString") !== true) {
-  $ERROR('#1: The Date.prototype has the property "toUTCString"');
+  throw new Test262Error('#1: The Date.prototype has the property "toUTCString"');
 }
 
 reportCompare(0, 0);

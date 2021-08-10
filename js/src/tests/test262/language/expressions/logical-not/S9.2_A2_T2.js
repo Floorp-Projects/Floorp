@@ -9,7 +9,7 @@ description: null convert to Boolean by implicit transformation
 
 // CHECK#1
 if (!(null) !== true) {
-  $ERROR('#1: !(null) === true. Actual: ' + (!(null))); 
+  throw new Test262Error('#1: !(null) === true. Actual: ' + (!(null))); 
 }
 
 reportCompare(0, 0);

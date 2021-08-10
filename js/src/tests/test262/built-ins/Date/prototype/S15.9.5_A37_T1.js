@@ -8,7 +8,7 @@ description: The Date.prototype has the property "setUTCDate"
 ---*/
 
 if (Date.prototype.hasOwnProperty("setUTCDate") !== true) {
-  $ERROR('#1: The Date.prototype has the property "setUTCDate"');
+  throw new Test262Error('#1: The Date.prototype has the property "setUTCDate"');
 }
 
 reportCompare(0, 0);

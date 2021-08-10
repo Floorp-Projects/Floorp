@@ -50,7 +50,7 @@ try {
 }
 
 if (result !== true) {
-  $ERROR('#1: If string.charAt(k) equal "%" and k + 2 >= string.length, throw URIError');
+  throw new Test262Error('#1: If string.charAt(k) equal "%" and k + 2 >= string.length, throw URIError');
 }
 
 reportCompare(0, 0);

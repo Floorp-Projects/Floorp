@@ -8,7 +8,7 @@ description: Checking existence of the property "prototype"
 ---*/
 
 if (!Object.hasOwnProperty("prototype")) {
-  $ERROR('#1: The Object constructor has the property "prototype"');
+  throw new Test262Error('#1: The Object constructor has the property "prototype"');
 }
 
 reportCompare(0, 0);

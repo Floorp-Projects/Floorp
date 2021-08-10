@@ -10,7 +10,7 @@ description: Call toLocaleLowerCase() function of Infinity
 Number.prototype.toLocaleLowerCase = String.prototype.toLocaleLowerCase;
 
 if (Infinity.toLocaleLowerCase() !== "infinity") {
-  $ERROR('#1: Number.prototype.toLocaleLowerCase = String.prototype.toLocaleLowerCase; Infinity.toLocaleLowerCase()=== "infinity". Actual: ' + Infinity.toLocaleLowerCase());
+  throw new Test262Error('#1: Number.prototype.toLocaleLowerCase = String.prototype.toLocaleLowerCase; Infinity.toLocaleLowerCase()=== "infinity". Actual: ' + Infinity.toLocaleLowerCase());
 }
 
 reportCompare(0, 0);

@@ -15,7 +15,7 @@ __re.indicator = 1;
 
 //CHECK#1
 if (__instance.indicator !== 1) {
-	$ERROR('#1: __re = /x/i; __instance = RegExp(__re); __re.indicator = 1; __instance.indicator === 1. Actual: ' + (__instance.indicator));
+	throw new Test262Error('#1: __re = /x/i; __instance = RegExp(__re); __re.indicator = 1; __instance.indicator === 1. Actual: ' + (__instance.indicator));
 }
 
 reportCompare(0, 0);

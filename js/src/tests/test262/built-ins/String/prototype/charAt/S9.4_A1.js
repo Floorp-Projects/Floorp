@@ -11,12 +11,12 @@ description: >
 
 // CHECK#1
 if ("abc".charAt(Number.NaN) !== "a") {
-  $ERROR('#1: "abc".charAt(Number.NaN) === "a". Actual: ' + ("abc".charAt(Number.NaN)));
+  throw new Test262Error('#1: "abc".charAt(Number.NaN) === "a". Actual: ' + ("abc".charAt(Number.NaN)));
 }
 
 // CHECK#2
 if ("abc".charAt("x") !== "a") {
-  $ERROR('#2: "abc".charAt("x") === "a". Actual: ' + ("abc".charAt("x")));
+  throw new Test262Error('#2: "abc".charAt("x") === "a". Actual: ' + ("abc".charAt("x")));
 }
 
 reportCompare(0, 0);

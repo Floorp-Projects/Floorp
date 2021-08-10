@@ -15,7 +15,7 @@ var __executed = /java(script)?/.test("state: both Java and JavaScript used in w
 
 //CHECK#1
 if (__executed) {
-	$ERROR('#1: /java(script)?/.test("state: both Java and JavaScript used in web development") === false');
+	throw new Test262Error('#1: /java(script)?/.test("state: both Java and JavaScript used in web development") === false');
 }
 
 reportCompare(0, 0);

@@ -14,7 +14,7 @@ var __executed = /a[^b]c/.test("abc");
 
 //CHECK#1
 if (__executed) {
-	$ERROR('#1: /a[^b]c/.test("abc") === false');
+	throw new Test262Error('#1: /a[^b]c/.test("abc") === false');
 }
 
 reportCompare(0, 0);

@@ -17,12 +17,12 @@ function f1(){
     return x;
   };
   return f2();
-  
+
   var x = 1;
 }
 
 if(!(f1() === undefined)){
-  $ERROR("#1: Scope chain disturbed");
+  throw new Test262Error("#1: Scope chain disturbed");
 }
 
 reportCompare(0, 0);

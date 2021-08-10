@@ -10,13 +10,13 @@ description: Type(x) is undefined or null
 //CHECK#1
 var x; 
 if (isNaN(void x) !== true) {
-  $ERROR('#1: var x; void x === undefined. Actual: ' + (void x));
+  throw new Test262Error('#1: var x; void x === undefined. Actual: ' + (void x));
 }
 
 //CHECK#2
 var x = null;
 if (void x !== undefined) {
-  $ERROR('#2: var x = null; void x === undefined. Actual: ' + (void x));
+  throw new Test262Error('#2: var x = null; void x === undefined. Actual: ' + (void x));
 }
 
 reportCompare(0, 0);

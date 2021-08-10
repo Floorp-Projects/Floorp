@@ -150,7 +150,7 @@ do{
 
 //CHECK#1
 if (__matched !== NEVERMORE_AND_EVERMORE) {
-	$ERROR('#1: __re = /[Nn]?evermore/g; __executed = __re.exec(__the__raven)'+__matched);
+	throw new Test262Error('#1: __re = /[Nn]?evermore/g; __executed = __re.exec(__the__raven)'+__matched);
 }
 
 reportCompare(0, 0);

@@ -11,7 +11,7 @@ flags: [noStrict]
 var __e = Math.E;
 Math.E=1;
 if (Math.E !==__e){
-  $ERROR('#1: __e = Math.E; Math.E=1; Math.E ===__e');
+  throw new Test262Error('#1: __e = Math.E; Math.E=1; Math.E ===__e');
 }
 
 reportCompare(0, 0);

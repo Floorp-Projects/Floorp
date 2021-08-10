@@ -17,7 +17,7 @@ description: >
 
 //CHECK#1
 if (this["shifted"] !== "12") {
-  $ERROR('#1: If argArray is either an array or an arguments object, the function is passed the...');
+  throw new Test262Error('#1: If argArray is either an array or an arguments object, the function is passed the...');
 }
 
 reportCompare(0, 0);

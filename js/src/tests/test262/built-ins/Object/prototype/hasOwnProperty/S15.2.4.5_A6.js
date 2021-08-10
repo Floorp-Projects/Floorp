@@ -11,7 +11,7 @@ description: >
 
 //CHECK#1
 if (Object.prototype.hasOwnProperty.prototype !== undefined) {
-  $ERROR('#1: Object.prototype.hasOwnProperty has not prototype property' + Object.prototype.hasOwnProperty.prototype);
+  throw new Test262Error('#1: Object.prototype.hasOwnProperty has not prototype property' + Object.prototype.hasOwnProperty.prototype);
 }
 //
 

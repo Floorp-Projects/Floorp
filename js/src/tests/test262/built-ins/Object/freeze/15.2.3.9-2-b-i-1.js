@@ -30,11 +30,11 @@ verifyEnumerable(obj, "foo");
 verifyNotConfigurable(obj, "foo");
 
 if (desc.writable !== false) {
-  $ERROR('Expected desc.writable === false, actually ' + desc.writable);
+  throw new Test262Error('Expected desc.writable === false, actually ' + desc.writable);
 }
 
 if (desc.configurable !== false) {
-  $ERROR('Expected desc.configurable === false, actually ' + desc.configurable);
+  throw new Test262Error('Expected desc.configurable === false, actually ' + desc.configurable);
 }
 
 reportCompare(0, 0);

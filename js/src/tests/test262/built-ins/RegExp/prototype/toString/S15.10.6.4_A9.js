@@ -13,17 +13,17 @@ description: >
 
 //CHECK#0
 if ((RegExp.prototype.toString.hasOwnProperty('length') !== true)) {
-	$ERROR('#0: RegExp.prototype.toString.hasOwnProperty(\'length\') === true');
+	throw new Test262Error('#0: RegExp.prototype.toString.hasOwnProperty(\'length\') === true');
 }
 
 //CHECK#1
 if (delete RegExp.prototype.toString.length !== true) {
-	$ERROR('#1: delete RegExp.prototype.toString.length === true');
+	throw new Test262Error('#1: delete RegExp.prototype.toString.length === true');
 }
 
 //CHECK#2
 if (RegExp.prototype.toString.hasOwnProperty('length') !== false) {
-	$ERROR('#2: delete RegExp.prototype.toString.length; RegExp.prototype.toString.hasOwnProperty(\'length\') === false');
+	throw new Test262Error('#2: delete RegExp.prototype.toString.length; RegExp.prototype.toString.hasOwnProperty(\'length\') === false');
 }
 
 reportCompare(0, 0);

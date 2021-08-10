@@ -10,11 +10,11 @@ description: Checking DontDelete attribute
 ---*/
 
 if (delete Date.prototype.getUTCFullYear.length !== true) {
-  $ERROR('#1: The Date.prototype.getUTCFullYear.length property does not have the attributes DontDelete');
+  throw new Test262Error('#1: The Date.prototype.getUTCFullYear.length property does not have the attributes DontDelete');
 }
 
 if (Date.prototype.getUTCFullYear.hasOwnProperty('length')) {
-  $ERROR('#2: The Date.prototype.getUTCFullYear.length property does not have the attributes DontDelete');
+  throw new Test262Error('#2: The Date.prototype.getUTCFullYear.length property does not have the attributes DontDelete');
 }
 
 reportCompare(0, 0);

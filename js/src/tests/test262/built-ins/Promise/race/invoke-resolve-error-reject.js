@@ -34,7 +34,7 @@ CustomPromise.resolve = function() {
 
 Promise.race.call(CustomPromise, [1])
   .then(function() {
-    $ERROR('The promise should be rejected.');
+    throw new Test262Error('The promise should be rejected.');
   }, function(reason) {
     assert.sameValue(reason, err);
     $DONE();

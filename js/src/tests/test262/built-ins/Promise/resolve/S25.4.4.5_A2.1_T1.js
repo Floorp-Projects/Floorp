@@ -11,7 +11,7 @@ var p1 = Promise.resolve(1),
   p2 = Promise.resolve(p1);
 
 if (p1 !== p2) {
-  $ERROR("Expected p1 === Promise.resolve(p1) because they have same constructor");
+  throw new Test262Error("Expected p1 === Promise.resolve(p1) because they have same constructor");
 }
 
 reportCompare(0, 0);

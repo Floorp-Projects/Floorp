@@ -11,7 +11,7 @@ description: Switch statement
 
 //CHECK#1
 if (eval("switch(1){}") !== undefined) {
-  $ERROR('#1: eval("switch(1){}") === undefined. Actual: ' + (eval("switch(1){}")));
+  throw new Test262Error('#1: eval("switch(1){}") === undefined. Actual: ' + (eval("switch(1){}")));
 }
 
 reportCompare(0, 0);

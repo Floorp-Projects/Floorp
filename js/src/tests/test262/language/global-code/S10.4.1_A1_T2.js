@@ -13,11 +13,11 @@ flags: [noStrict]
 x = 1;
 
 if (this.x !== 1) {
-  $ERROR("#1: variable x is a property of global object");
+  throw new Test262Error("#1: variable x is a property of global object");
 }
 
 if(delete this.x !== true){
-  $ERROR("#2: variable x has property attribute DontDelete");
+  throw new Test262Error("#2: variable x has property attribute DontDelete");
 }
 
 reportCompare(0, 0);

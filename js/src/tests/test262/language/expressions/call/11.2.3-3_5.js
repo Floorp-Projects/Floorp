@@ -14,7 +14,7 @@ description: >
     var o = { }; 
 assert.throws(TypeError, function() {
         eval("o.bar( foo() );");
-        $ERROR("o.bar does not exist!");
+        throw new Test262Error("o.bar does not exist!");
 });
 assert.sameValue(fooCalled, true, 'fooCalled');
 

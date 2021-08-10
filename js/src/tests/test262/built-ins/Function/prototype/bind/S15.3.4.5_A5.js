@@ -14,7 +14,7 @@ function construct(f, args) {
 }
 var d = construct(Date, [1957, 4, 27]);
 if (Object.prototype.toString.call(d) !== '[object Date]') {
-  $ERROR('Using the Date constructor via .bind did not create a Date.');
+  throw new Test262Error('Using the Date constructor via .bind did not create a Date.');
 }
 
 reportCompare(0, 0);

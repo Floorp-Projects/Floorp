@@ -16,7 +16,7 @@ var __executed = /\d{3}|[a-z]{4}/.test("2, 12 and 23 AND 0.00.1");
 
 //CHECK#1
 if (__executed) {
-	$ERROR('#1: /\\d{3}|[a-z]{4}/.test("2, 12 and 23 AND 0.00.1") === false');
+	throw new Test262Error('#1: /\\d{3}|[a-z]{4}/.test("2, 12 and 23 AND 0.00.1") === false');
 }
 
 reportCompare(0, 0);

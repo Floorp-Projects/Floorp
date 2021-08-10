@@ -9,12 +9,12 @@ description: Type(x) is undefined or null
 
 //CHECK#1
 if (!void 0 !== true) {
-  $ERROR('#1: !void 0 === true');
+  throw new Test262Error('#1: !void 0 === true');
 }
 
 //CHECK#2
 if (!null !== true) {
-  $ERROR('#2: !null === true');
+  throw new Test262Error('#2: !null === true');
 }
 
 reportCompare(0, 0);

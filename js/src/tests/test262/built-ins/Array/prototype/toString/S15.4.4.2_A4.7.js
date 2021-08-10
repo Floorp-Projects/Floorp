@@ -14,10 +14,10 @@ description: >
 
 try {
   new Array.prototype.toString();
-  $ERROR('#1.1: new Array.prototype.toString() throw TypeError. Actual: ' + (new Array.prototype.toString()));
+  throw new Test262Error('#1.1: new Array.prototype.toString() throw TypeError. Actual: ' + (new Array.prototype.toString()));
 } catch (e) {
   if ((e instanceof TypeError) !== true) {
-    $ERROR('#1.2: new Array.prototype.toString() throw TypeError. Actual: ' + (e));
+    throw new Test262Error('#1.2: new Array.prototype.toString() throw TypeError. Actual: ' + (e));
   }
 }
 

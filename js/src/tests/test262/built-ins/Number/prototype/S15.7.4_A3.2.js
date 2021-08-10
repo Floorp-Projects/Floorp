@@ -9,7 +9,7 @@ description: The test uses hasOwnProperty() method
 
 //CHECK#1
 if (Number.prototype.hasOwnProperty("toString") !== true) {
-  $ERROR('#1: The Number prototype object has the property toString');
+  throw new Test262Error('#1: The Number prototype object has the property toString');
 }
 
 reportCompare(0, 0);
