@@ -17,6 +17,8 @@
 
 #include "nsIContent.h"
 
+#include "nsCounterManager.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsViewManager.h"
 #include "nsIFrame.h"
 
@@ -246,6 +248,15 @@ NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpViews() {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
   DumpViewsRecur(mDocShell, stdout);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLayoutDebuggingTools::DumpCounterManager() {
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
+  if (PresShell* presShell = GetPresShell(mDocShell)) {
+    presShell->FrameConstructor()->CounterManager()->Dump();
+  }
   return NS_OK;
 }
 

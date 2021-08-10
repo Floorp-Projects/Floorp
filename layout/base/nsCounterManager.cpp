@@ -392,8 +392,8 @@ void nsCounterManager::GetSpokenCounterText(nsIFrame* aFrame,
 }
 #endif
 
-#ifdef DEBUG
-void nsCounterManager::Dump() {
+#if defined(DEBUG) || defined(MOZ_LAYOUT_DEBUGGER)
+void nsCounterManager::Dump() const {
   printf("\n\nCounter Manager Lists:\n");
   for (const auto& entry : mNames) {
     printf("Counter named \"%s\":\n", nsAtomCString(entry.GetKey()).get());
