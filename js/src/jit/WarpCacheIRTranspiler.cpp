@@ -11,6 +11,7 @@
 #include "jsmath.h"
 
 #include "builtin/DataViewObject.h"
+#include "builtin/MapObject.h"
 #include "jit/AtomicOp.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
@@ -368,6 +369,9 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
       break;
     case GuardClassKind::JSFunction:
       classp = &JSFunction::class_;
+      break;
+    case GuardClassKind::Set:
+      classp = &SetObject::class_;
       break;
     default:
       MOZ_CRASH("not yet supported");
