@@ -227,12 +227,21 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
     }
 }
 
+configurations {
+  // No need to include libglean_ffi.so here or for GeckoView consumers.
+  // If those consumers use Glean, they'll get the FFI through GeckoView anyway.
+  all*.exclude group: 'org.mozilla.telemetry', module: 'glean-native'
+}
+
 dependencies {
     // For exoplayer.
     compileOnly "com.google.code.findbugs:jsr305:3.0.2"
     compileOnly "org.checkerframework:checker-compat-qual:2.5.0"
     compileOnly "org.checkerframework:checker-qual:2.5.0"
     compileOnly "org.jetbrains.kotlin:kotlin-annotations-jvm:1.3.70"
+
+    // The Glean Kotlin, which will be re-exported.
+    api "org.mozilla.telemetry:glean:36.0.1"
 
     implementation "androidx.annotation:annotation:1.1.0"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
