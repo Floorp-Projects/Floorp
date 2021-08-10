@@ -507,7 +507,7 @@ class ContextMenuChild extends JSWindowActorChild {
     return false;
   }
 
-  handleEvent(aEvent) {
+  async handleEvent(aEvent) {
     contextMenus.set(this.browsingContext, this);
 
     let defaultPrevented = aEvent.defaultPrevented;
@@ -645,7 +645,6 @@ class ContextMenuChild extends JSWindowActorChild {
       referrerInfo,
       editFlags,
       principal,
-      spellInfo,
       contentType,
       docLocation,
       loginFillInfo,
@@ -692,6 +691,15 @@ class ContextMenuChild extends JSWindowActorChild {
     // instead.
     aEvent.stopPropagation();
 
+    data.spellInfo = null;
+    if (!spellInfo) {
+      this.sendAsyncMessage("contextmenu", data);
+      return;
+    }
+
+    try {
+      data.spellInfo = await spellInfo;
+    } catch (ex) {}
     this.sendAsyncMessage("contextmenu", data);
   }
 
