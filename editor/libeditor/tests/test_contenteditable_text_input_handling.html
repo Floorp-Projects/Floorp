@@ -152,10 +152,13 @@ function runTests() {
     function testDispatchedKeyEvent(aTarget) {
       var targetDescription = " (dispatched to " + aTarget._description + ")";
       function dispatchKeyEvent(aKeyCode, aChar, aDispatchTarget) {
-        var keyEvent = document.createEvent("KeyboardEvent");
-        keyEvent.initKeyEvent("keypress", true, true, null, false, false,
-                               false, false, aKeyCode,
-                               aChar ? aChar.charCodeAt(0) : 0);
+        var keyEvent = new KeyboardEvent("keypress", {
+          bubbles: true,
+          cancelable: true,
+          view: null,
+          keyCode: aKeyCode,
+          charCode: aChar ? aChar.charCodeAt(0) : 0
+        });
         aDispatchTarget.dispatchEvent(keyEvent);
       }
 

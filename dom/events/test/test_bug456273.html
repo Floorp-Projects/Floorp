@@ -23,9 +23,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=456273
 /** Test for Bug 456273 **/
 
 function doTest() {
-  var ev = document.createEvent('KeyboardEvent');
-  ev.initKeyEvent("keypress", true, true, null, true, false,
-                 false, false, 0, "z".charCodeAt(0));
+  var ev = new KeyboardEvent("keypress", {
+    bubbles: true,
+    cancelable: true,
+    view: null,
+    ctrlKey: true,
+    keyCode: 0,
+    charCode: "z".charCodeAt(0),
+  });
   SpecialPowers.dispatchEvent(window, document.getElementById('edit456273'), ev);
 
   ok(true, "PASS");

@@ -291,19 +291,13 @@ async function runTests(browser) {
       // Dispatch the event for changing the page
       var ev;
       if (test.action.event == "keydown") {
-        ev = document.createEvent("KeyboardEvent");
-        ev.initKeyEvent(
-          "keydown",
-          true,
-          true,
-          null,
-          false,
-          false,
-          false,
-          false,
-          test.action.keyCode,
-          0
-        );
+        ev = new window.KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          view: null,
+          keyCode: test.action.keyCode,
+          charCode: 0,
+        });
         el.dispatchEvent(ev);
       } else {
         ev = new content.Event(test.action.event);

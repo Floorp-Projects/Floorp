@@ -27,11 +27,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=381167
 SimpleTest.waitForExplicitFinish();
 
 function closeit() {
-  var evt = document.createEvent('KeyboardEvent');
-                                 evt.initKeyEvent('keypress', true, true,
-                                 window,
-                                 true, false, false, false,
-                                 'W'.charCodeAt(0), 0);
+  var evt = new KeyboardEvent("keypress", {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    ctrlKey: true,
+    keyCode: 'W'.charCodeAt(0),
+    charCode: 0,
+  });
   window.dispatchEvent(evt);
 
   setTimeout(finish, 200);
