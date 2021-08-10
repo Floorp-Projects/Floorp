@@ -6,35 +6,6 @@
   <panelview id="appMenu-mainView" class="PanelUI-subView"
              descriptionheightworkaround="true">
     <vbox class="panel-subview-body">
-      <toolbarbutton id="appMenu-logins-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     label="&logins.label;"
-                     oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'mainmenu' })"
-                     />
-      <toolbarbutton id="appMenu-addons-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     data-l10n-id="appmenuitem-addons-and-themes"
-                     key="key_openAddons"
-                     command="Tools:Addons"
-                     />
-      <toolbarbutton id="appMenu-preferences-button"
-                     class="subviewbutton subviewbutton-iconic"
-#ifdef XP_WIN
-                     label="&preferencesCmd2.label;"
-#else
-                     label="&preferencesCmdUnix.label;"
-#ifdef XP_MACOSX
-                     key="key_preferencesCmdMac"
-#endif
-#endif
-                     oncommand="openPreferences()"
-                     />
-      <toolbarbutton id="appMenu-customize-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     data-l10n-id="appmenu-customizetoolbar"
-                     command="cmd_CustomizeToolbars"
-                     />
-      <toolbarseparator/>
       <toolbarbutton id="appMenu-open-file-button"
                      class="subviewbutton"
                      label="&openFileCmd.label;"
@@ -46,16 +17,6 @@
                      data-l10n-id="appmenuitem-save-page"
                      key="key_savePage"
                      command="Browser:SavePage"
-                     />
-      <toolbarbutton id="appMenu-print-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     label="&printCmd.label;"
-                     key="printKb"
-#ifdef XP_MACOSX
-                     command="cmd_print"
-#else
-                     command="cmd_printPreview"
-#endif
                      />
       <toolbarseparator/>
       <toolbarbutton id="appMenu-find-button"

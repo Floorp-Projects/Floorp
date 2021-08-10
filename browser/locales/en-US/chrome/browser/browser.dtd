@@ -56,10 +56,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY newNavigatorCmd.label        "New Window">
 <!ENTITY newPrivateWindow.label     "New Private Window">
 
-<!ENTITY preferencesCmd2.label       "Options">
-<!ENTITY preferencesCmdUnix.label       "Preferences">
-<!ENTITY logins.label                           "Logins and Passwords">
-
 <!ENTITY overflowCustomizeToolbar.label       "Customize Toolbar…">
 <!ENTITY overflowCustomizeToolbar.accesskey   "C">
 
