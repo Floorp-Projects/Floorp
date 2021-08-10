@@ -1160,14 +1160,11 @@ bool Element::CanAttachShadowDOM() const {
   return true;
 }
 
-// https://dom.spec.whatwg.org/#dom-element-attachshadow
+// https://dom.spec.whatwg.org/commit-snapshots/1eadf0a4a271acc92013d1c0de8c730ac96204f9/#dom-element-attachshadow
 already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
                                                    ErrorResult& aError) {
   /**
-   * 1. If context object's namespace is not the HTML namespace,
-   *    then throw a "NotSupportedError" DOMException.
-   * 2. If context object's local name is not valid to attach shadow DOM to,
-   *    then throw a "NotSupportedError" DOMException.
+   * Step 1, 2, and 3.
    */
   if (!CanAttachShadowDOM()) {
     aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -1175,8 +1172,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
   }
 
   /**
-   * 4. If context object is a shadow host, then throw
-   *    an "NotSupportedError" DOMException.
+   * 4. If this is a shadow host, then throw a "NotSupportedError" DOMException.
    */
   if (GetShadowRoot()) {
     aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -1214,7 +1210,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
   }
 
   /**
-   * 4. Let shadow be a new shadow root whose node document is
+   * 5. Let shadow be a new shadow root whose node document is
    *    context object's node document, host is context object,
    *    and mode is init's mode.
    */
@@ -1227,7 +1223,17 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
   }
 
   /**
-   * 5. Set context object's shadow root to shadow.
+   * 7. If this’s custom element state is "precustomized" or "custom", then set
+   *    shadow’s available to element internals to true.
+   */
+  CustomElementData* ceData = GetCustomElementData();
+  if (ceData && (ceData->mState == CustomElementData::State::ePrecustomized ||
+                 ceData->mState == CustomElementData::State::eCustom)) {
+    shadowRoot->SetAvailableToElementInternals();
+  }
+
+  /**
+   * 9. Set context object's shadow root to shadow.
    */
   SetShadowRoot(shadowRoot);
 
@@ -1240,7 +1246,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
   }
 
   /**
-   * 6. Return shadow.
+   * 10. Return shadow.
    */
   return shadowRoot.forget();
 }

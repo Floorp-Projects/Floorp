@@ -208,6 +208,14 @@ class ShadowRoot final : public DocumentFragment,
     mIsUAWidget = true;
   }
 
+  bool IsAvailableToElementInternals() const {
+    return mIsAvailableToElementInternals;
+  }
+
+  void SetAvailableToElementInternals() {
+    mIsAvailableToElementInternals = true;
+  }
+
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
   // nsIRadioGroupContainer
@@ -279,6 +287,9 @@ class ShadowRoot final : public DocumentFragment,
   nsTArray<const Element*> mParts;
 
   bool mIsUAWidget : 1;
+
+  // https://dom.spec.whatwg.org/#shadowroot-available-to-element-internals
+  bool mIsAvailableToElementInternals : 1;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
