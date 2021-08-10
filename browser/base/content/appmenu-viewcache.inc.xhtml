@@ -6,33 +6,6 @@
   <panelview id="appMenu-mainView" class="PanelUI-subView"
              descriptionheightworkaround="true">
     <vbox class="panel-subview-body">
-      <toolbarbutton id="appMenu-new-window-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     data-l10n-id="appmenuitem-new-window"
-                     key="key_newNavigator"
-                     command="cmd_newNavigator"/>
-      <toolbarbutton id="appMenu-private-window-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     data-l10n-id="appmenuitem-new-private-window"
-                     key="key_privatebrowsing"
-                     command="Tools:PrivateBrowsing"/>
-#ifdef NIGHTLY_BUILD
-      <toolbarbutton id="appMenu-fission-window-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     label="New Fission Window"
-                     accesskey="s"
-                     command="Tools:FissionWindow"/>
-      <toolbarbutton id="appMenu-non-fission-window-button"
-                     class="subviewbutton subviewbutton-iconic"
-                     label="New Non-Fission Window"
-                     accesskey="s"
-                     command="Tools:NonFissionWindow"/>
-#endif
-      <toolbarbutton id="appMenuRestoreLastSession"
-                     data-l10n-id="appmenu-restore-session"
-                     class="subviewbutton subviewbutton-iconic"
-                     command="Browser:RestoreLastSession"/>
-      <toolbarseparator/>
       <toolbaritem id="appMenu-zoom-controls" class="toolbaritem-combined-buttons" closemenu="none">
         <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
         <spacer class="before-label"/>
