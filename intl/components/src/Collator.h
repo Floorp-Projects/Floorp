@@ -134,6 +134,28 @@ class Collator final {
   ICUResult SetOptions(const Options& aOptions,
                        const Maybe<Options&> aPrevOptions = Nothing());
 
+  /**
+   * Map keywords to their BCP 47 equivalents.
+   */
+  static SpanResult<char> KeywordValueToBcp47Extension(const char* aKeyword,
+                                                       int32_t aLength);
+
+  using Bcp47ExtEnumeration =
+      Enumeration<char, SpanResult<char>,
+                  Collator::KeywordValueToBcp47Extension>;
+
+  /**
+   * Returns an iterator of collator locale extensions in the preferred order.
+   * These extensions can be used in BCP 47 locales. For instance this
+   * iterator could return "phonebk" and could be appled to the German locale
+   * "de" as "de-co-phonebk" for a phonebook-style collation.
+   *
+   * The collation extensions can be found here:
+   * http://cldr.unicode.org/core-spec/#Key_Type_Definitions
+   */
+  static Result<Bcp47ExtEnumeration, InternalError>
+  GetBcp47KeywordValuesForLocale(const char* aLocale);
+
  private:
   /**
    * Toggle features, or use the default setting.
