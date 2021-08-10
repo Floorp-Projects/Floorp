@@ -1270,6 +1270,13 @@
   value: false
   mirror: always
 
+# Testing-only pref which makes data: URIs be loaded in a "web" content process
+# instead of within a process based on the URI's loader.
+- name: browser.tabs.remote.dataUriInDefaultWebProcess
+  type: bool
+  value: false
+  mirror: always
+
 - name: browser.tabs.remote.desktopbehavior
   type: bool
   value: false
@@ -1311,6 +1318,14 @@
 #else
   value: false
 #endif
+  mirror: always
+
+# Pref to control whether we use a separate privileged content process
+# for certain mozilla webpages (which are listed in the pref
+# browser.tabs.remote.separatedMozillaDomains).
+- name: browser.tabs.remote.separatePrivilegedMozillaWebContentProcess
+  type: bool
+  value: false
   mirror: always
 
 # When this pref is enabled, opaque response is only allowed to enter the

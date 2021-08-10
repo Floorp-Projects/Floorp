@@ -1244,7 +1244,7 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     // ReplacedBy will swap the entry back.
     aBrowsingContext->SetActiveSessionHistoryEntry(aEntry);
     loadingBC->SetActiveSessionHistoryEntry(nullptr);
-    RemotenessChangeOptions options;
+    NavigationIsolationOptions options;
     aBrowsingContext->ReplacedBy(loadingBC, options);
 
     // Assuming we still have the session history, update the index.
