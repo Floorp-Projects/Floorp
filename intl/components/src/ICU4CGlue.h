@@ -28,6 +28,11 @@ struct InternalError {};
 using ICUResult = Result<Ok, ICUError>;
 
 /**
+ * Convert a UErrorCode to ICUResult.
+ */
+ICUResult ToICUResult(UErrorCode status);
+
+/**
  * The ICU status can complain about a string not being terminated, but this
  * is fine for this API, as it deals with the mozilla::Span that has a pointer
  * and a length.
@@ -35,6 +40,28 @@ using ICUResult = Result<Ok, ICUError>;
 static inline bool ICUSuccessForStringSpan(UErrorCode status) {
   return U_SUCCESS(status) || status == U_STRING_NOT_TERMINATED_WARNING;
 }
+
+/**
+ * This class manages the access to an ICU pointer. It allows requesting either
+ * a mutable or const pointer. This pointer should match the const or mutability
+ * of the ICU APIs. This will then correctly propagate const-ness into the
+ * mozilla::intl APIs.
+ */
+template <typename T>
+class ICUPointer {
+ public:
+  explicit ICUPointer(T* aPointer) : mPointer(aPointer) {}
+
+  // Only allow moves, no copies.
+  ICUPointer(ICUPointer&& other) noexcept = default;
+  ICUPointer& operator=(ICUPointer&& other) noexcept = default;
+
+  const T* GetConst() const { return const_cast<const T*>(mPointer); }
+  T* GetMut() { return mPointer; }
+
+ private:
+  T* mPointer;
+};
 
 /**
  * Calling into ICU with the C-API can be a bit tricky. This function wraps up
