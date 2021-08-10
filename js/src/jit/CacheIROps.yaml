@@ -157,6 +157,13 @@
   args:
     input: ValId
 
+- name: GuardToNonGCThing
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    input: ValId
+
 # If the Value is a boolean, convert it to int32.
 - name: GuardBooleanToInt32
   shared: true
@@ -2610,6 +2617,14 @@
   shared: true
   transpile: false
   cost_estimate: 5
+  args:
+    set: ObjId
+    val: ValId
+
+- name: SetHasNonGCThingResult
+  shared: true
+  transpile: false
+  cost_estimate: 3
   args:
     set: ObjId
     val: ValId
