@@ -554,7 +554,7 @@ var Policies = {
       }
       if ("TLS_RSA_WITH_3DES_EDE_CBC_SHA" in param) {
         setAndLockPref(
-          "security.ssl3.deprecated.rsa_des_ede3_sha",
+          "security.ssl3.rsa_des_ede3_sha",
           !param.TLS_RSA_WITH_3DES_EDE_CBC_SHA
         );
       }

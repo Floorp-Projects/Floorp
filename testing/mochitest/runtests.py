@@ -684,7 +684,7 @@ class SSLTunnel:
                 "tls1_2",
                 "tls1_3",
                 "ssl3",
-                "3des",
+                "rc4",
                 "failHandshake",
             ):
                 config.write(
