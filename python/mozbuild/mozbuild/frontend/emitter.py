@@ -364,14 +364,9 @@ class TreeMetadataEmitter(LoggingMixin):
     LIBSTDCXX_VAR = {
         "host": "MOZ_LIBSTDCXX_HOST_VERSION",
         "target": "MOZ_LIBSTDCXX_TARGET_VERSION",
-        "wasm": "MOZ_LIBSTDCXX_TARGET_VERSION",
     }
 
-    STDCXXCOMPAT_NAME = {
-        "host": "host_stdc++compat",
-        "target": "stdc++compat",
-        "wasm": "stdc++compat",
-    }
+    STDCXXCOMPAT_NAME = {"host": "host_stdc++compat", "target": "stdc++compat"}
 
     def _link_libraries(self, context, obj, variable, extra_sources):
         """Add linkage declarations to a given object."""
@@ -399,7 +394,7 @@ class TreeMetadataEmitter(LoggingMixin):
             )
             and obj.cxx_link
         ):
-            if context.config.substs.get(self.LIBSTDCXX_VAR[obj.KIND]):
+            if context.config.substs.get(self.LIBSTDCXX_VAR.get(obj.KIND)):
                 self._link_library(
                     context, obj, variable, self.STDCXXCOMPAT_NAME[obj.KIND]
                 )
@@ -1437,15 +1432,11 @@ class TreeMetadataEmitter(LoggingMixin):
                 if mozpath.split(base)[0] == "res":
                     has_resources = True
                 for f in files:
-                    if (
-                        var
-                        in (
-                            "FINAL_TARGET_PP_FILES",
-                            "OBJDIR_PP_FILES",
-                            "LOCALIZED_PP_FILES",
-                        )
-                        and not isinstance(f, SourcePath)
-                    ):
+                    if var in (
+                        "FINAL_TARGET_PP_FILES",
+                        "OBJDIR_PP_FILES",
+                        "LOCALIZED_PP_FILES",
+                    ) and not isinstance(f, SourcePath):
                         raise SandboxValidationError(
                             ("Only source directory paths allowed in " + "%s: %s")
                             % (var, f),
