@@ -47,6 +47,12 @@ cd my-project
 wasm-pack build
 ```
 
+### 🛠️ Build a module that can be used for nodejs
+
+```
+wasm-pack build --target nodejs
+```
+
 ### 🔬 Test in Headless Browsers with `wasm-pack test`
 
 ```
