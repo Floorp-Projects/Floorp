@@ -816,11 +816,12 @@ def main(args):
                   'happen' % cache)
             return 1
 
-        purge = configure_cache_posix(cache, user, group, untrusted_caches,
-                                      running_as_root)
+        if running_as_root:
+        	purge = configure_cache_posix(cache, user, group, untrusted_caches,
+                                          running_as_root)
 
-        if purge:
-            return EXIT_PURGE_CACHE
+	        if purge:
+                    return EXIT_PURGE_CACHE
 
     if 'TASKCLUSTER_VOLUMES' in os.environ:
         volumes = os.environ['TASKCLUSTER_VOLUMES'].split(';')
@@ -840,7 +841,8 @@ def main(args):
                        volume.encode('utf-8'))
             continue
 
-        configure_volume_posix(volume, user, group, running_as_root)
+        if running_as_root:
+            configure_volume_posix(volume, user, group, running_as_root)
 
     all_caches_and_volumes = set(map(os.path.normpath, caches))
     all_caches_and_volumes |= set(map(os.path.normpath, volumes))
