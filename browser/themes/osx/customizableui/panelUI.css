@@ -46,7 +46,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   scrollbar-color: color-mix(in srgb, currentColor 26%, transparent) transparent;
 }
 
-#appMenu-addon-banners > .addon-banner-item,
 #appMenu-mainView > .panel-subview-body > .panel-banner-item {
   padding-inline-start: 18px;
 }
