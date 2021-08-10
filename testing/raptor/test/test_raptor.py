@@ -238,6 +238,8 @@ def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
         "1",
         "--browsertime.url",
         mock_test["test_url"],
+        "--browsertime.secondary_url",
+        mock_test["secondary_url"],
         "--browsertime.page_cycle_delay",
         "1000",
         "--browsertime.post_startup_delay",
