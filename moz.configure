@@ -630,42 +630,38 @@ def check_objdir_backend_reuse(build_env, backends):
                 )
 
 
-option(
-    "--disable-gtest-in-build",
-    help="Force disable building the gtest libxul during the build.",
-    when="--enable-compile-environment",
-)
-
 # Determine whether to build the gtest xul. This happens in automation
 # on Android and Desktop platforms with the exception of:
 #  - Windows PGO, where linking xul-gtest.dll takes too long;
 #  - Android other than x86_64, where gtest is not required.
-
-
 @depends(
     "MOZ_PGO",
     build_project,
     target,
     "MOZ_AUTOMATION",
-    "--disable-gtest-in-build",
     enable_tests,
     when="--enable-compile-environment",
 )
-def build_gtest(pgo, build_project, target, automation, enabled, enable_tests):
-    if not enable_tests or not enabled:
-        return None
-    if (
-        automation
+def build_gtest(pgo, build_project, target, automation, enable_tests):
+    return bool(
+        enable_tests
+        and automation
         and build_project in ("browser", "comm/mail", "mobile/android")
         and not (
             (pgo and target.os == "WINNT")
             or (target.os == "Android" and target.cpu != "x86_64")
         )
-    ):
-        return True
+    )
 
 
-set_config("LINK_GTEST_DURING_COMPILE", build_gtest)
+option(
+    "--enable-gtest-in-build",
+    default=build_gtest,
+    help="{Enable|Force disable} building the gtest libxul during the build.",
+    when="--enable-compile-environment",
+)
+
+set_config("LINK_GTEST_DURING_COMPILE", True, when="--enable-gtest-in-build")
 
 # Localization
 # ==============================================================
