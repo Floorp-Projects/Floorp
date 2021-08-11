@@ -186,6 +186,7 @@ dependencies {
     implementation Dependencies.androidx_compose_ui_tooling
     implementation Dependencies.androidx_compose_foundation
     implementation Dependencies.androidx_compose_material
+    implementation Dependencies.androidx_compose_runtime_livedata
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_lifecycle_extensions
     implementation Dependencies.androidx_palette
@@ -206,9 +207,15 @@ dependencies {
     implementation "org.mozilla.components:browser-menu:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:browser-state:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:browser-toolbar:${AndroidComponents.VERSION}"
+
+    implementation "org.mozilla.components:concept-awesomebar:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:concept-engine:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:concept-fetch:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:concept-menu:${AndroidComponents.VERSION}"
+
+    implementation "org.mozilla.components:compose-awesomebar:${AndroidComponents.VERSION}"
+
+    implementation "org.mozilla.components:feature-awesomebar:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-app-links:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-customtabs:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-contextmenu:${AndroidComponents.VERSION}"
@@ -220,12 +227,16 @@ dependencies {
     implementation "org.mozilla.components:feature-tabs:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-toolbar:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-top-sites:${AndroidComponents.VERSION}"
+
     implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
+
     implementation "org.mozilla.components:service-glean:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:service-location:${AndroidComponents.VERSION}"
+
     implementation "org.mozilla.components:support-ktx:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:support-utils:${AndroidComponents.VERSION}"
+
     implementation "org.mozilla.components:ui-autocomplete:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:ui-colors:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:ui-icons:${AndroidComponents.VERSION}"

@@ -124,20 +124,6 @@ class UrlInputFragment :
 
             return fragment
         }
-
-        /**
-         * Create a new UrlInputFragment with a gradient background (and the Focus logo). This configuration
-         * is usually shown if there's no content to be shown below (e.g. the current website).
-         */
-        @JvmStatic
-        fun createWithBackground(): UrlInputFragment {
-            val arguments = Bundle()
-
-            val fragment = UrlInputFragment()
-            fragment.arguments = arguments
-
-            return fragment
-        }
     }
 
     private var job = Job()
@@ -197,6 +183,13 @@ class UrlInputFragment :
                 }
             }
         )
+
+        searchSuggestionsViewModel.autocompleteSuggestion.observe(viewLifecycleOwner) { text ->
+            if (text != null) {
+                searchSuggestionsViewModel.clearAutocompleteSuggestion()
+                browserToolbar.setSearchTerms(text)
+            }
+        }
     }
 
     override fun onResume() {
