@@ -958,14 +958,25 @@ def sysroot(host_or_target, target_sysroot=None):
             when=bootstrap_sysroot,
         ),
     )
+    @imports("os")
     def sysroot(sysroot_input, host_or_target, macos_sdk, path):
+        version = None
         if sysroot_input:
             path = sysroot_input[0]
         elif host_or_target.kernel == "Darwin" and macos_sdk:
             path = macos_sdk
         if path:
+            # Find the version of libstdc++ headears in the sysroot
+            include = os.path.join(path, "usr/include/c++")
+            if os.path.isdir(include):
+                with os.scandir(include) as d:
+                    version = max(Version(e.name) for e in d if e.is_dir())
             log.info("Using %s sysroot in %s", host_or_target_str, path)
-        return namespace(path=path, bootstrapped=bool(path and not sysroot_input))
+        return namespace(
+            path=path,
+            bootstrapped=bool(path and not sysroot_input),
+            stdcxx_version=version,
+        )
 
     return sysroot
 
@@ -993,12 +1004,25 @@ def system_lib_option(name, *args, **kwargs):
 host_sysroot = sysroot(host, target_sysroot)
 
 
-@depends(target, when=target_sysroot.path)
-def multiarch_dir(target):
-    if target.cpu == "x86":
-        # Turn e.g. i686-linux-gnu into i386-linux-gnu
-        return target.toolchain.replace(target.raw_cpu, "i386")
-    return target.toolchain
+@template
+def multiarch_dir(host_or_target):
+    sysroot = {
+        host: host_sysroot,
+        target: target_sysroot,
+    }[host_or_target]
+
+    @depends(host_or_target, when=sysroot.path)
+    def multiarch_dir(target):
+        if target.cpu == "x86":
+            # Turn e.g. i686-linux-gnu into i386-linux-gnu
+            return target.toolchain.replace(target.raw_cpu, "i386")
+        return target.toolchain
+
+    return multiarch_dir
+
+
+target_multiarch_dir = multiarch_dir(target)
+host_multiarch_dir = multiarch_dir(host)
 
 
 def minimum_gcc_version():
@@ -1041,6 +1065,11 @@ def compiler(
         target: target_sysroot,
     }[host_or_target]
 
+    multiarch_dir = {
+        host: host_multiarch_dir,
+        target: target_multiarch_dir,
+    }[host_or_target]
+
     var = {
         ("C", target): "CC",
         ("C++", target): "CXX",
@@ -1080,23 +1109,26 @@ def compiler(
         provided_compiler,
         compiler_wrapper,
         host_or_target,
-        sysroot.path,
+        sysroot,
         macos_target,
+        multiarch_dir,
     )
     @checking("whether %s can be used" % what, lambda x: bool(x))
     @imports(_from="mozbuild.shellutil", _import="quote")
+    @imports("os")
     def valid_compiler(
         compiler,
         provided_compiler,
         compiler_wrapper,
         host_or_target,
-        sysroot_path,
+        sysroot,
         macos_target,
+        multiarch_dir,
     ):
         wrapper = list(compiler_wrapper or ())
         flags = []
-        if sysroot_path:
-            flags.extend(("--sysroot", sysroot_path))
+        if sysroot.path:
+            flags.extend(("--sysroot", sysroot.path))
         if host_or_target.os == "OSX" and macos_target:
             flags.append("-mmacosx-version-min=%s" % macos_target)
         if provided_compiler:
@@ -1175,6 +1207,19 @@ def compiler(
                     "Only GCC %d.%d or newer is supported (found version %s)."
                     % (gcc_version.major, gcc_version.minor, info.version)
                 )
+
+            # Force GCC to use the C++ headers from the sysroot, and to prefer the
+            # sysroot system headers to /usr/include.
+            # Non-Debian GCC also doesn't look at headers in multiarch directory.
+            if sysroot.bootstrapped and sysroot.stdcxx_version:
+                version = sysroot.stdcxx_version
+                for path in (
+                    "usr/include/c++/{}".format(version),
+                    "usr/include/{}/c++/{}".format(multiarch_dir, version),
+                    "usr/include/{}".format(multiarch_dir),
+                    "usr/include",
+                ):
+                    flags.extend(("-isystem", os.path.join(sysroot.path, path)))
 
         if info.type == "clang-cl":
             if info.version < "8.0.0":
@@ -2242,18 +2287,27 @@ def select_linker(
 set_config("LINKER_KIND", select_linker.KIND)
 
 
-@depends_if(select_linker, target, target_sysroot.path, multiarch_dir)
+@depends_if(select_linker, target, target_sysroot, target_multiarch_dir, c_compiler)
 @imports("os")
-def linker_ldflags(linker, target, sysroot_path, multiarch_dir):
+def linker_ldflags(linker, target, sysroot, multiarch_dir, c_compiler):
     flags = list((linker and linker.LINKER_FLAG) or [])
     # rpath-link is irrelevant to wasm, see for more info https://github.com/emscripten-core/emscripten/issues/11076.
-    if sysroot_path and multiarch_dir and target.os != "WASI":
+    if sysroot.path and multiarch_dir and target.os != "WASI":
         for d in ("lib", "usr/lib"):
-            multiarch_lib_dir = os.path.join(sysroot_path, d, multiarch_dir)
+            multiarch_lib_dir = os.path.join(sysroot.path, d, multiarch_dir)
             if os.path.exists(multiarch_lib_dir):
                 # Non-Debian-patched binutils linkers (both BFD and gold) don't lookup
                 # in multi-arch directories.
                 flags.append("-Wl,-rpath-link,%s" % multiarch_lib_dir)
+                # GCC also needs -L.
+                if c_compiler.type == "gcc":
+                    flags.append("-L%s" % multiarch_lib_dir)
+        if c_compiler.type == "gcc" and sysroot.bootstrapped and sysroot.stdcxx_version:
+            flags.append(
+                "-L{}/usr/lib/gcc/{}/{}".format(
+                    sysroot.path, multiarch_dir, sysroot.stdcxx_version
+                )
+            )
     return flags
 
 
