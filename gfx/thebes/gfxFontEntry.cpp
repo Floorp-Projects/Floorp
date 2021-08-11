@@ -632,19 +632,7 @@ struct gfxFontEntry::GrSandboxData {
 
   GrSandboxData() {
 #ifdef MOZ_WASM_SANDBOXING_GRAPHITE
-#  ifdef LUCETC_WASM_SANDBOXING
-    // Firefox preloads the library externally to ensure we won't be stopped by
-    // the content sandbox
-    const bool external_loads_exist = true;
-    // See Bug 1606981: In some environments allowing stdio in the wasm sandbox
-    // fails as the I/O redirection involves querying meta-data of file
-    // descriptors. This querying fails in some environments.
-    const bool allow_stdio = false;
-    sandbox.create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get(),
-                           external_loads_exist, allow_stdio);
-#  else
     sandbox.create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get());
-#  endif
 #else
     sandbox.create_sandbox();
 #endif

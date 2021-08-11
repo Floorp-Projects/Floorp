@@ -59,9 +59,6 @@ extern crate neqo_glue;
 #[cfg(feature = "webgpu")]
 extern crate wgpu_bindings;
 
-#[cfg(feature = "wasm_library_sandboxing")]
-extern crate rlbox_lucet_sandbox;
-
 extern crate qcms;
 
 extern crate unic_langid;

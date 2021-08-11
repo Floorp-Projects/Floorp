@@ -214,10 +214,8 @@ WASM_LIBRARY :=
 endif
 
 WASM_ARCHIVE = $(addsuffix .$(WASM_OBJ_SUFFIX),$(WASM_LIBRARY))
-ifndef LUCETC
 ifneq (,$(WASM_ARCHIVE))
 CSRCS += $(addsuffix .c,$(WASM_ARCHIVE))
-endif
 endif
 
 ifdef MACH
@@ -503,23 +501,8 @@ $(LIBRARY): $(OBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 $(WASM_ARCHIVE): $(CWASMOBJS) $(CPPWASMOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD_VERBOSE)
 	$(RM) $(WASM_ARCHIVE)
-	$(WASM_CXX) $(OUTOPTION)$@ -Wl,--export-all -Wl,--stack-first -Wl,-z,stack-size=$(if $(MOZ_OPTIMIZE),262144,1048576) $(if $(LUCETC),,-Wl,--no-entry -Wl,--growable-table) $(CWASMOBJS) $(CPPWASMOBJS)
+	$(WASM_CXX) $(OUTOPTION)$@ -Wl,--export-all -Wl,--stack-first -Wl,-z,stack-size=$(if $(MOZ_OPTIMIZE),262144,1048576) -Wl,--no-entry -Wl,--growable-table $(CWASMOBJS) $(CPPWASMOBJS)
 
-ifdef LUCETC
-lucet_options := \
-    --target $(LUCETC_TARGET) \
-    --target-cpu baseline \
-    --bindings $(topsrcdir)/third_party/rust/lucet-wasi-wasmsbx/bindings.json \
-    --guard-size 4GiB \
-    --min-reserved-size 4GiB \
-    --max-reserved-size 4GiB \
-    --opt-level 2
-
-$(WASM_LIBRARY): $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX)
-	$(REPORT_BUILD)
-	$(RM) $(WASM_LIBRARY)
-	env LD="$(CC)" LDFLAGS="$(LUCETC_LDFLAGS)" $(LUCETC) $(lucet_options) $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX) -o $(WASM_LIBRARY)
-else
 $(addsuffix .c,$(WASM_ARCHIVE)): $(WASM_ARCHIVE)
 	$(DIST)/host/bin/wasm2c -o $@ $<
 
@@ -529,7 +512,6 @@ $(WASM_LIBRARY): $(filter %.$(OBJ_SUFFIX),$(OBJS))
 	$(RM) $(WASM_LIBRARY)
 	$(MKCSHLIB) $(filter %.$(OBJ_SUFFIX),$(OBJS)) $(LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(OS_LIBS)
 	$(call py_action,check_binary,--target $@)
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 # Import libraries are created by the rules creating shared libraries.

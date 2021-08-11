@@ -259,26 +259,6 @@ wgpu-deps:
         toolchain:
             - linux64-rust-1.47  # whatever m-c is built with
 
-linux64-lucetc:
-    description: "lucetc build process"
-    attributes:
-        local-toolchain: true
-    treeherder:
-        symbol: TL(lucetc)
-    run-on-projects: [trunk]
-    run:
-        script: build-lucetc.sh
-        toolchain-artifact: public/build/lucetc.tar.xz
-    fetches:
-        fetch:
-            - cmake
-            - lucetc-source
-        toolchain:
-            - linux64-binutils
-            - linux64-clang
-            - linux64-rust
-            - sysroot-x86_64-linux-gnu
-
 linux64-liblowercase:
     description: "liblowercase"
     treeherder:

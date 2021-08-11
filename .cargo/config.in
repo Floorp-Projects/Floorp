@@ -102,16 +102,6 @@ git = "https://github.com/bytecodealliance/wasmtime"
 replace-with = "vendored-sources"
 rev = "824fa69756523f2b6d49029fe25de94130b1f144"
 
-[source."https://github.com/PLSysSec/rlbox_lucet_sandbox/"]
-git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/"
-replace-with = "vendored-sources"
-rev = "5c8e79048d3ff6f434109e19d4aee4ff8624d3d7"
-
-[source."https://github.com/PLSysSec/lucet_sandbox_compiler"]
-git = "https://github.com/PLSysSec/lucet_sandbox_compiler"
-replace-with = "vendored-sources"
-rev = "d582d76bf0d17984501f3933688bf7a1eb5cf208"
-
 [source.crates-io]
 replace-with = "vendored-sources"
 
