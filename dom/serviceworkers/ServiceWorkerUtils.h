@@ -25,30 +25,28 @@ class ServiceWorkerRegistrationData;
 class ServiceWorkerRegistrationDescriptor;
 struct NavigationPreloadState;
 
-typedef MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult,
-                   false>
-    ServiceWorkerRegistrationPromise;
+using ServiceWorkerRegistrationPromise =
+    MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult, false>;
 
-typedef MozPromise<CopyableTArray<ServiceWorkerRegistrationDescriptor>,
-                   CopyableErrorResult, false>
-    ServiceWorkerRegistrationListPromise;
+using ServiceWorkerRegistrationListPromise =
+    MozPromise<CopyableTArray<ServiceWorkerRegistrationDescriptor>,
+               CopyableErrorResult, false>;
 
-typedef MozPromise<IPCNavigationPreloadState, CopyableErrorResult, false>
-    NavigationPreloadStatePromise;
+using NavigationPreloadStatePromise =
+    MozPromise<IPCNavigationPreloadState, CopyableErrorResult, false>;
 
-typedef std::function<void(const ServiceWorkerRegistrationDescriptor&)>
-    ServiceWorkerRegistrationCallback;
+using ServiceWorkerRegistrationCallback =
+    std::function<void(const ServiceWorkerRegistrationDescriptor&)>;
 
-typedef std::function<void(
-    const nsTArray<ServiceWorkerRegistrationDescriptor>&)>
-    ServiceWorkerRegistrationListCallback;
+using ServiceWorkerRegistrationListCallback =
+    std::function<void(const nsTArray<ServiceWorkerRegistrationDescriptor>&)>;
 
-typedef std::function<void(bool)> ServiceWorkerBoolCallback;
+using ServiceWorkerBoolCallback = std::function<void(bool)>;
 
-typedef std::function<void(ErrorResult&&)> ServiceWorkerFailureCallback;
+using ServiceWorkerFailureCallback = std::function<void(ErrorResult&&)>;
 
-typedef std::function<void(NavigationPreloadState&&)>
-    NavigationPreloadGetStateCallback;
+using NavigationPreloadGetStateCallback =
+    std::function<void(NavigationPreloadState&&)>;
 
 bool ServiceWorkerRegistrationDataIsValid(
     const ServiceWorkerRegistrationData& aData);
