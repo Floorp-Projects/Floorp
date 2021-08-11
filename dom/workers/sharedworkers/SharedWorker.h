@@ -32,8 +32,8 @@ class SharedWorkerChild;
  * we only allow top-level windows to create SharedWorkers.
  */
 class SharedWorker final : public DOMEventTargetHelper {
-  using ErrorResult = mozilla::ErrorResult;
-  using GlobalObject = mozilla::dom::GlobalObject;
+  typedef mozilla::ErrorResult ErrorResult;
+  typedef mozilla::dom::GlobalObject GlobalObject;
 
   RefPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<SharedWorkerChild> mActor;

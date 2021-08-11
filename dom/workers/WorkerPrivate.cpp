@@ -144,8 +144,8 @@ const uint32_t kClampTimeoutNestingLevel = 5u;
 
 template <class T>
 class UniquePtrComparator {
-  using A = UniquePtr<T>;
-  using B = T*;
+  typedef UniquePtr<T> A;
+  typedef T* B;
 
  public:
   bool Equals(const A& a, const A& b) const {

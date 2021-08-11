@@ -167,7 +167,7 @@ struct PrefTraits;
 
 template <>
 struct PrefTraits<bool> {
-  using PrefValueType = bool;
+  typedef bool PrefValueType;
 
   static const PrefValueType kDefaultValue = false;
 
@@ -184,7 +184,7 @@ struct PrefTraits<bool> {
 
 template <>
 struct PrefTraits<int32_t> {
-  using PrefValueType = int32_t;
+  typedef int32_t PrefValueType;
 
   static inline PrefValueType Get(const char* aPref) {
     AssertIsOnMainThread();
@@ -203,7 +203,7 @@ T GetWorkerPref(const nsACString& aPref,
                 bool* aPresent = nullptr) {
   AssertIsOnMainThread();
 
-  using PrefHelper = PrefTraits<T>;
+  typedef PrefTraits<T> PrefHelper;
 
   T result;
   bool present = true;
