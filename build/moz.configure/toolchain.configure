@@ -1000,7 +1000,7 @@ def sysroot_flags(host_or_target):
     @depends(host_or_target, macos_sdk, sysroot_path)
     def sysroot_flags(host_or_target, macos_sdk, sysroot_path):
         if macos_sdk and host_or_target.os == "OSX":
-            return ["-isysroot", macos_sdk]
+            return ["--sysroot", macos_sdk]
         if sysroot_path:
             return ["--sysroot", sysroot_path]
         return []
@@ -2259,16 +2259,10 @@ def select_linker(
 set_config("LINKER_KIND", select_linker.KIND)
 
 
-@depends_if(select_linker, target, macos_sdk, target_sysroot_path, multiarch_dir)
+@depends_if(select_linker, target, target_sysroot_path, multiarch_dir)
 @imports("os")
-def linker_ldflags(linker, target, macos_sdk, sysroot_path, multiarch_dir):
+def linker_ldflags(linker, target, sysroot_path, multiarch_dir):
     flags = list((linker and linker.LINKER_FLAG) or [])
-    if target.kernel == "Darwin":
-        if linker and linker.KIND == "ld64":
-            flags.append("-Wl,-syslibroot,%s" % macos_sdk)
-        else:
-            flags.append("-Wl,--sysroot=%s" % macos_sdk)
-
     # rpath-link is irrelevant to wasm, see for more info https://github.com/emscripten-core/emscripten/issues/11076.
     if sysroot_path and multiarch_dir and target.os != "WASI":
         for d in ("lib", "usr/lib"):
