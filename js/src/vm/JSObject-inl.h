@@ -337,16 +337,16 @@ inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
  * Make an object with the specified prototype. If parent is null, it will
  * default to the prototype's global if the prototype is non-null.
  */
-JSObject* NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
-                                        Handle<TaggedProto> proto,
-                                        gc::AllocKind allocKind,
-                                        NewObjectKind newKind,
-                                        ObjectFlags objectFlags = {});
+NativeObject* NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
+                                            Handle<TaggedProto> proto,
+                                            gc::AllocKind allocKind,
+                                            NewObjectKind newKind,
+                                            ObjectFlags objectFlags = {});
 
 template <NewObjectKind NewKind>
-inline JSObject* NewObjectWithGivenTaggedProto(JSContext* cx,
-                                               const JSClass* clasp,
-                                               Handle<TaggedProto> proto) {
+inline NativeObject* NewObjectWithGivenTaggedProto(JSContext* cx,
+                                                   const JSClass* clasp,
+                                                   Handle<TaggedProto> proto) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
   return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, NewKind);
 }
@@ -369,22 +369,23 @@ inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
                                                                         proto);
 }
 
-inline JSObject* NewObjectWithGivenProto(
+inline NativeObject* NewObjectWithGivenProto(
     JSContext* cx, const JSClass* clasp, HandleObject proto,
     gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
   return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
                                        allocKind, newKind);
 }
 
-inline JSObject* NewObjectWithGivenProto(JSContext* cx, const JSClass* clasp,
-                                         HandleObject proto) {
+inline NativeObject* NewObjectWithGivenProto(JSContext* cx,
+                                             const JSClass* clasp,
+                                             HandleObject proto) {
   return NewObjectWithGivenTaggedProto<GenericObject>(cx, clasp,
                                                       AsTaggedProto(proto));
 }
 
-inline JSObject* NewTenuredObjectWithGivenProto(JSContext* cx,
-                                                const JSClass* clasp,
-                                                HandleObject proto) {
+inline NativeObject* NewTenuredObjectWithGivenProto(JSContext* cx,
+                                                    const JSClass* clasp,
+                                                    HandleObject proto) {
   return NewObjectWithGivenTaggedProto<TenuredObject>(cx, clasp,
                                                       AsTaggedProto(proto));
 }
@@ -412,11 +413,12 @@ inline T* NewObjectWithGivenProtoAndKinds(JSContext* cx, HandleObject proto,
 
 // Make an object with the prototype set according to the cached prototype or
 // Object.prototype.
-JSObject* NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
-                                  HandleObject proto, gc::AllocKind allocKind,
-                                  NewObjectKind newKind = GenericObject);
+NativeObject* NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
+                                      HandleObject proto,
+                                      gc::AllocKind allocKind,
+                                      NewObjectKind newKind = GenericObject);
 
-inline JSObject* NewObjectWithClassProto(
+inline NativeObject* NewObjectWithClassProto(
     JSContext* cx, const JSClass* clasp, HandleObject proto,
     NewObjectKind newKind = GenericObject) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
@@ -440,7 +442,7 @@ template <class T>
 inline T* NewObjectWithClassProto(JSContext* cx, HandleObject proto,
                                   gc::AllocKind allocKind,
                                   NewObjectKind newKind = GenericObject) {
-  JSObject* obj =
+  NativeObject* obj =
       NewObjectWithClassProto(cx, &T::class_, proto, allocKind, newKind);
   return obj ? &obj->as<T>() : nullptr;
 }
@@ -449,13 +451,13 @@ inline T* NewObjectWithClassProto(JSContext* cx, HandleObject proto,
  * Create a native instance of the given class with parent and proto set
  * according to the context's active global.
  */
-inline JSObject* NewBuiltinClassInstance(
+inline NativeObject* NewBuiltinClassInstance(
     JSContext* cx, const JSClass* clasp, gc::AllocKind allocKind,
     NewObjectKind newKind = GenericObject) {
   return NewObjectWithClassProto(cx, clasp, nullptr, allocKind, newKind);
 }
 
-inline JSObject* NewBuiltinClassInstance(
+inline NativeObject* NewBuiltinClassInstance(
     JSContext* cx, const JSClass* clasp,
     NewObjectKind newKind = GenericObject) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
