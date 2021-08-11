@@ -292,6 +292,7 @@ void WindowSurfaceWaylandMB::Commit(
     wl_surface_damage_buffer(waylandSurface, r.x, r.y, r.width, r.height);
   }
 
+  moz_container_wayland_set_scale_factor_locked(container);
   mInProgressBuffer->AttachAndCommit(waylandSurface);
   moz_container_wayland_surface_unlock(container, &waylandSurface);
 

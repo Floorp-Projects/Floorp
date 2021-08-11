@@ -245,7 +245,7 @@ class nsWindow final : public nsBaseWidget {
   void OnDPIChanged(void);
   void OnCheckResize(void);
   void OnCompositedChanged(void);
-  void OnScaleChanged(GtkAllocation* aAllocation);
+  void OnScaleChanged();
   void DispatchResized();
 
   static guint32 sLastButtonPressTime;
