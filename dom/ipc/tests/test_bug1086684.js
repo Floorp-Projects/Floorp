@@ -1,6 +1,7 @@
 "use strict";
 /* eslint-env mozilla/frame-script */
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCShellContentUtils } = ChromeUtils.import(
   "resource://testing-common/XPCShellContentUtils.jsm"
 );
@@ -58,6 +59,7 @@ function childFrameScript() {
 }
 
 add_task(async function() {
+  Services.prefs.setBoolPref("dom.security.https_first", false);
   let page = await XPCShellContentUtils.loadContentPage(childFrameURL, {
     remote: true,
   });
@@ -94,4 +96,5 @@ add_task(async function() {
   });
 
   await page.close();
+  Services.prefs.clearUserPref("dom.security.https_first");
 });
