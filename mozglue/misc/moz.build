@@ -50,6 +50,12 @@ SOURCES += [
 OS_LIBS += CONFIG["REALTIME_LIBS"]
 
 if CONFIG["OS_ARCH"] == "WINNT":
+    DIRS += [
+        "interceptor",
+    ]
+    EXPORTS += [
+        "nsWindowsDllInterceptor.h",
+    ]
     EXPORTS.mozilla += [
         "DynamicallyLinkedFunctionPtr.h",
         "ImportDir.h",
