@@ -9,6 +9,7 @@
 # So, we just need to first check if e.g. av1.webm decodes to what we expect,
 # and then we have generally trivially compare other codecs/containers to that.
 
+defaults pref(media.av1.enabled,true)
 
 # -
 # yuv420p
