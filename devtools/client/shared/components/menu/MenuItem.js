@@ -66,7 +66,9 @@ class MenuItem extends PureComponent {
    * with or without icon in order to keep all MenuItems aligned.
    */
   static get DUMMY_ICON() {
-    return "dummy-icon.svg";
+    return `data:image/svg+xml,${encodeURIComponent(
+      '<svg height="16" width="16"></svg>'
+    )}`;
   }
 
   constructor(props) {
