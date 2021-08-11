@@ -6,11 +6,11 @@
 
 const EXPORTED_SYMBOLS = ["commandwindowglobalonly"];
 
-class CommandWindowGlobalOnly {
-  constructor(messageHandler) {
-    this.messageHandler = messageHandler;
-  }
+const { Module } = ChromeUtils.import(
+  "chrome://remote/content/shared/messagehandler/Module.jsm"
+);
 
+class CommandWindowGlobalOnly extends Module {
   destroy() {}
 
   /**

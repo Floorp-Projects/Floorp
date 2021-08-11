@@ -224,6 +224,8 @@ class WebDriverSession {
     return this.messageHandler.handleCommand({
       moduleName: module,
       commandName: command,
+      params,
+
       // XXX: At the moment, commands do not describe consistently their destination,
       // so we will need a translation step based on a specific command and its params
       // in order to extract a destination that can be understood by the MessageHandler.
@@ -234,7 +236,6 @@ class WebDriverSession {
       destination: {
         type: RootMessageHandler.type,
       },
-      params,
     });
   }
 
