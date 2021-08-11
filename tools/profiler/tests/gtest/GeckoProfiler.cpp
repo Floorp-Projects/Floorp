@@ -274,8 +274,8 @@ static void JSONRootCheck(const Json::Value& aRoot,
     EXPECT_HAS_JSON(thread["registerTime"], Double);
     EXPECT_HAS_JSON(thread["samples"], Object);
     EXPECT_HAS_JSON(thread["markers"], Object);
-    EXPECT_HAS_JSON(thread["pid"], UInt);
-    EXPECT_HAS_JSON(thread["tid"], UInt);
+    EXPECT_HAS_JSON(thread["pid"], Int64);
+    EXPECT_HAS_JSON(thread["tid"], Int64);
     EXPECT_HAS_JSON(thread["stackTable"], Object);
     EXPECT_HAS_JSON(thread["frameTable"], Object);
     EXPECT_HAS_JSON(thread["stringTable"], Array);

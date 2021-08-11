@@ -175,6 +175,10 @@ BaseProfilerThreadId StreamSamplesAndMarkers(
   }
   aWriter.EndObject();
 
+  // Tech note: If `ToNumber()` returns a uint64_t, the conversion to int64_t is
+  // "implementation-defined" before C++20. This is acceptable here, because
+  // this is a one-way conversion to a unique identifier that's used to visually
+  // separate data by thread on the front-end.
   aWriter.IntProperty(
       "pid", static_cast<int64_t>(profiler_current_process_id().ToNumber()));
   aWriter.IntProperty("tid",

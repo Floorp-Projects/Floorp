@@ -49,7 +49,7 @@ ProfileBufferBlockIndex ProfileBuffer::AddThreadIdEntry(
     ProfileChunkedBuffer& aProfileChunkedBuffer,
     BaseProfilerThreadId aThreadId) {
   return AddEntry(aProfileChunkedBuffer,
-                  ProfileBufferEntry::ThreadId(aThreadId.ToNumber()));
+                  ProfileBufferEntry::ThreadId(aThreadId));
 }
 
 uint64_t ProfileBuffer::AddThreadIdEntry(BaseProfilerThreadId aThreadId) {
