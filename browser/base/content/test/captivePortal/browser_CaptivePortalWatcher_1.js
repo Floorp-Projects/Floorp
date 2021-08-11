@@ -51,10 +51,18 @@ let testcases = [
     let button = notification.buttonContainer.querySelector(
       "button.notification-button"
     );
-    async function clickButtonAndExpectNewPortalTab() {
-      let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
+    async function clickButtonAndExpectNewPortalTabAndNotification() {
+      let newTabCreation = BrowserTestUtils.waitForNewTab(
+        win.gBrowser,
+        CANONICAL_URL
+      );
+      let buttonPressedEvent = TestUtils.topicObserved(
+        "captive-portal-login-button-pressed"
+      );
+
       button.click();
-      let tab = await p;
+
+      const [tab] = await Promise.all([newTabCreation, buttonPressedEvent]);
       is(
         win.gBrowser.selectedTab,
         tab,
@@ -65,7 +73,7 @@ let testcases = [
 
     // Simulate clicking the button. The portal tab should be opened and
     // selected and the button should hide.
-    let tab = await clickButtonAndExpectNewPortalTab();
+    let tab = await clickButtonAndExpectNewPortalTabAndNotification();
     testPortalTabSelectedAndButtonNotVisible();
 
     // Close the tab. The button should become visible.
@@ -75,7 +83,7 @@ let testcases = [
 
     // When the button is clicked, a new portal tab should be opened and
     // selected.
-    tab = await clickButtonAndExpectNewPortalTab();
+    tab = await clickButtonAndExpectNewPortalTabAndNotification();
 
     // Open another arbitrary tab. The button should become visible. When it's clicked,
     // the portal tab should be selected.
@@ -93,7 +101,7 @@ let testcases = [
     BrowserTestUtils.removeTab(tab);
     win.gBrowser.selectedTab = anotherTab;
     testShowLoginPageButtonVisibility(notification, "visible");
-    tab = await clickButtonAndExpectNewPortalTab();
+    tab = await clickButtonAndExpectNewPortalTabAndNotification();
 
     BrowserTestUtils.removeTab(anotherTab);
     await freePortal(true);
