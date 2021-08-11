@@ -1761,11 +1761,10 @@ class RustTest(BaseConfigureTest):
         )
         # Same for the arm_target checks.
         dep = sandbox._depends[sandbox["arm_target"]]
-        getattr(sandbox, "__value_for_depends")[(dep,)] = (
-            arm_target
-            or ReadOnlyNamespace(
-                arm_arch=7, thumb2=False, fpu="vfpv2", float_abi="softfp"
-            )
+        getattr(sandbox, "__value_for_depends")[
+            (dep,)
+        ] = arm_target or ReadOnlyNamespace(
+            arm_arch=7, thumb2=False, fpu="vfpv2", float_abi="softfp"
         )
         return sandbox._value_for(sandbox["rust_target_triple"])
 
