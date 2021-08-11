@@ -145,7 +145,7 @@
 .search-setting-button {
   max-height: 32px;
   align-self: end;
-  margin-inline: var(--arrowpanel-menuitem-margin);
+  margin-inline: 0;
 }
 
 .search-setting-button > .button-box > .button-icon {
