@@ -2082,7 +2082,6 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
   }
 }
 
-#ifdef MOZ_WAYLAND
 static GdkGravity PopupAlignmentToGdkGravity(int8_t aAlignment) {
   switch (aAlignment) {
     case POPUPALIGNMENT_NONE:
@@ -2115,7 +2114,6 @@ static GdkGravity PopupAlignmentToGdkGravity(int8_t aAlignment) {
   }
   return GDK_GRAVITY_STATIC;
 }
-#endif
 
 void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
                                             GdkRectangle* aSize) {
