@@ -306,6 +306,11 @@ var CaptivePortalWatcher = {
         callback: () => {
           this.ensureCaptivePortalTab();
 
+          Services.obs.notifyObservers(
+            null,
+            "captive-portal-login-button-pressed"
+          );
+
           Services.telemetry.recordEvent(
             "networking.captive_portal",
             "login_button_pressed",
