@@ -19,7 +19,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -77,7 +77,7 @@ class ProfilerMarkerFactProcessorTest {
         processor.process(fact)
 
         // THEN no profiler marker is added
-        verifyZeroInteractions(profiler)
+        verifyNoInteractions(profiler)
     }
 
     private fun verifyProfilerAddMarkerWasNotCalled() {
