@@ -76,7 +76,7 @@ class ServiceWorkerRegistrationInfo final
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
 
-  typedef std::function<void()> TryToActivateCallback;
+  using TryToActivateCallback = std::function<void()>;
 
   ServiceWorkerRegistrationInfo(
       const nsACString& aScope, nsIPrincipal* aPrincipal,
