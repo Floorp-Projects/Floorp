@@ -49,16 +49,16 @@ TEST(GeckoProfiler, ProfilerUtils)
   static_assert(std::is_same_v<decltype(profiler_current_process_id()),
                                ProfilerProcessId>);
 #ifdef MOZ_GECKO_PROFILER
-  MOZ_RELEASE_ASSERT(profiler_current_process_id().IsSpecified());
+  EXPECT_TRUE(profiler_current_process_id().IsSpecified());
 #else
-  MOZ_RELEASE_ASSERT(!profiler_current_process_id().IsSpecified());
+  EXPECT_FALSE(profiler_current_process_id().IsSpecified());
 #endif
 
   static_assert(
       std::is_same_v<decltype(profiler_current_thread_id()), ProfilerThreadId>);
 #ifdef MOZ_GECKO_PROFILER
   ProfilerThreadId mainTestThreadId = profiler_current_thread_id();
-  MOZ_RELEASE_ASSERT(mainTestThreadId.IsSpecified());
+  EXPECT_TRUE(mainTestThreadId.IsSpecified());
 
   ProfilerThreadId mainThreadId = profiler_main_thread_id();
   if (!mainThreadId.IsSpecified()) {
@@ -68,23 +68,23 @@ TEST(GeckoProfiler, ProfilerUtils)
     // After which `profiler_main_thread_id` should work.
     mainThreadId = profiler_main_thread_id();
   }
-  MOZ_RELEASE_ASSERT(mainThreadId.IsSpecified());
+  EXPECT_TRUE(mainThreadId.IsSpecified());
 
-  MOZ_RELEASE_ASSERT(mainThreadId == mainTestThreadId,
-                     "Test should run on the main thread");
-  MOZ_RELEASE_ASSERT(profiler_is_main_thread());
+  EXPECT_EQ(mainThreadId, mainTestThreadId)
+      << "Test should run on the main thread";
+  EXPECT_TRUE(profiler_is_main_thread());
 
   std::thread testThread([&]() {
     const ProfilerThreadId testThreadId = profiler_current_thread_id();
-    MOZ_RELEASE_ASSERT(testThreadId.IsSpecified());
-    MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
-    MOZ_RELEASE_ASSERT(!profiler_is_main_thread());
+    EXPECT_TRUE(testThreadId.IsSpecified());
+    EXPECT_NE(testThreadId, mainThreadId);
+    EXPECT_FALSE(profiler_is_main_thread());
   });
   testThread.join();
 #else
-  MOZ_RELEASE_ASSERT(!profiler_current_thread_id().IsSpecified());
-  MOZ_RELEASE_ASSERT(!profiler_main_thread_id().IsSpecified());
-  MOZ_RELEASE_ASSERT(!profiler_is_main_thread());
+  EXPECT_FALSE(profiler_current_thread_id().IsSpecified());
+  EXPECT_FALSE(profiler_main_thread_id().IsSpecified());
+  EXPECT_FALSE(profiler_is_main_thread());
 #endif
 }
 
@@ -327,25 +327,6 @@ static void ActiveParamsCheck(int aEntries, double aInterval,
   for (size_t i = 0; i < aFiltersLen; i++) {
     ASSERT_TRUE(strcmp(filters[i], aFilters[i]) == 0);
   }
-}
-
-TEST(GeckoProfiler, Utilities)
-{
-  // We'll assume that this test runs in the main thread (which should be true
-  // when called from the `main` function).
-  const ProfilerThreadId mainThreadId = profiler_current_thread_id();
-
-  MOZ_RELEASE_ASSERT(profiler_main_thread_id() == mainThreadId);
-  MOZ_RELEASE_ASSERT(profiler_is_main_thread());
-
-  std::thread testThread([&]() {
-    const ProfilerThreadId testThreadId = profiler_current_thread_id();
-    MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
-
-    MOZ_RELEASE_ASSERT(profiler_main_thread_id() != testThreadId);
-    MOZ_RELEASE_ASSERT(!profiler_is_main_thread());
-  });
-  testThread.join();
 }
 
 TEST(GeckoProfiler, FeaturesAndParams)
@@ -830,7 +811,7 @@ TEST(GeckoProfiler, Markers)
   longstrCut[kMax - 1] = '\0';
 
   // Test basic markers 2.0.
-  MOZ_RELEASE_ASSERT(
+  EXPECT_TRUE(
       profiler_add_marker("default-templated markers 2.0 with empty options",
                           geckoprofiler::category::OTHER, {}));
 
@@ -841,7 +822,7 @@ TEST(GeckoProfiler, Markers)
   PROFILER_MARKER("explicitly-default-templated markers 2.0 with empty options",
                   OTHER, {}, NoPayload);
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker(
       "explicitly-default-templated markers 2.0 with option",
       geckoprofiler::category::OTHER, {},
       ::geckoprofiler::markers::NoPayload{}));
@@ -862,10 +843,10 @@ TEST(GeckoProfiler, Markers)
 
   // Keep this one first! (It's used to record `ts1` and `ts2`, to compare
   // to serialized numbers in other markers.)
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
-      "FirstMarker", geckoprofiler::category::OTHER,
-      MarkerTiming::Interval(ts1, ts2), geckoprofiler::markers::TextMarker{},
-      "First Marker"));
+  EXPECT_TRUE(profiler_add_marker("FirstMarker", geckoprofiler::category::OTHER,
+                                  MarkerTiming::Interval(ts1, ts2),
+                                  geckoprofiler::markers::TextMarker{},
+                                  "First Marker"));
 
   // User-defined marker type with different properties, and fake schema.
   struct GtestMarker {
@@ -923,7 +904,7 @@ TEST(GeckoProfiler, Markers)
       return schema;
     }
   };
-  MOZ_RELEASE_ASSERT(
+  EXPECT_TRUE(
       profiler_add_marker("Gtest custom marker", geckoprofiler::category::OTHER,
                           MarkerTiming::Interval(ts1, ts2), GtestMarker{}, 42,
                           43.0, "gtest text", "gtest unique text", ts1));
@@ -939,9 +920,9 @@ TEST(GeckoProfiler, Markers)
       return mozilla::MarkerSchema::SpecialFrontendLocation{};
     }
   };
-  MOZ_RELEASE_ASSERT(profiler_add_marker("Gtest special marker",
-                                         geckoprofiler::category::OTHER, {},
-                                         GtestSpecialMarker{}));
+  EXPECT_TRUE(profiler_add_marker("Gtest special marker",
+                                  geckoprofiler::category::OTHER, {},
+                                  GtestSpecialMarker{}));
 
   // User-defined marker type that is never used, so it shouldn't appear in the
   // output.
@@ -1106,11 +1087,11 @@ TEST(GeckoProfiler, Markers)
           nsIChannelEventSink::REDIRECT_STS_UPGRADE,
       /* uint64_t aRedirectChannelId = 0 */ 106);
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
       {MarkerStack::Capture(), MarkerTiming::Interval(ts1, ts2)},
       geckoprofiler::markers::TextMarker{}, ""));
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker(
       "Text from main thread with stack", geckoprofiler::category::OTHER,
       MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
       geckoprofiler::markers::TextMarker{}, ""));
@@ -1118,11 +1099,11 @@ TEST(GeckoProfiler, Markers)
   std::thread registeredThread([]() {
     AUTO_PROFILER_REGISTER_THREAD("Marker test sub-thread");
     // Marker in non-profiled thread won't be stored.
-    MOZ_RELEASE_ASSERT(profiler_add_marker(
+    EXPECT_TRUE(profiler_add_marker(
         "Text in registered thread with stack", geckoprofiler::category::OTHER,
         MarkerStack::Capture(), geckoprofiler::markers::TextMarker{}, ""));
     // Marker will be stored in main thread, with stack from registered thread.
-    MOZ_RELEASE_ASSERT(profiler_add_marker(
+    EXPECT_TRUE(profiler_add_marker(
         "Text from registered thread with stack",
         geckoprofiler::category::OTHER,
         MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
@@ -1132,13 +1113,13 @@ TEST(GeckoProfiler, Markers)
 
   std::thread unregisteredThread([]() {
     // Marker in unregistered thread won't be stored.
-    MOZ_RELEASE_ASSERT(profiler_add_marker(
-        "Text in unregistered thread with stack",
-        geckoprofiler::category::OTHER, MarkerStack::Capture(),
-        geckoprofiler::markers::TextMarker{}, ""));
+    EXPECT_TRUE(profiler_add_marker("Text in unregistered thread with stack",
+                                    geckoprofiler::category::OTHER,
+                                    MarkerStack::Capture(),
+                                    geckoprofiler::markers::TextMarker{}, ""));
     // Marker will be stored in main thread, but stack cannot be captured in an
     // unregistered thread.
-    MOZ_RELEASE_ASSERT(profiler_add_marker(
+    EXPECT_TRUE(profiler_add_marker(
         "Text from unregistered thread with stack",
         geckoprofiler::category::OTHER,
         MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
@@ -1146,15 +1127,15 @@ TEST(GeckoProfiler, Markers)
   });
   unregisteredThread.join();
 
-  MOZ_RELEASE_ASSERT(
-      profiler_add_marker("Tracing", geckoprofiler::category::OTHER, {},
-                          geckoprofiler::markers::Tracing{}, "category"));
+  EXPECT_TRUE(profiler_add_marker("Tracing", geckoprofiler::category::OTHER, {},
+                                  geckoprofiler::markers::Tracing{},
+                                  "category"));
 
-  MOZ_RELEASE_ASSERT(
-      profiler_add_marker("Text", geckoprofiler::category::OTHER, {},
-                          geckoprofiler::markers::TextMarker{}, "Text text"));
+  EXPECT_TRUE(profiler_add_marker("Text", geckoprofiler::category::OTHER, {},
+                                  geckoprofiler::markers::TextMarker{},
+                                  "Text text"));
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker(
       "MediaSample", geckoprofiler::category::OTHER, {},
       geckoprofiler::markers::MediaSampleMarker{}, 123, 456));
 
@@ -1870,7 +1851,7 @@ TEST(GeckoProfiler, Markers)
   });
 
   Maybe<ProfilerBufferInfo> info = profiler_get_buffer_info();
-  MOZ_RELEASE_ASSERT(info.isSome());
+  EXPECT_TRUE(info.isSome());
   printf("Profiler buffer range: %llu .. %llu (%llu bytes)\n",
          static_cast<unsigned long long>(info->mRangeStart),
          static_cast<unsigned long long>(info->mRangeEnd),
