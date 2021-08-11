@@ -53,7 +53,6 @@ using namespace mozilla;
 
 TEST(GeckoProfiler, ProfilerUtils)
 {
-#ifdef MOZ_GECKO_PROFILER
   // Special case: This may happen if the profiler has not yet been
   // initialized. We only need to set scProfilerMainThreadId.
   if (!baseprofiler::detail::scProfilerMainThreadId.IsSpecified()) {
@@ -63,7 +62,6 @@ TEST(GeckoProfiler, ProfilerUtils)
   if (!profiler::detail::scProfilerMainThreadId.IsSpecified()) {
     profiler::detail::scProfilerMainThreadId = profiler_current_thread_id();
   }
-#endif  // MOZ_GECKO_PROFILER
 
   static_assert(std::is_same_v<decltype(profiler_current_process_id()),
                                ProfilerProcessId>);
@@ -71,11 +69,7 @@ TEST(GeckoProfiler, ProfilerUtils)
       std::is_same_v<decltype(profiler_current_process_id()),
                      decltype(baseprofiler::profiler_current_process_id())>);
   ProfilerProcessId processId = profiler_current_process_id();
-#ifdef MOZ_GECKO_PROFILER
   EXPECT_TRUE(processId.IsSpecified());
-#else
-  EXPECT_TRUE(!processId.IsSpecified());
-#endif
   EXPECT_EQ(processId, baseprofiler::profiler_current_process_id());
 
   static_assert(
@@ -86,7 +80,8 @@ TEST(GeckoProfiler, ProfilerUtils)
   EXPECT_EQ(profiler_current_thread_id(),
             baseprofiler::profiler_current_thread_id());
 
-#ifdef MOZ_GECKO_PROFILER
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(__ANDROID__) || \
+    defined(ANDROID) || defined(XP_LINUX) || defined(XP_FREEBSD)
   ProfilerThreadId mainTestThreadId = profiler_current_thread_id();
   EXPECT_TRUE(mainTestThreadId.IsSpecified());
 
@@ -112,6 +107,7 @@ TEST(GeckoProfiler, ProfilerUtils)
   });
   testThread.join();
 #else
+  // Yet-unsupported platforms.
   EXPECT_FALSE(profiler_current_thread_id().IsSpecified());
   EXPECT_FALSE(profiler_main_thread_id().IsSpecified());
   EXPECT_FALSE(profiler_is_main_thread());
