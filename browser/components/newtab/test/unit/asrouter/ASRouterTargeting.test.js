@@ -346,19 +346,17 @@ describe("#mainPingSubmissions", () => {
     );
   });
   it("should allow for pings < 24hrs apart but on different days", async () => {
-    let startTime = new Date("2020-02-20").getTime();
-    let oneDay = 86400000;
+    let startTime = new Date().setHours(0);
+    let previousDay = new Date(startTime - 60 * 60 * 1000).getTime();
     promiseArchivedPingList = sandbox.stub().resolves([
       {
         id: "5c8c786b-eca5-734b-a755-7ec0f022aaaa",
-        // Using oneDay / 2 because timezone of browser running the test
-        // affects the calculation
-        timestampCreated: startTime - oneDay / 2,
+        timestampCreated: startTime,
         type: "main",
       },
       {
         id: "5c8c786b-eca5-734b-a755-7ec0f022aaac",
-        timestampCreated: startTime + 1000,
+        timestampCreated: previousDay,
         type: "main",
       },
     ]);
