@@ -1,10 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 package org.mozilla.focus.activity.robots
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
@@ -14,6 +14,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
 import org.mozilla.focus.R
@@ -28,7 +29,7 @@ class SettingsGeneralMenuRobot {
 
     fun verifyGeneralSettingsItems() {
         defaultBrowserSwitch.check(matches(isDisplayed()))
-        switchToLinkToggleButton.check(matches(isDisplayed()))
+        switchToNewTabToggleButton.check(matches(isDisplayed()))
     }
 
     fun clickSetDefaultBrowser() {
@@ -65,6 +66,18 @@ class SettingsGeneralMenuRobot {
         ))
     }
 
+    fun openLanguageSelectionMenu(localizedText: String = "Language"): ViewInteraction =
+        languageMenuButton(localizedText).perform(click())
+
+    fun verifyLanguageSelected(value: String) {
+        assertTrue(languageMenu.getChild(UiSelector().text(value)).isChecked)
+    }
+
+    fun selectLanguage(language: String) {
+        languageMenu.scrollTextIntoView(language)
+        onView(withText(language)).perform(click())
+    }
+
     class Transition {
         // add here transitions to other robot classes
     }
@@ -72,7 +85,7 @@ class SettingsGeneralMenuRobot {
 
 private val defaultBrowserSwitch = onView(withText("Make Firefox Focus default browser"))
 
-private val switchToLinkToggleButton = onView(withText("Switch to link in new tab immediately"))
+private val switchToNewTabToggleButton = onView(withText("Switch to link in new tab immediately"))
 
 private val openWithDialogTitle = mDevice.findObject(
         UiSelector()
@@ -83,3 +96,7 @@ private val openWithList = mDevice.findObject(
         UiSelector()
                 .resourceId("android:id/resolver_list")
 )
+
+private fun languageMenuButton(localizedText: String) = onView(withText(localizedText))
+
+private val languageMenu = UiScrollable(UiSelector().scrollable(true))

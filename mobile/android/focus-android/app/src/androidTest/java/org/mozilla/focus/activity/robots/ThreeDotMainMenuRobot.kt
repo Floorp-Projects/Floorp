@@ -30,7 +30,7 @@ class ThreeDotMainMenuRobot {
 
     fun verifyRequestDesktopSiteExists() = requestDesktopSiteButton.check(matches(isDisplayed()))
 
-    fun verifySettingsButtonExists() = settingsMenuButton.check(matches(isDisplayed()))
+    fun verifySettingsButtonExists() = settingsMenuButton().check(matches(isDisplayed()))
 
     fun verifyReportSiteIssueButtonExists() = reportSiteIssueButton.check(matches(isDisplayed()))
 
@@ -54,9 +54,12 @@ class ThreeDotMainMenuRobot {
     }
 
     class Transition {
-        fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            mDevice.findObject(UiSelector().text("Settings")).waitForExists(waitingTime)
-            settingsMenuButton
+        fun openSettings(
+            localizedText: String = "Settings",
+            interact: SettingsRobot.() -> Unit
+        ): SettingsRobot.Transition {
+            mDevice.findObject(UiSelector().text(localizedText)).waitForExists(waitingTime)
+            settingsMenuButton(localizedText)
                 .check(matches(isDisplayed()))
                 .perform(click())
 
@@ -91,9 +94,10 @@ class ThreeDotMainMenuRobot {
     }
 }
 
-private val settingsMenuButton = onView(
-    allOf(withText("Settings"), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
-)
+private fun settingsMenuButton(localizedText: String = "Settings") =
+    onView(
+        allOf(withText(localizedText), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
+    )
 
 private val shareBtn = mDevice.findObject(
     UiSelector()

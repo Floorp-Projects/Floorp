@@ -113,6 +113,10 @@ object TestHelper {
         mDevice.waitForIdle(waitingTime)
     }
 
+    // verifies localized strings in different UIs
+    fun verifyTranslatedTextExists(text: String) =
+        assertTrue(mDevice.findObject(UiSelector().text(text)).waitForExists(waitingTime))
+
     // wait for web area to be visible
     @JvmStatic
     fun waitForWebContent() {
@@ -259,21 +263,6 @@ object TestHelper {
     var downloadBtn = mDevice.findObject(
         UiSelector()
             .resourceId(packageName + ":id/download_dialog_download")
-            .enabled(true)
-    )
-
-    /********* Main View Menu Item Locators  */
-    @JvmField
-    var HelpItem = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/help")
-            .enabled(true)
-    )
-
-    @JvmField
-    var settingsMenuItem = mDevice.findObject(
-        UiSelector()
-            .resourceId(packageName + ":id/settings")
             .enabled(true)
     )
 

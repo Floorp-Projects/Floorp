@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 package org.mozilla.focus.activity.robots
 
 import androidx.test.espresso.Espresso.onView
@@ -18,7 +17,7 @@ class SettingsRobot {
 
     fun verifySettingsMenuItems() {
         settingsMenuList.waitForExists(waitingTime)
-        assertTrue(generalSettingsMenu.exists())
+        assertTrue(generalSettingsMenu().exists())
         assertTrue(searchSettingsMenu.exists())
         assertTrue(privacySettingsMenu.exists())
         assertTrue(advancedSettingsMenu.exists())
@@ -35,10 +34,11 @@ class SettingsRobot {
         }
 
         fun openGeneralSettingsMenu(
+            localizedText: String = "General",
             interact: SettingsGeneralMenuRobot.() -> Unit
         ): SettingsGeneralMenuRobot.Transition {
-            generalSettingsMenu.waitForExists(waitingTime)
-            generalSettingsMenu.click()
+            generalSettingsMenu(localizedText).waitForExists(waitingTime)
+            generalSettingsMenu(localizedText).click()
 
             SettingsGeneralMenuRobot().interact()
             return SettingsGeneralMenuRobot.Transition()
@@ -82,16 +82,17 @@ class SettingsRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
-
     }
 }
 
-private val settingsMenuList = UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
+private val settingsMenuList =
+    UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
 
-private val generalSettingsMenu = settingsMenuList.getChild(
-    UiSelector()
-        .text("General")
-)
+private fun generalSettingsMenu(localizedText: String = "General") =
+    settingsMenuList.getChild(
+        UiSelector()
+            .text(localizedText)
+    )
 
 private val searchSettingsMenu = settingsMenuList.getChild(
     UiSelector()
