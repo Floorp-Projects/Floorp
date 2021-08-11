@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - taskgraph.transforms.release:run_on_releases
     - taskgraph.transforms.release_deps:transforms
     - taskgraph.transforms.release_flatpak_push:transforms
     - taskgraph.transforms.task:transforms
@@ -15,6 +16,7 @@ kind-dependencies:
 job-defaults:
     description: Pushes Flatpaks onto Flathub
     run-on-projects: []  # to make sure this never runs as part of CI
+    run-on-releases: [beta, release, release-rc]
     shipping-phase: ship
     treeherder:
         platform: linux64/opt
