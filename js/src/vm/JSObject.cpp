@@ -730,14 +730,15 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 
 /* * */
 
-static inline JSObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
-                                  const JSClass* clasp, gc::AllocKind kind,
-                                  NewObjectKind newKind,
-                                  ObjectFlags objectFlags = {}) {
+static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
+                                      const JSClass* clasp, gc::AllocKind kind,
+                                      NewObjectKind newKind,
+                                      ObjectFlags objectFlags = {}) {
   MOZ_ASSERT(clasp != &ArrayObject::class_);
   MOZ_ASSERT_IF(clasp == &JSFunction::class_,
                 kind == gc::AllocKind::FUNCTION ||
                     kind == gc::AllocKind::FUNCTION_EXTENDED);
+  MOZ_ASSERT(clasp->isNativeObject());
 
   // For objects which can have fixed data following the object, only use
   // enough fixed slots to cover the number of reserved slots in the object,
@@ -755,13 +756,11 @@ static inline JSObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
 
   gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
 
-  JSObject* obj;
+  NativeObject* obj;
   if (clasp->isJSFunction()) {
     obj = JSFunction::create(cx, kind, heap, shape);
-  } else if (MOZ_LIKELY(clasp->isNativeObject())) {
-    obj = NativeObject::create(cx, kind, heap, shape);
   } else {
-    MOZ_CRASH("Unexpected non-native JSClass");
+    obj = NativeObject::create(cx, kind, heap, shape);
   }
   if (!obj) {
     return nullptr;
@@ -781,29 +780,24 @@ void NewObjectCache::fillProto(EntryIndex entry, const JSClass* clasp,
 
 bool js::NewObjectWithTaggedProtoIsCachable(JSContext* cx,
                                             Handle<TaggedProto> proto,
-                                            NewObjectKind newKind,
-                                            const JSClass* clasp) {
+                                            NewObjectKind newKind) {
   return !cx->isHelperThreadContext() && proto.isObject() &&
-         newKind == GenericObject && clasp->isNativeObject() &&
-         !proto.toObject()->is<GlobalObject>();
+         newKind == GenericObject && !proto.toObject()->is<GlobalObject>();
 }
 
-JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
-                                            Handle<TaggedProto> proto,
-                                            gc::AllocKind allocKind,
-                                            NewObjectKind newKind,
-                                            ObjectFlags objectFlags) {
+NativeObject* js::NewObjectWithGivenTaggedProto(
+    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
+    gc::AllocKind allocKind, NewObjectKind newKind, ObjectFlags objectFlags) {
   if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
     allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
-  bool isCachable =
-      NewObjectWithTaggedProtoIsCachable(cx, proto, newKind, clasp);
+  bool isCachable = NewObjectWithTaggedProtoIsCachable(cx, proto, newKind);
   if (isCachable) {
     NewObjectCache& cache = cx->caches().newObjectCache;
     NewObjectCache::EntryIndex entry = -1;
     if (cache.lookupProto(clasp, proto.toObject(), allocKind, &entry)) {
-      JSObject* obj =
+      NativeObject* obj =
           cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
       if (obj) {
         return obj;
@@ -811,32 +805,30 @@ JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
     }
   }
 
-  RootedObject obj(
-      cx, NewObject(cx, proto, clasp, allocKind, newKind, objectFlags));
+  NativeObject* obj =
+      NewObject(cx, proto, clasp, allocKind, newKind, objectFlags);
   if (!obj) {
     return nullptr;
   }
 
-  if (isCachable && !obj->as<NativeObject>().hasDynamicSlots()) {
+  if (isCachable && !obj->hasDynamicSlots()) {
     NewObjectCache& cache = cx->caches().newObjectCache;
     NewObjectCache::EntryIndex entry = -1;
     cache.lookupProto(clasp, proto.toObject(), allocKind, &entry);
-    cache.fillProto(entry, clasp, proto, allocKind, &obj->as<NativeObject>());
+    cache.fillProto(entry, clasp, proto, allocKind, obj);
   }
 
   return obj;
 }
 
-static bool NewObjectIsCachable(JSContext* cx, NewObjectKind newKind,
-                                const JSClass* clasp) {
-  return !cx->isHelperThreadContext() && newKind == GenericObject &&
-         clasp->isNativeObject();
+static bool NewObjectIsCachable(JSContext* cx, NewObjectKind newKind) {
+  return !cx->isHelperThreadContext() && newKind == GenericObject;
 }
 
-JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
-                                      HandleObject protoArg,
-                                      gc::AllocKind allocKind,
-                                      NewObjectKind newKind) {
+NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
+                                          HandleObject protoArg,
+                                          gc::AllocKind allocKind,
+                                          NewObjectKind newKind) {
   if (protoArg) {
     return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(protoArg),
                                          allocKind, newKind);
@@ -848,13 +840,13 @@ JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
 
   Handle<GlobalObject*> global = cx->global();
 
-  bool isCachable = NewObjectIsCachable(cx, newKind, clasp);
+  bool isCachable = NewObjectIsCachable(cx, newKind);
   if (isCachable) {
     NewObjectCache& cache = cx->caches().newObjectCache;
     NewObjectCache::EntryIndex entry = -1;
     if (cache.lookupGlobal(clasp, global, allocKind, &entry)) {
       gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
-      JSObject* obj = cache.newObjectFromHit(cx, entry, heap);
+      NativeObject* obj = cache.newObjectFromHit(cx, entry, heap);
       if (obj) {
         return obj;
       }
@@ -874,16 +866,16 @@ JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
   }
 
   Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-  JSObject* obj = NewObject(cx, taggedProto, clasp, allocKind, newKind);
+  NativeObject* obj = NewObject(cx, taggedProto, clasp, allocKind, newKind);
   if (!obj) {
     return nullptr;
   }
 
-  if (isCachable && !obj->as<NativeObject>().hasDynamicSlots()) {
+  if (isCachable && !obj->hasDynamicSlots()) {
     NewObjectCache& cache = cx->caches().newObjectCache;
     NewObjectCache::EntryIndex entry = -1;
     cache.lookupGlobal(clasp, global, allocKind, &entry);
-    cache.fillGlobal(entry, clasp, global, allocKind, &obj->as<NativeObject>());
+    cache.fillGlobal(entry, clasp, global, allocKind, obj);
   }
 
   return obj;

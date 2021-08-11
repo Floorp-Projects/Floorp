@@ -3842,8 +3842,8 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
   }
 
   Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-  bool isCachable = NewObjectWithTaggedProtoIsCachable(cx, taggedProto, newKind,
-                                                       &ArrayObject::class_);
+  bool isCachable =
+      NewObjectWithTaggedProtoIsCachable(cx, taggedProto, newKind);
   if (isCachable) {
     NewObjectCache& cache = cx->caches().newObjectCache;
     NewObjectCache::EntryIndex entry = -1;
