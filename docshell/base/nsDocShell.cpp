@@ -9214,6 +9214,27 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     return rv;
   }
 
+  if (mBrowsingContext->IsTopContent() &&
+      !aLoadState->GetPendingRedirectedChannel()) {
+    nsCOMPtr<nsITopLevelNavigationDelegate> delegate =
+        do_GetInterface(mTreeOwner);
+    if (delegate) {
+      bool shouldNavigate = false;
+      nsCOMPtr<nsIURI> referrer;
+      nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
+      if (referrerInfo) {
+        referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
+      }
+      rv = delegate->ShouldNavigate(this, aLoadState->URI(), referrer,
+                                    !!aLoadState->PostDataStream(),
+                                    aLoadState->TriggeringPrincipal(),
+                                    aLoadState->Csp(), &shouldNavigate);
+      if (NS_SUCCEEDED(rv) && !shouldNavigate) {
+        return NS_OK;
+      }
+    }
+  }
+
   // mContentViewer->PermitUnload can destroy |this| docShell, which
   // causes the next call of CanSavePresentation to crash.
   // Hold onto |this| until we return, to prevent a crash from happening.
