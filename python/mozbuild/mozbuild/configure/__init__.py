@@ -308,6 +308,8 @@ class ConfigureSandbox(dict):
                 "isinstance",
                 "len",
                 "list",
+                "max",
+                "min",
                 "range",
                 "set",
                 "sorted",
