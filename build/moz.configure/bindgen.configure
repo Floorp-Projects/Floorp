@@ -121,11 +121,11 @@ option(
     cxx_compiler,
     clang_search_path,
     target,
-    target_sysroot_flags,
+    target_sysroot.path,
 )
 @checking("for clang for bindgen", lambda x: x.path if x else "not found")
 def bindgen_clang_compiler(
-    clang_path, c_compiler, cxx_compiler, clang_search_path, target, sysroot_flags
+    clang_path, c_compiler, cxx_compiler, clang_search_path, target, sysroot_path
 ):
     # When the target compiler is clang, use that, including flags.
     if cxx_compiler.type == "clang":
@@ -162,7 +162,9 @@ def bindgen_clang_compiler(
     # Hack before bug 1617793: if the compiler is clang-cl, hack the target
     if cxx_compiler.type == "clang-cl":
         target = split_triplet("%s-pc-windows-msvc" % target.raw_cpu, allow_msvc=True)
-    flags = list(sysroot_flags or ())
+    flags = []
+    if sysroot_path:
+        flags.extend(("--sysroot", sysroot_path))
     info = check_compiler([clang_path] + flags, "C++", target)
     return namespace(
         path=clang_path,
