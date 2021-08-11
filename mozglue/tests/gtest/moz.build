@@ -4,15 +4,7 @@
 
 if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
-        "TestDLLBlocklist.cpp",
         "TestNativeNtGTest.cpp",
-    ]
-
-    TEST_DIRS += [
-        "TestDllBlocklist_AllowByVersion",
-        "TestDllBlocklist_MatchByName",
-        "TestDllBlocklist_MatchByVersion",
-        "TestDllBlocklist_NoOpEntryPoint",
     ]
 
 SOURCES += [
