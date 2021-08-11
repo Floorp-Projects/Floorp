@@ -37,7 +37,6 @@ class SearchOneOffs {
       </hbox>
       <box class="search-panel-one-offs-container">
         <hbox class="search-panel-one-offs" role="group"/>
-        <hbox class="search-one-offs-spacer"/>
         <button class="searchbar-engine-one-off-item search-setting-button" tabindex="-1" data-l10n-id="search-one-offs-change-settings-compact-button"/>
       </box>
       <box>
@@ -71,8 +70,6 @@ class SearchOneOffs {
     this.header = this.querySelector(".search-panel-one-offs-header");
 
     this.settingsButton = this.querySelector(".search-setting-button");
-
-    this.spacerCompact = this.querySelector(".search-one-offs-spacer");
 
     this.contextMenuPopup = this.querySelector(".search-one-offs-context-menu");
 
@@ -462,8 +459,6 @@ class SearchOneOffs {
     if (hideOneOffs) {
       return;
     }
-
-    this.spacerCompact.setAttribute("flex", "1");
 
     // Ensure we can refer to the settings buttons by ID:
     let origin = this.telemetryOrigin;
