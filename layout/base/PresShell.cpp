@@ -6346,6 +6346,13 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   }
 
   if (!renderer->BeginTransaction(url)) {
+    if (renderer->AsFallback() && !(aFlags & PaintFlags::PaintComposite)) {
+      // The fallback renderer doesn't do any retaining, and so always
+      // fails when called without PaintComposite (from the refresh driver).
+      // We just need to notify the view and widget that we're invalid, and
+      // we'll do a paint+composite from the PaintWindow callback.
+      aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
+    }
     return;
   }
 
