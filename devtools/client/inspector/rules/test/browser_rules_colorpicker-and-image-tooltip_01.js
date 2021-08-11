@@ -10,7 +10,7 @@
 const TEST_URI = `
   <style type="text/css">
     body {
-      background: url("chrome://global/skin/icons/warning-64.png"), linear-gradient(white, #F06 400px);
+      background: url("chrome://branding/content/icon64.png"), linear-gradient(white, #F06 400px);
     }
   </style>
   Testing the color picker tooltip!
@@ -40,7 +40,7 @@ async function testImageTooltipAfterColorChange(swatch, url, ruleView) {
     selector: "body",
     name: "background-image",
     value:
-      'url("chrome://global/skin/icons/warning-64.png"), linear-gradient(rgb(0, 0, 0), rgb(255, 0, 102) 400px)',
+      'url("chrome://branding/content/icon64.png"), linear-gradient(rgb(0, 0, 0), rgb(255, 0, 102) 400px)',
   });
 
   const spectrum = picker.spectrum;

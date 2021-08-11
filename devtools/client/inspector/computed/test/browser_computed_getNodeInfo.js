@@ -33,7 +33,7 @@ const TEST_URI = `
     }
     div div {
       background-color: yellow;
-      background-image: url(chrome://global/skin/icons/warning-64.png);
+      background-image: url(chrome://branding/content/icon64.png);
       color: red;
     }
   </style>
@@ -102,11 +102,8 @@ const TEST_DATA = [
       ok("property" in nodeInfo.value);
       ok("value" in nodeInfo.value);
       is(nodeInfo.value.property, "background-image");
-      is(
-        nodeInfo.value.value,
-        'url("chrome://global/skin/icons/warning-64.png")'
-      );
-      is(nodeInfo.value.url, "chrome://global/skin/icons/warning-64.png");
+      is(nodeInfo.value.value, 'url("chrome://branding/content/icon64.png")');
+      is(nodeInfo.value.url, "chrome://branding/content/icon64.png");
     },
   },
   {
