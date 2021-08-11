@@ -43,7 +43,6 @@ chardetng_c = "0.1.1"
 audio_thread_priority = "0.23.4"
 mdns_service = { path="../../../../dom/media/webrtc/transport/mdns_service", optional = true }
 neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
-rlbox_lucet_sandbox = { version = "0.1.0", optional = true }
 wgpu_bindings = { path = "../../../../gfx/wgpu_bindings", optional = true }
 mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", rev = "746743227485a83123784df0c53227ab466612ed" }
 fog_control = { path = "../../../components/glean" }
@@ -97,7 +96,6 @@ gecko_profiler_parse_elf = ["profiler_helper/parse_elf"]
 new_xulstore = ["xulstore"]
 libfuzzer = []
 webrtc = ["mdns_service"]
-wasm_library_sandboxing = ["rlbox_lucet_sandbox"]
 webgpu = ["wgpu_bindings"]
 glean_disable_upload = ["fog_control/disable_upload"]
 glean_with_gecko = ["fog_control/with_gecko"]

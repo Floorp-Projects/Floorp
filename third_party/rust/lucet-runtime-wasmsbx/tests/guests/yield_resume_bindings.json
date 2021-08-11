@@ -1,5 +1,0 @@
-{
-    "env": {
-        "lucet_runtime_test_hostcall_yield_resume": "lucet_runtime_test_hostcall_yield_resume"
-    }
-}

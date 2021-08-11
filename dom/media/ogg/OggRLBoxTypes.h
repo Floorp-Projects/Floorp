@@ -9,17 +9,10 @@
 #include "mozilla/rlbox/rlbox_types.hpp"
 
 #ifdef MOZ_WASM_SANDBOXING_OGG
-#  ifdef LUCETC_WASM_SANDBOXING
-namespace rlbox {
-class rlbox_lucet_sandbox;
-}
-using rlbox_ogg_sandbox_type = rlbox::rlbox_lucet_sandbox;
-#  else
 namespace rlbox {
 class rlbox_wasm2c_sandbox;
 }
 using rlbox_ogg_sandbox_type = rlbox::rlbox_wasm2c_sandbox;
-#  endif
 #else
 using rlbox_ogg_sandbox_type = rlbox::rlbox_noop_sandbox;
 #endif
