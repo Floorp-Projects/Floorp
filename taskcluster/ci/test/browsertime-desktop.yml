@@ -5,8 +5,8 @@
 job-defaults:
     max-run-time:
         by-test-platform:
+            .*-ref-hw-2017-qr/.*: 3600
             .*-qr/.*: 2400
-            .*-ref-hw-2017/.*: 3600
             default: 1800
     suite: raptor
     run-on-projects:
@@ -161,7 +161,7 @@ browsertime-tp6-essential:
             default: []
     tier:
         by-test-platform:
-            linux1804-64-clang-trunk/opt: 2
+            linux1804-64-clang-trunk-qr/opt: 2
             default:
                 by-app:
                     firefox: 1
@@ -191,7 +191,7 @@ browsertime-benchmark:
                         by-subtest:
                             motionmark-animometer:
                                 by-test-platform:
-                                    linux1804-64-clang-trunk/opt: 2
+                                    linux1804-64-clang-trunk-qr/opt: 2
                                     default: 1
                             unity-webgl: 3
                             default:
@@ -282,7 +282,6 @@ browsertime-benchmark:
             assorted-dom:
                 by-test-platform:
                     .*-qr/.*: 2100
-                    .*-ref-hw-2017/.*: 2100
                     default: 1500
             jetstream2: 8000
             motionmark-htmlsuite: 1500
@@ -368,7 +367,7 @@ browsertime-youtube-playback:
     limit-platforms:
         by-subtest:
             youtube-playback-av1-sfr:
-                - windows10-64-ref-hw-2017/opt
+                - windows10-64-ref-hw-2017-qr/opt
                 - macosx1015-64-shippable-qr/opt
             # Bug 1718630
             youtube-playback.*widevine.*:
