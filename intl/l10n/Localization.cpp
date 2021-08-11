@@ -85,48 +85,49 @@ static nsTArray<ffi::L10nKey> ConvertFromL10nKeys(
   return l10nKeys;
 }
 
-static FallibleTArray<AttributeNameValue> ConvertToAttributeNameValue(
-    const nsTArray<ffi::L10nAttribute>& aAttributes, OOMReporter& aError) {
-  FallibleTArray<AttributeNameValue> result(aAttributes.Length());
-  for (const auto& attr : aAttributes) {
-    auto cvtAttr = AttributeNameValue();
-    cvtAttr.mName = attr.name;
-    cvtAttr.mValue = attr.value;
-    if (!result.AppendElement(std::move(cvtAttr), fallible)) {
-      result.Clear();
-      aError.ReportOOM();
-      return result;
-    }
+[[nodiscard]] static bool ConvertToAttributeNameValue(
+    const nsTArray<ffi::L10nAttribute>& aAttributes,
+    FallibleTArray<AttributeNameValue>& aValues) {
+  if (!aValues.SetCapacity(aAttributes.Length(), fallible)) {
+    return false;
   }
-
-  return result;
+  for (const auto& attr : aAttributes) {
+    auto* cvtAttr = aValues.AppendElement(fallible);
+    MOZ_ASSERT(cvtAttr, "SetCapacity didn't set enough capacity somehow?");
+    cvtAttr->mName = attr.name;
+    cvtAttr->mValue = attr.value;
+  }
+  return true;
 }
 
-static FallibleTArray<Nullable<L10nMessage>> ConvertToL10nMessages(
-    const nsTArray<ffi::OptionalL10nMessage>& aMessages, ErrorResult& aError) {
-  FallibleTArray<Nullable<L10nMessage>> l10nMessages(aMessages.Length());
+[[nodiscard]] static bool ConvertToL10nMessages(
+    const nsTArray<ffi::OptionalL10nMessage>& aMessages,
+    nsTArray<Nullable<L10nMessage>>& aOut) {
+  if (!aOut.SetCapacity(aMessages.Length(), fallible)) {
+    return false;
+  }
 
   for (const auto& entry : aMessages) {
-    Nullable<L10nMessage> msg;
-    if (entry.is_present) {
-      L10nMessage& m = msg.SetValue();
-      if (!entry.message.value.IsVoid()) {
-        m.mValue = entry.message.value;
-      }
-      if (!entry.message.attributes.IsEmpty()) {
-        m.mAttributes.SetValue(
-            ConvertToAttributeNameValue(entry.message.attributes, aError));
-      }
+    Nullable<L10nMessage>* msg = aOut.AppendElement(fallible);
+    MOZ_ASSERT(msg, "SetCapacity didn't set enough capacity somehow?");
+
+    if (!entry.is_present) {
+      continue;
     }
 
-    if (!l10nMessages.AppendElement(std::move(msg), fallible)) {
-      l10nMessages.Clear();
-      aError.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return l10nMessages;
+    L10nMessage& m = msg->SetValue();
+    if (!entry.message.value.IsVoid()) {
+      m.mValue = entry.message.value;
+    }
+    if (!entry.message.attributes.IsEmpty()) {
+      auto& value = m.mAttributes.SetValue();
+      if (!ConvertToAttributeNameValue(entry.message.attributes, value)) {
+        return false;
+      }
     }
   }
 
-  return l10nMessages;
+  return true;
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Localization)
@@ -339,13 +340,11 @@ already_AddRefed<Promise> Localization::FormatMessages(
                                      promise->GetParentObject())) {
           promise->MaybeReject(std::move(rv));
         } else {
-          ErrorResult rv;
-          FallibleTArray<Nullable<L10nMessage>> messages =
-              ConvertToL10nMessages(*aRaw, rv);
-          if (rv.Failed()) {
-            promise->MaybeReject(std::move(rv));
+          nsTArray<Nullable<L10nMessage>> messages;
+          if (!ConvertToL10nMessages(*aRaw, messages)) {
+            promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
           } else {
-            promise->MaybeResolve(messages);
+            promise->MaybeResolve(std::move(messages));
           }
         }
       });
@@ -437,18 +436,17 @@ void Localization::FormatMessagesSync(
   bool rv = ffi::localization_format_messages_sync(mRaw.get(), &l10nKeys,
                                                    &result, &errors);
 
-  if (rv) {
-    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
-    if (!aRv.Failed()) {
-      aRetVal = ConvertToL10nMessages(result, aRv);
-    }
-  } else {
-    aRv.ThrowInvalidStateError(
+  if (!rv) {
+    return aRv.ThrowInvalidStateError(
         "Can't use formatMessagesSync when state is async.");
+  }
+  MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
+  if (aRv.Failed()) {
     return;
   }
-
-  aRetVal = ConvertToL10nMessages(result, aRv);
+  if (!ConvertToL10nMessages(result, aRetVal)) {
+    return aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+  }
 }
 
 void Localization::SetAsync() { ffi::localization_set_async(mRaw.get()); }
