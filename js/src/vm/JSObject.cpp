@@ -3776,6 +3776,9 @@ void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
     MOZ_ASSERT(gc::GetGCKindSlots(allocKind, clasp) == shape->numFixedSlots());
   }
 
+  // Assert background finalization is used when possible.
+  MOZ_ASSERT(!CanChangeToBackgroundAllocKind(allocKind, clasp));
+
   // Classes with a finalizer must specify whether instances will be finalized
   // on the main thread or in the background, except proxies whose behaviour
   // depends on the target object.
