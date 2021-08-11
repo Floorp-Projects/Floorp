@@ -658,7 +658,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     ////////////////////////////////////
     // FEATURE_WEBRENDER
 
-    // All Mesa software drivers, see FEATURE_WEBRENDER_SOFTWARE
+    // All Mesa software drivers, they should get Software WebRender instead.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         DesktopEnvironment::All, WindowProtocol::All,
@@ -788,16 +788,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
         V(17, 0, 0, 0), "FEATURE_ROLLOUT_ATI_MESA", "Mesa 17.0.0.0");
 
-    ////////////////////////////////////
-    // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
-#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || \
-    defined(__i386) || defined(__amd64__) || EARLY_BETA_OR_EARLIER
-    APPEND_TO_DRIVER_BLOCKLIST(OperatingSystem::Linux, DeviceFamily::All,
-                               nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-                               nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
-                               DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
-                               "FEATURE_ROLLOUT_SOFTWARE_WR", "");
-#endif
     ////////////////////////////////////
     // FEATURE_WEBRENDER_COMPOSITOR
     APPEND_TO_DRIVER_BLOCKLIST(
