@@ -56,16 +56,9 @@ with only_when(target_is_osx):
         help="Set the minimum MacOS version needed at runtime{|}",
     )
 
-    @depends("--enable-macos-target")
-    @imports(_from="os", _import="environ")
+    @depends_if("--enable-macos-target")
     def macos_target(value):
-        if value:
-            # Ensure every compiler process we spawn uses this value.
-            environ["MACOSX_DEPLOYMENT_TARGET"] = value[0]
-            return value[0]
-
-    set_config("MACOSX_DEPLOYMENT_TARGET", macos_target)
-    add_old_configure_assignment("MACOSX_DEPLOYMENT_TARGET", macos_target)
+        return value[0]
 
 
 @depends(host)
@@ -1102,15 +1095,27 @@ def compiler(
     )
 
     @depends(
-        compiler, provided_compiler, compiler_wrapper, host_or_target, sysroot_flags
+        compiler,
+        provided_compiler,
+        compiler_wrapper,
+        host_or_target,
+        sysroot_flags,
+        macos_target,
     )
     @checking("whether %s can be used" % what, lambda x: bool(x))
     @imports(_from="mozbuild.shellutil", _import="quote")
     def valid_compiler(
-        compiler, provided_compiler, compiler_wrapper, host_or_target, sysroot_flags
+        compiler,
+        provided_compiler,
+        compiler_wrapper,
+        host_or_target,
+        sysroot_flags,
+        macos_target,
     ):
         wrapper = list(compiler_wrapper or ())
         flags = list(sysroot_flags or ())
+        if host_or_target.os == "OSX" and macos_target:
+            flags.append("-mmacosx-version-min=%s" % macos_target)
         if provided_compiler:
             wrapper.extend(provided_compiler.wrapper)
             flags.extend(provided_compiler.flags)

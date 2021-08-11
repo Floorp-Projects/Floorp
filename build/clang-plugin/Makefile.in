@@ -12,8 +12,3 @@ HOST_LDFLAGS += -brepro
 else
 HOST_LDFLAGS += -shared
 endif
-
-# Use the default OS X deployment target to enable using the libc++ headers
-# correctly.  Note that the binary produced here is a host tool and doesn't need
-# to be distributed.
-MACOSX_DEPLOYMENT_TARGET :=
