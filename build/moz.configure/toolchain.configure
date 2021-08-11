@@ -911,7 +911,7 @@ def provided_program(env_var, when=None):
 
 
 @template
-def sysroot_path(host_or_target, target_sysroot=None):
+def sysroot(host_or_target, target_sysroot=None):
     assert target_sysroot or host_or_target is target
     bootstrap_target_when = target_is_linux
     if host_or_target is host:
@@ -951,22 +951,26 @@ def sysroot_path(host_or_target, target_sysroot=None):
 
     @depends(
         sysroot_input,
+        host_or_target,
+        macos_sdk,
         bootstrap_path(
             depends(host_or_target)(lambda t: "sysroot-{}".format(t.toolchain)),
             when=bootstrap_sysroot,
         ),
     )
-    def sysroot_path(sysroot_input, path):
+    def sysroot(sysroot_input, host_or_target, macos_sdk, path):
         if sysroot_input:
             path = sysroot_input[0]
+        elif host_or_target.kernel == "Darwin" and macos_sdk:
+            path = macos_sdk
         if path:
             log.info("Using %s sysroot in %s", host_or_target_str, path)
         return namespace(path=path, bootstrapped=bool(path and not sysroot_input))
 
-    return sysroot_path
+    return sysroot
 
 
-target_sysroot_path = sysroot_path(target)
+target_sysroot = sysroot(target)
 
 
 # Use `system_lib_option` instead of `option` for options that enable building
@@ -976,7 +980,7 @@ target_sysroot_path = sysroot_path(target)
 def system_lib_option(name, *args, **kwargs):
     option(name, *args, **kwargs)
 
-    @depends(name, target_sysroot_path.bootstrapped)
+    @depends(name, target_sysroot.bootstrapped)
     def no_system_lib_in_sysroot(value, bootstrapped):
         if bootstrapped and value:
             die(
@@ -986,33 +990,10 @@ def system_lib_option(name, *args, **kwargs):
             )
 
 
-host_sysroot_path = sysroot_path(host, target_sysroot_path).path
-target_sysroot_path = target_sysroot_path.path
+host_sysroot = sysroot(host, target_sysroot)
 
 
-@template
-def sysroot_flags(host_or_target):
-    sysroot_path = {
-        host: host_sysroot_path,
-        target: target_sysroot_path,
-    }[host_or_target]
-
-    @depends(host_or_target, macos_sdk, sysroot_path)
-    def sysroot_flags(host_or_target, macos_sdk, sysroot_path):
-        if macos_sdk and host_or_target.os == "OSX":
-            return ["--sysroot", macos_sdk]
-        if sysroot_path:
-            return ["--sysroot", sysroot_path]
-        return []
-
-    return sysroot_flags
-
-
-host_sysroot_flags = sysroot_flags(host)
-target_sysroot_flags = sysroot_flags(target)
-
-
-@depends(target, when=target_sysroot_path)
+@depends(target, when=target_sysroot.path)
 def multiarch_dir(target):
     if target.cpu == "x86":
         # Turn e.g. i686-linux-gnu into i386-linux-gnu
@@ -1055,9 +1036,9 @@ def compiler(
         target: "target",
     }[host_or_target]
 
-    sysroot_flags = {
-        host: host_sysroot_flags,
-        target: target_sysroot_flags,
+    sysroot = {
+        host: host_sysroot,
+        target: target_sysroot,
     }[host_or_target]
 
     var = {
@@ -1099,7 +1080,7 @@ def compiler(
         provided_compiler,
         compiler_wrapper,
         host_or_target,
-        sysroot_flags,
+        sysroot.path,
         macos_target,
     )
     @checking("whether %s can be used" % what, lambda x: bool(x))
@@ -1109,11 +1090,13 @@ def compiler(
         provided_compiler,
         compiler_wrapper,
         host_or_target,
-        sysroot_flags,
+        sysroot_path,
         macos_target,
     ):
         wrapper = list(compiler_wrapper or ())
-        flags = list(sysroot_flags or ())
+        flags = []
+        if sysroot_path:
+            flags.extend(("--sysroot", sysroot_path))
         if host_or_target.os == "OSX" and macos_target:
             flags.append("-mmacosx-version-min=%s" % macos_target)
         if provided_compiler:
@@ -2259,7 +2242,7 @@ def select_linker(
 set_config("LINKER_KIND", select_linker.KIND)
 
 
-@depends_if(select_linker, target, target_sysroot_path, multiarch_dir)
+@depends_if(select_linker, target, target_sysroot.path, multiarch_dir)
 @imports("os")
 def linker_ldflags(linker, target, sysroot_path, multiarch_dir):
     flags = list((linker and linker.LINKER_FLAG) or [])
@@ -2767,15 +2750,12 @@ def path_remapping(value):
 @depends(
     target,
     check_build_environment,
-    target_sysroot_path,
-    macos_sdk,
+    target_sysroot.path,
     windows_sdk_dir,
     vc_path,
     when="--enable-path-remapping",
 )
-def path_remappings(
-    target, build_env, sysroot_path, macos_sdk, windows_sdk_dir, vc_path
-):
+def path_remappings(target, build_env, sysroot_path, windows_sdk_dir, vc_path):
     win = target.kernel == "WINNT"
 
     # The prefix maps are processed in the order they're specified on the
@@ -2794,8 +2774,6 @@ def path_remappings(
     # IDEs.
     if sysroot_path:
         path_remappings.append((sysroot_path, "k:/" if win else "/sysroot/"))
-    if macos_sdk:
-        path_remappings.append((macos_sdk, "k:/" if win else "/sysroot/"))
     if windows_sdk_dir:
         path_remappings.append((windows_sdk_dir, "k:/" if win else "/windows_sdk/"))
     if vc_path:
