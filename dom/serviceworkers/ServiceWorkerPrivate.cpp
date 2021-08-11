@@ -1983,7 +1983,7 @@ namespace {
 class ServiceWorkerPrivateTimerCallback final : public nsITimerCallback,
                                                 public nsINamed {
  public:
-  using Method = void (ServiceWorkerPrivate::*)(nsITimer*);
+  typedef void (ServiceWorkerPrivate::*Method)(nsITimer*);
 
   ServiceWorkerPrivateTimerCallback(ServiceWorkerPrivate* aServiceWorkerPrivate,
                                     Method aMethod)

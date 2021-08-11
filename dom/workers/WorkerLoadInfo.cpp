@@ -65,7 +65,7 @@ class MainThreadReleaseRunnable final : public Runnable {
 // Specialize this if there's some class that has multiple nsISupports bases.
 template <class T>
 struct ISupportsBaseInfo {
-  using ISupportsBase = T;
+  typedef T ISupportsBase;
 };
 
 template <template <class> class SmartPtr, class T>

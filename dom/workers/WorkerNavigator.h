@@ -35,8 +35,8 @@ class Connection;
 }  // namespace network
 
 class WorkerNavigator final : public nsWrapperCache {
-  using NavigatorProperties =
-      struct workerinternals::RuntimeService::NavigatorProperties;
+  typedef struct workerinternals::RuntimeService::NavigatorProperties
+      NavigatorProperties;
 
   NavigatorProperties mProperties;
   RefPtr<StorageManager> mStorageManager;
