@@ -419,7 +419,8 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   return cells && cells->hasCell(cell);
 }
 
-/* static */ inline JS::Result<NativeObject*, JS::OOM> NativeObject::create(
+/* static */
+inline NativeObject* NativeObject::create(
     JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
     js::HandleShape shape, js::gc::AllocSite* site /* = nullptr */) {
   debugCheckNewObject(shape, kind, heap);
@@ -434,7 +435,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   JSObject* obj =
       js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp, site);
   if (!obj) {
-    return cx->alreadyReportedOOM();
+    return nullptr;
   }
 
   NativeObject* nobj = static_cast<NativeObject*>(obj);

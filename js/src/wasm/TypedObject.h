@@ -151,10 +151,8 @@ class TypedObject : public JSObject {
                                   gc::InitialHeap heap = gc::DefaultHeap);
 
   // Internal create used by JSObject
-  static JS::Result<TypedObject*, JS::OOM> create(JSContext* cx,
-                                                  js::gc::AllocKind kind,
-                                                  js::gc::InitialHeap heap,
-                                                  js::HandleShape shape);
+  static TypedObject* create(JSContext* cx, js::gc::AllocKind kind,
+                             js::gc::InitialHeap heap, js::HandleShape shape);
 
   TypedProto& typedProto() const {
     // Typed objects' prototypes can't be modified.
