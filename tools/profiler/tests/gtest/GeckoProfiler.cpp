@@ -72,8 +72,6 @@ TEST(GeckoProfiler, ProfilerUtils)
   EXPECT_EQ(profiler_current_thread_id(),
             baseprofiler::profiler_current_thread_id());
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(__ANDROID__) || \
-    defined(ANDROID) || defined(XP_LINUX) || defined(XP_FREEBSD)
   ProfilerThreadId mainTestThreadId = profiler_current_thread_id();
   EXPECT_TRUE(mainTestThreadId.IsSpecified());
 
@@ -98,16 +96,6 @@ TEST(GeckoProfiler, ProfilerUtils)
     EXPECT_FALSE(baseprofiler::profiler_is_main_thread());
   });
   testThread.join();
-#else
-  // Yet-unsupported platforms.
-  EXPECT_FALSE(profiler_current_thread_id().IsSpecified());
-  EXPECT_FALSE(profiler_main_thread_id().IsSpecified());
-  EXPECT_FALSE(profiler_is_main_thread());
-
-  EXPECT_FALSE(baseprofiler::profiler_current_thread_id().IsSpecified());
-  EXPECT_FALSE(baseprofiler::profiler_main_thread_id().IsSpecified());
-  EXPECT_FALSE(baseprofiler::profiler_is_main_thread());
-#endif
 }
 
 #ifdef MOZ_GECKO_PROFILER
