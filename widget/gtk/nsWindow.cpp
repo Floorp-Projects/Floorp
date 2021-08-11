@@ -8835,7 +8835,7 @@ nsWindow::GtkWindowDecoration nsWindow::GetSystemGtkWindowDecoration() {
   // decorations does not work with CSD.
   // We check GTK_CSD as well as gtk_window_should_use_csd() does.
   const char* csdOverride = getenv("GTK_CSD");
-  if (csdOverride && atoi(csdOverride)) {
+  if (csdOverride && *csdOverride == '1') {
     sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     return sGtkWindowDecoration;
   }
