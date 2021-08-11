@@ -11,6 +11,7 @@ DIRS += ["build"]
 
 XPIDL_SOURCES += [
     "nsIEmbeddingSiteWindow.idl",
+    "nsITopLevelNavigationDelegate.idl",
     "nsIWebBrowser.idl",
     "nsIWebBrowserChrome.idl",
     "nsIWebBrowserChromeFocus.idl",

@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIContentSecurityPolicy;
+interface nsIDocShell;
+interface nsIPrincipal;
+interface nsIURI;
+
+/**
+ * An interface for a component that nsIDocShell will look for during
+ * top-level navigations to offer an opportunity to cancel the navigation.
+ *
+ * Interested parties can register the delegate just by defining a
+ * JSWindowActorChild that implements this interface.
+ */
+[scriptable, uuid(bc6a26d5-0346-4062-9ad8-831789e2db5b)]
+interface nsITopLevelNavigationDelegate : nsISupports
+{
+  /**
+   * @param nsIDocShell docShell The nsIDocShell performing the navigation.
+   * @param nsIURI linkURI The URI that the nsIDocShell is trying to
+   *   navigate to.
+   * @param nsIURI referrer
+   *        The referrer of the load.
+   * @param boolean hasPostData
+   *        True if the load which is being asked about has associated post data
+   *        which would be discarded if the load was cancelled.
+   * @param nsIPrincipal triggeringPrincipal
+   *        The principal that initiated the load of aURI.
+   * @param nsIContentSecurityPolicy csp
+   *        The CSP to be used for that load. That is the CSP that e.g. upgrades
+   *        the load to HTTPS in case upgrade-insecure-requests is set.
+   * @return boolean True if the nsIDocShell should proceed with the
+   *   navigation.
+   */
+  bool shouldNavigate(in nsIDocShell docShell,
+                      in nsIURI linkURI,
+                      in nsIURI referrer,
+                      in boolean hasPostData,
+                      in nsIPrincipal triggeringPrincipal,
+                      in nsIContentSecurityPolicy csp);
+};
