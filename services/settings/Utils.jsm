@@ -30,6 +30,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsINetworkLinkService"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 // See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -99,6 +101,10 @@ var Utils = {
 
   /**
    * A wrapper around `ServiceRequest` that behaves like `fetch()`.
+   *
+   * Use this in order to leverage the `beConservative` flag, for
+   * example to avoid using HTTP3 to fetch critical data.
+   *
    * @param input a resource
    * @param init request options
    * @returns a Response object
@@ -168,8 +174,11 @@ var Utils = {
    */
   async hasLocalDump(bucket, collection) {
     try {
-      await Utils.fetch(
-        `resource://app/defaults/settings/${bucket}/${collection}.json`
+      await fetch(
+        `resource://app/defaults/settings/${bucket}/${collection}.json`,
+        {
+          method: "HEAD",
+        }
       );
       return true;
     } catch (e) {
@@ -189,7 +198,7 @@ var Utils = {
       if (!this._dumpStatsInitPromise) {
         this._dumpStatsInitPromise = (async () => {
           try {
-            let res = await Utils.fetch(
+            let res = await fetch(
               "resource://app/defaults/settings/last_modified.json"
             );
             this._dumpStats = await res.json();
@@ -206,7 +215,7 @@ var Utils = {
     let lastModified = this._dumpStats[identifier];
     if (lastModified === undefined) {
       try {
-        let res = await Utils.fetch(
+        let res = await fetch(
           `resource://app/defaults/settings/${bucket}/${collection}.json`
         );
         let records = (await res.json()).data;
