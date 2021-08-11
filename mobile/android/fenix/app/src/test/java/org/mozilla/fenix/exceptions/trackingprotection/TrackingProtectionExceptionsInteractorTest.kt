@@ -13,6 +13,7 @@ import io.mockk.verifySequence
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -56,7 +57,7 @@ class TrackingProtectionExceptionsInteractorTest {
             )
         }
     }
-
+    @Ignore("See https://github.com/mozilla-mobile/fenix/issues/20796")
     @Test
     fun onDeleteAll() {
         interactor.onDeleteAll()
