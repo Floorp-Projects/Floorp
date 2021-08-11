@@ -993,9 +993,9 @@ def target_tasks_build_linux64_clang_trunk_perf(
 ):
     """Select tasks required to run perf test on linux64 build with clang trunk"""
 
-    # Only keep tasks generated from platform `linux1804-64-clang-trunk/opt`
+    # Only keep tasks generated from platform `linux1804-64-clang-trunk-qr/opt`
     def filter(task_label):
-        if "linux1804-64-clang-trunk/opt" in task_label:
+        if "linux1804-64-clang-trunk-qr/opt" in task_label:
             return True
         return False
 
