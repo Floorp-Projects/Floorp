@@ -63,6 +63,14 @@ ProfileBufferEntry::ProfileBufferEntry(Kind aKind, uint64_t aUint64)
   memcpy(mStorage, &aUint64, sizeof(aUint64));
 }
 
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind,
+                                       BaseProfilerThreadId aThreadId)
+    : mKind(aKind) {
+  static_assert(std::is_trivially_copyable_v<BaseProfilerThreadId>);
+  static_assert(sizeof(aThreadId) <= sizeof(mStorage));
+  memcpy(mStorage, &aThreadId, sizeof(aThreadId));
+}
+
 const char* ProfileBufferEntry::GetString() const {
   const char* result;
   memcpy(&result, mStorage, sizeof(result));
@@ -95,6 +103,13 @@ int64_t ProfileBufferEntry::GetInt64() const {
 
 uint64_t ProfileBufferEntry::GetUint64() const {
   uint64_t result;
+  memcpy(&result, mStorage, sizeof(result));
+  return result;
+}
+
+BaseProfilerThreadId ProfileBufferEntry::GetThreadId() const {
+  BaseProfilerThreadId result;
+  static_assert(std::is_trivially_copyable_v<BaseProfilerThreadId>);
   memcpy(&result, mStorage, sizeof(result));
   return result;
 }
@@ -582,8 +597,7 @@ BaseProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
       // must be a ThreadId entry.
       MOZ_ASSERT(e.Get().IsThreadId());
 
-      BaseProfilerThreadId threadId =
-          BaseProfilerThreadId::FromNumber(e.Get().GetInt());
+      BaseProfilerThreadId threadId = e.Get().GetThreadId();
       e.Next();
 
       // Ignore samples that are for the wrong thread.
@@ -1209,8 +1223,7 @@ bool ProfileBuffer::DuplicateLastSample(BaseProfilerThreadId aThreadId,
     }
 
     MOZ_RELEASE_ASSERT(e.Has() && e.Get().IsThreadId() &&
-                       BaseProfilerThreadId::FromNumber(e.Get().GetInt()) ==
-                           aThreadId);
+                       e.Get().GetThreadId() == aThreadId);
 
     e.Next();
 

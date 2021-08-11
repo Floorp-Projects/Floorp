@@ -55,18 +55,18 @@ extern mozilla::LazyLogModule gProfilerLog;
 // These are for MOZ_LOG="prof:3" or higher. It's the default logging level for
 // the profiler, and should be used sparingly.
 #define LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Info)
-#define LOG(arg, ...)                                                  \
-  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info,                       \
-          ("[%d] " arg, int(profiler_current_process_id().ToNumber()), \
-           ##__VA_ARGS__))
+#define LOG(arg, ...)                            \
+  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info, \
+          ("[%" PRIu64 "d] " arg,                \
+           uint64_t(profiler_current_process_id().ToNumber()), ##__VA_ARGS__))
 
 // These are for MOZ_LOG="prof:4" or higher. It should be used for logging that
 // is somewhat more verbose than LOG.
 #define DEBUG_LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Debug)
-#define DEBUG_LOG(arg, ...)                                            \
-  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Debug,                      \
-          ("[%d] " arg, int(profiler_current_process_id().ToNumber()), \
-           ##__VA_ARGS__))
+#define DEBUG_LOG(arg, ...)                       \
+  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Debug, \
+          ("[%" PRIu64 "] " arg,                  \
+           uint64_t(profiler_current_process_id().ToNumber()), ##__VA_ARGS__))
 
 typedef uint8_t* Address;
 

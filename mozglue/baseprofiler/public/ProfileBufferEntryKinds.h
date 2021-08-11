@@ -7,6 +7,8 @@
 #ifndef ProfileBufferEntryKinds_h
 #define ProfileBufferEntryKinds_h
 
+#include "mozilla/BaseProfilerUtils.h"
+
 #include <cstdint>
 
 namespace mozilla {
@@ -35,7 +37,8 @@ static constexpr size_t ProfileBufferEntryNumChars = 8;
   MACRO(PauseSampling, double, sizeof(double))                    \
   MACRO(ResumeSampling, double, sizeof(double))                   \
   MACRO(Responsiveness, double, sizeof(double))                   \
-  MACRO(ThreadId, int, sizeof(int))                               \
+  MACRO(ThreadId, ::mozilla::baseprofiler::BaseProfilerThreadId,  \
+        sizeof(::mozilla::baseprofiler::BaseProfilerThreadId))    \
   MACRO(Time, double, sizeof(double))                             \
   MACRO(TimeBeforeCompactStack, double, sizeof(double))           \
   MACRO(CounterId, void*, sizeof(void*))                          \

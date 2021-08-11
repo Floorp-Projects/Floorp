@@ -3797,9 +3797,9 @@ MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
 }
 
 void TestProfiler() {
-  printf("TestProfiler starting -- pid: %d, tid: %d\n",
-         int(baseprofiler::profiler_current_process_id().ToNumber()),
-         int(baseprofiler::profiler_current_thread_id().ToNumber()));
+  printf("TestProfiler starting -- pid: %" PRIu64 ", tid: %" PRIu64 "\n",
+         uint64_t(baseprofiler::profiler_current_process_id().ToNumber()),
+         uint64_t(baseprofiler::profiler_current_thread_id().ToNumber()));
   // ::SleepMilli(10000);
 
   TestProfilerDependencies();
@@ -4561,9 +4561,10 @@ void TestPredefinedMarkers() {
 }
 
 void TestProfilerMarkers() {
-  printf("TestProfilerMarkers -- pid: %d, tid: %d\n",
-         int(mozilla::baseprofiler::profiler_current_process_id().ToNumber()),
-         int(mozilla::baseprofiler::profiler_current_thread_id().ToNumber()));
+  printf(
+      "TestProfilerMarkers -- pid: %" PRIu64 ", tid: %" PRIu64 "\n",
+      uint64_t(mozilla::baseprofiler::profiler_current_process_id().ToNumber()),
+      uint64_t(mozilla::baseprofiler::profiler_current_thread_id().ToNumber()));
   // ::SleepMilli(10000);
 
   TestUniqueJSONStrings();
@@ -4641,9 +4642,9 @@ int main()
 #endif  // defined(XP_WIN)
 {
 #ifdef MOZ_GECKO_PROFILER
-  printf("BaseTestProfiler -- pid: %d, tid: %d\n",
-         int(baseprofiler::profiler_current_process_id().ToNumber()),
-         int(baseprofiler::profiler_current_thread_id().ToNumber()));
+  printf("BaseTestProfiler -- pid: %" PRIu64 ", tid: %" PRIu64 "\n",
+         uint64_t(baseprofiler::profiler_current_process_id().ToNumber()),
+         uint64_t(baseprofiler::profiler_current_thread_id().ToNumber()));
   // ::SleepMilli(10000);
 #endif  // MOZ_GECKO_PROFILER
 
