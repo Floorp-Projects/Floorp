@@ -265,7 +265,8 @@ class BrowserFragment :
             ::setShouldRequestDesktop,
             ::showAddToHomescreenDialog,
             ::showFindInPageBar,
-            ::openSelectBrowser
+            ::openSelectBrowser,
+            ::openInBrowser
         )
 
         if (FeatureFlags.isMvp) {
@@ -561,6 +562,23 @@ class BrowserFragment :
         TelemetryWrapper.shareEvent()
     }
 
+    private fun openInBrowser() {
+        // Release the session from this view so that it can immediately be rendered by a different view
+        sessionFeature.get()?.release()
+
+        requireComponents.customTabsUseCases.migrate(tab.id)
+
+        val intent = Intent(context, MainActivity::class.java)
+        intent.action = Intent.ACTION_MAIN
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(intent)
+
+        TelemetryWrapper.openFullBrowser()
+
+        val activity = activity
+        activity?.finish()
+    }
+
     internal fun edit() {
         requireComponents.appStore.dispatch(
             AppAction.EditAction(tab.id)
@@ -583,20 +601,7 @@ class BrowserFragment :
             }
 
             R.id.open_in_firefox_focus -> {
-                // Release the session from this view so that it can immediately be rendered by a different view
-                sessionFeature.get()?.release()
-
-                requireComponents.customTabsUseCases.migrate(tab.id)
-
-                val intent = Intent(context, MainActivity::class.java)
-                intent.action = Intent.ACTION_MAIN
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                startActivity(intent)
-
-                TelemetryWrapper.openFullBrowser()
-
-                val activity = activity
-                activity?.finish()
+                openInBrowser()
             }
 
             R.id.share -> {

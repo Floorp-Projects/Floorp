@@ -18,7 +18,8 @@ class BrowserMenuController(
     private val requestDesktopCallback: (isChecked: Boolean) -> Unit,
     private val addToHomeScreenCallback: () -> Unit,
     private val showFindInPageCallback: () -> Unit,
-    private val openInCallback: () -> Unit
+    private val openInCallback: () -> Unit,
+    private val openInBrowser: () -> Unit
 ) {
 
     fun handleMenuInteraction(item: ToolbarMenu.Item) {
@@ -31,6 +32,7 @@ class BrowserMenuController(
             is ToolbarMenu.Item.FindInPage -> showFindInPageCallback()
             is ToolbarMenu.Item.RequestDesktop -> requestDesktopCallback(item.isChecked)
             is ToolbarMenu.Item.AddToHomeScreen -> addToHomeScreenCallback()
+            is ToolbarMenu.Item.OpenInBrowser -> openInBrowser()
             is ToolbarMenu.Item.OpenInApp -> openInCallback()
             is ToolbarMenu.Item.Settings -> appStore.dispatch(AppAction.OpenSettings(page = Screen.Settings.Page.Start))
         }

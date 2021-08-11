@@ -32,6 +32,7 @@ import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -90,6 +91,7 @@ class Components(
     val engine: Engine by lazy {
         engineOverride ?: EngineProvider.createEngine(context, engineDefaultSettings).apply {
             Settings.getInstance(context).setupSafeBrowsing(this)
+            WebCompatFeature.install(this)
             WebCompatReporterFeature.install(this, "focus")
         }
     }

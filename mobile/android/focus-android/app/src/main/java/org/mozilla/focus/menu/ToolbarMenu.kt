@@ -16,6 +16,7 @@ interface ToolbarMenu {
         object Share : Item()
         object FindInPage : Item()
         object AddToHomeScreen : Item()
+        object OpenInBrowser : Item()
         object OpenInApp : Item()
         object Settings : Item()
         object Stop : Item()

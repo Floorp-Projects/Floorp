@@ -4,16 +4,19 @@
 package org.mozilla.focus.menu.browser
 
 import android.content.Context
-import androidx.core.content.ContextCompat
-import mozilla.components.browser.menu.BrowserMenuBuilder
+import android.graphics.Typeface
+import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
+import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
-import mozilla.components.browser.menu.item.SimpleBrowserMenuHighlightableItem
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import org.mozilla.focus.R
 import org.mozilla.focus.menu.ToolbarMenu
 import org.mozilla.focus.theme.resolveAttribute
@@ -29,8 +32,9 @@ class CustomTabMenu(
         get() = store.state.findCustomTab(currentTabId)
 
     override val menuBuilder by lazy {
-        BrowserMenuBuilder(
-            items = menuItems
+        WebExtensionBrowserMenuBuilder(
+            items = menuItems,
+            store = store
         )
     }
 
@@ -103,6 +107,11 @@ class CustomTabMenu(
             onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
         }
 
+        val reportSiteIssue = WebExtensionPlaceholderMenuItem(
+            id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID,
+            iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText)
+        )
+
         val addToHomescreen = BrowserMenuImageText(
             label = context.getString(R.string.menu_add_to_home_screen),
             imageResource = R.drawable.ic_add_to_home_screen
@@ -110,19 +119,26 @@ class CustomTabMenu(
             onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
         }
 
-        val openInApp = BrowserMenuImageText(
+        val appName = context.getString(R.string.app_name)
+        val openInFocus = SimpleBrowserMenuItem(
+            label = context.getString(R.string.menu_open_with_default_browser2, appName),
+            textColorResource = context.theme.resolveAttribute(R.attr.primaryText)
+        ) {
+            onItemTapped.invoke(ToolbarMenu.Item.OpenInBrowser)
+        }
+
+        val openInApp = SimpleBrowserMenuItem(
             label = context.getString(R.string.menu_open_with_a_browser2),
-            imageResource = R.drawable.ic_open_in,
             textColorResource = context.theme.resolveAttribute(R.attr.primaryText)
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
         }
 
-        val poweredBy = SimpleBrowserMenuHighlightableItem(
+        val poweredBy = BrowserMenuCategory(
             label = context.getString(R.string.menu_custom_tab_branding, context.getString(R.string.app_name)),
             textSize = CAPTION_TEXT_SIZE,
             textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
-            backgroundTint = ContextCompat.getColor(context, R.color.colorPoweredBy)
+            textStyle = Typeface.NORMAL
         )
 
         listOfNotNull(
@@ -130,8 +146,10 @@ class CustomTabMenu(
             BrowserMenuDivider(),
             findInPage,
             desktopMode,
+            reportSiteIssue,
             BrowserMenuDivider(),
             addToHomescreen,
+            openInFocus,
             openInApp,
             poweredBy
         )

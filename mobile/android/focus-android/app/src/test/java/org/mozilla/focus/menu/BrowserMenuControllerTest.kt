@@ -45,6 +45,10 @@ class BrowserMenuControllerTest {
     @Mock
     private lateinit var openInCallback: () -> Unit
 
+    // NB: we should avoid mocking lambdas..
+    @Mock
+    private lateinit var openInBrowser: () -> Unit
+
     @Before
     fun setup() {
         val store = BrowserStore(
@@ -64,7 +68,8 @@ class BrowserMenuControllerTest {
             requestDesktopCallback,
             addToHomeScreenCallback,
             showFindInPageCallback,
-            openInCallback
+            openInCallback,
+            openInBrowser
         )
     }
 
@@ -110,6 +115,13 @@ class BrowserMenuControllerTest {
         val menuItem = ToolbarMenu.Item.RequestDesktop(isChecked = true)
         browserMenuController.handleMenuInteraction(menuItem)
         Mockito.verify(requestDesktopCallback, times(1)).invoke(true)
+    }
+
+    @Test
+    fun `GIVEN OpenInBrowser menu item WHEN the item is pressed THEN openInBrowser is called`() {
+        val menuItem = ToolbarMenu.Item.OpenInBrowser
+        browserMenuController.handleMenuInteraction(menuItem)
+        Mockito.verify(openInBrowser, times(1)).invoke()
     }
 
     @Test
