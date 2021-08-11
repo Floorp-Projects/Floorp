@@ -56,6 +56,9 @@ const APIS = {
   FlushApzRepaints({ tab }) {
     return browser.test.flushApzRepaints(tab.id);
   },
+  PromiseAllPaintsDone({ tab }) {
+    return browser.test.promiseAllPaintsDone(tab.id);
+  },
 };
 
 port.onMessage.addListener(async message => {

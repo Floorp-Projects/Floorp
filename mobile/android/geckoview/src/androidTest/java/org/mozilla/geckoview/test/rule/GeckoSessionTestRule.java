@@ -2173,6 +2173,13 @@ public class GeckoSessionTestRule implements TestRule {
         webExtensionApiCall(session, "FlushApzRepaints", null);
     }
 
+    /**
+     * Invokes a simplified version of promiseAllPaintsDone in paint_listener.js.
+     */
+    public void promiseAllPaintsDone(final GeckoSession session) {
+        webExtensionApiCall(session, "PromiseAllPaintsDone", null);
+    }
+
     private Object webExtensionApiCall(final @NonNull String apiName, final @NonNull SetArgs argsSetter) {
         return webExtensionApiCall(null, apiName, argsSetter);
     }

@@ -210,6 +210,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     fun GeckoSession.flushApzRepaints() = sessionRule.flushApzRepaints(this)
 
+    fun GeckoSession.promiseAllPaintsDone() = sessionRule.promiseAllPaintsDone(this)
+
     var GeckoSession.active: Boolean
             get() = sessionRule.getActive(this)
             set(value) = setActive(value)
