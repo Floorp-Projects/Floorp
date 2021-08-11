@@ -665,10 +665,6 @@
   margin-inline-start: calc(32px - /* settings start padding */ 8px );
 }
 
-#urlbar .search-one-offs-spacer {
-  flex-grow: 1;
-}
-
 .urlbarView-row[source="bookmarks"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
 #urlbar-engine-one-off-item-bookmarks {
   list-style-image: url("chrome://browser/skin/bookmark.svg");
