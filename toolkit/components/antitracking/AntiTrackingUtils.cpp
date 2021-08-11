@@ -617,7 +617,6 @@ bool AntiTrackingUtils::IsThirdPartyChannel(nsIChannel* aChannel) {
 bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
                                            nsIURI* aURI) {
   MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aURI);
 
   // We assume that the window is foreign to the URI by default.
   bool thirdParty = true;

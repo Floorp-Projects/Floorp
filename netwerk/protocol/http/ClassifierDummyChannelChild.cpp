@@ -9,6 +9,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsIURI.h"
+#include "mozilla/AntiTrackingUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -44,8 +45,7 @@ bool ClassifierDummyChannelChild::Create(
     return false;
   }
 
-  bool isThirdParty =
-      nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, aURI);
+  bool isThirdParty = AntiTrackingUtils::IsThirdPartyChannel(aChannel);
 
   static_cast<ClassifierDummyChannelChild*>(actor)->Initialize(
       aChannel, aURI, isThirdParty, aCallback);
