@@ -887,7 +887,7 @@ class OSXToolchainTest(BaseToolchainTest):
     SYSROOT_FLAGS = {
         "flags": PrependFlags(
             [
-                "-isysroot",
+                "--sysroot",
                 xcrun("", ("--show-sdk-path",))[1],
                 "-mmacosx-version-min=10.12",
             ]

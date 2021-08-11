@@ -13,10 +13,7 @@ import six
 from six import StringIO
 from textwrap import dedent
 
-from mozunit import (
-    main,
-    MockedOpen,
-)
+from mozunit import main, MockedOpen
 
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import ReadOnlyNamespace
@@ -106,10 +103,7 @@ class TestCompilerPreprocessor(unittest.TestCase):
 
     def test_normalization(self):
         pp = CompilerPreprocessor(
-            {
-                "__has_attribute(bar)": 1,
-                '__has_warning("-Wc++98-foo")': 1,
-            }
+            {"__has_attribute(bar)": 1, '__has_warning("-Wc++98-foo")': 1}
         )
         pp.out = StringIO()
         input = StringIO(
@@ -142,13 +136,7 @@ class TestCompilerPreprocessor(unittest.TestCase):
         self.assertEquals(pp.out.getvalue(), "WFOO\nBAR\nNO_FOO\n")
 
     def test_condition(self):
-        pp = CompilerPreprocessor(
-            {
-                "A": 1,
-                "B": "2",
-                "C": "0L",
-            }
-        )
+        pp = CompilerPreprocessor({"A": 1, "B": "2", "C": "0L"})
         pp.out = StringIO()
         input = StringIO(
             dedent(
@@ -229,8 +217,8 @@ class FakeCompiler(dict):
             if arg is None:
                 break
             if arg.startswith("-"):
-                # Ignore -isysroot and the argument that follows it.
-                if arg == "-isysroot":
+                # Ignore --sysroot and the argument that follows it.
+                if arg == "--sysroot":
                     next(args, None)
                 else:
                     flags.append(arg)
@@ -273,39 +261,17 @@ class FakeCompiler(dict):
 
 class TestFakeCompiler(unittest.TestCase):
     def test_fake_compiler(self):
-        with MockedOpen(
-            {
-                "file": "A B C",
-                "file.c": "A B C",
-            }
-        ):
-            compiler = FakeCompiler(
-                {
-                    "A": "1",
-                    "B": "2",
-                }
-            )
+        with MockedOpen({"file": "A B C", "file.c": "A B C"}):
+            compiler = FakeCompiler({"A": "1", "B": "2"})
             self.assertEquals(compiler(None, ["-E", "file"]), (0, "1 2 C", ""))
 
             compiler = FakeCompiler(
                 {
-                    None: {
-                        "A": "1",
-                        "B": "2",
-                    },
-                    "-foo": {
-                        "C": "foo",
-                    },
-                    "-bar": {
-                        "B": "bar",
-                        "C": "bar",
-                    },
-                    "-qux": {
-                        "B": False,
-                    },
-                    "*.c": {
-                        "B": "42",
-                    },
+                    None: {"A": "1", "B": "2"},
+                    "-foo": {"C": "foo"},
+                    "-bar": {"B": "bar", "C": "bar"},
+                    "-qux": {"B": False},
+                    "*.c": {"B": "42"},
                 }
             )
             self.assertEquals(compiler(None, ["-E", "file"]), (0, "1 2 C", ""))
@@ -334,111 +300,25 @@ class TestFakeCompiler(unittest.TestCase):
             )
 
     def test_multiple_definitions(self):
+        compiler = FakeCompiler({"A": 1, "B": 2}, {"C": 3})
+
+        self.assertEquals(compiler, {None: {"A": 1, "B": 2, "C": 3}})
+        compiler = FakeCompiler({"A": 1, "B": 2}, {"B": 4, "C": 3})
+
+        self.assertEquals(compiler, {None: {"A": 1, "B": 4, "C": 3}})
         compiler = FakeCompiler(
-            {
-                "A": 1,
-                "B": 2,
-            },
-            {
-                "C": 3,
-            },
+            {"A": 1, "B": 2}, {None: {"B": 4, "C": 3}, "-foo": {"D": 5}}
+        )
+
+        self.assertEquals(compiler, {None: {"A": 1, "B": 4, "C": 3}, "-foo": {"D": 5}})
+
+        compiler = FakeCompiler(
+            {None: {"A": 1, "B": 2}, "-foo": {"D": 5}},
+            {"-foo": {"D": 5}, "-bar": {"E": 6}},
         )
 
         self.assertEquals(
-            compiler,
-            {
-                None: {
-                    "A": 1,
-                    "B": 2,
-                    "C": 3,
-                },
-            },
-        )
-        compiler = FakeCompiler(
-            {
-                "A": 1,
-                "B": 2,
-            },
-            {
-                "B": 4,
-                "C": 3,
-            },
-        )
-
-        self.assertEquals(
-            compiler,
-            {
-                None: {
-                    "A": 1,
-                    "B": 4,
-                    "C": 3,
-                },
-            },
-        )
-        compiler = FakeCompiler(
-            {
-                "A": 1,
-                "B": 2,
-            },
-            {
-                None: {
-                    "B": 4,
-                    "C": 3,
-                },
-                "-foo": {
-                    "D": 5,
-                },
-            },
-        )
-
-        self.assertEquals(
-            compiler,
-            {
-                None: {
-                    "A": 1,
-                    "B": 4,
-                    "C": 3,
-                },
-                "-foo": {
-                    "D": 5,
-                },
-            },
-        )
-
-        compiler = FakeCompiler(
-            {
-                None: {
-                    "A": 1,
-                    "B": 2,
-                },
-                "-foo": {
-                    "D": 5,
-                },
-            },
-            {
-                "-foo": {
-                    "D": 5,
-                },
-                "-bar": {
-                    "E": 6,
-                },
-            },
-        )
-
-        self.assertEquals(
-            compiler,
-            {
-                None: {
-                    "A": 1,
-                    "B": 2,
-                },
-                "-foo": {
-                    "D": 5,
-                },
-                "-bar": {
-                    "E": 6,
-                },
-            },
+            compiler, {None: {"A": 1, "B": 2}, "-foo": {"D": 5}, "-bar": {"E": 6}}
         )
 
 
