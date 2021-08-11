@@ -81,7 +81,6 @@ set_config("PGO_PROFILE_PATH", pgo_profile_path)
 
 @depends(c_compiler, pgo_profile_path, target_is_windows)
 @imports("multiprocessing")
-@imports(_from="__builtin__", _import="min")
 def pgo_flags(compiler, profdata, target_is_windows):
     if compiler.type == "gcc":
         return namespace(
