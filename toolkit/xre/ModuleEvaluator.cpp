@@ -22,8 +22,6 @@
 #include "nsWindowsHelpers.h"
 #include "nsXULAppAPI.h"
 
-namespace mozilla {
-
 // Fills a Vector with keyboard layout DLLs found in the registry.
 // These are leaf names only, not full paths. Here we will convert them to
 // lowercase before returning, to facilitate case-insensitive searches.
@@ -62,6 +60,8 @@ static Vector<nsString> GetKeyboardLayoutDlls() {
 
   return result;
 }
+
+namespace mozilla {
 
 /* static */
 bool ModuleEvaluator::ResolveKnownFolder(REFKNOWNFOLDERID aFolderId,

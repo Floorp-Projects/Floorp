@@ -39,10 +39,9 @@ if CONFIG["OS_TARGET"] == "WINNT":
     if CONFIG["MOZ_MEMORY"]:
         DEFFILE = "mozglue.def"
     # We'll break the DLL blocklist if we immediately load user32.dll.
-    # For the same reason, we delayload these other DLLs to avoid eager
-    # dependencies on user32.dll.
+    # For the same reason, we delayload winmm.dll and ole32.dll which
+    # statically link user32.dll.
     DELAYLOAD_DLLS += [
-        "oleaut32.dll",
         "ole32.dll",
         "user32.dll",
         "winmm.dll",

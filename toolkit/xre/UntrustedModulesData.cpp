@@ -62,8 +62,6 @@ static LONGLONG TimeUnitsToQPC(const LONGLONG aTimeStamp,
   return result;
 }
 
-namespace mozilla {
-
 static Maybe<double> QPCLoadDurationToMilliseconds(
     const ModuleLoadInfo& aNtInfo) {
   if (aNtInfo.IsBare()) {
@@ -72,6 +70,8 @@ static Maybe<double> QPCLoadDurationToMilliseconds(
 
   return Some(QPCToMilliseconds<double>(aNtInfo.mLoadTimeInfo.QuadPart));
 }
+
+namespace mozilla {
 
 ModuleRecord::ModuleRecord() : mTrustFlags(ModuleTrustFlags::None) {}
 
