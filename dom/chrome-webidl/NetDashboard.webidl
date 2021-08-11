@@ -9,7 +9,7 @@ dictionary SocketElement {
   DOMString host = "";
   unsigned long port = 0;
   boolean active = false;
-  boolean tcp = false;
+  DOMString type = "";
   double sent = 0;
   double received = 0;
 };

@@ -1759,11 +1759,13 @@ void nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo>* data,
 
   NS_ENSURE_TRUE_VOID(idLayer);
 
-  bool tcp = PR_GetDescType(idLayer) == PR_DESC_SOCKET_TCP;
+  PRDescType type = PR_GetDescType(idLayer);
   char host[64] = {0};
   uint16_t port;
+  const char *type_desc;
 
-  if (tcp) {
+  if (type == PR_DESC_SOCKET_TCP) {
+    type_desc = "TCP";
     PRNetAddr peer_addr;
     PodZero(&peer_addr);
 
@@ -1784,6 +1786,11 @@ void nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo>* data,
     }
     port = PR_ntohs(port);
   } else {
+    if (type == PR_DESC_SOCKET_UDP) {
+      type_desc = "UDP";
+    } else {
+      type_desc = "other";
+    }
     NetAddr addr;
     if (context->mHandler->GetRemoteAddr(&addr) != NS_OK) {
       return;
@@ -1798,7 +1805,7 @@ void nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo>* data,
 
   uint64_t sent = context->mHandler->ByteCountSent();
   uint64_t received = context->mHandler->ByteCountReceived();
-  SocketInfo info = {nsCString(host), sent, received, port, aActive, tcp};
+  SocketInfo info = {nsCString(host), sent, received, port, aActive, nsCString(type_desc)};
 
   data->AppendElement(info);
 }
