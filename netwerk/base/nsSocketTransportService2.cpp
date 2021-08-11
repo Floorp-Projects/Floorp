@@ -1760,27 +1760,42 @@ void nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo>* data,
   NS_ENSURE_TRUE_VOID(idLayer);
 
   bool tcp = PR_GetDescType(idLayer) == PR_DESC_SOCKET_TCP;
-
-  PRNetAddr peer_addr;
-  PodZero(&peer_addr);
-  PRStatus rv = PR_GetPeerName(aFD, &peer_addr);
-  if (rv != PR_SUCCESS) {
-    return;
-  }
-
   char host[64] = {0};
-  rv = PR_NetAddrToString(&peer_addr, host, sizeof(host));
-  if (rv != PR_SUCCESS) {
-    return;
+  uint16_t port;
+
+  if (tcp) {
+    PRNetAddr peer_addr;
+    PodZero(&peer_addr);
+
+    PRStatus rv = PR_GetPeerName(aFD, &peer_addr);
+    if (rv != PR_SUCCESS) {
+      return;
+    }
+
+    rv = PR_NetAddrToString(&peer_addr, host, sizeof(host));
+    if (rv != PR_SUCCESS) {
+      return;
+    }
+
+    if (peer_addr.raw.family == PR_AF_INET) {
+      port = peer_addr.inet.port;
+    } else {
+      port = peer_addr.ipv6.port;
+    }
+    port = PR_ntohs(port);
+  } else {
+    NetAddr addr;
+    if (context->mHandler->GetRemoteAddr(&addr) != NS_OK) {
+      return;
+    }
+    if (!addr.ToStringBuffer(host, sizeof(host))) {
+      return;
+    }
+    if (addr.GetPort(&port) != NS_OK) {
+      return;
+    }
   }
 
-  uint16_t port;
-  if (peer_addr.raw.family == PR_AF_INET) {
-    port = peer_addr.inet.port;
-  } else {
-    port = peer_addr.ipv6.port;
-  }
-  port = PR_ntohs(port);
   uint64_t sent = context->mHandler->ByteCountSent();
   uint64_t received = context->mHandler->ByteCountReceived();
   SocketInfo info = {nsCString(host), sent, received, port, aActive, tcp};
