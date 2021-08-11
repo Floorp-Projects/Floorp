@@ -87,7 +87,9 @@ ProfilerThreadId profiler_current_thread_id() {
 // ------------------------------------------------------- Others
 #  else
 
-ProfilerThreadId profiler_current_thread_id() { return ProfilerThreadId{}; }
+ProfilerThreadId profiler_current_thread_id() {
+  return ProfilerThreadId::FromNativeId(std::this_thread::get_id());
+}
 
 #  endif
 #endif  // End of non-XP_WIN.

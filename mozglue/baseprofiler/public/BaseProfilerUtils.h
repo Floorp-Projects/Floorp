@@ -61,8 +61,10 @@ using ThreadIdType = long;
 // ------------------------------------------------------- Others
 #  else
 
+#    include <thread>
+
 namespace mozilla::baseprofiler::detail {
-using ThreadIdType = int;
+using ThreadIdType = std::thread::id;
 }  // namespace mozilla::baseprofiler::detail
 
 #  endif
