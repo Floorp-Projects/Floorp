@@ -124,6 +124,15 @@ void TestProfilerUtils() {
   }
 
   {
+#ifdef MOZ_GECKO_PROFILER
+    if (!mozilla::baseprofiler::detail::scProfilerMainThreadId.IsSpecified()) {
+      // Special case: This may happen if the profiler has not yet been
+      // initialized. We only need to set scProfilerMainThreadId.
+      mozilla::baseprofiler::detail::scProfilerMainThreadId =
+          mozilla::baseprofiler::profiler_current_thread_id();
+    }
+#endif  // MOZ_GECKO_PROFILER
+
     using mozilla::baseprofiler::BaseProfilerThreadId;
     using Number = BaseProfilerThreadId::NumberType;
     static constexpr Number scMaxNumber = std::numeric_limits<Number>::max();
@@ -197,13 +206,6 @@ void TestProfilerUtils() {
 
     BaseProfilerThreadId mainThreadId =
         mozilla::baseprofiler::profiler_main_thread_id();
-    if (!mainThreadId.IsSpecified()) {
-      // Special case: This may happen if the profiler has not yet been
-      // initialized. We only need to set scProfilerMainThreadId.
-      mozilla::baseprofiler::detail::scProfilerMainThreadId = mainTestThreadId;
-      // After which `profiler_main_thread_id` should work.
-      mainThreadId = mozilla::baseprofiler::profiler_main_thread_id();
-    }
     MOZ_RELEASE_ASSERT(mainThreadId.IsSpecified());
 
     MOZ_RELEASE_ASSERT(mainThreadId == mainTestThreadId,
