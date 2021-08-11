@@ -564,8 +564,7 @@ void nsWindow::DispatchDeactivateEvent(void) {
 
 void nsWindow::DispatchResized() {
   LOG(("nsWindow::DispatchResized() [%p] size [%d, %d]", this,
-       (int)(mBounds.width / FractionalScaleFactor()),
-       (int)(mBounds.height / FractionalScaleFactor())));
+       (int)(mBounds.width), (int)(mBounds.height)));
 
   mNeedsDispatchResized = false;
   if (mWidgetListener) {
@@ -3630,11 +3629,22 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   //   Override-redirect windows are children of the root window so parent
   //   coordinates are root coordinates.
 
-  LOG(("configure event [%p] %d %d %d %d\n", (void*)this, aEvent->x, aEvent->y,
-       aEvent->width, aEvent->height));
+  LOG(("configure event [%p] %d,%d -> %d x %d scale %d\n", (void*)this,
+       aEvent->x, aEvent->y, aEvent->width, aEvent->height,
+       gdk_window_get_scale_factor(mGdkWindow)));
 
   if (mPendingConfigures > 0) {
     mPendingConfigures--;
+  }
+
+  // Don't fire configure event for scale changes, we handle that
+  // OnScaleChanged event. Skip that for toplevel windows only.
+  if (mWindowType == eWindowType_toplevel) {
+    if (mWindowScaleFactor != gdk_window_get_scale_factor(mGdkWindow)) {
+      LOG(("  scale factor changed to %d,return early",
+           gdk_window_get_scale_factor(mGdkWindow)));
+      return FALSE;
+    }
   }
 
   LayoutDeviceIntRect screenBounds = GetScreenBounds();
@@ -4706,37 +4716,35 @@ void nsWindow::OnCompositedChanged() {
   mCompositedScreen = gdk_screen_is_composited(gdk_screen_get_default());
 }
 
-void nsWindow::OnScaleChanged(GtkAllocation* aAllocation) {
-  LOG(("nsWindow::OnScaleChanged [%p] %d,%d -> %d x %d\n", (void*)this,
-       aAllocation->x, aAllocation->y, aAllocation->width,
-       aAllocation->height));
+void nsWindow::OnScaleChanged() {
+  // Gtk supply us sometimes with doubled events so stay calm in such case.
+  if (gdk_window_get_scale_factor(mGdkWindow) == mWindowScaleFactor) {
+    return;
+  }
 
   // Force scale factor recalculation
   mWindowScaleFactorChanged = true;
 
-  // This eventually propagate new scale to the PuppetWidgets
-  OnDPIChanged();
+  GtkAllocation allocation;
+  gtk_widget_get_allocation(GTK_WIDGET(mContainer), &allocation);
+  LayoutDeviceIntSize size = GdkRectToDevicePixels(allocation).Size();
+  mBoundsAreValid = true;
+  mBounds.SizeTo(size);
 
-  // configure_event is already fired before scale-factor signal,
-  // but size-allocate isn't fired by changing scale
-  OnSizeAllocate(aAllocation);
-
-  // Client offset are updated by _NET_FRAME_EXTENTS on X11 when system titlebar
-  // is enabled. In ither cases (Wayland or system titlebar is off on X11)
-  // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
-  // it from mContainer position.
-  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
-    if (GdkIsWaylandDisplay() || (GdkIsX11Display() && mDrawInTitlebar)) {
-      UpdateClientOffsetFromCSDWindow();
+  if (mWidgetListener) {
+    if (PresShell* presShell = mWidgetListener->GetPresShell()) {
+      presShell->BackingScaleFactorChanged();
+      // This affects style / layout because it affects system font sizes.
+      // Update menu's font size etc.
+      presShell->ThemeChanged(ThemeChangeKind::StyleAndLayout);
     }
   }
 
-#ifdef MOZ_WAYLAND
-  // We need to update scale when scale of egl window is changed.
-  if (mContainer && moz_container_wayland_has_egl_window(mContainer)) {
-    moz_container_wayland_set_scale_factor(mContainer);
+  DispatchResized();
+
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->NotifyClientSizeChanged(GetClientSize());
   }
-#endif
 
   if (mCursor.IsCustom()) {
     mUpdateCursor = true;
@@ -7847,9 +7855,7 @@ static void scale_changed_cb(GtkWidget* widget, GParamSpec* aPSpec,
     return;
   }
 
-  GtkAllocation allocation;
-  gtk_widget_get_allocation(widget, &allocation);
-  window->OnScaleChanged(&allocation);
+  window->OnScaleChanged();
 }
 
 static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent) {
@@ -9292,10 +9298,12 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
 #ifdef MOZ_WAYLAND
 void nsWindow::SetEGLNativeWindowSize(
     const LayoutDeviceIntSize& aEGLWindowSize) {
-  if (mContainer && GdkIsWaylandDisplay()) {
-    moz_container_wayland_egl_window_set_size(mContainer, aEGLWindowSize.width,
-                                              aEGLWindowSize.height);
+  if (!mContainer || !GdkIsWaylandDisplay()) {
+    return;
   }
+  moz_container_wayland_egl_window_set_size(mContainer, aEGLWindowSize.width,
+                                            aEGLWindowSize.height);
+  moz_container_wayland_set_scale_factor(mContainer);
 }
 
 nsWindow* nsWindow::GetFocusedWindow() { return gFocusWindow; }
