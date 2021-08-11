@@ -219,19 +219,6 @@ def fission_filter(task):
 
 
 TEST_VARIANTS = {
-    "noqr": {
-        "description": "{description} with no webrender or software webrender",
-        "suffix": "noqr",
-        "merge": {
-            "webrender": False,
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=gfx.webrender.software=false",
-                    "--setpref=layers.acceleration.disabled=true",
-                ],
-            },
-        },
-    },
     "a11y-checks": {
         "description": "{description} with accessibility checks enabled",
         "suffix": "a11y-checks",

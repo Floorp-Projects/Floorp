@@ -445,7 +445,6 @@ mochitest-media:
                     windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     (linux|windows10-64-2004|macos)(?!.*-qr).*: []
                     default: built-projects
-            noqr: built-projects
             webgl-ipc:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
@@ -466,17 +465,15 @@ mochitest-media:
                     default: built-projects
     variants:
         by-test-platform:
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission', 'noqr']
-            android-em.*-qr.*: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'noqr']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission']
+            android-em.*-qr.*: ['fission', 'fission-webgl-ipc', 'webgl-ipc']
             android-.*/opt: []
             android.*: ['socketprocess']
-            .*-ccov-qr.*/.*: ['noqr']
-            .*tsan.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
-            windows10-64-2004-asan-qr/opt: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
+            .*-ccov-qr.*/.*: []
             windows10-aarch64-qr/.*: []
             (linux|windows10-64-2004|macos)(?!.*-qr).*: []
-            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'socketprocess', 'wayland', 'noqr']
-            (?!android-hw).*-qr.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc', 'noqr']
+            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'socketprocess', 'wayland']
+            (?!android-hw).*-qr.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
             default: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size:

@@ -156,8 +156,7 @@ browsertime-tp6-essential:
         by-app:
             firefox:
                 by-test-platform:
-                    windows10-64.*shippable-qr/.*: [fission, noqr]
-                    (?!windows10-64).*shippable-qr/.*: [fission]
+                    .*shippable-qr/.*: [fission]
                     default: []
             default: []
     tier:
