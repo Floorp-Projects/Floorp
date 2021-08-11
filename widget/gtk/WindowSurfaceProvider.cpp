@@ -56,7 +56,9 @@ WindowSurfaceProvider::WindowSurfaceProvider()
 }
 
 #ifdef MOZ_WAYLAND
-void WindowSurfaceProvider::Initialize(nsWindow* aWidget) { mWidget = aWidget; }
+void WindowSurfaceProvider::Initialize(RefPtr<nsWindow> aWidget) {
+  mWidget = std::move(aWidget);
+}
 #endif
 #ifdef MOZ_X11
 void WindowSurfaceProvider::Initialize(Window aWindow, Visual* aVisual,
@@ -78,13 +80,13 @@ RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
       LOG(
           ("Drawing to nsWindow %p will use wl_surface. Using multi-buffered "
            "backend.\n",
-           mWidget));
+           mWidget.get()));
       return MakeRefPtr<WindowSurfaceWaylandMB>(mWidget);
     }
     LOG(
         ("Drawing to nsWindow %p will use wl_surface. Using single-buffered "
          "backend.\n",
-         mWidget));
+         mWidget.get()));
     return MakeRefPtr<WindowSurfaceWayland>(mWidget);
   }
 #endif

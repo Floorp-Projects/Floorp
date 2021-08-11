@@ -41,7 +41,7 @@ class WindowSurfaceProvider final {
    * while WindowSurfaceProvider is used.
    */
 #ifdef MOZ_WAYLAND
-  void Initialize(nsWindow* aWidget);
+  void Initialize(RefPtr<nsWindow> aWidget);
 #endif
 #ifdef MOZ_X11
   void Initialize(Window aWindow, Visual* aVisual, int aDepth, bool aIsShaped);
@@ -65,7 +65,7 @@ class WindowSurfaceProvider final {
 
   RefPtr<WindowSurface> mWindowSurface;
 #ifdef MOZ_WAYLAND
-  nsWindow* mWidget;
+  RefPtr<nsWindow> mWidget;
 #endif
 #ifdef MOZ_X11
   bool mIsShaped;

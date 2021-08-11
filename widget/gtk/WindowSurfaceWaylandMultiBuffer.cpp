@@ -151,9 +151,9 @@ using gfx::DataSourceSurface;
 
 #define BACK_BUFFER_NUM 3
 
-WindowSurfaceWaylandMB::WindowSurfaceWaylandMB(nsWindow* aWindow)
+WindowSurfaceWaylandMB::WindowSurfaceWaylandMB(RefPtr<nsWindow> aWindow)
     : mSurfaceLock("WindowSurfaceWayland lock"),
-      mWindow(aWindow),
+      mWindow(std::move(aWindow)),
       mFrameInProcess(false),
       mCallbackRequested(false) {}
 

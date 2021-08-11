@@ -42,7 +42,7 @@ class GtkCompositorWidget : public CompositorWidget,
  public:
   GtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
                       const layers::CompositorOptions& aOptions,
-                      nsWindow* aWindow /* = nullptr*/);
+                      RefPtr<nsWindow> aWindow /* = nullptr*/);
   ~GtkCompositorWidget();
 
   // CompositorWidget Overrides
@@ -56,7 +56,6 @@ class GtkCompositorWidget : public CompositorWidget,
   void EndRemoteDrawingInRegion(
       gfx::DrawTarget* aDrawTarget,
       const LayoutDeviceIntRegion& aInvalidRegion) override;
-  uintptr_t GetWidgetKey() override;
 
   LayoutDeviceIntSize GetClientSize() override;
   void RemoteLayoutSizeUpdated(const LayoutDeviceRect& aSize);
@@ -83,7 +82,7 @@ class GtkCompositorWidget : public CompositorWidget,
   GtkCompositorWidget* AsGtkCompositorWidget() override { return this; }
 
  protected:
-  nsWindow* mWidget;
+  RefPtr<nsWindow> mWidget;
 
  private:
   // This field is written to on the main thread and read from on the compositor
