@@ -57,7 +57,7 @@ class SignOutFragment : AppCompatDialogFragment() {
             ),
             binding.root.context.getString(R.string.app_name)
         )
-        return view
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
