@@ -1,11 +1,9 @@
 package org.mozilla.focus.settings
 
 import android.content.Context
-import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceViewHolder
 import androidx.preference.SwitchPreferenceCompat
 import mozilla.components.browser.state.state.SessionState
@@ -30,8 +28,6 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
         }
 
         val learnMoreLink = holder!!.findViewById(R.id.link) as TextView
-        learnMoreLink.paintFlags = learnMoreLink.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        learnMoreLink.setTextColor(ContextCompat.getColor(context, R.color.colorAction))
         learnMoreLink.setOnClickListener {
             val tabId = context.components.tabsUseCases.addTab(
                 getLearnMoreUrl(),

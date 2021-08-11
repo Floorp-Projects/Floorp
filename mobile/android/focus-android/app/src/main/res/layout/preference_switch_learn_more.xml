@@ -3,15 +3,15 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:minHeight="?android:attr/listPreferredItemHeightSmall"
-    android:gravity="center_vertical"
     android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:orientation="horizontal"
     android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
-    android:orientation="horizontal">
+    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">
 
     <RelativeLayout
         android:layout_width="0dp"
@@ -20,32 +20,36 @@
         android:paddingTop="16dip"
         android:paddingBottom="16dip">
 
-        <TextView android:id="@android:id/title"
+        <TextView
+            android:id="@android:id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceListItem"
             tools:text="@string/preference_mozilla_telemetry2" />
 
-        <TextView android:id="@android:id/summary"
+        <TextView
+            android:id="@android:id/summary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@android:id/title"
             android:layout_alignStart="@android:id/title"
+            android:maxLines="10"
             android:textAppearance="?android:attr/textAppearanceListItemSecondary"
             android:textColor="?android:attr/textColorSecondary"
-            tools:text="@string/preference_mozilla_telemetry_summary2"
-            android:maxLines="10" />
+            tools:text="@string/preference_mozilla_telemetry_summary2" />
 
         <TextView
             android:id="@+id/link"
-            android:layout_below="@android:id/summary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_below="@android:id/summary"
             android:layout_alignStart="@android:id/title"
-            android:text="@string/preference_mozilla_telemetry_summary"
+            android:lineSpacingExtra="1sp"
             android:paddingTop="4dp"
             android:paddingBottom="4dp"
-            android:textColor="@color/colorAction" />
+            android:text="@string/preference_mozilla_telemetry_summary"
+            android:textColor="@color/preference_learn_more_link"
+            android:textSize="12sp" />
 
     </RelativeLayout>
 
@@ -53,8 +57,8 @@
         android:id="@android:id/widget_frame"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:minWidth="58dip"
         android:gravity="end|center_vertical"
+        android:minWidth="58dip"
         android:orientation="vertical" />
 
 </LinearLayout>

@@ -10,7 +10,7 @@
     android:layout_marginStart="16dp"
     android:layout_marginTop="12dp"
     android:textAllCaps="false"
-    android:textColor="@color/colorAccent"
+    android:textColor="@color/preference_title_text"
     android:textSize="14sp"
     android:textStyle="bold" />
 
