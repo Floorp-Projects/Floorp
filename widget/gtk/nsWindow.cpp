@@ -437,8 +437,8 @@ nsWindow::nsWindow()
       mGdkWindow(nullptr),
       mWindowShouldStartDragging(false),
       mCompositorWidgetDelegate(nullptr),
-      mNeedsCompositorResume(false),
-      mCompositorInitiallyPaused(false),
+      mCompositorState(COMPOSITOR_ENABLED),
+      mCompositorPauseTimeoutID(0),
       mHasMappedToplevel(false),
       mRetryPointerGrab(false),
       mSizeState(nsSizeMode_Normal),
@@ -716,6 +716,11 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource = nullptr;
   }
 #endif
+
+  if (mCompositorPauseTimeoutID) {
+    g_source_remove(mCompositorPauseTimeoutID);
+    mCompositorPauseTimeoutID = 0;
+  }
 
   // It is safe to call DestroyeCompositor several times (here and
   // in the parent class) since it will take effect only once.
@@ -1314,7 +1319,7 @@ void nsWindow::RemovePopupFromHierarchyList() {
 
 void nsWindow::HideWaylandWindow() {
   LOG(("nsWindow::HideWaylandWindow: [%p]\n", this));
-  PauseCompositor();
+  PauseCompositorHiddenWindow();
   gtk_widget_hide(mShell);
 }
 
@@ -4722,6 +4727,12 @@ void nsWindow::OnScaleChanged() {
     return;
   }
 
+  // We pause compositor to avoid rendering of obsoleted remote content which
+  // produces flickering.
+  // Re-enable compositor again when remote content is updated or
+  // timeout happens.
+  PauseCompositor();
+
   // Force scale factor recalculation
   mWindowScaleFactorChanged = true;
 
@@ -5380,12 +5391,16 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       mContainer = MOZ_CONTAINER(container);
 #ifdef MOZ_WAYLAND
       if (GdkIsWaylandDisplay() && mIsAccelerated) {
-        mCompositorInitiallyPaused = true;
+        mCompositorState = COMPOSITOR_PAUSED_INITIALLY;
         RefPtr<nsWindow> self(this);
         moz_container_wayland_add_initial_draw_callback(
             mContainer, [self]() -> void {
-              self->mNeedsCompositorResume = true;
-              self->MaybeResumeCompositor();
+              MOZ_LOG(self->IsPopup() ? gWidgetPopupLog : gWidgetLog,
+                      mozilla::LogLevel::Debug,
+                      ("moz_container_wayland initial create "
+                       "ResumeCompositorHiddenWindow()"));
+              self->mCompositorState = COMPOSITOR_PAUSED_MISSING_EGL_WINDOW;
+              self->ResumeCompositorHiddenWindow();
             });
       }
 #endif
@@ -5448,9 +5463,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       mGdkWindow = gtk_widget_get_window(eventWidget);
 
       if (GdkIsX11Display() && gfx::gfxVars::UseEGL() && mIsAccelerated) {
-        mCompositorInitiallyPaused = true;
-        mNeedsCompositorResume = true;
-        MaybeResumeCompositor();
+        mCompositorState = COMPOSITOR_PAUSED_MISSING_EGL_WINDOW;
+        ResumeCompositorHiddenWindow();
       }
 
       if (mIsWaylandPanelWindow) {
@@ -5645,12 +5659,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                      nullptr);
   }
 
-  LOG(("nsWindow [%p] %s %s\n", (void*)this,
-       mWindowType == eWindowType_toplevel ? "Toplevel" : "Popup",
+  LOG(("nsWindow [%p] type %d %s\n", (void*)this, mWindowType,
        mIsPIPWindow ? "PIP window" : ""));
   if (mShell) {
-    LOG(("\tmShell %p mContainer %p mGdkWindow %p 0x%lx\n", mShell, mContainer,
-         mGdkWindow,
+    LOG(("\tmShell %p mContainer %p mGdkWindow %p XID 0x%lx\n", mShell,
+         mContainer, mGdkWindow,
          GdkIsX11Display() ? gdk_x11_window_get_xid(mGdkWindow) : 0));
   } else if (mContainer) {
     LOG(("\tmContainer %p mGdkWindow %p\n", mContainer, mGdkWindow));
@@ -5884,61 +5897,142 @@ void nsWindow::NativeMoveResize() {
   }
 }
 
-void nsWindow::MaybeResumeCompositor() {
+void nsWindow::ResumeCompositorHiddenWindow() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (mIsDestroyed || !mNeedsCompositorResume) {
+  if (mIsDestroyed || mCompositorState == COMPOSITOR_ENABLED ||
+      mCompositorState == COMPOSITOR_PAUSED_INITIALLY) {
     return;
   }
 
   if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+    LOG(("nsWindow::ResumeCompositorHiddenWindow [%p]\n", (void*)this));
     MOZ_ASSERT(mCompositorWidgetDelegate);
     if (mCompositorWidgetDelegate) {
-      mCompositorInitiallyPaused = false;
-      mNeedsCompositorResume = false;
+      mCompositorState = COMPOSITOR_ENABLED;
       remoteRenderer->SendResumeAsync();
     }
     remoteRenderer->SendForcePresent();
   }
 }
 
-void nsWindow::PauseCompositor() {
-  // Because wl_egl_window is destroyed on moz_container_unmap(),
-  // the current compositor cannot use it anymore. To avoid crash,
-  // pause the compositor and destroy EGLSurface & resume the compositor
-  // and re-create EGLSurface on next expose event.
-
-  // moz_container_wayland_has_egl_window() could not be used here, since
-  // there is a case that resume compositor is not completed yet.
-
-  // TODO: The compositor backend currently relies on the pause event to work
-  // around a Gnome specific bug. Remove again once the fix is widely available.
-  // See bug 1721298
-  if ((!mIsAccelerated && !gfx::gfxVars::UseWebRenderCompositor()) ||
-      mIsDestroyed) {
+// Because wl_egl_window is destroyed on moz_container_unmap(),
+// the current compositor cannot use it anymore. To avoid crash,
+// pause the compositor and destroy EGLSurface & resume the compositor
+// and re-create EGLSurface on next expose event.
+void nsWindow::PauseCompositorHiddenWindow() {
+  if (!mIsAccelerated || mIsDestroyed ||
+      mCompositorState == COMPOSITOR_PAUSED_INITIALLY) {
     return;
   }
 
+  LOG(("nsWindow::PauseCompositorHiddenWindow [%p]\n", (void*)this));
+
+  mCompositorState = COMPOSITOR_PAUSED_MISSING_EGL_WINDOW;
+
+  // Without remote widget / renderer we can't pause compositor.
+  // So delete LayerManager to avoid EGLSurface access.
   CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
-  bool needsCompositorPause =
-      !mNeedsCompositorResume && !!remoteRenderer && mCompositorWidgetDelegate;
-  if (needsCompositorPause) {
-    // XXX slow sync IPC
-    remoteRenderer->SendPause();
-#ifdef MOZ_WAYLAND
-    if (GdkIsWaylandDisplay()) {
-      // Re-request initial draw callback
-      RefPtr<nsWindow> self(this);
-      moz_container_wayland_add_initial_draw_callback(
-          mContainer, [self]() -> void {
-            self->mNeedsCompositorResume = true;
-            self->MaybeResumeCompositor();
-          });
-    }
-#endif
-  } else {
+  if (!remoteRenderer || !mCompositorWidgetDelegate) {
+    LOG(("  deleted layer manager"));
     DestroyLayerManager();
+    return;
   }
+
+  // XXX slow sync IPC
+  LOG(("  paused compositor"));
+  remoteRenderer->SendPause();
+#ifdef MOZ_WAYLAND
+  if (GdkIsWaylandDisplay()) {
+    // Re-request initial draw callback
+    RefPtr<nsWindow> self(this);
+    moz_container_wayland_add_initial_draw_callback(
+        mContainer, [self]() -> void {
+          MOZ_LOG(self->IsPopup() ? gWidgetPopupLog : gWidgetLog,
+                  mozilla::LogLevel::Debug,
+                  ("moz_container_wayland resume callback "
+                   "ResumeCompositorHiddenWindow()"));
+          self->ResumeCompositorHiddenWindow();
+        });
+  }
+#endif
+}
+
+static int WindowResumeCompositor(void* data) {
+  nsWindow* window = static_cast<nsWindow*>(data);
+  window->ResumeCompositor();
+  return true;
+}
+
+// We pause compositor to avoid rendering of obsoleted remote content which
+// produces flickering.
+// Re-enable compositor again when remote content is updated or
+// timeout happens.
+
+// Define maximal compositor pause when it's paused to avoid flickering,
+// in milliseconds.
+#define COMPOSITOR_PAUSE_TIMEOUT (1000)
+
+void nsWindow::PauseCompositor() {
+  bool pauseCompositor = (mWindowType == eWindowType_toplevel) &&
+                         mCompositorState == COMPOSITOR_ENABLED &&
+                         mIsAccelerated && mCompositorWidgetDelegate &&
+                         !mIsDestroyed;
+  if (!pauseCompositor) {
+    return;
+  }
+
+  LOG(("nsWindow::PauseCompositor() [%p]\n", (void*)this));
+
+  if (mCompositorPauseTimeoutID) {
+    g_source_remove(mCompositorPauseTimeoutID);
+    mCompositorPauseTimeoutID = 0;
+  }
+
+  CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
+  if (remoteRenderer) {
+    remoteRenderer->SendPause();
+    mCompositorState = COMPOSITOR_PAUSED_FLICKERING;
+    mCompositorPauseTimeoutID = (int)g_timeout_add(
+        COMPOSITOR_PAUSE_TIMEOUT, &WindowResumeCompositor, this);
+  }
+}
+
+bool nsWindow::IsWaitingForCompositorResume() {
+  return !mIsDestroyed && mCompositorState == COMPOSITOR_PAUSED_FLICKERING;
+}
+
+void nsWindow::ResumeCompositor() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!IsWaitingForCompositorResume()) {
+    return;
+  }
+
+  LOG(("nsWindow::ResumeCompositor() [%p]\n", (void*)this));
+
+  if (mCompositorPauseTimeoutID) {
+    g_source_remove(mCompositorPauseTimeoutID);
+    mCompositorPauseTimeoutID = 0;
+  }
+
+  // We're expected to have mCompositorWidgetDelegate present
+  // as we don't delete LayerManager (in PauseCompositor())
+  // to avoid flickering.
+  MOZ_RELEASE_ASSERT(mCompositorWidgetDelegate);
+
+  CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
+  if (remoteRenderer) {
+    mCompositorState = COMPOSITOR_ENABLED;
+    remoteRenderer->SendResumeAsync();
+    remoteRenderer->SendForcePresent();
+  }
+}
+
+void nsWindow::ResumeCompositorFromCompositorThread() {
+  nsCOMPtr<nsIRunnable> event = NewRunnableMethod(
+      "nsWindow::ResumeCompositor", this, &nsWindow::ResumeCompositor);
+  NS_DispatchToMainThread(event.forget());
 }
 
 void nsWindow::WaylandStartVsync() {
@@ -8295,13 +8389,16 @@ nsIWidget::WindowRenderer* nsWindow::GetWindowRenderer() {
 }
 
 void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
+  LOG(("nsWindow::SetCompositorWidgetDelegate [%p] %p\n", (void*)this,
+       delegate));
+
   if (delegate) {
     mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
     MOZ_ASSERT(mCompositorWidgetDelegate,
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
+    ResumeCompositorHiddenWindow();
     WaylandStartVsync();
-    MaybeResumeCompositor();
   } else {
     WaylandStopVsync();
     mCompositorWidgetDelegate = nullptr;

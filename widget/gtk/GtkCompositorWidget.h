@@ -59,6 +59,7 @@ class GtkCompositorWidget : public CompositorWidget,
   uintptr_t GetWidgetKey() override;
 
   LayoutDeviceIntSize GetClientSize() override;
+  void RemoteLayoutSizeUpdated(const LayoutDeviceRect& aSize);
 
   nsIWidget* RealWidget() override;
   GtkCompositorWidget* AsGTK() override { return this; }
