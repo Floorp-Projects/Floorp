@@ -101,8 +101,23 @@ ProfilerThreadId profiler_current_thread_id() { return ProfilerThreadId{}; }
 
 // --------------------------------------------- Platform-agnostic definitions
 
-namespace mozilla::profiler::detail {
-// Statically initialized to 0, then set once from profiler_init(), which should
-// be called from the main thread before any other use of the profiler.
-ProfilerThreadId scProfilerMainThreadId;
-}  // namespace mozilla::profiler::detail
+#include "MainThreadUtils.h"
+#include "mozilla/Assertions.h"
+
+static ProfilerThreadId scProfilerMainThreadId;
+
+void profiler_init_main_thread_id() {
+  MOZ_ASSERT(NS_IsMainThread());
+  mozilla::baseprofiler::profiler_init_main_thread_id();
+  if (!scProfilerMainThreadId.IsSpecified()) {
+    scProfilerMainThreadId = profiler_current_thread_id();
+  }
+}
+
+[[nodiscard]] ProfilerThreadId profiler_main_thread_id() {
+  return scProfilerMainThreadId;
+}
+
+[[nodiscard]] bool profiler_is_main_thread() {
+  return profiler_current_thread_id() == scProfilerMainThreadId;
+}

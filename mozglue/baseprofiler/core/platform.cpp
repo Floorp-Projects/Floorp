@@ -2566,7 +2566,7 @@ static Vector<const char*> SplitAtCommas(const char* aString,
 void profiler_init(void* aStackTop) {
   LOG("profiler_init");
 
-  detail::scProfilerMainThreadId = profiler_current_thread_id();
+  profiler_init_main_thread_id();
 
   VTUNE_INIT();
 
