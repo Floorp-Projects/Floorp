@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - taskgraph.transforms.release:run_on_releases
     - taskgraph.transforms.release_deps:transforms
     - taskgraph.transforms.release_flatpak_repackage:transforms
     - taskgraph.transforms.task:transforms
@@ -16,6 +17,7 @@ kind-dependencies:
 job-defaults:
     description: Generates flatpak by reackaging the existing tar.bz2
     run-on-projects: []  # to make sure this never runs as part of CI
+    run-on-releases: [beta, release, release-rc]
     shipping-phase: promote
     scopes: []
     treeherder:
