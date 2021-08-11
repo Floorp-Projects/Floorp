@@ -156,8 +156,8 @@ handle to wayland compositor by WaylandBufferSHM/WindowSurfaceWayland
 static const struct wl_callback_listener sFrameListenerWindowSurfaceWayland = {
     WindowSurfaceWayland::FrameCallbackHandler};
 
-WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
-    : mWindow(aWindow),
+WindowSurfaceWayland::WindowSurfaceWayland(RefPtr<nsWindow> aWindow)
+    : mWindow(std::move(aWindow)),
       mWaylandDisplay(WaylandDisplayGet()),
       mWaylandFullscreenDamage(false),
       mFrameCallback(nullptr),
@@ -445,7 +445,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
        "MozContainer size [%d x %d]\n",
        (void*)this, lockSize.x, lockSize.y, lockSize.width, lockSize.height,
        aRegion.GetNumRects(), mozContainerSize.width, mozContainerSize.height));
-  LOGWAYLAND(("   nsWindow = %p\n", mWindow));
+  LOGWAYLAND(("   nsWindow = %p\n", mWindow.get()));
   LOGWAYLAND(("   isPopup = %d\n", mWindow->IsWaylandPopup()));
   LOGWAYLAND(("   isTransparentPopup = %d\n", isTransparentPopup));
   LOGWAYLAND(("   IsPopupFullScreenUpdate = %d\n",

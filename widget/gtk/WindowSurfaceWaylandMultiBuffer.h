@@ -24,7 +24,7 @@ using gfx::DrawTarget;
 // and related management
 class WindowSurfaceWaylandMB : public WindowSurface {
  public:
-  explicit WindowSurfaceWaylandMB(nsWindow* aWindow);
+  explicit WindowSurfaceWaylandMB(RefPtr<nsWindow> aWindow);
   ~WindowSurfaceWaylandMB() = default;
 
   // Lock() / Commit() are called by gecko when Firefox
@@ -56,7 +56,7 @@ class WindowSurfaceWaylandMB : public WindowSurface {
 
   mozilla::Mutex mSurfaceLock;
 
-  nsWindow* mWindow;
+  RefPtr<nsWindow> mWindow;
   LayoutDeviceIntSize mMozContainerSize;
 
   RefPtr<WaylandBufferSHM> mInProgressBuffer;

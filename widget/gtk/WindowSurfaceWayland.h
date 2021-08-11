@@ -41,7 +41,7 @@ class WindowImageSurface {
 // and related management
 class WindowSurfaceWayland : public WindowSurface {
  public:
-  explicit WindowSurfaceWayland(nsWindow* aWindow);
+  explicit WindowSurfaceWayland(RefPtr<nsWindow> aWindow);
 
   // Lock() / Commit() are called by gecko when Firefox
   // wants to display something. Lock() returns a DrawTarget
@@ -98,9 +98,7 @@ class WindowSurfaceWayland : public WindowSurface {
   void FrameCallbackHandler();
   void BufferReleaseCallbackHandler(wl_buffer* aBuffer);
 
-  // We can not hold a reference to nsWindow because nsBaseWidget
-  // is not thread-safe
-  nsWindow* mWindow;
+  RefPtr<nsWindow> mWindow;
 
   // Buffer screen rects helps us understand if we operate on
   // the same window size as we're called on WindowSurfaceWayland::Lock().
