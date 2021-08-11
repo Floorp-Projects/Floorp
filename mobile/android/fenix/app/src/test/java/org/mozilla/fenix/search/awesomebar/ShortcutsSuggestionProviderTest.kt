@@ -10,7 +10,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import io.mockk.verifySequence
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.search.SearchEngine
@@ -19,8 +18,8 @@ import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.store.BrowserStore
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.R
 
@@ -63,9 +62,10 @@ class ShortcutsSuggestionProviderTest {
                 )
             )
         )
-        val provider = ShortcutsSuggestionProvider(store, context, mockk(), mockk())
+        val provider = ShortcutsSuggestionProvider(store, context, {}, {})
 
         val suggestions = provider.onInputChanged("")
+
         assertEquals(3, suggestions.size)
 
         assertEquals(provider, suggestions[0].provider)
@@ -83,7 +83,6 @@ class ShortcutsSuggestionProviderTest {
         assertEquals("Search engine settings", suggestions[2].title)
     }
 
-    @Ignore("See https://github.com/mozilla-mobile/fenix/issues/20797")
     @Test
     fun `callbacks are triggered when suggestions are clicked`() = runBlockingTest {
         val engineOne = mockk<SearchEngine>(relaxed = true)
@@ -95,13 +94,13 @@ class ShortcutsSuggestionProviderTest {
             )
         )
 
-        val selectShortcutEngine = mockk<(SearchEngine) -> Unit>(relaxed = true)
-        val selectShortcutEngineSettings = mockk<() -> Unit>(relaxed = true)
+        var selectEngine: SearchEngine? = null
+        var selectShortcutEngineSettingsChanged = false
         val provider = ShortcutsSuggestionProvider(
             store,
             context,
-            selectShortcutEngine,
-            selectShortcutEngineSettings
+            { selectEngine = it },
+            { selectShortcutEngineSettingsChanged = true }
         )
 
         val suggestions = provider.onInputChanged("")
@@ -110,9 +109,7 @@ class ShortcutsSuggestionProviderTest {
         suggestions[0].onSuggestionClicked?.invoke()
         suggestions[1].onSuggestionClicked?.invoke()
 
-        verifySequence {
-            selectShortcutEngine(engineOne)
-            selectShortcutEngineSettings()
-        }
+        assertEquals(engineOne, selectEngine)
+        assertTrue(selectShortcutEngineSettingsChanged)
     }
 }
