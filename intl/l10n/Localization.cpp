@@ -6,6 +6,11 @@
 
 #include "Localization.h"
 #include "nsContentUtils.h"
+#include "nsIObserverService.h"
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
 #define L10N_PSEUDO_PREF "intl.l10n.pseudo"
@@ -229,7 +234,6 @@ void Localization::RegisterObservers() {
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-
   if (obs) {
     obs->AddObserver(this, INTL_APP_LOCALES_CHANGED, true);
   }
@@ -336,8 +340,8 @@ already_AddRefed<Promise> Localization::FormatMessages(
           promise->MaybeReject(std::move(rv));
         } else {
           ErrorResult rv;
-          FallibleTArray<Nullable<L10nMessage>> messages;
-          messages = ConvertToL10nMessages(*aRaw, rv);
+          FallibleTArray<Nullable<L10nMessage>> messages =
+              ConvertToL10nMessages(*aRaw, rv);
           if (rv.Failed()) {
             promise->MaybeReject(std::move(rv));
           } else {
