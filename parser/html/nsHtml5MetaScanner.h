@@ -29,21 +29,21 @@
 #ifndef nsHtml5MetaScanner_h
 #define nsHtml5MetaScanner_h
 
-#include "jArray.h"
-#include "nsAHtml5TreeBuilderState.h"
 #include "nsAtom.h"
-#include "nsGkAtoms.h"
-#include "nsHtml5ArrayCopy.h"
 #include "nsHtml5AtomTable.h"
-#include "nsHtml5ByteReadable.h"
-#include "nsHtml5ContentCreatorFunction.h"
-#include "nsHtml5Macros.h"
-#include "nsHtml5Portability.h"
 #include "nsHtml5String.h"
-#include "nsIContent.h"
-#include "nsIContentHandle.h"
 #include "nsNameSpaceManager.h"
+#include "nsIContent.h"
 #include "nsTraceRefcnt.h"
+#include "jArray.h"
+#include "nsHtml5ArrayCopy.h"
+#include "nsAHtml5TreeBuilderState.h"
+#include "nsGkAtoms.h"
+#include "nsHtml5ByteReadable.h"
+#include "nsHtml5Macros.h"
+#include "nsIContentHandle.h"
+#include "nsHtml5Portability.h"
+#include "nsHtml5ContentCreatorFunction.h"
 
 class nsHtml5StreamParser;
 
