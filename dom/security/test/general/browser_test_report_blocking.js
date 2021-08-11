@@ -6,7 +6,7 @@ const { TelemetryArchiveTesting } = ChromeUtils.import(
 
 const kTestPath = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 
 const kTestXFrameOptionsURI = kTestPath + "file_framing_error_pages_xfo.html";
@@ -23,11 +23,11 @@ const kTestExpectedPingXFO = [
   [["payload", "top_hostname"], "example.com"],
   [
     ["payload", "frame_uri"],
-    "http://example.com/browser/dom/security/test/general/file_framing_error_pages.sjs",
+    "https://example.com/browser/dom/security/test/general/file_framing_error_pages.sjs",
   ],
   [
     ["payload", "top_uri"],
-    "http://example.com/browser/dom/security/test/general/file_framing_error_pages_xfo.html",
+    "https://example.com/browser/dom/security/test/general/file_framing_error_pages_xfo.html",
   ],
 ];
 
@@ -39,11 +39,11 @@ const kTestExpectedPingCSP = [
   [["payload", "top_hostname"], "example.com"],
   [
     ["payload", "frame_uri"],
-    "http://example.com/browser/dom/security/test/general/file_framing_error_pages.sjs",
+    "https://example.com/browser/dom/security/test/general/file_framing_error_pages.sjs",
   ],
   [
     ["payload", "top_uri"],
-    "http://example.com/browser/dom/security/test/general/file_framing_error_pages_csp.html",
+    "https://example.com/browser/dom/security/test/general/file_framing_error_pages_csp.html",
   ],
 ];
 
@@ -52,16 +52,12 @@ const TEST_CASES = [
     type: "xfo",
     test_uri: kTestXFrameOptionsURI,
     frame_uri: kTestXFrameOptionsURIFrame,
-    expected_msg:
-      "This page has an X-Frame-Options policy that prevents it from being loaded in this context",
     expected_ping: kTestExpectedPingXFO,
   },
   {
     type: "csp",
     test_uri: kTestCspURI,
     frame_uri: kTestCspURIFrame,
-    expected_msg:
-      "This page has a content security policy that prevents it from being loaded in this way",
     expected_ping: kTestExpectedPingCSP,
   },
 ];
@@ -105,22 +101,19 @@ async function testReporting(test) {
   BrowserTestUtils.loadURI(browser, test.test_uri);
   await loaded;
 
-  let { type, expected_msg } = test;
+  let { type } = test;
 
   let frameBC = await SpecialPowers.spawn(browser, [], async _ => {
     const iframe = content.document.getElementById("testframe");
     return iframe.browsingContext;
   });
 
-  await SpecialPowers.spawn(frameBC, [{ type, expected_msg }], async obj => {
+  await SpecialPowers.spawn(frameBC, [type], async obj => {
     // Wait until the reporting UI is visible.
     await ContentTaskUtils.waitForCondition(() => {
       let reportUI = content.document.getElementById("blockingErrorReporting");
       return ContentTaskUtils.is_visible(reportUI);
     });
-
-    let errorPage = content.document.body.innerHTML;
-    ok(errorPage.includes(obj.expected_msg), `${obj.type} error page correct`);
 
     let reportCheckBox = content.document.getElementById(
       "automaticallyReportBlockingInFuture"
