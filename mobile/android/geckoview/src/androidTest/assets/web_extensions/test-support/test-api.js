@@ -71,6 +71,7 @@ this.test = class extends ExtensionAPI {
       return;
     }
     ChromeUtils.unregisterWindowActor("TestSupport");
+    ChromeUtils.unregisterProcessActor("TestSupportProcess");
   }
 
   getAPI(context) {
