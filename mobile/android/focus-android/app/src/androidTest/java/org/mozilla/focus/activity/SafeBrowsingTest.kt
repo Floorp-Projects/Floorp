@@ -122,6 +122,7 @@ class SafeBrowsingTest {
             mDevice.pressBack()
         }.openSearchBar {
         }.loadPage(insecurePageUrl) {
+            verifyPageURL(insecurePageUrl)
             verifySiteSecurityIconShown()
             verifySiteConnectionInfoIsSecure(false)
             mDevice.pressBack()
