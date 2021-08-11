@@ -24,6 +24,7 @@ def pkg_config_version(pkg_config):
 def pkg_config_vars(sysroot_path, multiarch_dir):
     if sysroot_path:
         return namespace(
+            PKG_CONFIG_PATH="",
             PKG_CONFIG_SYSROOT_DIR=sysroot_path,
             PKG_CONFIG_LIBDIR=":".join(
                 os.path.join(sysroot_path, d)
@@ -41,13 +42,16 @@ def pkg_config_vars(sysroot_path, multiarch_dir):
 def pkg_config_env(vars):
     if vars:
         env = dict(environ)
+        env["PKG_CONFIG_PATH"] = vars.PKG_CONFIG_PATH
         env["PKG_CONFIG_SYSROOT_DIR"] = vars.PKG_CONFIG_SYSROOT_DIR
         env["PKG_CONFIG_LIBDIR"] = vars.PKG_CONFIG_LIBDIR
         return env
 
 
+set_config("PKG_CONFIG_PATH", pkg_config_vars.PKG_CONFIG_PATH)
 set_config("PKG_CONFIG_SYSROOT_DIR", pkg_config_vars.PKG_CONFIG_SYSROOT_DIR)
 set_config("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
+add_old_configure_assignment("PKG_CONFIG_PATH", pkg_config_vars.PKG_CONFIG_PATH)
 add_old_configure_assignment(
     "PKG_CONFIG_SYSROOT_DIR", pkg_config_vars.PKG_CONFIG_SYSROOT_DIR
 )
