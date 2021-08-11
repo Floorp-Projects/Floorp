@@ -15,21 +15,6 @@
 using ProfilerProcessId = mozilla::baseprofiler::BaseProfilerProcessId;
 using ProfilerThreadId = mozilla::baseprofiler::BaseProfilerThreadId;
 
-#ifndef MOZ_GECKO_PROFILER
-
-[[nodiscard]] inline ProfilerProcessId profiler_current_process_id() {
-  return ProfilerProcessId{};
-}
-[[nodiscard]] inline ProfilerThreadId profiler_current_thread_id() {
-  return ProfilerThreadId{};
-}
-[[nodiscard]] inline ProfilerThreadId profiler_main_thread_id() {
-  return ProfilerThreadId{};
-}
-[[nodiscard]] inline bool profiler_is_main_thread() { return false; }
-
-#else  // !MOZ_GECKO_PROFILER
-
 // Get the current process's ID.
 [[nodiscard]] ProfilerProcessId profiler_current_process_id();
 
@@ -49,7 +34,5 @@ extern ProfilerThreadId scProfilerMainThreadId;
 [[nodiscard]] inline bool profiler_is_main_thread() {
   return profiler_current_thread_id() == profiler_main_thread_id();
 }
-
-#endif  // MOZ_GECKO_PROFILER
 
 #endif  // ProfilerUtils_h

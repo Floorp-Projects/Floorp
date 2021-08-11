@@ -114,24 +114,17 @@ void TestProfilerUtils() {
         std::is_same_v<
             decltype(mozilla::baseprofiler::profiler_current_process_id()),
             BaseProfilerProcessId>);
-#ifdef MOZ_GECKO_PROFILER
     MOZ_RELEASE_ASSERT(
         mozilla::baseprofiler::profiler_current_process_id().IsSpecified());
-#else
-    MOZ_RELEASE_ASSERT(
-        !mozilla::baseprofiler::profiler_current_process_id().IsSpecified());
-#endif
   }
 
   {
-#ifdef MOZ_GECKO_PROFILER
     if (!mozilla::baseprofiler::detail::scProfilerMainThreadId.IsSpecified()) {
       // Special case: This may happen if the profiler has not yet been
       // initialized. We only need to set scProfilerMainThreadId.
       mozilla::baseprofiler::detail::scProfilerMainThreadId =
           mozilla::baseprofiler::profiler_current_thread_id();
     }
-#endif  // MOZ_GECKO_PROFILER
 
     using mozilla::baseprofiler::BaseProfilerThreadId;
     using Number = BaseProfilerThreadId::NumberType;
@@ -199,7 +192,8 @@ void TestProfilerUtils() {
     static_assert(std::is_same_v<
                   decltype(mozilla::baseprofiler::profiler_current_thread_id()),
                   BaseProfilerThreadId>);
-#ifdef MOZ_GECKO_PROFILER
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(__ANDROID__) || \
+    defined(ANDROID) || defined(XP_LINUX) || defined(XP_FREEBSD)
     BaseProfilerThreadId mainTestThreadId =
         mozilla::baseprofiler::profiler_current_thread_id();
     MOZ_RELEASE_ASSERT(mainTestThreadId.IsSpecified());
@@ -221,6 +215,7 @@ void TestProfilerUtils() {
     });
     testThread.join();
 #else
+    // Yet-unsupported platforms.
     MOZ_RELEASE_ASSERT(
         !mozilla::baseprofiler::profiler_current_thread_id().IsSpecified());
     MOZ_RELEASE_ASSERT(

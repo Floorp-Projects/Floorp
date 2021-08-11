@@ -74,28 +74,6 @@ using namespace mozilla;
 namespace mozilla {
 namespace baseprofiler {
 
-BaseProfilerProcessId profiler_current_process_id() {
-  return BaseProfilerProcessId::FromNumber(getpid());
-}
-
-BaseProfilerThreadId profiler_current_thread_id() {
-#if defined(GP_OS_linux)
-  // glibc doesn't provide a wrapper for gettid() until 2.30
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(syscall(SYS_gettid)));
-#elif defined(GP_OS_android)
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(gettid()));
-#elif defined(GP_OS_freebsd)
-  long id;
-  (void)thr_self(&id);
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(id));
-#else
-#  error "bad platform"
-#endif
-}
-
 static int64_t MicrosecondsSince1970() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
