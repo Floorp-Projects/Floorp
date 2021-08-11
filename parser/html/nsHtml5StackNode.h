@@ -48,7 +48,6 @@
 class nsHtml5StreamParser;
 
 class nsHtml5AttributeName;
-class nsHtml5HtmlAttributes;
 class nsHtml5ElementName;
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
