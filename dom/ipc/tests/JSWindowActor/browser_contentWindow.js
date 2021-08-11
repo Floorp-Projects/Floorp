@@ -2,9 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const CONTENT_WINDOW_URL = "https://example.com/";
+
 declTest("contentWindow null when inner window inactive", {
-  matches: [TEST_URL + "*"],
-  url: TEST_URL + "?1",
+  matches: [CONTENT_WINDOW_URL + "*"],
+  url: CONTENT_WINDOW_URL + "?1",
 
   async test(browser) {
     // If Fission is disabled, the pref is no-op.
@@ -17,7 +19,7 @@ declTest("contentWindow null when inner window inactive", {
 
     await actorParent.sendQuery("storeActor");
 
-    let url = TEST_URL + "?2";
+    let url = CONTENT_WINDOW_URL + "?2";
     let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
     await BrowserTestUtils.loadURI(browser, url);
     await loaded;
