@@ -185,6 +185,18 @@
             "name": "tabId"
           }
         ]
+      },
+      {
+        "name": "promiseAllPaintsDone",
+        "type": "function",
+        "async": true,
+        "description": "A simplified version of promiseAllPaintsDone in paint_listeners.js.",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "tabId"
+          }
+        ]
       }
     ]
   }

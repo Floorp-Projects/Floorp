@@ -233,6 +233,15 @@ this.test = class extends ExtensionAPI {
             .getActor("TestSupport")
             .sendQuery("FlushApzRepaints");
         },
+
+        async promiseAllPaintsDone(tabId) {
+          const tab = context.extension.tabManager.get(tabId);
+          const { browsingContext } = tab.browser;
+
+          await browsingContext.currentWindowGlobal
+            .getActor("TestSupport")
+            .sendQuery("PromiseAllPaintsDone");
+        },
       },
     };
   }
