@@ -4,31 +4,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["LUCETC"]:
-    WASM_SOURCES += [
-        "/third_party/rust/rlbox_lucet_sandbox/c_src/lucet_sandbox_wrapper.c",
-    ]
-else:
-    WASM_SOURCES += [
-        "/third_party/rlbox_wasm2c_sandbox/c_src/wasm2c_sandbox_wrapper.c",
-    ]
+WASM_SOURCES += [
+    "/third_party/rlbox_wasm2c_sandbox/c_src/wasm2c_sandbox_wrapper.c",
+]
 
-    LOCAL_INCLUDES += ["/third_party/wasm2c/wasm2c/"]
+LOCAL_INCLUDES += ["/third_party/wasm2c/wasm2c/"]
 
-    EXPORTS += ["/third_party/wasm2c/wasm2c/wasm-rt.h"]
+EXPORTS += ["/third_party/wasm2c/wasm2c/wasm-rt.h"]
 
-    SOURCES += [
-        "/third_party/wasm2c/wasm2c/wasm-rt-impl.c",
-        "/third_party/wasm2c/wasm2c/wasm-rt-os-unix.c",
-        "/third_party/wasm2c/wasm2c/wasm-rt-os-win.c",
-        "/third_party/wasm2c/wasm2c/wasm-rt-wasi.c",
-    ]
+SOURCES += [
+    "/third_party/wasm2c/wasm2c/wasm-rt-impl.c",
+    "/third_party/wasm2c/wasm2c/wasm-rt-os-unix.c",
+    "/third_party/wasm2c/wasm2c/wasm-rt-os-win.c",
+    "/third_party/wasm2c/wasm2c/wasm-rt-wasi.c",
+]
 
-    NoVisibilityFlags()
+NoVisibilityFlags()
 
-    CFLAGS += [
-        "-Wno-error=unused-function",
-    ]
+CFLAGS += [
+    "-Wno-error=unused-function",
+]
 
 WASM_DEFINES["MOZILLA_CLIENT"] = True
 

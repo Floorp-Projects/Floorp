@@ -83,7 +83,6 @@ linux64-x11/opt:
             - linux64-sccache
             - linux64-nasm
             - linux64-node
-            - linux64-lucetc
             - sysroot-x86_64-linux-gnu-x11
             - wasi-sysroot
 

@@ -2086,21 +2086,6 @@ set_config("MOZ_USING_WASM_SANDBOXING", requires_wasm_sandboxing)
 set_define("MOZ_USING_WASM_SANDBOXING", requires_wasm_sandboxing)
 
 with only_when(requires_wasm_sandboxing & compile_environment):
-    option(env="LUCETC", nargs=1, help="Location of the lucet compiler")
-
-    @depends("LUCETC")
-    def lucetc(value):
-        return value
-
-    @depends("LUCETC")
-    def lucetc_not_empty(lucetc):
-        return bool(lucetc)
-
-    lucetc = check_prog(
-        "LUCETC", ["lucetc"], input=lucetc, bootstrap="lucetc", when=lucetc_not_empty
-    )
-    set_define("LUCETC_WASM_SANDBOXING", True, when=lucetc)
-
     option(
         "--with-wasi-sysroot",
         env="WASI_SYSROOT",
@@ -2221,48 +2206,13 @@ with only_when(requires_wasm_sandboxing & compile_environment):
 
     set_config("WASM_CXXFLAGS", wasm_cxxflags)
 
-    # This function is returning "ldflags" that lucetc will use when invoking
-    # the linker, but really lucetc is going to be invoking the compiler, since
-    # the compiler handles lots of details for us (like finding the linker in
-    # cross-compilation scenarios).
-    @depends(target)
-    def lucetc_ldflags(target):
-        if target.kernel == "Linux":
-            return [
-                "-Wl,-shared",
-                "-nostdlib",
-            ]
 
-        if target.kernel == "Darwin":
-            return [
-                "-Wl,-dylib",
-                "-Wl,-dead_strip",
-                "-Wl,-export_dynamic",
-                "-Wl,-undefined,dynamic_lookup",
-                "-nostdlib",
-            ]
-
-    set_config("LUCETC_LDFLAGS", lucetc_ldflags)
-
-    # Re-using the Rust target triple here is not exactly correct, but it is an
-    # excellent approximation for the platforms we currently support
-    set_config("LUCETC_TARGET", rust_target_triple)
-
-
-@depends("--with-wasm-sandboxed-libraries", target, lucetc)
-def wasm_sandboxing(libraries, target, lucetc):
+@depends("--with-wasm-sandboxed-libraries", target)
+def wasm_sandboxing(libraries, target):
     if not libraries:
         return
 
-    # Wasm sandboxing is only enabled on specific targets.
-    if lucetc and not (
-        target.cpu in ("x86_64",)
-        and (target.kernel == "Linux" and target.os != "Android")
-        or target.kernel == "Darwin"
-    ):
-        die("wasm sandboxing is only enabled on x86-64 Linux and Mac")
-
-    if not lucetc and target.bitness != 64:
+    if target.bitness != 64:
         die("wasm sandboxing is only supported on 64-bits platforms")
 
     return namespace(**{name: True for name in libraries})
