@@ -13,7 +13,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.menu.view.MenuButton
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
@@ -32,8 +31,8 @@ class HomeFragmentTest {
 
         homeFragment = spyk(HomeFragment())
 
-        every { homeFragment.context } returns context
-        every { context.settings() } returns settings
+        every { homeFragment.context } answers { context }
+        every { context.settings() } answers { settings }
     }
 
     @Test
@@ -46,7 +45,6 @@ class HomeFragmentTest {
         Assert.assertNull(topSitesConfig.frecencyConfig)
     }
 
-    @Ignore("See https://github.com/mozilla-mobile/fenix/issues/20795")
     @Test
     fun `GIVEN showTopFrecentSites is true WHEN getTopSitesConfig is called THEN it returns TopSitesConfig with non-null frecencyConfig`() {
         every { context.settings().showTopFrecentSites } returns true
