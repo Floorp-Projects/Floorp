@@ -688,12 +688,12 @@ UntrustedModulesProcessor::SendGetModulesTrust(ModulePaths&& aModules,
 
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Content: {
-      return ::SendGetModulesTrust(dom::ContentChild::GetSingleton(),
-                                   std::move(aModules), runNormal);
+      return ::mozilla::SendGetModulesTrust(dom::ContentChild::GetSingleton(),
+                                            std::move(aModules), runNormal);
     }
     case GeckoProcessType_RDD: {
-      return ::SendGetModulesTrust(RDDParent::GetSingleton(),
-                                   std::move(aModules), runNormal);
+      return ::mozilla::SendGetModulesTrust(RDDParent::GetSingleton(),
+                                            std::move(aModules), runNormal);
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("Unsupported process type");
