@@ -107,7 +107,6 @@ class WebDriverBiDiConnection extends WebSocketConnection {
    *     A JSON-serializable object, which is the actual result.
    */
   sendResult(id, result) {
-    result = typeof result !== "undefined" ? result : {};
     this.send({ id, result });
   }
 
@@ -136,10 +135,13 @@ class WebDriverBiDiConnection extends WebSocketConnection {
     const { id, method, params } = packet;
 
     try {
-      // First check for mandatory field in the command packet
-      assert.positiveInteger(id, "id: unsigned integer value expected");
-      assert.string(method, "method: string value expected");
-      assert.object(params, "params: object value expected");
+      // First check for mandatory field in the packets
+      if (typeof id == "undefined") {
+        throw new TypeError("Message missing 'id' field");
+      }
+      if (typeof method == "undefined") {
+        throw new TypeError("Message missing 'method' field");
+      }
 
       // Extract the module and the command name out of `method` attribute
       const { module, command } = splitMethod(method);
