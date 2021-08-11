@@ -107,7 +107,8 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
   bool useX11Remote = mozilla::widget::GdkIsX11Display();
 
 #  if defined(MOZ_ENABLE_DBUS)
-  if (!useX11Remote || getenv(DBUS_REMOTE_ENV)) {
+  const char* dbusRemoteEnv = getenv(DBUS_REMOTE_ENV);
+  if (!useX11Remote || (dbusRemoteEnv && *dbusRemoteEnv == '1')) {
     client = MakeUnique<nsDBusRemoteClient>();
   }
 #  endif
