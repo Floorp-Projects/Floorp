@@ -2195,11 +2195,9 @@ void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
     p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
   }
 
-#ifdef MOZ_WAYLAND
   nsRect anchorRectAppUnits = popupFrame->GetAnchorRect();
   anchorRect = LayoutDeviceIntRect::FromUnknownRect(
       anchorRectAppUnits.ToNearestPixels(p2a));
-#endif
 
   // Anchor rect is in the toplevel coordinates but we need to transfer it to
   // the coordinates relative to the popup parent for the
@@ -2249,13 +2247,11 @@ void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
       rectAnchor = GDK_GRAVITY_SOUTH_EAST;
       menuAnchor = GDK_GRAVITY_NORTH_WEST;
     }
-#ifdef MOZ_WAYLAND
   } else {
     rectAnchor = PopupAlignmentToGdkGravity(popupFrame->GetPopupAnchor());
     menuAnchor = PopupAlignmentToGdkGravity(popupFrame->GetPopupAlignment());
     flipType = popupFrame->GetFlipType();
     position = popupFrame->GetAlignmentPosition();
-#endif
   }
 
   LOG_POPUP(("  parentRect gravity: %d anchor gravity: %d\n", rectAnchor,
@@ -9159,23 +9155,6 @@ void nsWindow::UnlockNativePointer() {
     zwp_locked_pointer_v1_destroy(mLockedPointer);
     mLockedPointer = nullptr;
   }
-}
-
-nsresult nsWindow::GetScreenRect(LayoutDeviceIntRect* aRect) {
-  GtkWindow* topmostParentWindow = GetCurrentTopmostWindow();
-  nsWindow* window = get_window_for_gtk_widget(GTK_WIDGET(topmostParentWindow));
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-
-  GdkRectangle rect;
-  ScreenHelperGTK::GetScreenRectForWindow(window, &rect);
-
-  aRect->x = aRect->y = 0;
-  aRect->width = rect.width;
-  aRect->height = rect.height;
-
-  return NS_OK;
 }
 #endif
 

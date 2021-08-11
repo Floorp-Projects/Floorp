@@ -398,7 +398,6 @@ class nsWindow final : public nsBaseWidget {
       const LayoutDeviceIntPoint& aLockCenter) override;
   virtual void LockNativePointer() override;
   virtual void UnlockNativePointer() override;
-  virtual nsresult GetScreenRect(LayoutDeviceIntRect* aRect) override;
   virtual nsRect GetPreferredPopupRect() override {
     return mPreferredPopupRect;
   };
