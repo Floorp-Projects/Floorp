@@ -30,6 +30,30 @@ class TestSupportChild extends GeckoViewActorChild {
             repaintDone();
           }
         });
+      case "PromiseAllPaintsDone":
+        return new Promise(resolve => {
+          const window = this.contentWindow;
+          const utils = window.windowUtils;
+
+          function waitForPaints() {
+            // Wait until paint suppression has ended
+            if (utils.paintingSuppressed) {
+              dump`waiting for paint suppression to end...`;
+              window.setTimeout(waitForPaints, 0);
+              return;
+            }
+
+            if (utils.isMozAfterPaintPending) {
+              dump`waiting for paint...`;
+              window.addEventListener("MozAfterPaint", waitForPaints, {
+                once: true,
+              });
+              return;
+            }
+            resolve();
+          }
+          waitForPaints();
+        });
     }
     return null;
   }
