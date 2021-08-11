@@ -587,11 +587,11 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
     return nullptr;
   }
 
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj,
-      NativeObject::create(cx, ITERATOR_FINALIZE_KIND,
-                           GetInitialHeap(GenericObject, clasp), shape));
+  JSObject* obj = NativeObject::create(
+      cx, ITERATOR_FINALIZE_KIND, GetInitialHeap(GenericObject, clasp), shape);
+  if (!obj) {
+    return nullptr;
+  }
 
   PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 
@@ -998,9 +998,10 @@ PlainObject* js::CreateIterResultObject(JSContext* cx, HandleValue value,
     return nullptr;
   }
 
-  PlainObject* resultObj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, resultObj, PlainObject::createWithTemplate(cx, templateObject));
+  PlainObject* resultObj = PlainObject::createWithTemplate(cx, templateObject);
+  if (!resultObj) {
+    return nullptr;
+  }
 
   // Step 3.
   resultObj->setSlot(Realm::IterResultObjectValueSlot, value);

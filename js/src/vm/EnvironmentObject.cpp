@@ -91,9 +91,10 @@ static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &T::class_));
   allocKind = gc::ForegroundToBackgroundAllocKind(allocKind);
 
-  JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
-                            NativeObject::create(cx, allocKind, heap, shape));
+  JSObject* obj = NativeObject::create(cx, allocKind, heap, shape);
+  if (!obj) {
+    return nullptr;
+  }
 
   return &obj->as<T>();
 }

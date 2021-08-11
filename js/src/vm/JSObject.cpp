@@ -757,15 +757,15 @@ static inline JSObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
 
   JSObject* obj;
   if (clasp->isJSFunction()) {
-    JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
-                              JSFunction::create(cx, kind, heap, shape));
+    obj = JSFunction::create(cx, kind, heap, shape);
   } else if (MOZ_LIKELY(clasp->isNativeObject())) {
-    JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
-                              NativeObject::create(cx, kind, heap, shape));
+    obj = NativeObject::create(cx, kind, heap, shape);
   } else {
     MOZ_ASSERT(IsTypedObjectClass(clasp));
-    JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
-                              TypedObject::create(cx, kind, heap, shape));
+    obj = TypedObject::create(cx, kind, heap, shape);
+  }
+  if (!obj) {
+    return nullptr;
   }
 
   probes::CreateObject(cx, obj);
