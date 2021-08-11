@@ -53,15 +53,7 @@ using namespace mozilla;
 
 TEST(GeckoProfiler, ProfilerUtils)
 {
-  // Special case: This may happen if the profiler has not yet been
-  // initialized. We only need to set scProfilerMainThreadId.
-  if (!baseprofiler::detail::scProfilerMainThreadId.IsSpecified()) {
-    baseprofiler::detail::scProfilerMainThreadId =
-        baseprofiler::profiler_current_thread_id();
-  }
-  if (!profiler::detail::scProfilerMainThreadId.IsSpecified()) {
-    profiler::detail::scProfilerMainThreadId = profiler_current_thread_id();
-  }
+  profiler_init_main_thread_id();
 
   static_assert(std::is_same_v<decltype(profiler_current_process_id()),
                                ProfilerProcessId>);

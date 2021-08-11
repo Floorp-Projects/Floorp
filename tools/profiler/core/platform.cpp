@@ -4348,8 +4348,7 @@ void profiler_init_threadmanager() {
 void profiler_init(void* aStackTop) {
   LOG("profiler_init");
 
-  mozilla::profiler::detail::scProfilerMainThreadId =
-      profiler_current_thread_id();
+  profiler_init_main_thread_id();
 
   VTUNE_INIT();
 

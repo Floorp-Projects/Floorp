@@ -21,18 +21,12 @@ using ProfilerThreadId = mozilla::baseprofiler::BaseProfilerThreadId;
 // Get the current thread's ID.
 [[nodiscard]] ProfilerThreadId profiler_current_thread_id();
 
-namespace mozilla::profiler::detail {
-// Statically initialized to 0, then set once from profiler_init(), which should
-// be called from the main thread before any other use of the profiler.
-extern ProfilerThreadId scProfilerMainThreadId;
-}  // namespace mozilla::profiler::detail
+// Must be called at least once from the main thread, before any other main-
+// thread id function.
+void profiler_init_main_thread_id();
 
-[[nodiscard]] inline ProfilerThreadId profiler_main_thread_id() {
-  return mozilla::profiler::detail::scProfilerMainThreadId;
-}
+[[nodiscard]] ProfilerThreadId profiler_main_thread_id();
 
-[[nodiscard]] inline bool profiler_is_main_thread() {
-  return profiler_current_thread_id() == profiler_main_thread_id();
-}
+[[nodiscard]] bool profiler_is_main_thread();
 
 #endif  // ProfilerUtils_h
