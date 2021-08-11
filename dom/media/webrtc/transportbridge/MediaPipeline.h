@@ -253,6 +253,9 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   // Written in c'tor. Read on STS thread.
   const std::string mPc;
+
+  // String describing this MediaPipeline for logging purposes. Only safe to
+  // access from STS thread.
   std::string mDescription;
 
   // Written in c'tor, all following accesses are on the STS thread.
@@ -312,7 +315,9 @@ class MediaPipelineTransmit : public MediaPipeline {
  protected:
   ~MediaPipelineTransmit();
 
-  void SetDescription();
+  // Updates mDescription (async) with information about the track we are
+  // transmitting.
+  std::string GenerateDescription() const;
 
   // Sets up mSendPort and mSendTrack to feed mConduit if we are transmitting
   // and have a dom track but no send track. Main thread only.
@@ -328,6 +333,9 @@ class MediaPipelineTransmit : public MediaPipeline {
   Watchable<RefPtr<dom::MediaStreamTrack>> mDomTrack;
   // Input port connecting mDomTrack's MediaTrack to mSendTrack.
   RefPtr<MediaInputPort> mSendPort;
+  // True if a parameter affecting mDescription has changed. To avoid updating
+  // the description unnecessarily. Main thread only.
+  bool mDescriptionInvalidated = true;
   // Set true once we trigger the async removal of mSendTrack. Set false once
   // the async removal is done. Main thread only.
   bool mUnsettingSendTrack = false;

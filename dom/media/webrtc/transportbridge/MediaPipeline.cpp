@@ -9,6 +9,7 @@
 
 #include <inttypes.h>
 #include <math.h>
+#include <sstream>
 
 #include "AudioSegment.h"
 #include "AudioConverter.h"
@@ -819,6 +820,8 @@ MediaPipelineTransmit::MediaPipelineTransmit(
   mWatchManager.Watch(mDomTrack, &MediaPipelineTransmit::UpdateSendState);
   mWatchManager.Watch(mSendTrackOverride,
                       &MediaPipelineTransmit::UpdateSendState);
+
+  mDescription = GenerateDescription();
 }
 
 MediaPipelineTransmit::~MediaPipelineTransmit() {
@@ -845,26 +848,26 @@ void MediaPipeline::SetDescription_s(const std::string& description) {
   mDescription = description;
 }
 
-void MediaPipelineTransmit::SetDescription() {
-  std::string description;
-  description = mPc + "| ";
-  description += mIsVideo ? "Transmit video[" : "Transmit audio[";
+std::string MediaPipelineTransmit::GenerateDescription() const {
+  ASSERT_ON_THREAD(mMainThread);
 
-  if (!mDomTrack.Ref()) {
-    description += "no track]";
-  } else {
+  std::stringstream description;
+  description << mPc << "| ";
+  description << (mIsVideo ? "Transmit video[" : "Transmit audio[");
+
+  if (mDomTrack.Ref()) {
     nsString nsTrackId;
     mDomTrack.Ref()->GetId(nsTrackId);
-    std::string trackId(NS_ConvertUTF16toUTF8(nsTrackId).get());
-    description += trackId;
-    description += "]";
+    description << NS_ConvertUTF16toUTF8(nsTrackId).get();
+  } else if (mSendTrackOverride.Ref()) {
+    description << "override " << mSendTrackOverride.Ref().get();
+  } else {
+    description << "no track";
   }
 
-  RUN_ON_THREAD(
-      mStsThread,
-      WrapRunnable(RefPtr<MediaPipeline>(this),
-                   &MediaPipelineTransmit::SetDescription_s, description),
-      NS_DISPATCH_NORMAL);
+  description << "]";
+
+  return description.str();
 }
 
 void MediaPipelineTransmit::UpdateSendState() {
@@ -921,6 +924,17 @@ void MediaPipelineTransmit::UpdateSendState() {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("Attaching pipeline %p to track %p conduit type=%s", this,
              mDomTrack.Ref().get(), mIsVideo ? "video" : "audio"));
+    if (mDescriptionInvalidated) {
+      // Only update the description when we attach to a track, as detaching is
+      // always a longer async step than updating the description. Updating on
+      // detach would cause the wrong track id to be attributed in logs.
+      RUN_ON_THREAD(mStsThread,
+                    WrapRunnable(RefPtr<MediaPipeline>(this),
+                                 &MediaPipelineTransmit::SetDescription_s,
+                                 GenerateDescription()),
+                    NS_DISPATCH_NORMAL);
+      mDescriptionInvalidated = false;
+    }
     if (mSendTrackOverride.Ref()) {
       // Special path that allows unittests to avoid mDomTrack and the graph by
       // manually calling SetSendTrack.
@@ -1022,8 +1036,8 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
              mIsVideo ? "video" : "audio"));
   }
 
+  mDescriptionInvalidated = true;
   mDomTrack = std::move(aDomTrack);
-  SetDescription();
 
   return NS_OK;
 }
@@ -1039,6 +1053,7 @@ void MediaPipelineTransmit::SetSendTrackOverride(
   MOZ_RELEASE_ASSERT(!mSendTrack);
   MOZ_RELEASE_ASSERT(!mSendPort);
   MOZ_RELEASE_ASSERT(!mSendTrackOverride.Ref());
+  mDescriptionInvalidated = true;
   mSendTrackOverride = std::move(aSendTrack);
 }
 
