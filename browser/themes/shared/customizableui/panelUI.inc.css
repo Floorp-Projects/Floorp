@@ -46,6 +46,11 @@
   --panel-subview-body-padding: 8px 0;
 }
 
+:root[uidensity=compact] {
+  --arrowpanel-menuitem-margin: 0 4px;
+  --arrowpanel-menuitem-padding-block: 6px;
+}
+
 #PanelUI-menu-button[badge-status] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   display: -moz-box;
   height: 10px;
