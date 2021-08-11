@@ -31,21 +31,21 @@
 #ifndef nsHtml5Tokenizer_h
 #define nsHtml5Tokenizer_h
 
-#include "nsAtom.h"
-#include "nsHtml5AtomTable.h"
-#include "nsHtml5String.h"
-#include "nsIContent.h"
-#include "nsTraceRefcnt.h"
 #include "jArray.h"
-#include "nsHtml5DocumentMode.h"
+#include "nsAHtml5TreeBuilderState.h"
+#include "nsAtom.h"
+#include "nsGkAtoms.h"
 #include "nsHtml5ArrayCopy.h"
+#include "nsHtml5AtomTable.h"
+#include "nsHtml5DocumentMode.h"
+#include "nsHtml5Highlighter.h"
+#include "nsHtml5Macros.h"
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5NamedCharactersAccel.h"
-#include "nsGkAtoms.h"
-#include "nsAHtml5TreeBuilderState.h"
-#include "nsHtml5Macros.h"
-#include "nsHtml5Highlighter.h"
+#include "nsHtml5String.h"
 #include "nsHtml5TokenizerLoopPolicies.h"
+#include "nsIContent.h"
+#include "nsTraceRefcnt.h"
 
 class nsHtml5StreamParser;
 
