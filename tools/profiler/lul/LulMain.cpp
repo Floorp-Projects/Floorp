@@ -799,15 +799,15 @@ class PriMap {
 // LUL                                                        //
 ////////////////////////////////////////////////////////////////
 
-#define LUL_LOG(_str)                                                  \
-  do {                                                                 \
-    char buf[200];                                                     \
-    SprintfLiteral(buf, "LUL: pid %d tid %d lul-obj %p: %s",           \
-                   int(profiler_current_process_id().ToNumber()),      \
-                   int(profiler_current_thread_id().ToNumber()), this, \
-                   (_str));                                            \
-    buf[sizeof(buf) - 1] = 0;                                          \
-    mLog(buf);                                                         \
+#define LUL_LOG(_str)                                                          \
+  do {                                                                         \
+    char buf[200];                                                             \
+    SprintfLiteral(buf, "LUL: pid %" PRIu64 " tid %" PRIu64 " lul-obj %p: %s", \
+                   uint64_t(profiler_current_process_id().ToNumber()),         \
+                   uint64_t(profiler_current_thread_id().ToNumber()), this,    \
+                   (_str));                                                    \
+    buf[sizeof(buf) - 1] = 0;                                                  \
+    mLog(buf);                                                                 \
   } while (0)
 
 LUL::LUL(void (*aLog)(const char*))

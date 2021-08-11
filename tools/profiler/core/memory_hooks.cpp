@@ -96,7 +96,12 @@ static bool profiler_add_native_allocation_marker(int64_t aSize,
       aWriter.IntProperty("size", aSize);
       aWriter.IntProperty("memoryAddress",
                           static_cast<int64_t>(aMemoryAddress));
-      aWriter.IntProperty("threadId", aThreadId.ToNumber());
+      // Tech note: If `ToNumber()` returns a uint64_t, the conversion to
+      // int64_t is "implementation-defined" before C++20. This is acceptable
+      // here, because this is a one-way conversion to a unique identifier
+      // that's used to visually separate data by thread on the front-end.
+      aWriter.IntProperty("threadId",
+                          static_cast<int64_t>(aThreadId.ToNumber()));
     }
     static mozilla::MarkerSchema MarkerTypeDisplay() {
       return mozilla::MarkerSchema::SpecialFrontendLocation{};

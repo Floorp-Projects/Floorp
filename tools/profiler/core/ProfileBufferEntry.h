@@ -19,6 +19,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfileBufferEntryKinds.h"
 #include "mozilla/ProfileJSONWriter.h"
+#include "mozilla/ProfilerUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
@@ -45,6 +46,7 @@ class ProfileBufferEntry {
   ProfileBufferEntry(Kind aKind, int64_t aInt64);
   ProfileBufferEntry(Kind aKind, uint64_t aUint64);
   ProfileBufferEntry(Kind aKind, int aInt);
+  ProfileBufferEntry(Kind aKind, ProfilerThreadId aThreadId);
 
  public:
 #define CTOR(KIND, TYPE, SIZE)                   \
@@ -78,6 +80,7 @@ class ProfileBufferEntry {
   int GetInt() const;
   int64_t GetInt64() const;
   uint64_t GetUint64() const;
+  ProfilerThreadId GetThreadId() const;
   void CopyCharsInto(char (&aOutArray)[kNumChars]) const;
 };
 
