@@ -7,7 +7,4 @@ webdriver_path = os.path.abspath(
 )
 sys.path.insert(0, os.path.join(webdriver_path))
 
-pytest_plugins = [
-    "tests.support.fixtures",
-    "tests.support.fixtures_http",
-]
+pytest_plugins = "tests.support.fixtures"
