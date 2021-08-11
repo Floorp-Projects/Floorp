@@ -2751,7 +2751,15 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
                                         bounds);
       }
     } else if (shouldInvalidate) {
-      view->GetViewManager()->InvalidateView(view);
+      if (!renderer->AsFallback()) {
+        view->GetViewManager()->InvalidateView(view);
+      } else {
+        // If we're the fallback renderer, then we don't need to invalidate
+        // as we've just drawn directly to the window and don't need to do
+        // anything else.
+        NS_ASSERTION(!(aFlags & PAINT_NO_COMPOSITE),
+                     "Must be compositing during fallback");
+      }
     }
   }
 
