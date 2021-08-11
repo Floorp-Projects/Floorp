@@ -51,29 +51,41 @@ class AsyncLogger {
 
   // The order of the fields is important here to minimize padding.
   struct TracePayload {
-    // If this marker is of phase B or E (begin or end), this is the time at
-    // which it was captured.
-    TimeStamp mTimestamp;
-    // If this marker is of phase X (COMPLETE), this holds the duration of the
-    // event in microseconds. Else, the value is not used.
-    uint32_t mDurationUs;
-    // The thread on which this tracepoint was gathered.
-    ProfilerThreadId mTID;
+#define MEMBERS_EXCEPT_NAME                                                  \
+  /* If this marker is of phase B or E (begin or end), this is the time at   \
+   * which it was captured. */                                               \
+  TimeStamp mTimestamp;                                                      \
+  /* The thread on which this tracepoint was gathered. */                    \
+  ProfilerThreadId mTID;                                                     \
+  /* If this marker is of phase X (COMPLETE), this holds the duration of the \
+   * event in microseconds. Else, the value is not used. */                  \
+  uint32_t mDurationUs;                                                      \
+  /* A trace payload can be either:                                          \
+   * - Begin - this marks the beginning of a temporal region                 \
+   * - End - this marks the end of a temporal region                         \
+   * - Complete - this is a timestamp and a length, forming complete a       \
+   * temporal region */                                                      \
+  TracingPhase mPhase
+
+    MEMBERS_EXCEPT_NAME;
+
+   private:
+    // Mock structure, to know where the first character of the name will be.
+    struct MembersWithChar {
+      MEMBERS_EXCEPT_NAME;
+      char c;
+    };
+    static constexpr size_t scRemainingSpaceForName =
+        PAYLOAD_TOTAL_SIZE - offsetof(MembersWithChar, c) -
+        ((MPSC_MSG_RESERVERD + alignof(MembersWithChar) - 1) &
+         ~(alignof(MembersWithChar) - 1));
+#undef MEMBERS_EXCEPT_NAME
+
+   public:
     // An arbitrary string, usually containing a function signature or a
     // recognizable tag of some sort, to be displayed when analyzing the
     // profile.
-    char mName[PAYLOAD_TOTAL_SIZE - sizeof(TracingPhase) - sizeof(int) -
-               sizeof(uint32_t) - sizeof(TimeStamp) -
-               // Really, we'd want alignof(TracePayload), but it's not fully
-               // declared yet. The alignment is going to be that of TimeStamp.
-               ((MPSC_MSG_RESERVERD + alignof(TimeStamp) - 1) &
-                ~(alignof(TimeStamp) - 1))];
-    // A trace payload can be either:
-    // - Begin - this marks the beginning of a temporal region
-    // - End - this marks the end of a temporal region
-    // - Complete - this is a timestamp and a length, forming complete a
-    // temporal region
-    TracingPhase mPhase;
+    char mName[scRemainingSpaceForName];
   };
 
   // The goal here is to make it easy on the allocator. We pack a pointer in the
