@@ -13013,6 +13013,10 @@ bool BaseCompiler::emitMemCopyInline() {
 
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
+#ifdef ENABLE_WASM_SIMD
+  size_t numCopies16 = remainder / sizeof(V128);
+  remainder %= sizeof(V128);
+#endif
 #ifdef JS_64BIT
   size_t numCopies8 = remainder / sizeof(uint64_t);
   remainder %= sizeof(uint64_t);
@@ -13028,6 +13032,24 @@ bool BaseCompiler::emitMemCopyInline() {
   // anything if any source byte is out-of-bounds.
   bool omitBoundsCheck = false;
   size_t offset = 0;
+
+#ifdef ENABLE_WASM_SIMD
+  for (uint32_t i = 0; i < numCopies16; i++) {
+    RegI32 temp = needI32();
+    moveI32(src, temp);
+    pushI32(temp);
+
+    MemoryAccessDesc access(Scalar::Simd128, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!loadCommon(&access, check, ValType::V128)) {
+      return false;
+    }
+
+    offset += sizeof(V128);
+    omitBoundsCheck = true;
+  }
+#endif
 
 #ifdef JS_64BIT
   for (uint32_t i = 0; i < numCopies8; i++) {
@@ -13175,6 +13197,27 @@ bool BaseCompiler::emitMemCopyInline() {
   }
 #endif
 
+#ifdef ENABLE_WASM_SIMD
+  for (uint32_t i = 0; i < numCopies16; i++) {
+    offset -= sizeof(V128);
+
+    RegV128 value = popV128();
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushV128(value);
+
+    MemoryAccessDesc access(Scalar::Simd128, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!storeCommon(&access, check, ValType::V128)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+#endif
+
   freeI32(dest);
   freeI32(src);
   return true;
@@ -13251,6 +13294,10 @@ bool BaseCompiler::emitMemFillInline() {
 
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
+#ifdef ENABLE_WASM_SIMD
+  size_t numCopies16 = remainder / sizeof(V128);
+  remainder %= sizeof(V128);
+#endif
 #ifdef JS_64BIT
   size_t numCopies8 = remainder / sizeof(uint64_t);
   remainder %= sizeof(uint64_t);
@@ -13264,6 +13311,9 @@ bool BaseCompiler::emitMemFillInline() {
   MOZ_ASSERT(numCopies2 <= 1 && numCopies1 <= 1);
 
   // Generate splatted definitions for wider fills as needed
+#ifdef ENABLE_WASM_SIMD
+  V128 val16(value);
+#endif
 #ifdef JS_64BIT
   uint64_t val8 = SplatByteToUInt<uint64_t>(value, 8);
 #endif
@@ -13343,6 +13393,26 @@ bool BaseCompiler::emitMemFillInline() {
     AccessCheck check;
     check.omitBoundsCheck = omitBoundsCheck;
     if (!storeCommon(&access, check, ValType::I64)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+#endif
+
+#ifdef ENABLE_WASM_SIMD
+  for (uint32_t i = 0; i < numCopies16; i++) {
+    offset -= sizeof(V128);
+
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushV128(val16);
+
+    MemoryAccessDesc access(Scalar::Simd128, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!storeCommon(&access, check, ValType::V128)) {
       return false;
     }
 
