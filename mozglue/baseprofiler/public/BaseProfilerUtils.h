@@ -118,19 +118,13 @@ namespace mozilla::baseprofiler {
 // Get the current thread's ID.
 [[nodiscard]] MFBT_API BaseProfilerThreadId profiler_current_thread_id();
 
-namespace detail {
-// Statically initialized to 0, then set once from profiler_init(), which should
-// be called from the main thread before any other use of the profiler.
-extern MFBT_DATA BaseProfilerThreadId scProfilerMainThreadId;
-}  // namespace detail
+// Must be called at least once from the main thread, before any other main-
+// thread id function.
+MFBT_API void profiler_init_main_thread_id();
 
-[[nodiscard]] inline BaseProfilerThreadId profiler_main_thread_id() {
-  return detail::scProfilerMainThreadId;
-}
+[[nodiscard]] MFBT_API BaseProfilerThreadId profiler_main_thread_id();
 
-[[nodiscard]] inline bool profiler_is_main_thread() {
-  return profiler_current_thread_id() == profiler_main_thread_id();
-}
+[[nodiscard]] MFBT_API bool profiler_is_main_thread();
 
 }  // namespace mozilla::baseprofiler
 

@@ -131,8 +131,22 @@ BaseProfilerThreadId profiler_current_thread_id() {
 
 // --------------------------------------------- Platform-agnostic definitions
 
-namespace mozilla::baseprofiler::detail {
-// Statically initialized to 0, then set once from profiler_init(), which should
-// be called from the main thread before any other use of the profiler.
-BaseProfilerThreadId scProfilerMainThreadId;
-}  // namespace mozilla::baseprofiler::detail
+namespace mozilla::baseprofiler {
+
+static BaseProfilerThreadId scBaseProfilerMainThreadId{};
+
+void profiler_init_main_thread_id() {
+  if (!scBaseProfilerMainThreadId.IsSpecified()) {
+    scBaseProfilerMainThreadId = profiler_current_thread_id();
+  }
+}
+
+BaseProfilerThreadId profiler_main_thread_id() {
+  return scBaseProfilerMainThreadId;
+}
+
+bool profiler_is_main_thread() {
+  return profiler_current_thread_id() == scBaseProfilerMainThreadId;
+}
+
+}  // namespace mozilla::baseprofiler
