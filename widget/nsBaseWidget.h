@@ -165,7 +165,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
  public:
   nsBaseWidget();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   // nsIWidget interface
   void CaptureMouse(bool aCapture) override {}
