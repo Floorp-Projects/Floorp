@@ -34,21 +34,6 @@
 
 // this port is based off of v8 svn revision 9837
 
-ProfilerProcessId profiler_current_process_id() {
-  return ProfilerProcessId::FromNumber(getpid());
-}
-
-ProfilerThreadId profiler_current_thread_id() {
-  uint64_t tid;
-  pthread_threadid_np(nullptr, &tid);
-  // Cast the uint64_t value to NumberType, which is an int.
-  // In theory, this risks truncating the value. It's unknown if such large
-  // values occur in reality.
-  // It may be worth changing our cross-platform tid type to 64 bits.
-  return ProfilerThreadId::FromNumber(
-      static_cast<ProfilerThreadId::NumberType>(tid));
-}
-
 void* GetStackTop(void* aGuess) {
   pthread_t thread = pthread_self();
   return pthread_get_stackaddr_np(thread);

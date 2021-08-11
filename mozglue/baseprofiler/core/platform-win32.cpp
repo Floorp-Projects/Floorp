@@ -39,17 +39,6 @@
 namespace mozilla {
 namespace baseprofiler {
 
-BaseProfilerProcessId profiler_current_process_id() {
-  return BaseProfilerProcessId::FromNumber(_getpid());
-}
-
-BaseProfilerThreadId profiler_current_thread_id() {
-  DWORD threadId = GetCurrentThreadId();
-  MOZ_ASSERT(threadId <= INT32_MAX, "native thread ID is > INT32_MAX");
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(threadId));
-}
-
 static int64_t MicrosecondsSince1970() {
   int64_t prt;
   FILETIME ft;

@@ -181,12 +181,6 @@ void PrintToConsole(const char* aFmt, ...) {
   va_end(args);
 }
 
-namespace detail {
-// Statically initialized to 0, then set once from profiler_init(), which should
-// be called from the main thread before any other use of the profiler.
-BaseProfilerThreadId scProfilerMainThreadId;
-}  // namespace detail
-
 constexpr static bool ValidateFeatures() {
   int expectedFeatureNumber = 0;
 

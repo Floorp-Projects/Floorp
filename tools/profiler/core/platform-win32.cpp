@@ -36,17 +36,6 @@
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
-ProfilerProcessId profiler_current_process_id() {
-  return ProfilerProcessId::FromNumber(_getpid());
-}
-
-ProfilerThreadId profiler_current_thread_id() {
-  DWORD threadId = GetCurrentThreadId();
-  MOZ_ASSERT(threadId <= INT32_MAX, "native thread ID is > INT32_MAX");
-  return ProfilerThreadId::FromNumber(
-      static_cast<ProfilerThreadId::NumberType>(threadId));
-}
-
 void* GetStackTop(void* aGuess) {
   PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
   return reinterpret_cast<void*>(pTib->StackBase);

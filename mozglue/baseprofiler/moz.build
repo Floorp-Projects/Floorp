@@ -66,8 +66,6 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         DEFINES["ANDROID_NDK_MAJOR_VERSION"] = CONFIG["ANDROID_NDK_MAJOR_VERSION"]
         DEFINES["ANDROID_NDK_MINOR_VERSION"] = CONFIG["ANDROID_NDK_MINOR_VERSION"]
 
-    FINAL_LIBRARY = "mozglue"
-
 GeneratedFile(
     "public/ProfilingCategoryList.h",
     script="build/generate_profiling_categories.py",
@@ -107,12 +105,17 @@ EXPORTS.mozilla += [
     "public/ProfileChunkedBuffer.h",
 ]
 
+UNIFIED_SOURCES += [
+    "core/ProfilerUtils.cpp",
+]
+
 if CONFIG["MOZ_VTUNE"]:
     DEFINES["MOZ_VTUNE_INSTRUMENTATION"] = True
     UNIFIED_SOURCES += [
         "core/VTuneProfiler.cpp",
     ]
 
+FINAL_LIBRARY = "mozglue"
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [

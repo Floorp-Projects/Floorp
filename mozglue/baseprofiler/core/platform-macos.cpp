@@ -36,21 +36,6 @@
 namespace mozilla {
 namespace baseprofiler {
 
-BaseProfilerProcessId profiler_current_process_id() {
-  return BaseProfilerProcessId::FromNumber(getpid());
-}
-
-BaseProfilerThreadId profiler_current_thread_id() {
-  uint64_t tid;
-  pthread_threadid_np(nullptr, &tid);
-  // Cast the uint64_t value to NumberType, which is an int.
-  // In theory, this risks truncating the value. It's unknown if such large
-  // values occur in reality.
-  // It may be worth changing our cross-platform tid type to 64 bits.
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(tid));
-}
-
 static int64_t MicrosecondsSince1970() {
   struct timeval tv;
   gettimeofday(&tv, NULL);

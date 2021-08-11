@@ -74,28 +74,6 @@
 
 using namespace mozilla;
 
-ProfilerProcessId profiler_current_process_id() {
-  return ProfilerProcessId::FromNumber(getpid());
-}
-
-ProfilerThreadId profiler_current_thread_id() {
-#if defined(GP_OS_linux)
-  // glibc doesn't provide a wrapper for gettid() until 2.30
-  return ProfilerThreadId::FromNumber(
-      static_cast<ProfilerThreadId::NumberType>(syscall(SYS_gettid)));
-#elif defined(GP_OS_android)
-  return ProfilerThreadId::FromNumber(
-      static_cast<ProfilerThreadId::NumberType>(gettid()));
-#elif defined(GP_OS_freebsd)
-  long id;
-  (void)thr_self(&id);
-  return ProfilerThreadId::FromNumber(
-      static_cast<ProfilerThreadId::NumberType>(id));
-#else
-#  error "bad platform"
-#endif
-}
-
 void* GetStackTop(void* aGuess) { return aGuess; }
 
 static void PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext) {
