@@ -4,9 +4,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string-array name="preference_privacy_cookies_options">
-        <item>@string/preference_privacy_should_block_cookies_yes_option</item>
+        <item>@string/preference_privacy_should_block_cookies_yes_option2</item>
         <item>@string/preference_privacy_should_block_cookies_third_party_only_option</item>
         <item>@string/preference_privacy_should_block_cookies_third_party_tracker_cookies_option</item>
-        <item>@string/preference_privacy_should_block_cookies_no_option</item>
+        <item>@string/preference_privacy_should_block_cookies_no_option2</item>
     </string-array>
 </resources>

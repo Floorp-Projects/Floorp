@@ -76,7 +76,7 @@
             android:entryValues="@array/preference_privacy_cookies_options"
             android:key="@string/pref_key_performance_enable_cookies"
             android:defaultValue="@string/preference_privacy_should_block_cookies_third_party_tracker_cookies_option"
-            android:layout="@layout/focus_preference_no_icon"
+            android:layout="@layout/cookies_preference"
             android:title="@string/preference_privacy_category_cookies" />
     </androidx.preference.PreferenceCategory>
 

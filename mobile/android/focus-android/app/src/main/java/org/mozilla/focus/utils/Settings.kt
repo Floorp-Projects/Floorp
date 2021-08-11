@@ -58,7 +58,7 @@ class Settings private constructor(
         }
 
         val cookiePolicy = when (shouldBlockCookiesValue()) {
-            context.getString(R.string.preference_privacy_should_block_cookies_yes_option) ->
+            context.getString(R.string.preference_privacy_should_block_cookies_yes_option2) ->
                 EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE
 
             context.getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option) ->
@@ -136,13 +136,13 @@ class Settings private constructor(
 
     fun shouldBlockCookies(): Boolean =
             shouldBlockCookiesValue() == resources.getString(
-                    R.string.preference_privacy_should_block_cookies_yes_option)
+                    R.string.preference_privacy_should_block_cookies_yes_option2)
 
     fun shouldBlockThirdPartyCookies(): Boolean =
             shouldBlockCookiesValue() == resources.getString(
                     R.string.preference_privacy_should_block_cookies_third_party_only_option) ||
                     shouldBlockCookiesValue() == resources.getString(
-                    R.string.preference_privacy_should_block_cookies_yes_option)
+                    R.string.preference_privacy_should_block_cookies_yes_option2)
 
     fun shouldShowFirstrun(): Boolean =
             !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false)

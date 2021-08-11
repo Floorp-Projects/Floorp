@@ -4,10 +4,13 @@
 
 package org.mozilla.focus.widget
 
+import android.R
 import android.content.Context
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceViewHolder
 import android.util.AttributeSet
+import android.view.View
+import androidx.core.view.isVisible
 import org.mozilla.focus.utils.Settings
 
 /**
@@ -18,6 +21,7 @@ class CookiesPreference(context: Context?, attrs: AttributeSet?) : ListPreferenc
     override fun onBindViewHolder(holder: PreferenceViewHolder?) {
         super.onBindViewHolder(holder)
         updateSummary()
+        showIcon(holder)
     }
 
     override fun notifyChanged() {
@@ -28,5 +32,10 @@ class CookiesPreference(context: Context?, attrs: AttributeSet?) : ListPreferenc
     fun updateSummary() {
         val settings = Settings.getInstance(context)
         super.setSummary(settings.shouldBlockCookiesValue())
+    }
+
+    private fun showIcon(holder: PreferenceViewHolder?) {
+        val widgetFrame: View? = holder?.findViewById(R.id.widget_frame)
+        widgetFrame?.isVisible = true
     }
 }

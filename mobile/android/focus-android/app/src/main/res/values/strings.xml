@@ -276,10 +276,10 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">No</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">No thanks</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Block 3rd-party tracker cookies only</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Block 3rd-party cookies only</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Yes</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Yes please</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Use fingerprint to unlock app</string>
@@ -710,6 +710,12 @@
     <string name="preference_exceptions_menu_remove">Remove</string>
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Remove all websites</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Block Cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Would you like to block cookies?</string>
 
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Tab Crashed</string>
