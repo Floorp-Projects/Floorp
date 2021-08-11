@@ -25,11 +25,8 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     private fun setupDocument(documentPath: String) {
         sessionRule.session.loadTestPath(documentPath)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-            @GeckoSessionTestRule.AssertCalled(count = 1)
-            override fun onFirstContentfulPaint(session: GeckoSession) {
-            }
-        })
+        sessionRule.session.waitForPageStop()
+        sessionRule.session.promiseAllPaintsDone()
         sessionRule.session.flushApzRepaints()
     }
 
