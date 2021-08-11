@@ -26,6 +26,22 @@ var CaptivePortalWatcher = {
   // after successful login if we're redirected to the canonicalURL.
   _previousCaptivePortalTab: null,
 
+  // We will only show the VPN promo if we're pretty sure that the captive
+  // portal "Login" button has been pressed relatively recently
+  // before the captive-portal-login-success notification was received so that
+  // we can have reasonable degree of confidence that the user has some mental
+  // context why when we might be showing them the promo.
+  _loginButtonPressedTimeStamp: 0, // 0 is magic value meaning "not set"
+
+  // Here's where we define "recently" for the button above:
+  //
+  // On the one hand, if for some reason the login doesn't happen (eg user
+  // decides airplane wifi charge is too high), the next time they try to
+  // log into either this or another captive portal, we could end up showing
+  // the VPN promo when it's been a long time since they saw the UI, and
+  // they've lost mental context.
+  _LOGIN_BUTTON_PRESSED_TIMEOUT: 60 * 1000 * 1000, // 60 mins
+
   get _captivePortalNotification() {
     return gNotificationBox.getNotificationWithValue(
       this.PORTAL_NOTIFICATION_VALUE
@@ -48,6 +64,7 @@ var CaptivePortalWatcher = {
     Services.obs.addObserver(this, "captive-portal-login");
     Services.obs.addObserver(this, "captive-portal-login-abort");
     Services.obs.addObserver(this, "captive-portal-login-success");
+    Services.obs.addObserver(this, "captive-portal-login-button-pressed");
 
     this._cps = Cc["@mozilla.org/network/captive-portal-service;1"].getService(
       Ci.nsICaptivePortalService
@@ -83,6 +100,7 @@ var CaptivePortalWatcher = {
     Services.obs.removeObserver(this, "captive-portal-login");
     Services.obs.removeObserver(this, "captive-portal-login-abort");
     Services.obs.removeObserver(this, "captive-portal-login-success");
+    Services.obs.removeObserver(this, "captive-portal-login-button-pressed");
 
     this._cancelDelayedCaptivePortal();
   },
@@ -105,8 +123,23 @@ var CaptivePortalWatcher = {
       case "captive-portal-login-abort":
         this._captivePortalGone(false);
         break;
+      case "captive-portal-login-button-pressed":
+        this._loginButtonPressedTimeStamp = Cu.now();
+        break;
       case "captive-portal-login-success":
         this._captivePortalGone(true);
+
+        if (
+          this._loginButtonPressedTimeStamp &&
+          Cu.now() - this._loginButtonPressedTimeStamp <
+            this._LOGIN_BUTTON_PRESSED_TIMEOUT
+        ) {
+          Services.obs.notifyObservers(
+            null,
+            "captive-portal-login-success-after-button-pressed"
+          );
+          this._loginButtonPressedTimeStamp = 0;
+        }
         break;
       case "delayed-captive-portal-handled":
         this._cancelDelayedCaptivePortal();

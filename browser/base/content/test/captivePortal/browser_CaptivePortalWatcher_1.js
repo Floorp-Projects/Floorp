@@ -109,6 +109,67 @@ let testcases = [
     ensureNoPortalNotification(win);
     await closeWindowAndWaitForWindowActivate(win);
   },
+  async function testLoginSuccessAfterButtonPress() {
+    // test that button not clicked generates no notification
+    let loginSuccessAfterButtonPress = TestUtils.topicObserved(
+      "captive-portal-login-success-after-button-pressed"
+    );
+    window.CaptivePortalWatcher.observe(null, "captive-portal-login-success");
+
+    let exception = undefined;
+    try {
+      await waitForPromiseWithTimeout(loginSuccessAfterButtonPress);
+    } catch (ex) {
+      exception = ex;
+    }
+    isnot(
+      exception,
+      undefined,
+      "captive-portal-login-success-after-button-pressed should not have" +
+        " been sent, because button was not pressed"
+    );
+
+    // test that button clicked does generate a notification
+    loginSuccessAfterButtonPress = TestUtils.topicObserved(
+      "captive-portal-login-success-after-button-pressed"
+    );
+
+    window.CaptivePortalWatcher.observe(
+      null,
+      "captive-portal-login-button-pressed"
+    );
+    window.CaptivePortalWatcher.observe(null, "captive-portal-login-success");
+
+    await loginSuccessAfterButtonPress;
+
+    // test that subsequent captive-portal-login-success without a click
+    // does not send a notification
+
+    // Normally, we would stub Cu.now() and make it move the clock forward.
+    // Unfortunately, since it's in C++, we can't do that here, so instead
+    // we move the time stamp into the past so that things will have expired.
+    window.CaptivePortalWatcher._loginButtonPressedTimeStamp -=
+      window.CaptivePortalWatcher._LOGIN_BUTTON_PRESSED_TIMEOUT;
+
+    loginSuccessAfterButtonPress = TestUtils.topicObserved(
+      "captive-portal-login-success-after-button-pressed"
+    );
+
+    window.CaptivePortalWatcher.observe(null, "captive-portal-login-success");
+    exception = undefined;
+    try {
+      await waitForPromiseWithTimeout(loginSuccessAfterButtonPress);
+    } catch (ex) {
+      exception = ex;
+    }
+
+    isnot(
+      exception,
+      undefined,
+      "captive-portal-login-success-after-button-pressed should not have" +
+        " been sent, button was not pressed again"
+    );
+  },
 ];
 
 for (let testcase of testcases) {
