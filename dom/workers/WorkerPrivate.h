@@ -78,7 +78,7 @@ class WorkerThread;
 // object. It exists to avoid changing a lot of code to use Mutex* instead of
 // Mutex&.
 class SharedMutex {
-  using Mutex = mozilla::Mutex;
+  typedef mozilla::Mutex Mutex;
 
   class RefCountedMutex final : public Mutex {
    public:
