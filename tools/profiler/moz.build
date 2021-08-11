@@ -113,9 +113,6 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
             "/toolkit/crashreporter/google-breakpad/src/common/android/include",
         ]
 
-    if CONFIG["ENABLE_TESTS"]:
-        DIRS += ["tests/gtest"]
-
     if CONFIG["MOZ_VTUNE"]:
         DEFINES["MOZ_VTUNE_INSTRUMENTATION"] = True
         UNIFIED_SOURCES += [
@@ -171,6 +168,9 @@ CONFIGURE_SUBST_FILES += [
 ]
 
 FINAL_LIBRARY = "xul"
+
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["tests/gtest"]
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
