@@ -2126,8 +2126,8 @@ BufferOffset Assembler::as_vldr_unaligned(VFPRegister vd, Register rn) {
   }
   // vld1 (single element to single lane) with index=0, size=2
   MOZ_ASSERT(vd.isFloat());
-  uint32_t index = (vd.code() & 1);
-  return writeInst(0xF4A0080F | RN(rn) | VD(vd.asDouble()) | (index << 5));
+  MOZ_ASSERT((vd.code() & 1) == 0);
+  return writeInst(0xF4A0080F | RN(rn) | VD(vd.asDouble()));
 }
 
 BufferOffset Assembler::as_vstr_unaligned(VFPRegister vd, Register rn) {
@@ -2138,8 +2138,8 @@ BufferOffset Assembler::as_vstr_unaligned(VFPRegister vd, Register rn) {
   }
   // vst1 (single element from one lane) with index=0, size=2
   MOZ_ASSERT(vd.isFloat());
-  uint32_t index = (vd.code() & 1);
-  return writeInst(0xF480080F | RN(rn) | VD(vd.asDouble()) | (index << 5));
+  MOZ_ASSERT((vd.code() & 1) == 0);
+  return writeInst(0xF480080F | RN(rn) | VD(vd.asDouble()));
 }
 
 BufferOffset Assembler::as_vimm(VFPRegister vd, VFPImm imm, Condition c) {
