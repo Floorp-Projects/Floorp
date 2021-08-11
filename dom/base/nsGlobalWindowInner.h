@@ -1157,11 +1157,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Get the toplevel principal, returns null if this is a toplevel window.
   nsIPrincipal* GetTopLevelAntiTrackingPrincipal();
 
-  // Get the parent principal, returns null if this or the parent are not a
-  // toplevel window. This is mainly used to determine the anti-tracking storage
-  // area.
-  nsIPrincipal* GetTopLevelStorageAreaPrincipal();
-
   // This method is called if this window loads a 3rd party tracking resource
   // and the storage is just been granted. The window can reset the partitioned
   // storage objects and switch to the first party cookie jar.

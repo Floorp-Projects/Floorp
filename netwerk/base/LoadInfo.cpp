@@ -183,25 +183,11 @@ LoadInfo::LoadInfo(
       if (innerWindow) {
         mTopLevelPrincipal = innerWindow->GetTopLevelAntiTrackingPrincipal();
 
-        // The top-level-storage-area-principal is not null only for the first
-        // level of iframes (null for top-level contexts, and null for
-        // sub-iframes). If we are loading a sub-document resource, we must
-        // calculate what the top-level-storage-area-principal will be for the
-        // new context.
-        if (externalType != ExtContentPolicy::TYPE_SUBDOCUMENT) {
-          mTopLevelStorageAreaPrincipal =
-              innerWindow->GetTopLevelStorageAreaPrincipal();
-        } else if (bc->IsTop()) {
-          Document* doc = innerWindow->GetExtantDoc();
-          if (!doc || (!doc->StorageAccessSandboxed())) {
-            mTopLevelStorageAreaPrincipal = innerWindow->GetPrincipal();
-          }
-
+        if (!mTopLevelPrincipal &&
+            externalType == ExtContentPolicy::TYPE_SUBDOCUMENT && bc->IsTop()) {
           // If this is the first level iframe, innerWindow is our top-level
           // principal.
-          if (!mTopLevelPrincipal) {
-            mTopLevelPrincipal = innerWindow->GetPrincipal();
-          }
+          mTopLevelPrincipal = innerWindow->GetPrincipal();
         }
       }
 
@@ -353,8 +339,6 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       nsGlobalWindowInner::Cast(aOuterWindow->GetCurrentInnerWindow());
   if (innerWindow) {
     mTopLevelPrincipal = innerWindow->GetTopLevelAntiTrackingPrincipal();
-    // mTopLevelStorageAreaPrincipal is always null for top-level document
-    // loading.
   }
 
   // get the docshell from the outerwindow, and then get the originattributes
@@ -469,21 +453,10 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
     }
   }
 
-  // The top-level-storage-area-principal is not null only for the first
-  // level of iframes (null for top-level contexts, and null for
-  // sub-iframes). If we are loading a sub-document resource, we must
-  // calculate what the top-level-storage-area-principal will be for the
-  // new context.
-  if (parentBC->IsTop()) {
-    if (!Document::StorageAccessSandboxed(aParentWGP->SandboxFlags())) {
-      mTopLevelStorageAreaPrincipal = aParentWGP->DocumentPrincipal();
-    }
-
+  if (!mTopLevelPrincipal && parentBC->IsTop()) {
     // If this is the first level iframe, embedder WindowGlobalParent's document
     // principal is our top-level principal.
-    if (!mTopLevelPrincipal) {
-      mTopLevelPrincipal = aParentWGP->DocumentPrincipal();
-    }
+    mTopLevelPrincipal = aParentWGP->DocumentPrincipal();
   }
 
   mInnerWindowID = aParentWGP->InnerWindowId();
@@ -546,7 +519,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mTriggeringPrincipal(rhs.mTriggeringPrincipal),
       mPrincipalToInherit(rhs.mPrincipalToInherit),
       mTopLevelPrincipal(rhs.mTopLevelPrincipal),
-      mTopLevelStorageAreaPrincipal(rhs.mTopLevelStorageAreaPrincipal),
       mResultPrincipalURI(rhs.mResultPrincipalURI),
       mCookieJarSettings(rhs.mCookieJarSettings),
       mCspToInherit(rhs.mCspToInherit),
@@ -621,8 +593,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
     nsIPrincipal* aPrincipalToInherit, nsIPrincipal* aTopLevelPrincipal,
-    nsIPrincipal* aTopLevelStorageAreaPrincipal, nsIURI* aResultPrincipalURI,
-    nsICookieJarSettings* aCookieJarSettings,
+    nsIURI* aResultPrincipalURI, nsICookieJarSettings* aCookieJarSettings,
     nsIContentSecurityPolicy* aCspToInherit,
     const nsID& aSandboxedNullPrincipalID, const Maybe<ClientInfo>& aClientInfo,
     const Maybe<ClientInfo>& aReservedClientInfo,
@@ -661,7 +632,6 @@ LoadInfo::LoadInfo(
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
       mTopLevelPrincipal(aTopLevelPrincipal),
-      mTopLevelStorageAreaPrincipal(aTopLevelStorageAreaPrincipal),
       mResultPrincipalURI(aResultPrincipalURI),
       mCookieJarSettings(aCookieJarSettings),
       mCspToInherit(aCspToInherit),
@@ -865,10 +835,6 @@ void LoadInfo::ResetSandboxedNullPrincipalID() {
 }
 
 nsIPrincipal* LoadInfo::GetTopLevelPrincipal() { return mTopLevelPrincipal; }
-
-nsIPrincipal* LoadInfo::GetTopLevelStorageAreaPrincipal() {
-  return mTopLevelStorageAreaPrincipal;
-}
 
 NS_IMETHODIMP
 LoadInfo::GetLoadingDocument(Document** aResult) {

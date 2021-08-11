@@ -83,7 +83,6 @@ struct LoadInfoArgs
   PrincipalInfo               triggeringPrincipalInfo;
   PrincipalInfo?              principalToInheritInfo;
   PrincipalInfo?              topLevelPrincipalInfo;
-  PrincipalInfo?              topLevelStorageAreaPrincipalInfo;
   URIParams?                  resultPrincipalURI;
   nsID                        sandboxedNullPrincipalID;
   uint32_t                    securityFlags;

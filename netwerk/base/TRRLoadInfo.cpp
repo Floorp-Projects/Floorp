@@ -66,8 +66,6 @@ void TRRLoadInfo::ResetSandboxedNullPrincipalID() {}
 
 nsIPrincipal* TRRLoadInfo::GetTopLevelPrincipal() { return nullptr; }
 
-nsIPrincipal* TRRLoadInfo::GetTopLevelStorageAreaPrincipal() { return nullptr; }
-
 NS_IMETHODIMP
 TRRLoadInfo::GetLoadingDocument(Document** aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
