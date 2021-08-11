@@ -37,8 +37,16 @@ function receiveMessage(event) {
   checkResults(event.data.result);
 }
 
-document.getElementById("testframe").src =
+function startTest() {
+  document.getElementById("testframe").src =
   "https://example.com/tests/dom/security/test/csp/file_uir_top_nav.html";
+}
+
+// Don't upgrade to https to test that upgrade-insecure-requests acts correctly and
+// start test
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", false]
+  ]}, startTest);
 
 </script>
 </body>

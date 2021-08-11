@@ -2,7 +2,7 @@
 
 const kTestPath = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 const kTestXFrameOptionsURI = kTestPath + "file_framing_error_pages_xfo.html";
 const kTestXFrameOptionsURIFrame =
