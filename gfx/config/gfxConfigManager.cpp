@@ -140,39 +140,6 @@ void gfxConfigManager::ConfigureWebRenderSoftware() {
   } else if (gfxPlatform::DoesFissionForceWebRender()) {
     mFeatureWrSoftware->UserForceEnable("Force enabled by fission");
   }
-
-  if (!mHasWrSoftwareBlocklist) {
-    return;
-  }
-
-  nsCString failureId;
-  int32_t status;
-  if (NS_FAILED(mGfxInfo->GetFeatureStatus(
-          nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE, failureId, &status))) {
-    mFeatureWrSoftware->Disable(FeatureStatus::BlockedNoGfxInfo,
-                                "gfxInfo is broken",
-                                "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
-    return;
-  }
-
-  switch (status) {
-    case nsIGfxInfo::FEATURE_ALLOW_ALWAYS:
-    case nsIGfxInfo::FEATURE_ALLOW_QUALIFIED:
-      break;
-    case nsIGfxInfo::FEATURE_DENIED:
-      mFeatureWrSoftware->Disable(FeatureStatus::Denied, "Not on allowlist",
-                                  failureId);
-      break;
-    default:
-      mFeatureWrSoftware->Disable(FeatureStatus::Blocklisted,
-                                  "No qualified hardware", failureId);
-      break;
-    case nsIGfxInfo::FEATURE_STATUS_OK:
-      MOZ_ASSERT_UNREACHABLE("We should still be rolling out WebRender!");
-      mFeatureWrSoftware->Disable(FeatureStatus::Blocked,
-                                  "Not controlled by rollout", failureId);
-      break;
-  }
 }
 
 void gfxConfigManager::ConfigureWebRenderQualified() {
