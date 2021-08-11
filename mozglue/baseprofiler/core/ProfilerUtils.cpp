@@ -14,22 +14,21 @@
 // --------------------------------------------- Windows process & thread ids
 #if defined(XP_WIN)
 
-#  include "mozilla/Assertions.h"
-
 #  include <process.h>
 #  include <processthreadsapi.h>
 
 namespace mozilla::baseprofiler {
 
 BaseProfilerProcessId profiler_current_process_id() {
-  return BaseProfilerProcessId::FromNumber(_getpid());
+  return BaseProfilerProcessId::FromNativeId(_getpid());
 }
 
 BaseProfilerThreadId profiler_current_thread_id() {
-  DWORD threadId = GetCurrentThreadId();
-  MOZ_ASSERT(threadId <= INT32_MAX, "native thread ID is > INT32_MAX");
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(threadId));
+  static_assert(std::is_same_v<BaseProfilerThreadId::NativeType,
+                               decltype(GetCurrentThreadId())>,
+                "BaseProfilerThreadId::NativeType must be exactly the type "
+                "returned by GetCurrentThreadId()");
+  return BaseProfilerThreadId::FromNativeId(GetCurrentThreadId());
 }
 
 }  // namespace mozilla::baseprofiler
@@ -43,7 +42,7 @@ BaseProfilerThreadId profiler_current_thread_id() {
 namespace mozilla::baseprofiler {
 
 BaseProfilerProcessId profiler_current_process_id() {
-  return BaseProfilerProcessId::FromNumber(getpid());
+  return BaseProfilerProcessId::FromNativeId(getpid());
 }
 
 }  // namespace mozilla::baseprofiler
@@ -58,13 +57,10 @@ namespace mozilla::baseprofiler {
 
 BaseProfilerThreadId profiler_current_thread_id() {
   uint64_t tid;
-  pthread_threadid_np(nullptr, &tid);
-  // Cast the uint64_t value to NumberType, which is an int.
-  // In theory, this risks truncating the value. It's unknown if such large
-  // values occur in reality.
-  // It may be worth changing our cross-platform tid type to 64 bits.
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(tid));
+  if (pthread_threadid_np(nullptr, &tid) != 0) {
+    return BaseProfilerThreadId{};
+  }
+  return BaseProfilerThreadId::FromNativeId(tid);
 }
 
 }  // namespace mozilla::baseprofiler
@@ -73,13 +69,10 @@ BaseProfilerThreadId profiler_current_thread_id() {
 // Test Android before Linux, because Linux includes Android.
 #  elif defined(__ANDROID__) || defined(ANDROID)
 
-#    include <sys/types.h>
-
 namespace mozilla::baseprofiler {
 
 BaseProfilerThreadId profiler_current_thread_id() {
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(gettid()));
+  return BaseProfilerThreadId::FromNativeId(gettid());
 }
 
 }  // namespace mozilla::baseprofiler
@@ -93,8 +86,7 @@ namespace mozilla::baseprofiler {
 
 BaseProfilerThreadId profiler_current_thread_id() {
   // glibc doesn't provide a wrapper for gettid() until 2.30
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(syscall(SYS_gettid)));
+  return BaseProfilerThreadId::FromNativeId(syscall(SYS_gettid));
 }
 
 }  // namespace mozilla::baseprofiler
@@ -108,15 +100,16 @@ namespace mozilla::baseprofiler {
 
 BaseProfilerThreadId profiler_current_thread_id() {
   long id;
-  (void)thr_self(&id);
-  return BaseProfilerThreadId::FromNumber(
-      static_cast<BaseProfilerThreadId::NumberType>(id));
+  if (thr_self(&id) != 0) {
+    return BaseProfilerThreadId{};
+  }
+  return BaseProfilerThreadId::FromNativeId(id);
 }
 
 }  // namespace mozilla::baseprofiler
 
 // ------------------------------------------------------- Others
-#  else  // Unsupported platforms.
+#  else
 
 namespace mozilla::baseprofiler {
 
@@ -126,8 +119,8 @@ BaseProfilerThreadId profiler_current_thread_id() {
 
 }  // namespace mozilla::baseprofiler
 
-#  endif  // End of unsupported platforms.
-#endif    // End of non-XP_WIN.
+#  endif
+#endif  // End of non-XP_WIN.
 
 // --------------------------------------------- Platform-agnostic definitions
 
