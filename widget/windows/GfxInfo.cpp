@@ -1281,9 +1281,6 @@ static bool OnlyAllowFeatureOnWhitelistedVendor(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_GPU_PROCESS:
     // We can mostly assume that ANGLE will work
     case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
-    // Software WebRender is our Basic compositor replacement. It needs to
-    // always work.
-    case nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE:
       return false;
     default:
       return true;
@@ -1893,25 +1890,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1603515");
-
-    ////////////////////////////////////
-    // FEATURE_WEBRENDER_SOFTWARE
-
-    // TODO(aosmond): Bug 1678044 - wdspec tests ignore enable/disable-webrender
-    // Once the test infrastructure is fixed, we can remove this blocklist rule
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows, DeviceFamily::AmazonAll,
-        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1678044");
-
-    ////////////////////////////////////
-    // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
-    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows, DeviceFamily::All,
-                                nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-                                nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
-                                DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
-                                "FEATURE_ROLLOUT_SOFTWARE_WR");
   }
   return *sDriverInfo;
 }

@@ -652,11 +652,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
-
-    if (aFeature == FEATURE_WEBRENDER_SOFTWARE) {
-      *aStatus = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
-      return NS_OK;
-    }
   }
 
   if (aFeature == FEATURE_GL_SWIZZLE) {
