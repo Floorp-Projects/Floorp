@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ContentBlocking.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/StorageAccess.h"
@@ -137,8 +138,8 @@ nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
 
   // If the window is 3rd party resource, let's see if first-party storage
   // access is granted for this image.
-  if (nsContentUtils::IsThirdPartyWindowOrChannel(aDocument->GetInnerWindow(),
-                                                  nullptr, nullptr)) {
+  if (AntiTrackingUtils::IsThirdPartyWindow(aDocument->GetInnerWindow(),
+                                            nullptr)) {
     uint32_t rejectedReason = 0;
     Unused << rejectedReason;
     return StorageDisabledByAntiTracking(aDocument, aURI, rejectedReason)

@@ -8391,67 +8391,6 @@ bool nsContentUtils::IsNonSubresourceInternalPolicyType(
 }
 
 // static public
-bool nsContentUtils::IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
-                                                 nsIChannel* aChannel,
-                                                 nsIURI* aURI) {
-  MOZ_ASSERT(!aWindow || !aChannel,
-             "A window and channel should not both be provided.");
-
-  ThirdPartyUtil* thirdPartyUtil = ThirdPartyUtil::GetInstance();
-  if (!thirdPartyUtil) {
-    return false;
-  }
-
-  // In the absence of a window or channel, we assume that we are first-party.
-  bool thirdParty = false;
-
-  if (aWindow) {
-    nsresult rv = thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
-                                                     aURI, &thirdParty);
-    if (NS_FAILED(rv)) {
-      // Ideally we would do something similar to the channel code path here,
-      // but existing code depends on this behaviour.
-      return false;
-    }
-  }
-
-  if (aChannel) {
-    // Note, we must call IsThirdPartyChannel() here and not just try to
-    // use nsILoadInfo.isThirdPartyContext.  That nsILoadInfo property only
-    // indicates if the parent loading window is third party or not.  We
-    // want to check the channel URI against the loading principal as well.
-    nsresult rv =
-        thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &thirdParty);
-    if (NS_FAILED(rv)) {
-      // Assume third-party in case of failure
-      thirdParty = true;
-    }
-
-    // We check isThirdPartyWindow to expand the list of domains that are
-    // considered first party (e.g., if facebook.com includes an iframe from
-    // fatratgames.com, all subsources included in that iframe are considered
-    // third-party with isThirdPartyChannel, even if they are not third-party
-    // w.r.t.  facebook.com), and isThirdPartyChannel to prevent top-level
-    // navigations from being detected as third-party.
-    bool isThirdPartyWindow = true;
-    nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
-    if (NS_SUCCEEDED(rv) && chan) {
-      nsCOMPtr<nsIURI> topWinURI;
-      rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
-      if (NS_SUCCEEDED(rv) && topWinURI) {
-        rv = thirdPartyUtil->IsThirdPartyURI(aURI, topWinURI,
-                                             &isThirdPartyWindow);
-        if (NS_SUCCEEDED(rv)) {
-          thirdParty = thirdParty && isThirdPartyWindow;
-        }
-      }
-    }
-  }
-
-  return thirdParty;
-}
-
-// static public
 bool nsContentUtils::IsThirdPartyTrackingResourceWindow(
     nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);

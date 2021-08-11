@@ -2931,12 +2931,6 @@ class nsContentUtils {
 
  public:
   /*
-   * Returns true if this window/channel is a 3rd party context.
-   */
-  static bool IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
-                                          nsIChannel* aChannel, nsIURI* aURI);
-
-  /*
    * Returns true if this window's channel has been marked as a third-party
    * tracking resource.
    */

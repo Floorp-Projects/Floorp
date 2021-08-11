@@ -989,21 +989,6 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
     blockedReason = nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
   }
 
-#ifdef DEBUG
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      components::ThirdPartyUtil::Service();
-  if (thirdPartyUtil) {
-    bool thirdParty = false;
-    nsresult rv = thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
-                                                     aURI, &thirdParty);
-    // The result of this assertion depends on whether IsThirdPartyWindow
-    // succeeds, because otherwise IsThirdPartyWindowOrChannel artificially
-    // fails.
-    MOZ_ASSERT_IF(NS_SUCCEEDED(rv), nsContentUtils::IsThirdPartyWindowOrChannel(
-                                        aWindow, nullptr, aURI) == thirdParty);
-  }
-#endif
-
   Document* doc = aWindow->GetExtantDoc();
   // Make sure storage access isn't disabled
   if (doc && (doc->StorageAccessSandboxed())) {
