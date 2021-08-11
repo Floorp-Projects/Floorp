@@ -7,7 +7,7 @@ package org.mozilla.fenix.settings.quicksettings
 /**
  * Parent Reducer for all [QuickSettingsFragmentState]s of all Views shown in this Fragment.
  */
-fun quickSettingsFragmentReducer(
+internal fun quickSettingsFragmentReducer(
     state: QuickSettingsFragmentState,
     action: QuickSettingsFragmentAction
 ): QuickSettingsFragmentState {

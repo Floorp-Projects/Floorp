@@ -4,16 +4,14 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
-import mozilla.components.support.test.mock
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.settings.PhoneFeature
 
 class QuickSettingsFragmentReducerTest {
 
-    @Ignore("See https://github.com/mozilla-mobile/fenix/issues/20792")
     @Test
     fun `WebsitePermissionAction - TogglePermission`() {
         val toggleablePermission = WebsitePermission.Toggleable(
@@ -26,8 +24,8 @@ class QuickSettingsFragmentReducerTest {
 
         val map =
             mapOf<PhoneFeature, WebsitePermission>(PhoneFeature.CAMERA to toggleablePermission)
-
-        val state = QuickSettingsFragmentState(mock(), map)
+        val infoState = WebsiteInfoState("", "", WebsiteSecurityUiValues.SECURE, "")
+        val state = QuickSettingsFragmentState(infoState, map)
         val newState = quickSettingsFragmentReducer(
             state,
             WebsitePermissionAction.TogglePermission(
@@ -46,7 +44,7 @@ class QuickSettingsFragmentReducerTest {
         val permissionPermission = WebsitePermission.Autoplay(
             autoplayValue = AutoplayValue.BlockAll(
                 label = "label",
-                rules = mock(),
+                rules = createTestRule(),
                 sitePermission = null
             ),
             options = emptyList(),
@@ -55,11 +53,11 @@ class QuickSettingsFragmentReducerTest {
 
         val map =
             mapOf<PhoneFeature, WebsitePermission>(PhoneFeature.AUTOPLAY to permissionPermission)
-
-        val state = QuickSettingsFragmentState(mock(), map)
+        val infoState = WebsiteInfoState("", "", WebsiteSecurityUiValues.SECURE, "")
+        val state = QuickSettingsFragmentState(infoState, map)
         val autoplayValue = AutoplayValue.AllowAll(
             label = "newLabel",
-            rules = mock(),
+            rules = createTestRule(),
             sitePermission = null
         )
         val newState = quickSettingsFragmentReducer(
@@ -71,4 +69,15 @@ class QuickSettingsFragmentReducerTest {
             newState.websitePermissionsState[PhoneFeature.AUTOPLAY] as WebsitePermission.Autoplay
         assertEquals(autoplayValue, result.autoplayValue)
     }
+
+    private fun createTestRule() = SitePermissionsRules(
+        SitePermissionsRules.Action.ALLOWED,
+        SitePermissionsRules.Action.ALLOWED,
+        SitePermissionsRules.Action.ALLOWED,
+        SitePermissionsRules.Action.ALLOWED,
+        SitePermissionsRules.AutoplayAction.ALLOWED,
+        SitePermissionsRules.AutoplayAction.ALLOWED,
+        SitePermissionsRules.Action.ALLOWED,
+        SitePermissionsRules.Action.ALLOWED,
+    )
 }
