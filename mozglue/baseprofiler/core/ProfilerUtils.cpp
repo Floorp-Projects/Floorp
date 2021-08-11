@@ -114,7 +114,7 @@ BaseProfilerThreadId profiler_current_thread_id() {
 namespace mozilla::baseprofiler {
 
 BaseProfilerThreadId profiler_current_thread_id() {
-  return BaseProfilerThreadId{};
+  return BaseProfilerThreadId::FromNativeId(std::this_thread::get_id());
 }
 
 }  // namespace mozilla::baseprofiler

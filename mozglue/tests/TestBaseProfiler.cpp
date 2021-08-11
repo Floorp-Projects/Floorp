@@ -187,8 +187,6 @@ void TestProfilerUtils() {
     static_assert(std::is_same_v<
                   decltype(mozilla::baseprofiler::profiler_current_thread_id()),
                   BaseProfilerThreadId>);
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(__ANDROID__) || \
-    defined(ANDROID) || defined(XP_LINUX) || defined(XP_FREEBSD)
     BaseProfilerThreadId mainTestThreadId =
         mozilla::baseprofiler::profiler_current_thread_id();
     MOZ_RELEASE_ASSERT(mainTestThreadId.IsSpecified());
@@ -209,14 +207,6 @@ void TestProfilerUtils() {
       MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_is_main_thread());
     });
     testThread.join();
-#else
-    // Yet-unsupported platforms.
-    MOZ_RELEASE_ASSERT(
-        !mozilla::baseprofiler::profiler_current_thread_id().IsSpecified());
-    MOZ_RELEASE_ASSERT(
-        !mozilla::baseprofiler::profiler_main_thread_id().IsSpecified());
-    MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_is_main_thread());
-#endif
   }
 
   // No conversions between processes and threads.
