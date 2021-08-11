@@ -15,7 +15,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito.times
 import org.mockito.MockitoAnnotations
 import org.mockito.Spy
-import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.state.AppStore
 import org.robolectric.RobolectricTestRunner
@@ -29,10 +28,6 @@ class BrowserMenuControllerTest {
 
     @Mock
     private lateinit var appStore: AppStore
-    private lateinit var store: BrowserStore
-
-    @Mock
-    private lateinit var findInPageIntegration: FindInPageIntegration
 
     private val currentTabId: String = "1"
     private val selectedTab = createTab("https://www.mozilla.org", id = "1")
@@ -42,14 +37,17 @@ class BrowserMenuControllerTest {
     private lateinit var requestDesktopCallback: (isChecked: Boolean) -> Unit
 
     @Mock
-    private lateinit var addToHomeScreenCallback: (url: String, title: String) -> Unit
+    private lateinit var addToHomeScreenCallback: () -> Unit
+
+    @Mock
+    private lateinit var showFindInPageCallback: () -> Unit
 
     @Mock
     private lateinit var openInCallback: () -> Unit
 
     @Before
     fun setup() {
-        store = BrowserStore(
+        val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(selectedTab),
                 selectedTabId = selectedTab.id
@@ -61,12 +59,11 @@ class BrowserMenuControllerTest {
         browserMenuController = BrowserMenuController(
             sessionUseCases,
             appStore,
-            store,
-            findInPageIntegration,
             currentTabId,
             shareCallback,
             requestDesktopCallback,
             addToHomeScreenCallback,
+            showFindInPageCallback,
             openInCallback
         )
     }
@@ -126,6 +123,6 @@ class BrowserMenuControllerTest {
     fun `GIVEN FindInPage menu item WHEN the item is pressed THEN findInPageMenuEvent method is called`() {
         val menuItem = ToolbarMenu.Item.FindInPage
         browserMenuController.handleMenuInteraction(menuItem)
-        Mockito.verify(findInPageIntegration).show(selectedTab)
+        Mockito.verify(showFindInPageCallback, times(1)).invoke()
     }
 }

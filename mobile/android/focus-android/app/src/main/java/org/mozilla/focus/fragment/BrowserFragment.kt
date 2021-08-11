@@ -260,12 +260,11 @@ class BrowserFragment :
         val controller = BrowserMenuController(
             requireComponents.sessionUseCases,
             requireComponents.appStore,
-            requireComponents.store,
-            findInPageIntegration.get(),
             tabId,
             ::shareCurrentUrl,
             ::setShouldRequestDesktop,
             ::showAddToHomescreenDialog,
+            ::showFindInPageBar,
             ::openSelectBrowser
         )
 
@@ -450,7 +449,7 @@ class BrowserFragment :
         snackbar.show()
     }
 
-    internal fun showAddToHomescreenDialog(url: String, title: String) {
+    private fun showAddToHomescreenDialog() {
         val fragmentManager = childFragmentManager
 
         if (fragmentManager.findFragmentByTag(AddToHomescreenDialogFragment.FRAGMENT_TAG) != null) {
@@ -462,8 +461,8 @@ class BrowserFragment :
         val requestDesktop = tab.content.desktopMode
 
         val addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(
-            url,
-            title,
+            tab.content.url,
+            tab.content.title,
             tab.trackingProtection.enabled,
             requestDesktop = requestDesktop
         )
@@ -662,11 +661,7 @@ class BrowserFragment :
                 )
             }
 
-            R.id.add_to_homescreen -> {
-                showAddToHomescreenDialog(
-                    tab.content.url, tab.content.title
-                )
-            }
+            R.id.add_to_homescreen -> { showAddToHomescreenDialog() }
 
             R.id.report_site_issue -> {
                 val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, tab.content.url)
@@ -680,13 +675,15 @@ class BrowserFragment :
                 TelemetryWrapper.reportSiteIssueEvent()
             }
 
-            R.id.find_in_page -> {
-                findInPageIntegration.get()?.show(tab)
-                TelemetryWrapper.findInPageMenuEvent()
-            }
+            R.id.find_in_page -> { showFindInPageBar() }
 
             else -> throw IllegalArgumentException("Unhandled menu item in BrowserFragment")
         }
+    }
+
+    private fun showFindInPageBar() {
+        findInPageIntegration.get()?.show(tab)
+        TelemetryWrapper.findInPageMenuEvent()
     }
 
     private fun openSelectBrowser() {

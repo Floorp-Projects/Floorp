@@ -41,6 +41,17 @@
         <item name="android:fontFamily">@string/font_roboto_medium</item>
     </style>
 
+    <style name="AddToHomeScreenTitle" parent="Widget.AppCompat.EditText">
+        <item name="android:fontFamily">@string/font_roboto_medium</item>
+        <item name="android:backgroundTint">@color/home_screen_dialog_bg_tint</item>
+        <item name="android:inputType">text</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
+        <item name="android:textColor">@color/home_screen_dialog_text</item>
+        <item name="android:textColorHighlight">@color/home_screen_dialog_highlight</item>
+        <item name="android:textColorHint">@color/home_screen_dialog_text</item>
+        <item name="android:textCursorDrawable">@null</item>
+    </style>
+
     <!-- Setting this via alertDialogStyle in AppTheme results in crashes. You need to
          explicitly select this via "new AlertDialog.Builder(activity, R.style.DialogStyle)"
          We need this style because the accent colour for the MainActivity is purple,

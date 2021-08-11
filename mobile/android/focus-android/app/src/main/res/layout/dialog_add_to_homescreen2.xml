@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/dialog_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+        android:text="@string/menu_add_to_home_screen"
+        android:textColor="@color/photonWhite"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/homescreen_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="30dp"
+        app:layout_constraintStart_toStartOf="@id/dialog_title"
+        app:layout_constraintTop_toBottomOf="@id/dialog_title" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/edit_title"
+        style="@style/AddToHomeScreenTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintBottom_toBottomOf="@id/homescreen_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/homescreen_icon"
+        app:layout_constraintTop_toTopOf="@id/homescreen_icon" />
+
+    <Button
+        android:id="@+id/addtohomescreen_dialog_add"
+        style="@style/ButtonStyle"
+        android:layout_marginTop="36dp"
+        android:contentDescription="@string/dialog_addtohomescreen_action_add"
+        android:text="@string/dialog_addtohomescreen_action_yes"
+        app:layout_constraintBottom_toBottomOf="@id/homescreen_dialog_warning_layout"
+        app:layout_constraintBottom_toTopOf="@id/homescreen_dialog_warning_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/edit_title" />
+
+    <Button
+        android:id="@+id/addtohomescreen_dialog_cancel"
+        style="@style/ButtonStyle"
+        android:contentDescription="@string/dialog_addtohomescreen_action_cancel"
+        android:text="@string/dialog_addtohomescreen_action_no"
+        app:layout_constraintEnd_toStartOf="@id/addtohomescreen_dialog_add"
+        app:layout_constraintTop_toTopOf="@id/addtohomescreen_dialog_add" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/homescreen_dialog_warning_layout"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/dialog_warning_background"
+        android:padding="24dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/addtohomescreen_dialog_add">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/homescreen_dialog_block_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:tint="@color/photonWhite"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/homescreen_dialog_warning"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:fontFamily="@string/font_roboto_regular"
+            android:text="@string/dialog_addtohomescreen_tracking_protection"
+            android:textColor="@color/photonWhite"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@id/homescreen_dialog_block_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/homescreen_dialog_block_icon"
+            app:layout_constraintTop_toTopOf="@id/homescreen_dialog_block_icon" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

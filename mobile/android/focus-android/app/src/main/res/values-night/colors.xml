@@ -5,18 +5,27 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <color name="snackbarBackground">#2E255D</color>
     <color name="colorPoweredBy" tools:ignore="MissingDefaultResource">#271948</color>
+
     <!-- Browser Menu items color palette -->
     <color name="mvp_browser_menu_bg" tools:ignore="MissingDefaultResource">@color/photonInk80</color>
     <color name="colorProgressGradientStart">#9059FF</color>
     <color name="colorProgressGradientCenter">#FF4AA2</color>
     <color name="colorProgressGradientEnd">#FFBD4F</color>
 
+    <!-- Find in page bar color palette -->
     <color name="find_in_page_background">#1D1133</color>
     <color name="find_in_page_buttons_tint">#FFFFFF</color>
     <color name="find_in_page_no_matches_color">#FFFFFF</color>
     <color name="find_in_page_query_color">#FFFFFF</color>
     <color name="find_in_page_query_hint_color">#FFFFFF</color>
     <color name="find_in_page_results_color">#FFFFFF</color>
+
+    <!-- Add to Home screen dialog color palette -->
+    <color name="home_screen_dialog_bg">#271948</color>
+    <color name="images_removal_warning_background_color">#1D1133</color>
+    <color name="home_screen_dialog_bg_tint">#FF4AA2</color>
+    <color name="home_screen_dialog_highlight">#FF4AA2</color>
+    <color name="home_screen_dialog_button_text">#FF4AA2</color>
 
     <!-- Settings -->
     <color name="settings_summary_text">#ffbbbcc5</color>

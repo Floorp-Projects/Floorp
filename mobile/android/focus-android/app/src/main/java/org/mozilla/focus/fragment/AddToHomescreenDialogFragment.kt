@@ -15,11 +15,13 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.shortcut.IconGenerator
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.FeatureFlags
 
 /**
  * Fragment displaying a dialog where a user can change the title for a homescreen shortcut
@@ -35,10 +37,12 @@ class AddToHomescreenDialogFragment : DialogFragment() {
 
         val builder = AlertDialog.Builder(requireActivity(), R.style.DialogStyle)
         builder.setCancelable(true)
-        builder.setTitle(requireActivity().getString(R.string.menu_add_to_home_screen))
-
+        if (!FeatureFlags.isMvp) {
+            builder.setTitle(requireActivity().getString(R.string.menu_add_to_home_screen))
+        }
         val inflater = requireActivity().layoutInflater
-        val dialogView = inflater.inflate(R.layout.add_to_homescreen, null)
+        val layoutId = if (FeatureFlags.isMvp) R.layout.dialog_add_to_homescreen2 else R.layout.add_to_homescreen
+        val dialogView = inflater.inflate(layoutId, null)
         builder.setView(dialogView)
 
         // For the dialog we display the Pre Oreo version of the icon because the Oreo+
@@ -51,14 +55,17 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         iconView.setImageBitmap(iconBitmap)
 
         val blockIcon = dialogView.findViewById<ImageView>(R.id.homescreen_dialog_block_icon)
-        blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled)
-
-        val addToHomescreenDialogCancelButton =
-            dialogView.findViewById<Button>(R.id.addtohomescreen_dialog_cancel)
-        val addToHomescreenDialogConfirmButton =
-            dialogView.findViewById<Button>(R.id.addtohomescreen_dialog_add)
-
-        val warning = dialogView.findViewById<LinearLayout>(R.id.homescreen_dialog_warning_layout)
+        val trackingProtectionDisabledId = if (FeatureFlags.isMvp) {
+            R.drawable.ic_tracking_protection_disabled2
+        } else {
+            R.drawable.ic_tracking_protection_disabled
+        }
+        blockIcon.setImageResource(trackingProtectionDisabledId)
+        val warning = if (FeatureFlags.isMvp) {
+            dialogView.findViewById<ConstraintLayout>(R.id.homescreen_dialog_warning_layout)
+        } else {
+            dialogView.findViewById<LinearLayout>(R.id.homescreen_dialog_warning_layout)
+        }
         warning.visibility = if (blockingEnabled) View.GONE else View.VISIBLE
 
         val editableTitle = dialogView.findViewById<EditText>(R.id.edit_title)
@@ -68,6 +75,21 @@ class AddToHomescreenDialogFragment : DialogFragment() {
             editableTitle.setSelection(title!!.length)
         }
 
+        setButtons(dialogView, editableTitle, url, blockingEnabled, requestDesktop)
+
+        return builder.create()
+    }
+
+    private fun setButtons(
+        parentView: View,
+        editableTitle: EditText,
+        iconUrl: String?,
+        blockingEnabled: Boolean,
+        requestDesktop: Boolean
+    ) {
+        val addToHomescreenDialogCancelButton = parentView.findViewById<Button>(R.id.addtohomescreen_dialog_cancel)
+        val addToHomescreenDialogConfirmButton = parentView.findViewById<Button>(R.id.addtohomescreen_dialog_add)
+
         addToHomescreenDialogCancelButton.setOnClickListener {
             TelemetryWrapper.cancelAddToHomescreenShortcutEvent()
             dismiss()
@@ -76,8 +98,8 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         addToHomescreenDialogConfirmButton.setOnClickListener {
             HomeScreen.installShortCut(
                 context,
-                IconGenerator.generateLauncherIcon(requireContext(), url),
-                url,
+                IconGenerator.generateLauncherIcon(requireContext(), iconUrl),
+                iconUrl,
                 editableTitle.text.toString().trim { it <= ' ' },
                 blockingEnabled,
                 requestDesktop
@@ -90,7 +112,6 @@ class AddToHomescreenDialogFragment : DialogFragment() {
                 ).apply()
             dismiss()
         }
-        return builder.create()
     }
 
     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4958

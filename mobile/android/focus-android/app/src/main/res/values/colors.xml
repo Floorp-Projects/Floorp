@@ -117,6 +117,7 @@
     <color name="home_screen_dialog_button_text">@color/focusContrastPink</color>
     <color name="home_screen_dialog_bg_tint">@color/focusContrastPink</color>
     <color name="home_screen_dialog_text">@color/photonGrey10</color>
+    <color name="home_screen_dialog_highlight">@color/focusContrastPink</color>
 
     <color name="home_screen_dialog_warning_bg">#353852</color>
     <color name="home_screen_dialog_warning_text">#96f9f9fa</color>
