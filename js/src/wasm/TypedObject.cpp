@@ -252,6 +252,36 @@ void MemoryTracingVisitor::visitReference(uint8_t* base, size_t offset) {
   TraceNullableEdge(trace_, objectPtr, "reference-obj");
 }
 
+template <typename T>
+static T* NewTypedObject(JSContext* cx, HandleObject proto,
+                         gc::AllocKind allocKind, gc::InitialHeap heap) {
+  const JSClass* clasp = &T::class_;
+  MOZ_ASSERT(IsTypedObjectClass(clasp));
+
+  if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
+    allocKind = ForegroundToBackgroundAllocKind(allocKind);
+  }
+
+  RootedShape shape(cx, SharedShape::getInitialShape(
+                            cx, clasp, cx->realm(), TaggedProto(proto),
+                            /* nfixed = */ 0, ObjectFlags()));
+  if (!shape) {
+    return nullptr;
+  }
+
+  NewObjectKind newKind =
+      (heap == gc::TenuredHeap) ? TenuredObject : GenericObject;
+  heap = GetInitialHeap(newKind, clasp);
+
+  TypedObject* obj = TypedObject::create(cx, allocKind, heap, shape);
+  if (!obj) {
+    return nullptr;
+  }
+
+  probes::CreateObject(cx, obj);
+  return &obj->as<T>();
+}
+
 /******************************************************************************
  * Outline typed objects
  */
@@ -265,10 +295,7 @@ OutlineTypedObject* OutlineTypedObject::create(JSContext* cx,
 
   RootedObject proto(cx, &rtt->typedProto());
 
-  NewObjectKind newKind =
-      (heap == gc::TenuredHeap) ? TenuredObject : GenericObject;
-  auto* obj = NewObjectWithGivenProtoAndKinds<OutlineTypedObject>(
-      cx, proto, allocKind(), newKind);
+  auto* obj = NewTypedObject<OutlineTypedObject>(cx, proto, allocKind(), heap);
   if (!obj) {
     return nullptr;
   }
@@ -650,10 +677,7 @@ InlineTypedObject* InlineTypedObject::createStruct(JSContext* cx,
 
   RootedObject proto(cx, &rtt->typedProto());
 
-  NewObjectKind newKind =
-      (heap == gc::TenuredHeap) ? TenuredObject : GenericObject;
-  auto* obj = NewObjectWithGivenProtoAndKinds<InlineTypedObject>(
-      cx, proto, allocKind, newKind);
+  auto* obj = NewTypedObject<InlineTypedObject>(cx, proto, allocKind, heap);
   if (!obj) {
     return nullptr;
   }

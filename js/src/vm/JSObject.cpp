@@ -761,8 +761,7 @@ static inline JSObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
   } else if (MOZ_LIKELY(clasp->isNativeObject())) {
     obj = NativeObject::create(cx, kind, heap, shape);
   } else {
-    MOZ_ASSERT(IsTypedObjectClass(clasp));
-    obj = TypedObject::create(cx, kind, heap, shape);
+    MOZ_CRASH("Unexpected non-native JSClass");
   }
   if (!obj) {
     return nullptr;
