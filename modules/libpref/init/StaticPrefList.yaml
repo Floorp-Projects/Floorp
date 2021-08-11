@@ -8049,6 +8049,12 @@
   value: false
   mirror: always
 
+# Are test specific clearkey key systems enabled and exposed?
+- name: media.clearkey.test-key-systems.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: media.cloneElementVisually.testing
   type: bool
   value: false
