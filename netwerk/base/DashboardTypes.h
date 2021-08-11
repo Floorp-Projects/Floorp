@@ -20,12 +20,12 @@ struct SocketInfo {
   uint64_t received;
   uint16_t port;
   bool active;
-  bool tcp;
+  nsCString type;
 };
 
 inline bool operator==(const SocketInfo& a, const SocketInfo& b) {
   return a.host == b.host && a.sent == b.sent && a.received == b.received &&
-         a.port == b.port && a.active == b.active && a.tcp == b.tcp;
+         a.port == b.port && a.active == b.active && a.type == b.type;
 }
 
 struct DnsAndConnectSockets {
@@ -76,7 +76,7 @@ struct ParamTraits<mozilla::net::SocketInfo> {
     WriteParam(aMsg, aParam.received);
     WriteParam(aMsg, aParam.port);
     WriteParam(aMsg, aParam.active);
-    WriteParam(aMsg, aParam.tcp);
+    WriteParam(aMsg, aParam.type);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -86,7 +86,7 @@ struct ParamTraits<mozilla::net::SocketInfo> {
            ReadParam(aMsg, aIter, &aResult->received) &&
            ReadParam(aMsg, aIter, &aResult->port) &&
            ReadParam(aMsg, aIter, &aResult->active) &&
-           ReadParam(aMsg, aIter, &aResult->tcp);
+           ReadParam(aMsg, aIter, &aResult->type);
   }
 };
 
