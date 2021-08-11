@@ -7,6 +7,7 @@
 #include "mozilla/EMEUtils.h"
 
 #include "jsfriendapi.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
@@ -52,6 +53,11 @@ void CopyArrayBufferViewOrArrayBufferData(
 }
 
 bool IsClearkeyKeySystem(const nsAString& aKeySystem) {
+  if (StaticPrefs::media_clearkey_test_key_systems_enabled()) {
+    return aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_CLEARKEY) ||
+           aKeySystem.EqualsLiteral(
+               EME_KEY_SYSTEM_CLEARKEY_WITH_PROTECTION_QUERY);
+  }
   return aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_CLEARKEY);
 }
 
