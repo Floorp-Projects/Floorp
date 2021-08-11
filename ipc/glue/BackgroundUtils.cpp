@@ -411,13 +411,6 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  Maybe<PrincipalInfo> topLevelStorageAreaPrincipalInfo;
-  if (nsIPrincipal* prin = aLoadInfo->GetTopLevelStorageAreaPrincipal()) {
-    topLevelStorageAreaPrincipalInfo.emplace();
-    rv = PrincipalToPrincipalInfo(prin, topLevelStorageAreaPrincipalInfo.ptr());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   Maybe<URIParams> optionalResultPrincipalURI;
   nsCOMPtr<nsIURI> resultPrincipalURI;
   Unused << aLoadInfo->GetResultPrincipalURI(
@@ -495,10 +488,9 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
 
   *aOptionalLoadInfoArgs = Some(LoadInfoArgs(
       loadingPrincipalInfo, triggeringPrincipalInfo, principalToInheritInfo,
-      topLevelPrincipalInfo, topLevelStorageAreaPrincipalInfo,
-      optionalResultPrincipalURI, aLoadInfo->GetSandboxedNullPrincipalID(),
-      aLoadInfo->GetSecurityFlags(), aLoadInfo->GetSandboxFlags(),
-      aLoadInfo->GetTriggeringSandboxFlags(),
+      topLevelPrincipalInfo, optionalResultPrincipalURI,
+      aLoadInfo->GetSandboxedNullPrincipalID(), aLoadInfo->GetSecurityFlags(),
+      aLoadInfo->GetSandboxFlags(), aLoadInfo->GetTriggeringSandboxFlags(),
       aLoadInfo->InternalContentPolicyType(),
       static_cast<uint32_t>(aLoadInfo->GetTainting()),
       aLoadInfo->GetBlockAllMixedContent(),
@@ -639,16 +631,6 @@ nsresult LoadInfoArgsToLoadInfo(
     topLevelPrincipal = topLevelPrincipalOrErr.unwrap();
   }
 
-  nsCOMPtr<nsIPrincipal> topLevelStorageAreaPrincipal;
-  if (loadInfoArgs.topLevelStorageAreaPrincipalInfo().isSome()) {
-    auto topLevelStorageAreaPrincipalOrErr = PrincipalInfoToPrincipal(
-        loadInfoArgs.topLevelStorageAreaPrincipalInfo().ref());
-    if (NS_WARN_IF(topLevelStorageAreaPrincipalOrErr.isErr())) {
-      return topLevelStorageAreaPrincipalOrErr.unwrapErr();
-    }
-    topLevelStorageAreaPrincipal = topLevelStorageAreaPrincipalOrErr.unwrap();
-  }
-
   nsCOMPtr<nsIURI> resultPrincipalURI;
   if (loadInfoArgs.resultPrincipalURI().isSome()) {
     resultPrincipalURI = DeserializeURI(loadInfoArgs.resultPrincipalURI());
@@ -744,11 +726,11 @@ nsresult LoadInfoArgsToLoadInfo(
 
   RefPtr<mozilla::net::LoadInfo> loadInfo = new mozilla::net::LoadInfo(
       loadingPrincipal, triggeringPrincipal, principalToInherit,
-      topLevelPrincipal, topLevelStorageAreaPrincipal, resultPrincipalURI,
-      cookieJarSettings, cspToInherit, loadInfoArgs.sandboxedNullPrincipalID(),
-      clientInfo, reservedClientInfo, initialClientInfo, controller,
-      loadInfoArgs.securityFlags(), loadInfoArgs.sandboxFlags(),
-      loadInfoArgs.triggeringSandboxFlags(), loadInfoArgs.contentPolicyType(),
+      topLevelPrincipal, resultPrincipalURI, cookieJarSettings, cspToInherit,
+      loadInfoArgs.sandboxedNullPrincipalID(), clientInfo, reservedClientInfo,
+      initialClientInfo, controller, loadInfoArgs.securityFlags(),
+      loadInfoArgs.sandboxFlags(), loadInfoArgs.triggeringSandboxFlags(),
+      loadInfoArgs.contentPolicyType(),
       static_cast<LoadTainting>(loadInfoArgs.tainting()),
       loadInfoArgs.blockAllMixedContent(),
       loadInfoArgs.upgradeInsecureRequests(),
