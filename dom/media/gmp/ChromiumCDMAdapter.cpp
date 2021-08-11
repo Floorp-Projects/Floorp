@@ -105,6 +105,8 @@ GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
                                      const nsCString& aKeySystem) {
   MOZ_ASSERT(aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_WIDEVINE) ||
                  aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_CLEARKEY) ||
+                 aKeySystem.EqualsLiteral(
+                     EME_KEY_SYSTEM_CLEARKEY_WITH_PROTECTION_QUERY) ||
                  aKeySystem.EqualsLiteral("fake"),
              "Should not get an unrecognized key system. Why didn't it get "
              "blocked by MediaKeySystemAccess?");
