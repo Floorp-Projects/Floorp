@@ -249,10 +249,6 @@ endif
 
 DEPENDENCIES	= .md
 
-ifdef MACOSX_DEPLOYMENT_TARGET
-export MACOSX_DEPLOYMENT_TARGET
-endif # MACOSX_DEPLOYMENT_TARGET
-
 # Export to propagate to cl and submake for third-party code.
 # Eventually, we'll want to just use -I.
 ifdef INCLUDE
