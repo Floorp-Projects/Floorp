@@ -4881,6 +4881,10 @@ void Simulator::decodeSpecialCondition(SimInstruction* instr) {
         if (size != 2 || align) {
           MOZ_CRASH("NYI");
         }
+        int a = instr->bits(5, 4);
+        if (a != 0 && a != 3) {
+          MOZ_CRASH("Unspecified");
+        }
         if (index > 1) {
           Vd++;
           index -= 2;
