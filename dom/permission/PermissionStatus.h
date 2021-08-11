@@ -33,6 +33,8 @@ class PermissionStatus final : public DOMEventTargetHelper {
 
   void DisconnectFromOwner() override;
 
+  PermissionName Name() const { return mName; }
+
  private:
   ~PermissionStatus();
 
