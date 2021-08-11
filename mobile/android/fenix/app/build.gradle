@@ -226,19 +226,19 @@ android {
     }
 }
 
-android.applicationVariants.all { variant ->
-
 // -------------------------------------------------------------------------------------------------
 // Set up kotlin-allopen plugin for writing tests
 // -------------------------------------------------------------------------------------------------
 
-    boolean hasTest = gradle.startParameter.taskNames.find { it.contains("test") || it.contains("Test") } != null
-    if (hasTest) {
-        apply plugin: 'kotlin-allopen'
-        allOpen {
-            annotation("org.mozilla.fenix.utils.OpenClass")
-        }
+boolean hasTest = gradle.startParameter.taskNames.find { it.contains("test") || it.contains("Test") } != null
+if (hasTest) {
+    apply plugin: 'kotlin-allopen'
+    allOpen {
+        annotation("org.mozilla.fenix.utils.OpenClass")
     }
+}
+
+android.applicationVariants.all { variant ->
 
 // -------------------------------------------------------------------------------------------------
 // Generate version codes for builds
