@@ -23,6 +23,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
+#include "ThirdPartyUtil.h"
 
 constexpr auto CONSOLE_SCHEMEFUL_CATEGORY = "cookieSchemeful"_ns;
 
@@ -316,9 +317,17 @@ CookieStatus CookieStatusForWindow(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aDocumentURI);
 
-  if (!nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr,
-                                                   aDocumentURI)) {
-    return STATUS_ACCEPTED;
+  ThirdPartyUtil* thirdPartyUtil = ThirdPartyUtil::GetInstance();
+  if (thirdPartyUtil) {
+    bool isThirdParty = true;
+
+    nsresult rv = thirdPartyUtil->IsThirdPartyWindow(
+        aWindow->GetOuterWindow(), aDocumentURI, &isThirdParty);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Third-party window check failed.");
+
+    if (NS_SUCCEEDED(rv) && !isThirdParty) {
+      return STATUS_ACCEPTED;
+    }
   }
 
   if (StaticPrefs::network_cookie_thirdparty_sessionOnly()) {
