@@ -72,9 +72,9 @@ class CustomTabTest {
 
         customTab {
             verifyCustomTabActionButton(ACTION_BUTTON_DESCRIPTION)
+            verifyShareButtonIsDisplayed()
             openCustomTabMenu()
             verifyTheStandardMenuItems()
-            verifyShareButtonIsDisplayed()
             verifyCustomMenuItem(MENU_ITEM_LABEL)
             // Close the menu and close the tab
             mDevice.pressBack()

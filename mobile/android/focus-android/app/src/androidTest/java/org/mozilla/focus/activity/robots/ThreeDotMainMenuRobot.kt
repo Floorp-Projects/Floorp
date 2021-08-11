@@ -34,8 +34,6 @@ class ThreeDotMainMenuRobot {
 
     fun verifyReportSiteIssueButtonExists() = reportSiteIssueButton.check(matches(isDisplayed()))
 
-    fun verifyWhatsNewLinkExists() = whatsNewMenuLink.check(matches(isDisplayed()))
-
     fun verifyHelpPageLinkExists() = helpPageMenuLink.check(matches(isDisplayed()))
 
     fun clickOpenInOption() {
@@ -82,15 +80,6 @@ class ThreeDotMainMenuRobot {
             return AddToHomeScreenRobot.Transition()
         }
 
-        fun clickWhatsNewLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            whatsNewMenuLink
-                .check(matches(isDisplayed()))
-                .perform(click())
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
         fun clickHelpPageLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             helpPageMenuLink
                 .check(matches(isDisplayed()))
@@ -117,8 +106,6 @@ private val addToHSmenuItem = mDevice.findObject(
 )
 
 private val findInPageButton = onView(withText("Find in Page"))
-
-private val whatsNewMenuLink = onView(withText("What’s New"))
 
 private val helpPageMenuLink = onView(withText("Help"))
 

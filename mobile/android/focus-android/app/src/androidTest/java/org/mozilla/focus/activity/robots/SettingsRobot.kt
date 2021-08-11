@@ -4,9 +4,13 @@
 
 package org.mozilla.focus.activity.robots
 
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
+import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
@@ -69,6 +73,16 @@ class SettingsRobot {
             SettingsMozillaMenuRobot().interact()
             return SettingsMozillaMenuRobot.Transition()
         }
+
+        fun clickWhatsNewLink(
+            interact: BrowserRobot.() -> Unit
+        ): BrowserRobot.Transition {
+            whatsNewButton.perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
     }
 }
 
@@ -98,3 +112,5 @@ private val mozillaSettingsMenu = settingsMenuList.getChild(
     UiSelector()
         .text("Mozilla")
 )
+
+private val whatsNewButton = onView(withId(R.id.menu_whats_new))

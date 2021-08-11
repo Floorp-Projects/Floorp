@@ -10,10 +10,12 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.focus.R
+import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 
@@ -36,14 +38,13 @@ class CustomTabRobot {
     fun verifyShareButtonIsDisplayed(): ViewInteraction = shareButton.check(matches(isDisplayed()))
 
     fun verifyTheStandardMenuItems() {
-        onView(withId(R.id.tracking_protection_toggle_title)).check(matches(isDisplayed()))
-        onView(withId(R.id.add_to_homescreen)).check(matches(isDisplayed()))
-        onView(withId(R.id.find_in_page)).check(matches(isDisplayed()))
-        onView(withId(R.id.open_select_browser)).check(matches(isDisplayed()))
-        onView(withId(R.id.open_in_firefox_focus)).check(matches(isDisplayed()))
-        onView(withId(R.id.check_menu_item_checkbox)).check(matches(isDisplayed()))
-        onView(withId(R.id.report_site_issue)).check(matches(isDisplayed()))
-        onView(withId(R.id.branding)).check(matches(withText("Powered by Firefox Focus")))
+        onView(withText("Add to Home screen")).check(matches(isDisplayed()))
+        onView(withText("Find in Page")).check(matches(isDisplayed()))
+        onView(withText("Open in…")).check(matches(isDisplayed()))
+        openInFocusButton.check(matches(isDisplayed()))
+        onView(withSubstring("Desktop site")).check(matches(isDisplayed()))
+        onView(withText("Report site issue")).check(matches(isDisplayed()))
+        onView(withText("Powered by $appName")).check(matches(isDisplayed()))
     }
 
     fun clickOpenInFocusButton() {
@@ -70,10 +71,10 @@ private fun actionButton(description: String) = onView(withContentDescription(de
 
 private val menuButton = onView(withId(R.id.mozac_browser_toolbar_menu))
 
-private val shareButton = onView(withId(R.id.share))
+private val shareButton = onView(withContentDescription("Share link"))
 
 private fun customMenuItem(description: String) = onView(withText(description))
 
 private val closeCustomTabButton = onView(withContentDescription(R.string.mozac_feature_customtabs_exit_button))
 
-private val openInFocusButton = onView(withId(R.id.open_in_firefox_focus))
+private val openInFocusButton = onView(withText("Open in $appName"))

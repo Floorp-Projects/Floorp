@@ -40,7 +40,6 @@ class ThreeDotMainMenuTest {
     fun homeScreenMenuItemsTest() {
         homeScreen {
         }.openMainMenu {
-            verifyWhatsNewLinkExists()
             verifyHelpPageLinkExists()
             verifySettingsButtonExists()
         }
@@ -53,6 +52,7 @@ class ThreeDotMainMenuTest {
 
         searchScreen {
         }.loadPage(pageUrl) {
+            verifyPageContent("Tab 1")
         }.openMainMenu {
             verifyShareButtonExists()
             verifyAddToHSButtonExists()

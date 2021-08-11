@@ -26,6 +26,7 @@ class MozillaSupportPagesTest {
     fun openMenuWhatsNewPageTest() {
         homeScreen {
         }.openMainMenu {
+        }.openSettings {
         }.clickWhatsNewLink {
             verifyPageURL("support.mozilla.org")
         }
