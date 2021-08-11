@@ -6168,7 +6168,17 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
         // NEON available: The VLD1 multiple-single-elements variant will only
         // trap if SCTRL.A==1, but we already assume (for integer accesses) that
         // the hardware/OS handles that transparently.
-        load = as_vldr_unaligned(dest, scratch);
+        //
+        // An additional complication is that if we're targeting the high single
+        // then an unaligned load is not possible, and we may need to go via the
+        // FPR scratch.
+        if (byteSize == 4 && dest.code() & 1) {
+          ScratchFloat32Scope fscratch(asMasm());
+          load = as_vldr_unaligned(fscratch, scratch);
+          as_vmov(dest, fscratch);
+        } else {
+          load = as_vldr_unaligned(dest, scratch);
+        }
       } else {
         // NEON not available: Load to GPR scratch, move to FPR destination.  We
         // don't have adjacent scratches for the f64, so use individual LDRs,
@@ -6253,7 +6263,13 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
 
       // See comments above at wasmLoadImpl for more about this logic.
       if (HasNEON()) {
-        store = as_vstr_unaligned(val, scratch);
+        if (byteSize == 4 && (val.code() & 1)) {
+          ScratchFloat32Scope fscratch(asMasm());
+          as_vmov(fscratch, val);
+          store = as_vstr_unaligned(fscratch, scratch);
+        } else {
+          store = as_vstr_unaligned(val, scratch);
+        }
       } else {
         // NEON not available: Move FPR to GPR scratch, store GPR.  We have only
         // one scratch to hold the value, so for f64 we must do two separate
