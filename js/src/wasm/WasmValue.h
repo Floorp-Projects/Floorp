@@ -34,6 +34,10 @@ struct V128 {
 
   V128() { memset(bytes, 0, sizeof(bytes)); }
 
+  explicit V128(uint8_t splatValue) {
+    memset(bytes, int(splatValue), sizeof(bytes));
+  }
+
   template <typename T>
   T extractLane(unsigned lane) const {
     T result;

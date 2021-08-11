@@ -3636,6 +3636,10 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
 
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
+#ifdef ENABLE_WASM_SIMD
+  size_t numCopies16 = remainder / sizeof(V128);
+  remainder %= sizeof(V128);
+#endif
 #ifdef JS_64BIT
   size_t numCopies8 = remainder / sizeof(uint64_t);
   remainder %= sizeof(uint64_t);
@@ -3651,6 +3655,18 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   // byte is out-of-bounds.
   size_t offset = 0;
   DefVector loadedValues;
+
+#ifdef ENABLE_WASM_SIMD
+  for (uint32_t i = 0; i < numCopies16; i++) {
+    MemoryAccessDesc access(Scalar::Simd128, 1, offset, f.bytecodeOffset());
+    auto* load = f.load(src, &access, ValType::V128);
+    if (!load || !loadedValues.append(load)) {
+      return false;
+    }
+
+    offset += sizeof(V128);
+  }
+#endif
 
 #ifdef JS_64BIT
   for (uint32_t i = 0; i < numCopies8; i++) {
@@ -3726,6 +3742,16 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
     offset -= sizeof(uint64_t);
 
     MemoryAccessDesc access(Scalar::Int64, 1, offset, f.bytecodeOffset());
+    auto* value = loadedValues.popCopy();
+    f.store(dst, &access, value);
+  }
+#endif
+
+#ifdef ENABLE_WASM_SIMD
+  for (uint32_t i = 0; i < numCopies16; i++) {
+    offset -= sizeof(V128);
+
+    MemoryAccessDesc access(Scalar::Simd128, 1, offset, f.bytecodeOffset());
     auto* value = loadedValues.popCopy();
     f.store(dst, &access, value);
   }
@@ -3883,6 +3909,10 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
 
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
+#ifdef ENABLE_WASM_SIMD
+  size_t numCopies16 = remainder / sizeof(V128);
+  remainder %= sizeof(V128);
+#endif
 #ifdef JS_64BIT
   size_t numCopies8 = remainder / sizeof(uint64_t);
   remainder %= sizeof(uint64_t);
@@ -3894,6 +3924,9 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
   size_t numCopies1 = remainder;
 
   // Generate splatted definitions for wider fills as needed
+#ifdef ENABLE_WASM_SIMD
+  MDefinition* val16 = numCopies16 ? f.constant(V128(value)) : nullptr;
+#endif
 #ifdef JS_64BIT
   MDefinition* val8 =
       numCopies8 ? f.constant(int64_t(SplatByteToUInt<uint64_t>(value, 8)))
@@ -3940,6 +3973,15 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
 
     MemoryAccessDesc access(Scalar::Int64, 1, offset, f.bytecodeOffset());
     f.store(start, &access, val8);
+  }
+#endif
+
+#ifdef ENABLE_WASM_SIMD
+  for (uint32_t i = 0; i < numCopies16; i++) {
+    offset -= sizeof(V128);
+
+    MemoryAccessDesc access(Scalar::Simd128, 1, offset, f.bytecodeOffset());
+    f.store(start, &access, val16);
   }
 #endif
 
