@@ -7,8 +7,8 @@ job-defaults:
         by-app:
             firefox:
                 by-test-platform:
-                    .*-ref-hw-2017-qr/.*: 3600
                     .*-qr/.*: 2400
+                    .*-ref-hw-2017/.*: 3600
                     default: 1800
             default:
                 by-test-platform:
@@ -119,7 +119,7 @@ raptor-youtube-playback-av1-sfr-firefox:
                     (linux|windows.*64|macos)(?!.*-qr).*: []
                     default: [mozilla-central]
     limit-platforms:
-        - windows10-64-ref-hw-2017-qr/opt
+        - windows10-64-ref-hw-2017/opt
         - macosx1015-64-shippable-qr/opt
     max-run-time:
         by-test-platform:
