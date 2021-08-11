@@ -50,6 +50,9 @@
 #ifdef XP_WIN
 #  include "mozilla/widget/WinCompositorWidget.h"
 #endif
+#if defined(MOZ_WIDGET_GTK)
+#  include "mozilla/widget/GtkCompositorWidget.h"
+#endif
 
 bool is_in_main_thread() { return NS_IsMainThread(); }
 
@@ -1113,6 +1116,11 @@ bool WebRenderBridgeParent::SetDisplayList(
   wr::Vec<uint8_t> dlCache(std::move(aDLCache));
 
   if (IsRootWebRenderBridgeParent()) {
+#ifdef MOZ_WIDGET_GTK
+    if (mWidget->AsGTK()) {
+      mWidget->AsGTK()->RemoteLayoutSizeUpdated(aRect);
+    }
+#endif
     LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
     LayoutDeviceIntRect rect =
         LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
