@@ -163,7 +163,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-ranges.html d
 # Test that prefs font fallback respects the CSS generic from content (bug 1687426)
 skip-if(Android) == fallback-respects-generic-1.html fallback-respects-generic-1-ref.html # fonts present on Android are too unpredictable for easy testing
 
-!= system-ui-fallback.html system-ui-fallback-notref.html
+skip-if(Android) != system-ui-fallback.html system-ui-fallback-notref.html # Roboto supports the characters in the reftest, and that's better behavior.
 
 # Japanese monospace font on macOS is Osaka-mono
 # If Osaka is present then Osaka-mono should also be available.
