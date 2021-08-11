@@ -13,8 +13,8 @@
     <script class="testbody" type="text/javascript">
         SimpleTest.requestLongerTimeout(2);
 
-        const SAME_ORIGIN = "http://mochi.test:8888/"
-        const CROSS_ORIGIN = "http://example.com/";
+        const CROSS_ORIGIN = "http://mochi.test:8888/";
+        const SAME_ORIGIN= "https://example.com/";
         const PATH = "file_cache_splitting_server.sjs";
 
         async function getCount() {

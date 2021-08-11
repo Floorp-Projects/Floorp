@@ -1,5 +1,5 @@
 const TEST_PAGE =
-  "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+  "https://example.org/browser/browser/base/content/test/general/dummy_page.html";
 const TEST_REFERRER = "http://mochi.test:8888/";
 
 const ReferrerInfo = Components.Constructor(

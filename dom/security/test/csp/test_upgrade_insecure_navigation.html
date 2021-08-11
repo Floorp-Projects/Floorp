@@ -94,9 +94,11 @@ function loadNextTest() {
   document.getElementById("testframe").src = src;
   document.getElementById("sandboxedtestframe").src = src;
 }
-
+// Don't upgrade to https to test that upgrade-insecure-requests acts correctly
 // start running the tests
-loadNextTest();
+SpecialPowers.pushPrefEnv({
+  set: [["dom.security.https_first", false]]
+}, loadNextTest);
 
 </script>
 </body>

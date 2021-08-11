@@ -2,12 +2,12 @@
 
 const kTestPath = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 const kTestXFOEmbedURI = kTestPath + "file_framing_xfo_embed.html";
 const kTestXFOObjectURI = kTestPath + "file_framing_xfo_object.html";
 
-const errorMessage = `The loading of “http://example.com/browser/dom/security/test/general/file_framing_xfo_embed_object.sjs” in a frame is denied by “X-Frame-Options“ directive set to “deny“`;
+const errorMessage = `The loading of “https://example.com/browser/dom/security/test/general/file_framing_xfo_embed_object.sjs” in a frame is denied by “X-Frame-Options“ directive set to “deny“`;
 
 let xfoBlocked = false;
 
