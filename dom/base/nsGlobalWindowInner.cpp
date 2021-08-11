@@ -5984,37 +5984,6 @@ nsIPrincipal* nsGlobalWindowInner::GetTopLevelAntiTrackingPrincipal() {
   return topLevelPrincipal;
 }
 
-nsIPrincipal* nsGlobalWindowInner::GetTopLevelStorageAreaPrincipal() {
-  if (mDoc && (mDoc->StorageAccessSandboxed())) {
-    // Storage access is disabled
-    return nullptr;
-  }
-
-  BrowsingContext* parent = GetBrowsingContext()->GetParent();
-  nsPIDOMWindowOuter* outerWindow = parent ? parent->GetDOMWindow() : nullptr;
-  if (!outerWindow) {
-    // No outer window available!
-    return nullptr;
-  }
-
-  if (!outerWindow->GetBrowsingContext()->IsTop()) {
-    return nullptr;
-  }
-
-  nsPIDOMWindowInner* innerWindow = outerWindow->GetCurrentInnerWindow();
-  if (NS_WARN_IF(!innerWindow)) {
-    return nullptr;
-  }
-
-  nsIPrincipal* parentPrincipal =
-      nsGlobalWindowInner::Cast(innerWindow)->GetPrincipal();
-  if (NS_WARN_IF(!parentPrincipal)) {
-    return nullptr;
-  }
-
-  return parentPrincipal;
-}
-
 //*****************************************************************************
 // nsGlobalWindowInner: Timeout Functions
 //*****************************************************************************

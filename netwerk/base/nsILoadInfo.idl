@@ -1047,13 +1047,6 @@ interface nsILoadInfo : nsISupports
   [notxpcom, nostdcall] readonly attribute nsIPrincipal topLevelPrincipal;
 
   /**
-   * Return the top-level storage area principal, which is the principal of
-   * the top-level window if it's not a 3rd party context, non tracking
-   * resource.
-   */
-  [notxpcom, nostdcall] readonly attribute nsIPrincipal topLevelStorageAreaPrincipal;
-
-  /**
    * Note which client (i.e. global) initiated this network request.  All
    * nsGlobalWindow and WorkerPrivate can be converted to a ClientInfo to
    * be set here.  While this is being added to support service worker

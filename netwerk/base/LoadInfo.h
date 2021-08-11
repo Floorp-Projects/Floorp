@@ -186,8 +186,7 @@ class LoadInfo final : public nsILoadInfo {
   LoadInfo(
       nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
       nsIPrincipal* aPrincipalToInherit, nsIPrincipal* aTopLevelPrincipal,
-      nsIPrincipal* aTopLevelStorageAreaPrincipal, nsIURI* aResultPrincipalURI,
-      nsICookieJarSettings* aCookieJarSettings,
+      nsIURI* aResultPrincipalURI, nsICookieJarSettings* aCookieJarSettings,
       nsIContentSecurityPolicy* aCspToInherit,
       const nsID& aSandboxedNullPrincipalID,
       const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
@@ -261,7 +260,6 @@ class LoadInfo final : public nsILoadInfo {
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
-  nsCOMPtr<nsIPrincipal> mTopLevelStorageAreaPrincipal;
   nsCOMPtr<nsIURI> mResultPrincipalURI;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
