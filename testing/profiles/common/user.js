@@ -77,4 +77,4 @@ user_pref("browser.region.network.url", "");
 // Do not unload tabs on low memory when testing
 user_pref("browser.tabs.unloadOnLowMemory", false);
 // Don't pull Top Sites content from the network
-user_pref("browser.topsites.contile.endpoint", "http://localhost/contile-dummy/v1");
+user_pref("browser.topsites.contile.enabled", false);
