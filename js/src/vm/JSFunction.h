@@ -131,9 +131,9 @@ class JSFunction : public js::NativeObject {
   js::GCPtrAtom atom_;
 
  public:
-  static inline JS::Result<JSFunction*, JS::OOM> create(
-      JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-      js::HandleShape shape);
+  static inline JSFunction* create(JSContext* cx, js::gc::AllocKind kind,
+                                   js::gc::InitialHeap heap,
+                                   js::HandleShape shape);
 
   /* Call objects must be created for each invocation of this function. */
   bool needsCallObject() const;

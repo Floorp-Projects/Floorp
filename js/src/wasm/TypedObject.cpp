@@ -723,9 +723,10 @@ DEFINE_TYPEDOBJ_CLASS(OutlineTypedObject, OutlineTypedObject::obj_trace,
 DEFINE_TYPEDOBJ_CLASS(InlineTypedObject, InlineTypedObject::obj_trace, nullptr,
                       InlineTypedObject::obj_moved, 0);
 
-/* static */ JS::Result<TypedObject*, JS::OOM> TypedObject::create(
-    JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-    js::HandleShape shape) {
+/* static */
+TypedObject* TypedObject::create(JSContext* cx, js::gc::AllocKind kind,
+                                 js::gc::InitialHeap heap,
+                                 js::HandleShape shape) {
   debugCheckNewObject(shape, kind, heap);
 
   const JSClass* clasp = shape->getObjectClass();
@@ -735,7 +736,7 @@ DEFINE_TYPEDOBJ_CLASS(InlineTypedObject, InlineTypedObject::obj_trace, nullptr,
   JSObject* obj =
       js::AllocateObject(cx, kind, /* nDynamicSlots = */ 0, heap, clasp);
   if (!obj) {
-    return cx->alreadyReportedOOM();
+    return nullptr;
   }
 
   TypedObject* tobj = static_cast<TypedObject*>(obj);

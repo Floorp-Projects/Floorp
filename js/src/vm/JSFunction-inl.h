@@ -44,9 +44,10 @@ inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
 
 } /* namespace js */
 
-/* static */ inline JS::Result<JSFunction*, JS::OOM> JSFunction::create(
-    JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-    js::HandleShape shape) {
+/* static */
+inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
+                                      js::gc::InitialHeap heap,
+                                      js::HandleShape shape) {
   MOZ_ASSERT(kind == js::gc::AllocKind::FUNCTION ||
              kind == js::gc::AllocKind::FUNCTION_EXTENDED);
 
@@ -62,7 +63,7 @@ inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
 
   JSObject* obj = js::AllocateObject(cx, kind, NumDynamicSlots, heap, clasp);
   if (!obj) {
-    return cx->alreadyReportedOOM();
+    return nullptr;
   }
 
   NativeObject* nobj = static_cast<NativeObject*>(obj);

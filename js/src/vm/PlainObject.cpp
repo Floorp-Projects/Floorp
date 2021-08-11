@@ -80,8 +80,8 @@ void PlainObject::assertHasNoNonWritableOrAccessorPropExclProto() const {
 }
 #endif
 
-JS::Result<PlainObject*, JS::OOM>
-PlainObject::createWithTemplateFromDifferentRealm(
+// static
+PlainObject* PlainObject::createWithTemplateFromDifferentRealm(
     JSContext* cx, HandlePlainObject templateObject) {
   MOZ_ASSERT(cx->realm() != templateObject->realm(),
              "Use createWithTemplate() for same-realm objects");

@@ -33,14 +33,14 @@ class PlainObject : public NativeObject {
   void assertHasNoNonWritableOrAccessorPropExclProto() const;
 #endif
 
-  static inline JS::Result<PlainObject*, JS::OOM> createWithShape(
-      JSContext* cx, JS::Handle<Shape*> shape);
+  static inline js::PlainObject* createWithShape(JSContext* cx,
+                                                 JS::Handle<Shape*> shape);
 
  public:
-  static inline JS::Result<PlainObject*, JS::OOM> createWithTemplate(
+  static inline PlainObject* createWithTemplate(
       JSContext* cx, JS::Handle<PlainObject*> templateObject);
 
-  static JS::Result<PlainObject*, JS::OOM> createWithTemplateFromDifferentRealm(
+  static js::PlainObject* createWithTemplateFromDifferentRealm(
       JSContext* cx, JS::Handle<PlainObject*> templateObject);
 
   /* Return the allocKind we would use if we were to tenure this object. */

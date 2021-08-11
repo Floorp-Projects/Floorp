@@ -267,9 +267,10 @@ static bool ReturnUndefined(JSContext* cx, unsigned argc, Value* vp) {
   // Step 3: Assert: Type(done) is Boolean (implicit).
 
   // Step 4: Let obj be ObjectCreate(prototype).
-  PlainObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, PlainObject::createWithTemplate(cx, templateObject));
+  PlainObject* obj = PlainObject::createWithTemplate(cx, templateObject);
+  if (!obj) {
+    return nullptr;
+  }
 
   // Step 5: Perform CreateDataProperty(obj, "value", value).
   obj->setSlot(Realm::IterResultObjectValueSlot, value);

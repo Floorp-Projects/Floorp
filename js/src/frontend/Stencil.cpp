@@ -776,7 +776,8 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
     closedOverBindings[i - start] = parserAtom;
   }
 
-  closedOverBindings_ = ClosedOverBindingsSpan(closedOverBindings, length - start);
+  closedOverBindings_ =
+      ClosedOverBindingsSpan(closedOverBindings, length - start);
   return true;
 }
 
@@ -971,9 +972,10 @@ static JSFunction* CreateFunctionFast(JSContext* cx,
                                 ? gc::AllocKind::FUNCTION_EXTENDED
                                 : gc::AllocKind::FUNCTION;
 
-  JSFunction* fun;
-  JS_TRY_VAR_OR_RETURN_NULL(
-      cx, fun, JSFunction::create(cx, allocKind, gc::TenuredHeap, shape));
+  JSFunction* fun = JSFunction::create(cx, allocKind, gc::TenuredHeap, shape);
+  if (!fun) {
+    return nullptr;
+  }
 
   fun->setArgCount(scriptExtra.nargs);
   fun->setFlags(flags);
