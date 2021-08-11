@@ -21,6 +21,7 @@
 
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsISupportsPriority.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsITimer.h"
 #include "Http3Session.h"

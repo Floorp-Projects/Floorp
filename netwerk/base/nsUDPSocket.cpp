@@ -9,6 +9,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/Telemetry.h"
 
+#include "nsQueryObject.h"
 #include "nsSocketTransport2.h"
 #include "nsUDPSocket.h"
 #include "nsProxyRelease.h"
@@ -29,6 +30,7 @@
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
 #include "nsWrapperCacheInlines.h"
+#include "HttpConnectionUDP.h"
 
 namespace mozilla {
 namespace net {
@@ -473,6 +475,17 @@ void nsUDPSocket::OnSocketDetached(PRFileDesc* fd) {
 void nsUDPSocket::IsLocal(bool* aIsLocal) {
   // If bound to loopback, this UDP socket only accepts local connections.
   *aIsLocal = mAddr.IsLoopbackAddr();
+}
+
+nsresult nsUDPSocket::GetRemoteAddr(NetAddr* addr) {
+  if (!mSyncListener) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<HttpConnectionUDP> connUDP = do_QueryObject(mSyncListener);
+  if (!connUDP) {
+    return NS_ERROR_FAILURE;
+  }
+  return connUDP->GetPeerAddr(addr);
 }
 
 //-----------------------------------------------------------------------------

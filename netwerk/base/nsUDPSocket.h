@@ -29,6 +29,7 @@ class nsUDPSocket final : public nsASocketHandler, public nsIUDPSocket {
   virtual void OnSocketReady(PRFileDesc* fd, int16_t outFlags) override;
   virtual void OnSocketDetached(PRFileDesc* fd) override;
   virtual void IsLocal(bool* aIsLocal) override;
+  virtual nsresult GetRemoteAddr(NetAddr* addr) override;
 
   uint64_t ByteCountSent() override { return mByteWriteCount; }
   uint64_t ByteCountReceived() override { return mByteReadCount; }

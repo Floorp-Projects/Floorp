@@ -6,6 +6,7 @@
 #define nsASocketHandler_h__
 
 #include "nsError.h"
+#include "nsINetAddr.h"
 #include "nsISupports.h"
 #include "prio.h"
 
@@ -82,6 +83,14 @@ class nsASocketHandler : public nsISupports {
   // called when global pref for keepalive has changed.
   //
   virtual void OnKeepaliveEnabledPrefChange(bool aEnabled) {}
+
+  //
+  // called to determine the NetAddr. addr can only be assumed to be initialized
+  // when NS_OK is returned
+  //
+  virtual nsresult GetRemoteAddr(mozilla::net::NetAddr* addr) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   //
   // returns the number of bytes sent/transmitted over the socket
