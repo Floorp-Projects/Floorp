@@ -87,8 +87,6 @@ static void moz_container_wayland_size_allocate(GtkWidget* widget,
                                                 GtkAllocation* allocation);
 static bool moz_container_wayland_surface_create_locked(
     MozContainer* container);
-static void moz_container_wayland_set_scale_factor_locked(
-    MozContainer* container);
 static void moz_container_wayland_set_opaque_region_locked(
     MozContainer* container);
 
@@ -440,8 +438,7 @@ static void moz_container_wayland_set_opaque_region(MozContainer* container) {
   }
 }
 
-static void moz_container_wayland_set_scale_factor_locked(
-    MozContainer* container) {
+void moz_container_wayland_set_scale_factor_locked(MozContainer* container) {
   if (gfx::gfxVars::UseWebRenderCompositor()) {
     // the compositor backend handles scaling itself
     return;
@@ -554,8 +551,6 @@ struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
     return nullptr;
   }
   container->wl_container.container_lock->Lock();
-
-  moz_container_wayland_set_scale_factor_locked(container);
   return container->wl_container.surface;
 }
 

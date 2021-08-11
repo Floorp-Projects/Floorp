@@ -79,6 +79,7 @@ gboolean moz_container_wayland_surface_needs_clear(MozContainer* container);
 void moz_container_wayland_egl_window_set_size(MozContainer* container,
                                                int width, int height);
 void moz_container_wayland_set_scale_factor(MozContainer* container);
+void moz_container_wayland_set_scale_factor_locked(MozContainer* container);
 void moz_container_wayland_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb);
 wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
