@@ -9,7 +9,7 @@ const MenuItem = require("devtools/client/shared/components/menu/MenuItem");
 
 const FIREFOX_ICON =
   'url("chrome://devtools/skin/images/browsers/firefox.svg")';
-const DUMMY_ICON = `url("chrome://devtools/skin/${MenuItem.DUMMY_ICON}")`;
+const DUMMY_ICON = `url("${MenuItem.DUMMY_ICON}")`;
 
 const FIREFOX_DEVICE = {
   name: "Device of Firefox user-agent",

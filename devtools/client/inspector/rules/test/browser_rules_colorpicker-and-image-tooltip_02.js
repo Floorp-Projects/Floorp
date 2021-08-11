@@ -12,7 +12,7 @@
 const TEST_URI = `
   <style type="text/css">
     body {
-      background: red url("chrome://global/skin/icons/warning-64.png")
+      background: red url("chrome://branding/content/icon64.png")
         no-repeat center center;
     }
   </style>

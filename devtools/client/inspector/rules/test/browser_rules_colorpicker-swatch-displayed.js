@@ -10,7 +10,7 @@ const TEST_URI = `
     body {
       color: red;
       background-color: #ededed;
-      background-image: url(chrome://global/skin/icons/warning-64.png);
+      background-image: url(chrome://branding/content/icon64.png);
       border: 2em solid rgba(120, 120, 120, .5);
     }
     * {
