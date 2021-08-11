@@ -109,7 +109,7 @@ linux1804-64-devedition-qr/opt:
         - linux1804-tests
         - web-platform-tests
 
-linux1804-64-clang-trunk-qr/opt:
+linux1804-64-clang-trunk/opt:
     build-platform: linux64-plain-clang-trunk/opt
     test-sets:
         - awsy
@@ -198,7 +198,7 @@ windows10-aarch64-qr/opt:
     test-sets:
         - windows-aarch64-tests
 
-windows10-64-ref-hw-2017-qr/opt:
+windows10-64-ref-hw-2017/opt:
     build-platform: win64-shippable/opt
     test-sets:
         - raptor-firefox
@@ -307,6 +307,13 @@ macosx1100-64-shippable-qr/opt:
         # - browsertime-high-priority
         # - raptor-firefox
 
+macosx1015-64-shippable/opt:
+    build-platform: macosx64-shippable/opt
+    test-sets:
+        - awsy
+        - browsertime
+        - macosx64-talos
+
 macosx1015-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
@@ -323,6 +330,16 @@ macosx1015-64-shippable-qr/opt:
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
+
+macosx1015-64/debug:
+    build-platform: macosx64/debug
+    test-sets:
+        - macosx1015-64-tests
+
+macosx1015-64-devedition/opt:
+    build-platform: macosx64-devedition/opt
+    test-sets:
+        - macosx1015-64-tests
 
 macosx1015-64-devedition-qr/opt:
     build-platform: macosx64-devedition/opt
