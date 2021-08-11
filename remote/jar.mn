@@ -25,6 +25,7 @@ remote.jar:
   content/shared/messagehandler/MessageHandler.jsm (shared/messagehandler/MessageHandler.jsm)
   content/shared/messagehandler/MessageHandlerInfo.jsm (shared/messagehandler/MessageHandlerInfo.jsm)
   content/shared/messagehandler/MessageHandlerRegistry.jsm (shared/messagehandler/MessageHandlerRegistry.jsm)
+  content/shared/messagehandler/Module.jsm (shared/messagehandler/Module.jsm)
   content/shared/messagehandler/ModuleCache.jsm (shared/messagehandler/ModuleCache.jsm)
   content/shared/messagehandler/RootMessageHandler.jsm (shared/messagehandler/RootMessageHandler.jsm)
   content/shared/messagehandler/WindowGlobalMessageHandler.jsm (shared/messagehandler/WindowGlobalMessageHandler.jsm)
