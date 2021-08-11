@@ -14,7 +14,7 @@ from abc import ABCMeta, abstractproperty
 
 from mozlog import get_default_logger
 from mozprocess import ProcessHandler
-from six import string_types, text_type
+from six import ensure_str, string_types
 
 try:
     import mozcrash
@@ -129,22 +129,18 @@ class BaseRunner(object):
         if self.logger:
             self.logger.info("Application command: %s" % " ".join(cmd))
 
-        encoded_env = {}
+        str_env = {}
         for k in self.env:
             v = self.env[k]
-            if isinstance(v, text_type):
-                v = v.encode("utf-8")
-            if isinstance(k, text_type):
-                k = k.encode("utf-8")
-            encoded_env[k] = v
+            str_env[ensure_str(k)] = ensure_str(v)
 
         if interactive:
-            self.process_handler = subprocess.Popen(cmd, env=encoded_env)
+            self.process_handler = subprocess.Popen(cmd, env=str_env)
             # TODO: other arguments
         else:
             # this run uses the managed processhandler
             try:
-                process = self.process_class(cmd, env=encoded_env, **self.process_args)
+                process = self.process_class(cmd, env=str_env, **self.process_args)
                 process.run(self.timeout, self.output_timeout)
 
                 self.process_handler = process
