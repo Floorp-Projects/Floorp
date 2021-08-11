@@ -16,6 +16,7 @@
 #include "nsWeakReference.h"
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 #include "nsDeque.h"
 
 namespace mozilla {
