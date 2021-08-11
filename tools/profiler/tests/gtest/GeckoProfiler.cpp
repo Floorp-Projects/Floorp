@@ -53,28 +53,44 @@ using namespace mozilla;
 
 TEST(GeckoProfiler, ProfilerUtils)
 {
+#ifdef MOZ_GECKO_PROFILER
+  // Special case: This may happen if the profiler has not yet been
+  // initialized. We only need to set scProfilerMainThreadId.
+  if (!baseprofiler::detail::scProfilerMainThreadId.IsSpecified()) {
+    baseprofiler::detail::scProfilerMainThreadId =
+        baseprofiler::profiler_current_thread_id();
+  }
+  if (!profiler::detail::scProfilerMainThreadId.IsSpecified()) {
+    profiler::detail::scProfilerMainThreadId = profiler_current_thread_id();
+  }
+#endif  // MOZ_GECKO_PROFILER
+
   static_assert(std::is_same_v<decltype(profiler_current_process_id()),
                                ProfilerProcessId>);
+  static_assert(
+      std::is_same_v<decltype(profiler_current_process_id()),
+                     decltype(baseprofiler::profiler_current_process_id())>);
+  ProfilerProcessId processId = profiler_current_process_id();
 #ifdef MOZ_GECKO_PROFILER
-  EXPECT_TRUE(profiler_current_process_id().IsSpecified());
+  EXPECT_TRUE(processId.IsSpecified());
 #else
-  EXPECT_FALSE(profiler_current_process_id().IsSpecified());
+  EXPECT_TRUE(!processId.IsSpecified());
 #endif
+  EXPECT_EQ(processId, baseprofiler::profiler_current_process_id());
 
   static_assert(
       std::is_same_v<decltype(profiler_current_thread_id()), ProfilerThreadId>);
+  static_assert(
+      std::is_same_v<decltype(profiler_current_thread_id()),
+                     decltype(baseprofiler::profiler_current_thread_id())>);
+  EXPECT_EQ(profiler_current_thread_id(),
+            baseprofiler::profiler_current_thread_id());
+
 #ifdef MOZ_GECKO_PROFILER
   ProfilerThreadId mainTestThreadId = profiler_current_thread_id();
   EXPECT_TRUE(mainTestThreadId.IsSpecified());
 
   ProfilerThreadId mainThreadId = profiler_main_thread_id();
-  if (!mainThreadId.IsSpecified()) {
-    // Special case: This may happen if the profiler has not yet been
-    // initialized. We only need to set scProfilerMainThreadId.
-    mozilla::profiler::detail::scProfilerMainThreadId = mainTestThreadId;
-    // After which `profiler_main_thread_id` should work.
-    mainThreadId = profiler_main_thread_id();
-  }
   EXPECT_TRUE(mainThreadId.IsSpecified());
 
   EXPECT_EQ(mainThreadId, mainTestThreadId)
@@ -82,16 +98,27 @@ TEST(GeckoProfiler, ProfilerUtils)
   EXPECT_TRUE(profiler_is_main_thread());
 
   std::thread testThread([&]() {
+    EXPECT_EQ(profiler_current_process_id(), processId);
+
     const ProfilerThreadId testThreadId = profiler_current_thread_id();
     EXPECT_TRUE(testThreadId.IsSpecified());
     EXPECT_NE(testThreadId, mainThreadId);
     EXPECT_FALSE(profiler_is_main_thread());
+
+    EXPECT_EQ(baseprofiler::profiler_current_process_id(), processId);
+    EXPECT_EQ(baseprofiler::profiler_current_thread_id(), testThreadId);
+    EXPECT_EQ(baseprofiler::profiler_main_thread_id(), mainThreadId);
+    EXPECT_FALSE(baseprofiler::profiler_is_main_thread());
   });
   testThread.join();
 #else
   EXPECT_FALSE(profiler_current_thread_id().IsSpecified());
   EXPECT_FALSE(profiler_main_thread_id().IsSpecified());
   EXPECT_FALSE(profiler_is_main_thread());
+
+  EXPECT_FALSE(baseprofiler::profiler_current_thread_id().IsSpecified());
+  EXPECT_FALSE(baseprofiler::profiler_main_thread_id().IsSpecified());
+  EXPECT_FALSE(baseprofiler::profiler_is_main_thread());
 #endif
 }
 
