@@ -481,6 +481,21 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // attributes.
   void MoveToAttributePosition();
 
+  /**
+   * Return whether the popup direction should be RTL.
+   * If the popup has an anchor, its direction is the anchor direction.
+   * Otherwise, its the general direction of the UI.
+   *
+   * Return whether the popup direction should be RTL.
+   */
+  bool IsDirectionRTL() const {
+    return mAnchorContent && mAnchorContent->GetPrimaryFrame()
+               ? mAnchorContent->GetPrimaryFrame()
+                         ->StyleVisibility()
+                         ->mDirection == mozilla::StyleDirection::Rtl
+               : StyleVisibility()->mDirection == mozilla::StyleDirection::Rtl;
+  }
+
   // Create a popup view for this frame. The view is added a child of the root
   // view, and is initially hidden.
   void CreatePopupView();
@@ -497,21 +512,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   bool ShouldFollowAnchor();
 
  public:
-  /**
-   * Return whether the popup direction should be RTL.
-   * If the popup has an anchor, its direction is the anchor direction.
-   * Otherwise, its the general direction of the UI.
-   *
-   * Return whether the popup direction should be RTL.
-   */
-  bool IsDirectionRTL() const {
-    return mAnchorContent && mAnchorContent->GetPrimaryFrame()
-               ? mAnchorContent->GetPrimaryFrame()
-                         ->StyleVisibility()
-                         ->mDirection == mozilla::StyleDirection::Rtl
-               : StyleVisibility()->mDirection == mozilla::StyleDirection::Rtl;
-  }
-
   bool ShouldFollowAnchor(nsRect& aRect);
 
   // Returns parent menu widget for submenus that are in the same
