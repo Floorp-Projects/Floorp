@@ -97,18 +97,16 @@ def build_index_def(num_specials_operands, index_value, num_reg_operands, piece)
         )
 
 
-def gen_lir_class(name, result_type, operands, call_instruction, mir_op):
+def gen_lir_class(name, result_type, operands, num_temps, call_instruction, mir_op):
     """Generates class definition for a single LIR opcode."""
     class_name = "L" + name
 
-    # Operand getters.
-    oper_getters = []
-    # Operand setters.
-    oper_setters = []
+    getters = []
+    setters = []
     # Operand index definitions.
     oper_indices = []
-    # Operands for the class constructor.
-    constructor_opers = []
+    # Parameters for the class constructor.
+    constructor_params = []
 
     num_reg_operands = 0
     num_value_operands = 0
@@ -123,11 +121,11 @@ def gen_lir_class(name, result_type, operands, call_instruction, mir_op):
         for operand in operands:
             op_type = operands[operand]
             op_alloc_type = operand_types[op_type]
-            constructor_opers.append("const " + op_alloc_type + "& " + operand)
+            constructor_params.append("const " + op_alloc_type + "& " + operand)
             if op_type == "WordSized":
                 index_value = str(current_reg_oper)
                 current_reg_oper += 1
-                oper_getters.append(
+                getters.append(
                     "  const "
                     + op_alloc_type
                     + "* "
@@ -136,9 +134,7 @@ def gen_lir_class(name, result_type, operands, call_instruction, mir_op):
                     + index_value
                     + "); }"
                 )
-                oper_setters.append(
-                    "    setOperand(" + index_value + ", " + operand + ");"
-                )
+                setters.append("    setOperand(" + index_value + ", " + operand + ");")
             elif op_type == "BoxedValue":
                 index_value = operand[0].upper() + operand[1:] + "Index"
                 oper_indices.append(
@@ -148,7 +144,7 @@ def gen_lir_class(name, result_type, operands, call_instruction, mir_op):
                 )
                 num_value_operands += 1
                 # No getters generated for BoxedValue operands.
-                oper_setters.append(
+                setters.append(
                     "    setBoxOperand(" + index_value + ", " + operand + ");"
                 )
             elif op_type == "Int64":
@@ -162,7 +158,7 @@ def gen_lir_class(name, result_type, operands, call_instruction, mir_op):
                     )
                 )
                 num_int64_operands += 1
-                oper_getters.append(
+                getters.append(
                     "  const "
                     + op_alloc_type
                     + " "
@@ -171,12 +167,22 @@ def gen_lir_class(name, result_type, operands, call_instruction, mir_op):
                     + index_value
                     + "); }"
                 )
-                oper_setters.append(
+                setters.append(
                     "    setInt64Operand(" + index_value + ", " + operand + ");"
                 )
             else:
                 raise Exception("Invalid operand type: " + op_type)
-
+    if num_temps:
+        for temp in range(num_temps):
+            constructor_params.append("const LDefinition& temp" + str(temp))
+            setters.append("    setTemp(" + str(temp) + ", temp" + str(temp) + ");")
+            getters.append(
+                "  const LDefinition* temp"
+                + str(temp)
+                + "() { return getTemp("
+                + str(temp)
+                + "); }"
+            )
     code = "class {} : public LInstructionHelper<".format(class_name)
     if result_type:
         code += result_types[result_type] + ", "
@@ -185,16 +191,16 @@ def gen_lir_class(name, result_type, operands, call_instruction, mir_op):
     code += gen_helper_template_value(
         num_reg_operands, num_value_operands, num_int64_operands
     )
-    code += ", 0> {{\\\n public:\\\n  LIR_HEADER({})\\\n".format(name)
+    code += ", {}> {{\\\n public:\\\n  LIR_HEADER({})\\\n".format(num_temps, name)
     code += "  explicit {}(".format(class_name)
-    code += ", ".join(constructor_opers)
+    code += ", ".join(constructor_params)
     code += ") : LInstructionHelper(classOpcode) {"
     if call_instruction:
         code += "\\\n    this->setIsCall();"
     code += "\\\n"
-    code += "\\\n".join(oper_setters)
+    code += "\\\n".join(setters)
     code += "\\\n  }\\\n"
-    code += "\\\n".join(oper_getters)
+    code += "\\\n".join(getters)
     code += "\\\n"
     if operands:
         code += "\\\n".join(oper_indices)
@@ -235,6 +241,9 @@ def generate_lir_header(c_out, yaml_path):
             operands = op.get("operands", None)
             assert operands is None or OrderedDict
 
+            num_temps = op.get("num_temps", 0)
+            assert num_temps is None or int
+
             gen_boilerplate = op.get("gen_boilerplate", True)
             assert isinstance(gen_boilerplate, bool)
 
@@ -245,7 +254,14 @@ def generate_lir_header(c_out, yaml_path):
             assert mir_op is None or True or str
 
             lir_op_classes.append(
-                gen_lir_class(name, result_type, operands, call_instruction, mir_op)
+                gen_lir_class(
+                    name,
+                    result_type,
+                    operands,
+                    num_temps,
+                    call_instruction,
+                    mir_op,
+                )
             )
 
         ops.append("_({})".format(name))

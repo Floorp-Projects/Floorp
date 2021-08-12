@@ -55,8 +55,15 @@
 #     static const size_t rhsIndex = BOX_PIECES; 
 #
 #   - attribute not specified (default): no code generated
-#   - list of operand names with their types: operand getters and setters
+#   - list of operand names with their types: WordSized getters and setters
 #     are generated and passed into the constructor
+#
+# num_temps
+# ========
+# Specifies the number of temporary virtual registers, LDefinitions, used by 
+# this LIR op.
+#   - attribute not specified (default): number of temps is set to 0
+#   - number of LDefinition temps: sets number of temps max 15
 #
 # call_instruction
 # ================
@@ -125,16 +132,28 @@
   gen_boilerplate: false
 
 - name: NewArrayDynamicLength
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    length: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: NewIterator
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: NewTypedArray
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 2
+  mir_op: true
 
 - name: NewTypedArrayDynamicLength
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    length: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: NewTypedArrayFromArray
   result_type: WordSized
@@ -156,22 +175,52 @@
   gen_boilerplate: false
 
 - name: NewPlainObject
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 3
+  mir_op: true
 
 - name: NewArrayObject
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 2
+  mir_op: true
 
+# Allocates a new NamedLambdaObject.
+#
+# This instruction generates two possible instruction sets:
+#   (1) An inline allocation of the call object is attempted.
+#   (2) Otherwise, a callVM create a new object.
+#
 - name: NewNamedLambdaObject
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 1
+  mir_op: true
 
+# Allocates a new CallObject.
+#
+# This instruction generates two possible instruction sets:
+#   (1) If the call object is extensible, this is a callVM to create the
+#       call object.
+#   (2) Otherwise, an inline allocation of the call object is attempted.
+#
 - name: NewCallObject
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: NewStringObject
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: InitElemGetterSetter
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    id: BoxedValue
+    value: WordSized
+  call_instruction: true
+  mir_op: true
 
 # Takes in an Object and a Value.
 - name: MutateProto
@@ -235,11 +284,21 @@
 - name: CreateThis
   gen_boilerplate: false
 
+# Allocate an object for |new| on the caller-side.
+# Always performs object initialization with a fast path.
 - name: CreateThisWithTemplate
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 1
+  mir_op: true
 
+# Allocate a new arguments object for the frame.
 - name: CreateArgumentsObject
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    callObject: WordSized
+  num_temps: 3
+  call_instruction: true
+  mir_op: true
 
 - name: CreateInlinedArgumentsObject
   gen_boilerplate: false
@@ -250,8 +309,13 @@
 - name: GetArgumentsObjectArg
   gen_boilerplate: false
 
+# Set argument on arguments object.
 - name: SetArgumentsObjectArg
-  gen_boilerplate: false
+  operands:
+    argsObject: WordSized
+    value: BoxedValue
+  num_temps: 1
+  mir_op: true
 
 - name: LoadArgumentsObjectArg
   gen_boilerplate: false
@@ -262,8 +326,12 @@
   operands:
     argsObject: WordSized
 
+# Guard that the given flags are not set on the arguments object.
 - name: GuardArgumentsObjectFlags
-  gen_boilerplate: false
+  operands:
+    argsObject: WordSized
+  num_temps: 1
+  mir_op: true
 
 # If the Value is an Object, return unbox(Value).
 # Otherwise, return the other Object.
@@ -335,7 +403,10 @@
   gen_boilerplate: false
 
 - name: GuardDOMExpandoMissingOrGuardShape
-  gen_boilerplate: false
+  operands:
+    input: BoxedValue
+  num_temps: 1
+  mir_op: true
 
 - name: ApplyArgsGeneric
   gen_boilerplate: false
@@ -425,7 +496,11 @@
   gen_boilerplate: false
 
 - name: SameValueDouble
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    left: WordSized
+    right: WordSized
+  num_temps: 1
 
 - name: SameValue
   result_type: WordSized
@@ -439,8 +514,11 @@
   operands:
     input: WordSized
 
+# Not operation on an int64.
 - name: NotI64
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    inputI64: Int64
 
 - name: NotD
   gen_boilerplate: false
@@ -580,14 +658,26 @@
 - name: Hypot
   gen_boilerplate: false
 
+# Double raised to an integer power.
 - name: PowI
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: WordSized
+    power: WordSized
+  num_temps: 1
+  call_instruction: true
 
 - name: PowII
   gen_boilerplate: false
 
+# Double raised to a double power.
 - name: PowD
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: WordSized
+    power: WordSized
+  num_temps: 1
+  call_instruction: true
 
 - name: PowOfTwoI
   gen_boilerplate: false
@@ -604,8 +694,12 @@
   operands:
     num: WordSized
 
+# Sign value of a double with expected int32 result.
 - name: SignDI
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  num_temps: 1
 
 - name: MathFunctionD
   gen_boilerplate: false
@@ -694,11 +788,21 @@
 - name: BigIntBitNot
   gen_boilerplate: false
 
+# Adds two string, returning a string.
 - name: Concat
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  num_temps: 5
 
+# Get uint16 character code from a string.
 - name: CharCodeAt
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    str: WordSized
+    index: WordSized
+  num_temps: 1
 
 # Convert uint16 character code to a string.
 - name: FromCharCode
@@ -706,8 +810,12 @@
   operands:
     code: WordSized
 
+# Convert uint32 code point to a string.
 - name: FromCodePoint
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    codePoint: WordSized
+  num_temps: 2
 
 # Calls the ToLowerCase or ToUpperCase case conversion function.
 - name: StringConvertCase
@@ -815,7 +923,11 @@
   gen_boilerplate: false
 
 - name: NaNToZero
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: OsrEntry
   gen_boilerplate: false
@@ -840,7 +952,9 @@
   mir_op: true
 
 - name: RegExp
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: RegExpMatcher
   gen_boilerplate: false
@@ -864,13 +978,25 @@
   mir_op: true
 
 - name: RegExpPrototypeOptimizable
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: RegExpInstanceOptimizable
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+    proto: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: GetFirstDollarIndex
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    str: WordSized
+  num_temps: 3
 
 - name: StringReplace
   result_type: WordSized
@@ -903,10 +1029,19 @@
   mir_op: true
 
 - name: Lambda
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    environmentChain: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: LambdaArrow
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    environmentChain: WordSized
+    newTarget: BoxedValue
+  num_temps: 1
+  mir_op: true
 
 - name: FunctionWithProto
   result_type: WordSized
@@ -984,7 +1119,12 @@
     function: WordSized
 
 - name: GetNextEntryForIterator
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    iter: WordSized
+    result: WordSized
+  num_temps: 3
+  mir_op: true
 
 - name: ArrayBufferByteLength
   result_type: WordSized
@@ -1091,16 +1231,39 @@
   gen_boilerplate: false
 
 - name: ArrayPush
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+    value: BoxedValue
+  num_temps: 2
+  mir_op: true
 
 - name: ArraySlice
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+    begin: WordSized
+    end: WordSized
+  num_temps: 2
+  call_instruction: true
+  mir_op: true
 
 - name: ArrayJoin
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    array: WordSized
+    separator: WordSized
+  num_temps: 1
+  call_instruction: true
+  mir_op: true
 
 - name: LoadUnboxedScalar
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    elements: WordSized
+    index: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: LoadUnboxedBigInt
   gen_boilerplate: false
@@ -1128,7 +1291,13 @@
   gen_boilerplate: false
 
 - name: StoreTypedArrayElementHole
-  gen_boilerplate: false
+  operands:
+    elements: WordSized
+    length: WordSized
+    index: WordSized
+    value: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: StoreTypedArrayElementHoleBigInt
   gen_boilerplate: false
@@ -1181,7 +1350,10 @@
     input: WordSized
 
 - name: ClampDToUint8
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+  num_temps: 1
 
 - name: ClampVToUint8
   gen_boilerplate: false
@@ -1212,10 +1384,19 @@
   mir_op: true
 
 - name: AddAndStoreSlot
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: BoxedValue
+  num_temps: 1
+  mir_op: true
 
 - name: AllocateAndStoreSlot
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: BoxedValue
+  num_temps: 2
+  call_instruction: true
+  mir_op: true
 
 - name: StoreFixedSlotV
   gen_boilerplate: false
@@ -1236,7 +1417,11 @@
   gen_boilerplate: false
 
 - name: BindNameCache
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    environmentChain: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: CallBindVar
   result_type: WordSized
@@ -1287,8 +1472,14 @@
   operands:
     string: WordSized
 
+# Round a double precision number and converts it to an int32.
+# Implements Math.round().
 - name: Round
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    num: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: RoundF
   gen_boilerplate: false
@@ -1364,11 +1555,23 @@
 - name: CallDeleteElement
   gen_boilerplate: false
 
+# Patchable jump to stubs generated for a SetProperty cache.
 - name: SetPropertyCache
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    id: BoxedValue
+    value: BoxedValue
+  # Takes an additional temp: this is intendend to be FloatReg0 to allow the
+  # actual cache code to safely clobber that value without save and restore.
+  num_temps: 2
+  mir_op: true
 
 - name: GetIteratorCache
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  num_temps: 2
+  mir_op: true
 
 - name: OptimizeSpreadCallCache
   gen_boilerplate: false
@@ -1380,7 +1583,10 @@
   gen_boilerplate: false
 
 - name: IteratorEnd
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 3
+  mir_op: true
 
 # Read the number of actual arguments.
 - name: ArgumentsLength
@@ -1389,8 +1595,14 @@
 - name: GetFrameArgument
   gen_boilerplate: false
 
+# Create the rest parameter.
 - name: Rest
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    numActuals: WordSized
+  num_temps: 3
+  call_instruction: true
+  mir_op: true
 
 - name: Int32ToIntPtr
   result_type: WordSized
@@ -1426,8 +1638,13 @@
 - name: TruncateBigIntToInt64
   gen_boilerplate: false
 
+# Create a new BigInt* from an unboxed int64.
 - name: Int64ToBigInt
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: Int64
+  num_temps: 1
+  mir_op: true
 
 - name: PostWriteBarrierO
   gen_boilerplate: false
@@ -1467,7 +1684,10 @@
     expected: WordSized
 
 - name: GuardSpecificAtom
-  gen_boilerplate: false
+  operands:
+    str: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: GuardSpecificSymbol
   operands:
@@ -1480,31 +1700,54 @@
     string: WordSized
 
 - name: GuardStringToInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    string: WordSized
+  num_temps: 1
 
 - name: GuardStringToDouble
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    string: WordSized
+  num_temps: 2
 
 - name: GuardShape
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: GuardProto
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    expected: WordSized
+  num_temps: 1
 
 - name: GuardNullProto
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 1
 
 - name: GuardIsNativeObject
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 1
 
 - name: GuardIsProxy
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 1
 
 - name: GuardIsNotProxy
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 1
 
 - name: GuardIsNotDOMProxy
-  gen_boilerplate: false
+  operands:
+    proxy: WordSized
+  num_temps: 1
 
 - name: ProxyGet
   gen_boilerplate: false
@@ -1516,7 +1759,12 @@
   gen_boilerplate: false
 
 - name: ProxySet
-  gen_boilerplate: false
+  operands:
+    proxy: WordSized
+    rhs: BoxedValue
+  num_temps: 1
+  call_instruction: true
+  mir_op: true
 
 - name: ProxySetByValue
   operands:
@@ -1543,19 +1791,36 @@
   gen_boilerplate: false
 
 - name: MegamorphicHasProp
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+    id: BoxedValue
+  num_temps: 2
+  call_instruction: true
+  mir_op: true
 
 - name: GuardIsNotArrayBufferMaybeShared
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 1
 
 - name: GuardIsTypedArray
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 1
 
 - name: GuardNoDenseElements
-  gen_boilerplate: false
+  operands:
+    in: WordSized
+  num_temps: 1
 
 - name: InCache
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    lhs: BoxedValue
+    rhs: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: HasOwnCache
   result_type: WordSized
@@ -1637,10 +1902,19 @@
   mir_op: true
 
 - name: GuardToClass
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: ObjectClassToString
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+  num_temps: 1
+  call_instruction: true
+  mir_op: true
 
 - name: WasmSelect
   gen_boilerplate: false
@@ -1755,7 +2029,12 @@
   gen_boilerplate: false
 
 - name: WasmStoreRef
-  gen_boilerplate: false
+  operands:
+    tls: WordSized
+    valueAddr: WordSized
+    value: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: WasmParameter
   result_type: WordSized
@@ -1798,7 +2077,9 @@
   gen_boilerplate: false
 
 - name: WasmStackResultArea
-  gen_boilerplate: false
+  result_type: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: WasmStackResult
   gen_boilerplate: false
@@ -1819,7 +2100,10 @@
   gen_boilerplate: false
 
 - name: AssertClass
-  gen_boilerplate: false
+  operands:
+    input: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: AssertShape
   operands:
@@ -1850,10 +2134,15 @@
   mir_op: true
 
 - name: GuardFunctionIsNonBuiltinCtor
-  gen_boilerplate: false
+  operands:
+    function: WordSized
+  num_temps: 1
 
 - name: GuardFunctionKind
-  gen_boilerplate: false
+  operands:
+    function: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: GuardFunctionScript
   operands:
@@ -1861,7 +2150,8 @@
   mir_op: true
 
 - name: IncrementWarmUpCounter
-  gen_boilerplate: false
+  num_temps: 1
+  mir_op: true
 
 - name: LexicalCheck
   operands:
@@ -1883,7 +2173,8 @@
   gen_boilerplate: false
 
 - name: Debugger
-  gen_boilerplate: false
+  num_temps: 2
+  call_instruction: true
 
 - name: NewTarget
   gen_boilerplate: false
@@ -1908,7 +2199,9 @@
     value: BoxedValue
 
 - name: CheckClassHeritage
-  gen_boilerplate: false
+  operands:
+    heritage: BoxedValue
+  num_temps: 2
 
 - name: CheckThis
   operands:
@@ -1959,13 +2252,23 @@
   call_instruction: true
 
 - name: FinishBoundFunctionInit
-  gen_boilerplate: false
+  operands:
+    bound: WordSized
+    target: WordSized
+    argCount: WordSized
+  num_temps: 2
 
 - name: IsPackedArray
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+  num_temps: 1
 
 - name: GuardArrayIsPacked
-  gen_boilerplate: false
+  operands:
+    array: WordSized
+  num_temps: 2
+  mir_op: true
 
 - name: GetPrototypeOf
   gen_boilerplate: false
@@ -2016,20 +2319,32 @@
     object: WordSized
 
 - name: GuardHasGetterSetter
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 3
+  call_instruction: true
+  mir_op: true
 
 - name: GuardIsExtensible
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 1
 
 - name: GuardInt32IsNonNegative
   operands:
     index: WordSized
 
 - name: GuardIndexGreaterThanDenseInitLength
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    index: WordSized
+  num_temps: 2
 
 - name: GuardIndexIsValidUpdateOrAdd
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    index: WordSized
+  num_temps: 2
 
 - name: CallAddOrUpdateSparseElement
   operands:
@@ -2046,7 +2361,12 @@
   gen_boilerplate: false
 
 - name: CallObjectHasSparseElement
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+    index: WordSized
+  num_temps: 2
+  call_instruction: true
 
 - name: BigIntAsIntN
   result_type: WordSized
