@@ -7,11 +7,10 @@
 #ifndef jit_x86_MacroAssembler_x86_h
 #define jit_x86_MacroAssembler_x86_h
 
+#include "jit/JitOptions.h"
 #include "jit/MoveResolver.h"
 #include "jit/x86-shared/MacroAssembler-x86-shared.h"
 #include "js/HeapAPI.h"
-#include "vm/BigIntType.h"  // JS::BigInt
-#include "vm/Realm.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmTlsData.h"
 
@@ -967,16 +966,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     test32(operand.payloadReg(), operand.payloadReg());
     return truthy ? NonZero : Zero;
   }
-  Condition testStringTruthy(bool truthy, const ValueOperand& value) {
-    Register string = value.payloadReg();
-    cmp32(Operand(string, JSString::offsetOfLength()), Imm32(0));
-    return truthy ? Assembler::NotEqual : Assembler::Equal;
-  }
-  Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
-    Register bi = value.payloadReg();
-    cmp32(Operand(bi, BigInt::offsetOfDigitLength()), Imm32(0));
-    return truthy ? Assembler::NotEqual : Assembler::Equal;
-  }
+  Condition testStringTruthy(bool truthy, const ValueOperand& value);
+  Condition testBigIntTruthy(bool truthy, const ValueOperand& value);
 
   template <typename T>
   inline void loadInt32OrDouble(const T& src, FloatRegister dest);

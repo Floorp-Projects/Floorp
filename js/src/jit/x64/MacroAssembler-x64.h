@@ -9,7 +9,6 @@
 
 #include "jit/x86-shared/MacroAssembler-x86-shared.h"
 #include "js/HeapAPI.h"
-#include "vm/BigIntType.h"  // JS::BigInt
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmTlsData.h"
 
@@ -1019,18 +1018,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     test32(operand.valueReg(), operand.valueReg());
     return truthy ? NonZero : Zero;
   }
-  Condition testStringTruthy(bool truthy, const ValueOperand& value) {
-    ScratchRegisterScope scratch(asMasm());
-    unboxString(value, scratch);
-    cmp32(Operand(scratch, JSString::offsetOfLength()), Imm32(0));
-    return truthy ? Assembler::NotEqual : Assembler::Equal;
-  }
-  Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
-    ScratchRegisterScope scratch(asMasm());
-    unboxBigInt(value, scratch);
-    cmp32(Operand(scratch, BigInt::offsetOfDigitLength()), Imm32(0));
-    return truthy ? Assembler::NotEqual : Assembler::Equal;
-  }
+  Condition testStringTruthy(bool truthy, const ValueOperand& value);
+  Condition testBigIntTruthy(bool truthy, const ValueOperand& value);
 
   template <typename T>
   inline void loadInt32OrDouble(const T& src, FloatRegister dest);
