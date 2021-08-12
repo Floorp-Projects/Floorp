@@ -14,13 +14,16 @@
       win.onload = function() {
         win.onmessage = function() {
           win.start = win.performance.now();
+          win.didRunMicrotask = false;
           win.onmessage = function() {
+            ok(win.didRunMicrotask, "Should have run a microtask.");
             let period = win.performance.now() - win.start;
             win.opener.ok(
               period < 200,
               "Running a task should be fast. Took " + period + "ms.");
             win.onmessage = null;
           }
+          win.queueMicrotask(function() { win.didRunMicrotask = true; });
           win.postMessage("measurementMessage", "*");
         }
         win.postMessage("initialMessage", "*");
@@ -46,6 +49,7 @@
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "slow.sjs", false);
         xhr.send();
+        is(previousTask, -1, "Shouldn't have run microtasks during a sync XHR.");
       }
     }
   </script>
