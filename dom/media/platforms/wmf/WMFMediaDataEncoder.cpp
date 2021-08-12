@@ -27,6 +27,10 @@ static const GUID CodecToSubtype(MediaDataEncoder::CodecType aCodec) {
   switch (aCodec) {
     case MediaDataEncoder::CodecType::H264:
       return MFVideoFormat_H264;
+    case MediaDataEncoder::CodecType::VP8:
+      return MFVideoFormat_VP80;
+    case MediaDataEncoder::CodecType::VP9:
+      return MFVideoFormat_VP90;
     default:
       MOZ_ASSERT(false, "Unsupported codec");
       return GUID_NULL;
@@ -186,9 +190,14 @@ already_AddRefed<IMFMediaType> CreateInputType(Config& aConfig) {
              : nullptr;
 }
 
-static HRESULT SetCodecSpecific(
-    IMFMediaType* aOutputType,
-    const MediaDataEncoder::H264Specific& aSpecific) {
+template <typename T>
+HRESULT SetCodecSpecific(IMFMediaType* aOutputType, const T& aSpecific) {
+  return S_OK;
+}
+
+template <>
+HRESULT SetCodecSpecific(IMFMediaType* aOutputType,
+                         const MediaDataEncoder::H264Specific& aSpecific) {
   return aOutputType->SetUINT32(MF_MT_MPEG2_PROFILE,
                                 GetProfile(aSpecific.mProfileLevel));
 }
@@ -446,11 +455,9 @@ RefPtr<GenericPromise> WMFMediaDataEncoder<T>::SetBitrate(
       });
 }
 
-template <>
-nsCString
-WMFMediaDataEncoder<MediaDataEncoder::H264Config>::GetDescriptionName() const {
-  MOZ_ASSERT(mConfig.mCodecType == CodecType::H264);
-  return MFTEncoder::GetFriendlyName(MFVideoFormat_H264);
+template <typename T>
+nsCString WMFMediaDataEncoder<T>::GetDescriptionName() const {
+  return MFTEncoder::GetFriendlyName(CodecToSubtype(mConfig.mCodecType));
 }
 
 }  // namespace mozilla
