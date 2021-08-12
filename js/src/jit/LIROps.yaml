@@ -19,6 +19,15 @@
 #   - true (default): auto generate boilerplate for this LIR opcode
 #   - false: do not generate boilerplate for this LIR opcode
 #
+# result_type
+# ===========
+# Specifies the result type that is produced by this LIR instruction.
+# The result type can be any of the following: WordSized, BoxedValue,
+# or Int64.
+#   - attribute not specified (default): there is no result produced
+#     by this LIR instruction
+#   - result type: sets result type for this LIR instruction
+#
 # call_instruction
 # ================
 # Used to define call instructions. 
@@ -26,7 +35,7 @@
 #   - true: generates a call to setIsCall in the op's constructor
 #
 # mir_op
-# ============
+# ======
 # If a LIR instruction corresponds one-to-one with a particular MIR 
 # instruction, this will generate a method that returns that MIR 
 # instruction.
@@ -66,16 +75,18 @@
   gen_boilerplate: false
 
 - name: NurseryObject
-  gen_boilerplate: false
+  result_type: WordSized
+  mir_op: true
 
 - name: Parameter
   gen_boilerplate: false
 
+# Stack offset for a word-sized immutable input value to a frame.
 - name: Callee
-  gen_boilerplate: false
+  result_type: WordSized
 
 - name: IsConstructing
-  gen_boilerplate: false
+  result_type: WordSized
 
 - name: Goto
   gen_boilerplate: false
@@ -235,7 +246,7 @@
   gen_boilerplate: false
 
 - name: UnreachableResultT
-  gen_boilerplate: false
+  result_type: WordSized
 
 - name: GetDOMProperty
   gen_boilerplate: false
@@ -724,7 +735,9 @@
   gen_boilerplate: false
 
 - name: ModuleMetadata
-  gen_boilerplate: false
+  result_type: WordSized
+  call_instruction: true
+  mir_op: true
 
 - name: DynamicImport
   gen_boilerplate: false
@@ -1050,8 +1063,9 @@
 - name: IteratorEnd
   gen_boilerplate: false
 
+# Read the number of actual arguments.
 - name: ArgumentsLength
-  gen_boilerplate: false
+  result_type: WordSized
 
 - name: GetFrameArgument
   gen_boilerplate: false
@@ -1338,7 +1352,7 @@
   gen_boilerplate: false
 
 - name: WasmParameter
-  gen_boilerplate: false
+  result_type: WordSized
 
 - name: WasmParameterI64
   gen_boilerplate: false
@@ -1359,7 +1373,7 @@
   gen_boilerplate: false
 
 - name: WasmNullConstant
-  gen_boilerplate: false
+  result_type: WordSized
 
 - name: WasmCall
   gen_boilerplate: false
@@ -1508,7 +1522,9 @@
   gen_boilerplate: false
 
 - name: BuiltinObject
-  gen_boilerplate: false
+  result_type: WordSized
+  call_instruction: true
+  mir_op: true
 
 - name: SuperFunction
   gen_boilerplate: false
