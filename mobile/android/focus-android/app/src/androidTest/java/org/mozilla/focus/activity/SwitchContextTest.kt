@@ -15,7 +15,6 @@ import org.junit.After
 import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -80,7 +79,6 @@ class SwitchContextTest {
         }
     }
 
-    @Ignore("Failing on Firebase: https://github.com/mozilla-mobile/focus-android/issues/4823")
     @SmokeTest
     @Test
     fun notificationOpenButtonTest() {
@@ -99,7 +97,6 @@ class SwitchContextTest {
         }
     }
 
-    @Ignore("Failing on Firebase: https://github.com/mozilla-mobile/focus-android/issues/4823")
     @Test
     fun switchFromSettingsToFocusTest() {
         // Initialize UiDevice instance
