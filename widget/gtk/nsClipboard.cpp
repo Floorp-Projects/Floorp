@@ -12,6 +12,7 @@
 #include "nsClipboardX11.h"
 #if defined(MOZ_WAYLAND)
 #  include "nsClipboardWayland.h"
+#  include "nsClipboardWaylandAsync.h"
 #endif
 #include "nsContentUtils.h"
 #include "HeadlessClipboard.h"
@@ -96,10 +97,14 @@ NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard, nsIObserver)
 
 nsresult nsClipboard::Init(void) {
   if (widget::GdkIsX11Display()) {
-    mContext = MakeUnique<nsRetrievalContextX11>();
+    mContext = new nsRetrievalContextX11();
 #if defined(MOZ_WAYLAND)
   } else if (widget::GdkIsWaylandDisplay()) {
-    mContext = MakeUnique<nsRetrievalContextWayland>();
+    if (StaticPrefs::widget_wayland_async_clipboard_enabled_AtStartup()) {
+      mContext = new nsRetrievalContextWaylandAsync();
+    } else {
+      mContext = new nsRetrievalContextWayland();
+    }
 #endif
   } else {
     NS_WARNING("Missing nsRetrievalContext for nsClipboard!");
@@ -247,6 +252,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
   LOGCLIP(("nsClipboard::GetData (%s)\n",
            aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard"));
 
+  // TODO: Ensure we don't re-enter here.
   if (!aTransferable || !mContext) {
     return NS_ERROR_FAILURE;
   }

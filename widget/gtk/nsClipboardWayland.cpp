@@ -863,8 +863,7 @@ void nsRetrievalContextWayland::ClearDragAndDropDataOffer(void) {
 }
 
 nsRetrievalContextWayland::nsRetrievalContextWayland(void)
-    : mInitialized(false),
-      mDisplay(WaylandDisplayGet()),
+    : mDisplay(WaylandDisplayGet()),
       mClipboardRequestNumber(0),
       mClipboardData(nullptr),
       mClipboardDataLength(0) {
@@ -887,20 +886,18 @@ nsRetrievalContextWayland::nsRetrievalContextWayland(void)
     gtk_primary_selection_device_add_listener(
         primaryDataDevice, &primary_selection_device_listener_gtk, this);
   }
-
-  mInitialized = true;
 }
 
 nsRetrievalContextWayland::~nsRetrievalContextWayland(void) {}
 
 struct FastTrackClipboard {
   FastTrackClipboard(ClipboardDataType aDataType, int aClipboardRequestNumber,
-                     nsRetrievalContextWayland* aRetrievalContex)
+                     RefPtr<nsRetrievalContextWayland> aRetrievalContex)
       : mClipboardRequestNumber(aClipboardRequestNumber),
-        mRetrievalContex(aRetrievalContex),
+        mRetrievalContex(std::move(aRetrievalContex)),
         mDataType(aDataType) {}
   int mClipboardRequestNumber;
-  nsRetrievalContextWayland* mRetrievalContex;
+  RefPtr<nsRetrievalContextWayland> mRetrievalContex;
   ClipboardDataType mDataType;
 };
 
