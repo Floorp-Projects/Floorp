@@ -91,6 +91,10 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
     return;
   }
 
+  int32_t port;
+  rv = aURI->GetPort(&port);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   nsCOMPtr<nsIEffectiveTLDService> tldService =
       do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   MOZ_ASSERT(tldService);
@@ -99,17 +103,13 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
   nsAutoCString baseDomain;
   rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
   if (NS_SUCCEEDED(rv)) {
-    MakeTopLevelInfo(scheme, baseDomain, aUseSite, topLevelInfo);
+    MakeTopLevelInfo(scheme, baseDomain, port, aUseSite, topLevelInfo);
     return;
   }
 
   // Saving before rv is overwritten.
   bool isIpAddress = (rv == NS_ERROR_HOST_IS_IP_ADDRESS);
   bool isInsufficientDomainLevels = (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS);
-
-  int32_t port;
-  rv = aURI->GetPort(&port);
-  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsAutoCString host;
   rv = aURI->GetHost(host);
