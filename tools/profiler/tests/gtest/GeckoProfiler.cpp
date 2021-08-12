@@ -9,6 +9,7 @@
 // happens when calling these functions. They don't do much inspection of
 // profiler internals.
 
+#include "mozilla/ProfilerThreadPlatformData.h"
 #include "mozilla/ProfilerThreadRegistrationInfo.h"
 #include "mozilla/ProfilerUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
