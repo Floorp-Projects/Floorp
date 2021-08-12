@@ -74,9 +74,8 @@ nsDataHandler::GetProtocolFlags(uint32_t* result) {
                    contentType.Find("xml") == kNotFound)) {
       // it's ascii encoded binary, don't let any spaces in
       rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
-               .Apply(NS_MutatorMethod(
-                   &nsISimpleURIMutator::SetSpecAndFilterWhitespace, spec,
-                   nullptr))
+               .Apply(&nsISimpleURIMutator::SetSpecAndFilterWhitespace, spec,
+                      nullptr)
                .Finalize(uri);
     } else {
       rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
