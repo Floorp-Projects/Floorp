@@ -485,21 +485,26 @@ nsHttpNegotiateAuth::GenerateCredentials(
 
   nsAutoCString inToken;
   if (aChallenge.Length() > kNegotiateLen) {
-    const nsCString& flatChallenge = PromiseFlatCString(aChallenge);
-    const char* challenge = flatChallenge.get();
-    challenge += kNegotiateLen;
-    while (*challenge == ' ') challenge++;
-    unsigned int len = strlen(challenge);
-
-    if (!len) return NS_ERROR_UNEXPECTED;
+    nsDependentCSubstring challenge(aChallenge, kNegotiateLen);
+    uint32_t startPos = 0;
+    while (startPos < challenge.Length() && challenge[startPos] == ' ') {
+      startPos++;
+    }
+    if (startPos == challenge.Length()) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
     // strip off any padding (see bug 230351)
-    while (len && challenge[len - 1] == '=') len--;
+    uint32_t len = challenge.Length();
+    while (len > startPos && challenge[len - 1] == '=') {
+      len--;
+    }
 
     //
     // Decode the response that followed the "Negotiate" token
     //
-    (void)Base64Decode(nsDependentCSubstring(challenge, len), inToken);
+    (void)Base64Decode(
+        nsDependentCSubstring(challenge, startPos, len - startPos), inToken);
   }
 
   void* outToken = nullptr;
