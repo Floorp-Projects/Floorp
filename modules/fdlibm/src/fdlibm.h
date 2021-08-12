@@ -24,6 +24,10 @@ double	asin(double);
 double	atan(double);
 double	atan2(double, double);
 
+double	cos(double);
+double	sin(double);
+double	tan(double);
+
 double	cosh(double);
 double	sinh(double);
 double	tanh(double);
