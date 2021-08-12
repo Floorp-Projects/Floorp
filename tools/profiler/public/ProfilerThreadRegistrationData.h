@@ -4,6 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This header contains classes that hold data related to thread profiling:
+// Data members are stored `protected` in `ThreadRegistrationData`.
+// Non-virtual sub-classes of ProfilerThreadRegistrationData provide layers of
+// public accessors to subsets of the data. Each level builds on the previous
+// one and adds further access to more data, but always with the appropriate
+// guards where necessary.
+// These classes have protected constructors, so only some trusted classes
+// `ThreadRegistration` and `ThreadRegistry` will be able to construct them, and
+// then give limited access depending on who asks (the owning thread or another
+// one), and how much data they actually need.
+//
+// The hierarchy is, from base to most derived:
+// - ThreadRegistrationData
+// - ThreadRegistrationUnlockedConstReader
+// - ThreadRegistrationUnlockedConstReaderAndAtomicRW
+// - ThreadRegistrationUnlockedRWForLockedProfiler
+// - ThreadRegistrationUnlockedReaderAndAtomicRWOnThread
+// - ThreadRegistrationLockedRWFromAnyThread
+// - ThreadRegistrationLockedRWOnThread
+// - ThreadRegistration::EmbeddedData (actual data member in ThreadRegistration)
+//
+// Tech detail: These classes need to be a single hierarchy so that
+// `ThreadRegistration` can contain the most-derived class, and from there can
+// publish references to base classes without relying on Undefined Behavior.
+// (It's not allowed to have some object and give a reference to a sub-class,
+// unless that object was *really* constructed as that sub-class at least, even
+// if that sub-class only adds member functions!)
+// And where appropriate, these references will come along with the required
+// lock.
+
 #ifndef ProfilerThreadRegistrationData_h
 #define ProfilerThreadRegistrationData_h
 
@@ -14,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 
+class PSAutoLock;
 struct JSContext;
 
 namespace mozilla::profiler {
@@ -163,6 +194,216 @@ class ThreadRegistrationData {
   static const int SLEEPING_OBSERVED = 2;
   // Read&written from thread and suspended thread.
   Atomic<int> mSleep{AWAKE};
+};
+
+// Accessing const data from any thread.
+class ThreadRegistrationUnlockedConstReader : public ThreadRegistrationData {
+ public:
+  [[nodiscard]] const ThreadRegistrationInfo& Info() const { return mInfo; }
+
+  [[nodiscard]] const PlatformData& PlatformDataCRef() const {
+    return mPlatformData;
+  }
+
+  [[nodiscard]] const void* StackTop() const { return mStackTop; }
+
+ protected:
+  ThreadRegistrationUnlockedConstReader(const char* aName,
+                                        const void* aStackTop)
+      : ThreadRegistrationData(aName, aStackTop) {}
+};
+
+// Accessing atomic data from any thread.
+class ThreadRegistrationUnlockedConstReaderAndAtomicRW
+    : public ThreadRegistrationUnlockedConstReader {
+ public:
+  [[nodiscard]] const ProfilingStack& ProfilingStackCRef() const {
+    return mProfilingStack;
+  }
+  [[nodiscard]] ProfilingStack& ProfilingStackRef() { return mProfilingStack; }
+
+  // Similar to `profiler_is_active()`, this atomic flag may become out-of-date.
+  // It should only be used as an indication to know whether this thread is
+  // probably being profiled, to avoid doing expensive operations otherwise.
+  // Edge cases:
+  // - This thread could get `false`, but the profiler has just started, so some
+  //   very early data may be missing. No real impact on profiling.
+  // - This thread could get `true`, but the profiled has just stopped, so some
+  //   some work will be done and then discarded when finally attempting to
+  //   write to the buffer. No impact on profiling.
+  // - This thread could see `true`, but the profiler will quickly stop and
+  //   restart, so this thread will write information relevant to the previous
+  //   profiling session. Very rare, and little impact on profiling.
+  [[nodiscard]] bool IsBeingProfiled() const { return mIsBeingProfiled; }
+
+  // Call this whenever the current thread sleeps. Calling it twice in a row
+  // without an intervening setAwake() call is an error.
+  void SetSleeping() {
+    MOZ_ASSERT(mSleep == AWAKE);
+    mSleep = SLEEPING_NOT_OBSERVED;
+  }
+
+  // Call this whenever the current thread wakes. Calling it twice in a row
+  // without an intervening setSleeping() call is an error.
+  void SetAwake() {
+    MOZ_ASSERT(mSleep != AWAKE);
+    mSleep = AWAKE;
+  }
+
+  // This is called on every profiler restart. Put things that should happen
+  // at that time here.
+  void ReinitializeOnResume() {
+    // This is needed to cause an initial sample to be taken from sleeping
+    // threads that had been observed prior to the profiler stopping and
+    // restarting. Otherwise sleeping threads would not have any samples to
+    // copy forward while sleeping.
+    (void)mSleep.compareExchange(SLEEPING_OBSERVED, SLEEPING_NOT_OBSERVED);
+  }
+
+  // This returns true for the second and subsequent calls in each sleep
+  // cycle, so that the sampler can skip its full sampling and reuse the first
+  // asleep sample instead.
+  [[nodiscard]] bool CanDuplicateLastSampleDueToSleep() {
+    if (mSleep == AWAKE) {
+      return false;
+    }
+    if (mSleep.compareExchange(SLEEPING_NOT_OBSERVED, SLEEPING_OBSERVED)) {
+      return false;
+    }
+    return true;
+  }
+
+  [[nodiscard]] bool IsSleeping() const { return mSleep != AWAKE; }
+
+ protected:
+  ThreadRegistrationUnlockedConstReaderAndAtomicRW(const char* aName,
+                                                   const void* aStackTop)
+      : ThreadRegistrationUnlockedConstReader(aName, aStackTop) {}
+};
+
+// Like above, with special PSAutoLock-guarded accessors.
+class ThreadRegistrationUnlockedRWForLockedProfiler
+    : public ThreadRegistrationUnlockedConstReaderAndAtomicRW {
+ public:
+  // IMPORTANT! IMPORTANT! IMPORTANT! IMPORTANT! IMPORTANT! IMPORTANT!
+  // Only add functions that take a `const PSAutoLock&` proof-of-lock.
+  // (Because there is no other lock.)
+
+  // This is like IsBeingProfiled, but guaranteed to be stable while the lock is
+  // held (unless modified under the same lock, of course).
+  [[nodiscard]] bool IsBeingProfiled(const PSAutoLock&) const {
+    return mIsBeingProfiled;
+  }
+
+ protected:
+  ThreadRegistrationUnlockedRWForLockedProfiler(const char* aName,
+                                                const void* aStackTop)
+      : ThreadRegistrationUnlockedConstReaderAndAtomicRW(aName, aStackTop) {}
+};
+
+// Reading data, unlocked from the thread, or locked otherwise.
+// This data MUST only be written from the thread with lock (i.e., in
+// LockedRWOnThread through RWOnThreadWithLock.)
+class ThreadRegistrationUnlockedReaderAndAtomicRWOnThread
+    : public ThreadRegistrationUnlockedRWForLockedProfiler {
+ public:
+  // IMPORTANT! IMPORTANT! IMPORTANT! IMPORTANT! IMPORTANT! IMPORTANT!
+  // Non-atomic members read here MUST be written from LockedRWOnThread (to
+  // guarantee that they are only modified on this thread.)
+
+  [[nodiscard]] JSContext* GetJSContext() const { return mJSContext; }
+
+ protected:
+  ThreadRegistrationUnlockedReaderAndAtomicRWOnThread(const char* aName,
+                                                      const void* aStackTop)
+      : ThreadRegistrationUnlockedRWForLockedProfiler(aName, aStackTop) {}
+};
+
+// Accessing locked data from the thread, or from any thread through the locked
+// profiler:
+
+// Like above, and profiler can also read&write mutex-protected members.
+class ThreadRegistrationLockedRWFromAnyThread
+    : public ThreadRegistrationUnlockedReaderAndAtomicRWOnThread {
+ public:
+  void SetIsBeingProfiled(bool aIsBeingProfiled, const PSAutoLock&);
+
+  [[nodiscard]] const nsCOMPtr<nsIEventTarget> GetEventTarget() const {
+    return mThread;
+  }
+
+  void ResetMainThread(nsIThread* aThread) { mThread = aThread; }
+
+  // aDelay is the time the event that is currently running on the thread was
+  // queued before starting to run (if a PrioritizedEventQueue
+  // (i.e. MainThread), this will be 0 for any event at a lower priority
+  // than Input).
+  // aRunning is the time the event has been running. If no event is running
+  // these will both be TimeDuration() (i.e. 0). Both are out params, and are
+  // always set. Their initial value is discarded.
+  void GetRunningEventDelay(const TimeStamp& aNow, TimeDuration& aDelay,
+                            TimeDuration& aRunning) {
+    if (mThread) {  // can be null right at the start of a process
+      TimeStamp start;
+      mThread->GetRunningEventDelay(&aDelay, &start);
+      if (!start.IsNull()) {
+        // Note: the timestamp used here will be from when we started to
+        // suspend and sample the thread; which is also the timestamp
+        // associated with the sample.
+        aRunning = aNow - start;
+        return;
+      }
+    }
+    aDelay = TimeDuration();
+    aRunning = TimeDuration();
+  }
+
+  // Request that this thread start JS sampling. JS sampling won't actually
+  // start until a subsequent PollJSSampling() call occurs *and* mContext has
+  // been set.
+  void StartJSSampling(uint32_t aJSFlags) {
+    // This function runs on-thread or off-thread.
+
+    MOZ_RELEASE_ASSERT(mJSSampling == INACTIVE ||
+                       mJSSampling == INACTIVE_REQUESTED);
+    mJSSampling = ACTIVE_REQUESTED;
+    mJSFlags = aJSFlags;
+  }
+
+  // Request that this thread stop JS sampling. JS sampling won't actually
+  // stop until a subsequent PollJSSampling() call occurs.
+  void StopJSSampling() {
+    // This function runs on-thread or off-thread.
+
+    MOZ_RELEASE_ASSERT(mJSSampling == ACTIVE ||
+                       mJSSampling == ACTIVE_REQUESTED);
+    mJSSampling = INACTIVE_REQUESTED;
+  }
+
+ protected:
+  ThreadRegistrationLockedRWFromAnyThread(const char* aName,
+                                          const void* aStackTop)
+      : ThreadRegistrationUnlockedReaderAndAtomicRWOnThread(aName, aStackTop) {}
+};
+
+// Accessing data, locked, from the thread.
+// If any non-atomic data is readable from UnlockedReaderAndAtomicRWOnThread,
+// it must be written from here, and not in base classes: Since this data is
+// only written on the thread, it can be read from the same thread without
+// lock; but writing must be locked so that other threads can safely read it,
+// typically from LockedRWFromAnyThread.
+class ThreadRegistrationLockedRWOnThread
+    : public ThreadRegistrationLockedRWFromAnyThread {
+ public:
+  void SetJSContext(JSContext* aJSContext);
+  void ClearJSContext();
+
+  // Poll to see if JS sampling should be started/stopped.
+  void PollJSSampling();
+
+ public:
+  ThreadRegistrationLockedRWOnThread(const char* aName, const void* aStackTop)
+      : ThreadRegistrationLockedRWFromAnyThread(aName, aStackTop) {}
 };
 
 }  // namespace mozilla::profiler
