@@ -18,8 +18,6 @@
 #include "nsClipboard.h"
 #include "nsWaylandDisplay.h"
 
-struct FastTrackClipboard;
-
 class DataOffer {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataOffer)
 
@@ -132,15 +130,14 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
                                   int aClipboardRequestNumber,
                                   GtkSelectionData* aSelectionData);
 
+ private:
   virtual ~nsRetrievalContextWayland() override;
 
- private:
   RefPtr<DataOffer> FindActiveOffer(wl_data_offer* aDataOffer,
                                     bool aRemove = false);
   void InsertOffer(RefPtr<DataOffer> aDataOffer);
 
  private:
-  bool mInitialized;
   RefPtr<mozilla::widget::nsWaylandDisplay> mDisplay;
 
   // Data offers provided by Wayland data device

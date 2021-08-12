@@ -27,6 +27,10 @@ enum ClipboardDataType { CLIPBOARD_DATA, CLIPBOARD_TEXT, CLIPBOARD_TARGETS };
 
 class nsRetrievalContext {
  public:
+  // We intentionally use unsafe thread refcount as clipboard is used in
+  // main thread only.
+  NS_INLINE_DECL_REFCOUNTING(nsRetrievalContext)
+
   // Get actual clipboard content (GetClipboardData/GetClipboardText)
   // which has to be released by ReleaseClipboardData().
   virtual const char* GetClipboardData(const char* aMimeType,
@@ -41,6 +45,7 @@ class nsRetrievalContext {
 
   virtual bool HasSelectionSupport(void) = 0;
 
+ protected:
   virtual ~nsRetrievalContext() = default;
 };
 
@@ -81,7 +86,7 @@ class nsClipboard : public nsIClipboard, public nsIObserver {
   nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
   nsCOMPtr<nsITransferable> mSelectionTransferable;
   nsCOMPtr<nsITransferable> mGlobalTransferable;
-  mozilla::UniquePtr<nsRetrievalContext> mContext;
+  RefPtr<nsRetrievalContext> mContext;
 };
 
 extern const int kClipboardTimeout;

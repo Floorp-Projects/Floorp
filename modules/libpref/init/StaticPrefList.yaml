@@ -11849,6 +11849,12 @@
   value: true
   mirror: always
 
+# Use async clipboard on Wayland
+- name: widget.wayland.async-clipboard.enabled
+  type: bool
+  value: false
+  mirror: once
+
 # Force fractional scaling using wp_viewporter. Valid values: 0.5 - 8
 - name: widget.wayland.fractional_buffer_scale
   type: float
