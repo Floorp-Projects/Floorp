@@ -2923,10 +2923,10 @@ close_tab_warning:
       the reason it is shown and what choices the user makes (close or not).
     objects: ["window", "application", "tabs"]
     release_channel_collection: opt-out
-    expiry_version: "94"
+    expiry_version: "99"
     record_in_processes: ["main"]
     products: ["firefox"]
-    bug_numbers: [1712306]
+    bug_numbers: [1712306, 1725296]
     notification_emails:
       - gkruitbosch@mozilla.com
       - rtestard@mozilla.com
