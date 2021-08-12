@@ -13,7 +13,7 @@
 
 #include <stddef.h>  // size_t
 
-namespace js {
+namespace JS {
 
 namespace Scalar {
 
@@ -193,6 +193,15 @@ static inline const char* byteSizeString(Type atype) {
 }
 
 }  // namespace Scalar
+
+}  // namespace JS
+
+namespace js {
+
+// This is aliased in NamespaceImports.h, but that is internal-only and
+// inaccessible to Gecko code, which uses this type fairly heavily. Until such
+// uses are changed, we need the alias here as well.
+namespace Scalar = JS::Scalar;
 
 }  // namespace js
 
