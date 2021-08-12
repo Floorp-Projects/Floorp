@@ -394,7 +394,8 @@ void MacroAssembler::flexibleRemainder32(
 // Stack manipulation functions.
 
 size_t MacroAssembler::PushRegsInMaskSizeInBytes(LiveRegisterSet set) {
-  return set.gprs().size() * sizeof(intptr_t) + set.fpus().getPushSizeInBytes();
+  FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
+  return set.gprs().size() * sizeof(intptr_t) + fpuSet.getPushSizeInBytes();
 }
 
 void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
