@@ -365,36 +365,6 @@ class LRotateI64
   LAllocation* count() { return getOperand(Count); }
 };
 
-class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 1> {
- public:
-  LIR_HEADER(TypeOfV)
-
-  LTypeOfV(const LBoxAllocation& input, const LDefinition& tempToUnbox)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-    setTemp(0, tempToUnbox);
-  }
-
-  static const size_t Input = 0;
-
-  const LDefinition* tempToUnbox() { return getTemp(0); }
-
-  MTypeOf* mir() const { return mir_->toTypeOf(); }
-};
-
-class LTypeOfO : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(TypeOfO)
-
-  explicit LTypeOfO(const LAllocation& obj) : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-
-  MTypeOf* mir() const { return mir_->toTypeOf(); }
-};
-
 class LToPropertyKeyCache
     : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
  public:
@@ -718,19 +688,6 @@ class LGetDOMMemberV : public LInstructionHelper<BOX_PIECES, 1, 0> {
  public:
   LIR_HEADER(GetDOMMemberV);
   explicit LGetDOMMemberV(const LAllocation& object)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-
-  MGetDOMMember* mir() const { return mir_->toGetDOMMember(); }
-};
-
-class LGetDOMMemberT : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(GetDOMMemberT);
-  explicit LGetDOMMemberT(const LAllocation& object)
       : LInstructionHelper(classOpcode) {
     setOperand(0, object);
   }
@@ -1176,35 +1133,6 @@ class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0> {
   const char* extraName() const { return CodeName(jsop_); }
 };
 
-class LCompareD : public LInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(CompareD)
-  LCompareD(const LAllocation& left, const LAllocation& right)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, left);
-    setOperand(1, right);
-  }
-
-  const LAllocation* left() { return getOperand(0); }
-  const LAllocation* right() { return getOperand(1); }
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
-class LCompareF : public LInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(CompareF)
-
-  LCompareF(const LAllocation& left, const LAllocation& right)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, left);
-    setOperand(1, right);
-  }
-
-  const LAllocation* left() { return getOperand(0); }
-  const LAllocation* right() { return getOperand(1); }
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
 class LCompareDAndBranch : public LControlInstructionHelper<2, 2, 0> {
   MCompare* cmpMir_;
 
@@ -1252,97 +1180,6 @@ class LCompareFAndBranch : public LControlInstructionHelper<2, 2, 0> {
   MCompare* cmpMir() const { return cmpMir_; }
 };
 
-class LCompareS : public LInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(CompareS)
-
-  LCompareS(const LAllocation& left, const LAllocation& right)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, left);
-    setOperand(1, right);
-  }
-
-  const LAllocation* left() { return getOperand(0); }
-  const LAllocation* right() { return getOperand(1); }
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
-class LCompareBigInt : public LInstructionHelper<1, 2, 3> {
- public:
-  LIR_HEADER(CompareBigInt)
-
-  LCompareBigInt(const LAllocation& left, const LAllocation& right,
-                 const LDefinition& temp1, const LDefinition& temp2,
-                 const LDefinition& temp3)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, left);
-    setOperand(1, right);
-    setTemp(0, temp1);
-    setTemp(1, temp2);
-    setTemp(2, temp3);
-  }
-
-  const LAllocation* left() { return getOperand(0); }
-  const LAllocation* right() { return getOperand(1); }
-  const LDefinition* temp1() { return getTemp(0); }
-  const LDefinition* temp2() { return getTemp(1); }
-  const LDefinition* temp3() { return getTemp(2); }
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
-class LCompareBigIntInt32 : public LInstructionHelper<1, 2, 2> {
- public:
-  LIR_HEADER(CompareBigIntInt32)
-
-  LCompareBigIntInt32(const LAllocation& left, const LAllocation& right,
-                      const LDefinition& temp1, const LDefinition& temp2)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, left);
-    setOperand(1, right);
-    setTemp(0, temp1);
-    setTemp(1, temp2);
-  }
-
-  const LAllocation* left() { return getOperand(0); }
-  const LAllocation* right() { return getOperand(1); }
-  const LDefinition* temp1() { return getTemp(0); }
-  const LDefinition* temp2() { return getTemp(1); }
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
-class LCompareBigIntDouble : public LCallInstructionHelper<1, 2, 1> {
- public:
-  LIR_HEADER(CompareBigIntDouble)
-
-  LCompareBigIntDouble(const LAllocation& left, const LAllocation& right,
-                       const LDefinition& temp)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, left);
-    setOperand(1, right);
-    setTemp(0, temp);
-  }
-
-  const LAllocation* left() { return getOperand(0); }
-  const LAllocation* right() { return getOperand(1); }
-  const LDefinition* temp() { return getTemp(0); }
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
-class LCompareBigIntString : public LCallInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(CompareBigIntString)
-
-  LCompareBigIntString(const LAllocation& left, const LAllocation& right)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, left);
-    setOperand(1, right);
-  }
-
-  const LAllocation* left() { return getOperand(0); }
-  const LAllocation* right() { return getOperand(1); }
-  MCompare* mir() { return mir_->toCompare(); }
-};
-
 class LBitAndAndBranch : public LControlInstructionHelper<2, 2, 0> {
   Assembler::Condition cond_;
 
@@ -1363,44 +1200,6 @@ class LBitAndAndBranch : public LControlInstructionHelper<2, 2, 0> {
     MOZ_ASSERT(cond_ == Assembler::Zero || cond_ == Assembler::NonZero);
     return cond_;
   }
-};
-
-// Takes a value and tests whether it is null, undefined, or is an object that
-// emulates |undefined|, as determined by the JSCLASS_EMULATES_UNDEFINED class
-// flag on unwrapped objects.  See also js::EmulatesUndefined.
-class LIsNullOrLikeUndefinedV : public LInstructionHelper<1, BOX_PIECES, 2> {
- public:
-  LIR_HEADER(IsNullOrLikeUndefinedV)
-
-  LIsNullOrLikeUndefinedV(const LBoxAllocation& value, const LDefinition& temp,
-                          const LDefinition& tempToUnbox)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Value, value);
-    setTemp(0, temp);
-    setTemp(1, tempToUnbox);
-  }
-
-  static const size_t Value = 0;
-
-  MCompare* mir() { return mir_->toCompare(); }
-
-  const LDefinition* temp() { return getTemp(0); }
-
-  const LDefinition* tempToUnbox() { return getTemp(1); }
-};
-
-// Takes an object pointer and tests whether it is an object that emulates
-// |undefined|, as above.
-class LIsNullOrLikeUndefinedT : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(IsNullOrLikeUndefinedT)
-
-  explicit LIsNullOrLikeUndefinedT(const LAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  MCompare* mir() { return mir_->toCompare(); }
 };
 
 class LIsNullOrLikeUndefinedAndBranchV
@@ -1455,78 +1254,6 @@ class LIsNullOrLikeUndefinedAndBranchT
   MTest* mir() const { return mir_->toTest(); }
   MCompare* cmpMir() const { return cmpMir_; }
   const LDefinition* temp() { return getTemp(0); }
-};
-
-// Not operation on a double.
-class LNotD : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(NotD)
-
-  explicit LNotD(const LAllocation& input) : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  MNot* mir() { return mir_->toNot(); }
-};
-
-// Not operation on a float32.
-class LNotF : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(NotF)
-
-  explicit LNotF(const LAllocation& input) : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  MNot* mir() { return mir_->toNot(); }
-};
-
-// Not operation on a BigInt.
-class LNotBI : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(NotBI)
-
-  explicit LNotBI(const LAllocation& input) : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  MNot* mir() { return mir_->toNot(); }
-};
-
-// Boolean complement operation on an object.
-class LNotO : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(NotO)
-
-  explicit LNotO(const LAllocation& input) : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  MNot* mir() { return mir_->toNot(); }
-};
-
-// Boolean complement operation on a value.
-class LNotV : public LInstructionHelper<1, BOX_PIECES, 3> {
- public:
-  LIR_HEADER(NotV)
-
-  static const size_t Input = 0;
-  LNotV(const LBoxAllocation& input, const LDefinition& temp0,
-        const LDefinition& temp1, const LDefinition& temp2)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-    setTemp(0, temp0);
-    setTemp(1, temp1);
-    setTemp(2, temp2);
-  }
-
-  const LDefinition* tempFloat() { return getTemp(0); }
-
-  const LDefinition* temp1() { return getTemp(1); }
-
-  const LDefinition* temp2() { return getTemp(2); }
-
-  MNot* mir() { return mir_->toNot(); }
 };
 
 // Bitwise not operation, takes a 32-bit integer as input and returning
@@ -1780,17 +1507,6 @@ class LCopySignF : public LInstructionHelper<1, 2, 2> {
   explicit LCopySignF() : LInstructionHelper(classOpcode) {}
 };
 
-// Count leading zeroes on an int32.
-class LClzI : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(ClzI)
-  explicit LClzI(const LAllocation& num) : LInstructionHelper(classOpcode) {
-    setOperand(0, num);
-  }
-
-  MClz* mir() const { return mir_->toClz(); }
-};
-
 // Count leading zeroes on an int64.
 class LClzI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES, 0> {
  public:
@@ -1803,17 +1519,6 @@ class LClzI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES, 0> {
   MClz* mir() const { return mir_->toClz(); }
 };
 
-// Count trailing zeroes on an int32.
-class LCtzI : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(CtzI)
-  explicit LCtzI(const LAllocation& num) : LInstructionHelper(classOpcode) {
-    setOperand(0, num);
-  }
-
-  MCtz* mir() const { return mir_->toCtz(); }
-};
-
 // Count trailing zeroes on an int64.
 class LCtzI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES, 0> {
  public:
@@ -1824,21 +1529,6 @@ class LCtzI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES, 0> {
   }
 
   MCtz* mir() const { return mir_->toCtz(); }
-};
-
-// Count population on an int32.
-class LPopcntI : public LInstructionHelper<1, 1, 1> {
- public:
-  LIR_HEADER(PopcntI)
-  explicit LPopcntI(const LAllocation& num, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, num);
-    setTemp(0, temp);
-  }
-
-  MPopcnt* mir() const { return mir_->toPopcnt(); }
-
-  const LDefinition* temp() { return getTemp(0); }
 };
 
 // Count population on an int64.
@@ -1913,27 +1603,6 @@ class LHypot : public LCallInstructionHelper<1, 4, 1> {
   const LDefinition* temp() { return getTemp(0); }
 
   const LDefinition* output() { return getDef(0); }
-};
-
-// Integer raised to an integer power.
-class LPowII : public LInstructionHelper<1, 2, 2> {
- public:
-  LIR_HEADER(PowII)
-  LPowII(const LAllocation& value, const LAllocation& power,
-         const LDefinition& temp1, const LDefinition& temp2)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, value);
-    setOperand(1, power);
-    setTemp(0, temp1);
-    setTemp(1, temp2);
-  }
-
-  const LAllocation* value() { return getOperand(0); }
-  const LAllocation* power() { return getOperand(1); }
-  const LDefinition* temp1() { return getTemp(0); }
-  const LDefinition* temp2() { return getTemp(1); }
-
-  MPow* mir() const { return mir_->toPow(); }
 };
 
 // Constant of a power of two raised to an integer power.
@@ -2384,58 +2053,6 @@ class LBigIntBitNot : public LUnaryMath<2> {
   const LDefinition* temp2() { return getTemp(1); }
 };
 
-class LSubstr : public LInstructionHelper<1, 3, 3> {
- public:
-  LIR_HEADER(Substr)
-
-  LSubstr(const LAllocation& string, const LAllocation& begin,
-          const LAllocation& length, const LDefinition& temp,
-          const LDefinition& temp2, const LDefinition& temp3)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, string);
-    setOperand(1, begin);
-    setOperand(2, length);
-    setTemp(0, temp);
-    setTemp(1, temp2);
-    setTemp(2, temp3);
-  }
-  const LAllocation* string() { return getOperand(0); }
-  const LAllocation* begin() { return getOperand(1); }
-  const LAllocation* length() { return getOperand(2); }
-  const LDefinition* temp() { return getTemp(0); }
-  const LDefinition* temp2() { return getTemp(1); }
-  const LDefinition* temp3() { return getTemp(2); }
-  const MStringSplit* mir() const { return mir_->toStringSplit(); }
-};
-
-// Convert a value to a double.
-class LValueToDouble : public LInstructionHelper<1, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(ValueToDouble)
-  static const size_t Input = 0;
-
-  explicit LValueToDouble(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  MToDouble* mir() { return mir_->toToDouble(); }
-};
-
-// Convert a value to a float32.
-class LValueToFloat32 : public LInstructionHelper<1, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(ValueToFloat32)
-  static const size_t Input = 0;
-
-  explicit LValueToFloat32(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  MToFloat32* mir() { return mir_->toToFloat32(); }
-};
-
 // Convert a value to an int32.
 //   Input: components of a Value
 //   Output: 32-bit integer
@@ -2487,164 +2104,6 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2> {
   MInstruction* mir() const { return mir_->toInstruction(); }
 };
 
-// Convert a value to a BigInt.
-class LValueToBigInt : public LInstructionHelper<1, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(ValueToBigInt)
-  static const size_t Input = 0;
-
-  explicit LValueToBigInt(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  MToBigInt* mir() const { return mir_->toToBigInt(); }
-};
-
-// Convert a double to an int32.
-//   Input: floating-point register
-//   Output: 32-bit integer
-//   Bailout: if the double cannot be converted to an integer.
-class LDoubleToInt32 : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(DoubleToInt32)
-
-  explicit LDoubleToInt32(const LAllocation& in)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-  }
-
-  MToNumberInt32* mir() const { return mir_->toToNumberInt32(); }
-};
-
-// Convert a float32 to an int32.
-//   Input: floating-point register
-//   Output: 32-bit integer
-//   Bailout: if the float32 cannot be converted to an integer.
-class LFloat32ToInt32 : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(Float32ToInt32)
-
-  explicit LFloat32ToInt32(const LAllocation& in)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-  }
-
-  MToNumberInt32* mir() const { return mir_->toToNumberInt32(); }
-};
-
-// Truncates a double to an int32.
-//   Input: floating-point register
-//   Output: 32-bit integer
-//   Bailout: if the double when converted to an integer exceeds the int32
-//            bounds. No bailout for NaN or negative zero.
-class LDoubleToIntegerInt32 : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(DoubleToIntegerInt32)
-
-  explicit LDoubleToIntegerInt32(const LAllocation& in)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-  }
-
-  MToIntegerInt32* mir() const { return mir_->toToIntegerInt32(); }
-};
-
-// Truncates a float to an int32.
-//   Input: floating-point register
-//   Output: 32-bit integer
-//   Bailout: if the double when converted to an integer exceeds the int32
-//            bounds. No bailout for NaN or negative zero.
-class LFloat32ToIntegerInt32 : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(Float32ToIntegerInt32)
-
-  explicit LFloat32ToIntegerInt32(const LAllocation& in)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-  }
-
-  MToIntegerInt32* mir() const { return mir_->toToIntegerInt32(); }
-};
-
-// Convert a double to a truncated int32.
-//   Input: floating-point register
-//   Output: 32-bit integer
-class LTruncateDToInt32 : public LInstructionHelper<1, 1, 1> {
- public:
-  LIR_HEADER(TruncateDToInt32)
-
-  LTruncateDToInt32(const LAllocation& in, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* tempFloat() { return getTemp(0); }
-
-  MTruncateToInt32* mir() const { return mir_->toTruncateToInt32(); }
-};
-
-// Convert a double to a truncated int32 with tls offset because we need it for
-// the slow ool path.
-class LWasmBuiltinTruncateDToInt32 : public LInstructionHelper<1, 2, 1> {
- public:
-  LIR_HEADER(WasmBuiltinTruncateDToInt32)
-
-  LWasmBuiltinTruncateDToInt32(const LAllocation& in, const LAllocation& tls,
-                               const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setOperand(1, tls);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* tempFloat() { return getTemp(0); }
-
-  MWasmBuiltinTruncateToInt32* mir() const {
-    return mir_->toWasmBuiltinTruncateToInt32();
-  }
-};
-
-// Convert a float32 to a truncated int32.
-//   Input: floating-point register
-//   Output: 32-bit integer
-class LTruncateFToInt32 : public LInstructionHelper<1, 1, 1> {
- public:
-  LIR_HEADER(TruncateFToInt32)
-
-  LTruncateFToInt32(const LAllocation& in, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* tempFloat() { return getTemp(0); }
-
-  MTruncateToInt32* mir() const { return mir_->toTruncateToInt32(); }
-};
-
-// Convert a float32 to a truncated int32 with tls offset because we need it for
-// the slow ool path.
-class LWasmBuiltinTruncateFToInt32 : public LInstructionHelper<1, 2, 1> {
- public:
-  LIR_HEADER(WasmBuiltinTruncateFToInt32)
-
-  LWasmBuiltinTruncateFToInt32(const LAllocation& in, const LAllocation& tls,
-                               const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setOperand(1, tls);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* tempFloat() { return getTemp(0); }
-
-  MWasmBuiltinTruncateToInt32* mir() const {
-    return mir_->toWasmBuiltinTruncateToInt32();
-  }
-};
-
 class LExtendInt32ToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
  public:
   LIR_HEADER(ExtendInt32ToInt64)
@@ -2655,65 +2114,6 @@ class LExtendInt32ToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
   }
 
   const MExtendInt32ToInt64* mir() { return mir_->toExtendInt32ToInt64(); }
-};
-
-// Convert a boolean value to a string.
-class LBooleanToString : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(BooleanToString)
-
-  explicit LBooleanToString(const LAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  const MToString* mir() { return mir_->toToString(); }
-};
-
-// Convert an integer hosted on one definition to a string with a function call.
-class LIntToString : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(IntToString)
-
-  explicit LIntToString(const LAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-
-  const MToString* mir() { return mir_->toToString(); }
-};
-
-// Convert a double hosted on one definition to a string with a function call.
-class LDoubleToString : public LInstructionHelper<1, 1, 1> {
- public:
-  LIR_HEADER(DoubleToString)
-
-  LDoubleToString(const LAllocation& input, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* tempInt() { return getTemp(0); }
-  const MToString* mir() { return mir_->toToString(); }
-};
-
-// Convert a primitive to a string with a function call.
-class LValueToString : public LInstructionHelper<1, BOX_PIECES, 1> {
- public:
-  LIR_HEADER(ValueToString)
-
-  LValueToString(const LBoxAllocation& input, const LDefinition& tempToUnbox)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-    setTemp(0, tempToUnbox);
-  }
-
-  static const size_t Input = 0;
-
-  const MToString* mir() { return mir_->toToString(); }
-
-  const LDefinition* tempToUnbox() { return getTemp(0); }
 };
 
 // Double raised to a half power.
@@ -2821,28 +2221,6 @@ class LBinaryValueCache
   static const size_t RhsInput = BOX_PIECES;
 };
 
-class LBinaryBoolCache : public LInstructionHelper<1, 2 * BOX_PIECES, 2> {
- public:
-  LIR_HEADER(BinaryBoolCache)
-
-  // Takes two temps: these are intendend to be FloatReg0 and FloatReg1
-  // To allow the actual cache code to safely clobber those values without
-  // save and restore.
-  LBinaryBoolCache(const LBoxAllocation& lhs, const LBoxAllocation& rhs,
-                   const LDefinition& temp0, const LDefinition& temp1)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(LhsInput, lhs);
-    setBoxOperand(RhsInput, rhs);
-    setTemp(0, temp0);
-    setTemp(1, temp1);
-  }
-
-  const MBinaryCache* mir() const { return mir_->toBinaryCache(); }
-
-  static const size_t LhsInput = 0;
-  static const size_t RhsInput = BOX_PIECES;
-};
-
 class LUnaryCache : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
  public:
   LIR_HEADER(UnaryCache)
@@ -2857,20 +2235,6 @@ class LUnaryCache : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
   const LAllocation* input() { return getOperand(Input); }
 
   static const size_t Input = 0;
-};
-
-class LGuardHasAttachedArrayBuffer : public LInstructionHelper<0, 1, 1> {
- public:
-  LIR_HEADER(GuardHasAttachedArrayBuffer)
-
-  LGuardHasAttachedArrayBuffer(const LAllocation& obj, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setTemp(0, temp);
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
 };
 
 // Bailout if index + minimum < 0 or index + maximum >= length.
@@ -2983,55 +2347,6 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0> {
   const LAllocation* elements() { return getOperand(0); }
   const LAllocation* index() { return getOperand(1); }
   const LAllocation* value() { return getOperand(2); }
-};
-
-// Like LStoreElementV, but supports indexes >= initialized length.
-class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 1> {
- public:
-  LIR_HEADER(StoreElementHoleV)
-
-  LStoreElementHoleV(const LAllocation& object, const LAllocation& elements,
-                     const LAllocation& index, const LBoxAllocation& value,
-                     const LDefinition& spectreTemp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-    setOperand(1, elements);
-    setOperand(2, index);
-    setBoxOperand(Value, value);
-    setTemp(0, spectreTemp);
-  }
-
-  static const size_t Value = 3;
-
-  const MStoreElementHole* mir() const { return mir_->toStoreElementHole(); }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* elements() { return getOperand(1); }
-  const LAllocation* index() { return getOperand(2); }
-  const LDefinition* spectreTemp() { return getTemp(0); }
-};
-
-// Like LStoreElementT, but supports indexes >= initialized length.
-class LStoreElementHoleT : public LInstructionHelper<0, 4, 1> {
- public:
-  LIR_HEADER(StoreElementHoleT)
-
-  LStoreElementHoleT(const LAllocation& object, const LAllocation& elements,
-                     const LAllocation& index, const LAllocation& value,
-                     const LDefinition& spectreTemp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-    setOperand(1, elements);
-    setOperand(2, index);
-    setOperand(3, value);
-    setTemp(0, spectreTemp);
-  }
-
-  const MStoreElementHole* mir() const { return mir_->toStoreElementHole(); }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* elements() { return getOperand(1); }
-  const LAllocation* index() { return getOperand(2); }
-  const LAllocation* value() { return getOperand(3); }
-  const LDefinition* spectreTemp() { return getTemp(0); }
 };
 
 class LArrayPopShift : public LInstructionHelper<BOX_PIECES, 1, 2> {
@@ -3737,22 +3052,6 @@ class LAtomicTypedArrayElementBinopForEffect64
   }
 };
 
-class LClampVToUint8 : public LInstructionHelper<1, BOX_PIECES, 1> {
- public:
-  LIR_HEADER(ClampVToUint8)
-
-  LClampVToUint8(const LBoxAllocation& input, const LDefinition& tempFloat)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-    setTemp(0, tempFloat);
-  }
-
-  static const size_t Input = 0;
-
-  const LDefinition* tempFloat() { return getTemp(0); }
-  const MClampToUint8* mir() const { return mir_->toClampToUint8(); }
-};
-
 // Load a boxed value from an object's fixed slot.
 class LLoadFixedSlotV : public LInstructionHelper<BOX_PIECES, 1, 0> {
  public:
@@ -3763,50 +3062,6 @@ class LLoadFixedSlotV : public LInstructionHelper<BOX_PIECES, 1, 0> {
     setOperand(0, object);
   }
   const MLoadFixedSlot* mir() const { return mir_->toLoadFixedSlot(); }
-};
-
-// Load a typed value from an object's fixed slot.
-class LLoadFixedSlotT : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(LoadFixedSlotT)
-
-  explicit LLoadFixedSlotT(const LAllocation& object)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-  }
-  const MLoadFixedSlot* mir() const { return mir_->toLoadFixedSlot(); }
-};
-
-// Store a boxed value to an object's fixed slot.
-class LStoreFixedSlotV : public LInstructionHelper<0, 1 + BOX_PIECES, 0> {
- public:
-  LIR_HEADER(StoreFixedSlotV)
-
-  LStoreFixedSlotV(const LAllocation& obj, const LBoxAllocation& value)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setBoxOperand(Value, value);
-  }
-
-  static const size_t Value = 1;
-
-  const MStoreFixedSlot* mir() const { return mir_->toStoreFixedSlot(); }
-  const LAllocation* obj() { return getOperand(0); }
-};
-
-// Store a typed value to an object's fixed slot.
-class LStoreFixedSlotT : public LInstructionHelper<0, 2, 0> {
- public:
-  LIR_HEADER(StoreFixedSlotT)
-
-  LStoreFixedSlotT(const LAllocation& obj, const LAllocation& value)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, value);
-  }
-  const MStoreFixedSlot* mir() const { return mir_->toStoreFixedSlot(); }
-  const LAllocation* obj() { return getOperand(0); }
-  const LAllocation* value() { return getOperand(1); }
 };
 
 // Note, Name ICs always return a Value. There are no V/T variants.
@@ -3882,138 +3137,6 @@ class LLoadDynamicSlotV : public LInstructionHelper<BOX_PIECES, 1, 0> {
     setOperand(0, in);
   }
   const MLoadDynamicSlot* mir() const { return mir_->toLoadDynamicSlot(); }
-};
-
-// Store a value to an object's dslots or a slots vector.
-class LStoreDynamicSlotV : public LInstructionHelper<0, 1 + BOX_PIECES, 0> {
- public:
-  LIR_HEADER(StoreDynamicSlotV)
-
-  LStoreDynamicSlotV(const LAllocation& slots, const LBoxAllocation& value)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, slots);
-    setBoxOperand(Value, value);
-  }
-
-  static const size_t Value = 1;
-
-  const MStoreDynamicSlot* mir() const { return mir_->toStoreDynamicSlot(); }
-  const LAllocation* slots() { return getOperand(0); }
-};
-
-// Store a typed value to an object's dslots or a slots vector. This has a
-// few advantages over LStoreDynamicSlotV:
-// 1) We can bypass storing the type tag if the slot has the same type as
-//    the value.
-// 2) Better register allocation: we can store constants and FP regs directly
-//    without requiring a second register for the value.
-class LStoreDynamicSlotT : public LInstructionHelper<0, 2, 0> {
- public:
-  LIR_HEADER(StoreDynamicSlotT)
-
-  LStoreDynamicSlotT(const LAllocation& slots, const LAllocation& value)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, slots);
-    setOperand(1, value);
-  }
-  const MStoreDynamicSlot* mir() const { return mir_->toStoreDynamicSlot(); }
-  const LAllocation* slots() { return getOperand(0); }
-  const LAllocation* value() { return getOperand(1); }
-};
-
-// Round a single precision number and converts it to an int32.
-// Implements Math.round().
-class LRoundF : public LInstructionHelper<1, 1, 1> {
- public:
-  LIR_HEADER(RoundF)
-
-  LRoundF(const LAllocation& num, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, num);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* temp() { return getTemp(0); }
-  MRound* mir() const { return mir_->toRound(); }
-};
-
-// Rounds a single precision number accordingly to mir()->roundingMode(),
-// and keeps a single output.
-class LNearbyIntF : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(NearbyIntF)
-
-  explicit LNearbyIntF(const LAllocation& num)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, num);
-  }
-  MNearbyInt* mir() const { return mir_->toNearbyInt(); }
-};
-
-class LCallSetElement
-    : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CallSetElement)
-
-  static const size_t Index = 1;
-  static const size_t Value = 1 + BOX_PIECES;
-
-  LCallSetElement(const LAllocation& obj, const LBoxAllocation& index,
-                  const LBoxAllocation& value)
-      : LCallInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setBoxOperand(Index, index);
-    setBoxOperand(Value, value);
-  }
-
-  const MCallSetElement* mir() const { return mir_->toCallSetElement(); }
-};
-
-class LCallDeleteProperty : public LCallInstructionHelper<1, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CallDeleteProperty)
-
-  static const size_t Value = 0;
-
-  explicit LCallDeleteProperty(const LBoxAllocation& value)
-      : LCallInstructionHelper(classOpcode) {
-    setBoxOperand(Value, value);
-  }
-
-  MDeleteProperty* mir() const { return mir_->toDeleteProperty(); }
-};
-
-class LCallDeleteElement : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0> {
- public:
-  LIR_HEADER(CallDeleteElement)
-
-  static const size_t Value = 0;
-  static const size_t Index = BOX_PIECES;
-
-  LCallDeleteElement(const LBoxAllocation& value, const LBoxAllocation& index)
-      : LCallInstructionHelper(classOpcode) {
-    setBoxOperand(Value, value);
-    setBoxOperand(Index, index);
-  }
-
-  MDeleteElement* mir() const { return mir_->toDeleteElement(); }
-};
-
-class LOptimizeSpreadCallCache : public LInstructionHelper<1, BOX_PIECES, 1> {
- public:
-  LIR_HEADER(OptimizeSpreadCallCache)
-
-  static const size_t Value = 0;
-
-  LOptimizeSpreadCallCache(const LBoxAllocation& value, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Value, value);
-    setTemp(0, temp);
-  }
-  const MOptimizeSpreadCallCache* mir() const {
-    return mir_->toOptimizeSpreadCallCache();
-  }
-  const LDefinition* temp() { return getTemp(0); }
 };
 
 class LIteratorMore : public LInstructionHelper<BOX_PIECES, 1, 1> {
@@ -4122,197 +3245,6 @@ class LTruncateBigIntToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
   const MTruncateBigIntToInt64* mir() const {
     return mir_->toTruncateBigIntToInt64();
   }
-};
-
-// Generational write barrier used when writing an object to another object.
-class LPostWriteBarrierO : public LInstructionHelper<0, 2, 1> {
- public:
-  LIR_HEADER(PostWriteBarrierO)
-
-  LPostWriteBarrierO(const LAllocation& obj, const LAllocation& value,
-                     const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, value);
-    setTemp(0, temp);
-  }
-
-  const MPostWriteBarrier* mir() const { return mir_->toPostWriteBarrier(); }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* value() { return getOperand(1); }
-  const LDefinition* temp() { return getTemp(0); }
-};
-
-// Generational write barrier used when writing a string to an object.
-class LPostWriteBarrierS : public LInstructionHelper<0, 2, 1> {
- public:
-  LIR_HEADER(PostWriteBarrierS)
-
-  LPostWriteBarrierS(const LAllocation& obj, const LAllocation& value,
-                     const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, value);
-    setTemp(0, temp);
-  }
-
-  const MPostWriteBarrier* mir() const { return mir_->toPostWriteBarrier(); }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* value() { return getOperand(1); }
-  const LDefinition* temp() { return getTemp(0); }
-};
-
-// Generational write barrier used when writing a BigInt to an object.
-class LPostWriteBarrierBI : public LInstructionHelper<0, 2, 1> {
- public:
-  LIR_HEADER(PostWriteBarrierBI)
-
-  LPostWriteBarrierBI(const LAllocation& obj, const LAllocation& value,
-                      const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, value);
-    setTemp(0, temp);
-  }
-
-  const MPostWriteBarrier* mir() const { return mir_->toPostWriteBarrier(); }
-  const LAllocation* object() { return getOperand(0); }
-  const LAllocation* value() { return getOperand(1); }
-  const LDefinition* temp() { return getTemp(0); }
-};
-
-// Generational write barrier used when writing a value to another object.
-class LPostWriteBarrierV : public LInstructionHelper<0, 1 + BOX_PIECES, 1> {
- public:
-  LIR_HEADER(PostWriteBarrierV)
-
-  LPostWriteBarrierV(const LAllocation& obj, const LBoxAllocation& value,
-                     const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setBoxOperand(Input, value);
-    setTemp(0, temp);
-  }
-
-  static const size_t Input = 1;
-
-  const MPostWriteBarrier* mir() const { return mir_->toPostWriteBarrier(); }
-  const LAllocation* object() { return getOperand(0); }
-  const LDefinition* temp() { return getTemp(0); }
-};
-
-// Generational write barrier used when writing an object to another object's
-// elements.
-class LPostWriteElementBarrierO : public LInstructionHelper<0, 3, 1> {
- public:
-  LIR_HEADER(PostWriteElementBarrierO)
-
-  LPostWriteElementBarrierO(const LAllocation& obj, const LAllocation& value,
-                            const LAllocation& index, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, value);
-    setOperand(2, index);
-    setTemp(0, temp);
-  }
-
-  const MPostWriteElementBarrier* mir() const {
-    return mir_->toPostWriteElementBarrier();
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-
-  const LAllocation* value() { return getOperand(1); }
-
-  const LAllocation* index() { return getOperand(2); }
-
-  const LDefinition* temp() { return getTemp(0); }
-};
-
-// Generational write barrier used when writing a string to an object's
-// elements.
-class LPostWriteElementBarrierS : public LInstructionHelper<0, 3, 1> {
- public:
-  LIR_HEADER(PostWriteElementBarrierS)
-
-  LPostWriteElementBarrierS(const LAllocation& obj, const LAllocation& value,
-                            const LAllocation& index, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, value);
-    setOperand(2, index);
-    setTemp(0, temp);
-  }
-
-  const MPostWriteElementBarrier* mir() const {
-    return mir_->toPostWriteElementBarrier();
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-
-  const LAllocation* value() { return getOperand(1); }
-
-  const LAllocation* index() { return getOperand(2); }
-
-  const LDefinition* temp() { return getTemp(0); }
-};
-
-// Generational write barrier used when writing a BigInt to an object's
-// elements.
-class LPostWriteElementBarrierBI : public LInstructionHelper<0, 3, 1> {
- public:
-  LIR_HEADER(PostWriteElementBarrierBI)
-
-  LPostWriteElementBarrierBI(const LAllocation& obj, const LAllocation& value,
-                             const LAllocation& index, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, value);
-    setOperand(2, index);
-    setTemp(0, temp);
-  }
-
-  const MPostWriteElementBarrier* mir() const {
-    return mir_->toPostWriteElementBarrier();
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-
-  const LAllocation* value() { return getOperand(1); }
-
-  const LAllocation* index() { return getOperand(2); }
-
-  const LDefinition* temp() { return getTemp(0); }
-};
-
-// Generational write barrier used when writing a value to another object's
-// elements.
-class LPostWriteElementBarrierV
-    : public LInstructionHelper<0, 2 + BOX_PIECES, 1> {
- public:
-  LIR_HEADER(PostWriteElementBarrierV)
-
-  LPostWriteElementBarrierV(const LAllocation& obj, const LAllocation& index,
-                            const LBoxAllocation& value,
-                            const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, obj);
-    setOperand(1, index);
-    setBoxOperand(Input, value);
-    setTemp(0, temp);
-  }
-
-  static const size_t Input = 2;
-
-  const MPostWriteElementBarrier* mir() const {
-    return mir_->toPostWriteElementBarrier();
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-
-  const LAllocation* index() { return getOperand(1); }
-
-  const LDefinition* temp() { return getTemp(0); }
 };
 
 class LProxyGet : public LCallInstructionHelper<BOX_PIECES, 1, 1> {
@@ -4448,38 +3380,6 @@ class LNewPrivateName : public LCallInstructionHelper<1, 0, 0> {
   const MNewPrivateName* mir() const { return mir_->toNewPrivateName(); }
 };
 
-class LInstanceOfO : public LInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(InstanceOfO)
-  explicit LInstanceOfO(const LAllocation& lhs, const LAllocation& rhs)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, lhs);
-    setOperand(1, rhs);
-  }
-
-  MInstanceOf* mir() const { return mir_->toInstanceOf(); }
-
-  const LAllocation* lhs() { return getOperand(0); }
-  const LAllocation* rhs() { return getOperand(1); }
-};
-
-class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
- public:
-  LIR_HEADER(InstanceOfV)
-  explicit LInstanceOfV(const LBoxAllocation& lhs, const LAllocation& rhs)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(LHS, lhs);
-    setOperand(RHS, rhs);
-  }
-
-  MInstanceOf* mir() const { return mir_->toInstanceOf(); }
-
-  const LAllocation* rhs() { return getOperand(RHS); }
-
-  static const size_t LHS = 0;
-  static const size_t RHS = BOX_PIECES;
-};
-
 class LInstanceOfCache : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
  public:
   LIR_HEADER(InstanceOfCache)
@@ -4494,58 +3394,6 @@ class LInstanceOfCache : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
 
   static const size_t LHS = 0;
   static const size_t RHS = BOX_PIECES;
-};
-
-class LIsCallableO : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(IsCallableO);
-  explicit LIsCallableO(const LAllocation& object)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-  }
-
-  const LAllocation* object() { return getOperand(0); }
-  MIsCallable* mir() const { return mir_->toIsCallable(); }
-};
-
-class LIsCallableV : public LInstructionHelper<1, BOX_PIECES, 1> {
- public:
-  LIR_HEADER(IsCallableV);
-  static const size_t Value = 0;
-
-  LIsCallableV(const LBoxAllocation& value, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(0, value);
-    setTemp(0, temp);
-  }
-  const LDefinition* temp() { return getTemp(0); }
-  MIsCallable* mir() const { return mir_->toIsCallable(); }
-};
-
-class LIsArrayO : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(IsArrayO);
-
-  explicit LIsArrayO(const LAllocation& object)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, object);
-  }
-  const LAllocation* object() { return getOperand(0); }
-  MIsArray* mir() const { return mir_->toIsArray(); }
-};
-
-class LIsArrayV : public LInstructionHelper<1, BOX_PIECES, 1> {
- public:
-  LIR_HEADER(IsArrayV);
-  static const size_t Value = 0;
-
-  LIsArrayV(const LBoxAllocation& value, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(0, value);
-    setTemp(0, temp);
-  }
-  const LDefinition* temp() { return getTemp(0); }
-  MIsArray* mir() const { return mir_->toIsArray(); }
 };
 
 class LIsObjectAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 0> {
@@ -5067,17 +3915,6 @@ class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0> {
   LIR_HEADER(WasmParameterI64);
 
   LWasmParameterI64() : LInstructionHelper(classOpcode) {}
-};
-
-class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0> {
- public:
-  LIR_HEADER(WasmStackArgI64);
-  explicit LWasmStackArgI64(const LInt64Allocation& arg)
-      : LInstructionHelper(classOpcode) {
-    setInt64Operand(0, arg);
-  }
-  MWasmStackArg* mir() const { return mirRaw()->toWasmStackArg(); }
-  const LInt64Allocation arg() { return getInt64Operand(0); }
 };
 
 class LWasmCall : public LVariadicInstruction<0, 0> {
@@ -5988,18 +4825,6 @@ class LIonToWasmCallI64 : public LIonToWasmCallBase<INT64_PIECES> {
   LIonToWasmCallI64(uint32_t numOperands, const LDefinition& temp,
                     const LDefinition& fp)
       : LIonToWasmCallBase<INT64_PIECES>(classOpcode, numOperands, temp, fp) {}
-};
-
-class LWasmBoxValue : public LInstructionHelper<1, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(WasmBoxValue)
-
-  explicit LWasmBoxValue(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  static const size_t Input = 0;
 };
 // Wasm SIMD.
 
