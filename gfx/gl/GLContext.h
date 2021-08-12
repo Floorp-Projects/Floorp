@@ -280,8 +280,8 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   }
 
   GLVendor Vendor() const { return mVendor; }
-
   GLRenderer Renderer() const { return mRenderer; }
+  bool IsMesa() const { return mIsMesa; }
 
   bool IsContextLost() const { return mContextLost; }
 
@@ -335,6 +335,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
 
   GLVendor mVendor = GLVendor::Other;
   GLRenderer mRenderer = GLRenderer::Other;
+  bool mIsMesa = false;
 
   // -----------------------------------------------------------------------------
   // Extensions management

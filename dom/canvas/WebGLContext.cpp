@@ -2012,6 +2012,13 @@ GLint WebGLContext::GetFragDataLocation(const WebGLProgram& prog,
   }
   const auto mappedName = ret.str();
 
+  if (gl->WorkAroundDriverBugs() && gl->IsMesa()) {
+    // Mesa incorrectly generates INVALID_OPERATION for gl_ prefixes here.
+    if (mappedName.find("gl_") == 0) {
+      return -1;
+    }
+  }
+
   return gl->fGetFragDataLocation(prog.mGLName, mappedName.c_str());
 }
 
