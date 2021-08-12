@@ -541,17 +541,6 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
     }
   } else if (!strcmp(aTopic, "quit-application")) {
     if (jni::IsAvailable()) {
-#if defined(EARLY_BETA_OR_EARLIER)
-      const int curGeckoThreadState = java::GeckoThread::GetStateOrdinal();
-      CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::GeckoViewThreadState, curGeckoThreadState);
-
-      const char* isInAutomation = PR_GetEnv("MOZ_IN_AUTOMATION");
-      if (!isInAutomation || !(*isInAutomation)) {
-        MOZ_CRASH("Something triggered the \"quit-application\" notification!");
-      }
-#endif  // defined(EARLY_BETA_OR_EARLIER)
-
       const bool restarting = aData && u"restart"_ns.Equals(aData);
       java::GeckoThread::SetState(restarting
                                       ? java::GeckoThread::State::RESTARTING()
