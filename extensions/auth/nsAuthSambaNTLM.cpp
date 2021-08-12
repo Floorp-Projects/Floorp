@@ -188,10 +188,11 @@ nsresult nsAuthSambaNTLM::SpawnNTLMAuthHelper() {
 }
 
 NS_IMETHODIMP
-nsAuthSambaNTLM::Init(const char* serviceName, uint32_t serviceFlags,
-                      const char16_t* domain, const char16_t* username,
-                      const char16_t* password) {
-  NS_ASSERTION(!username && !domain && !password, "unexpected credentials");
+nsAuthSambaNTLM::Init(const nsACString& serviceName, uint32_t serviceFlags,
+                      const nsAString& domain, const nsAString& username,
+                      const nsAString& password) {
+  NS_ASSERTION(username.IsEmpty() && domain.IsEmpty() && password.IsEmpty(),
+               "unexpected credentials");
 
   static bool sTelemetrySent = false;
   if (!sTelemetrySent) {
