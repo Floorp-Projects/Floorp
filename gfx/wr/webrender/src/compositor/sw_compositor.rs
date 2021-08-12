@@ -687,12 +687,6 @@ impl SwCompositeThread {
         // Done waiting for job completion.
         self.waiting_for_jobs.store(false, Ordering::SeqCst);
     }
-
-    /// Check if all in-flight jobs have not been completed yet. If they have
-    /// not, then we assume the SwComposite thread is currently busy compositing.
-    fn is_busy_compositing(&self) -> bool {
-        !self.jobs_completed.load(Ordering::SeqCst)
-    }
 }
 
 /// Parameters describing how to composite a surface within a frame
@@ -728,6 +722,8 @@ pub struct SwCompositor {
     composite_thread: Option<Arc<SwCompositeThread>>,
     /// SWGL locked resource for sharing framebuffer with SwComposite thread
     locked_framebuffer: Option<swgl::LockedResource>,
+    /// Whether we are currently in the middle of compositing
+    is_compositing: bool,
 }
 
 impl SwCompositor {
@@ -761,6 +757,7 @@ impl SwCompositor {
             depth_id,
             composite_thread,
             locked_framebuffer: None,
+            is_compositing: false,
         }
     }
 
@@ -1362,7 +1359,7 @@ impl Compositor for SwCompositor {
             // surfaces instead of trying to sort into the main frame queue.
             // These late surfaces will not have any overlap tracking done for
             // them and must be processed synchronously at the end of the frame.
-            if self.composite_thread.as_ref().unwrap().is_busy_compositing() {
+            if self.is_compositing {
                 self.late_surfaces.push((id, transform, clip_rect, filter));
                 return;
             }
@@ -1377,6 +1374,8 @@ impl Compositor for SwCompositor {
     /// be added to the late_surfaces queue to be processed at the end of the
     /// frame.
     fn start_compositing(&mut self, clear_color: ColorF, dirty_rects: &[DeviceIntRect], _opaque_rects: &[DeviceIntRect]) {
+        self.is_compositing = true;
+
         // Opaque rects are currently only computed here, not by WR itself, so we
         // ignore the passed parameter and forward our own version onto the native
         // compositor.
@@ -1444,6 +1443,8 @@ impl Compositor for SwCompositor {
     }
 
     fn end_frame(&mut self) {
+        self.is_compositing = false;
+
         if self.use_native_compositor {
             self.compositor.end_frame();
         } else if let Some(ref composite_thread) = self.composite_thread {
