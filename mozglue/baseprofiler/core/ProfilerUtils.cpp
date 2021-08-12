@@ -11,8 +11,25 @@
 
 #include "mozilla/BaseProfilerUtils.h"
 
+// --------------------------------------------- WASI process & thread ids
+#if defined(__wasi__)
+
+namespace mozilla::baseprofiler {
+
+// WASI is single-process and single-thread for now.
+
+BaseProfilerProcessId profiler_current_process_id() {
+  return BaseProfilerProcessId::FromNativeId(1u);
+}
+
+BaseProfilerThreadId profiler_current_thread_id() {
+  return BaseProfilerThreadId::FromNativeId(1u);
+}
+
+}  // namespace mozilla::baseprofiler
+
 // --------------------------------------------- Windows process & thread ids
-#if defined(XP_WIN)
+#elif defined(XP_WIN)
 
 #  include <process.h>
 #  include <processthreadsapi.h>

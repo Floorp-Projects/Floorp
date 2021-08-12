@@ -10,8 +10,16 @@
 // This header contains most process- and thread-related functions.
 // It is safe to include unconditionally.
 
+// --------------------------------------------- WASI process & thread ids
+#if defined(__wasi__)
+
+namespace mozilla::baseprofiler::detail {
+using ProcessIdType = unsigned;
+using ThreadIdType = unsigned;
+}  // namespace mozilla::baseprofiler::detail
+
 // --------------------------------------------- Windows process & thread ids
-#if defined(XP_WIN)
+#elif defined(XP_WIN)
 
 namespace mozilla::baseprofiler::detail {
 using ProcessIdType = int;
