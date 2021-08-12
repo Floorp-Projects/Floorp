@@ -362,7 +362,7 @@ nsresult Http2Stream::MakeOriginURL(const nsACString& scheme,
       .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_AUTHORITY,
              scheme.EqualsLiteral("http") ? NS_HTTP_DEFAULT_PORT
                                           : NS_HTTPS_DEFAULT_PORT,
-             nsCString(origin), nullptr, nullptr, nullptr)
+             origin, nullptr, nullptr, nullptr)
       .Finalize(url);
 }
 
