@@ -1730,10 +1730,9 @@ nsresult NS_NewURI(nsIURI** result, const char* spec,
 static nsresult NewStandardURI(const nsACString& aSpec, const char* aCharset,
                                nsIURI* aBaseURI, int32_t aDefaultPort,
                                nsIURI** aURI) {
-  nsCOMPtr<nsIURI> base(aBaseURI);
   return NS_MutateURI(new nsStandardURL::Mutator())
       .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_AUTHORITY,
-             aDefaultPort, nsCString(aSpec), aCharset, base, nullptr)
+             aDefaultPort, aSpec, aCharset, aBaseURI, nullptr)
       .Finalize(aURI);
 }
 
@@ -1816,12 +1815,11 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
     }
 #endif
 
-    nsCOMPtr<nsIURI> base(aBaseURI);
     return NS_MutateURI(new nsStandardURL::Mutator())
         .Apply(&nsIFileURLMutator::MarkFileURL)
         .Apply(&nsIStandardURLMutator::Init,
-               nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, buf, aCharset, base,
-               nullptr)
+               nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, buf, aCharset,
+               aBaseURI, nullptr)
         .Finalize(aURI);
   }
 
@@ -1865,10 +1863,9 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   }
 
   if (scheme.EqualsLiteral("indexeddb")) {
-    nsCOMPtr<nsIURI> base(aBaseURI);
     return NS_MutateURI(new nsStandardURL::Mutator())
         .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_AUTHORITY,
-               0, nsCString(aSpec), aCharset, base, nullptr)
+               0, aSpec, aCharset, aBaseURI, nullptr)
         .Finalize(aURI);
   }
 
@@ -1903,10 +1900,8 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   }
 
   if (scheme.EqualsLiteral("jar")) {
-    nsCOMPtr<nsIURI> base(aBaseURI);
     return NS_MutateURI(new nsJARURI::Mutator())
-        .Apply(&nsIJARURIMutator::SetSpecBaseCharset, nsCString(aSpec), base,
-               aCharset)
+        .Apply(&nsIJARURIMutator::SetSpecBaseCharset, aSpec, aBaseURI, aCharset)
         .Finalize(aURI);
   }
 
@@ -1918,19 +1913,17 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
 
 #ifdef MOZ_WIDGET_GTK
   if (scheme.EqualsLiteral("smb") || scheme.EqualsLiteral("sftp")) {
-    nsCOMPtr<nsIURI> base(aBaseURI);
     return NS_MutateURI(new nsStandardURL::Mutator())
         .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_STANDARD,
-               -1, nsCString(aSpec), aCharset, base, nullptr)
+               -1, aSpec, aCharset, aBaseURI, nullptr)
         .Finalize(aURI);
   }
 #endif
 
   if (scheme.EqualsLiteral("android")) {
-    nsCOMPtr<nsIURI> base(aBaseURI);
     return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
         .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_STANDARD,
-               -1, nsCString(aSpec), aCharset, base, nullptr)
+               -1, aSpec, aCharset, aBaseURI, nullptr)
         .Finalize(aURI);
   }
 

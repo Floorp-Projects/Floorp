@@ -252,7 +252,7 @@ nsresult nsJARURI::SetSpecWithBase(const nsACString& aSpec, nsIURI* aBaseURL) {
 
     rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
              .Apply(&nsIStandardURLMutator::Init,
-                    nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, nsCString(aSpec),
+                    nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, aSpec,
                     mCharsetHint.get(), otherJAR->mJAREntry, nullptr)
              .Finalize(entry);
     if (NS_FAILED(rv)) {
@@ -513,7 +513,7 @@ nsJARURI::GetFileName(nsACString& fileName) {
 
 nsresult nsJARURI::SetFileNameInternal(const nsACString& fileName) {
   return NS_MutateURI(mJAREntry)
-      .Apply(&nsIURLMutator::SetFileName, nsCString(fileName), nullptr)
+      .Apply(&nsIURLMutator::SetFileName, fileName, nullptr)
       .Finalize(mJAREntry);
 }
 
@@ -524,7 +524,7 @@ nsJARURI::GetFileBaseName(nsACString& fileBaseName) {
 
 nsresult nsJARURI::SetFileBaseNameInternal(const nsACString& fileBaseName) {
   return NS_MutateURI(mJAREntry)
-      .Apply(&nsIURLMutator::SetFileBaseName, nsCString(fileBaseName), nullptr)
+      .Apply(&nsIURLMutator::SetFileBaseName, fileBaseName, nullptr)
       .Finalize(mJAREntry);
 }
 
@@ -535,8 +535,7 @@ nsJARURI::GetFileExtension(nsACString& fileExtension) {
 
 nsresult nsJARURI::SetFileExtensionInternal(const nsACString& fileExtension) {
   return NS_MutateURI(mJAREntry)
-      .Apply(&nsIURLMutator::SetFileExtension, nsCString(fileExtension),
-             nullptr)
+      .Apply(&nsIURLMutator::SetFileExtension, fileExtension, nullptr)
       .Finalize(mJAREntry);
 }
 
