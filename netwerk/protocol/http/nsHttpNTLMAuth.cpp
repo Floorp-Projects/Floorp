@@ -283,11 +283,9 @@ nsHttpNTLMAuth::GenerateCredentials(
   uint32_t inBufLen, outBufLen;
   Maybe<nsTArray<uint8_t>> certArray;
 
-  const nsCString& flatChallenge = PromiseFlatCString(aChallenge);
-  const char* challenge = flatChallenge.get();
-
   // initial challenge
-  if (nsCRT::strcasecmp(challenge, "NTLM") == 0) {
+  if (aChallenge.Equals("NTLM"_ns,
+                       nsCaseInsensitiveCStringComparator)) {
     // NTLM service name format is 'HTTP@host' for both http and https
     nsCOMPtr<nsIURI> uri;
     rv = authChannel->GetURI(getter_AddRefs(uri));
@@ -353,16 +351,19 @@ nsHttpNTLMAuth::GenerateCredentials(
   } else {
     // decode challenge; skip past "NTLM " to the start of the base64
     // encoded data.
-    int len = strlen(challenge);
-    if (len < 6) return NS_ERROR_UNEXPECTED;  // bogus challenge
-    challenge += 5;
-    len -= 5;
+    if (aChallenge.Length() < 6) {
+      return NS_ERROR_UNEXPECTED;  // bogus challenge
+    }
 
     // strip off any padding (see bug 230351)
-    while (len && challenge[len - 1] == '=') len--;
+    nsDependentCSubstring challenge(aChallenge, 5);
+    uint32_t len = challenge.Length();
+    while (len > 0 && challenge[len - 1] == '=') {
+      len--;
+    }
 
     // decode into the input secbuffer
-    rv = Base64Decode(challenge, len, (char**)&inBuf, &inBufLen);
+    rv = Base64Decode(challenge.BeginReading(), len, (char**)&inBuf, &inBufLen);
     if (NS_FAILED(rv)) {
       return rv;
     }
