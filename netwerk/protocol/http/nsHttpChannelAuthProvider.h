@@ -65,7 +65,7 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
   [[nodiscard]] nsresult GetAuthenticator(const char* challenge,
                                           nsCString& authType,
                                           nsIHttpAuthenticator** auth);
-  void ParseRealm(const char* challenge, nsACString& realm);
+  void ParseRealm(const nsACString&, nsACString& realm);
   void GetIdentityFromURI(uint32_t authFlags, nsHttpAuthIdentity&);
 
   /**
@@ -76,11 +76,9 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
    */
   [[nodiscard]] nsresult GetCredentials(const char* challenges, bool proxyAuth,
                                         nsCString& creds);
-  [[nodiscard]] nsresult GetCredentialsForChallenge(const char* challenge,
-                                                    const char* authType,
-                                                    bool proxyAuth,
-                                                    nsIHttpAuthenticator* auth,
-                                                    nsCString& creds);
+  [[nodiscard]] nsresult GetCredentialsForChallenge(
+      const nsACString& aChallenge, const nsACString& aAuthType, bool proxyAuth,
+      nsIHttpAuthenticator* auth, nsCString& creds);
   [[nodiscard]] nsresult PromptForIdentity(uint32_t level, bool proxyAuth,
                                            const char* realm,
                                            const char* authType,
