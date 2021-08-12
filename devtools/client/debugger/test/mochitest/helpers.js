@@ -267,10 +267,6 @@ function getVisibleSelectedFrameLine(dbg) {
   return frame && frame.location.line;
 }
 
-function waitForPausedLine(dbg, line) {
-  return waitForState(dbg, () => getVisibleSelectedFrameLine(dbg) == line);
-}
-
 /**
  * Assert that the debugger pause location is correctly rendered.
  *
