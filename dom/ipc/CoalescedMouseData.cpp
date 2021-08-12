@@ -49,6 +49,7 @@ void CoalescedMouseData::Coalesce(const WidgetMouseEvent& aEvent,
         mCoalescedInputEvent->mCoalescedWidgetEvents->mEvents.AppendElement(
             aEvent);
 
+    event->mMessage = ePointerMove;
     event->mFlags.mBubbles = false;
     event->mFlags.mCancelable = false;
   }
