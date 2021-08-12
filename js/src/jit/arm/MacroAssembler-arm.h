@@ -11,7 +11,6 @@
 
 #include "jit/arm/Assembler-arm.h"
 #include "jit/MoveResolver.h"
-#include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenTypes.h"
