@@ -380,7 +380,7 @@ SanityTest.prototype = {
         REASON_DRIVER_CHANGED
       ) &&
       checkPref(DEVICE_PREF, gfxinfo.adapterDeviceID, REASON_DEVICE_CHANGED) &&
-      checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED) &&
+      checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED)
     ) {
       return false;
     }
