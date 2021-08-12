@@ -37,6 +37,7 @@ function runTests() {
       for (let i = 0; i < length; ++i) {
         let coalescedEvent = ev.getCoalescedEvents()[i];
         isnot(coalescedEvent.timeStamp, 0, "getCoalescedEvents()[" + i + "].timeStamp");
+        is(coalescedEvent.type, "pointermove", "getCoalescedEvents()[" + i + "].type");
         is(coalescedEvent.pointerId, ev.pointerId, "getCoalescedEvents()[" + i + "].pointerId");
         is(coalescedEvent.pointerType, ev.pointerType, "getCoalescedEvents()[" + i + "].pointerType");
         is(coalescedEvent.isPrimary, ev.isPrimary, "getCoalescedEvents()[" + i + "].isPrimary");
