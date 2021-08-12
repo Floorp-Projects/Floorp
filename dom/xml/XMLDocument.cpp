@@ -292,7 +292,7 @@ nsresult XMLDocument::StartDocumentLoad(const char* aCommand,
   mParser->SetDocumentCharset(encoding, charsetSource);
   mParser->SetCommand(aCommand);
   mParser->SetContentSink(sink);
-  mParser->Parse(aUrl, nullptr, (void*)this);
+  mParser->Parse(aUrl, this);
 
   return NS_OK;
 }

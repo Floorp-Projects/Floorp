@@ -138,14 +138,8 @@ class nsParser final : public nsIParser,
 
   /**
    * Cause parser to parse input from given URL
-   * @update	gess5/11/98
-   * @param   aURL is a descriptor for source document
-   * @param   aListener is a listener to forward notifications to
-   * @return  TRUE if all went well -- FALSE otherwise
    */
-  NS_IMETHOD Parse(nsIURI* aURL, nsIRequestObserver* aListener = nullptr,
-                   void* aKey = 0,
-                   nsDTDMode aMode = eDTDMode_autodetect) override;
+  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) override;
 
   /**
    * This method needs documentation
@@ -368,7 +362,6 @@ class nsParser final : public nsIParser,
 
   CParserContext* mParserContext;
   nsCOMPtr<nsIDTD> mDTD;
-  nsCOMPtr<nsIRequestObserver> mObserver;
   nsCOMPtr<nsIContentSink> mSink;
   nsIRunnable* mContinueEvent;  // weak ref
 

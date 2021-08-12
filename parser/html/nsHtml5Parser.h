@@ -120,13 +120,9 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * Set up request observer.
    *
    * @param   aURL used for View Source title
-   * @param   aListener a listener to forward notifications to
    * @param   aKey the root context key (used for document.write)
-   * @param   aMode ignored (for interface compat only)
    */
-  NS_IMETHOD Parse(nsIURI* aURL, nsIRequestObserver* aListener = nullptr,
-                   void* aKey = 0,
-                   nsDTDMode aMode = eDTDMode_autodetect) override;
+  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) override;
 
   /**
    * document.write and document.close
