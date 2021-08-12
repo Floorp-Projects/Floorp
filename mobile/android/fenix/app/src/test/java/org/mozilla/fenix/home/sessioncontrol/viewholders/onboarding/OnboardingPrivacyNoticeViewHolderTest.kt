@@ -5,38 +5,36 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.LayoutInflater
-import android.view.View
 import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.OnboardingPrivacyNoticeBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingPrivacyNoticeViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: OnboardingPrivacyNoticeBinding
     private lateinit var interactor: OnboardingInteractor
 
     @Before
     fun setup() {
         val context = ContextThemeWrapper(testContext, R.style.NormalTheme)
-        view = LayoutInflater.from(context)
-            .inflate(OnboardingPrivacyNoticeViewHolder.LAYOUT_ID, null)
+        binding = OnboardingPrivacyNoticeBinding.inflate(LayoutInflater.from(context))
         interactor = mockk(relaxed = true)
     }
 
     @Test
     fun `call interactor on click`() {
-        OnboardingPrivacyNoticeViewHolder(view, interactor)
+        OnboardingPrivacyNoticeViewHolder(binding.root, interactor)
 
-        view.read_button.performClick()
+        binding.readButton.performClick()
         verify { interactor.onReadPrivacyNoticeClicked() }
     }
 }

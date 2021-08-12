@@ -5,14 +5,12 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.LayoutInflater
-import android.view.View
 import io.mockk.every
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.verify
 import io.mockk.unmockkObject
-import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runBlockingTest
@@ -28,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.BackgroundServices
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.databinding.OnboardingAutomaticSigninBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -35,14 +34,13 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingAutomaticSignInViewHolderTest {
 
-    private lateinit var view: View
     private lateinit var backgroundServices: BackgroundServices
     private lateinit var snackbar: FenixSnackbar
+    private lateinit var binding: OnboardingAutomaticSigninBinding
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext)
-            .inflate(OnboardingAutomaticSignInViewHolder.LAYOUT_ID, null)
+        binding = OnboardingAutomaticSigninBinding.inflate(LayoutInflater.from(testContext))
         snackbar = mockk(relaxed = true)
         mockkObject(FenixSnackbar.Companion)
 
@@ -57,7 +55,7 @@ class OnboardingAutomaticSignInViewHolderTest {
 
     @Test
     fun `bind updates header text`() {
-        val holder = OnboardingAutomaticSignInViewHolder(view)
+        val holder = OnboardingAutomaticSignInViewHolder(binding.root)
         holder.bind(
             mockk {
                 every { email } returns "email@example.com"
@@ -65,9 +63,9 @@ class OnboardingAutomaticSignInViewHolderTest {
         )
         assertEquals(
             "You are signed in as email@example.com on another Firefox browser on this device. Would you like to sign in with this account?",
-            view.header_text.text
+            binding.headerText.text
         )
-        assertTrue(view.fxa_sign_in_button.isEnabled)
+        assertTrue(binding.fxaSignInButton.isEnabled)
     }
 
     @Test
@@ -79,12 +77,12 @@ class OnboardingAutomaticSignInViewHolderTest {
             backgroundServices.accountManager.migrateFromAccount(account)
         } returns MigrationResult.Success
 
-        val holder = OnboardingAutomaticSignInViewHolder(view, scope = this)
+        val holder = OnboardingAutomaticSignInViewHolder(binding.root, scope = this)
         holder.bind(account)
-        holder.onClick(view.fxa_sign_in_button)
+        holder.onClick(binding.fxaSignInButton)
 
-        assertEquals("Signing in…", view.fxa_sign_in_button.text)
-        assertFalse(view.fxa_sign_in_button.isEnabled)
+        assertEquals("Signing in…", binding.fxaSignInButton.text)
+        assertFalse(binding.fxaSignInButton.isEnabled)
     }
 
     @Test
@@ -96,12 +94,12 @@ class OnboardingAutomaticSignInViewHolderTest {
             backgroundServices.accountManager.migrateFromAccount(account)
         } returns MigrationResult.WillRetry
 
-        val holder = OnboardingAutomaticSignInViewHolder(view, scope = this)
+        val holder = OnboardingAutomaticSignInViewHolder(binding.root, scope = this)
         holder.bind(account)
-        holder.onClick(view.fxa_sign_in_button)
+        holder.onClick(binding.fxaSignInButton)
 
-        assertEquals("Signing in…", view.fxa_sign_in_button.text)
-        assertFalse(view.fxa_sign_in_button.isEnabled)
+        assertEquals("Signing in…", binding.fxaSignInButton.text)
+        assertFalse(binding.fxaSignInButton.isEnabled)
     }
 
     @Test
@@ -113,12 +111,12 @@ class OnboardingAutomaticSignInViewHolderTest {
             backgroundServices.accountManager.migrateFromAccount(account)
         } returns MigrationResult.Failure
 
-        val holder = OnboardingAutomaticSignInViewHolder(view, scope = this)
+        val holder = OnboardingAutomaticSignInViewHolder(binding.root, scope = this)
         holder.bind(account)
-        holder.onClick(view.fxa_sign_in_button)
+        holder.onClick(binding.fxaSignInButton)
 
-        assertEquals("Yes, sign me in", view.fxa_sign_in_button.text)
-        assertTrue(view.fxa_sign_in_button.isEnabled)
+        assertEquals("Yes, sign me in", binding.fxaSignInButton.text)
+        assertTrue(binding.fxaSignInButton.isEnabled)
         verify { snackbar.setText("Failed to sign-in") }
     }
 }

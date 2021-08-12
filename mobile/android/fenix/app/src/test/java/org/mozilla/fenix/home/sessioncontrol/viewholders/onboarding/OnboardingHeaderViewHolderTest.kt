@@ -5,25 +5,23 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.LayoutInflater
-import android.view.View
-import kotlinx.android.synthetic.main.onboarding_header.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.OnboardingHeaderBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingHeaderViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: OnboardingHeaderBinding
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext)
-            .inflate(OnboardingHeaderViewHolder.LAYOUT_ID, null)
+        binding = OnboardingHeaderBinding.inflate(LayoutInflater.from(testContext))
     }
 
     @Test
@@ -31,8 +29,8 @@ class OnboardingHeaderViewHolderTest {
         val appName = testContext.getString(R.string.app_name)
         val welcomeMessage = testContext.getString(R.string.onboarding_header, appName)
 
-        OnboardingHeaderViewHolder(view)
+        OnboardingHeaderViewHolder(binding.root)
 
-        assertEquals(welcomeMessage, view.header_text.text)
+        assertEquals(welcomeMessage, binding.headerText.text)
     }
 }

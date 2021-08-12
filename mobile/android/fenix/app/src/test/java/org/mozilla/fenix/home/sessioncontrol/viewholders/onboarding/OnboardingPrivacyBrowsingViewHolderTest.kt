@@ -5,38 +5,36 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.LayoutInflater
-import android.view.View
 import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.onboarding_private_browsing.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.OnboardingPrivateBrowsingBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingPrivacyBrowsingViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: OnboardingPrivateBrowsingBinding
     private lateinit var interactor: OnboardingInteractor
 
     @Before
     fun setup() {
         val context = ContextThemeWrapper(testContext, R.style.NormalTheme)
-        view = LayoutInflater.from(context)
-            .inflate(OnboardingPrivateBrowsingViewHolder.LAYOUT_ID, null)
+        binding = OnboardingPrivateBrowsingBinding.inflate(LayoutInflater.from(context))
         interactor = mockk(relaxed = true)
     }
 
     @Test
     fun `call interactor on click`() {
-        OnboardingPrivateBrowsingViewHolder(view, interactor)
+        OnboardingPrivateBrowsingViewHolder(binding.root, interactor)
 
-        view.open_settings_button.performClick()
+        binding.openSettingsButton.performClick()
         verify { interactor.onOpenSettingsClicked() }
     }
 }
