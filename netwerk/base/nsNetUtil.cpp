@@ -3386,11 +3386,6 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
     return;
   }
 
-  // Bug 1723729
-  if (spec.EqualsLiteral("chrome://tart/content/tart.ico")) {
-    return;
-  }
-
   if (xpc::IsInAutomation()) {
 #ifdef DEBUG
     if (NS_IsMainThread()) {
