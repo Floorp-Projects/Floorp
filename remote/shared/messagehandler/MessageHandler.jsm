@@ -112,18 +112,23 @@ class MessageHandler extends EventEmitter {
 
   /**
    * @typedef {Object} CommandDestination
-   * @property {String} type - One of MessageHandler.type.
-   * @property {String} id - Unique context identifier, format depends on the
-   *     type. For WINDOW_GLOBAL destinations, this is a browsing context id.
+   * @property {String} type
+   *     One of MessageHandler.type.
+   * @property {String} id
+   *     Unique context identifier. The format depends on the type.
+   *     For WINDOW_GLOBAL destinations, this is a browsing context id.
    */
 
   /**
    * @typedef {Object} Command
-   * @property {String} commandName - The name of the command to execute.
-   * @property {String} moduleName - The name of the module.
-   * @property {CommandDestination} destination - The destination describing a
-   *     debuggable context.
-   * @property {Object} params - Optional arguments.
+   * @property {String} commandName
+   *     The name of the command to execute.
+   * @property {String} moduleName
+   *     The name of the module.
+   * @property {Object} params
+   *     Optional command parameters.
+   * @property {CommandDestination} destination
+   *     The destination describing a debuggable context.
    */
 
   /**
@@ -137,14 +142,14 @@ class MessageHandler extends EventEmitter {
    *     command once it has been executed.
    */
   handleCommand(command) {
-    const { moduleName, commandName, destination, params } = command;
+    const { moduleName, commandName, params, destination } = command;
     logger.trace(
-      `Received command ${moduleName}:${commandName} for destination ${destination.type}`
+      `Received command ${moduleName}.${commandName} for destination ${destination.type}`
     );
 
-    const mod = this._moduleCache.getModuleInstance(moduleName, destination);
-    if (this._isCommandSupportedByModule(commandName, mod)) {
-      return mod[commandName](params, destination);
+    const module = this._moduleCache.getModuleInstance(moduleName, destination);
+    if (this._isCommandSupportedByModule(commandName, module)) {
+      return module[commandName](params, destination);
     }
 
     return this.forwardCommand(command);
@@ -154,12 +159,12 @@ class MessageHandler extends EventEmitter {
     return `[object ${this.constructor.name} ${this.key}]`;
   }
 
-  _isCommandSupportedByModule(commandName, mod) {
+  _isCommandSupportedByModule(commandName, module) {
     // TODO: With the current implementation, all functions of a given module
     // are considered as valid commands.
     // This should probably be replaced by a more explicit declaration, via a
     // manifest for instance.
-    return mod && typeof mod[commandName] === "function";
+    return module && typeof module[commandName] === "function";
   }
 
   /**

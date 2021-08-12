@@ -10,12 +10,17 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+// Import the ModuleRegistry so that all modules are properly referenced.
+ChromeUtils.import(
+  "chrome://remote/content/webdriver-bidi/modules/ModuleRegistry.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
-  Log: "chrome://remote/content/shared/Log.jsm",
   getMessageHandlerClass:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm",
+  Log: "chrome://remote/content/shared/Log.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
