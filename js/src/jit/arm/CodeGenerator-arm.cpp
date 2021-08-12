@@ -1099,7 +1099,7 @@ void CodeGenerator::visitPopcntI(LPopcntI* ins) {
   Register input = ToRegister(ins->input());
   Register output = ToRegister(ins->output());
 
-  Register tmp = ToRegister(ins->temp());
+  Register tmp = ToRegister(ins->temp0());
 
   masm.popcnt32(input, output, tmp);
 }
