@@ -290,6 +290,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["gfx.direct2d.force-enabled", { what: RECORD_PREF_VALUE }],
   ["gfx.webrender.all", { what: RECORD_PREF_VALUE }],
   ["gfx.webrender.all.qualified", { what: RECORD_PREF_VALUE }],
+  ["gfx.webrender.force-legacy-layers", { what: RECORD_PREF_VALUE }],
   ["layers.acceleration.disabled", { what: RECORD_PREF_VALUE }],
   ["layers.acceleration.force-enabled", { what: RECORD_PREF_VALUE }],
   ["layers.async-pan-zoom.enabled", { what: RECORD_PREF_VALUE }],
