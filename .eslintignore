@@ -175,7 +175,6 @@ servo/
 # Test files that we don't want to lint (preprocessed, minified etc)
 testing/condprofile/condprof/tests/profile
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
-testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
 testing/talos/talos/tests/devtools/addon/content/pages/
