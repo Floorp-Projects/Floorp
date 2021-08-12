@@ -95,6 +95,9 @@ server.registerPathHandler("/client_replace", (request, response) => {
 });
 
 add_task(async function sandboxed_precursor() {
+  // Bug 1725345: Make XPCShellContentUtils.createHttpServer support https
+  Services.prefs.setBoolPref("dom.security.https_first", false);
+
   let extension = await ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
@@ -253,4 +256,5 @@ add_task(async function sandboxed_precursor() {
 
     await page.close();
   }
+  Services.prefs.clearUserPref("dom.security.https_first");
 });
