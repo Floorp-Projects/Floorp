@@ -154,7 +154,8 @@ nsresult nsHttpDigestAuth::GetMethodAndPath(
 
 NS_IMETHODIMP
 nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel* authChannel,
-                                    const char* challenge, bool isProxyAuth,
+                                    const nsACString& challenge,
+                                    bool isProxyAuth,
                                     nsISupports** sessionState,
                                     nsISupports** continuationState,
                                     bool* result) {
@@ -162,8 +163,8 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel* authChannel,
   bool stale;
   uint16_t algorithm, qop;
 
-  nsresult rv = ParseChallenge(nsCString(challenge), realm, domain, nonce,
-                               opaque, &stale, &algorithm, &qop);
+  nsresult rv = ParseChallenge(challenge, realm, domain, nonce, opaque, &stale,
+                               &algorithm, &qop);
 
   if (!(algorithm &
         (ALGO_MD5 | ALGO_MD5_SESS | ALGO_SHA256 | ALGO_SHA256_SESS))) {
@@ -187,28 +188,28 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel* authChannel,
 NS_IMETHODIMP
 nsHttpDigestAuth::GenerateCredentialsAsync(
     nsIHttpAuthenticableChannel* authChannel,
-    nsIHttpAuthenticatorCallback* aCallback, const char* challenge,
-    bool isProxyAuth, const char16_t* domain, const char16_t* username,
-    const char16_t* password, nsISupports* sessionState,
+    nsIHttpAuthenticatorCallback* aCallback, const nsACString& challenge,
+    bool isProxyAuth, const nsAString& domain, const nsAString& username,
+    const nsAString& password, nsISupports* sessionState,
     nsISupports* continuationState, nsICancelable** aCancellable) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpDigestAuth::GenerateCredentials(
-    nsIHttpAuthenticableChannel* authChannel, const char* challenge,
-    bool isProxyAuth, const char16_t* userdomain, const char16_t* username,
-    const char16_t* password, nsISupports** sessionState,
-    nsISupports** continuationState, uint32_t* aFlags, char** creds)
+    nsIHttpAuthenticableChannel* authChannel, const nsACString& aChallenge,
+    bool isProxyAuth, const nsAString& userdomain, const nsAString& username,
+    const nsAString& password, nsISupports** sessionState,
+    nsISupports** continuationState, uint32_t* aFlags, nsACString& creds)
 
 {
-  LOG(("nsHttpDigestAuth::GenerateCredentials [challenge=%s]\n", challenge));
-
-  NS_ENSURE_ARG_POINTER(creds);
+  LOG(("nsHttpDigestAuth::GenerateCredentials [challenge=%s]\n",
+       aChallenge.BeginReading()));
 
   *aFlags = 0;
 
-  bool isDigestAuth = !nsCRT::strncasecmp(challenge, "digest ", 7);
+  bool isDigestAuth = StringBeginsWith(aChallenge, "digest "_ns,
+                                       nsCaseInsensitiveCStringComparator);
   NS_ENSURE_TRUE(isDigestAuth, NS_ERROR_UNEXPECTED);
 
   // IIS implementation requires extra quotes
@@ -232,8 +233,8 @@ nsHttpDigestAuth::GenerateCredentials(
   bool stale;
   uint16_t algorithm, qop;
 
-  rv = ParseChallenge(nsCString(challenge), realm, domain, nonce, opaque,
-                      &stale, &algorithm, &qop);
+  rv = ParseChallenge(aChallenge, realm, domain, nonce, opaque, &stale,
+                      &algorithm, &qop);
   if (NS_FAILED(rv)) {
     LOG(
         ("nsHttpDigestAuth::GenerateCredentials [ParseChallenge failed "
@@ -406,7 +407,7 @@ nsHttpDigestAuth::GenerateCredentials(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  *creds = ToNewCString(authString);
+  creds = authString;
   return NS_OK;
 }
 
