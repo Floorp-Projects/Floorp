@@ -167,7 +167,6 @@ impl InternablePrimitive for NormalBorderPrim {
         _key: NormalBorderKey,
         data_handle: NormalBorderDataHandle,
         _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::NormalBorder {
             data_handle,
@@ -355,7 +354,6 @@ impl InternablePrimitive for ImageBorder {
         _key: ImageBorderKey,
         data_handle: ImageBorderDataHandle,
         _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::ImageBorder {
             data_handle
