@@ -78,9 +78,12 @@ child:
   async IntrinsicSizeOrRatioChanged(IntrinsicSize? aIntrinsicSize,
                                     AspectRatio? aIntrinsicRatio);
 
-parent:
   // Destroy the remote web browser due to the nsFrameLoader going away.
   async __delete__();
+
+parent:
+
+  async BeginDestroy();
 
   // DocShell messaging.
   async LoadURL(nsDocShellLoadState aLoadState);
