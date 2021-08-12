@@ -39,6 +39,7 @@
 #include "vm/ErrorObject.h"
 #include "wasm/TypedObject.h"
 #include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 

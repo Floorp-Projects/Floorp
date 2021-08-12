@@ -40,6 +40,7 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "wasm/TypedObject.h"
 #include "wasm/WasmBuiltins.h"
+#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmStubs.h"

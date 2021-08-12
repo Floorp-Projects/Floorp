@@ -27,6 +27,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/Xdr.h"
+#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 
 #include "gc/Marking-inl.h"
