@@ -162,8 +162,8 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel* authChannel,
   bool stale;
   uint16_t algorithm, qop;
 
-  nsresult rv = ParseChallenge(challenge, realm, domain, nonce, opaque, &stale,
-                               &algorithm, &qop);
+  nsresult rv = ParseChallenge(nsCString(challenge), realm, domain, nonce,
+                               opaque, &stale, &algorithm, &qop);
 
   if (!(algorithm &
         (ALGO_MD5 | ALGO_MD5_SESS | ALGO_SHA256 | ALGO_SHA256_SESS))) {
@@ -232,8 +232,8 @@ nsHttpDigestAuth::GenerateCredentials(
   bool stale;
   uint16_t algorithm, qop;
 
-  rv = ParseChallenge(challenge, realm, domain, nonce, opaque, &stale,
-                      &algorithm, &qop);
+  rv = ParseChallenge(nsCString(challenge), realm, domain, nonce, opaque,
+                      &stale, &algorithm, &qop);
   if (NS_FAILED(rv)) {
     LOG(
         ("nsHttpDigestAuth::GenerateCredentials [ParseChallenge failed "
@@ -562,17 +562,19 @@ nsresult nsHttpDigestAuth::CalculateHA2(const nsCString& method,
   return rv;
 }
 
-nsresult nsHttpDigestAuth::ParseChallenge(const char* challenge,
+nsresult nsHttpDigestAuth::ParseChallenge(const nsACString& aChallenge,
                                           nsACString& realm, nsACString& domain,
                                           nsACString& nonce, nsACString& opaque,
                                           bool* stale, uint16_t* algorithm,
                                           uint16_t* qop) {
   // put an absurd, but maximum, length cap on the challenge so
   // that calculations are 32 bit safe
-  if (strlen(challenge) > 16000000) {
+  if (aChallenge.Length() > 16000000) {
     return NS_ERROR_INVALID_ARG;
   }
 
+  const nsCString& flat = PromiseFlatCString(aChallenge);
+  const char* challenge = flat.get();
   const char* p = challenge + 6;  // first 6 characters are "Digest"
 
   *stale = false;
