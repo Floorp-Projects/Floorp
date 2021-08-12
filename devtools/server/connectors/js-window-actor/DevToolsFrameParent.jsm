@@ -58,23 +58,12 @@ class DevToolsFrameParent extends JSWindowActorParent {
     browserId,
     watchedData,
   }) {
-    try {
-      await this.sendQuery(
-        "DevToolsFrameParent:instantiate-already-available",
-        {
-          watcherActorID,
-          connectionPrefix,
-          browserId,
-          watchedData,
-        }
-      );
-    } catch (e) {
-      console.warn(
-        "Failed to create DevTools Frame target for browsingContext",
-        this.browsingContext.id
-      );
-      console.warn(e);
-    }
+    await this.sendQuery("DevToolsFrameParent:instantiate-already-available", {
+      watcherActorID,
+      connectionPrefix,
+      browserId,
+      watchedData,
+    });
   }
 
   destroyTarget({ watcherActorID, browserId }) {

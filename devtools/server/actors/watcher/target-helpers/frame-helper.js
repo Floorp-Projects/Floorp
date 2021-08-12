@@ -74,10 +74,11 @@ async function createTargets(watcher) {
     // If server side target switching is enabled, process the top level browsing context first,
     // so that we guarantee it is notified to the client first.
     // If it is disabled, the top level target will be created from the client instead.
-    await createTargetForBrowsingContext(
+    await createTargetForBrowsingContext({
       watcher,
-      watcher.browserElement.browsingContext
-    );
+      browsingContext: watcher.browserElement.browsingContext,
+      retryOnAbortError: true,
+    });
   }
 
   const browsingContexts = getFilteredRemoteBrowsingContext(
@@ -87,9 +88,9 @@ async function createTargets(watcher) {
   // already available targets.
   // i.e. each call to `createTargetForBrowsingContext` should end up emitting
   // a target-available-form event via the WatcherActor.
-  await Promise.all(
+  await Promise.allSettled(
     browsingContexts.map(browsingContext =>
-      createTargetForBrowsingContext(watcher, browsingContext)
+      createTargetForBrowsingContext({ watcher, browsingContext })
     )
   );
 }
@@ -101,8 +102,16 @@ async function createTargets(watcher) {
  *        The Watcher Actor requesting to watch for new targets.
  * @param BrowsingContext browsingContext
  *        The context for which a target should be created.
+ * @param Boolean retryOnAbortError
+ *        Set to true to retry creating existing targets when receiving an AbortError.
+ *        An AbortError is sent when the JSWindowActor pair was destroyed before the query
+ *        was complete, which can happen if the document navigates while the query is pending.
  */
-async function createTargetForBrowsingContext(watcher, browsingContext) {
+async function createTargetForBrowsingContext({
+  watcher,
+  browsingContext,
+  retryOnAbortError = false,
+}) {
   logWindowGlobal(browsingContext.currentWindowGlobal, "Existing WindowGlobal");
 
   // We need to set the watchedByDevTools flag on all top-level browsing context. In the
@@ -113,14 +122,33 @@ async function createTargetForBrowsingContext(watcher, browsingContext) {
     browsingContext.watchedByDevTools = true;
   }
 
-  return browsingContext.currentWindowGlobal
-    .getActor("DevToolsFrame")
-    .instantiateTarget({
-      watcherActorID: watcher.actorID,
-      connectionPrefix: watcher.conn.prefix,
-      browserId: watcher.browserId,
-      watchedData: watcher.watchedData,
-    });
+  try {
+    await browsingContext.currentWindowGlobal
+      .getActor("DevToolsFrame")
+      .instantiateTarget({
+        watcherActorID: watcher.actorID,
+        connectionPrefix: watcher.conn.prefix,
+        browserId: watcher.browserId,
+        watchedData: watcher.watchedData,
+      });
+  } catch (e) {
+    console.warn(
+      "Failed to create DevTools Frame target for browsingContext",
+      browsingContext.id,
+      ": ",
+      e,
+      retryOnAbortError ? "retrying" : ""
+    );
+    if (retryOnAbortError && e.name === "AbortError") {
+      await createTargetForBrowsingContext({
+        watcher,
+        browsingContext,
+        retryOnAbortError,
+      });
+    } else {
+      throw e;
+    }
+  }
 }
 
 /**
