@@ -51,31 +51,35 @@ TEST(Tokenizer, HTTPResponse)
   p.SkipWhites();
 
   p.Record();
-  while (p.Next(t) && t.Type() != Tokenizer::TOKEN_EOL)
+  while (p.Next(t) && t.Type() != Tokenizer::TOKEN_EOL) {
     ;
+  }
   EXPECT_FALSE(p.HasFailed());
   nsAutoCString h;
   p.Claim(h);
   EXPECT_TRUE(h == "Not modified");
 
   p.Record();
-  while (p.CheckChar(HttpHeaderCharacter))
+  while (p.CheckChar(HttpHeaderCharacter)) {
     ;
+  }
   p.Claim(h, Tokenizer::INCLUDE_LAST);
   EXPECT_TRUE(h == "ETag");
   p.SkipWhites();
   EXPECT_TRUE(p.CheckChar(':'));
   p.SkipWhites();
   p.Record();
-  while (p.Next(t) && t.Type() != Tokenizer::TOKEN_EOL)
+  while (p.Next(t) && t.Type() != Tokenizer::TOKEN_EOL) {
     ;
+  }
   EXPECT_FALSE(p.HasFailed());
   p.Claim(h);
   EXPECT_TRUE(h == "hallo");
 
   p.Record();
-  while (p.CheckChar(HttpHeaderCharacter))
+  while (p.CheckChar(HttpHeaderCharacter)) {
     ;
+  }
   p.Claim(h, Tokenizer::INCLUDE_LAST);
   EXPECT_TRUE(h == "Content-Length");
   p.SkipWhites();
@@ -88,8 +92,9 @@ TEST(Tokenizer, HTTPResponse)
   EXPECT_TRUE(p.CheckEOL());
 
   p.Record();
-  while (p.Next(t) && t.Type() != Tokenizer::TOKEN_EOF)
+  while (p.Next(t) && t.Type() != Tokenizer::TOKEN_EOF) {
     ;
+  }
   nsAutoCString b;
   p.Claim(b);
   EXPECT_TRUE(b == "This is the body");
@@ -389,8 +394,9 @@ TEST(Tokenizer, HasFailed)
 
   Tokenizer p1("a b"_ns);
 
-  while (p1.Next(t) && t.Type() != Tokenizer::TOKEN_CHAR)
+  while (p1.Next(t) && t.Type() != Tokenizer::TOKEN_CHAR) {
     ;
+  }
   EXPECT_TRUE(p1.HasFailed());
 
   Tokenizer p2("a b ?!c"_ns);
@@ -417,8 +423,9 @@ TEST(Tokenizer, HasFailed)
   EXPECT_TRUE(p2.Check(t));
   EXPECT_FALSE(p2.HasFailed());
 
-  while (p2.Next(t) && t.Type() != Tokenizer::TOKEN_CHAR)
+  while (p2.Next(t) && t.Type() != Tokenizer::TOKEN_CHAR) {
     ;
+  }
   EXPECT_TRUE(p2.HasFailed());
 }
 
@@ -938,7 +945,7 @@ TEST(Tokenizer, CustomRaw)
 
 TEST(Tokenizer, Incremental)
 {
-  typedef IncrementalTokenizer::Token Token;
+  using Token = IncrementalTokenizer::Token;
 
   int test = 0;
   IncrementalTokenizer i(
@@ -974,8 +981,8 @@ TEST(Tokenizer, Incremental)
       });
 
   constexpr auto input = "test1,test2,,,test3"_ns;
-  auto cur = input.BeginReading();
-  auto end = input.EndReading();
+  const auto* cur = input.BeginReading();
+  const auto* end = input.EndReading();
   for (; cur < end; ++cur) {
     i.FeedInput(nsDependentCSubstring(cur, 1));
   }
@@ -987,7 +994,7 @@ TEST(Tokenizer, Incremental)
 
 TEST(Tokenizer, IncrementalRollback)
 {
-  typedef IncrementalTokenizer::Token Token;
+  using Token = IncrementalTokenizer::Token;
 
   int test = 0;
   IncrementalTokenizer i(
@@ -1027,8 +1034,8 @@ TEST(Tokenizer, IncrementalRollback)
       });
 
   constexpr auto input = "test1,test2,,,test3"_ns;
-  auto cur = input.BeginReading();
-  auto end = input.EndReading();
+  const auto* cur = input.BeginReading();
+  const auto* end = input.EndReading();
   for (; cur < end; ++cur) {
     i.FeedInput(nsDependentCSubstring(cur, 1));
   }
@@ -1040,7 +1047,7 @@ TEST(Tokenizer, IncrementalRollback)
 
 TEST(Tokenizer, IncrementalNeedMoreInput)
 {
-  typedef IncrementalTokenizer::Token Token;
+  using Token = IncrementalTokenizer::Token;
 
   int test = 0;
   IncrementalTokenizer i(
@@ -1078,8 +1085,8 @@ TEST(Tokenizer, IncrementalNeedMoreInput)
       });
 
   constexpr auto input = "a bb,c"_ns;
-  auto cur = input.BeginReading();
-  auto end = input.EndReading();
+  const auto* cur = input.BeginReading();
+  const auto* end = input.EndReading();
 
   nsresult rv;
   for (; cur < end; ++cur) {
@@ -1099,7 +1106,7 @@ TEST(Tokenizer, IncrementalNeedMoreInput)
 
 TEST(Tokenizer, IncrementalCustom)
 {
-  typedef IncrementalTokenizer::Token Token;
+  using Token = IncrementalTokenizer::Token;
 
   int test = 0;
   Token custom;
@@ -1134,7 +1141,7 @@ TEST(Tokenizer, IncrementalCustom)
 
 TEST(Tokenizer, IncrementalCustomRaw)
 {
-  typedef IncrementalTokenizer::Token Token;
+  using Token = IncrementalTokenizer::Token;
 
   int test = 0;
   Token custom;
@@ -1177,8 +1184,8 @@ TEST(Tokenizer, IncrementalCustomRaw)
   i.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
 
   constexpr auto input = "test1,test2!,,test3test2tes"_ns;
-  auto cur = input.BeginReading();
-  auto end = input.EndReading();
+  const auto* cur = input.BeginReading();
+  const auto* end = input.EndReading();
   for (; cur < end; ++cur) {
     i.FeedInput(nsDependentCSubstring(cur, 1));
   }
@@ -1190,7 +1197,7 @@ TEST(Tokenizer, IncrementalCustomRaw)
 
 TEST(Tokenizer, IncrementalCustomRemove)
 {
-  typedef IncrementalTokenizer::Token Token;
+  using Token = IncrementalTokenizer::Token;
 
   int test = 0;
   Token custom;
@@ -1223,7 +1230,7 @@ TEST(Tokenizer, IncrementalCustomRemove)
 
 TEST(Tokenizer, IncrementalBuffering1)
 {
-  typedef IncrementalTokenizer::Token Token;
+  using Token = IncrementalTokenizer::Token;
 
   int test = 0;
   Token custom;
@@ -1283,7 +1290,7 @@ TEST(Tokenizer, IncrementalBuffering1)
 
 TEST(Tokenizer, IncrementalBuffering2)
 {
-  typedef IncrementalTokenizer::Token Token;
+  using Token = IncrementalTokenizer::Token;
 
   int test = 0;
   Token custom;

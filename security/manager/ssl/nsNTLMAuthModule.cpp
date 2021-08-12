@@ -184,10 +184,11 @@ static void LogBuf(const char* tag, const uint8_t* buf, uint32_t bufLen) {
     snprintf(line + len, sizeof(line) - len, "   ");
     for (i = 0; i < count; ++i) {
       len = strlen(line);
-      if (isprint(buf[i]))
+      if (isprint(buf[i])) {
         snprintf(line + len, sizeof(line) - len, "%c", buf[i]);
-      else
+      } else {
         snprintf(line + len, sizeof(line) - len, ".");
+      }
     }
     PR_LogPrint("%s\n", line);
 
@@ -407,17 +408,19 @@ static nsresult ParseType2Msg(const void* inBuf, uint32_t inLen,
   //
   if (inLen < NTLM_TYPE2_HEADER_LEN) return NS_ERROR_UNEXPECTED;
 
-  auto cursor = static_cast<const uint8_t*>(inBuf);
+  const auto* cursor = static_cast<const uint8_t*>(inBuf);
 
   // verify NTLMSSP signature
-  if (memcmp(cursor, NTLM_SIGNATURE, sizeof(NTLM_SIGNATURE)) != 0)
+  if (memcmp(cursor, NTLM_SIGNATURE, sizeof(NTLM_SIGNATURE)) != 0) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   cursor += sizeof(NTLM_SIGNATURE);
 
   // verify Type-2 marker
-  if (memcmp(cursor, NTLM_TYPE2_MARKER, sizeof(NTLM_TYPE2_MARKER)) != 0)
+  if (memcmp(cursor, NTLM_TYPE2_MARKER, sizeof(NTLM_TYPE2_MARKER)) != 0) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   cursor += sizeof(NTLM_TYPE2_MARKER);
 
@@ -488,7 +491,7 @@ static nsresult GenerateType3Msg(const nsString& domain,
   // inBuf contains Type-2 msg (the challenge) from server
   MOZ_ASSERT(NS_IsMainThread());
   nsresult rv;
-  Type2Msg msg;
+  Type2Msg msg{};
 
   rv = ParseType2Msg(inBuf, inLen, &msg);
   if (NS_FAILED(rv)) return rv;
@@ -497,8 +500,7 @@ static nsresult GenerateType3Msg(const nsString& domain,
 
   // There is no negotiation for NTLMv2, so we just do it unless we are forced
   // by explict user configuration to use the older DES-based cryptography.
-  bool ntlmv2 =
-      mozilla::StaticPrefs::network_auth_force_generic_ntlm_v1() == false;
+  bool ntlmv2 = !mozilla::StaticPrefs::network_auth_force_generic_ntlm_v1();
 
   // temporary buffers for unicode strings
 #ifdef IS_BIG_ENDIAN
@@ -790,7 +792,7 @@ static nsresult GenerateType3Msg(const nsString& domain,
       return rv;
     }
 
-    auto sessionHash = mozilla::BitwiseCast<const uint8_t*, const char*>(
+    const auto* sessionHash = mozilla::BitwiseCast<const uint8_t*, const char*>(
         sessionHashString.get());
 
     LogBuf("NTLM2 effective key: ", sessionHash, 8);
@@ -1001,10 +1003,11 @@ nsNTLMAuthModule::Wrap(const void* inToken, uint32_t inTokenLen,
 static uint8_t des_setkeyparity(uint8_t x) {
   if ((((x >> 7) ^ (x >> 6) ^ (x >> 5) ^ (x >> 4) ^ (x >> 3) ^ (x >> 2) ^
         (x >> 1)) &
-       0x01) == 0)
+       0x01) == 0) {
     x |= 0x01;
-  else
+  } else {
     x &= 0xfe;
+  }
   return x;
 }
 
