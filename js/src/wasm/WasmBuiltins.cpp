@@ -1427,10 +1427,12 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
 // Each JS builtin can have several overloads. These must all be enumerated in
 // PopulateTypedNatives() so they can be included in the process-wide thunk set.
 
+#define FOR_EACH_SIN_COS_TAN_NATIVE(_) \
+  _(math_sin, MathSin)                 \
+  _(math_tan, MathTan)                 \
+  _(math_cos, MathCos)
+
 #define FOR_EACH_UNARY_NATIVE(_) \
-  _(math_sin, MathSin)           \
-  _(math_tan, MathTan)           \
-  _(math_cos, MathCos)           \
   _(math_exp, MathExp)           \
   _(math_log, MathLog)           \
   _(math_asin, MathASin)         \
@@ -1455,6 +1457,14 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
   _(ecmaHypot, MathHypot)         \
   _(ecmaPow, MathPow)
 
+#define DEFINE_SIN_COS_TAN_FLOAT_WRAPPER(func, _)  \
+  static float func##_impl_f32(float x) {          \
+    if (math_use_fdlibm_for_sin_cos_tan()) {       \
+      return float(func##_fdlibm_impl(double(x))); \
+    }                                              \
+    return float(func##_native_impl(double(x)));   \
+  }
+
 #define DEFINE_UNARY_FLOAT_WRAPPER(func, _) \
   static float func##_impl_f32(float x) {   \
     return float(func##_impl(double(x)));   \
@@ -1465,6 +1475,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     return float(func(double(x), double(y))); \
   }
 
+FOR_EACH_SIN_COS_TAN_NATIVE(DEFINE_SIN_COS_TAN_FLOAT_WRAPPER)
 FOR_EACH_UNARY_NATIVE(DEFINE_UNARY_FLOAT_WRAPPER)
 FOR_EACH_BINARY_NATIVE(DEFINE_BINARY_FLOAT_WRAPPER)
 
@@ -1496,6 +1507,14 @@ static bool PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives) {
                             FuncCast(funcName, abiType)))                  \
     return false;
 
+#define ADD_SIN_COS_TAN_OVERLOADS(funcName, native)                  \
+  if (math_use_fdlibm_for_sin_cos_tan()) {                           \
+    ADD_OVERLOAD(funcName##_fdlibm_impl, native, Args_Double_Double) \
+  } else {                                                           \
+    ADD_OVERLOAD(funcName##_native_impl, native, Args_Double_Double) \
+  }                                                                  \
+  ADD_OVERLOAD(funcName##_impl_f32, native, Args_Float32_Float32)
+
 #define ADD_UNARY_OVERLOADS(funcName, native)               \
   ADD_OVERLOAD(funcName##_impl, native, Args_Double_Double) \
   ADD_OVERLOAD(funcName##_impl_f32, native, Args_Float32_Float32)
@@ -1504,6 +1523,7 @@ static bool PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives) {
   ADD_OVERLOAD(funcName, native, Args_Double_DoubleDouble) \
   ADD_OVERLOAD(funcName##_f32, native, Args_Float32_Float32Float32)
 
+  FOR_EACH_SIN_COS_TAN_NATIVE(ADD_SIN_COS_TAN_OVERLOADS)
   FOR_EACH_UNARY_NATIVE(ADD_UNARY_OVERLOADS)
   FOR_EACH_BINARY_NATIVE(ADD_BINARY_OVERLOADS)
 
