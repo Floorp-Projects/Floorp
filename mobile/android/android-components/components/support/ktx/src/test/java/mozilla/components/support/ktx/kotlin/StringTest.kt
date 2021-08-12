@@ -158,12 +158,12 @@ class StringTest {
     }
 
     @Test
-
     fun sanitizeURL() {
         val expectedUrl = "http://mozilla.org"
         assertEquals(expectedUrl, "\nhttp://mozilla.org\n".sanitizeURL())
     }
 
+    @Test
     fun isResourceUrl() {
         assertTrue("resource://1232-abcd".isResourceUrl())
         assertFalse("mozilla.org".isResourceUrl())
@@ -232,5 +232,50 @@ class StringTest {
         val validResult = "notEmptyString"
 
         assertSame(validResult, nullString.ifNullOrEmpty { validResult })
+    }
+
+    @Test
+    fun `getRepresentativeCharacter returns the correct representative character for the given urls`() {
+        assertEquals("M", "https://mozilla.org".getRepresentativeCharacter())
+        assertEquals("W", "http://wikipedia.org".getRepresentativeCharacter())
+        assertEquals("P", "http://plus.google.com".getRepresentativeCharacter())
+        assertEquals("E", "https://en.m.wikipedia.org/wiki/Main_Page".getRepresentativeCharacter())
+
+        // Stripping common prefixes
+        assertEquals("T", "http://www.theverge.com".getRepresentativeCharacter())
+        assertEquals("F", "https://m.facebook.com".getRepresentativeCharacter())
+        assertEquals("T", "https://mobile.twitter.com".getRepresentativeCharacter())
+
+        // Special urls
+        assertEquals("?", "file:///".getRepresentativeCharacter())
+        assertEquals("S", "file:///system/".getRepresentativeCharacter())
+        assertEquals("P", "ftp://people.mozilla.org/test".getRepresentativeCharacter())
+
+        // No values
+        assertEquals("?", "".getRepresentativeCharacter())
+
+        // Rubbish
+        assertEquals("Z", "zZz".getRepresentativeCharacter())
+        assertEquals("Ö", "ölkfdpou3rkjaslfdköasdfo8".getRepresentativeCharacter())
+        assertEquals("?", "_*+*'##".getRepresentativeCharacter())
+        assertEquals("ツ", "¯\\_(ツ)_/¯".getRepresentativeCharacter())
+        assertEquals("ಠ", "ಠ_ಠ Look of Disapproval".getRepresentativeCharacter())
+
+        // Non-ASCII
+        assertEquals("Ä", "http://www.ätzend.de".getRepresentativeCharacter())
+        assertEquals("名", "http://名がドメイン.com".getRepresentativeCharacter())
+        assertEquals("C", "http://√.com".getRepresentativeCharacter())
+        assertEquals("SS", "http://ß.de".getRepresentativeCharacter())
+        assertEquals("Ԛ", "http://ԛәлп.com/".getRepresentativeCharacter()) // cyrillic
+
+        // Punycode
+        assertEquals("X", "http://xn--tzend-fra.de".getRepresentativeCharacter()) // ätzend.de
+        assertEquals("X", "http://xn--V8jxj3d1dzdz08w.com".getRepresentativeCharacter()) // 名がドメイン.com
+
+        // Numbers
+        assertEquals("1", "https://www.1and1.com/".getRepresentativeCharacter())
+
+        // IP
+        assertEquals("1", "https://192.168.0.1".getRepresentativeCharacter())
     }
 }

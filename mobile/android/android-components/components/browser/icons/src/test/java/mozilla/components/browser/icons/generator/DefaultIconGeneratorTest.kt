@@ -21,56 +21,6 @@ import org.junit.runner.RunWith
 class DefaultIconGeneratorTest {
 
     @Test
-    fun getRepresentativeCharacter() = runBlocking {
-        val generator = DefaultIconGenerator()
-
-        assertEquals("M", generator.getRepresentativeCharacter("https://mozilla.org"))
-        assertEquals("W", generator.getRepresentativeCharacter("http://wikipedia.org"))
-        assertEquals("P", generator.getRepresentativeCharacter("http://plus.google.com"))
-        assertEquals("E", generator.getRepresentativeCharacter("https://en.m.wikipedia.org/wiki/Main_Page"))
-
-        // Stripping common prefixes
-        assertEquals("T", generator.getRepresentativeCharacter("http://www.theverge.com"))
-        assertEquals("F", generator.getRepresentativeCharacter("https://m.facebook.com"))
-        assertEquals("T", generator.getRepresentativeCharacter("https://mobile.twitter.com"))
-
-        // Special urls
-        assertEquals("?", generator.getRepresentativeCharacter("file:///"))
-        assertEquals("S", generator.getRepresentativeCharacter("file:///system/"))
-        assertEquals("P", generator.getRepresentativeCharacter("ftp://people.mozilla.org/test"))
-
-        // No values
-        assertEquals("?", generator.getRepresentativeCharacter(""))
-
-        // Rubbish
-        assertEquals("Z", generator.getRepresentativeCharacter("zZz"))
-        assertEquals("Ö", generator.getRepresentativeCharacter("ölkfdpou3rkjaslfdköasdfo8"))
-        assertEquals("?", generator.getRepresentativeCharacter("_*+*'##"))
-        assertEquals("ツ", generator.getRepresentativeCharacter("¯\\_(ツ)_/¯"))
-        assertEquals("ಠ", generator.getRepresentativeCharacter("ಠ_ಠ Look of Disapproval"))
-
-        // Non-ASCII
-        assertEquals("Ä", generator.getRepresentativeCharacter("http://www.ätzend.de"))
-        assertEquals("名", generator.getRepresentativeCharacter("http://名がドメイン.com"))
-        assertEquals("C", generator.getRepresentativeCharacter("http://√.com"))
-        assertEquals("SS", generator.getRepresentativeCharacter("http://ß.de"))
-        assertEquals("Ԛ", generator.getRepresentativeCharacter("http://ԛәлп.com/")) // cyrillic
-
-        // Punycode
-        assertEquals("X", generator.getRepresentativeCharacter("http://xn--tzend-fra.de")) // ätzend.de
-        assertEquals(
-            "X",
-            generator.getRepresentativeCharacter("http://xn--V8jxj3d1dzdz08w.com")
-        ) // 名がドメイン.com
-
-        // Numbers
-        assertEquals("1", generator.getRepresentativeCharacter("https://www.1and1.com/"))
-
-        // IP
-        assertEquals("1", generator.getRepresentativeCharacter("https://192.168.0.1"))
-    }
-
-    @Test
     fun pickColor() {
         val generator = DefaultIconGenerator()
         val res = testContext.resources
