@@ -15646,17 +15646,22 @@ already_AddRefed<Element> Document::CreateHTMLElement(nsAtom* aTag) {
   return element.forget();
 }
 
+void AutoWalkBrowsingContextGroup::SuppressBrowsingContext(
+    BrowsingContext* aContext) {
+  aContext->PreOrderWalk([&](BrowsingContext* aBC) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> win = aBC->GetDOMWindow()) {
+      if (RefPtr<Document> doc = win->GetExtantDoc()) {
+        SuppressDocument(doc);
+        mDocuments.AppendElement(doc);
+      }
+    }
+  });
+}
+
 void AutoWalkBrowsingContextGroup::SuppressBrowsingContextGroup(
     BrowsingContextGroup* aGroup) {
   for (const auto& bc : aGroup->Toplevels()) {
-    bc->PreOrderWalk([&](BrowsingContext* aBC) {
-      if (nsCOMPtr<nsPIDOMWindowOuter> win = aBC->GetDOMWindow()) {
-        if (RefPtr<Document> doc = win->GetExtantDoc()) {
-          SuppressDocument(doc);
-          mDocuments.AppendElement(doc);
-        }
-      }
-    });
+    SuppressBrowsingContext(bc);
   }
 }
 
@@ -15669,10 +15674,14 @@ nsAutoSyncOperation::nsAutoSyncOperation(Document* aDoc,
     ccjs->SetMicroTaskLevel(0);
   }
   if (aDoc) {
-    if (auto* bcg = aDoc->GetDocGroup()->GetBrowsingContextGroup()) {
-      SuppressBrowsingContextGroup(bcg);
-    }
     mBrowsingContext = aDoc->GetBrowsingContext();
+    if (InputTaskManager::CanSuspendInputEvent()) {
+      if (auto* bcg = aDoc->GetDocGroup()->GetBrowsingContextGroup()) {
+        SuppressBrowsingContextGroup(bcg);
+      }
+    } else if (mBrowsingContext) {
+      SuppressBrowsingContext(mBrowsingContext->Top());
+    }
     if (mBrowsingContext &&
         mSyncBehavior == SyncOperationBehavior::eSuspendInput &&
         InputTaskManager::CanSuspendInputEvent()) {
