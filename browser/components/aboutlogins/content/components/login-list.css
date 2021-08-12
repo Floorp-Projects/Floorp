@@ -86,6 +86,7 @@ ol {
   padding-inline-start: 0;
   overflow: hidden auto;
   flex-grow: 1;
+  scroll-padding-top: 24px; /* there is the section header that is sticky to the top */
 }
 
 .create-login-button {
@@ -107,6 +108,18 @@ ol {
   user-select: none;
 }
 
+.login-list-header {
+  display: block;
+  position: sticky;
+  top: 0;
+  font-size: .85em;
+  font-weight: 600;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--in-content-border-color);
+  background-color: var(--in-content-box-background);
+}
+
+:not([hidden]) + .login-list-section,
 .login-list-item + .login-list-item {
   border-top: 1px solid var(--in-content-border-color);
 }
