@@ -10,6 +10,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StoragePrincipalHelper.h"
+#include "mozilla/Tokenizer.h"
 #include "nsHttpChannelAuthProvider.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
@@ -746,8 +747,8 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(const char* challenges,
       // if a particular auth method only knows 1 thing, like a
       // non-identity based authentication method)
       //
-      rv = GetCredentialsForChallenge(challenge.get(), authType.get(),
-                                      proxyAuth, auth, creds);
+      rv = GetCredentialsForChallenge(challenge, authType, proxyAuth, auth,
+                                      creds);
       if (NS_SUCCEEDED(rv)) {
         gotCreds = true;
         *currentAuthType = authType;
@@ -817,12 +818,14 @@ nsresult nsHttpChannelAuthProvider::GetAuthorizationMembers(
 }
 
 nsresult nsHttpChannelAuthProvider::GetCredentialsForChallenge(
-    const char* challenge, const char* authType, bool proxyAuth,
+    const nsACString& aChallenge, const nsACString& aAuthType, bool proxyAuth,
     nsIHttpAuthenticator* auth, nsCString& creds) {
+  const nsCString& flatAuthType = PromiseFlatCString(aAuthType);
+  const char* authType = flatAuthType.get();
   LOG(
       ("nsHttpChannelAuthProvider::GetCredentialsForChallenge "
        "[this=%p channel=%p proxyAuth=%d challenges=%s]\n",
-       this, mAuthChannel, proxyAuth, challenge));
+       this, mAuthChannel, proxyAuth, nsCString(aChallenge).get()));
 
   // this getter never fails
   nsHttpAuthCache* authCache = gHttpHandler->AuthCache(mIsPrivate);
@@ -832,7 +835,7 @@ nsresult nsHttpChannelAuthProvider::GetCredentialsForChallenge(
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString realm;
-  ParseRealm(challenge, realm);
+  ParseRealm(aChallenge, realm);
 
   // if no realm, then use the auth type as the realm.  ToUpperCase so the
   // ficticious realm stands out a bit more.
@@ -1268,7 +1271,7 @@ void nsHttpChannelAuthProvider::GetIdentityFromURI(uint32_t authFlags,
   }
 }
 
-void nsHttpChannelAuthProvider::ParseRealm(const char* challenge,
+void nsHttpChannelAuthProvider::ParseRealm(const nsACString& aChallenge,
                                            nsACString& realm) {
   //
   // From RFC2617 section 1.2, the realm value is defined as such:
@@ -1279,6 +1282,9 @@ void nsHttpChannelAuthProvider::ParseRealm(const char* challenge,
   // but, we'll accept anything after the the "=" up to the first space, or
   // end-of-line, if the string is not quoted.
   //
+
+  const nsCString& flat = PromiseFlatCString(aChallenge);
+  const char* challenge = flat.get();
 
   const char* p = nsCRT::strcasestr(challenge, "realm=");
   if (p) {
@@ -1446,7 +1452,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthAvailable(
   if (NS_FAILED(rv)) OnAuthCancelled(aContext, false);
 
   nsAutoCString realm;
-  ParseRealm(mCurrentChallenge.get(), realm);
+  ParseRealm(mCurrentChallenge, realm);
 
   nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
   nsAutoCString suffix;
@@ -1601,7 +1607,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnCredsGenerated(
 
   // Get realm from challenge
   nsAutoCString realm;
-  ParseRealm(mCurrentChallenge.get(), realm);
+  ParseRealm(mCurrentChallenge, realm);
 
   rv = GetAuthorizationMembers(mProxyAuth, scheme, host, port, directory, ident,
                                unusedContinuationState);
