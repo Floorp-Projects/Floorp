@@ -208,15 +208,6 @@ class LValue : public LInstructionHelper<BOX_PIECES, 0, 0> {
   Value value() const { return v_; }
 };
 
-class LNurseryObject : public LInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(NurseryObject);
-
-  LNurseryObject() : LInstructionHelper(classOpcode) {}
-
-  MNurseryObject* mir() const { return mir_->toNurseryObject(); }
-};
-
 // Formal argument for a function, returning a box. Formal arguments are
 // initially read from the stack.
 class LParameter : public LInstructionHelper<BOX_PIECES, 0, 0> {
@@ -224,21 +215,6 @@ class LParameter : public LInstructionHelper<BOX_PIECES, 0, 0> {
   LIR_HEADER(Parameter)
 
   LParameter() : LInstructionHelper(classOpcode) {}
-};
-
-// Stack offset for a word-sized immutable input value to a frame.
-class LCallee : public LInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(Callee)
-
-  LCallee() : LInstructionHelper(classOpcode) {}
-};
-
-class LIsConstructing : public LInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(IsConstructing)
-
-  LIsConstructing() : LInstructionHelper(classOpcode) {}
 };
 
 // Base class for control instructions (goto, branch, etc.)
@@ -1112,13 +1088,6 @@ class LUnreachableResultV : public LInstructionHelper<BOX_PIECES, 0, 0> {
   LIR_HEADER(UnreachableResultV)
 
   LUnreachableResultV() : LInstructionHelper(classOpcode) {}
-};
-
-class LUnreachableResultT : public LInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(UnreachableResultT)
-
-  LUnreachableResultT() : LInstructionHelper(classOpcode) {}
 };
 
 template <size_t defs, size_t ops>
@@ -3879,15 +3848,6 @@ class LUnaryCache : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
   static const size_t Input = 0;
 };
 
-class LModuleMetadata : public LCallInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(ModuleMetadata)
-
-  const MModuleMetadata* mir() const { return mir_->toModuleMetadata(); }
-
-  LModuleMetadata() : LCallInstructionHelper(classOpcode) {}
-};
-
 class LDynamicImport : public LCallInstructionHelper<1, BOX_PIECES, 0> {
  public:
   LIR_HEADER(DynamicImport)
@@ -6018,14 +5978,6 @@ class LIteratorEnd : public LInstructionHelper<0, 1, 3> {
   MIteratorEnd* mir() const { return mir_->toIteratorEnd(); }
 };
 
-// Read the number of actual arguments.
-class LArgumentsLength : public LInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(ArgumentsLength)
-
-  LArgumentsLength() : LInstructionHelper(classOpcode) {}
-};
-
 // Load a value from the actual arguments.
 class LGetFrameArgument : public LInstructionHelper<BOX_PIECES, 1, 0> {
  public:
@@ -7741,13 +7693,6 @@ class LWasmStoreRef : public LInstructionHelper<0, 3, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
-class LWasmParameter : public LInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(WasmParameter);
-
-  LWasmParameter() : LInstructionHelper(classOpcode) {}
-};
-
 class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0> {
  public:
   LIR_HEADER(WasmParameterI64);
@@ -7801,12 +7746,6 @@ class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0> {
   }
   MWasmStackArg* mir() const { return mirRaw()->toWasmStackArg(); }
   const LInt64Allocation arg() { return getInt64Operand(0); }
-};
-
-class LWasmNullConstant : public LInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(WasmNullConstant);
-  explicit LWasmNullConstant() : LInstructionHelper(classOpcode) {}
 };
 
 class LWasmCall : public LVariadicInstruction<0, 0> {
@@ -8544,15 +8483,6 @@ class LObjectStaticProto : public LInstructionHelper<1, 1, 0> {
       : LInstructionHelper(classOpcode) {
     setOperand(0, object);
   }
-};
-
-class LBuiltinObject : public LCallInstructionHelper<1, 0, 0> {
- public:
-  LIR_HEADER(BuiltinObject)
-
-  LBuiltinObject() : LCallInstructionHelper(classOpcode) {}
-
-  MBuiltinObject* mir() const { return mir_->toBuiltinObject(); }
 };
 
 class LSuperFunction : public LInstructionHelper<BOX_PIECES, 1, 1> {

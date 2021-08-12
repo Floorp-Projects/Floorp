@@ -62,14 +62,26 @@ def generate_header(c_out, includeguard, contents):
     )
 
 
-def gen_lir_class(name, call_instruction, mir_op):
+result_types = {
+    "WordSized": "1",
+    "BoxedValue": "BOX_PIECES",
+    "Int64": "INT64_PIECES",
+}
+
+
+def gen_lir_class(name, result_type, call_instruction, mir_op):
     """Generates class definition for a single LIR opcode."""
     class_name = "L" + name
-    code = "class {} : public LInstructionHelper<0, 0, 0> {{".format(class_name)
+    code = "class {} : public LInstructionHelper<".format(class_name)
+    if result_type:
+        code += result_types[result_type] + ", "
+    else:
+        code += "0, "
+    code += "0, 0> {"
     code += "\\\n public:\\\n  LIR_HEADER({})\\\n".format(name)
     code += "  {}() : LInstructionHelper(classOpcode) {{\\\n".format(class_name)
     if call_instruction:
-        code += "    this->setIsCall();\\\n  "
+        code += "    this->setIsCall();\\\n"
     code += "  }\\\n"
     if mir_op:
         if mir_op is True:
@@ -100,6 +112,11 @@ def generate_lir_header(c_out, yaml_path):
         assert isinstance(gen_boilerplate, bool)
 
         if gen_boilerplate:
+            result_type = op.get("result_type", None)
+            assert result_type is None or str
+            if result_type:
+                assert result_types[result_type]
+
             gen_boilerplate = op.get("gen_boilerplate", True)
             assert isinstance(gen_boilerplate, bool)
 
@@ -109,7 +126,9 @@ def generate_lir_header(c_out, yaml_path):
             mir_op = op.get("mir_op", None)
             assert mir_op is None or True or str
 
-            lir_op_classes.append(gen_lir_class(name, call_instruction, mir_op))
+            lir_op_classes.append(
+                gen_lir_class(name, result_type, call_instruction, mir_op)
+            )
 
         ops.append("_({})".format(name))
 
