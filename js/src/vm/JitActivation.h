@@ -26,8 +26,9 @@
 #include "js/HashTable.h"             // js::HashMap
 #include "js/UniquePtr.h"             // js::UniquePtr
 #include "vm/Activation.h"            // js::Activation
+#include "wasm/WasmCodegenTypes.h"    // js::wasm::TrapData
 #include "wasm/WasmConstants.h"       // js::wasm::Trap
-#include "wasm/WasmFrame.h"           // js::wasm::{Frame,TrapData}
+#include "wasm/WasmFrame.h"           // js::wasm::Frame
 #include "wasm/WasmFrameIter.h"  // js::wasm::{ExitReason,RegisterState,WasmFrameIter}
 
 struct JS_PUBLIC_API JSContext;

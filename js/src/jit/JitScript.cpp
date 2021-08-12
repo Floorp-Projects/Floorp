@@ -15,6 +15,7 @@
 #include "jit/BytecodeAnalysis.h"
 #include "jit/IonScript.h"
 #include "jit/JitFrames.h"
+#include "jit/JitSpewer.h"
 #include "jit/ScriptFromCalleeToken.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
