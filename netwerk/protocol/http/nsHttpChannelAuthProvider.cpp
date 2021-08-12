@@ -180,7 +180,7 @@ nsHttpChannelAuthProvider::ProcessAuthentication(uint32_t httpStatus,
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString creds;
-  rv = GetCredentials(challenges.get(), mProxyAuth, creds);
+  rv = GetCredentials(challenges, mProxyAuth, creds);
   if (rv == NS_ERROR_IN_PROGRESS) return rv;
   if (NS_FAILED(rv)) {
     LOG(("unable to authenticate\n"));
@@ -499,201 +499,59 @@ nsresult nsHttpChannelAuthProvider::PrepareForAuthentication(bool proxyAuth) {
 
   return NS_OK;
 }
+nsresult nsHttpChannelAuthProvider::GetCredentials(
+    const nsACString& aChallenges, bool proxyAuth, nsCString& creds) {
+  LOG(("nsHttpChannelAuthProvider::GetCredentials"));
+  nsAutoCString challenges(aChallenges);
 
-nsresult nsHttpChannelAuthProvider::GetCredentials(const char* challenges,
-                                                   bool proxyAuth,
-                                                   nsCString& creds) {
-  // separate challenges by type
-  const char* p = challenges;  // ptr
-  const char* s = nullptr;     // challenge start (saved position)
-  const char* b = nullptr;     // challenge begin (once end is reached)
-  const char* e = nullptr;     // end of challenge end  (updated each token)
-  size_t n;
-  struct {
-    const char* p;
-    const char* eol;
-  } authpref[16]; /*(4 per auth type)*/
-  memset(authpref, 0, sizeof(authpref));
+  using AuthChallenge = struct AuthChallenge {
+    nsDependentCSubstring challenge;
+    uint16_t algorithm = 0;
 
-  do {
-    // get the challenge string (see nsHttpHeaderArray)
-    while (nsCRT::IsAsciiSpace(*p) || *p == ',') ++p;
-    const char* const t = p;  // token start
-    while (!nsCRT::IsAsciiSpace(*p) && *p != ',' && *p != '=' && *p) ++p;
-    const char* const te = p;             // token end
-    while (nsCRT::IsAsciiSpace(*p)) ++p;  // BWS if followed by '='
-    if (*p == '=') {
-      do {
-        ++p;
-      } while (nsCRT::IsAsciiSpace(*p));  // BWS
-      if (*p == '"') {  // parse over quoted-string (not strict)
-        do {
-          ++p;
-        } while (*p && *p != '"' && *p != '\r' && *p != '\n' &&
-                 (*p != '\\' || *++p != '\0'));
-        if (*p == '"') ++p;
-        // else unterminated quoted-string; missing '"' before end of line
-      }  // not strict: includes non-WS chars after quoted-string
-      while (!nsCRT::IsAsciiSpace(*p) && *p != ',' && *p) ++p;
-      e = p;
-      if (!*p) b = s;
-    } else if (te != t || !*t) {
-      b = s;
-      s = t;
-      if (!b) n = te - t;
+    void operator=(const AuthChallenge& aOther) {
+      challenge.Rebind(aOther.challenge, 0);
+      algorithm = aOther.algorithm;
     }
+  };
 
-    if (b) {
-      // reached end of a challenge
-      int i = -1; /* preference order: 0 .. 3 */
-      switch (n) {
-        case 9:
-          if (nsCRT::strncasecmp(b, "negotiate", 9) == 0) i = 0;
-          break;
-        case 4:
-          if (nsCRT::strncasecmp(b, "ntlm", 4) == 0) i = 1;
-          break;
-        case 6:
-          if (nsCRT::strncasecmp(b, "digest", 6) == 0) i = 2;
-          break;
-        case 5:
-          if (nsCRT::strncasecmp(b, "basic", 5) == 0) i = 3;
-          break;
-        default:
-          break;
-      }
-      if (i != -1) {
-        // save challenge
-        i <<= 2; /* support up to 4 challenges per auth type */
-        int j = 0;
-        while (j < 4 && authpref[i + j].p) ++j;
-        if (j < 4) {
-          authpref[i + j].p = b;
-          authpref[i + j].eol = e;
-        }
-      }
+  nsTArray<AuthChallenge> cc;
 
-      if (b != s) {
-        if (!*s) {
-          break;
-        }
-        e = te;
-        n = te - s;
-      } else {
-        s = nullptr;
-      }
-      b = nullptr;
-    }
-
-  } while (*p);
-
-  if (authpref[(2 << 2) + 1].p) {
-    // more than one Digest challenge (i=2); parse and choose the strongest
-    uint16_t algo_pref = 0;
-    for (int i = 0; i < 4 && authpref[(2 << 2) + i].p; ++i) {
-      nsAutoCString challenge;
-      challenge.Assign(authpref[(2 << 2) + i].p,
-                       authpref[(2 << 2) + i].eol - authpref[(2 << 2) + i].p);
-#if 0  // nsHttpDigestAuth::ParseChallenge is a non-static, protected member
+  Tokenizer t(challenges);
+  nsDependentCSubstring line;
+  t.Record();
+  while (!t.CheckEOF()) {
+    Tokenizer::Token token1;
+    t.SkipUntil(Tokenizer::Token::NewLine());
+    t.Claim(line, Tokenizer::ClaimInclusion::INCLUDE_LAST);
+    if (!line.IsEmpty()) {
+      AuthChallenge ac{line, 0};
       nsAutoCString realm, domain, nonce, opaque;
-      bool stale;
-      uint16_t algorithm, qop;
-      nsresult rv = nsHttpDigestAuth::ParseChallenge(challenge, realm, domain,
-                                                     nonce, opaque, &stale,
-                                                     &algorithm, &qop);
-      if (NS_FAILED(rv))
-        continue;
-      uint16_t cmp = 0;
-      switch (algorithm) {
-        case ALGO_SHA256_SESS:
-          cmp = ALGO_SHA256_SESS;
-          break;
-        case ALGO_SHA256:
-          cmp = ALGO_SHA256_SESS|ALGO_SHA256;
-          break;
-        case ALGO_MD5_SESS:
-          cmp = ALGO_SHA256_SESS|ALGO_SHA256|ALGO_MD5_SESS;
-          break;
-        case ALGO_MD5:
-          cmp = ALGO_SHA256_SESS|ALGO_SHA256|ALGO_MD5_SESS|ALGO_MD5;
-          break;
-        default:
-          continue;
+      bool stale = false;
+      uint16_t qop = 0;
+      if (StringBeginsWith(ac.challenge, "Digest"_ns, nsCaseInsensitiveCStringComparator)) {
+        Unused << nsHttpDigestAuth::ParseChallenge(ac.challenge, realm, domain,
+                                                   nonce, opaque, &stale,
+                                                   &ac.algorithm, &qop);
       }
-#else
-      const char* p = authpref[(2 << 2) + i].p + 6;  // +6 for "Digest"
-      const char* const end = authpref[(2 << 2) + i].eol;
-      uint16_t algorithm = 0;
-      uint16_t cmp = 0;
-      do {
-        while (nsCRT::IsAsciiSpace(*p) || *p == ',') ++p;
-        const char* const t = p;  // token start
-        while (!nsCRT::IsAsciiSpace(*p) && *p != ',' && *p != '=' && *p) ++p;
-        const char* const te = p;             // token end
-        while (nsCRT::IsAsciiSpace(*p)) ++p;  // BWS if followed by '='
-        const char* v = nullptr;
-        if (*p == '=') {
-          do {
-            ++p;
-          } while (nsCRT::IsAsciiSpace(*p));  // BWS
-          v = p;
-          if (*p == '"') {  // parse over quoted-string (not strict)
-            do {
-              ++p;
-            } while (*p && *p != '"' && *p != '\r' && *p != '\n' &&
-                     (*p != '\\' || *++p != '\0'));
-            if (*p == '"') ++p;
-            // else unterminated quoted-string; missing '"' before end of line
-          }  // not strict: includes non-WS chars after quoted-string
-          while (!nsCRT::IsAsciiSpace(*p) && *p != ',' && *p) ++p;
-        }
-        if (!v) continue;
-        if (te - t != 9 || nsCRT::strncasecmp(t, "algorithm", 9) != 0) continue;
-        cmp = 0;
-        switch (p - v) {
-          case 3:
-            if (nsCRT::strncasecmp(v, "MD5", 3) == 0) {
-              algorithm = ALGO_MD5;
-              cmp = ALGO_SHA256_SESS | ALGO_SHA256 | ALGO_MD5_SESS | ALGO_MD5;
-            }
-            break;
-          case 8:
-            if (nsCRT::strncasecmp(v, "MD5-sess", 8) == 0) {
-              algorithm = ALGO_MD5_SESS;
-              cmp = ALGO_SHA256_SESS | ALGO_SHA256 | ALGO_MD5_SESS;
-            }
-            break;
-          case 7:
-            if (nsCRT::strncasecmp(v, "SHA-256", 7) == 0) {
-              algorithm = ALGO_SHA256;
-              cmp = ALGO_SHA256_SESS | ALGO_SHA256;
-            }
-            break;
-          case 12:
-            if (nsCRT::strncasecmp(v, "SHA-256-sess", 12) == 0) {
-              algorithm = ALGO_SHA256_SESS;
-              cmp = ALGO_SHA256_SESS;
-            }
-            break;
-          default:
-            break;
-        }
-        break;
-      } while (p < end);
-#endif
-      if (!cmp || (algo_pref & cmp)) continue;
-      algo_pref = algorithm;
-      // overwrite first Digest slot in authpref[] since only one is tried below
-      if (i) {
-        authpref[2 << 2].p = authpref[(2 << 2) + i].p;
-        authpref[2 << 2].eol = authpref[(2 << 2) + i].eol;
-      }
+      cc.AppendElement(ac);
     }
+
+    t.SkipWhites(Tokenizer::WhiteSkipping::INCLUDE_NEW_LINE);
+    if (t.CheckEOF()) {
+      break;
+    }
+    t.Record();
   }
 
-  nsCOMPtr<nsIHttpAuthenticator> auth;
-  nsAutoCString challenge;
+  cc.StableSort([](const AuthChallenge& lhs, const AuthChallenge& rhs) {
+    // Non-digest challenges should not be reordered.
+    if (!lhs.algorithm || !rhs.algorithm || lhs.algorithm == rhs.algorithm) {
+      return 0;
+    }
+    return lhs.algorithm < rhs.algorithm ? 1 : -1;
+  });
 
+  nsCOMPtr<nsIHttpAuthenticator> auth;
   nsCString authType;  // force heap allocation to enable string sharing since
                        // we'll be assigning this value into mAuthType.
 
@@ -714,16 +572,9 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(const char* challenges,
   bool gotCreds = false;
 
   // figure out which challenge we can handle and which authenticator to use.
-  for (int i = 0; i < (int)(sizeof(authpref) / sizeof(*authpref)); ++i) {
-    if (authpref[i].p == nullptr) continue;
-
-    // get the challenge string (LF separated -- see nsHttpHeaderArray)
-    if (authpref[i].eol != nullptr)
-      challenge.Assign(authpref[i].p, authpref[i].eol - authpref[i].p);
-    else
-      challenge.Assign(authpref[i].p);
-
-    rv = GetAuthenticator(challenge.get(), authType, getter_AddRefs(auth));
+  for (size_t i = 0; i < cc.Length(); i++) {
+    rv = GetAuthenticator(nsCString(cc[i].challenge).get(), authType,
+                          getter_AddRefs(auth));
     if (NS_SUCCEEDED(rv)) {
       //
       // if we've already selected an auth type from a previous challenge
@@ -747,8 +598,8 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(const char* challenges,
       // if a particular auth method only knows 1 thing, like a
       // non-identity based authentication method)
       //
-      rv = GetCredentialsForChallenge(challenge, authType, proxyAuth, auth,
-                                      creds);
+      rv = GetCredentialsForChallenge(cc[i].challenge, authType, proxyAuth,
+                                      auth, creds);
       if (NS_SUCCEEDED(rv)) {
         gotCreds = true;
         *currentAuthType = authType;
@@ -760,10 +611,15 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(const char* challenges,
         // expected asynchronously, save current challenge being
         // processed and all remaining challenges to use later in
         // OnAuthAvailable and now immediately return
-        mCurrentChallenge = challenge;
+        mCurrentChallenge = cc[i].challenge;
         // imperfect; does not save server-side preference ordering.
         // instead, continues with remaining string as provided by client
-        mRemainingChallenges = authpref[i].eol ? authpref[i].eol + 1 : nullptr;
+        mRemainingChallenges.Truncate();
+        while (i + 1 < cc.Length()) {
+          i++;
+          mRemainingChallenges.Append(cc[i].challenge);
+          mRemainingChallenges.Append("\n"_ns);
+        }
         return rv;
       }
 
@@ -1540,7 +1396,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthCancelled(nsISupports* aContext,
         NS_IF_RELEASE(mAuthContinuationState);
       }
       nsAutoCString creds;
-      rv = GetCredentials(mRemainingChallenges.get(), mProxyAuth, creds);
+      rv = GetCredentials(mRemainingChallenges, mProxyAuth, creds);
       if (NS_SUCCEEDED(rv)) {
         // GetCredentials loaded the credentials from the cache or
         // some other way in a synchronous manner, process those
