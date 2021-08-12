@@ -192,10 +192,10 @@ static nsresult gssInit() {
 
   LOG(("Attempting to load gss functions\n"));
 
-  for (size_t i = 0; i < ArrayLength(gssFuncs); ++i) {
-    gssFuncs[i].func = PR_FindFunctionSymbol(lib, gssFuncs[i].str);
-    if (!gssFuncs[i].func) {
-      LOG(("Fail to load %s function from gssapi library\n", gssFuncs[i].str));
+  for (auto& gssFunc : gssFuncs) {
+    gssFunc.func = PR_FindFunctionSymbol(lib, gssFunc.str);
+    if (!gssFunc.func) {
+      LOG(("Fail to load %s function from gssapi library\n", gssFunc.str));
       PR_UnloadLibrary(lib);
       return NS_ERROR_FAILURE;
     }
@@ -447,17 +447,19 @@ nsAuthGSSAPI::GetNextToken(const void* inToken, uint32_t inTokenLen,
   }
 
   *outTokenLen = output_token.length;
-  if (output_token.length != 0)
+  if (output_token.length != 0) {
     *outToken = moz_xmemdup(output_token.value, output_token.length);
-  else
+  } else {
     *outToken = nullptr;
+  }
 
   gss_release_buffer_ptr(&minor_status, &output_token);
 
-  if (major_status == GSS_S_COMPLETE)
+  if (major_status == GSS_S_COMPLETE) {
     rv = NS_SUCCESS_AUTH_FINISHED;
-  else
+  } else {
     rv = NS_OK;
+  }
 
 end:
   gss_release_name_ptr(&minor_status, &server);
@@ -489,10 +491,11 @@ nsAuthGSSAPI::Unwrap(const void* inToken, uint32_t inTokenLen, void** outToken,
 
   *outTokenLen = output_token.length;
 
-  if (output_token.length)
+  if (output_token.length) {
     *outToken = moz_xmemdup(output_token.value, output_token.length);
-  else
+  } else {
     *outToken = nullptr;
+  }
 
   gss_release_buffer_ptr(&minor_status, &output_token);
 

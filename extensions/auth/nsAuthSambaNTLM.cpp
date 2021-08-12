@@ -48,8 +48,9 @@ static bool SpawnIOChild(char* const* aArgs, PRProcess** aPID,
                          PRFileDesc** aFromChildFD, PRFileDesc** aToChildFD) {
   PRFileDesc* toChildPipeRead;
   PRFileDesc* toChildPipeWrite;
-  if (PR_CreatePipe(&toChildPipeRead, &toChildPipeWrite) != PR_SUCCESS)
+  if (PR_CreatePipe(&toChildPipeRead, &toChildPipeWrite) != PR_SUCCESS) {
     return false;
+  }
   PR_SetFDInheritable(toChildPipeRead, true);
   PR_SetFDInheritable(toChildPipeWrite, false);
 

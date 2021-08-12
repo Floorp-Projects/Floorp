@@ -72,7 +72,7 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator {
   [[nodiscard]] nsresult CalculateHA2(const nsCString& http_method,
                                       const nsCString& http_uri_path,
                                       uint16_t algorithm, uint16_t qop,
-                                      const char* body_digest, char* result);
+                                      const char* bodyDigest, char* result);
 
   // result is in mHashBuf
   [[nodiscard]] nsresult DigestHash(const char* buf, uint32_t len,

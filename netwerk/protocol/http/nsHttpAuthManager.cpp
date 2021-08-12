@@ -56,13 +56,11 @@ nsHttpAuthManager::GetAuthIdentity(
   }
 
   if (!aPath.IsEmpty()) {
-    rv = auth_cache->GetAuthEntryForPath(
-        aScheme, aHost,
-        aPort, aPath, originSuffix, &entry);
+    rv = auth_cache->GetAuthEntryForPath(aScheme, aHost, aPort, aPath,
+                                         originSuffix, &entry);
   } else {
-    rv = auth_cache->GetAuthEntryForDomain(
-        aScheme, aHost,
-        aPort, aRealm, originSuffix, &entry);
+    rv = auth_cache->GetAuthEntryForDomain(aScheme, aHost, aPort, aRealm,
+                                           originSuffix, &entry);
   }
 
   if (NS_FAILED(rv)) return rv;
