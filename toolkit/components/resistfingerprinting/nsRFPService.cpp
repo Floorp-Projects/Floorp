@@ -33,7 +33,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
@@ -717,12 +716,6 @@ void nsRFPService::UpdateRFPPref() {
 
   bool privacyResistFingerprinting =
       StaticPrefs::privacy_resistFingerprinting();
-
-  // set fdlibm pref
-  JS::SetUseFdlibmForSinCosTan(
-      StaticPrefs::javascript_options_use_fdlibm_for_sin_cos_tan() ||
-      privacyResistFingerprinting);
-
   if (privacyResistFingerprinting) {
     PR_SetEnv("TZ=UTC");
   } else if (sInitialized) {
