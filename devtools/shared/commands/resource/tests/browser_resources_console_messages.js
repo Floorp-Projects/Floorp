@@ -47,12 +47,6 @@ async function testTabConsoleMessagesResources(executeInIframe) {
   const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
   const onAvailable = resources => {
     for (const resource of resources) {
-      if (resource.message.arguments?.[0] === "[WORKER] started") {
-        // XXX Ignore message from workers as we can't know when they're logged, and we
-        // have a dedicated test for them (browser_resources_console_messages_workers.js).
-        continue;
-      }
-
       is(
         resource.resourceType,
         resourceCommand.TYPES.CONSOLE_MESSAGE,
@@ -105,12 +99,6 @@ async function testTabConsoleMessagesResources(executeInIframe) {
 
   targetCommand.destroy();
   await client.close();
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-    // registrationPromise is set by the test page.
-    const registration = await content.wrappedJSObject.registrationPromise;
-    registration.unregister();
-  });
 }
 
 async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
@@ -178,12 +166,6 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
 
   targetCommand.destroy();
   await client.close();
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-    // registrationPromise is set by the test page.
-    const registration = await content.wrappedJSObject.registrationPromise;
-    registration.unregister();
-  });
 }
 
 async function logExistingMessages(browser, executeInIframe) {
