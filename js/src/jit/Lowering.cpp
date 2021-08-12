@@ -13,6 +13,7 @@
 
 #include <type_traits>
 
+#include "jit/ABIArgGenerator.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
