@@ -33,6 +33,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -82,10 +83,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         if (FeatureFlags.showHomeButtonFeature) {
             val homeAction = BrowserToolbar.Button(
                 imageDrawable = AppCompatResources.getDrawable(
-                    requireContext(),
+                    context,
                     R.drawable.mozac_ic_home
                 )!!,
-                contentDescription = requireContext().getString(R.string.browser_toolbar_home),
+                contentDescription = context.getString(R.string.browser_toolbar_home),
                 iconTintColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
                 listener = browserToolbarInteractor::onHomeButtonClicked
             )
@@ -93,19 +94,100 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             browserToolbarView.view.addNavigationAction(homeAction)
         }
 
+        if (resources.getBoolean(R.bool.tablet)) {
+            val enableTint = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            val disableTint = ThemeManager.resolveAttribute(R.attr.disabled, context)
+            val backAction = BrowserToolbar.TwoStateButton(
+                primaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_back
+                )!!,
+                primaryContentDescription = context.getString(R.string.browser_menu_back),
+                primaryImageTintResource = enableTint,
+                isInPrimaryState = { getCurrentTab()?.content?.canGoBack ?: false },
+                secondaryImageTintResource = disableTint,
+                disableInSecondaryState = true,
+                longClickListener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Back(viewHistory = true)
+                    )
+                },
+                listener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Back(viewHistory = false)
+                    )
+                }
+            )
+            browserToolbarView.view.addNavigationAction(backAction)
+            val forwardAction = BrowserToolbar.TwoStateButton(
+                primaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_forward
+                )!!,
+                primaryContentDescription = context.getString(R.string.browser_menu_forward),
+                primaryImageTintResource = enableTint,
+                isInPrimaryState = { getCurrentTab()?.content?.canGoForward ?: false },
+                secondaryImageTintResource = disableTint,
+                disableInSecondaryState = true,
+                longClickListener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Forward(viewHistory = true)
+                    )
+                },
+                listener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Forward(viewHistory = false)
+                    )
+                }
+            )
+            browserToolbarView.view.addNavigationAction(forwardAction)
+            val refreshAction = BrowserToolbar.TwoStateButton(
+                primaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_refresh
+                )!!,
+                primaryContentDescription = context.getString(R.string.browser_menu_refresh),
+                primaryImageTintResource = enableTint,
+                isInPrimaryState = {
+                    getCurrentTab()?.content?.loading == false
+                },
+                secondaryImage = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_stop
+                )!!,
+                secondaryContentDescription = context.getString(R.string.browser_menu_stop),
+                disableInSecondaryState = false,
+                longClickListener = {
+                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                        ToolbarMenu.Item.Reload(bypassCache = true)
+                    )
+                },
+                listener = {
+                    if (getCurrentTab()?.content?.loading == true) {
+                        browserToolbarInteractor.onBrowserToolbarMenuItemTapped(ToolbarMenu.Item.Stop)
+                    } else {
+                        browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                            ToolbarMenu.Item.Reload(bypassCache = false)
+                        )
+                    }
+                }
+            )
+            browserToolbarView.view.addNavigationAction(refreshAction)
+        }
+
         val readerModeAction =
             BrowserToolbar.ToggleButton(
                 image = AppCompatResources.getDrawable(
-                    requireContext(),
+                    context,
                     R.drawable.ic_readermode
                 )!!,
                 imageSelected =
                 AppCompatResources.getDrawable(
-                    requireContext(),
+                    context,
                     R.drawable.ic_readermode_selected
                 )!!,
-                contentDescription = requireContext().getString(R.string.browser_menu_read),
-                contentDescriptionSelected = requireContext().getString(R.string.browser_menu_read_close),
+                contentDescription = context.getString(R.string.browser_menu_read),
+                contentDescriptionSelected = context.getString(R.string.browser_menu_read_close),
                 visible = {
                     readerModeAvailable
                 },
