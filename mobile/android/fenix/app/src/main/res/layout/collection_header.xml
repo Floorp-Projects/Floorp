@@ -9,4 +9,4 @@
     android:gravity="center_vertical"
     android:layout_marginTop="40dp"
     android:text="@string/collections_header"
-    android:textAppearance="@style/HeaderTextStyle" />
+    android:textAppearance="@style/Header20TextStyle" />
