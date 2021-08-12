@@ -311,12 +311,11 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
     }
 
     nsCOMPtr<nsIURI> url;
-    nsresult rv =
-        NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-            .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                                    nsIStandardURL::URLTYPE_STANDARD, 443,
-                                    newURI, nullptr, nullptr, nullptr))
-            .Finalize(url);
+    nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+                      .Apply(&nsIStandardURLMutator::Init,
+                             nsIStandardURL::URLTYPE_STANDARD, 443, newURI,
+                             nullptr, nullptr, nullptr)
+                      .Finalize(url);
     if (NS_FAILED(rv)) {
       LOG(("TRRService::MaybeSetPrivateURI failed to create URI!\n"));
       return false;
@@ -865,9 +864,8 @@ bool TRRService::MaybeBootstrap(const nsACString& aPossible,
   nsCOMPtr<nsIURI> url;
   nsresult rv =
       NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-          .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                                  nsIStandardURL::URLTYPE_STANDARD, 443,
-                                  mPrivateURI, nullptr, nullptr, nullptr))
+          .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_STANDARD,
+                 443, mPrivateURI, nullptr, nullptr, nullptr)
           .Finalize(url);
   if (NS_FAILED(rv)) {
     LOG(("TRRService::MaybeBootstrap failed to create URI!\n"));

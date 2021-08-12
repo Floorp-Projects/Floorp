@@ -225,7 +225,7 @@ nsFileProtocolHandler::NewFileURI(nsIFile* aFile, nsIURI** aResult) {
   // NOTE: the origin charset is assigned the value of the platform
   // charset by the SetFile method.
   return NS_MutateURI(new nsStandardURL::Mutator())
-      .Apply(NS_MutatorMethod(&nsIFileURLMutator::SetFile, file))
+      .Apply(&nsIFileURLMutator::SetFile, file)
       .Finalize(aResult);
 }
 
