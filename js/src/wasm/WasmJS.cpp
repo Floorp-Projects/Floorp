@@ -97,13 +97,11 @@ static inline bool IsFuzzingCranelift(JSContext* cx) {
 // These functions read flags and apply fuzzing intercession policies.  Never go
 // directly to the flags in code below, always go via these accessors.
 
-static inline bool WasmSimdWormholeFlag(JSContext* cx) {
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
+static inline bool WasmSimdWormholeFlag(JSContext* cx) {
   return cx->options().wasmSimdWormhole();
-#else
-  return false;
-#endif
 }
+#endif
 
 static inline bool WasmThreadsFlag(JSContext* cx) {
   return cx->realm() &&
@@ -377,7 +375,7 @@ bool wasm::ThreadsAvailable(JSContext* cx) {
 bool wasm::HasPlatformSupport(JSContext* cx) {
 #if !MOZ_LITTLE_ENDIAN() || defined(JS_CODEGEN_NONE) || defined(__wasi__)
   return false;
-#endif
+#else
 
   if (gc::SystemPageSize() > wasm::PageSize) {
     return false;
@@ -413,6 +411,7 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
   // they are enabled.
   return BaselinePlatformSupport() || IonPlatformSupport() ||
          CraneliftPlatformSupport();
+#endif
 }
 
 bool wasm::HasSupport(JSContext* cx) {
