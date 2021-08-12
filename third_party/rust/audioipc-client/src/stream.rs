@@ -5,11 +5,13 @@
 
 use crate::ClientContext;
 use crate::{assert_not_in_callback, run_in_callback};
-use audioipc::frame::{framed, Framed};
-use audioipc::messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage};
 use audioipc::rpc;
 use audioipc::shm::SharedMem;
 use audioipc::{codec::LengthDelimitedCodec, messages::StreamCreateParams};
+use audioipc::{
+    framing::{framed, Framed},
+    messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage},
+};
 use cubeb_backend::{ffi, DeviceRef, Error, Result, Stream, StreamOps};
 use futures::Future;
 use futures_cpupool::{CpuFuture, CpuPool};
@@ -50,9 +52,17 @@ pub struct ClientStream<'ctx> {
     shutdown_rx: mpsc::Receiver<()>,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum StreamDirection {
+    Input,
+    Output,
+    Duplex,
+}
+
 struct CallbackServer {
-    input_shm: Option<SharedMem>,
-    output_shm: Option<SharedMem>,
+    dir: StreamDirection,
+    shm: Option<SharedMem>,
+    duplex_input: Option<Vec<u8>>,
     data_cb: ffi::cubeb_data_callback,
     state_cb: ffi::cubeb_state_callback,
     user_ptr: usize,
@@ -83,34 +93,68 @@ impl rpc::Server for CallbackServer {
                     output_frame_size,
                 );
 
+                let input_nbytes = nframes as usize * input_frame_size;
+                let output_nbytes = nframes as usize * output_frame_size;
+
                 // Clone values that need to be moved into the cpu pool thread.
-                let input_shm = unsafe { self.input_shm.as_ref().map(|shm| shm.unsafe_view()) };
-                let output_shm = unsafe { self.output_shm.as_ref().map(|shm| shm.unsafe_view()) };
+                let mut shm = unsafe { self.shm.as_ref().unwrap().unsafe_view() };
+
+                let duplex_copy_ptr = match &mut self.duplex_input {
+                    Some(buf) => {
+                        assert_eq!(self.dir, StreamDirection::Duplex);
+                        assert!(input_frame_size > 0);
+                        assert!(buf.capacity() >= input_nbytes);
+                        buf.as_mut_ptr()
+                    }
+                    None => ptr::null_mut(),
+                } as usize;
                 let user_ptr = self.user_ptr;
                 let cb = self.data_cb.unwrap();
+                let dir = self.dir;
 
                 self.cpu_pool.spawn_fn(move || {
-                    let input_ptr = match input_shm {
-                        Some(shm) => unsafe {
-                            shm.get_slice(nframes as usize * input_frame_size)
-                                .unwrap()
-                                .as_ptr()
+                    // Input and output reuse the same shmem backing.  Unfortunately, cubeb's data_callback isn't
+                    // specified in such a way that would require the callee to consume all of the input before
+                    // writing to the output (i.e., it is passed as two pointers that aren't expected to alias).
+                    // That means we need to copy the input here.
+                    let (input_ptr, output_ptr) = match dir {
+                        StreamDirection::Duplex => unsafe {
+                            assert!(input_frame_size > 0);
+                            assert!(output_frame_size > 0);
+                            assert_ne!(duplex_copy_ptr, 0);
+                            let input = shm.get_slice(input_nbytes).unwrap();
+                            ptr::copy_nonoverlapping(
+                                input.as_ptr(),
+                                duplex_copy_ptr as *mut _,
+                                input.len(),
+                            );
+                            (
+                                duplex_copy_ptr as _,
+                                shm.get_mut_slice(output_nbytes).unwrap().as_mut_ptr(),
+                            )
                         },
-                        None => ptr::null(),
-                    };
-                    let output_ptr = match output_shm {
-                        Some(mut shm) => unsafe {
-                            shm.get_mut_slice(nframes as usize * output_frame_size)
-                                .unwrap()
-                                .as_mut_ptr()
+                        StreamDirection::Input => unsafe {
+                            assert!(input_frame_size > 0);
+                            assert_eq!(output_frame_size, 0);
+                            (
+                                shm.get_slice(input_nbytes).unwrap().as_ptr(),
+                                ptr::null_mut(),
+                            )
                         },
-                        None => ptr::null(),
+                        StreamDirection::Output => unsafe {
+                            assert!(output_frame_size > 0);
+                            assert_eq!(input_frame_size, 0);
+                            (
+                                ptr::null(),
+                                shm.get_mut_slice(output_nbytes).unwrap().as_mut_ptr(),
+                            )
+                        },
                     };
 
                     run_in_callback(|| {
                         let nframes = unsafe {
                             cb(
-                                ptr::null_mut(),
+                                ptr::null_mut(), // https://github.com/kinetiknz/cubeb/issues/518
                                 user_ptr as *mut c_void,
                                 input_ptr as *const _,
                                 output_ptr as *mut _,
@@ -152,6 +196,20 @@ impl rpc::Server for CallbackServer {
                     Ok(CallbackResp::DeviceChange)
                 })
             }
+            CallbackReq::SharedMem(mut handle, shm_area_size) => {
+                let shm = unsafe {
+                    SharedMem::from(handle.take_handle(), shm_area_size)
+                        .expect("Client failed to set up shmem")
+                };
+                self.shm = Some(shm);
+
+                self.duplex_input = if let StreamDirection::Duplex = self.dir {
+                    Some(Vec::with_capacity(shm_area_size))
+                } else {
+                    None
+                };
+                self.cpu_pool.spawn_fn(move || Ok(CallbackResp::SharedMem))
+            }
         }
     }
 }
@@ -171,41 +229,15 @@ impl<'ctx> ClientStream<'ctx> {
             input_stream_params: init_params.input_stream_params,
             output_stream_params: init_params.output_stream_params,
         };
-        let data = send_recv!(rpc, StreamCreate(create_params) => StreamCreated())?;
+        let mut data = send_recv!(rpc, StreamCreate(create_params) => StreamCreated())?;
 
         debug!(
-            "token = {}, handles = {:?}",
-            data.token, data.platform_handles
+            "token = {}, handle = {:?}",
+            data.token, data.platform_handle
         );
 
-        let has_input = init_params.input_stream_params.is_some();
-        let has_output = init_params.output_stream_params.is_some();
-
-        let stream =
-            unsafe { audioipc::MessageStream::from_raw_fd(data.platform_handles[0].into_raw()) };
-
-        let input_shm = if has_input {
-            match unsafe { SharedMem::from(&data.platform_handles[1], audioipc::SHM_AREA_SIZE) } {
-                Ok(shm) => Some(shm),
-                Err(e) => {
-                    debug!("Client failed to set up input shmem: {}", e);
-                    return Err(Error::error());
-                }
-            }
-        } else {
-            None
-        };
-
-        let output_shm = if has_output {
-            match unsafe { SharedMem::from(&data.platform_handles[2], audioipc::SHM_AREA_SIZE) } {
-                Ok(shm) => Some(shm),
-                Err(e) => {
-                    debug!("Client failed to set up output shmem: {}", e);
-                    return Err(Error::error());
-                }
-            }
-        } else {
-            None
+        let stream = unsafe {
+            audioipc::MessageStream::from_raw_handle(data.platform_handle.take_handle().into_raw())
         };
 
         let user_data = user_ptr as usize;
@@ -217,9 +249,20 @@ impl<'ctx> ClientStream<'ctx> {
 
         let (_shutdown_tx, shutdown_rx) = mpsc::channel();
 
+        let dir = match (
+            init_params.input_stream_params,
+            init_params.output_stream_params,
+        ) {
+            (Some(_), Some(_)) => StreamDirection::Duplex,
+            (Some(_), None) => StreamDirection::Input,
+            (None, Some(_)) => StreamDirection::Output,
+            (None, None) => unreachable!(),
+        };
+
         let server = CallbackServer {
-            input_shm,
-            output_shm,
+            dir,
+            shm: None,
+            duplex_input: None,
             data_cb: data_callback,
             state_cb: state_callback,
             user_ptr: user_data,
