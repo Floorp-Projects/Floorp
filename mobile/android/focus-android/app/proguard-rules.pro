@@ -129,3 +129,21 @@
     public static int i(...);
     public static int d(...);
 }
+
+####################################################################################################
+# kotlinx.coroutines: use the fast service loader to init MainDispatcherLoader by including a rule
+# to rewrite this property to return true:
+# https://github.com/Kotlin/kotlinx.coroutines/blob/8c98180f177bbe4b26f1ed9685a9280fea648b9c/kotlinx-coroutines-core/jvm/src/internal/MainDispatchers.kt#L19
+#
+# R8 is expected to optimize the default implementation to avoid a performance issue but a bug in R8
+# as bundled with AGP v7.0.0 causes this optimization to fail so we use the fast service loader instead. See:
+# https://github.com/mozilla-mobile/focus-android/issues/5102#issuecomment-897854121
+#
+# The fast service loader appears to be as performant as the R8 optimization, however, this proguard
+# implementation is more fragile because it relies upon the coroutines source not changing. We
+# should back this out when the R8 bug is solved. We are tracking this in:
+# https://github.com/mozilla-mobile/focus-android/issues/5121
+####################################################################################################
+-assumenosideeffects class kotlinx.coroutines.internal.MainDispatcherLoader {
+    boolean FAST_SERVICE_LOADER_ENABLED return true;
+}
