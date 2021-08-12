@@ -64,16 +64,6 @@
 
 /************************************************************************/
 
-namespace JS {
-/**
- * Tell JS engine whether to use fdlibm for Math.sin, Math.cos, and Math.tan.
- * Using fdlibm ensures that we don't expose a math fingerprint.
- */
-extern JS_PUBLIC_API void SetUseFdlibmForSinCosTan(bool value);
-}  // namespace JS
-
-/************************************************************************/
-
 struct JSFunctionSpec;
 struct JSPropertySpec;
 

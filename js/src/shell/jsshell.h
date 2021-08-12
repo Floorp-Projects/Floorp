@@ -157,8 +157,6 @@ extern bool dumpEntrainedVariables;
 extern bool OOM_printAllocationCount;
 #endif
 
-extern bool useFdlibmForSinCosTan;
-
 extern UniqueChars processWideModuleLoadPath;
 
 // Alias the global dstName to namespaceObj.srcName. For example, if dstName is
