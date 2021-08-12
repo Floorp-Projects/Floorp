@@ -9,7 +9,9 @@
 // happens when calling these functions. They don't do much inspection of
 // profiler internals.
 
+#include "mozilla/ProfilerThreadRegistrationInfo.h"
 #include "mozilla/ProfilerUtils.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include "gtest/gtest.h"
 
@@ -34,7 +36,6 @@
 #  include "mozilla/ProfileBufferEntrySerializationGeckoExtensions.h"
 #  include "mozilla/ProfileJSONWriter.h"
 #  include "mozilla/ScopeExit.h"
-#  include "mozilla/UniquePtrExtensions.h"
 #  include "mozilla/net/HttpBaseChannel.h"
 #  include "nsIChannelEventSink.h"
 #  include "nsIThread.h"
@@ -96,6 +97,72 @@ TEST(GeckoProfiler, ProfilerUtils)
     EXPECT_FALSE(baseprofiler::profiler_is_main_thread());
   });
   testThread.join();
+}
+
+TEST(GeckoProfiler, ThreadRegistrationInfo)
+{
+  profiler_init_main_thread_id();
+
+  TimeStamp ts = TimeStamp::Now();
+  {
+    profiler::ThreadRegistrationInfo trInfo{
+        "name", ProfilerThreadId::FromNumber(123), false, ts};
+    EXPECT_STREQ(trInfo.Name(), "name");
+    EXPECT_NE(trInfo.Name(), "name")
+        << "ThreadRegistrationInfo should keep its own copy of the name";
+    EXPECT_EQ(trInfo.RegisterTime(), ts);
+    EXPECT_EQ(trInfo.ThreadId(), ProfilerThreadId::FromNumber(123));
+    EXPECT_EQ(trInfo.IsMainThread(), false);
+  }
+
+  // Make sure the next timestamp will be different from `ts`.
+  while (TimeStamp::Now() == ts) {
+  }
+
+  {
+    profiler::ThreadRegistrationInfo trInfoHere{"Here"};
+    EXPECT_STREQ(trInfoHere.Name(), "Here");
+    EXPECT_NE(trInfoHere.Name(), "Here")
+        << "ThreadRegistrationInfo should keep its own copy of the name";
+    EXPECT_GT(trInfoHere.RegisterTime(), ts);
+    EXPECT_EQ(trInfoHere.ThreadId(), profiler_current_thread_id());
+    EXPECT_EQ(trInfoHere.ThreadId(), profiler_main_thread_id())
+        << "Gtests are assumed to run on the main thread";
+    EXPECT_EQ(trInfoHere.IsMainThread(), true)
+        << "Gtests are assumed to run on the main thread";
+  }
+
+  {
+    // Sub-thread test.
+    // These will receive sub-thread data (to test move at thread end).
+    TimeStamp tsThread;
+    ProfilerThreadId threadThreadId;
+    UniquePtr<profiler::ThreadRegistrationInfo> trInfoThreadPtr;
+
+    std::thread testThread([&]() {
+      profiler::ThreadRegistrationInfo trInfoThread{"Thread"};
+      EXPECT_STREQ(trInfoThread.Name(), "Thread");
+      EXPECT_NE(trInfoThread.Name(), "Thread")
+          << "ThreadRegistrationInfo should keep its own copy of the name";
+      EXPECT_GT(trInfoThread.RegisterTime(), ts);
+      EXPECT_EQ(trInfoThread.ThreadId(), profiler_current_thread_id());
+      EXPECT_NE(trInfoThread.ThreadId(), profiler_main_thread_id());
+      EXPECT_EQ(trInfoThread.IsMainThread(), false);
+
+      tsThread = trInfoThread.RegisterTime();
+      threadThreadId = trInfoThread.ThreadId();
+      trInfoThreadPtr =
+          MakeUnique<profiler::ThreadRegistrationInfo>(std::move(trInfoThread));
+    });
+    testThread.join();
+
+    ASSERT_NE(trInfoThreadPtr, nullptr);
+    EXPECT_STREQ(trInfoThreadPtr->Name(), "Thread");
+    EXPECT_EQ(trInfoThreadPtr->RegisterTime(), tsThread);
+    EXPECT_EQ(trInfoThreadPtr->ThreadId(), threadThreadId);
+    EXPECT_EQ(trInfoThreadPtr->IsMainThread(), false)
+        << "Gtests are assumed to run on the main thread";
+  }
 }
 
 #ifdef MOZ_GECKO_PROFILER

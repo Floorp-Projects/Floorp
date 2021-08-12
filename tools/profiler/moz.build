@@ -154,6 +154,7 @@ EXPORTS.mozilla += [
     "public/ProfilerMarkersPrerequisites.h",
     "public/ProfilerMarkerTypes.h",
     "public/ProfilerState.h",
+    "public/ProfilerThreadRegistrationInfo.h",
     "public/ProfilerUtils.h",
 ]
 
