@@ -849,6 +849,9 @@ rnint(__double_t x)
 #define asin fdlibm::asin
 #define atan fdlibm::atan
 #define atan2 fdlibm::atan2
+#define cos fdlibm::cos
+#define sin fdlibm::sin
+#define tan fdlibm::tan
 #define cosh fdlibm::cosh
 #define sinh fdlibm::sinh
 #define tanh fdlibm::tanh
