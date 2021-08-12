@@ -27,7 +27,6 @@
 
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/BytecodeUtil-inl.h"
-#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace jit;

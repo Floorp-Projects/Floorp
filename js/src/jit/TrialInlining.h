@@ -9,7 +9,6 @@
 
 #include "jit/CacheIR.h"
 #include "jit/ICStubSpace.h"
-#include "vm/BytecodeLocation.h"
 
 /*
  * [SMDOC] Trial Inlining
@@ -34,6 +33,9 @@
  */
 
 namespace js {
+
+class BytecodeLocation;
+
 namespace jit {
 
 class BaselineFrame;

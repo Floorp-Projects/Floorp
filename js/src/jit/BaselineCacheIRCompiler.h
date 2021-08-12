@@ -9,7 +9,6 @@
 
 #include "mozilla/Maybe.h"
 
-#include "gc/Barrier.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 

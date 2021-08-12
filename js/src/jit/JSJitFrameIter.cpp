@@ -6,8 +6,6 @@
 
 #include "jit/JSJitFrameIter-inl.h"
 
-#include "jit/BaselineDebugModeOSR.h"
-#include "jit/BaselineIC.h"
 #include "jit/CalleeToken.h"
 #include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"

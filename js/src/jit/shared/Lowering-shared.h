@@ -319,15 +319,9 @@ class LIRGeneratorShared {
   inline LInt64Allocation useInt64FixedAtStart(MDefinition* mir,
                                                Register64 regs);
 
-  LInt64Allocation useInt64RegisterAtStart(MDefinition* mir) {
-    return useInt64Register(mir, /* useAtStart = */ true);
-  }
-  LInt64Allocation useInt64RegisterOrConstantAtStart(MDefinition* mir) {
-    return useInt64RegisterOrConstant(mir, /* useAtStart = */ true);
-  }
-  LInt64Allocation useInt64OrConstantAtStart(MDefinition* mir) {
-    return useInt64OrConstant(mir, /* useAtStart = */ true);
-  }
+  inline LInt64Allocation useInt64RegisterAtStart(MDefinition* mir);
+  inline LInt64Allocation useInt64RegisterOrConstantAtStart(MDefinition* mir);
+  inline LInt64Allocation useInt64OrConstantAtStart(MDefinition* mir);
 
   // Rather than defining a new virtual register, sets |ins| to have the same
   // virtual register as |as|.
@@ -403,12 +397,9 @@ class LIRGeneratorShared {
   // Marks this instruction as needing a wasm safepoint.
   void assignWasmSafepoint(LInstruction* ins, MInstruction* mir);
 
-  void lowerConstantDouble(double d, MInstruction* mir) {
-    define(new (alloc()) LDouble(d), mir);
-  }
-  void lowerConstantFloat32(float f, MInstruction* mir) {
-    define(new (alloc()) LFloat32(f), mir);
-  }
+  inline void lowerConstantDouble(double d, MInstruction* mir);
+  inline void lowerConstantFloat32(float f, MInstruction* mir);
+
   bool canSpecializeWasmCompareAndSelect(MCompare::CompareType compTy,
                                          MIRType insTy);
   void lowerWasmCompareAndSelect(MWasmSelect* ins, MDefinition* lhs,

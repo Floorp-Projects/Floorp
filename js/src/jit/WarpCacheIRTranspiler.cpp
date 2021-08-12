@@ -16,7 +16,6 @@
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/CacheIROpsGenerated.h"
-#include "jit/CompileInfo.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
@@ -27,7 +26,7 @@
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeLocation.h"
-#include "wasm/WasmInstance.h"
+#include "wasm/WasmCode.h"
 
 #include "gc/ObjectKind-inl.h"
 

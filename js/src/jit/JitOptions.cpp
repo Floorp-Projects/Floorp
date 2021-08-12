@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <type_traits>
 
-#include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 
 using namespace js;
 using namespace js::jit;

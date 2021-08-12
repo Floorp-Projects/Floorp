@@ -23,8 +23,6 @@
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
 #include "jit/VMFunctionList-inl.h"
-#include "vm/JSContext-inl.h"
-#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -35,8 +33,6 @@ using JS::ExpandoAndGeneration;
 
 namespace js {
 namespace jit {
-
-class AutoStubFrame;
 
 Address CacheRegisterAllocator::addressOf(MacroAssembler& masm,
                                           BaselineFrameSlot slot) const {

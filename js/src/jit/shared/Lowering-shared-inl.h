@@ -860,6 +860,27 @@ LInt64Allocation LIRGeneratorShared::useInt64RegisterOrConstant(
   return useInt64Register(mir, useAtStart);
 }
 
+LInt64Allocation LIRGeneratorShared::useInt64RegisterAtStart(MDefinition* mir) {
+  return useInt64Register(mir, /* useAtStart = */ true);
+}
+
+LInt64Allocation LIRGeneratorShared::useInt64RegisterOrConstantAtStart(
+    MDefinition* mir) {
+  return useInt64RegisterOrConstant(mir, /* useAtStart = */ true);
+}
+
+LInt64Allocation LIRGeneratorShared::useInt64OrConstantAtStart(
+    MDefinition* mir) {
+  return useInt64OrConstant(mir, /* useAtStart = */ true);
+}
+
+void LIRGeneratorShared::lowerConstantDouble(double d, MInstruction* mir) {
+  define(new (alloc()) LDouble(d), mir);
+}
+void LIRGeneratorShared::lowerConstantFloat32(float f, MInstruction* mir) {
+  define(new (alloc()) LFloat32(f), mir);
+}
+
 }  // namespace jit
 }  // namespace js
 

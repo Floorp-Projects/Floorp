@@ -7,7 +7,6 @@
 #ifndef jit_CodeGenerator_h
 #define jit_CodeGenerator_h
 
-#include "jit/CacheIR.h"
 #if defined(JS_ION_PERF)
 #  include "jit/PerfSpewer.h"
 #endif
@@ -31,9 +30,12 @@
 #  error "Unknown architecture!"
 #endif
 
-#include "wasm/WasmGC.h"
-
 namespace js {
+
+namespace wasm {
+class StackMaps;
+}
+
 namespace jit {
 
 class WarpSnapshot;

@@ -6,7 +6,6 @@
 
 #include "jit/x64/MacroAssembler-x64.h"
 
-#include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"

@@ -12,23 +12,12 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <utility>
 
-#include "gc/Barrier.h"
-#include "gc/GC.h"
-#include "gc/Rooting.h"
-#include "jit/BaselineICList.h"
 #include "jit/ICState.h"
-#include "jit/ICStubSpace.h"
 #include "jit/JitCode.h"
-#include "jit/JitOptions.h"
-#include "jit/Registers.h"
-#include "jit/RegisterSets.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/TypeData.h"
 #include "js/TypeDecls.h"
-#include "js/Value.h"
-#include "vm/ArrayObject.h"
 #include "vm/JSScript.h"
 
 class JS_PUBLIC_API JSTracer;
@@ -42,7 +31,6 @@ namespace jit {
 class BaselineFrame;
 class CacheIRStubInfo;
 class ICScript;
-class MacroAssembler;
 
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;

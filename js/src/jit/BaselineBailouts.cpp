@@ -22,7 +22,6 @@
 #include "jit/JitSpewer.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
-#include "jit/Recover.h"
 #include "jit/RematerializedFrame.h"
 #include "jit/SharedICRegisters.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit, js::ReportOverRecursed

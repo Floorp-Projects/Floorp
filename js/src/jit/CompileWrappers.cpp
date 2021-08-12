@@ -6,12 +6,11 @@
 
 #include "jit/CompileWrappers.h"
 
-#include "gc/GC.h"
 #include "gc/Heap.h"
+#include "gc/Zone.h"
 #include "jit/Ion.h"
 #include "jit/JitRuntime.h"
-
-#include "vm/Realm-inl.h"
+#include "vm/Realm.h"
 
 using namespace js;
 using namespace js::jit;

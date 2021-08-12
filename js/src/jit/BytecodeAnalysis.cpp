@@ -14,7 +14,6 @@
 
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
-#include "vm/BytecodeUtil-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;

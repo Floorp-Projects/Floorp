@@ -10,19 +10,15 @@
 #include "mozilla/ScopeExit.h"
 
 #include "jit/BaselineJIT.h"
-#include "jit/Invalidation.h"
-#include "jit/Ion.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/JSJitFrameIter.h"
 #include "jit/SafepointIndex.h"
-#include "jit/Snapshots.h"
 #include "vm/JSContext.h"
 #include "vm/Stack.h"
 #include "vm/TraceLogging.h"
 
-#include "jit/JSJitFrameIter-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 

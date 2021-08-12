@@ -6,7 +6,6 @@
 
 #include "jit/x64/Assembler-x64.h"
 
-#include "gc/Marking.h"
 #include "util/Memory.h"
 
 using namespace js;

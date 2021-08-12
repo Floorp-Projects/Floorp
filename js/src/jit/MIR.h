@@ -21,11 +21,9 @@
 
 #include "NamespaceImports.h"
 
-#include "gc/Allocator.h"
 #include "jit/AtomicOp.h"
 #include "jit/FixedList.h"
 #include "jit/InlineList.h"
-#include "jit/InlineScriptTree.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MIROpsGenerated.h"
@@ -33,18 +31,13 @@
 #include "jit/TypePolicy.h"
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter}Op, JSJitInfo
 #include "js/HeapAPI.h"
-#include "js/Id.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/Value.h"
 #include "js/Vector.h"
-#include "util/DifferentialTesting.h"
-#include "vm/ArrayObject.h"
-#include "vm/BuiltinObjectKind.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
-#include "vm/SharedMem.h"
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmJS.h"  // for WasmInstanceObject
 
@@ -82,6 +75,7 @@ class MDefinitionVisitorDefaultNoop {
 #undef VISIT_INS
 };
 
+class BytecodeSite;
 class CompactBufferWriter;
 class Range;
 
