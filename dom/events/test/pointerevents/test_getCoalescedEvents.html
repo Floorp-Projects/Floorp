@@ -79,7 +79,7 @@ function runTests() {
 }
 
 SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({"set": [["dom.event.coalesce_mouse_move", true]]}, runTests);
+  SpecialPowers.pushPrefEnv({"set": [["dom.events.coalesce.mousemove", true]]}, runTests);
 });
 
 </script>

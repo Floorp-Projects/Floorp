@@ -2052,6 +2052,12 @@
   value: true
   mirror: always
 
+# Allow mousemove events to be coalesced in the child side after they are sent.
+- name: dom.events.coalesce.mousemove
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to expose test interfaces of various sorts
 - name: dom.expose_test_interfaces
   type: bool
