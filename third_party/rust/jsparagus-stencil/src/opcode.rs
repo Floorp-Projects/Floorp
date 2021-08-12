@@ -91,6 +91,7 @@ macro_rules! using_opcode_database {
                 (StrictDelElem, strict_del_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_CHECKSTRICT),
                 (HasOwn, has_own, NULL, 1, 2, 1, JOF_BYTE|JOF_IC),
                 (CheckPrivateField, check_private_field, NULL, 3, 2, 3, JOF_TWO_UINT8|JOF_CHECKSTRICT|JOF_IC),
+                (NewPrivateName, new_private_name, NULL, 5, 0, 1, JOF_ATOM),
                 (SuperBase, super_base, NULL, 1, 1, 1, JOF_BYTE),
                 (GetPropSuper, get_prop_super, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_IC),
                 (GetElemSuper, get_elem_super, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_IC),
