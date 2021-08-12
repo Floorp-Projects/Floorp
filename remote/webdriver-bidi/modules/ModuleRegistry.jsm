@@ -4,6 +4,8 @@
 
 "use strict";
 
+var EXPORTED_SYMBOLS = [];
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
