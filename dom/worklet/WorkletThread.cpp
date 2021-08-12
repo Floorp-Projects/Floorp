@@ -159,7 +159,7 @@ class WorkletJSContext final : public CycleCollectedJSContext {
 #endif
 
     JS::JobQueueMayNotBeEmpty(cx);
-    GetMicroTaskQueue().push(std::move(runnable));
+    GetMicroTaskQueue().push_back(std::move(runnable));
   }
 
   bool IsSystemCaller() const override {
