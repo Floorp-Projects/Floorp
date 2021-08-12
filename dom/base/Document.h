@@ -5315,6 +5315,7 @@ class AutoWalkBrowsingContextGroup {
   virtual ~AutoWalkBrowsingContextGroup() = default;
 
  protected:
+  void SuppressBrowsingContext(BrowsingContext* aContext);
   void SuppressBrowsingContextGroup(BrowsingContextGroup* aGroup);
   void UnsuppressDocuments() {
     for (const auto& doc : mDocuments) {
