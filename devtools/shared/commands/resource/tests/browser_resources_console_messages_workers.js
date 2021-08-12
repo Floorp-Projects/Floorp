@@ -5,9 +5,9 @@
 
 // Test the ResourceCommand API around CONSOLE_MESSAGE in workers
 
-const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
+const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document_workers.html";
 const WORKER_FILE = "test_worker.js";
-const IFRAME_FILE = `${URL_ROOT_ORG_SSL}fission_iframe.html`;
+const IFRAME_FILE = `${URL_ROOT_ORG_SSL}fission_iframe_workers.html`;
 
 add_task(async function() {
   // Set the following pref to false as it's the one that enables direct connection
