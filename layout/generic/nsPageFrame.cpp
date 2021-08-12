@@ -592,20 +592,23 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     clipState.Clear();
 
-    // We need to extend the building rect to include the specified page size,
-    // in case it is larger than the physical page size. In that case the
-    // nsPageFrame will be the size of the physical page, but the child
-    // nsPageContentFrame will be the larger specified page size.
-    // The more correct way to do this would be to fully reverse the result of
-    // ComputePagesPerSheetAndPageSizeTransform to handle this scaling, but
-    // this should have the same result and is easier.
-    const nsRect pageContentRect({0, 0}, ComputePageSize());
+    // We need to extend the building rect to include the specified page size
+    // (scaled by the print scaling factor), in case it is larger than the
+    // physical page size. In that case the nsPageFrame will be the size of the
+    // physical page, but the child nsPageContentFrame will be the larger
+    // specified page size. The more correct way to do this would be to fully
+    // reverse the result of ComputePagesPerSheetAndPageSizeTransform to handle
+    // this scaling, but this should have the same result and is easier.
+    nsPresContext* const pc = PresContext();
+    const float scale = pc->GetPageScale();
+    const nsSize pageSize = ComputePageSize();
+    const nsRect scaledPageRect{0, 0, NSToCoordCeil(pageSize.width / scale),
+                                NSToCoordCeil(pageSize.height / scale)};
     nsDisplayListBuilder::AutoBuildingDisplayList buildingForPageContentFrame(
-        aBuilder, this, pageContentRect, pageContentRect);
+        aBuilder, this, scaledPageRect, scaledPageRect);
 
     nsContainerFrame::BuildDisplayList(aBuilder, set);
 
-    nsPresContext* const pc = PresContext();
     if (pc->IsRootPaginatedDocument()) {
       content.AppendNewToTop<nsDisplayHeaderFooter>(aBuilder, this);
 
