@@ -1,152 +1,443 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Annuler</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">Enregistrer</string>
-  <string name="urlbar_hint">Recherche ou adresse</string>
-  <string name="teaser">Navigation privée automatique.\nNaviguez. Effacez. Recommencez.</string>
-  <string name="feedback_erase">Votre historique de navigation a été effacé.</string>
-  <string name="feedback_erase_custom_tab">L’historique de navigation de l’onglet a été effacé.</string>
-  <string name="search_hint">Rechercher %1$s</string>
-  <string name="menu_share">Partager…</string>
-  <string name="menu_report_site_issue">Signaler un problème sur ce site</string>
-  <string name="menu_open_with_default_browser2">Ouvrir avec %1$s</string>
-  <string name="menu_open_with_a_browser2">Ouvrir avec…</string>
-  <string name="menu_add_to_home_screen">Ajouter à l’écran d’accueil</string>
-  <string name="menu_whats_new">Nouveautés</string>
-  <string name="menu_settings">Paramètres</string>
-  <string name="menu_about">À propos</string>
-  <string name="menu_help">Aide</string>
-  <string name="menu_rights">Droits de l’utilisateur</string>
-  <string name="menu_trackers_blocked_title">Traqueurs bloqués</string>
-  <string name="menu_trackers_blocked_subtitle">Désactiver cette option peut résoudre certains problèmes du site</string>
-  <string name="menu_content_blocking">Blocage de contenu</string>
-  <string name="menu_content_blocking_subtitle">Désactiver pour réparer certains sites</string>
-  <string name="menu_custom_tab_branding">Fonctionne grâce à %1$s</string>
-  <string name="share_dialog_title">Partager avec</string>
-  <string name="notification_erase_text">Effacer l’historique de navigation</string>
-  <string name="notification_action_open">Ouvrir</string>
-  <string name="notification_action_erase_and_open">Effacer et ouvrir</string>
-  <string name="shortcut_erase_short_label">Effacer</string>
-  <string name="shortcut_erase_long_label">Effacer l’historique de navigation</string>
-  <string name="shortcut_erase_and_open_short_label">Effacer et ouvrir</string>
-  <string name="shortcut_erase_and_open_long_label">Effacer et ouvrir %1$s</string>
-  <string name="text_selection_search_action">Faire une recherche privée</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Vie privée et sécurité</string>
-  <string name="preference_privacy_and_security_summary">Pistage, cookies, données collectées</string>
-  <string name="preference_search_summary">Moteur par défaut, saisie semi-automatique</string>
-  <string name="preference_mozilla_summary">À propos de %1$s, aide</string>
-  <string name="preference_category_tracking_protection">Protection contre le pistage</string>
-  <string name="preference_category_web_content">Contenu web</string>
-  <string name="preference_category_switching_apps">Navigation entre les applications</string>
-  <string name="preference_category_general">Général</string>
-  <string name="preference_general_summary">Navigateur par défaut, onglets, langue</string>
-  <string name="preference_category_data_collection_use">Collecte de données et utilisation</string>
-  <string name="preference_category_search">Recherche</string>
-  <string name="preference_show_search_suggestions">Obtenir des suggestions de recherche</string>
-  <string name="preference_show_search_suggestions_summary">%1$s enverra ce que vous saisissez dans votre barre d’adresse à votre moteur de recherche</string>
-  <string name="preference_search_engine_default">Par défaut</string>
-  <string name="preference_search_engine_label">Moteur de recherche</string>
-  <string name="preference_state_on">Activée</string>
-  <string name="preference_state_off">Désactivée</string>
-  <string name="preference_subitem_autocomplete">Saisie semi-automatique des adresses</string>
-  <string name="preference_switch_autocomplete_topsites">Pour les sites les plus populaires</string>
-  <string name="preference_autocomplete_topsite_summary">Activer pour compléter automatiquement plus de 450 adresses populaires dans la barre d’adresse.</string>
-  <string name="preference_switch_autocomplete_user_list">Pour les sites que vous ajoutez</string>
-  <string name="preference_autocomplete_user_list_summary">Activer pour compléter automatiquement plus de 450 adresses populaires dans la barre d’adresse.</string>
-  <string name="preference_category_autocomplete_manage_sites">Gérer les sites</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Gérer les sites</string>
-  <string name="preference_autocomplete_action_add">+ Ajouter une adresse personnalisée</string>
-  <string name="preference_autocomplete_title_add">Ajouter une adresse personnalisée</string>
-  <string name="custom_autocomplete_quick_add">Ajouter une adresse personnalisée</string>
-  <string name="add_custom_autocomplete_label">Ajouter un lien à la saisie semi-automatique</string>
-  <string name="preference_category_cookies">Cookies et données de sites</string>
-  <string name="preference_category_data_choices">Données collectées</string>
-  <string name="preference_autocomplete_title_remove">Supprimer des adresses personnalisées</string>
-  <string name="preference_autocomplete_learn_more">En savoir plus</string>
-  <string name="preference_autocomplete_custom_summary">Ajouter et gérer des adresses personnalisées pour la saisie semi-automatique.</string>
-  <string name="preference_autocomplete_add_title">Adresse web à ajouter</string>
-  <string name="preference_autocomplete_add_hint">Coller ou saisir une adresse web</string>
-  <string name="preference_autocomplete_add_example2">Exemple : mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Exemple : example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Nouvelle adresse personnalisée ajoutée.</string>
-  <string name="preference_autocomplete_menu_remove">Supprimer</string>
-  <string name="preference_autocomplete_action_remove_content_description">Supprimer</string>
-  <string name="preference_autocomplete_add_error">Veuillez vérifier l’adresse saisie.</string>
-  <string name="preference_language">Langue</string>
-  <string name="preference_language_systemdefault">Valeur par défaut du système</string>
-  <string name="preference_category_privacy">Vie privée</string>
-  <string name="preference_privacy_block_ads">Bloquer les traqueurs publicitaires</string>
-  <string name="preference_privacy_block_ads_summary">Certaines publicités pistent vos visites sur les sites, même sans cliquer sur les publicités</string>
-  <string name="preference_privacy_block_analytics">Bloquer les traqueurs de statistiques</string>
-  <string name="preference_privacy_block_analytics_summary">Ils servent à collecter, analyser et mesurer les actions telles qu’appuyer sur l’écran ou faire défiler la page</string>
-  <string name="preference_privacy_block_social">Bloquer les traqueurs de réseaux sociaux</string>
-  <string name="preference_privacy_block_social_summary">Ils sont insérés sur certains sites pour pister vos visites et afficher des fonctionnalités comme des boutons de partage</string>
-  <string name="preference_privacy_block_content">Bloquer les autres traqueurs de contenu</string>
-  <string name="preference_privacy_block_content_summary2">Activer cette option peut provoquer des problèmes sur certaines pages</string>
-  <string name="preference_privacy_category_cookies">Interdire les cookies</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Non</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloquer uniquement les cookies tiers utilisés pour le pistage</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Interdire les cookies tiers uniquement</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Oui</string>
-  <string name="preference_security_biometric">Utiliser une empreinte digitale pour déverrouiller l’application</string>
-  <string name="preference_security_biometric_summary">Votre empreinte digitale peut déverrouiller %1$s si une URL est déjà ouverte au sein de l’application. Le mode furtif sera activé.</string>
-  <string name="preference_privacy_secure_mode">Mode furtif</string>
-  <string name="preference_privacy_stealth_summary">Masquer les pages web lorsque vous changez d’application et empêcher les captures d’écran.</string>
-  <string name="preference_category_security">Sécurité</string>
-  <string name="preference_category_performance">Performances</string>
-  <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
-  <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>
-  <string name="preference_performance_block_javascript">Bloquer JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Les pages peuvent se charger plus rapidement, mais peuvent aussi se comporter de manière inattendue</string>
-  <string name="preference_default_browser2">Définir %1$s comme navigateur par défaut</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Envoyer des données d’utilisation</string>
-  <string name="preference_mozilla_telemetry_summary">En savoir plus</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla veille à collecter uniquement les données nécessaires afin d’offrir et d’améliorer %1$s pour tout le monde.</string>
-  <string name="preference_privacy_notice">Politique de confidentialité</string>
-  <string name="preference_about">À propos de %1$s</string>
-  <string name="preference_search_installed_search_engines">Moteurs de recherche installés</string>
-  <string name="preference_search_restore">Restaurer les moteurs par défaut</string>
-  <string name="preference_search_add2">+ Ajouter un autre moteur de recherche</string>
-  <string name="preference_search_remove_title">Supprimer des moteurs de recherche</string>
-  <string name="preference_search_remove">Supprimer</string>
-  <string name="preference_homescreen_tips">Afficher des astuces sur l’écran d’accueil</string>
-  <string name="action_option_add_search_engine">Ajouter un moteur de recherche</string>
-  <string name="search_add_manually_name_hint">Nom du moteur de recherche</string>
-  <string name="search_add_manually_string">Chaîne de recherche à utiliser</string>
-  <string name="search_add_manually_save">Enregistrer</string>
-  <string name="search_add_manually_example">Exemple : example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Nouveau moteur de recherche ajouté.</string>
-  <string name="search_add_error_empty_name">Saisir le nom du moteur de recherche</string>
-  <string name="search_add_error_duplicate_name">Un moteur de recherche du même nom est déjà installé.</string>
-  <string name="search_add_error_empty_search">Saisir une chaîne de recherche</string>
-  <string name="search_add_error_format">Vérifiez que la chaîne de recherche suit le format de l’exemple</string>
-  <string name="content_description_clear_input">Effacer le texte saisi</string>
-  <string name="content_description_dismiss_input">Fermer</string>
-  <string name="content_description_erase">Effacer l’historique de navigation</string>
-  <string name="content_description_tab_counter">Onglets ouverts : %1$s</string>
-  <string name="content_description_lock">Connexion sécurisée</string>
-  <string name="accessibility_announcement_loading">Chargement…</string>
-  <string name="accessibility_announcement_loading_finished">Site web chargé</string>
-  <string name="content_description_menu">Options supplémentaires</string>
-  <string name="indicator_content_description_menu">Bouton pour afficher davantage d’options</string>
-  <string name="content_description_forward">Avancer dans l’historique</string>
-  <string name="content_description_reload">Actualiser la page web</string>
-  <string name="content_description_back">Précédent</string>
-  <string name="content_description_stop">Arrêter le chargement du site web</string>
-  <string name="content_description_customtab_exit">Revenir à l’application précédente</string>
-  <string name="content_description_trackers_blocked">Nombre de traqueurs bloqués</string>
-  <string name="content_description_blocking_switch">Bloquer les traqueurs</string>
-  <string name="your_rights">Droits de l’utilisateur</string>
-  <string name="external_app_prompt_title">Ouvrir le lien dans une autre application</string>
-  <string name="external_app_prompt">Vous allez quitter %1$s pour ouvrir ce lien dans %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Trouver une application capable d’ouvrir ce lien</string>
-  <string name="external_app_prompt_no_app">Aucune des applications de votre appareil n’est capable d’ouvrir ce lien. Vous pouvez quitter %1$s pour rechercher dans %2$s une application qui en est capable.</string>
-  <string name="external_multiple_apps_matched_exit">Quitter la navigation privée ?</string>
-  <string name="download_snackbar_finished">%1$s terminé</string>
-  <string name="download_snackbar_open">Ouvrir</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Annuler</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">Enregistrer</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Recherche ou adresse</string>
+
+    <string name="teaser">Navigation privée automatique.\nNaviguez. Effacez. Recommencez.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Votre historique de navigation a été effacé.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">L’historique de navigation de l’onglet a été effacé.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Rechercher %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Partager…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Signaler un problème sur ce site</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Ouvrir avec %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Ouvrir avec…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Ajouter à l’écran d’accueil</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Nouveautés</string>
+    <string name="menu_settings">Paramètres</string>
+    <string name="menu_about">À propos</string>
+    <string name="menu_help">Aide</string>
+    <string name="menu_rights">Droits de l’utilisateur</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Traqueurs bloqués</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Désactiver cette option peut résoudre certains problèmes du site</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Blocage de contenu</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Désactiver pour réparer certains sites</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Fonctionne grâce à %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Partager avec</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Effacer l’historique de navigation</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Ouvrir</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Effacer et ouvrir</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Effacer</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Effacer l’historique de navigation</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Effacer et ouvrir</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Effacer et ouvrir %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Faire une recherche privée</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s vous aide à rester aux commandes.</p>
+<p>Utilisez-le comme un navigateur privé :
+<ul>
+<li>Effectuez des recherches et naviguez depuis l’application</li>
+<li>Bloquez les traqueurs (ou modifiez les paramètres pour les autoriser)</li>
+<li>Effacez les cookies, ainsi que les historiques de navigation et de recherche</li>
+</ul>
+</p>
+<p>%1$s est réalisé par Mozilla. Notre mission est de défendre l’ouverture et la bonne santé d’Internet.<br/>
+<a href="%2$s">En savoir plus</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Vie privée et sécurité</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Pistage, cookies, données collectées</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Moteur par défaut, saisie semi-automatique</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">À propos de %1$s, aide</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Protection contre le pistage</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Contenu web</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Navigation entre les applications</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Général</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Navigateur par défaut, onglets, langue</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Collecte de données et utilisation</string>
+
+    <string name="preference_category_search">Recherche</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Obtenir des suggestions de recherche</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s enverra ce que vous saisissez dans votre barre d’adresse à votre moteur de recherche</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Par défaut</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Moteur de recherche</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Activée</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Désactivée</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Saisie semi-automatique des adresses</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Pour les sites les plus populaires</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Activer pour compléter automatiquement plus de 450 adresses populaires dans la barre d’adresse.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Pour les sites que vous ajoutez</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Activer pour compléter automatiquement plus de 450 adresses populaires dans la barre d’adresse.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Gérer les sites</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Gérer les sites</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Ajouter une adresse personnalisée</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Ajouter une adresse personnalisée</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Ajouter une adresse personnalisée</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Ajouter un lien à la saisie semi-automatique</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookies et données de sites</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Données collectées</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Supprimer des adresses personnalisées</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">En savoir plus</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Ajouter et gérer des adresses personnalisées pour la saisie semi-automatique.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">Adresse web à ajouter</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Coller ou saisir une adresse web</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Exemple : mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Exemple : example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Nouvelle adresse personnalisée ajoutée.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Supprimer</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Supprimer</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Veuillez vérifier l’adresse saisie.</string>
+
+    <string name="preference_language">Langue</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Valeur par défaut du système</string>
+
+    <string name="preference_category_privacy">Vie privée</string>
+    <string name="preference_privacy_block_ads">Bloquer les traqueurs publicitaires</string>
+    <string name="preference_privacy_block_ads_summary">Certaines publicités pistent vos visites sur les sites, même sans cliquer sur les publicités</string>
+    <string name="preference_privacy_block_analytics">Bloquer les traqueurs de statistiques</string>
+    <string name="preference_privacy_block_analytics_summary">Ils servent à collecter, analyser et mesurer les actions telles qu’appuyer sur l’écran ou faire défiler la page</string>
+    <string name="preference_privacy_block_social">Bloquer les traqueurs de réseaux sociaux</string>
+    <string name="preference_privacy_block_social_summary">Ils sont insérés sur certains sites pour pister vos visites et afficher des fonctionnalités comme des boutons de partage</string>
+    <string name="preference_privacy_block_content">Bloquer les autres traqueurs de contenu</string>
+    <string name="preference_privacy_block_content_summary2">Activer cette option peut provoquer des problèmes sur certaines pages</string>
+    <string name="preference_privacy_category_cookies">Interdire les cookies</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">Non</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloquer uniquement les cookies tiers utilisés pour le pistage</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Interdire les cookies tiers uniquement</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">Oui</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Utiliser une empreinte digitale pour déverrouiller l’application</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Votre empreinte digitale peut déverrouiller %1$s si une URL est déjà ouverte au sein de l’application. Le mode furtif sera activé.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Mode furtif</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Masquer les pages web lorsque vous changez d’application et empêcher les captures d’écran.</string>
+
+    <string name="preference_category_security">Sécurité</string>
+
+    <string name="preference_category_performance">Performances</string>
+    <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>
+
+    <string name="preference_performance_block_javascript">Bloquer JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Les pages peuvent se charger plus rapidement, mais peuvent aussi se comporter de manière inattendue</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Définir %1$s comme navigateur par défaut</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Envoyer des données d’utilisation</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">En savoir plus</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla veille à collecter uniquement les données nécessaires afin d’offrir et d’améliorer %1$s pour tout le monde.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Politique de confidentialité</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">À propos de %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Moteurs de recherche installés</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Restaurer les moteurs par défaut</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Ajouter un autre moteur de recherche</string>
+    <string name="preference_search_remove_title">Supprimer des moteurs de recherche</string>
+    <string name="preference_search_remove">Supprimer</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Afficher des astuces sur l’écran d’accueil</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Ajouter un moteur de recherche</string>
+
+    <string name="search_add_manually_name_hint">Nom du moteur de recherche</string>
+    <string name="search_add_manually_string">Chaîne de recherche à utiliser</string>
+    <string name="search_add_manually_save">Enregistrer</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Exemple : example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Nouveau moteur de recherche ajouté.</string>
+
+    <string name="search_add_error_empty_name">Saisir le nom du moteur de recherche</string>
+    <string name="search_add_error_duplicate_name">Un moteur de recherche du même nom est déjà installé.</string>
+
+    <string name="search_add_error_empty_search">Saisir une chaîne de recherche</string>
+
+    <string name="search_add_error_format">Vérifiez que la chaîne de recherche suit le format de l’exemple</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Effacer le texte saisi</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Fermer</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Effacer l’historique de navigation</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Onglets ouverts : %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Connexion sécurisée</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Chargement…</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Site web chargé</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Options supplémentaires</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Bouton pour afficher davantage d’options</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Avancer dans l’historique</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Actualiser la page web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Précédent</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Arrêter le chargement du site web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Revenir à l’application précédente</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Nombre de traqueurs bloqués</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Bloquer les traqueurs</string>
+
+    <string name="your_rights">Droits de l’utilisateur</string>
+
+    <string name="external_app_prompt_title">Ouvrir le lien dans une autre application</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Vous allez quitter %1$s pour ouvrir ce lien dans %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Trouver une application capable d’ouvrir ce lien</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Aucune des applications de votre appareil n’est capable d’ouvrir ce lien. Vous pouvez quitter %1$s pour rechercher dans %2$s une application qui en est capable.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Quitter la navigation privée ?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s terminé</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Ouvrir</string>
 
 
 
@@ -176,91 +467,269 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Renforcez votre vie privée</string>
-  <string name="firstrun_defaultbrowser_text2">La navigation privée passe au niveau supérieur. Dites adieu aux publicités et autres traqueurs qui vous espionnent et ralentissent le chargement des pages web.</string>
-  <string name="firstrun_search_title">Recherchez à votre manière</string>
-  <string name="firstrun_search_text">Vous recherchez quelque chose de différent ? Choisissez un autre moteur de recherche par défaut dans les paramètres.</string>
-  <string name="firstrun_shortcut_title">Ajoutez des raccourcis sur votre écran d’accueil</string>
-  <string name="firstrun_shortcut_text">Retournez voir vos sites préférés dans %1$s rapidement. Sélectionnez simplement « Ajouter à l’écran d’accueil » depuis le menu de %1$s.</string>
-  <string name="firstrun_privacy_title">Reprenez votre vie privée en main</string>
-  <string name="firstrun_privacy_text">Définissez %1$s en tant que navigateur par défaut et bénéficiez d’une navigation privée dès que vous ouvrez les pages web à partir d’autres applications.</string>
-  <string name="firstrun_close_button">OK</string>
-  <string name="firstrun_skip_button">Ignorer</string>
-  <string name="firstrun_next_button">Suivant</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Ajouter</string>
-  <string name="dialog_addtohomescreen_action_cancel">Annuler</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Ce raccourci s’ouvrira avec la protection contre le pistage désactivée</string>
-  <string name="notification_browsing_session_channel_name">Session de navigation privée</string>
-  <string name="notification_browsing_session_channel_description">Vous pouvez effacer votre session %1$s d’un simple appui depuis les notifications. Vous n’avez pas besoin d’ouvrir l’application ni d’afficher ce qui s’exécute dans votre navigateur.</string>
-  <string name="tabs_tray_action_erase">Effacer l’historique de navigation</string>
-  <string name="download_firefox">Télécharger Firefox</string>
-  <string name="your_rights_content1">%1$s est un logiciel libre et ouvert réalisé par Mozilla avec l’aide d’autres contributeurs.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Renforcez votre vie privée</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">La navigation privée passe au niveau supérieur. Dites adieu aux publicités et autres traqueurs qui vous espionnent et ralentissent le chargement des pages web.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Recherchez à votre manière</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Vous recherchez quelque chose de différent ? Choisissez un autre moteur de recherche par défaut dans les paramètres.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Ajoutez des raccourcis sur votre écran d’accueil</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Retournez voir vos sites préférés dans %1$s rapidement. Sélectionnez simplement « Ajouter à l’écran d’accueil » depuis le menu de %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Reprenez votre vie privée en main</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Définissez %1$s en tant que navigateur par défaut et bénéficiez d’une navigation privée dès que vous ouvrez les pages web à partir d’autres applications.</string>
+
+    <string name="firstrun_close_button">OK</string>
+    <string name="firstrun_skip_button">Ignorer</string>
+    <string name="firstrun_next_button">Suivant</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Ajouter</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Annuler</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Ce raccourci s’ouvrira avec la protection contre le pistage désactivée</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Session de navigation privée</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Vous pouvez effacer votre session %1$s d’un simple appui depuis les notifications. Vous n’avez pas besoin d’ouvrir l’application ni d’afficher ce qui s’exécute dans votre navigateur.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Effacer l’historique de navigation</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Télécharger Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s est un logiciel libre et ouvert réalisé par Mozilla avec l’aide d’autres contributeurs.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Nom d’utilisateur</string>
-  <string name="gv_prompt_password_hint">Mot de passe</string>
-  <string name="gv_prompt_clear">Effacer</string>
-  <string name="security_popup_secure_connection">Connexion sécurisée</string>
-  <string name="security_popup_insecure_connection">Connexion non sécurisée</string>
-  <string name="security_popup_security_verified">Vérifié par : %1$s</string>
-  <string name="site_security_icon_content_description">Sécurité du site</string>
-  <string name="preference_autocomplete_duplicate_url_error">L’adresse existe déjà</string>
-  <string name="find_in_page">Rechercher dans la page</string>
-  <string name="find_in_page_input">Rechercher dans la page</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d sur %2$d</string>
-  <string name="accessibility_next_result">Trouver le résultat suivant</string>
-  <string name="accessibility_previous_result">Trouver le résultat précédent</string>
-  <string name="accessibility_dismiss_find_in_page">Fermer la recherche dans la page</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s est distribué suivant les modalités de la <a href="%2$s">Mozilla Public License</a> et d’autres licences open source.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Il ne vous est cédé aucun droit ou licence sur les marques déposées de la Fondation Mozilla ou de tiers, y compris sur les noms et logos de Mozilla, Firefox ou %1$s. Des informations complémentaires peuvent être consultées <a href="%2$s">ici</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Le code source complémentaire pour %1$s est disponible sous différentes <a href="%2$s">licences</a> libres et open source.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s utilise aussi des listes de blocage fournies par Disconnect Inc, en tant que créations sous la licence <a href="%2$s">GNU General Public License v3</a> et qui sont disponibles <a href="%3$s">ici</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Nom d’utilisateur</string>
+    <string name="gv_prompt_password_hint">Mot de passe</string>
+    <string name="gv_prompt_clear">Effacer</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Connexion sécurisée</string>
+    <string name="security_popup_insecure_connection">Connexion non sécurisée</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Vérifié par : %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Sécurité du site</string>
+    <string name="preference_autocomplete_duplicate_url_error">L’adresse existe déjà</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Rechercher dans la page</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Rechercher dans la page</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d sur %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Trouver le résultat suivant</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Trouver le résultat précédent</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Fermer la recherche dans la page</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Voir version ordinateur</string>
-  <string name="custom_tab_copy_url_action">Adresse web copiée</string>
-  <string name="preference_advanced_summary">Outils de développement</string>
-  <string name="preference_category_advanced">Avancé</string>
-  <string name="preference_remote_debugging">Débogage distant par USB/Wi-Fi</string>
-  <string name="biometric_auth_title">Déverrouiller %1$s</string>
-  <string name="biometric_auth_description">Touchez le capteur d’empreinte digitale pour continuer.</string>
-  <string name="biometric_auth_new_session">Nouvelle session</string>
-  <string name="biometric_auth_image_description">Icône d’empreinte digitale</string>
-  <string name="biometric_auth_not_recognized_error">Empreinte digitale non reconnue. Veuillez réessayer.</string>
-  <string name="biometric_auth_moved_too_quickly">Votre doigt a bougé trop rapidement. Veuillez réessayer.</string>
-  <string name="enable_search_suggestion_title">Voulez-vous activer les suggestions de recherche ?</string>
-  <string name="enable_search_suggestion_subtitle">Pour obtenir des suggestions de recherche, %1$s doit envoyer ce que vous saisissez dans la barre d’adresse vers le moteur de recherche choisi. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">En savoir plus</string>
-  <string name="enable_search_suggestions_no">Non</string>
-  <string name="enable_search_suggestions_yes">Oui</string>
-  <string name="no_suggestions_message">Certains moteurs de recherche ne peuvent pas afficher de suggestions.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
-  <string name="tip_disable_tracking_protection">Ce site ne se comporte pas comme prévu ?\nEssayer de désactiver la protection contre le pistage</string>
-  <string name="tip_add_to_homescreen">Accédez rapidement à vos sites favoris%1$s Menu &gt; Ajouter à l’écran d’accueil</string>
-  <string name="tip_set_default_browser">Ouvrir tous les liens dans %1$s\n Définir %1$s comme navigateur par défaut</string>
-  <string name="tip_autocomplete_url">Compléter automatiquement les URL des sites les plus visités\n Effectuez un appui long sur une URL dans la barre d’adresse</string>
-  <string name="tip_open_in_new_tab">Ouvrir un lien dans un nouvel onglet\n Effectuez un appui long sur un lien dans une page</string>
-  <string name="tip_request_desktop">Préférez-vous voir la version pour ordinateur du site ?%1$s Menu &gt; Voir version ordinateur</string>
-  <string name="tip_disable_tips2">Désactiver les conseils sur l’écran de démarrage</string>
-  <string name="tip_explain_allowlist">Un site de confiance ?\n Allowlist désactive la protection contre le pistage pour les sites que vous connaissez et auxquels vous faites confiance.</string>
-  <string name="new_tab_opened_snackbar">Nouvel onglet ouvert</string>
-  <string name="open_new_tab_snackbar">Afficher</string>
-  <string name="preference_open_new_tab">Afficher immédiatement les liens ouverts dans de nouveaux onglets</string>
-  <string name="preference_category_safe_browsing">Navigation sécurisée</string>
-  <string name="preference_safe_browsing_title">Bloquer les sites potentiellement dangereux ou trompeurs</string>
-  <string name="preference_safe_browsing_summary">Bloquer les sites malveillants et trompeurs, les sites de logiciels malveillants et indésirables signalés.</string>
-  <string name="preference_exceptions">Exceptions</string>
-  <string name="preference_exceptions_description">Vous avez désactivé le blocage de contenu pour ces sites web.</string>
-  <string name="preference_exceptions_menu_remove">Supprimer</string>
-  <string name="preference_exceptions_remove_all_button_label">Supprimer tous les sites web</string>
-  <string name="tab_crash_report_title">L’onglet a planté</string>
-  <string name="tab_crash_report_headline">Nous sommes désolés, nous avons un problème avec cet onglet.</string>
-  <string name="tab_crash_report_description">Votre navigation était privée, nous n’avons pas enregistré cet onglet et ne pouvons donc pas le restaurer.</string>
-  <string name="tab_crash_report_close_tab_button_label">Fermer l’onglet</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Voir version ordinateur</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">Adresse web copiée</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Outils de développement</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Avancé</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Débogage distant par USB/Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Déverrouiller %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Touchez le capteur d’empreinte digitale pour continuer.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Nouvelle session</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Ouvrir le lien dans une nouvelle session</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Icône d’empreinte digitale</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Empreinte digitale non reconnue. Veuillez réessayer.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Votre doigt a bougé trop rapidement. Veuillez réessayer.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">Voulez-vous activer les suggestions de recherche ?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">Pour obtenir des suggestions de recherche, %1$s doit envoyer ce que vous saisissez dans la barre d’adresse vers le moteur de recherche choisi. %2$s.</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">En savoir plus</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Non</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Oui</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Certains moteurs de recherche ne peuvent pas afficher de suggestions.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Ce site ne se comporte pas comme prévu ?\nEssayer de désactiver la protection contre le pistage</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Accédez rapidement à vos sites favoris%1$s Menu > Ajouter à l’écran d’accueil]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Ouvrir tous les liens dans %1$s\n Définir %1$s comme navigateur par défaut</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Compléter automatiquement les URL des sites les plus visités\n Effectuez un appui long sur une URL dans la barre d’adresse</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Ouvrir un lien dans un nouvel onglet\n Effectuez un appui long sur un lien dans une page</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[Préférez-vous voir la version pour ordinateur du site ?%1$s Menu > Voir version ordinateur]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Désactiver les conseils sur l’écran de démarrage</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">Un site de confiance ?\n Allowlist désactive la protection contre le pistage pour les sites que vous connaissez et auxquels vous faites confiance.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Nouvel onglet ouvert</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Afficher</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Afficher immédiatement les liens ouverts dans de nouveaux onglets</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Navigation sécurisée</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Bloquer les sites potentiellement dangereux ou trompeurs</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Bloquer les sites malveillants et trompeurs, les sites de logiciels malveillants et indésirables signalés.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Exceptions</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Vous avez désactivé le blocage de contenu pour ces sites web.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Supprimer</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Supprimer tous les sites web</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">L’onglet a planté</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Nous sommes désolés, nous avons un problème avec cet onglet.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Votre navigation était privée, nous n’avons pas enregistré cet onglet et ne pouvons donc pas le restaurer.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Fermer l’onglet</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Envoyer un rapport de plantage à Mozilla</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Envoyer un rapport de plantage à Mozilla</string>
 </resources>

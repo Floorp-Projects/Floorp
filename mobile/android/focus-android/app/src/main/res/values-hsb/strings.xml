@@ -1,152 +1,444 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Přetorhnyć</string>
-  <string name="action_ok">W porjadku</string>
-  <string name="action_save">Składować</string>
-  <string name="urlbar_hint">Adresu pytać abo zapodać</string>
-  <string name="teaser">Awtomatiski priwatny modus.\nPřehladować. Zhašeć. Wospjetować.</string>
-  <string name="feedback_erase">Waša přehladowanska historija je so zhašała.</string>
-  <string name="feedback_erase_custom_tab">Přehladowanska historija rajtark je so zhašała.</string>
-  <string name="search_hint">Pytanje za %1$s</string>
-  <string name="menu_share">Dźělić…</string>
-  <string name="menu_report_site_issue">Sydłowy problem zdźělić</string>
-  <string name="menu_open_with_default_browser2">W %1$s wočinić</string>
-  <string name="menu_open_with_a_browser2">Wočinić w…</string>
-  <string name="menu_add_to_home_screen">Startowej wobrazowce přidać</string>
-  <string name="menu_whats_new">Nowe funkcije a změny</string>
-  <string name="menu_settings">Nastajenja</string>
-  <string name="menu_about">Wo</string>
-  <string name="menu_help">Pomoc</string>
-  <string name="menu_rights">Waše prawa</string>
-  <string name="menu_trackers_blocked_title">Přesćěhowaki zablokowane</string>
-  <string name="menu_trackers_blocked_subtitle">Hdyž to znjemóžnjeće, so někotre sydłowe problemy rozrisaja</string>
-  <string name="menu_content_blocking">Blokowanje wobsaha</string>
-  <string name="menu_content_blocking_subtitle">Znjemóžnić, zo byšće někotre sydła porjedźił</string>
-  <string name="menu_custom_tab_branding">Spěchowany wot %1$s</string>
-  <string name="share_dialog_title">Dźělić přez</string>
-  <string name="notification_erase_text">Přehladowansku historiju zhašeć</string>
-  <string name="notification_action_open">Wočinić</string>
-  <string name="notification_action_erase_and_open">Zhašeć a wočinić</string>
-  <string name="shortcut_erase_short_label">Zhašeć</string>
-  <string name="shortcut_erase_long_label">Přehladowansku historiju zhašeć</string>
-  <string name="shortcut_erase_and_open_short_label">Zhašeć a wočinić</string>
-  <string name="shortcut_erase_and_open_long_label">%1$s zhašeć a wočinić</string>
-  <string name="text_selection_search_action">Priwatnje pytać</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Priwatnosć a wěstota</string>
-  <string name="preference_privacy_and_security_summary">Slědowanje, placki, datowe wuběry</string>
-  <string name="preference_search_summary">Standard nastajić, awtomatiske wudospołnjenje</string>
-  <string name="preference_mozilla_summary">Wo %1$s, pomoc</string>
-  <string name="preference_category_tracking_protection">Slědowanski škit</string>
-  <string name="preference_category_web_content">Webwobsah</string>
-  <string name="preference_category_switching_apps">Přešaltowanje nałoženjow</string>
-  <string name="preference_category_general">Powšitkowne</string>
-  <string name="preference_general_summary">Standardny wobhladowak, rajtarki, rěč</string>
-  <string name="preference_category_data_collection_use">Zběranje a wužiwanje datow</string>
-  <string name="preference_category_search">Pytać</string>
-  <string name="preference_show_search_suggestions">Pytanske namjety wobstarać</string>
-  <string name="preference_show_search_suggestions_summary">%1$s so na wašu pytawu pósćele, štož w adresowym polu zapodaće</string>
-  <string name="preference_search_engine_default">Standard</string>
-  <string name="preference_search_engine_label">Pytawa</string>
-  <string name="preference_state_on">Zapinjeny</string>
-  <string name="preference_state_off">Wupinjeny</string>
-  <string name="preference_subitem_autocomplete">Awtomatiske wudospołnjenje URL</string>
-  <string name="preference_switch_autocomplete_topsites">Za najlubše sydła</string>
-  <string name="preference_autocomplete_topsite_summary">Zmóžnić, zo by so wjace hač 450 woblubowanych adresow w adresowym polu wudospołniło.</string>
-  <string name="preference_switch_autocomplete_user_list">Za sydła, kotrež přidawaće</string>
-  <string name="preference_autocomplete_user_list_summary">Zmóžnić, zo by so wjace hač 450 woblubowanych adresow w adresowym polu wudospołniło.</string>
-  <string name="preference_category_autocomplete_manage_sites">Sydła rjadować</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Sydła rjadować</string>
-  <string name="preference_autocomplete_action_add">+ Swójsku adresu přidać</string>
-  <string name="preference_autocomplete_title_add">Swójsku adresu přidać</string>
-  <string name="custom_autocomplete_quick_add">Swójski URL přidać</string>
-  <string name="add_custom_autocomplete_label">Wotkaz za awtowudospołnjenje přidać</string>
-  <string name="preference_category_cookies">Placki a sydłowe daty</string>
-  <string name="preference_category_data_choices">Datowy wuběr</string>
-  <string name="preference_autocomplete_title_remove">Swójske adresy wotstronić</string>
-  <string name="preference_autocomplete_learn_more">Dalše informacije</string>
-  <string name="preference_autocomplete_custom_summary">Swójske adresy za wudospołnjenje přidać a rjadowác.</string>
-  <string name="preference_autocomplete_add_title">Adresa, kotraž ma so přidać</string>
-  <string name="preference_autocomplete_add_hint">Adresu zasadźić abo zapodać</string>
-  <string name="preference_autocomplete_add_example2">Přikład: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Přikład: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Nowa swójska adresa přidata.</string>
-  <string name="preference_autocomplete_menu_remove">Wotstronić</string>
-  <string name="preference_autocomplete_action_remove_content_description">Wotstronić</string>
-  <string name="preference_autocomplete_add_error">Přepruwujće zapodatu adresu.</string>
-  <string name="preference_language">Rěč</string>
-  <string name="preference_language_systemdefault">Systemowy standard</string>
-  <string name="preference_category_privacy">Priwatnosć</string>
-  <string name="preference_privacy_block_ads">Wabjenske přesćěhowaki blokować</string>
-  <string name="preference_privacy_block_ads_summary">Někotre wbajenje sydłowe wopyty slěduje, samo hdyž na wabjenje njekliknjeće</string>
-  <string name="preference_privacy_block_analytics">Analyzowe přesćěhowaki blokować</string>
-  <string name="preference_privacy_block_analytics_summary">Z tym so aktiwity kaž dótkanje a kulenje přez strony hromadźa, analyzuja a měrja</string>
-  <string name="preference_privacy_block_social">Socialne přesćěhowaki blokować</string>
-  <string name="preference_privacy_block_social_summary">Na sydłach zasadźene, zo bychu waše wopyty slědowali a funkcije kaž tłóčatka za dźělenje zwobraznili</string>
-  <string name="preference_privacy_block_content">Druhe wobsahowe přesćěhowaki blokować</string>
-  <string name="preference_privacy_block_content_summary2">To móže wjesć k tomu, zo so někotre strony njewšědnje zadźerža</string>
-  <string name="preference_privacy_category_cookies">Placki blokować</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Ně</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Jenož slědowace placki třećich poskićowarjow blokować</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Jenož placki třećich poskićowarjow</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Haj</string>
-  <string name="preference_security_biometric">Wužiwajće porstowy wotćišć, zo byšće nałoženje wotewrěł</string>
-  <string name="preference_security_biometric_summary">Waš porstowy wotćišć móže %1$s wotewrěć, jeli URL je hižo w nałoženju wočinjeny. Tarnowanski modus so zapinje.</string>
-  <string name="preference_privacy_secure_mode">Tarnowanje</string>
-  <string name="preference_privacy_stealth_summary">Webstrony schować, hdyž so nałoženja přepinaja a fotam wobrazowki zadźěwać.</string>
-  <string name="preference_category_security">Wěstota</string>
-  <string name="preference_category_performance">Wukon</string>
-  <string name="preference_performance_block_webfonts">Webpisma blokować</string>
-  <string name="preference_performance_block_webfonts_summary">Móže k tomu wjesć, zo symbole abo wobrazy faluja</string>
-  <string name="preference_performance_block_javascript">JavaScript blokować</string>
-  <string name="preference_performance_block_javascript_summary">Strony so spěšnišo začitaja, móhli so wšak tež na njewočakowane wašnje zadźeržeć</string>
-  <string name="preference_default_browser2">%1$s jako standardny wobhladowak nastajić</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Wužiwanske daty pósłać</string>
-  <string name="preference_mozilla_telemetry_summary">Dalše informacije</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla so prócuje, jenož informacije hromadźić, z kotrymiž móžemy %1$s za kóždeho poskićić a polěpšić.</string>
-  <string name="preference_privacy_notice">Zdźělenka priwatnosće</string>
-  <string name="preference_about">Wo %1$s</string>
-  <string name="preference_search_installed_search_engines">Instalowane pytawy</string>
-  <string name="preference_search_restore">Standardne pytawy wobnowić</string>
-  <string name="preference_search_add2">+ Dalšu pytawu přidać</string>
-  <string name="preference_search_remove_title">Pytawy wotstronić</string>
-  <string name="preference_search_remove">Wotstronić</string>
-  <string name="preference_homescreen_tips">Pokiwy na startowej wobrazowce pokazać</string>
-  <string name="action_option_add_search_engine">Pytawu přidać</string>
-  <string name="search_add_manually_name_hint">Mjeno pytawy</string>
-  <string name="search_add_manually_string">Pytanski wuraz, kotryž ma so wužiwać</string>
-  <string name="search_add_manually_save">Składować</string>
-  <string name="search_add_manually_example">Přikład: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Nowa pytawa je so přidała.</string>
-  <string name="search_add_error_empty_name">Mjeno pytawy zapodać</string>
-  <string name="search_add_error_duplicate_name">Je hižo pytawa instalowana, kotraž tute mjeno wužiwa.</string>
-  <string name="search_add_error_empty_search">Pytanski wuraz zapodać</string>
-  <string name="search_add_error_format">Přepruwujće, hač pytanski wuraz přikładowemu formatej wotpowěduje</string>
-  <string name="content_description_clear_input">Zapodaće wuprózdnić</string>
-  <string name="content_description_dismiss_input">Zaćisnyć</string>
-  <string name="content_description_erase">Přehladowansku historiju zhašeć</string>
-  <string name="content_description_tab_counter">Wočinjene rajtarki: %1$s</string>
-  <string name="content_description_lock">Wěsty zwisk</string>
-  <string name="accessibility_announcement_loading">Začitanje</string>
-  <string name="accessibility_announcement_loading_finished">Websydło je so začitało</string>
-  <string name="content_description_menu">Dalše nastajenja</string>
-  <string name="indicator_content_description_menu">Tłóčatko dalšich nastajenjow</string>
-  <string name="content_description_forward">Doprědka</string>
-  <string name="content_description_reload">Websydło znowa začitać</string>
-  <string name="content_description_back">Wróćo</string>
-  <string name="content_description_stop">Čitanje websydła zastajić</string>
-  <string name="content_description_customtab_exit">Wróćo k předchadnemu nałoženju</string>
-  <string name="content_description_trackers_blocked">Ličba zablokowanych přesćěhowakow</string>
-  <string name="content_description_blocking_switch">Přesćěhowaki blokować</string>
-  <string name="your_rights">Waše prawa</string>
-  <string name="external_app_prompt_title">Wotkaz w druhim nałoženju wočinić</string>
-  <string name="external_app_prompt">Móžeće %1$s wopušćić, zo byšće tutón wotkaz w %2$s wočinił.</string>
-  <string name="external_app_prompt_no_app_title">Nałoženje pytać, kotrež móže wotkaz wočinić</string>
-  <string name="external_app_prompt_no_app">Žane z nałoženjow na wašim graće njemóže tutón wotkaz wočinić. Móžeće %1$s wopušćić, zo byšće %2$s za nałoženjom přepytował.</string>
-  <string name="external_multiple_apps_matched_exit">Priwatny modus wopušćić?</string>
-  <string name="download_snackbar_finished">%1$s dokónčeny</string>
-  <string name="download_snackbar_open">Wočinić</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Přetorhnyć</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">W porjadku</string>
+
+    <string name="action_save">Składować</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Adresu pytać abo zapodać</string>
+
+    <string name="teaser">Awtomatiski priwatny modus.\nPřehladować. Zhašeć. Wospjetować.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Waša přehladowanska historija je so zhašała.</string>
+    <string name="feedback_erase2">Přehladowanska historija je so zhašała</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Přehladowanska historija rajtark je so zhašała.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Pytanje za %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Dźělić…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Sydłowy problem zdźělić</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">W %1$s wočinić</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Wočinić w…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Startowej wobrazowce přidać</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Nowe funkcije a změny</string>
+    <string name="menu_settings">Nastajenja</string>
+    <string name="menu_about">Wo</string>
+    <string name="menu_help">Pomoc</string>
+    <string name="menu_rights">Waše prawa</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Přesćěhowaki zablokowane</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Hdyž to znjemóžnjeće, so někotre sydłowe problemy rozrisaja</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Blokowanje wobsaha</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Znjemóžnić, zo byšće někotre sydła porjedźił</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Spěchowany wot %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Dźělić přez</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Přehladowansku historiju zhašeć</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Wočinić</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Zhašeć a wočinić</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Zhašeć</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Přehladowansku historiju zhašeć</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Zhašeć a wočinić</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">%1$s zhašeć a wočinić</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Priwatnje pytać</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s da was kontrolu wobchować.</p>
+<p>Wužiwajće jón jako priwatny wobhladowak:
+  <ul>
+    <li>Pytajće a přehladujće direktnje w nałoženju</li>
+    <li>Blokujće přesćěhowaki (abo aktualizujće nastajenja, zo byšće přesćěhowaki dowolił)</li>
+    <li>Zhašejće placki a pytansku a přehladowansku historiju</li>
+  </ul>
+</p>
+<p>%1$s so wot Mozilla wuwiwa. Naša misija je spěchowanje stroweho, wotewrjeneho interneta.<br/>
+<a href="%2$s">Dalše informacije</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Priwatnosć a wěstota</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Slědowanje, placki, datowe wuběry</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Standard nastajić, awtomatiske wudospołnjenje</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Wo %1$s, pomoc</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Slědowanski škit</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Webwobsah</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Přešaltowanje nałoženjow</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Powšitkowne</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Standardny wobhladowak, rajtarki, rěč</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Zběranje a wužiwanje datow</string>
+
+    <string name="preference_category_search">Pytać</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Pytanske namjety wobstarać</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s so na wašu pytawu pósćele, štož w adresowym polu zapodaće</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Standard</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Pytawa</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Zapinjeny</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Wupinjeny</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Awtomatiske wudospołnjenje URL</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Za najlubše sydła</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Zmóžnić, zo by so wjace hač 450 woblubowanych adresow w adresowym polu wudospołniło.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Za sydła, kotrež přidawaće</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Zmóžnić, zo by so wjace hač 450 woblubowanych adresow w adresowym polu wudospołniło.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Sydła rjadować</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Sydła rjadować</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Swójsku adresu přidać</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Swójsku adresu přidać</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Swójski URL přidać</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Wotkaz za awtowudospołnjenje přidać</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Placki a sydłowe daty</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Datowy wuběr</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Swójske adresy wotstronić</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Dalše informacije</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Swójske adresy za wudospołnjenje přidać a rjadowác.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">Adresa, kotraž ma so přidać</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Adresu zasadźić abo zapodać</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Přikład: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Přikład: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Nowa swójska adresa přidata.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Wotstronić</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Wotstronić</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Přepruwujće zapodatu adresu.</string>
+
+    <string name="preference_language">Rěč</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Systemowy standard</string>
+
+    <string name="preference_category_privacy">Priwatnosć</string>
+    <string name="preference_privacy_block_ads">Wabjenske přesćěhowaki blokować</string>
+    <string name="preference_privacy_block_ads_summary">Někotre wbajenje sydłowe wopyty slěduje, samo hdyž na wabjenje njekliknjeće</string>
+    <string name="preference_privacy_block_analytics">Analyzowe přesćěhowaki blokować</string>
+    <string name="preference_privacy_block_analytics_summary">Z tym so aktiwity kaž dótkanje a kulenje přez strony hromadźa, analyzuja a měrja</string>
+    <string name="preference_privacy_block_social">Socialne přesćěhowaki blokować</string>
+    <string name="preference_privacy_block_social_summary">Na sydłach zasadźene, zo bychu waše wopyty slědowali a funkcije kaž tłóčatka za dźělenje zwobraznili</string>
+    <string name="preference_privacy_block_content">Druhe wobsahowe přesćěhowaki blokować</string>
+    <string name="preference_privacy_block_content_summary2">To móže wjesć k tomu, zo so někotre strony njewšědnje zadźerža</string>
+    <string name="preference_privacy_category_cookies">Placki blokować</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">Ně</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Jenož slědowace placki třećich poskićowarjow blokować</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Jenož placki třećich poskićowarjow</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">Haj</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Wužiwajće porstowy wotćišć, zo byšće nałoženje wotewrěł</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Waš porstowy wotćišć móže %1$s wotewrěć, jeli URL je hižo w nałoženju wočinjeny. Tarnowanski modus so zapinje.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Tarnowanje</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Webstrony schować, hdyž so nałoženja přepinaja a fotam wobrazowki zadźěwać.</string>
+
+    <string name="preference_category_security">Wěstota</string>
+
+    <string name="preference_category_performance">Wukon</string>
+    <string name="preference_performance_block_webfonts">Webpisma blokować</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Móže k tomu wjesć, zo symbole abo wobrazy faluja</string>
+
+    <string name="preference_performance_block_javascript">JavaScript blokować</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Strony so spěšnišo začitaja, móhli so wšak tež na njewočakowane wašnje zadźeržeć</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s jako standardny wobhladowak nastajić</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Wužiwanske daty pósłać</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Dalše informacije</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla so prócuje, jenož informacije hromadźić, z kotrymiž móžemy %1$s za kóždeho poskićić a polěpšić.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Zdźělenka priwatnosće</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Wo %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Instalowane pytawy</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Standardne pytawy wobnowić</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Dalšu pytawu přidać</string>
+    <string name="preference_search_remove_title">Pytawy wotstronić</string>
+    <string name="preference_search_remove">Wotstronić</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Pokiwy na startowej wobrazowce pokazać</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Pytawu přidać</string>
+
+    <string name="search_add_manually_name_hint">Mjeno pytawy</string>
+    <string name="search_add_manually_string">Pytanski wuraz, kotryž ma so wužiwać</string>
+    <string name="search_add_manually_save">Składować</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Přikład: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Nowa pytawa je so přidała.</string>
+
+    <string name="search_add_error_empty_name">Mjeno pytawy zapodać</string>
+    <string name="search_add_error_duplicate_name">Je hižo pytawa instalowana, kotraž tute mjeno wužiwa.</string>
+
+    <string name="search_add_error_empty_search">Pytanski wuraz zapodać</string>
+
+    <string name="search_add_error_format">Přepruwujće, hač pytanski wuraz přikładowemu formatej wotpowěduje</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Zapodaće wuprózdnić</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Zaćisnyć</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Přehladowansku historiju zhašeć</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Wočinjene rajtarki: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Wěsty zwisk</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Začitanje</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Websydło je so začitało</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Dalše nastajenja</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Tłóčatko dalšich nastajenjow</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Doprědka</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Websydło znowa začitać</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Wróćo</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Čitanje websydła zastajić</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Wróćo k předchadnemu nałoženju</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Ličba zablokowanych přesćěhowakow</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Přesćěhowaki blokować</string>
+
+    <string name="your_rights">Waše prawa</string>
+
+    <string name="external_app_prompt_title">Wotkaz w druhim nałoženju wočinić</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Móžeće %1$s wopušćić, zo byšće tutón wotkaz w %2$s wočinił.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Nałoženje pytać, kotrež móže wotkaz wočinić</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Žane z nałoženjow na wašim graće njemóže tutón wotkaz wočinić. Móžeće %1$s wopušćić, zo byšće %2$s za nałoženjom přepytował.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Priwatny modus wopušćić?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s dokónčeny</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Wočinić</string>
 
 
 
@@ -176,91 +468,272 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Zesylńće swoju priwatnosć</string>
-  <string name="firstrun_defaultbrowser_text2">Zběhńće priwatne přehladowanje na přichodnu wyšu runinu. Blokujće wabjenje a hinaši wobsah, kotryž móžeće přez sydła slědować a začitanske časy stronow podlěšić.</string>
-  <string name="firstrun_search_title">Waše pytanje kaž wy jo chceće</string>
-  <string name="firstrun_search_text">Pytaće za něčim druhim? Wubjerće druhu stndardnu pytawu w nastajenjach.</string>
-  <string name="firstrun_shortcut_title">Přidajće swojej startowej wobrazowce tastowe skrótšenki</string>
-  <string name="firstrun_shortcut_text">Wróćće so spěšnje k swojim najlubšim sydłam w %1$s. Wubjerće prosće „Startowej wobrazowce přidać“ z menija %1$s.</string>
-  <string name="firstrun_privacy_title">Přiwučće sej priwatnosć</string>
-  <string name="firstrun_privacy_text">Nastajće %1$s jako swój standardny wobhladowak a zwužitkujće priwatne přehladowanje, hdyž webstrony z druhich nałoženjow wočinjeće.</string>
-  <string name="firstrun_close_button">W porjadku, sym zrozumił!</string>
-  <string name="firstrun_skip_button">Přeskočić</string>
-  <string name="firstrun_next_button">Dale</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Přidać</string>
-  <string name="dialog_addtohomescreen_action_cancel">Přetorhnyć</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Zwjazanje so ze znjemóžnjenym šlědowanskim škitom wočini</string>
-  <string name="notification_browsing_session_channel_name">Priwatne posedźenje</string>
-  <string name="notification_browsing_session_channel_description">Zdźělenki wam zmóžnjeja, waše posedźenje %1$s z podótkom zhašeć. Njetrjebaće nałoženje wočinić abo hladać, štož we wašim wobhladowaku běži.</string>
-  <string name="tabs_tray_action_erase">Přehladowansku historiju zhašeć</string>
-  <string name="download_firefox">Firefox sćahnyć</string>
-  <string name="your_rights_content1">%1$s je darmotna softwara wotewrjeneho žórła wot Mozilla a druhich sobuskutkowarjow.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Zesylńće swoju priwatnosć</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Zběhńće priwatne přehladowanje na přichodnu wyšu runinu. Blokujće wabjenje a hinaši wobsah, kotryž móžeće přez sydła slědować a začitanske časy stronow podlěšić.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Waše pytanje kaž wy jo chceće</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Pytaće za něčim druhim? Wubjerće druhu stndardnu pytawu w nastajenjach.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Přidajće swojej startowej wobrazowce tastowe skrótšenki</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Wróćće so spěšnje k swojim najlubšim sydłam w %1$s. Wubjerće prosće „Startowej wobrazowce přidać“ z menija %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Přiwučće sej priwatnosć</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Nastajće %1$s jako swój standardny wobhladowak a zwužitkujće priwatne přehladowanje, hdyž webstrony z druhich nałoženjow wočinjeće.</string>
+
+    <string name="firstrun_close_button">W porjadku, sym zrozumił!</string>
+    <string name="firstrun_skip_button">Přeskočić</string>
+    <string name="firstrun_next_button">Dale</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Přidać</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Přetorhnyć</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Zwjazanje so ze znjemóžnjenym šlědowanskim škitom wočini</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Priwatne posedźenje</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Zdźělenki wam zmóžnjeja, waše posedźenje %1$s z podótkom zhašeć. Njetrjebaće nałoženje wočinić abo hladać, štož we wašim wobhladowaku běži.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Přehladowansku historiju zhašeć</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Firefox sćahnyć</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s je darmotna softwara wotewrjeneho žórła wot Mozilla a druhich sobuskutkowarjow.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Wužiwarske mjeno</string>
-  <string name="gv_prompt_password_hint">Hesło</string>
-  <string name="gv_prompt_clear">Zhašeć</string>
-  <string name="security_popup_secure_connection">Wěsty zwisk</string>
-  <string name="security_popup_insecure_connection">Njewěsty zwisk</string>
-  <string name="security_popup_security_verified">Přepruwowany wot: %1$s</string>
-  <string name="site_security_icon_content_description">Sydłowa wěstota</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL hižo eksistuje</string>
-  <string name="find_in_page">Na stronje pytać</string>
-  <string name="find_in_page_input">Na stronje pytać</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d z %2$d</string>
-  <string name="accessibility_next_result">Přichodny wuslědk namakać</string>
-  <string name="accessibility_previous_result">Předchadny wuslědk namakać</string>
-  <string name="accessibility_dismiss_find_in_page">Na stronje pytać znjemóžnić</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s so pod wuměnjenjemi licency <a href="%2$s">Mozilla Public License</a> a druhimi licencami wotewrjeneho žórła k dispoziciji staja.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Njegarantuja wam žane prawa abo licency na wikowanskich znamjenjach załožby Mozilla Foundation abo někajkeje druheje strony, inkluziwnje mjena abo loga Mozilla, Firefox abo %1$s. Přidatne informacije namakaće <a href="%2$s">tu</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Přidatny žórłowy kod za %1$s je pod wšelakich druhich swobodnych <a href="%2$s">licencach</a> wotewrjeneho žórła k dispoziciji.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s tež blokowanske lisćiny poskićene wot Disconnect, Inc. jako separatne a njewotwisne dźěła pod licencu <a href="%2$s">General Public Licence v3</a> wužiwa, kotrež su <a href="%3$s">tu</a> k dispoziciji.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Wužiwarske mjeno</string>
+    <string name="gv_prompt_password_hint">Hesło</string>
+    <string name="gv_prompt_clear">Zhašeć</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Wěsty zwisk</string>
+    <string name="security_popup_insecure_connection">Njewěsty zwisk</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Přepruwowany wot: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Sydłowa wěstota</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL hižo eksistuje</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Na stronje pytać</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Na stronje pytać</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d z %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Přichodny wuslědk namakać</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Předchadny wuslědk namakać</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Na stronje pytać znjemóžnić</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Desktopowe sydło požadać</string>
-  <string name="custom_tab_copy_url_action">URL kopěrowany</string>
-  <string name="preference_advanced_summary">Wuwiwarske nastroje</string>
-  <string name="preference_category_advanced">Rozšěrjene</string>
-  <string name="preference_remote_debugging">Zdalene pytanje zmylkow přez USB/WLAN</string>
-  <string name="biometric_auth_title">%1$s hižo njeblokować</string>
-  <string name="biometric_auth_description">Dótkńće so sensora porstoweho wotćišća, zo byšće pokročował.</string>
-  <string name="biometric_auth_new_session">Nowe posedźenje</string>
-  <string name="biometric_auth_image_description">Symbol porstoweho wotćišća</string>
-  <string name="biometric_auth_not_recognized_error">Porstowy wotćišće njeje so spóznał. Spytajće hišće raz.</string>
-  <string name="biometric_auth_moved_too_quickly">Porst je so přespěšnje pohibnył. Spytajće hišće raz.</string>
-  <string name="enable_search_suggestion_title">Chceće pytanske namjety aktiwizować?</string>
-  <string name="enable_search_suggestion_subtitle">Zo byšće pytanske namjety dóstał, dyrbi %1$s wobsah, kotryž sće do adresoweho pola zapodał, na pytawu słać, kotruž sće wubrał. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Dalše informacije</string>
-  <string name="enable_search_suggestions_no">Ně</string>
-  <string name="enable_search_suggestions_yes">Haj</string>
-  <string name="no_suggestions_message">Někotre pytawy njemóža namjety pokazać.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Zaćisnyć</string>
-  <string name="tip_disable_tracking_protection">Sydło so na njewočakowane wašnje zadźerži?\nSpytajće slědowanski škit znjemóžnić</string>
-  <string name="tip_add_to_homescreen">Přistup na sydła, kotrež najhusćišo wopytujeće, z jednym podótkom%1$s Meni &gt; Startowej wobrazowce přidać</string>
-  <string name="tip_set_default_browser">Kóždy wotkaz w %1$s wočinić\n%1$s jako standardny wobhladowak nastajić</string>
-  <string name="tip_autocomplete_url">URL za sydła, kotrež najhusćišo wopytujeće, awtomatisce wudospołnić\nTłóčće dołho na URL w adresowym polu</string>
-  <string name="tip_open_in_new_tab">Wotkaz w nowym rajtarku wočinić\nTłóčće dołho na wotkaz na stronje</string>
-  <string name="tip_request_desktop">Chceće radšo dospołne desktopowe sydło widźeć?%1$s Meni &gt; Desktopowe sydło požadać</string>
-  <string name="tip_disable_tips2">Pokiwy na starrtowej wobrazowce znjemóžnić</string>
-  <string name="tip_explain_allowlist">Dowěry hódne sydło?\nZ dowolenskej lisćinje móžeće slědowanski škit za sydła, kotrež znajeće a kotrymž dowěrjeće, znjemóžnić.</string>
-  <string name="new_tab_opened_snackbar">Nowy rajtark je so wočinił</string>
-  <string name="open_new_tab_snackbar">Přepinać</string>
-  <string name="preference_open_new_tab">Hnydom k wotkazej w nowym rajtarku přeńć</string>
-  <string name="preference_category_safe_browsing">Wěste přehladowanje</string>
-  <string name="preference_safe_browsing_title">Potencielnje strašne a wobšudne sydła blokować</string>
-  <string name="preference_safe_browsing_summary">Blokujće zdźělene wobšudne a nadpadowe sydła, škódne sydła a sydła z njewitanej softwaru.</string>
-  <string name="preference_exceptions">Wuwzaća</string>
-  <string name="preference_exceptions_description">Sće blokowanje wobsaha za tute sydła znjemóžnił.</string>
-  <string name="preference_exceptions_menu_remove">Wotstronić</string>
-  <string name="preference_exceptions_remove_all_button_label">Wšě sydła wotstronić</string>
-  <string name="tab_crash_report_title">Rajtark je spadnył</string>
-  <string name="tab_crash_report_headline">Bohužel mamy problem z tutym rajtarkom.</string>
-  <string name="tab_crash_report_description">Jako priwatny wobhladowak njeskładujemy ženje a njemóžemy tutón rajtark wobnowić.</string>
-  <string name="tab_crash_report_close_tab_button_label">Rajtark začinić</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Desktopowe sydło požadać</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Desktopowe sydło</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL kopěrowany</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Wuwiwarske nastroje</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Rozšěrjene</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Zdalene pytanje zmylkow přez USB/WLAN</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">%1$s hižo njeblokować</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Dótkńće so sensora porstoweho wotćišća, zo byšće pokročował.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Nowe posedźenje</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Wotkaz w nowym posedźenju wočinić</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Symbol porstoweho wotćišća</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Porstowy wotćišće njeje so spóznał. Spytajće hišće raz.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Porst je so přespěšnje pohibnył. Spytajće hišće raz.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">Chceće pytanske namjety aktiwizować?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">Zo byšće pytanske namjety dóstał, dyrbi %1$s wobsah, kotryž sće do adresoweho pola zapodał, na pytawu słać, kotruž sće wubrał. %2$s.</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">Dalše informacije</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Ně</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Haj</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Někotre pytawy njemóža namjety pokazać.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Zaćisnyć</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Sydło so na njewočakowane wašnje zadźerži?\nSpytajće slědowanski škit znjemóžnić</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Přistup na sydła, kotrež najhusćišo wopytujeće, z jednym podótkom%1$s Meni > Startowej wobrazowce přidać]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Kóždy wotkaz w %1$s wočinić\n%1$s jako standardny wobhladowak nastajić</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">URL za sydła, kotrež najhusćišo wopytujeće, awtomatisce wudospołnić\nTłóčće dołho na URL w adresowym polu</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Wotkaz w nowym rajtarku wočinić\nTłóčće dołho na wotkaz na stronje</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[Chceće radšo dospołne desktopowe sydło widźeć?%1$s Meni > Desktopowe sydło požadać]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Pokiwy na starrtowej wobrazowce znjemóžnić</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">Dowěry hódne sydło?\nZ dowolenskej lisćinje móžeće slědowanski škit za sydła, kotrež znajeće a kotrymž dowěrjeće, znjemóžnić.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Nowy rajtark je so wočinił</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Přepinać</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Hnydom k wotkazej w nowym rajtarku přeńć</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Wěste přehladowanje</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Potencielnje strašne a wobšudne sydła blokować</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Blokujće zdźělene wobšudne a nadpadowe sydła, škódne sydła a sydła z njewitanej softwaru.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Wuwzaća</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Sće blokowanje wobsaha za tute sydła znjemóžnił.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Wotstronić</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Wšě sydła wotstronić</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Rajtark je spadnył</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Bohužel mamy problem z tutym rajtarkom.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Jako priwatny wobhladowak njeskładujemy ženje a njemóžemy tutón rajtark wobnowić.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Rajtark začinić</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Mozilla spadowu rozprawu pósłać</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Mozilla spadowu rozprawu pósłać</string>
 </resources>
