@@ -2613,64 +2613,70 @@ bool js::DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
 
 /* JS Public API */
 
-#define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(ExternalType, NativeType, Name)  \
-  JS_PUBLIC_API JSObject* JS_New##Name##Array(JSContext* cx,                 \
-                                              size_t nelements) {            \
-    return TypedArrayObjectTemplate<NativeType>::fromLength(cx, nelements);  \
-  }                                                                          \
-                                                                             \
-  JS_PUBLIC_API JSObject* JS_New##Name##ArrayFromArray(JSContext* cx,        \
-                                                       HandleObject other) { \
-    return TypedArrayObjectTemplate<NativeType>::fromArray(cx, other);       \
-  }                                                                          \
-                                                                             \
-  JS_PUBLIC_API JSObject* JS_New##Name##ArrayWithBuffer(                     \
-      JSContext* cx, HandleObject arrayBuffer, size_t byteOffset,            \
-      int64_t length) {                                                      \
-    return TypedArrayObjectTemplate<NativeType>::fromBuffer(                 \
-        cx, arrayBuffer, byteOffset, length);                                \
-  }                                                                          \
-                                                                             \
-  JS_PUBLIC_API JSObject* js::Unwrap##Name##Array(JSObject* obj) {           \
-    obj = obj->maybeUnwrapIf<TypedArrayObject>();                            \
-    if (!obj) {                                                              \
-      return nullptr;                                                        \
-    }                                                                        \
-    const JSClass* clasp = obj->getClass();                                  \
-    if (clasp != TypedArrayObjectTemplate<NativeType>::instanceClass()) {    \
-      return nullptr;                                                        \
-    }                                                                        \
-    return obj;                                                              \
-  }                                                                          \
-                                                                             \
-  JS_PUBLIC_API bool JS_Is##Name##Array(JSObject* obj) {                     \
-    return js::Unwrap##Name##Array(obj) != nullptr;                          \
-  }                                                                          \
-                                                                             \
-  JS_PUBLIC_API JSObject* JS_GetObjectAs##Name##Array(                       \
-      JSObject* obj, size_t* length, bool* isShared, ExternalType** data) {  \
-    obj = js::Unwrap##Name##Array(obj);                                      \
-    if (!obj) {                                                              \
-      return nullptr;                                                        \
-    }                                                                        \
-    TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                   \
-    *length = tarr->length();                                                \
-    *isShared = tarr->isSharedMemory();                                      \
-    *data = static_cast<ExternalType*>(tarr->dataPointerEither().unwrap(     \
-        /*safe - caller sees isShared flag*/));                              \
-    return obj;                                                              \
-  }                                                                          \
-                                                                             \
-  JS_PUBLIC_API ExternalType* JS_Get##Name##ArrayData(                       \
-      JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&) {     \
-    TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();         \
-    if (!tarr) {                                                             \
-      return nullptr;                                                        \
-    }                                                                        \
-    MOZ_ASSERT(tarr->type() == TypeIDOfType<NativeType>::id);                \
-    *isSharedMemory = tarr->isSharedMemory();                                \
-    return static_cast<ExternalType*>(                                       \
-        tarr->dataPointerEither().unwrap(/*safe - caller sees isShared*/));  \
+#define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(ExternalType, NativeType, Name)   \
+  JS_PUBLIC_API JSObject* JS_New##Name##Array(JSContext* cx,                  \
+                                              size_t nelements) {             \
+    return TypedArrayObjectTemplate<NativeType>::fromLength(cx, nelements);   \
+  }                                                                           \
+                                                                              \
+  JS_PUBLIC_API JSObject* JS_New##Name##ArrayFromArray(JSContext* cx,         \
+                                                       HandleObject other) {  \
+    return TypedArrayObjectTemplate<NativeType>::fromArray(cx, other);        \
+  }                                                                           \
+                                                                              \
+  JS_PUBLIC_API JSObject* JS_New##Name##ArrayWithBuffer(                      \
+      JSContext* cx, HandleObject arrayBuffer, size_t byteOffset,             \
+      int64_t length) {                                                       \
+    return TypedArrayObjectTemplate<NativeType>::fromBuffer(                  \
+        cx, arrayBuffer, byteOffset, length);                                 \
+  }                                                                           \
+                                                                              \
+  JS_PUBLIC_API JSObject* js::Unwrap##Name##Array(JSObject* obj) {            \
+    obj = obj->maybeUnwrapIf<TypedArrayObject>();                             \
+    if (!obj) {                                                               \
+      return nullptr;                                                         \
+    }                                                                         \
+    const JSClass* clasp = obj->getClass();                                   \
+    if (clasp != TypedArrayObjectTemplate<NativeType>::instanceClass()) {     \
+      return nullptr;                                                         \
+    }                                                                         \
+    return obj;                                                               \
+  }                                                                           \
+                                                                              \
+  JS_PUBLIC_API bool JS_Is##Name##Array(JSObject* obj) {                      \
+    return js::Unwrap##Name##Array(obj) != nullptr;                           \
+  }                                                                           \
+                                                                              \
+  JS_PUBLIC_API JSObject* JS_GetObjectAs##Name##Array(                        \
+      JSObject* obj, size_t* length, bool* isShared, ExternalType** data) {   \
+    obj = js::Unwrap##Name##Array(obj);                                       \
+    if (!obj) {                                                               \
+      return nullptr;                                                         \
+    }                                                                         \
+    TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                    \
+    *length = tarr->length();                                                 \
+    *isShared = tarr->isSharedMemory();                                       \
+    *data = static_cast<ExternalType*>(tarr->dataPointerEither().unwrap(      \
+        /*safe - caller sees isShared flag*/));                               \
+    return obj;                                                               \
+  }                                                                           \
+                                                                              \
+  JS_PUBLIC_API ExternalType* JS_Get##Name##ArrayLengthAndData(               \
+      JSObject* obj, size_t* length, bool* isSharedMemory,                    \
+      const JS::AutoRequireNoGC& nogc) {                                      \
+    TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();          \
+    if (!tarr) {                                                              \
+      return nullptr;                                                         \
+    }                                                                         \
+    return JS::TypedArray<js::Scalar::Name>::fromObject(tarr)                 \
+        .getLengthAndData(length, isSharedMemory, nogc);                      \
+  }                                                                           \
+                                                                              \
+  JS_PUBLIC_API ExternalType* JS_Get##Name##ArrayData(                        \
+      JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC& nogc) { \
+    size_t length;                                                            \
+    return JS_Get##Name##ArrayLengthAndData(obj, &length, isSharedMemory,     \
+                                            nogc);                            \
   }
 
 JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS)
@@ -2739,5 +2745,35 @@ const JSClass* const TypedArray_base::classes = TypedArrayObject::classes;
   template class TypedArray<js::Scalar::Name>;
 JS_FOR_EACH_TYPED_ARRAY(INSTANTIATE)
 #undef INSTANTIATE
+
+// Template getLengthAndData function for TypedArrays, implemented here because
+// it requires internal APIs.
+template <js::Scalar::Type EType>
+typename TypedArray<EType>::DataType* TypedArray<EType>::getLengthAndData(
+    size_t* length, bool* isSharedMemory, const AutoRequireNoGC&) {
+  using ExternalType = TypedArray<EType>::DataType;
+  if (!obj) {
+    return nullptr;
+  }
+  TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
+  MOZ_ASSERT(tarr);
+  *length = tarr->length();
+  *isSharedMemory = tarr->isSharedMemory();
+  return static_cast<ExternalType*>(
+      tarr->dataPointerEither().unwrap(/*safe - caller sees isShared*/));
+};
+
+// Force the method defined above to actually be instantianted in this
+// compilation unit and emitted into the object file, since otherwise a binary
+// could include the header file and emit an undefined symbol that would not be
+// satisfied by the linker. (This happens with opt gtest, at least. In a DEBUG
+// build, the header contains a call to this function so it will always be
+// emitted.)
+#define INSTANTIATE_GET_DATA(a, b, Name)                    \
+  template typename TypedArray<js::Scalar::Name>::DataType* \
+  TypedArray<js::Scalar::Name>::getLengthAndData(           \
+      size_t* length, bool* isSharedMemory, const AutoRequireNoGC&);
+JS_FOR_EACH_TYPED_ARRAY(INSTANTIATE_GET_DATA)
+#undef INSTANTIATE_GET_DATA
 
 } /* namespace JS */
