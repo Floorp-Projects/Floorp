@@ -5071,14 +5071,6 @@
   value: false
   mirror: always
 
-# Also expose a pref to allow users to force-disable WR. This is exposed
-# on all channels because WR can be enabled on qualified hardware on all
-# channels.
-- name: gfx.webrender.force-legacy-layers
-  type: bool
-  value: false
-  mirror: once
-
 #ifdef MOZ_WIDGET_GTK
 - name: gfx.webrender.reject-software-driver
   type: bool
@@ -5166,12 +5158,6 @@
 - name: gfx.webrender.enable-item-cache
   type: bool
   value: true
-  mirror: once
-
-# Whether or not to fallback from WebRender/WebRender Software to Basic.
-- name: gfx.webrender.fallback.basic
-  type: bool
-  value: false
   mirror: once
 
 # Whether or not to fallback from WebRender to Software WebRender.
