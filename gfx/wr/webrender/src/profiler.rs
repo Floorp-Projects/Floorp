@@ -1496,9 +1496,15 @@ impl Counter {
 
         self.value = std::f64::NAN;
 
-        if update_avg && self.num_samples > 0 {
-            self.avg = self.sum / self.num_samples as f64;
-            self.max = self.next_max;
+        if update_avg {
+            if self.num_samples > 0 {
+                self.avg = self.sum / self.num_samples as f64;
+                self.max = self.next_max;
+            } else {
+                // There has been no sample in the averaging window, just show zero.
+                self.avg = 0.0;
+                self.max = 0.0;
+            }
             self.sum = 0.0;
             self.num_samples = 0;
             self.next_max = std::f64::MIN;
