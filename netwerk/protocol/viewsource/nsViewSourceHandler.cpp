@@ -91,7 +91,7 @@ nsresult nsViewSourceHandler::CreateNewURI(const nsACString& aSpec,
 
   nsCOMPtr<nsIURI> uri;
   rv = NS_MutateURI(new nsSimpleNestedURI::Mutator())
-           .Apply(&nsINestedURIMutator::Init, innerURI)
+           .Apply(NS_MutatorMethod(&nsINestedURIMutator::Init, innerURI))
            .SetSpec(asciiSpec)
            .Finalize(uri);
   if (NS_FAILED(rv)) {

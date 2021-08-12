@@ -149,8 +149,10 @@ nsresult nsAboutProtocolHandler::CreateNewURI(const nsACString& aSpec,
     rv = NS_NewURI(getter_AddRefs(inner), spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIURI> base(aBaseURI);
     rv = NS_MutateURI(new nsNestedAboutURI::Mutator())
-             .Apply(&nsINestedAboutURIMutator::InitWithBase, inner, aBaseURI)
+             .Apply(NS_MutatorMethod(&nsINestedAboutURIMutator::InitWithBase,
+                                     inner, base))
              .SetSpec(aSpec)
              .Finalize(url);
     NS_ENSURE_SUCCESS(rv, rv);
