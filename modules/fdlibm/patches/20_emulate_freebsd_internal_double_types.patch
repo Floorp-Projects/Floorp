@@ -1,0 +1,32 @@
+diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
+--- a/modules/fdlibm/src/math_private.h
++++ b/modules/fdlibm/src/math_private.h
+@@ -21,16 +21,28 @@
+ #include <stdint.h>
+ #include <sys/types.h>
+ 
+ #include "fdlibm.h"
+ 
+ #include "mozilla/EndianUtils.h"
+ 
+ /*
++ * Emulate FreeBSD internal double types.
++ * Adapted from https://github.com/freebsd/freebsd-src/search?q=__double_t
++ */
++
++#if defined(__i386__)
++typedef long double __double_t;
++#else
++typedef double      __double_t;
++#endif
++typedef __double_t  double_t;
++
++/*
+  * The original fdlibm code used statements like:
+  *	n0 = ((*(int*)&one)>>29)^1;		* index of high word *
+  *	ix0 = *(n0+(int*)&x);			* high word of x *
+  *	ix1 = *((1-n0)+(int*)&x);		* low word of x *
+  * to dig two 32 bit words out of the 64 bit IEEE floating point
+  * value.  That is non-ANSI, and, moreover, the gcc instruction
+  * scheduler gets it wrong.  We instead use the following macros.
+  * Unlike the original code, we determine the endianness at compile
