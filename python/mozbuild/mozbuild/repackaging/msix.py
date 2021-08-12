@@ -250,6 +250,11 @@ def repackage_msix(
         )
     )
 
+    if channel == "beta":
+        # Release (official) and Beta share branding.  Differentiate Beta a little bit.
+        displayname += " Beta"
+        brandFullName += " Beta"
+
     # Like 'Firefox Package Root', 'Firefox Nightly Package Root', 'Firefox Beta
     # Package Root'.  This is `BrandFullName` in the installer, and we want to
     # be close but to not match.  By not matching, we hope to prevent confusion
@@ -263,6 +268,7 @@ def repackage_msix(
 
     defines = {
         "APPX_ARCH": _MSIX_ARCH[arch],
+        "APPX_DISPLAYNAME": brandFullName,
         "APPX_DESCRIPTION": brandFullName,
         # Like 'Mozilla.Firefox', 'Mozilla.Firefox.Beta', 'Mozilla.Firefox.Nightly'.
         "APPX_IDENTITY": identity,
