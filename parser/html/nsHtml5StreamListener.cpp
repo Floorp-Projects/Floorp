@@ -30,7 +30,7 @@ nsHtml5StreamListener::CheckListenerChain() {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->CheckListenerChain();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

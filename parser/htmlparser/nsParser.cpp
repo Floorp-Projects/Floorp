@@ -127,8 +127,6 @@ void nsParser::Initialize(bool aConstructor) {
     // Raw pointer
     mParserContext = 0;
   } else {
-    // nsCOMPtrs
-    mObserver = nullptr;
     mUnusedInput.Truncate();
   }
 
@@ -169,14 +167,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsParser)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsParser)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDTD)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSink)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsParser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDTD)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSink)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObserver)
   CParserContext* pc = tmp->mParserContext;
   while (pc) {
     cb.NoteXPCOMChild(pc->mTokenizer);
@@ -681,12 +677,10 @@ bool nsParser::IsScriptCreated() { return false; }
  *  of this method.
  */
 NS_IMETHODIMP
-nsParser::Parse(nsIURI* aURL, nsIRequestObserver* aListener, void* aKey,
-                nsDTDMode aMode) {
+nsParser::Parse(nsIURI* aURL, void* aKey) {
   MOZ_ASSERT(aURL, "Error: Null URL given");
 
   nsresult result = NS_ERROR_HTMLPARSER_BADURL;
-  mObserver = aListener;
 
   if (aURL) {
     nsAutoCString spec;
@@ -697,12 +691,12 @@ nsParser::Parse(nsIURI* aURL, nsIRequestObserver* aListener, void* aKey,
     NS_ConvertUTF8toUTF16 theName(spec);
 
     nsScanner* theScanner = new nsScanner(theName, false);
-    CParserContext* pc = new CParserContext(mParserContext, theScanner, aKey,
-                                            mCommand, aListener);
+    CParserContext* pc =
+        new CParserContext(mParserContext, theScanner, aKey, mCommand);
     if (pc && theScanner) {
       pc->mMultipart = true;
       pc->mContextType = CParserContext::eCTURL;
-      pc->mDTDMode = aMode;
+      pc->mDTDMode = eDTDMode_autodetect;
       PushContext(*pc);
 
       result = NS_OK;
@@ -769,7 +763,7 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
         }
       }
 
-      pc = new CParserContext(mParserContext, theScanner, aKey, mCommand, 0,
+      pc = new CParserContext(mParserContext, theScanner, aKey, mCommand,
                               theStatus, aLastCall);
       NS_ENSURE_TRUE(pc, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1072,9 +1066,6 @@ nsresult nsParser::OnStartRequest(nsIRequest* request) {
              "Parser's nsIStreamListener API was not setup "
              "correctly in constructor.");
 
-  if (mObserver) {
-    mObserver->OnStartRequest(request);
-  }
   mParserContext->mStreamListenerState = eOnStart;
   mParserContext->mAutoDetectStatus = eUnknownDetect;
   mParserContext->mRequest = request;
@@ -1355,12 +1346,6 @@ nsresult nsParser::OnStopRequest(nsIRequest* request, nsresult status) {
 
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
-
-  // XXX Should we wait to notify our observers as well if the
-  // parser isn't yet enabled?
-  if (mObserver) {
-    mObserver->OnStopRequest(request, status);
-  }
 
   return rv;
 }

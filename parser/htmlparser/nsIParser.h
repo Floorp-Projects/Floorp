@@ -160,8 +160,7 @@ class nsIParser : public nsParserBase {
   NS_IMETHOD_(bool) IsParserEnabled() override = 0;
   NS_IMETHOD_(bool) IsComplete() = 0;
 
-  NS_IMETHOD Parse(nsIURI* aURL, nsIRequestObserver* aListener = nullptr,
-                   void* aKey = 0, nsDTDMode aMode = eDTDMode_autodetect) = 0;
+  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) = 0;
 
   NS_IMETHOD Terminate(void) = 0;
 
