@@ -9102,6 +9102,18 @@
   value: true
   mirror: always
 
+# Whether to use new implementation of ParseReasm
+- name: network.auth.use_new_parse_realm
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Whether to use new implementation of ParseReasm
+- name: network.auth.allow_multiple_challenges_same_line
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # See the full list of values in nsICookieService.idl.
 - name: network.cookie.cookieBehavior
   type: RelaxedAtomicInt32
