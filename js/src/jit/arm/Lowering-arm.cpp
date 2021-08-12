@@ -756,7 +756,8 @@ void LIRGenerator::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins) {
     }
   }
 
-  define(new (alloc()) LAsmJSLoadHeap(baseAlloc, limitAlloc), ins);
+  define(new (alloc()) LAsmJSLoadHeap(baseAlloc, limitAlloc, LAllocation()),
+         ins);
 }
 
 void LIRGenerator::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins) {
@@ -779,7 +780,7 @@ void LIRGenerator::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins) {
   }
 
   add(new (alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value()),
-                                    limitAlloc),
+                                    limitAlloc, LAllocation()),
       ins);
 }
 
