@@ -2064,11 +2064,11 @@ nsresult nsWebBrowserPersist::CalculateUniqueFilename(
 
       // Resync the URI with the file after the extension has been appended
       return NS_MutateURI(aURI)
-          .Apply(NS_MutatorMethod(&nsIFileURLMutator::SetFile, localFile))
+          .Apply(&nsIFileURLMutator::SetFile, localFile)
           .Finalize(aOutURI);
     }
     return NS_MutateURI(url)
-        .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName, filename, nullptr))
+        .Apply(&nsIURLMutator::SetFileName, filename, nullptr)
         .Finalize(aOutURI);
   }
 
@@ -2217,12 +2217,11 @@ nsresult nsWebBrowserPersist::CalculateAndAppendFileExt(
 
           // Resync the URI with the file after the extension has been appended
           return NS_MutateURI(url)
-              .Apply(NS_MutatorMethod(&nsIFileURLMutator::SetFile, localFile))
+              .Apply(&nsIFileURLMutator::SetFile, localFile)
               .Finalize(aOutURI);
         }
         return NS_MutateURI(url)
-            .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName, newFileName,
-                                    nullptr))
+            .Apply(&nsIURLMutator::SetFileName, newFileName, nullptr)
             .Finalize(aOutURI);
       }
     }

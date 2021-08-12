@@ -68,11 +68,12 @@ nsChromeProtocolHandler::GetProtocolFlags(uint32_t* result) {
   nsresult rv;
   nsCOMPtr<nsIURI> surl;
   nsCOMPtr<nsIURI> base(aBaseURI);
-  rv = NS_MutateURI(new mozilla::net::nsStandardURL::Mutator())
-           .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                                   nsIStandardURL::URLTYPE_STANDARD, -1,
-                                   nsCString(aSpec), aCharset, base, nullptr))
-           .Finalize(surl);
+  rv =
+      NS_MutateURI(new mozilla::net::nsStandardURL::Mutator())
+          .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_STANDARD,
+                 -1, nsCString(aSpec), aCharset, aBaseURI, nullptr)
+
+          .Finalize(surl);
   if (NS_FAILED(rv)) {
     return rv;
   }
