@@ -6,7 +6,7 @@
 
 #include "mozilla/ProfilerThreadRegistration.h"
 
-// TODO in bug 1721939 next patch: #include "mozilla/ProfilerThreadRegistry.h"
+#include "mozilla/ProfilerThreadRegistry.h"
 
 namespace mozilla::profiler {
 
@@ -35,7 +35,7 @@ ThreadRegistration::ThreadRegistration(const char* aName, const void* aStackTop)
     }
 
     tls->set(this);
-    // TODO in bug 1721939 next patch: ThreadRegistry::Register(*this);
+    ThreadRegistry::Register(OnThreadRef{*this});
   }
 }
 
@@ -58,7 +58,7 @@ ThreadRegistration::~ThreadRegistration() {
       return;
     }
 
-    // TODO in bug 1721939 next patch: ThreadRegistry::Unregister(*this);
+    ThreadRegistry::Unregister(OnThreadRef{*this});
     tls->set(nullptr);
   }
 }

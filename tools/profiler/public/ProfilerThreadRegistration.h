@@ -236,6 +236,9 @@ class ThreadRegistration {
     explicit OnThreadRef(ThreadRegistration& aThreadRegistration)
         : mThreadRegistration(&aThreadRegistration) {}
 
+    // Allow ThreadRegistry to read mThreadRegistration.
+    friend class ThreadRegistry;
+
     // Guaranted to be non-null by construction from a reference.
     ThreadRegistration* mThreadRegistration;
   };
