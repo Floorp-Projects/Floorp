@@ -6,14 +6,21 @@ package org.mozilla.fenix.exceptions.trackingprotection
 
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.lib.state.Action
+import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
 /**
  * The [Store] for holding the [ExceptionsFragmentState] and applying [ExceptionsFragmentAction]s.
  */
-class ExceptionsFragmentStore(initialState: ExceptionsFragmentState) :
-    Store<ExceptionsFragmentState, ExceptionsFragmentAction>(initialState, ::exceptionsStateReducer)
+class ExceptionsFragmentStore(
+    initialState: ExceptionsFragmentState = ExceptionsFragmentState(),
+    middlewares: List<Middleware<ExceptionsFragmentState, ExceptionsFragmentAction>> = emptyList()
+) : Store<ExceptionsFragmentState, ExceptionsFragmentAction>(
+    initialState,
+    ::exceptionsStateReducer,
+    middlewares
+)
 
 /**
  * Actions to dispatch through the `ExceptionsStore` to modify `ExceptionsState` through the reducer.

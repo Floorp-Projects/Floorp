@@ -10,10 +10,15 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifySequence
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.feature.session.TrackingProtectionUseCases
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
+import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -22,10 +27,15 @@ import org.mozilla.fenix.settings.SupportUtils
 class TrackingProtectionExceptionsInteractorTest {
 
     @MockK(relaxed = true) private lateinit var activity: HomeActivity
-    @MockK(relaxed = true) private lateinit var exceptionsStore: ExceptionsFragmentStore
-    @MockK(relaxed = true) private lateinit var trackingProtectionUseCases: TrackingProtectionUseCases
     private lateinit var interactor: TrackingProtectionExceptionsInteractor
-    private lateinit var results: List<TrackingProtectionException>
+
+    private val results: List<TrackingProtectionException> = emptyList()
+    private val engine: Engine = mockk(relaxed = true)
+    private val store = BrowserStore()
+    private val capture = CaptureActionsMiddleware<ExceptionsFragmentState, ExceptionsFragmentAction>()
+    private val exceptionsStore = ExceptionsFragmentStore(middlewares = listOf(capture))
+    private val trackingProtectionUseCases = TrackingProtectionUseCases(store, engine)
+    private val trackingStorage: TrackingProtectionExceptionStorage = mockk(relaxed = true)
 
     @Before
     fun setup() {
@@ -36,8 +46,8 @@ class TrackingProtectionExceptionsInteractorTest {
             trackingProtectionUseCases = trackingProtectionUseCases
         )
 
-        results = emptyList()
-        every { trackingProtectionUseCases.fetchExceptions(any()) } answers {
+        every { engine.trackingProtectionExceptionStore } returns trackingStorage
+        every { trackingStorage.fetchAll(any()) } answers {
             firstArg<(List<TrackingProtectionException>) -> Unit>()(results)
         }
     }
@@ -57,27 +67,36 @@ class TrackingProtectionExceptionsInteractorTest {
             )
         }
     }
-    @Ignore("See https://github.com/mozilla-mobile/fenix/issues/20796")
     @Test
     fun onDeleteAll() {
         interactor.onDeleteAll()
+
         verifySequence {
-            trackingProtectionUseCases.removeAllExceptions()
-            trackingProtectionUseCases.fetchExceptions(any())
+            trackingStorage.removeAll(any())
+            trackingStorage.fetchAll(any())
         }
 
-        verify { exceptionsStore.dispatch(ExceptionsFragmentAction.Change(results)) }
+        exceptionsStore.waitUntilIdle()
+
+        capture.assertLastAction(ExceptionsFragmentAction.Change::class) {
+            assertEquals(results, it.list)
+        }
     }
 
     @Test
     fun onDeleteOne() {
         val exceptionsItem = mockk<TrackingProtectionException>()
         interactor.onDeleteOne(exceptionsItem)
+
         verifySequence {
-            trackingProtectionUseCases.removeException(exceptionsItem)
-            trackingProtectionUseCases.fetchExceptions(any())
+            trackingStorage.remove(exceptionsItem)
+            trackingStorage.fetchAll(any())
         }
 
-        verify { exceptionsStore.dispatch(ExceptionsFragmentAction.Change(results)) }
+        exceptionsStore.waitUntilIdle()
+
+        capture.assertLastAction(ExceptionsFragmentAction.Change::class) {
+            assertEquals(results, it.list)
+        }
     }
 }
