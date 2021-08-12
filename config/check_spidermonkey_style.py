@@ -66,7 +66,7 @@ included_inclnames_to_ignore = set(
         "gc/StatsPhasesGenerated.h",  # generated in $OBJDIR
         "gc/StatsPhasesGenerated.inc",  # generated in $OBJDIR
         "jit/CacheIROpsGenerated.h",  # generated in $OBJDIR
-        "jit/LOpcodesGenerated.h",  # generated in $OBJDIR
+        "jit/LIROpsGenerated.h",  # generated in $OBJDIR
         "jit/MIROpsGenerated.h",  # generated in $OBJDIR
         "js/ProfilingCategoryList.h",  # comes from mozglue/baseprofiler
         "jscustomallocator.h",  # provided by embedders;  allowed to be missing

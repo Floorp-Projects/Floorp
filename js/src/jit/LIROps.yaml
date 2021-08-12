@@ -1,0 +1,1313 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# [SMDOC] LIR Opcodes
+# =======================
+# This file defines all LIR opcodes. It is parsed by GenerateLIRFiles.py
+# at build time to create LIROpsGenerated.h.
+#
+# name [required]
+# ====
+# Opcode name. 
+# Possible values:
+#   - opcode string: used as the name for LIR opcode.
+#
+
+- name: Phi
+
+- name: Box
+
+- name: OsiPoint
+
+- name: MoveGroup
+
+- name: Integer
+
+- name: Integer64
+
+- name: Pointer
+
+- name: Double
+
+- name: Float32
+
+- name: Value
+
+- name: NurseryObject
+
+- name: Parameter
+
+- name: Callee
+
+- name: IsConstructing
+
+- name: Goto
+
+- name: NewArray
+
+- name: NewArrayDynamicLength
+
+- name: NewIterator
+
+- name: NewTypedArray
+
+- name: NewTypedArrayDynamicLength
+
+- name: NewTypedArrayFromArray
+
+- name: NewTypedArrayFromArrayBuffer
+
+- name: NewObject
+
+- name: NewPlainObject
+
+- name: NewArrayObject
+
+- name: NewNamedLambdaObject
+
+- name: NewCallObject
+
+- name: NewStringObject
+
+- name: InitElemGetterSetter
+
+- name: MutateProto
+
+- name: InitPropGetterSetter
+
+- name: CheckOverRecursed
+
+- name: WasmTrap
+
+- name: WasmReinterpret
+
+- name: WasmReinterpretFromI64
+
+- name: WasmReinterpretToI64
+
+- name: Rotate
+
+- name: RotateI64
+
+- name: InterruptCheck
+
+- name: WasmInterruptCheck
+
+- name: TypeOfV
+
+- name: TypeOfO
+
+- name: ToAsyncIter
+
+- name: ToPropertyKeyCache
+
+- name: CreateThis
+
+- name: CreateThisWithTemplate
+
+- name: CreateArgumentsObject
+
+- name: CreateInlinedArgumentsObject
+
+- name: GetInlinedArgument
+
+- name: GetArgumentsObjectArg
+
+- name: SetArgumentsObjectArg
+
+- name: LoadArgumentsObjectArg
+
+- name: ArgumentsObjectLength
+
+- name: GuardArgumentsObjectFlags
+
+- name: ReturnFromCtor
+
+- name: BoxNonStrictThis
+
+- name: ImplicitThis
+
+- name: StackArgT
+
+- name: StackArgV
+
+- name: CallGeneric
+
+- name: CallKnown
+
+- name: CallNative
+
+- name: CallDOMNative
+
+- name: Bail
+
+- name: Unreachable
+
+- name: EncodeSnapshot
+
+- name: UnreachableResultV
+
+- name: UnreachableResultT
+
+- name: GetDOMProperty
+
+- name: GetDOMMemberV
+
+- name: GetDOMMemberT
+
+- name: SetDOMProperty
+
+- name: LoadDOMExpandoValue
+
+- name: LoadDOMExpandoValueGuardGeneration
+
+- name: LoadDOMExpandoValueIgnoreGeneration
+
+- name: GuardDOMExpandoMissingOrGuardShape
+
+- name: ApplyArgsGeneric
+
+- name: ApplyArgsObj
+
+- name: ApplyArrayGeneric
+
+- name: ConstructArrayGeneric
+
+- name: TestIAndBranch
+
+- name: TestI64AndBranch
+
+- name: TestDAndBranch
+
+- name: TestFAndBranch
+
+- name: TestBIAndBranch
+
+- name: TestOAndBranch
+
+- name: TestVAndBranch
+
+- name: Compare
+
+- name: CompareI64
+
+- name: CompareI64AndBranch
+
+- name: CompareAndBranch
+
+- name: CompareD
+
+- name: CompareF
+
+- name: CompareDAndBranch
+
+- name: CompareFAndBranch
+
+- name: CompareS
+
+- name: CompareBigInt
+
+- name: CompareBigIntInt32
+
+- name: CompareBigIntDouble
+
+- name: CompareBigIntString
+
+- name: BitAndAndBranch
+
+- name: IsNullOrLikeUndefinedV
+
+- name: IsNullOrLikeUndefinedT
+
+- name: IsNullOrLikeUndefinedAndBranchV
+
+- name: IsNullOrLikeUndefinedAndBranchT
+
+- name: SameValueDouble
+
+- name: SameValue
+
+- name: NotI
+
+- name: NotI64
+
+- name: NotD
+
+- name: NotF
+
+- name: NotBI
+
+- name: NotO
+
+- name: NotV
+
+- name: BitNotI
+
+- name: BitOpI
+
+- name: BitOpI64
+
+- name: ShiftI
+
+- name: ShiftI64
+
+- name: SignExtendInt32
+
+- name: SignExtendInt64
+
+- name: UrshD
+
+- name: Return
+
+- name: Throw
+
+- name: MinMaxI
+
+- name: MinMaxD
+
+- name: MinMaxF
+
+- name: MinMaxArrayI
+
+- name: MinMaxArrayD
+
+- name: NegI
+
+- name: NegI64
+
+- name: NegD
+
+- name: NegF
+
+- name: AbsI
+
+- name: AbsD
+
+- name: AbsF
+
+- name: CopySignD
+
+- name: CopySignF
+
+- name: ClzI
+
+- name: ClzI64
+
+- name: CtzI
+
+- name: CtzI64
+
+- name: PopcntI
+
+- name: PopcntI64
+
+- name: SqrtD
+
+- name: SqrtF
+
+- name: Atan2D
+
+- name: Hypot
+
+- name: PowI
+
+- name: PowII
+
+- name: PowD
+
+- name: PowOfTwoI
+
+- name: SignI
+
+- name: SignD
+
+- name: SignDI
+
+- name: MathFunctionD
+
+- name: MathFunctionF
+
+- name: AddI
+
+- name: AddI64
+
+- name: SubI
+
+- name: SubI64
+
+- name: MulI64
+
+- name: MathD
+
+- name: MathF
+
+- name: ModD
+
+- name: ModPowTwoD
+
+- name: WasmBuiltinModD
+
+- name: BigIntAdd
+
+- name: BigIntSub
+
+- name: BigIntMul
+
+- name: BigIntDiv
+
+- name: BigIntMod
+
+- name: BigIntPow
+
+- name: BigIntBitAnd
+
+- name: BigIntBitOr
+
+- name: BigIntBitXor
+
+- name: BigIntLsh
+
+- name: BigIntRsh
+
+- name: BigIntIncrement
+
+- name: BigIntDecrement
+
+- name: BigIntNegate
+
+- name: BigIntBitNot
+
+- name: Concat
+
+- name: CharCodeAt
+
+- name: FromCharCode
+
+- name: FromCodePoint
+
+- name: StringConvertCase
+
+- name: StringSplit
+
+- name: Substr
+
+- name: Int32ToDouble
+
+- name: Float32ToDouble
+
+- name: DoubleToFloat32
+
+- name: Int32ToFloat32
+
+- name: ValueToDouble
+
+- name: ValueToFloat32
+
+- name: ValueToInt32
+
+- name: ValueToBigInt
+
+- name: DoubleToInt32
+
+- name: Float32ToInt32
+
+- name: DoubleToIntegerInt32
+
+- name: Float32ToIntegerInt32
+
+- name: TruncateDToInt32
+
+- name: WasmBuiltinTruncateDToInt32
+
+- name: TruncateFToInt32
+
+- name: WasmBuiltinTruncateFToInt32
+
+- name: WasmTruncateToInt32
+
+- name: WrapInt64ToInt32
+
+- name: ExtendInt32ToInt64
+
+- name: BooleanToString
+
+- name: IntToString
+
+- name: DoubleToString
+
+- name: ValueToString
+
+- name: PowHalfD
+
+- name: NaNToZero
+
+- name: OsrEntry
+
+- name: OsrValue
+
+- name: OsrEnvironmentChain
+
+- name: OsrReturnValue
+
+- name: OsrArgumentsObject
+
+- name: RegExp
+
+- name: RegExpMatcher
+
+- name: RegExpSearcher
+
+- name: RegExpTester
+
+- name: RegExpPrototypeOptimizable
+
+- name: RegExpInstanceOptimizable
+
+- name: GetFirstDollarIndex
+
+- name: StringReplace
+
+- name: BinaryValueCache
+
+- name: BinaryBoolCache
+
+- name: UnaryCache
+
+- name: ModuleMetadata
+
+- name: DynamicImport
+
+- name: Lambda
+
+- name: LambdaArrow
+
+- name: FunctionWithProto
+
+- name: SetFunName
+
+- name: KeepAliveObject
+
+- name: Slots
+
+- name: Elements
+
+- name: InitializedLength
+
+- name: SetInitializedLength
+
+- name: ArrayLength
+
+- name: SetArrayLength
+
+- name: FunctionLength
+
+- name: FunctionName
+
+- name: GetNextEntryForIterator
+
+- name: ArrayBufferByteLength
+
+- name: ArrayBufferViewLength
+
+- name: ArrayBufferViewByteOffset
+
+- name: ArrayBufferViewElements
+
+- name: TypedArrayElementSize
+
+- name: GuardHasAttachedArrayBuffer
+
+- name: GuardNumberToIntPtrIndex
+
+- name: BoundsCheck
+
+- name: BoundsCheckRange
+
+- name: BoundsCheckLower
+
+- name: SpectreMaskIndex
+
+- name: LoadElementV
+
+- name: InArray
+
+- name: GuardElementNotHole
+
+- name: LoadElementHole
+
+- name: StoreElementV
+
+- name: StoreElementT
+
+- name: StoreHoleValueElement
+
+- name: StoreElementHoleV
+
+- name: StoreElementHoleT
+
+- name: ArrayPopShift
+
+- name: ArrayPush
+
+- name: ArraySlice
+
+- name: ArrayJoin
+
+- name: LoadUnboxedScalar
+
+- name: LoadUnboxedBigInt
+
+- name: LoadDataViewElement
+
+- name: LoadTypedArrayElementHole
+
+- name: LoadTypedArrayElementHoleBigInt
+
+- name: StoreUnboxedScalar
+
+- name: StoreUnboxedBigInt
+
+- name: StoreDataViewElement
+
+- name: StoreTypedArrayElementHole
+
+- name: StoreTypedArrayElementHoleBigInt
+
+- name: AtomicIsLockFree
+
+- name: CompareExchangeTypedArrayElement
+
+- name: AtomicExchangeTypedArrayElement
+
+- name: AtomicTypedArrayElementBinop
+
+- name: AtomicTypedArrayElementBinopForEffect
+
+- name: AtomicLoad64
+
+- name: AtomicStore64
+
+- name: CompareExchangeTypedArrayElement64
+
+- name: AtomicExchangeTypedArrayElement64
+
+- name: AtomicTypedArrayElementBinop64
+
+- name: AtomicTypedArrayElementBinopForEffect64
+
+- name: EffectiveAddress
+
+- name: ClampIToUint8
+
+- name: ClampDToUint8
+
+- name: ClampVToUint8
+
+- name: LoadFixedSlotV
+
+- name: LoadFixedSlotT
+
+- name: LoadFixedSlotAndUnbox
+
+- name: LoadDynamicSlotAndUnbox
+
+- name: LoadElementAndUnbox
+
+- name: AddAndStoreSlot
+
+- name: AllocateAndStoreSlot
+
+- name: StoreFixedSlotV
+
+- name: StoreFixedSlotT
+
+- name: GetNameCache
+
+- name: CallGetIntrinsicValue
+
+- name: GetPropSuperCache
+
+- name: GetPropertyCache
+
+- name: BindNameCache
+
+- name: CallBindVar
+
+- name: LoadDynamicSlotV
+
+- name: StoreDynamicSlotV
+
+- name: StoreDynamicSlotT
+
+- name: StringLength
+
+- name: Floor
+
+- name: FloorF
+
+- name: Ceil
+
+- name: CeilF
+
+- name: Round
+
+- name: RoundF
+
+- name: Trunc
+
+- name: TruncF
+
+- name: NearbyInt
+
+- name: NearbyIntF
+
+- name: FunctionEnvironment
+
+- name: HomeObject
+
+- name: HomeObjectSuperBase
+
+- name: NewLexicalEnvironmentObject
+
+- name: CopyLexicalEnvironmentObject
+
+- name: NewClassBodyEnvironmentObject
+
+- name: CallSetElement
+
+- name: CallDeleteProperty
+
+- name: CallDeleteElement
+
+- name: SetPropertyCache
+
+- name: GetIteratorCache
+
+- name: OptimizeSpreadCallCache
+
+- name: IteratorMore
+
+- name: IsNoIterAndBranch
+
+- name: IteratorEnd
+
+- name: ArgumentsLength
+
+- name: GetFrameArgument
+
+- name: Rest
+
+- name: Int32ToIntPtr
+
+- name: NonNegativeIntPtrToInt32
+
+- name: IntPtrToDouble
+
+- name: AdjustDataViewLength
+
+- name: BooleanToInt64
+
+- name: StringToInt64
+
+- name: ValueToInt64
+
+- name: TruncateBigIntToInt64
+
+- name: Int64ToBigInt
+
+- name: PostWriteBarrierO
+
+- name: PostWriteBarrierS
+
+- name: PostWriteBarrierBI
+
+- name: PostWriteBarrierV
+
+- name: PostWriteElementBarrierO
+
+- name: PostWriteElementBarrierS
+
+- name: PostWriteElementBarrierBI
+
+- name: PostWriteElementBarrierV
+
+- name: GuardObjectIdentity
+
+- name: GuardSpecificFunction
+
+- name: GuardSpecificAtom
+
+- name: GuardSpecificSymbol
+
+- name: GuardStringToIndex
+
+- name: GuardStringToInt32
+
+- name: GuardStringToDouble
+
+- name: GuardShape
+
+- name: GuardProto
+
+- name: GuardNullProto
+
+- name: GuardIsNativeObject
+
+- name: GuardIsProxy
+
+- name: GuardIsNotProxy
+
+- name: GuardIsNotDOMProxy
+
+- name: ProxyGet
+
+- name: ProxyGetByValue
+
+- name: ProxyHasProp
+
+- name: ProxySet
+
+- name: ProxySetByValue
+
+- name: CallSetArrayLength
+
+- name: MegamorphicLoadSlot
+
+- name: MegamorphicLoadSlotByValue
+
+- name: MegamorphicStoreSlot
+
+- name: MegamorphicHasProp
+
+- name: GuardIsNotArrayBufferMaybeShared
+
+- name: GuardIsTypedArray
+
+- name: GuardNoDenseElements
+
+- name: InCache
+
+- name: HasOwnCache
+
+- name: CheckPrivateFieldCache
+
+- name: NewPrivateName
+
+- name: InstanceOfO
+
+- name: InstanceOfV
+
+- name: InstanceOfCache
+
+- name: IsCallableO
+
+- name: IsCallableV
+
+- name: IsConstructor
+
+- name: IsCrossRealmArrayConstructor
+
+- name: IsArrayO
+
+- name: IsArrayV
+
+- name: IsTypedArray
+
+- name: IsObject
+
+- name: IsObjectAndBranch
+
+- name: IsNullOrUndefined
+
+- name: IsNullOrUndefinedAndBranch
+
+- name: HasClass
+
+- name: GuardToClass
+
+- name: ObjectClassToString
+
+- name: WasmSelect
+
+- name: WasmSelectI64
+
+- name: WasmCompareAndSelect
+
+- name: WasmAddOffset
+
+- name: WasmBoundsCheck
+
+- name: WasmBoundsCheck64
+
+- name: WasmExtendU32Index
+
+- name: WasmWrapU32Index
+
+- name: WasmAlignmentCheck
+
+- name: WasmLoadTls
+
+- name: WasmHeapBase
+
+- name: WasmLoad
+
+- name: WasmLoadI64
+
+- name: WasmStore
+
+- name: WasmStoreI64
+
+- name: AsmJSLoadHeap
+
+- name: AsmJSStoreHeap
+
+- name: WasmCompareExchangeHeap
+
+- name: WasmFence
+
+- name: WasmAtomicExchangeHeap
+
+- name: WasmAtomicBinopHeap
+
+- name: WasmAtomicBinopHeapForEffect
+
+- name: WasmLoadSlot
+
+- name: WasmLoadSlotI64
+
+- name: WasmStoreSlot
+
+- name: WasmStoreSlotI64
+
+- name: WasmDerivedPointer
+
+- name: WasmStoreRef
+
+- name: WasmParameter
+
+- name: WasmParameterI64
+
+- name: WasmReturn
+
+- name: WasmReturnI64
+
+- name: WasmReturnVoid
+
+- name: WasmStackArg
+
+- name: WasmStackArgI64
+
+- name: WasmNullConstant
+
+- name: WasmCall
+
+- name: WasmRegisterResult
+
+- name: WasmRegisterPairResult
+
+- name: WasmStackResultArea
+
+- name: WasmStackResult
+
+- name: WasmStackResult64
+
+- name: AssertRangeI
+
+- name: AssertRangeD
+
+- name: AssertRangeF
+
+- name: AssertRangeV
+
+- name: AssertClass
+
+- name: AssertShape
+
+- name: AssertResultT
+
+- name: AssertResultV
+
+- name: GuardValue
+
+- name: GuardNullOrUndefined
+
+- name: GuardFunctionFlags
+
+- name: GuardFunctionIsNonBuiltinCtor
+
+- name: GuardFunctionKind
+
+- name: GuardFunctionScript
+
+- name: IncrementWarmUpCounter
+
+- name: LexicalCheck
+
+- name: ThrowRuntimeLexicalError
+
+- name: ThrowMsg
+
+- name: GlobalDeclInstantiation
+
+- name: MemoryBarrier
+
+- name: Debugger
+
+- name: NewTarget
+
+- name: ArrowNewTarget
+
+- name: Random
+
+- name: CheckReturn
+
+- name: CheckIsObj
+
+- name: CheckObjCoercible
+
+- name: CheckClassHeritage
+
+- name: CheckThis
+
+- name: CheckThisReinit
+
+- name: Generator
+
+- name: AsyncResolve
+
+- name: AsyncAwait
+
+- name: CanSkipAwait
+
+- name: MaybeExtractAwaitValue
+
+- name: DebugCheckSelfHosted
+
+- name: FinishBoundFunctionInit
+
+- name: IsPackedArray
+
+- name: GuardArrayIsPacked
+
+- name: GetPrototypeOf
+
+- name: ObjectWithProto
+
+- name: ObjectStaticProto
+
+- name: BuiltinObject
+
+- name: SuperFunction
+
+- name: InitHomeObject
+
+- name: IsTypedArrayConstructor
+
+- name: LoadValueTag
+
+- name: GuardTagNotEqual
+
+- name: LoadWrapperTarget
+
+- name: GuardHasGetterSetter
+
+- name: GuardIsExtensible
+
+- name: GuardInt32IsNonNegative
+
+- name: GuardIndexGreaterThanDenseInitLength
+
+- name: GuardIndexIsValidUpdateOrAdd
+
+- name: CallAddOrUpdateSparseElement
+
+- name: CallGetSparseElement
+
+- name: CallNativeGetElement
+
+- name: CallObjectHasSparseElement
+
+- name: BigIntAsIntN
+
+- name: BigIntAsIntN64
+
+- name: BigIntAsIntN32
+
+- name: GuardNonGCThing
+
+- name: ToHashableNonGCThing
+
+- name: ToHashableString
+
+- name: ToHashableValue
+
+- name: HashNonGCThing
+
+- name: HashString
+
+- name: HashSymbol
+
+- name: HashBigInt
+
+- name: HashObject
+
+- name: HashValue
+
+- name: SetObjectHasNonBigInt
+
+- name: SetObjectHasBigInt
+
+- name: SetObjectHasValue
+
+- name: SetObjectHasValueVMCall
+
+- name: MapObjectHasNonBigInt
+
+- name: MapObjectHasBigInt
+
+- name: MapObjectHasValue
+
+- name: MapObjectHasValueVMCall
+
+- name: MapObjectGetNonBigInt
+
+- name: MapObjectGetBigInt
+
+- name: MapObjectGetValue
+
+- name: MapObjectGetValueVMCall
+
+- name: BigIntAsUintN
+
+- name: BigIntAsUintN64
+
+- name: BigIntAsUintN32
+
+- name: IonToWasmCall
+
+- name: IonToWasmCallV
+
+- name: IonToWasmCallI64
+
+- name: WasmBoxValue
+
+- name: WasmAnyRefFromJSObject
+
+- name: Simd128
+
+- name: WasmBitselectSimd128
+
+- name: WasmBinarySimd128
+
+- name: WasmBinarySimd128WithConstant
+
+- name: WasmVariableShiftSimd128
+
+- name: WasmConstantShiftSimd128
+
+- name: WasmSignReplicationSimd128
+
+- name: WasmShuffleSimd128
+
+- name: WasmPermuteSimd128
+
+- name: WasmReplaceLaneSimd128
+
+- name: WasmReplaceInt64LaneSimd128
+
+- name: WasmScalarToSimd128
+
+- name: WasmInt64ToSimd128
+
+- name: WasmUnarySimd128
+
+- name: WasmReduceSimd128
+
+- name: WasmReduceAndBranchSimd128
+
+- name: WasmReduceSimd128ToInt64
+
+- name: WasmLoadLaneSimd128
+
+- name: WasmStoreLaneSimd128
+
+- name: Unbox
+
+- name: UnboxFloatingPoint
+
+- name: WasmUint32ToDouble
+
+- name: WasmUint32ToFloat32
+
+- name: DivI
+
+- name: ModI
+
+- name: DivPowTwoI
+
+- name: ModPowTwoI
+
+- name: TableSwitch
+
+- name: TableSwitchV
+
+- name: MulI
+
+#ifdef JS_CODEGEN_X86
+- name: BoxFloatingPoint
+
+- name: DivOrModI64
+
+- name: UDivOrModI64
+
+- name: DivOrModConstantI
+
+- name: UDivOrMod
+
+- name: UDivOrModConstant
+
+- name: WasmTruncateToInt64
+
+- name: Int64ToFloatingPoint
+
+- name: WasmAtomicLoadI64
+
+- name: WasmAtomicStoreI64
+
+- name: WasmCompareExchangeI64
+
+- name: WasmAtomicBinopI64
+
+- name: WasmAtomicExchangeI64
+#endif
+
+#ifdef JS_CODEGEN_X64
+- name: DivOrModI64
+
+- name: UDivOrModI64
+
+- name: DivOrModConstantI
+
+- name: UDivOrMod
+
+- name: UDivOrModConstant
+
+- name: WasmTruncateToInt64
+
+- name: Int64ToFloatingPoint
+#endif
+
+#ifdef JS_CODEGEN_ARM
+- name: BoxFloatingPoint
+
+- name: DivOrModI64
+
+- name: UDivOrModI64
+
+- name: SoftDivI
+
+- name: SoftModI
+
+- name: ModMaskI
+
+- name: UDiv
+
+- name: UMod
+
+- name: SoftUDivOrMod
+
+- name: Int64ToFloatingPointCall
+
+- name: WasmTruncateToInt64
+
+- name: WasmAtomicLoadI64
+
+- name: WasmAtomicStoreI64
+
+- name: WasmCompareExchangeI64
+
+- name: WasmAtomicBinopI64
+
+- name: WasmAtomicExchangeI64
+#endif
+
+#ifdef JS_CODEGEN_ARM64
+- name: DivOrModI64
+
+- name: UDivOrModI64
+
+- name: DivConstantI
+
+- name: UDivConstantI
+
+- name: ModMaskI
+
+- name: UDiv
+
+- name: UMod
+
+- name: WasmTruncateToInt64
+
+- name: Int64ToFloatingPoint
+#endif
+
+#ifdef JS_CODEGEN_MIPS32
+- name: BoxFloatingPoint
+
+- name: DivOrModI64
+
+- name: UDivOrModI64
+
+- name: UDivOrMod
+
+- name: ModMaskI
+
+- name: WasmTruncateToInt64
+
+- name: Int64ToFloatingPoint
+
+- name: WasmUnalignedLoad
+
+- name: WasmUnalignedLoadI64
+
+- name: WasmUnalignedStore
+
+- name: WasmUnalignedStoreI64
+
+- name: WasmAtomicLoadI64
+
+- name: WasmAtomicStoreI64
+
+- name: WasmCompareExchangeI64
+
+- name: WasmAtomicBinopI64
+
+- name: WasmAtomicExchangeI64
+#endif
+
+#ifdef JS_CODEGEN_MIPS64
+- name: DivOrModI64
+
+- name: UDivOrMod
+
+- name: ModMaskI
+
+- name: WasmTruncateToInt64
+
+- name: Int64ToFloatingPoint
+
+- name: WasmUnalignedLoad
+
+- name: WasmUnalignedLoadI64
+
+- name: WasmUnalignedStore
+
+- name: WasmUnalignedStoreI64
+
+- name: WasmCompareExchangeI64
+
+- name: WasmAtomicBinopI64
+
+- name: WasmAtomicExchangeI64
+#endif
