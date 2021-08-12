@@ -21,10 +21,12 @@
 
 #include "mozilla/BinarySearch.h"
 
-#include "jit/MacroAssembler.h"  // For ABIArgIter
+#include "jit/ABIArgGenerator.h"  // For ABIArgIter
+#include "jit/Label.h"
 #include "js/AllocPolicy.h"
 #include "js/Vector.h"
 #include "util/Memory.h"
+#include "wasm/WasmBuiltins.h"
 
 namespace js {
 
@@ -33,6 +35,8 @@ class MacroAssembler;
 }  // namespace jit
 
 namespace wasm {
+
+class ArgTypeVector;
 
 using jit::Label;
 using jit::MIRType;
@@ -403,7 +407,7 @@ void EmitWasmPreBarrierCall(jit::MacroAssembler& masm, Register tls,
 // `otherScratch` cannot be a designated scratch register.
 
 void EmitWasmPostBarrierGuard(jit::MacroAssembler& masm,
-                              const Maybe<Register>& object,
+                              const mozilla::Maybe<Register>& object,
                               Register otherScratch, Register setValue,
                               Label* skipBarrier);
 

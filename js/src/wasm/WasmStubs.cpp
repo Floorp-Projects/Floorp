@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "jit/ABIArgGenerator.h"
 #include "jit/ABIFunctions.h"
 #include "jit/JitFrames.h"
 #include "jit/JitScript.h"
