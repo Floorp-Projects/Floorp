@@ -97,7 +97,9 @@ def build_index_def(num_specials_operands, index_value, num_reg_operands, piece)
         )
 
 
-def gen_lir_class(name, result_type, operands, num_temps, call_instruction, mir_op):
+def gen_lir_class(
+    name, result_type, operands, arguments, num_temps, call_instruction, mir_op
+):
     """Generates class definition for a single LIR opcode."""
     class_name = "L" + name
 
@@ -191,16 +193,30 @@ def gen_lir_class(name, result_type, operands, num_temps, call_instruction, mir_
     code += gen_helper_template_value(
         num_reg_operands, num_value_operands, num_int64_operands
     )
-    code += ", {}> {{\\\n public:\\\n  LIR_HEADER({})\\\n".format(num_temps, name)
+    code += ", {}> {{\\\n".format(num_temps)
+    if arguments:
+        for arg_name in arguments:
+            arg_type_sig = arguments[arg_name]
+            constructor_params.append(arg_type_sig + " " + arg_name)
+            code += "  " + arg_type_sig + " " + arg_name + "_;\\\n"
+    code += " public:\\\n  LIR_HEADER({})\\\n".format(name)
     code += "  explicit {}(".format(class_name)
     code += ", ".join(constructor_params)
-    code += ") : LInstructionHelper(classOpcode) {"
+    code += ") : LInstructionHelper(classOpcode)"
+    if arguments:
+        for arg_name in arguments:
+            code += ", " + arg_name + "_(" + arg_name + ")"
+    code += " {"
     if call_instruction:
         code += "\\\n    this->setIsCall();"
     code += "\\\n"
     code += "\\\n".join(setters)
     code += "\\\n  }\\\n"
     code += "\\\n".join(getters)
+    if arguments:
+        for arg_name in arguments:
+            code += "  " + arguments[arg_name] + " " + arg_name + "() const { "
+            code += "return " + arg_name + "_; }\\\n"
     code += "\\\n"
     if operands:
         code += "\\\n".join(oper_indices)
@@ -241,6 +257,9 @@ def generate_lir_header(c_out, yaml_path):
             operands = op.get("operands", None)
             assert operands is None or OrderedDict
 
+            arguments = op.get("arguments", None)
+            assert arguments is None or isinstance(arguments, OrderedDict)
+
             num_temps = op.get("num_temps", 0)
             assert num_temps is None or int
 
@@ -258,6 +277,7 @@ def generate_lir_header(c_out, yaml_path):
                     name,
                     result_type,
                     operands,
+                    arguments,
                     num_temps,
                     call_instruction,
                     mir_op,
