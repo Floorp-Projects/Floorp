@@ -23,13 +23,11 @@
 #include "gc/Allocator.h"
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/IonCacheIRCompiler.h"
-#include "jit/IonIC.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitZone.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
-#include "jit/TemplateObject.h"
 #include "jit/VMFunctions.h"
 #include "js/friend/DOMProxy.h"     // JS::ExpandoAndGeneration
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo
@@ -46,12 +44,9 @@
 #include "vm/Uint8Clamped.h"
 
 #include "builtin/Boolean-inl.h"
-#include "gc/ObjectKind-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
 #include "jit/VMFunctionList-inl.h"
-#include "vm/BytecodeUtil-inl.h"
-#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::jit;

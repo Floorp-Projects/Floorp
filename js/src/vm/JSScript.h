@@ -1536,8 +1536,10 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   // Canonical function for the script, if it has a function. For top-level
   // scripts this is nullptr.
   JSFunction* function() const {
-    if (functionOrGlobal_->is<JSFunction>()) {
-      return &functionOrGlobal_->as<JSFunction>();
+    // JSFunction's definition isn't visible at this point, so we can't use
+    // the normal |is<JSFunction>| and |as<JSFunction>| pair.
+    if (isFunction()) {
+      return reinterpret_cast<JSFunction*>(functionOrGlobal_.get());
     }
     return nullptr;
   }

@@ -10,10 +10,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Sprintf.h"
 
 #include "gc/Marking.h"
-#include "gc/Statistics.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/JitRuntime.h"
@@ -22,7 +20,6 @@
 #include "vm/BytecodeLocation.h"  // for BytecodeLocation
 #include "vm/GeckoProfiler.h"
 
-#include "vm/BytecodeLocation-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSScript-inl.h"
 

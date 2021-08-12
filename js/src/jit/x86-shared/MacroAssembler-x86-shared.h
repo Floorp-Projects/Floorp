@@ -7,8 +7,6 @@
 #ifndef jit_x86_shared_MacroAssembler_x86_shared_h
 #define jit_x86_shared_MacroAssembler_x86_shared_h
 
-#include "mozilla/Casting.h"
-
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/Assembler-x86.h"
 #elif defined(JS_CODEGEN_X64)

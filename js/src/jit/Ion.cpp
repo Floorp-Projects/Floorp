@@ -13,7 +13,6 @@
 #include "mozilla/ThreadLocal.h"
 
 #include "gc/FreeOp.h"
-#include "gc/Marking.h"
 #include "gc/PublicIterators.h"
 #include "jit/AliasAnalysis.h"
 #include "jit/AlignmentMaskAnalysis.h"
@@ -21,7 +20,6 @@
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
-#include "jit/CacheIRSpewer.h"
 #include "jit/CodeGenerator.h"
 #include "jit/CompileInfo.h"
 #include "jit/EdgeCaseAnalysis.h"
@@ -37,7 +35,6 @@
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
-#include "jit/JitCommon.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
@@ -60,7 +57,6 @@
 #include "js/UniquePtr.h"
 #include "util/Memory.h"
 #include "util/Windows.h"
-#include "vm/BytecodeIterator.h"
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
 #include "vm/TraceLogging.h"
@@ -68,19 +64,13 @@
 #  include "vtune/VTuneWrapper.h"
 #endif
 
-#include "debugger/DebugAPI-inl.h"
 #include "gc/GC-inl.h"
 #include "jit/InlineScriptTree-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SafepointIndex-inl.h"
-#include "jit/shared/Lowering-shared-inl.h"
-#include "vm/BytecodeIterator-inl.h"
-#include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
-#include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Realm-inl.h"
-#include "vm/Stack-inl.h"
 
 #if defined(ANDROID)
 #  include <sys/system_properties.h>

@@ -7,7 +7,6 @@
 #include "jit/IonCompileTask.h"
 
 #include "jit/CodeGenerator.h"
-#include "jit/CompileInfo.h"
 #include "jit/Ion.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"

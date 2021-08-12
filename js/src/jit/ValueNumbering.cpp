@@ -6,10 +6,10 @@
 
 #include "jit/ValueNumbering.h"
 
-#include "jit/AliasAnalysis.h"
 #include "jit/IonAnalysis.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
+#include "jit/MIRGraph.h"
 
 using namespace js;
 using namespace js::jit;

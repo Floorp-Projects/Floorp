@@ -6,17 +6,14 @@
 
 #include "jit/ScalarReplacement.h"
 
-#include "mozilla/Vector.h"
-
 #include "jit/IonAnalysis.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/WarpBuilderShared.h"
+#include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
-
-#include "vm/JSObject-inl.h"
 
 namespace js {
 namespace jit {

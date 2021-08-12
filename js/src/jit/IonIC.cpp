@@ -11,7 +11,6 @@
 #include "util/DiagnosticAssertions.h"
 #include "vm/EqualityOperations.h"
 
-#include "jit/MacroAssembler-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;

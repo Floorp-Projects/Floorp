@@ -13,10 +13,7 @@
 #  include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
-#include "jit/x64/SharedICHelpers-x64.h"
-#ifdef MOZ_VTUNE
-#  include "vtune/VTuneWrapper.h"
-#endif
+#include "jit/x64/SharedICRegisters-x64.h"
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/JSContext.h"
 

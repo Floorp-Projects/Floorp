@@ -23,19 +23,15 @@
 #include "jit/JitCommon.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
+#include "jit/MacroAssembler.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
-#include "util/Memory.h"
-#include "util/StructuredSpewer.h"
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
 
 #include "debugger/DebugAPI-inl.h"
 #include "gc/GC-inl.h"
 #include "jit/JitScript-inl.h"
-#include "jit/MacroAssembler-inl.h"
-#include "vm/BytecodeUtil-inl.h"
 #include "vm/GeckoProfiler-inl.h"
-#include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"
 

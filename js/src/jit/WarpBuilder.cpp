@@ -22,7 +22,6 @@
 #include "vm/Opcodes.h"
 
 #include "gc/ObjectKind-inl.h"
-#include "jit/JitScript-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 

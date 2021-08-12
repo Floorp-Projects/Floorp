@@ -8,8 +8,6 @@
 
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/ScopeExit.h"
 
 #include <utility>
 
@@ -18,19 +16,12 @@
 #include "jit/IonScript.h"
 #include "jit/JitFrames.h"
 #include "jit/ScriptFromCalleeToken.h"
-#include "util/Memory.h"
-#include "vm/BytecodeIterator.h"
-#include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
 #include "vm/JSScript.h"
-#include "vm/Stack.h"
-#include "wasm/WasmInstance.h"
 
 #include "gc/FreeOp-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
-#include "vm/BytecodeIterator-inl.h"
-#include "vm/BytecodeLocation-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;

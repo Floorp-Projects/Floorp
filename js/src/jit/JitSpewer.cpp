@@ -11,17 +11,12 @@
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Sprintf.h"
 
-#  include "jit/Ion.h"
 #  include "jit/MIR.h"
 #  include "jit/MIRGenerator.h"
 #  include "jit/MIRGraph.h"
 #  include "threading/LockGuard.h"
 #  include "util/GetPidProvider.h"  // getpid()
-#  include "util/Text.h"
-#  include "vm/HelperThreads.h"
 #  include "vm/MutexIDs.h"
-
-#  include "vm/Realm-inl.h"
 
 #  ifndef JIT_SPEW_DIR
 #    if defined(_WIN32)

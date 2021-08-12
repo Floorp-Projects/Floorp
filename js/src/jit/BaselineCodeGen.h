@@ -8,11 +8,9 @@
 #define jit_BaselineCodeGen_h
 
 #include "jit/BaselineFrameInfo.h"
-#include "jit/BaselineIC.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/FixedList.h"
 #include "jit/MacroAssembler.h"
-#include "vm/GeneratorResumeKind.h"  // GeneratorResumeKind
 
 namespace js {
 

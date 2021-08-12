@@ -9,7 +9,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
 
@@ -20,7 +19,6 @@
 #include "builtin/RegExp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/CompileInfo.h"
-#include "jit/JitSpewer.h"
 #include "jit/KnownClass.h"
 #include "jit/MIRGraph.h"
 #include "jit/RangeAnalysis.h"
@@ -34,11 +32,7 @@
 #include "vm/Uint8Clamped.h"
 #include "wasm/WasmCode.h"
 
-#include "builtin/Boolean-inl.h"
-
 #include "vm/JSAtom-inl.h"
-#include "vm/JSObject-inl.h"
-#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::jit;

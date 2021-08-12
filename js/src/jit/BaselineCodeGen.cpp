@@ -8,13 +8,11 @@
 
 #include "mozilla/Casting.h"
 
-#include "jit/ABIFunctions.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CacheIRCompiler.h"
 #include "jit/CalleeToken.h"
 #include "jit/FixedList.h"
-#include "jit/IonAnalysis.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
@@ -42,7 +40,6 @@
 #endif
 
 #include "debugger/DebugAPI-inl.h"
-#include "jit/ABIFunctionList-inl.h"
 #include "jit/BaselineFrameInfo-inl.h"
 #include "jit/JitScript-inl.h"
 #include "jit/MacroAssembler-inl.h"
@@ -50,7 +47,6 @@
 #include "jit/VMFunctionList-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
-#include "vm/NativeObject-inl.h"
 
 using namespace js;
 using namespace js::jit;

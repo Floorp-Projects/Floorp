@@ -13,9 +13,12 @@
 #include "jit/JitRuntime.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "vm/Interpreter.h"
+#include "vm/JitActivation.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
-#include "vm/Stack-inl.h"
+#include "vm/Activation-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::jit;
