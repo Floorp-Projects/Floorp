@@ -5,16 +5,14 @@
 package org.mozilla.fenix.settings.logins
 
 import android.view.LayoutInflater
-import android.view.View
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.logins_item.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.LoginsItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 import org.mozilla.fenix.settings.logins.view.LoginsListViewHolder
@@ -30,36 +28,36 @@ class LoginsListViewHolderTest {
         timeLastUsed = 100L
     )
 
-    private lateinit var view: View
     private lateinit var interactor: SavedLoginsInteractor
+    private lateinit var binding: LoginsItemBinding
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext).inflate(R.layout.logins_item, null)
+        binding = LoginsItemBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
     }
 
     @Test
     fun `bind url and username`() {
         val holder = LoginsListViewHolder(
-            view,
+            binding.root,
             interactor
         )
         holder.bind(baseLogin)
 
-        assertEquals("mozilla.org", view.webAddressView.text)
-        assertEquals("admin", view.usernameView.text)
+        assertEquals("mozilla.org", binding.webAddressView.text)
+        assertEquals("admin", binding.usernameView.text)
     }
 
     @Test
     fun `call interactor on click`() {
         val holder = LoginsListViewHolder(
-            view,
+            binding.root,
             interactor
         )
         holder.bind(baseLogin)
 
-        view.performClick()
+        binding.root.performClick()
         verify { interactor.onItemClicked(baseLogin) }
     }
 }

@@ -11,13 +11,13 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
-import kotlinx.android.synthetic.main.fragment_exceptions.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.databinding.FragmentExceptionsBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 
@@ -39,8 +39,12 @@ class LoginExceptionsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_exceptions, container, false)
+    ): View {
+        val binding = FragmentExceptionsBinding.inflate(
+            inflater,
+            container,
+            false
+        )
         exceptionsStore = StoreProvider.get(this) {
             ExceptionsFragmentStore(
                 ExceptionsFragmentState(items = emptyList())
@@ -51,11 +55,11 @@ class LoginExceptionsFragment : Fragment() {
             loginExceptionStorage = requireComponents.core.loginExceptionStorage
         )
         exceptionsView = LoginExceptionsView(
-            view.exceptionsLayout,
+            binding.exceptionsLayout,
             exceptionsInteractor
         )
         subscribeToLoginExceptions()
-        return view
+        return binding.root
     }
 
     private fun subscribeToLoginExceptions() {

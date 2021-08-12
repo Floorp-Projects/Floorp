@@ -44,7 +44,7 @@ import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 import org.mozilla.fenix.settings.logins.createInitialLoginsListState
 import org.mozilla.fenix.settings.logins.interactor.LoginDetailInteractor
 import org.mozilla.fenix.settings.logins.togglePasswordReveal
-import org.mozilla.fenix.settings.logins.view.LoginDetailView
+import org.mozilla.fenix.settings.logins.view.LoginDetailsBindingDelegate
 
 /**
  * Displays saved login information for a single website.
@@ -56,7 +56,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
     private val args by navArgs<LoginDetailFragmentArgs>()
     private var login: SavedLogin? = null
     private lateinit var savedLoginsStore: LoginsFragmentStore
-    private lateinit var loginDetailView: LoginDetailView
+    private lateinit var loginDetailsBindingDelegate: LoginDetailsBindingDelegate
     private lateinit var interactor: LoginDetailInteractor
     private lateinit var menu: Menu
     private var deleteDialog: AlertDialog? = null
@@ -76,9 +76,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
                 createInitialLoginsListState(requireContext().settings())
             )
         }
-        loginDetailView = LoginDetailView(
-            view.findViewById(R.id.loginDetailLayout)
-        )
+        loginDetailsBindingDelegate = LoginDetailsBindingDelegate(binding)
 
         return view
     }
@@ -99,7 +97,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
         interactor.onFetchLoginList(args.savedLoginId)
 
         consumeFrom(savedLoginsStore) {
-            loginDetailView.update(it)
+            loginDetailsBindingDelegate.update(it)
             login = savedLoginsStore.state.currentItem
             setUpCopyButtons()
             showToolbar(

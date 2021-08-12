@@ -6,15 +6,14 @@ package org.mozilla.fenix.settings.logins
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.fragment_login_detail.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentLoginDetailBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.settings.logins.view.LoginDetailView
+import org.mozilla.fenix.settings.logins.view.LoginDetailsBindingDelegate
 
 @RunWith(FenixRobolectricTestRunner::class)
 class LoginDetailViewTest {
@@ -36,30 +35,31 @@ class LoginDetailViewTest {
     )
 
     private lateinit var view: ViewGroup
-    private lateinit var detailView: LoginDetailView
+    private lateinit var binding: FragmentLoginDetailBinding
+    private lateinit var detailsBindingDelegate: LoginDetailsBindingDelegate
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext).inflate(R.layout.fragment_login_detail, null)
-            .findViewById(R.id.loginDetailLayout)
-        detailView = LoginDetailView(view)
+        binding = FragmentLoginDetailBinding.inflate(LayoutInflater.from(testContext))
+        view = binding.loginDetailLayout
+        detailsBindingDelegate = LoginDetailsBindingDelegate(binding)
     }
 
     @Test
     fun `bind currentItem`() {
-        detailView.update(state)
+        detailsBindingDelegate.update(state)
 
-        assertEquals("mozilla.org", view.webAddressText.text)
-        assertEquals("admin", view.usernameText.text)
-        assertEquals("password", view.passwordText.text)
+        assertEquals("mozilla.org", binding.webAddressText.text)
+        assertEquals("admin", binding.usernameText.text)
+        assertEquals("password", binding.passwordText.text)
     }
 
     @Test
     fun `bind null currentItem`() {
-        detailView.update(state.copy(currentItem = null))
+        detailsBindingDelegate.update(state.copy(currentItem = null))
 
-        assertEquals("", view.webAddressText.text)
-        assertEquals("", view.usernameText.text)
-        assertEquals("", view.passwordText.text)
+        assertEquals("", binding.webAddressText.text)
+        assertEquals("", binding.usernameText.text)
+        assertEquals("", binding.passwordText.text)
     }
 }
