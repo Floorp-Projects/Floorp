@@ -20,7 +20,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  /* A union which permits us to convert between a long double and
     four 32 bit ints.  */
  
- #if MOZ_BIG_ENDIAN
+ #if MOZ_BIG_ENDIAN()
  
  typedef union
  {
