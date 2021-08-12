@@ -8,3 +8,7 @@ remote.jar:
   content/webdriver-bidi/NewSessionHandler.jsm (NewSessionHandler.jsm)
   content/webdriver-bidi/WebDriverBiDi.jsm (WebDriverBiDi.jsm)
   content/webdriver-bidi/WebDriverBiDiConnection.jsm (WebDriverBiDiConnection.jsm)
+
+  # WebDriver BiDi modules
+  content/webdriver-bidi/modules/ModuleRegistry.jsm (modules/ModuleRegistry.jsm)
+  content/webdriver-bidi/modules/root/session.jsm (modules/root/session.jsm)

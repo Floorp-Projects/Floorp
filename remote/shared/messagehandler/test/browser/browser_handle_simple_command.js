@@ -127,22 +127,22 @@ add_task(async function test_multisession() {
   await rootMessageHandler1.handleCommand({
     moduleName: "command",
     commandName: "testSetValue",
+    params: { value: "session1-value" },
     destination: {
       type: WindowGlobalMessageHandler.type,
       id: browsingContextId,
     },
-    params: "session1-value",
   });
 
   info("Set value for session 2");
   await rootMessageHandler2.handleCommand({
     moduleName: "command",
     commandName: "testSetValue",
+    params: { value: "session2-value" },
     destination: {
       type: WindowGlobalMessageHandler.type,
       id: browsingContextId,
     },
-    params: "session2-value",
   });
 
   const session1Value = await rootMessageHandler1.handleCommand({
@@ -189,6 +189,7 @@ add_task(async function test_forwarding_command() {
   const interceptAndForwardValue = await rootMessageHandler.handleCommand({
     moduleName: "command",
     commandName: "testInterceptAndForwardModule",
+    params: { id: "value" },
     destination: {
       type: WindowGlobalMessageHandler.type,
       id: browsingContextId,
