@@ -74,14 +74,14 @@ def configuration():
     }
 
 
-async def reset_current_session_if_necessary(caps, request_bidi):
+async def reset_current_session_if_necessary(caps):
     global _current_session
 
-    # If there is a session with different capabilities active or the current session
-    # is of different type than the one we would like to create, end it now.
+    # If there is a session with different requested capabilities active than
+    # the one we would like to create, end it now.
     if _current_session is not None:
-        is_bidi = isinstance(_current_session, webdriver.BidiSession)
-        if is_bidi != request_bidi or not _current_session.match(caps):
+        if not _current_session.match(caps):
+            is_bidi = isinstance(_current_session, webdriver.BidiSession)
             if is_bidi:
                 await _current_session.end()
             else:
@@ -106,7 +106,7 @@ async def session(capabilities, configuration, request):
     deep_update(caps, capabilities)
     caps = {"alwaysMatch": caps}
 
-    await reset_current_session_if_necessary(caps, False)
+    await reset_current_session_if_necessary(caps)
 
     if _current_session is None:
         _current_session = webdriver.Session(
@@ -146,10 +146,11 @@ async def bidi_session(capabilities, configuration, request):
     # Update configuration capabilities with custom ones from the
     # capabilities fixture, which can be set by tests
     caps = copy.deepcopy(configuration["capabilities"])
+    caps.update({"webSocketUrl": True})
     deep_update(caps, capabilities)
     caps = {"alwaysMatch": caps}
 
-    await reset_current_session_if_necessary(caps, True)
+    await reset_current_session_if_necessary(caps)
 
     if _current_session is None:
         _current_session = webdriver.Session(
