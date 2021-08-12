@@ -1150,7 +1150,7 @@ nsJSProtocolHandler::GetProtocolFlags(uint32_t* result) {
 
   NS_MutateURI mutator(new nsJSURI::Mutator());
   nsCOMPtr<nsIURI> base(aBaseURI);
-  mutator.Apply(NS_MutatorMethod(&nsIJSURIMutator::SetBase, base));
+  mutator.Apply(&nsIJSURIMutator::SetBase, base);
   if (!aCharset || !nsCRT::strcasecmp("UTF-8", aCharset)) {
     mutator.SetSpec(aSpec);
   } else {
