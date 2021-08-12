@@ -33,7 +33,7 @@
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType, JS_GetTypedArray{Length,ByteOffset,ByteLength}, JS_IsTypedArrayObject
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
-#include "js/ScalarType.h"  // js::Scalar::Type
+#include "js/ScalarType.h"  // JS::Scalar::Type
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
 #include "util/DifferentialTesting.h"
@@ -2650,7 +2650,7 @@ bool js::DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
     if (!tarr) {                                                              \
       return nullptr;                                                         \
     }                                                                         \
-    return JS::TypedArray<js::Scalar::Name>::fromObject(tarr)                 \
+    return JS::TypedArray<JS::Scalar::Name>::fromObject(tarr)                 \
         .getLengthAndData(length, isSharedMemory, nogc);                      \
   }                                                                           \
                                                                               \
@@ -2713,7 +2713,7 @@ JS_PUBLIC_API bool JS_GetTypedArraySharedness(JSObject* obj) {
   return tarr->isSharedMemory();
 }
 
-JS_PUBLIC_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj) {
+JS_PUBLIC_API JS::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj) {
   ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!view) {
     return Scalar::MaxTypedArrayViewType;
@@ -2737,7 +2737,7 @@ namespace JS {
 const JSClass* const TypedArray_base::classes = TypedArrayObject::classes;
 
 #define INSTANTIATE(ExternalType, NativeType, Name) \
-  template class TypedArray<js::Scalar::Name>;
+  template class TypedArray<JS::Scalar::Name>;
 JS_FOR_EACH_TYPED_ARRAY(INSTANTIATE)
 #undef INSTANTIATE
 
@@ -2768,7 +2768,7 @@ JS::TypedArray_base JS::TypedArray_base::fromObject(JSObject* unwrapped) {
 
 // Template getLengthAndData function for TypedArrays, implemented here because
 // it requires internal APIs.
-template <js::Scalar::Type EType>
+template <JS::Scalar::Type EType>
 typename TypedArray<EType>::DataType* TypedArray<EType>::getLengthAndData(
     size_t* length, bool* isSharedMemory, const AutoRequireNoGC&) {
   using ExternalType = TypedArray<EType>::DataType;
@@ -2790,8 +2790,8 @@ typename TypedArray<EType>::DataType* TypedArray<EType>::getLengthAndData(
 // build, the header contains a call to this function so it will always be
 // emitted.)
 #define INSTANTIATE_GET_DATA(a, b, Name)                    \
-  template typename TypedArray<js::Scalar::Name>::DataType* \
-  TypedArray<js::Scalar::Name>::getLengthAndData(           \
+  template typename TypedArray<JS::Scalar::Name>::DataType* \
+  TypedArray<JS::Scalar::Name>::getLengthAndData(           \
       size_t* length, bool* isSharedMemory, const AutoRequireNoGC&);
 JS_FOR_EACH_TYPED_ARRAY(INSTANTIATE_GET_DATA)
 #undef INSTANTIATE_GET_DATA
