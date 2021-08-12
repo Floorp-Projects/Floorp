@@ -69,7 +69,7 @@
 #include "vm/Stack.h"                      // for AbstractFramePtr, FrameIter
 #include "vm/StringType.h"                 // for PropertyName, JSString
 #include "wasm/WasmDebug.h"                // for DebugState
-#include "wasm/WasmFrame.h"                // for DebugFrame
+#include "wasm/WasmDebugFrame.h"           // for DebugFrame
 #include "wasm/WasmInstance.h"             // for Instance
 #include "wasm/WasmJS.h"                   // for WasmInstanceObject
 
