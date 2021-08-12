@@ -8197,26 +8197,6 @@ class LLexicalCheck : public LInstructionHelper<0, BOX_PIECES, 0> {
   static const size_t Input = 0;
 };
 
-class LThrowRuntimeLexicalError : public LCallInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(ThrowRuntimeLexicalError)
-
-  LThrowRuntimeLexicalError() : LCallInstructionHelper(classOpcode) {}
-
-  MThrowRuntimeLexicalError* mir() {
-    return mir_->toThrowRuntimeLexicalError();
-  }
-};
-
-class LThrowMsg : public LCallInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(ThrowMsg)
-
-  LThrowMsg() : LCallInstructionHelper(classOpcode) {}
-
-  MThrowMsg* mir() { return mir_->toThrowMsg(); }
-};
-
 class LMemoryBarrier : public LInstructionHelper<0, 0, 0> {
  private:
   const MemoryBarrierBits type_;
