@@ -1,5 +1,5 @@
-Repackaging MSIX/App Packages
-=============================
+MSIX Package
+============
 
 Firefox MSIX packages are full participants in the "modern" Windows
 app packaging system.  They are distributed, installed, updated,
@@ -110,10 +110,10 @@ Repackage using commands like:
 
 ::
 
-    $ mach repackage msix
-      --input firefox-88.0.1.zip
-      --channel=official
-      --arch=x86_64
+    $ ./mach repackage msix \
+      --input firefox-88.0.1.zip \
+      --channel=official \
+      --arch=x86_64 \
       --verbose
 
 Paths to tools can be set via environment variables. In order, searched
@@ -134,7 +134,7 @@ adding ``--sign`` to ``mach repackage msix``, or with commands like:
 
 ::
 
-    $ mach repackage sign-msix --input test.msix --verbose
+    $ ./mach repackage sign-msix --input test.msix --verbose
 
 Or sign them yourself following `Microsoft's self-signed certificate
 instructions <https://docs.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing#create-a-self-signed-certificate>`__.
@@ -164,11 +164,12 @@ Generate a new ``resources.pri`` file on a Windows machine using
 
 ::
 
-    $ makepri.exe new
-        -IndexName firefox
-        -ConfigXml browser/installer/windows/msix/priconfig.xml
-        -ProjectRoot browser/branding/official/msix
-        -OutputFile browser/installer/windows/msix/resources.pri
+    $ makepri.exe new \
+        -IndexName firefox \
+        -ConfigXml browser/installer/windows/msix/priconfig.xml \
+        -ProjectRoot browser/branding/official/msix \
+        -OutputFile browser/installer/windows/msix/resources.pri \
+        -Overwrite
 
 The choice of channel (i.e.,
 ``browser/branding/{official,aurora,beta,nightly,unofficial}``) should
