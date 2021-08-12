@@ -7019,15 +7019,22 @@ static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
   }
   array->ensureDenseInitializedLength(0, 2);
 
+  JSObject* obj = args[1].isObject() ? &args[1].toObject() : nullptr;
+  auto view = JS::TypedArray<Scalar::Uint8>::unwrap(obj);
+  if (!view) {
+    ReportUsageErrorASCII(cx, callee, "Second argument must be a Uint8Array");
+    return false;
+  }
   size_t length;
   bool isSharedMemory;
-  uint8_t* data;
-  if (!args[1].isObject() ||
-      !JS_GetObjectAsUint8Array(&args[1].toObject(), &length, &isSharedMemory,
-                                &data) ||
-      isSharedMemory ||  // excluded views of SharedArrayBuffers
+  JS::AutoCheckCannotGC nogc(cx);
+  uint8_t* data = view.getLengthAndData(&length, &isSharedMemory, nogc);
+
+  if (isSharedMemory ||  // excluded views of SharedArrayBuffers
       !data) {           // exclude views of detached ArrayBuffers
-    ReportUsageErrorASCII(cx, callee, "Second argument must be a Uint8Array");
+    ReportUsageErrorASCII(
+        cx, callee,
+        "Second argument must be an unshared, non-detached Uint8Array");
     return false;
   }
 
