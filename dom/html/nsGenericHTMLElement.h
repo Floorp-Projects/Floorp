@@ -184,7 +184,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     SetHTMLAttr(nsGkAtoms::autocapitalize, aValue, aRv);
   }
 
-  void GetEnterKeyHint(nsAString& aValue) {
+  void GetEnterKeyHint(nsAString& aValue) const {
     GetEnumAttr(nsGkAtoms::enterkeyhint, nullptr, aValue);
   }
   void SetEnterKeyHint(const nsAString& aValue, ErrorResult& aRv) {
