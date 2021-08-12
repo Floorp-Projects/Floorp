@@ -126,6 +126,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
 UNIFIED_SOURCES += [
     "core/MicroGeckoProfiler.cpp",
     "core/ProfilerBindings.cpp",
+    "core/ProfilerThreadRegistrationData.cpp",
     "core/ProfilerUtils.cpp",
     "gecko/ProfilerParent.cpp",
 ]
@@ -155,6 +156,7 @@ EXPORTS.mozilla += [
     "public/ProfilerMarkerTypes.h",
     "public/ProfilerState.h",
     "public/ProfilerThreadPlatformData.h",
+    "public/ProfilerThreadRegistrationData.h",
     "public/ProfilerThreadRegistrationInfo.h",
     "public/ProfilerUtils.h",
 ]
