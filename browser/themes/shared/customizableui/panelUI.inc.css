@@ -905,9 +905,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 
 .PanelUI-fxa-signin-button > .toolbarbutton-text,
 .PanelUI-remotetabs-button > .toolbarbutton-text {
-  /* !important to override ".cui-widget-panel toolbarbutton > .toolbarbutton-text" above. */
-  text-align: center !important;
-  text-shadow: none;
+  display: -moz-box;
 }
 
 #PanelUI-remotetabs[mainview] { /* panel anchored to toolbar button might be too skinny */
