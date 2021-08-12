@@ -236,14 +236,31 @@ class DevToolsFrameChild extends JSWindowActorChild {
    * @param Boolean options.isDocumentCreation
    *        Set to true if the function is called from `instantiate`, i.e. when we're
    *        handling a new document being created.
+   * @param Boolean options.fromInstantiateAlreadyAvailable
+   *        Set to true if the function is called from handling `DevToolsFrameParent:instantiate-already-available`
+   *        query.
    */
   _createTargetActor({
     watcherActorID,
     parentConnectionPrefix,
     watchedData,
     isDocumentCreation,
+    fromInstantiateAlreadyAvailable,
   }) {
     if (this._connections.get(watcherActorID)) {
+      // If this function is called as a result of a `DevToolsFrameParent:instantiate-already-available`
+      // message, we might have a legitimate race condition:
+      // In frame-helper, we want to create the initial targets for a given browser element.
+      // It might happen that the `DevToolsFrameParent:instantiate-already-available` is
+      // aborted if the page navigates (and the document is destroyed) while the query is still pending.
+      // In such case, frame-helper will try to send a new message. In the meantime,
+      // the DevToolsFrameChild `DOMWindowCreated` handler may already have been called and
+      // the new target already created.
+      // We don't want to throw in such case, as our end-goal, having a target for the document,
+      // is achieved.
+      if (fromInstantiateAlreadyAvailable) {
+        return;
+      }
       throw new Error(
         "DevToolsFrameChild _createTargetActor was called more than once" +
           ` for the same Watcher (Actor ID: "${watcherActorID}")`
@@ -452,6 +469,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
           watcherActorID,
           parentConnectionPrefix: connectionPrefix,
           watchedData,
+          fromInstantiateAlreadyAvailable: true,
         });
       }
       case "DevToolsFrameParent:destroy": {
