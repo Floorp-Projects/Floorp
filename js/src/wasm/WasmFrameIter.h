@@ -21,17 +21,13 @@
 
 #include "js/ProfilingFrameIterator.h"
 #include "js/TypeDecls.h"
-#include "wasm/WasmCode.h"
-#include "wasm/WasmCodegenTypes.h"
-#include "wasm/WasmFrame.h"
-#include "wasm/WasmTlsData.h"
 
 namespace js {
 
 namespace jit {
+class JitActivation;
 class MacroAssembler;
 struct Register;
-class Label;
 enum class FrameType;
 }  // namespace jit
 
@@ -43,10 +39,10 @@ class DebugFrame;
 struct TlsData;
 class TypeIdDesc;
 class Instance;
-class ModuleSegment;
 
 struct CallableOffsets;
 struct FuncOffsets;
+struct Offsets;
 class Frame;
 
 using RegisterState = JS::ProfilingFrameIterator::RegisterState;
