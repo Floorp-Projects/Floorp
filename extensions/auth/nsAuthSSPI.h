@@ -41,7 +41,7 @@ class nsAuthSSPI final : public nsIAuthModule {
   typedef ::TimeStamp MS_TimeStamp;
 
  private:
-  nsresult MakeSN(const char* principal, nsCString& result);
+  nsresult MakeSN(const nsACString& principal, nsCString& result);
 
   CredHandle mCred;
   CtxtHandle mCtxt;
