@@ -63,9 +63,7 @@ skip-if(!webrender) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt70
 skip-if(!webrender) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.h264.mp4
 
 # Our vp9 support doesn't handle gbrp
-skip-if(!webrender||OSX||winWidget) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm  ../reftest_video.html?src=timeout
-skip-if(!webrender||!OSX) fuzzy-if(appleSilicon,255-255,360000-360000) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm  ../reftest_video.html?src=none
-skip-if(!webrender||!winWidget) fuzzy-if(appleSilicon,255-255,360000-360000) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm  ../reftest_video.html?src=none
+skip-if(!webrender) fuzzy-if(appleSilicon,255-255,360000-360000) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm  ../reftest_video.html?src=none
 
 skip-if(!webrender) fuzzy-if(appleSilicon,1-1,3600-3600) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.vp9.webm  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm
 skip-if(!webrender) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm
