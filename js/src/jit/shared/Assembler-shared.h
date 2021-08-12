@@ -21,7 +21,6 @@
 #include "jit/RegisterSets.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/HelperThreads.h"
-#include "vm/NativeObject.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmConstants.h"
 
@@ -355,31 +354,27 @@ struct BaseValueIndex : BaseIndex {
 // base.  The index must not already be scaled by sizeof(Value)!
 struct BaseObjectElementIndex : BaseValueIndex {
   BaseObjectElementIndex(Register base, Register index, int32_t offset = 0)
-      : BaseValueIndex(base, index, offset) {
-    NativeObject::elementsSizeMustNotOverflow();
-  }
+      : BaseValueIndex(base, index, offset) {}
 
 #ifdef JS_HAS_HIDDEN_SP
   BaseObjectElementIndex(RegisterOrSP base, Register index, int32_t offset = 0)
-      : BaseValueIndex(base, index, offset) {
-    NativeObject::elementsSizeMustNotOverflow();
-  }
+      : BaseValueIndex(base, index, offset) {}
 #endif
+
+  static void staticAssertions();
 };
 
 // Like BaseObjectElementIndex, except for object slots.
 struct BaseObjectSlotIndex : BaseValueIndex {
   BaseObjectSlotIndex(Register base, Register index)
-      : BaseValueIndex(base, index) {
-    NativeObject::slotsSizeMustNotOverflow();
-  }
+      : BaseValueIndex(base, index) {}
 
 #ifdef JS_HAS_HIDDEN_SP
   BaseObjectSlotIndex(RegisterOrSP base, Register index)
-      : BaseValueIndex(base, index) {
-    NativeObject::slotsSizeMustNotOverflow();
-  }
+      : BaseValueIndex(base, index) {}
 #endif
+
+  static void staticAssertions();
 };
 
 enum class RelocationKind {
