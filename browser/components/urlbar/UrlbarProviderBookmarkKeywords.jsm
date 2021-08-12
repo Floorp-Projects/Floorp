@@ -15,7 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
@@ -94,7 +93,7 @@ class ProviderBookmarkKeywords extends UrlbarProvider {
         ]
       );
     } else {
-      title = Services.textToSubURI.unEscapeURIForUI(url);
+      title = UrlbarUtils.unEscapeURIForUI(url);
     }
 
     let result = new UrlbarResult(
