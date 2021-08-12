@@ -257,6 +257,21 @@ JS_PUBLIC_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   return offset;
 }
 
+JS_PUBLIC_API uint8_t* JS::ArrayBufferView::getLengthAndData(
+    size_t* length, bool* isSharedMemory, const AutoRequireNoGC&) {
+  MOZ_ASSERT(obj->is<ArrayBufferViewObject>());
+  size_t byteLength = obj->is<DataViewObject>()
+                          ? obj->as<DataViewObject>().byteLength()
+                          : obj->as<TypedArrayObject>().byteLength();
+  *length = byteLength;  // *Not* the number of elements in the array, if
+                         // sizeof(elt) != 1.
+
+  ArrayBufferViewObject& view = obj->as<ArrayBufferViewObject>();
+  *isSharedMemory = view.isSharedMemory();
+  return static_cast<uint8_t*>(
+      view.dataPointerEither().unwrap(/*safe - caller sees isShared flag*/));
+}
+
 JS_PUBLIC_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,
                                                       size_t* length,
                                                       bool* isSharedMemory,
@@ -274,17 +289,9 @@ JS_PUBLIC_API void js::GetArrayBufferViewLengthAndData(JSObject* obj,
                                                        size_t* length,
                                                        bool* isSharedMemory,
                                                        uint8_t** data) {
-  MOZ_ASSERT(obj->is<ArrayBufferViewObject>());
-
-  size_t byteLength = obj->is<DataViewObject>()
-                          ? obj->as<DataViewObject>().byteLength()
-                          : obj->as<TypedArrayObject>().byteLength();
-  *length = byteLength;
-
-  ArrayBufferViewObject& view = obj->as<ArrayBufferViewObject>();
-  *isSharedMemory = view.isSharedMemory();
-  *data = static_cast<uint8_t*>(
-      view.dataPointerEither().unwrap(/*safe - caller sees isShared flag*/));
+  JS::AutoAssertNoGC nogc;
+  *data = JS::ArrayBufferView::fromObject(obj).getLengthAndData(
+      length, isSharedMemory, nogc);
 }
 
 JS_PUBLIC_API bool JS::IsArrayBufferViewShared(JSObject* obj) {
