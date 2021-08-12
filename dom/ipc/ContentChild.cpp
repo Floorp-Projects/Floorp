@@ -1414,9 +1414,9 @@ mozilla::ipc::IPCResult ContentChild::RecvRequestMemoryReport(
   return IPC_OK();
 }
 
+#if defined(XP_WIN)
 mozilla::ipc::IPCResult ContentChild::RecvGetUntrustedModulesData(
     GetUntrustedModulesDataResolver&& aResolver) {
-#if defined(XP_WIN)
   RefPtr<DllServices> dllSvc(DllServices::Get());
   dllSvc->GetUntrustedModulesData()->Then(
       GetMainThreadSerialEventTarget(), __func__,
@@ -1425,10 +1425,8 @@ mozilla::ipc::IPCResult ContentChild::RecvGetUntrustedModulesData(
       },
       [aResolver](nsresult aReason) { aResolver(Nothing()); });
   return IPC_OK();
-#else
-  return IPC_FAIL(this, "Unsupported on this platform");
-#endif  // defined(XP_WIN)
 }
+#endif  // defined(XP_WIN)
 
 PCycleCollectWithLogsChild* ContentChild::AllocPCycleCollectWithLogsChild(
     const bool& aDumpAllTraces, const FileDescriptor& aGCLog,

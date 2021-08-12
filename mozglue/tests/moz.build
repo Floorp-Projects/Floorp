@@ -36,9 +36,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
         ],
         linkage=None,
     )
-    TEST_DIRS += [
-        "interceptor",
-    ]
     OS_LIBS += [
         "ntdll",
         "version",
