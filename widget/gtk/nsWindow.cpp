@@ -5919,8 +5919,11 @@ void nsWindow::ResumeCompositorHiddenWindow() {
 // pause the compositor and destroy EGLSurface & resume the compositor
 // and re-create EGLSurface on next expose event.
 void nsWindow::PauseCompositorHiddenWindow() {
-  if (!mIsAccelerated || mIsDestroyed ||
-      mCompositorState == COMPOSITOR_PAUSED_INITIALLY) {
+  // TODO: The compositor backend currently relies on the pause event to work
+  // around a Gnome specific bug. Remove again once the fix is widely available.
+  // See bug 1721298
+  if ((!mIsAccelerated && !gfx::gfxVars::UseWebRenderCompositor()) ||
+      mIsDestroyed || mCompositorState == COMPOSITOR_PAUSED_INITIALLY) {
     return;
   }
 
