@@ -16,6 +16,8 @@
 #include "UntrustedModulesBackupService.h"
 #include "UntrustedModulesDataSerializer.h"
 
+using namespace mozilla;
+
 class ModuleLoadCounter final {
   nsTHashMap<nsStringCaseInsensitiveHashKey, int> mCounters;
 

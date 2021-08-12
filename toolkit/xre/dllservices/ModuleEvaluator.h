@@ -16,6 +16,8 @@
 #include "nsIFile.h"
 #include "nsString.h"
 
+#include <shtypes.h>
+
 namespace mozilla {
 
 class ModuleRecord;
