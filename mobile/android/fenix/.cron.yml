@@ -11,14 +11,6 @@ jobs:
           target-tasks-method: nightly
       when:
           - {hour: 5, minute: 0}
-    # This is a temporary hook in order to not overload Google Play.
-    # See bug 1628413 for more context.
-    - name: nightly-on-google-play
-      job:
-          type: decision-task
-          treeherder-symbol: Nd-gp
-          target-tasks-method: nightly-on-google-play
-      when:
           - {hour: 17, minute: 0}
     - name: fennec-production
       job:
