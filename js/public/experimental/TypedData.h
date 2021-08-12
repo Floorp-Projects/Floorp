@@ -166,44 +166,20 @@ extern JS_PUBLIC_API void GetArrayBufferViewLengthAndData(JSObject* obj,
 }  // namespace js
 
 /*
+ * JS_GetObjectAs(type)Array(JSObject* maybeWrapped, size_t* length, bool*
+ * isSharedMemory, element_type** data)
+ *
  * Unwrap Typed arrays all at once. Return nullptr without throwing if the
  * object cannot be viewed as the correct typed array, or the typed array
  * object on success, filling both outparameters.
  */
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsInt8Array(JSObject* obj,
-                                                       size_t* length,
-                                                       bool* isSharedMemory,
-                                                       int8_t** data);
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsUint8Array(JSObject* obj,
-                                                        size_t* length,
-                                                        bool* isSharedMemory,
-                                                        uint8_t** data);
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsUint8ClampedArray(
-    JSObject* obj, size_t* length, bool* isSharedMemory, uint8_t** data);
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsInt16Array(JSObject* obj,
-                                                        size_t* length,
-                                                        bool* isSharedMemory,
-                                                        int16_t** data);
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsUint16Array(JSObject* obj,
-                                                         size_t* length,
-                                                         bool* isSharedMemory,
-                                                         uint16_t** data);
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsInt32Array(JSObject* obj,
-                                                        size_t* length,
-                                                        bool* isSharedMemory,
-                                                        int32_t** data);
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsUint32Array(JSObject* obj,
-                                                         size_t* length,
-                                                         bool* isSharedMemory,
-                                                         uint32_t** data);
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsFloat32Array(JSObject* obj,
-                                                          size_t* length,
-                                                          bool* isSharedMemory,
-                                                          float** data);
-extern JS_PUBLIC_API JSObject* JS_GetObjectAsFloat64Array(JSObject* obj,
-                                                          size_t* length,
-                                                          bool* isSharedMemory,
-                                                          double** data);
+#define DECLARE_GET_OBJECT_AS(ExternalType, NativeType, Name)       \
+  extern JS_PUBLIC_API JSObject* JS_GetObjectAs##Name##Array(       \
+      JSObject* maybeWrapped, size_t* length, bool* isSharedMemory, \
+      ExternalType** data);
+JS_FOR_EACH_TYPED_ARRAY(DECLARE_GET_OBJECT_AS)
+#undef DECLARE_GET_OBJECT_AS
+
 extern JS_PUBLIC_API JSObject* JS_GetObjectAsArrayBufferView(
     JSObject* obj, size_t* length, bool* isSharedMemory, uint8_t** data);
 

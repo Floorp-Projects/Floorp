@@ -2647,20 +2647,6 @@ bool js::DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
     return js::Unwrap##Name##Array(obj) != nullptr;                           \
   }                                                                           \
                                                                               \
-  JS_PUBLIC_API JSObject* JS_GetObjectAs##Name##Array(                        \
-      JSObject* obj, size_t* length, bool* isShared, ExternalType** data) {   \
-    obj = js::Unwrap##Name##Array(obj);                                       \
-    if (!obj) {                                                               \
-      return nullptr;                                                         \
-    }                                                                         \
-    TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                    \
-    *length = tarr->length();                                                 \
-    *isShared = tarr->isSharedMemory();                                       \
-    *data = static_cast<ExternalType*>(tarr->dataPointerEither().unwrap(      \
-        /*safe - caller sees isShared flag*/));                               \
-    return obj;                                                               \
-  }                                                                           \
-                                                                              \
   JS_PUBLIC_API ExternalType* JS_Get##Name##ArrayLengthAndData(               \
       JSObject* obj, size_t* length, bool* isSharedMemory,                    \
       const JS::AutoRequireNoGC& nogc) {                                      \
@@ -2677,6 +2663,19 @@ bool js::DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
     size_t length;                                                            \
     return JS_Get##Name##ArrayLengthAndData(obj, &length, isSharedMemory,     \
                                             nogc);                            \
+  }                                                                           \
+  JS_PUBLIC_API JSObject* JS_GetObjectAs##Name##Array(                        \
+      JSObject* obj, size_t* length, bool* isShared, ExternalType** data) {   \
+    obj = js::Unwrap##Name##Array(obj);                                       \
+    if (!obj) {                                                               \
+      return nullptr;                                                         \
+    }                                                                         \
+    TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                    \
+    *length = tarr->length();                                                 \
+    *isShared = tarr->isSharedMemory();                                       \
+    *data = static_cast<ExternalType*>(tarr->dataPointerEither().unwrap(      \
+        /*safe - caller sees isShared flag*/));                               \
+    return obj;                                                               \
   }
 
 JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS)
