@@ -689,7 +689,7 @@ void CodeGenerator::visitPopcntI(LPopcntI* ins) {
   Register input = ToRegister(ins->input());
   Register output = ToRegister(ins->output());
   Register temp =
-      ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
+      ins->temp0()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp0());
 
   masm.popcnt32(input, output, temp);
 }

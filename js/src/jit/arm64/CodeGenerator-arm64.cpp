@@ -2228,7 +2228,7 @@ void CodeGenerator::visitSubI64(LSubI64* lir) {
 void CodeGenerator::visitPopcntI(LPopcntI* ins) {
   Register input = ToRegister(ins->input());
   Register output = ToRegister(ins->output());
-  Register temp = ToRegister(ins->temp());
+  Register temp = ToRegister(ins->temp0());
   masm.popcnt32(input, output, temp);
 }
 

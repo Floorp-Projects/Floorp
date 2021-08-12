@@ -51,6 +51,7 @@
 #       setOperand(rhsIndex, rhs);
 #     }
 #     const LAllocation* rhs() { return getOperand(0); }
+#
 #     static const size_t lhsIndex = 0;
 #     static const size_t rhsIndex = BOX_PIECES; 
 #
@@ -266,10 +267,17 @@
   mir_op: true
 
 - name: TypeOfV
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  num_temps: 1
+  mir_op: TypeOf
 
 - name: TypeOfO
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+  mir_op: TypeOf
 
 - name: ToAsyncIter
   result_type: WordSized
@@ -388,7 +396,10 @@
   gen_boilerplate: false
 
 - name: GetDOMMemberT
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+  mir_op: GetDOMMember
 
 - name: SetDOMProperty
   gen_boilerplate: false
@@ -454,10 +465,18 @@
   gen_boilerplate: false
 
 - name: CompareD
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    left: WordSized
+    right: WordSized
+  mir_op: Compare
 
 - name: CompareF
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    left: WordSized
+    right: WordSized
+  mir_op: Compare
 
 - name: CompareDAndBranch
   gen_boilerplate: false
@@ -466,28 +485,65 @@
   gen_boilerplate: false
 
 - name: CompareS
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    left: WordSized
+    right: WordSized
+  mir_op: Compare
 
 - name: CompareBigInt
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    left: WordSized
+    right: WordSized
+  num_temps: 3
+  mir_op: Compare
 
 - name: CompareBigIntInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    left: WordSized
+    right: WordSized
+  num_temps: 2
+  mir_op: Compare
 
 - name: CompareBigIntDouble
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    left: WordSized
+    right: WordSized
+  num_temps: 1
+  call_instruction: true
+  mir_op: Compare
 
 - name: CompareBigIntString
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    left: WordSized
+    right: WordSized
+  call_instruction: true
+  mir_op: Compare
 
 - name: BitAndAndBranch
   gen_boilerplate: false
 
+# Takes a value and tests whether it is null, undefined, or is an object that
+# emulates |undefined|, as determined by the JSCLASS_EMULATES_UNDEFINED class
+# flag on unwrapped objects.  See also js::EmulatesUndefined.
 - name: IsNullOrLikeUndefinedV
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  num_temps: 2
+  mir_op: Compare
 
+# Takes an object pointer and tests whether it is an object that emulates
+# |undefined|, as above.
 - name: IsNullOrLikeUndefinedT
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: Compare
 
 - name: IsNullOrLikeUndefinedAndBranchV
   gen_boilerplate: false
@@ -520,20 +576,41 @@
   operands:
     inputI64: Int64
 
+# Not operation on a double.
 - name: NotD
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: Not
 
+# Not operation on a float32.
 - name: NotF
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: Not
 
+# Not operation on a BigInt.
 - name: NotBI
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: Not
 
+# Boolean complement operation on an object.
 - name: NotO
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: Not
 
+# Boolean complement operation on a value.
 - name: NotV
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  num_temps: 3
+  mir_op: Not
 
 - name: BitNotI
   gen_boilerplate: false
@@ -624,20 +701,33 @@
 - name: CopySignF
   gen_boilerplate: false
 
+# Count leading zeroes on an int32.
 - name: ClzI
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    num: WordSized
+  mir_op: Clz
 
 - name: ClzI64
   gen_boilerplate: false
 
+# Count trailing zeroes on an int32.
 - name: CtzI
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    num: WordSized
+  mir_op: Ctz
 
 - name: CtzI64
   gen_boilerplate: false
 
+# Count population on an int32.
 - name: PopcntI
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    num: WordSized
+  num_temps: 1
+  mir_op: Popcnt
 
 - name: PopcntI64
   gen_boilerplate: false
@@ -667,8 +757,14 @@
   num_temps: 1
   call_instruction: true
 
+# Integer raised to an integer power.
 - name: PowII
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: WordSized
+    power: WordSized
+  num_temps: 2
+  mir_op: Pow
 
 # Double raised to a double power.
 - name: PowD
@@ -834,7 +930,13 @@
   mir_op: true
 
 - name: Substr
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    string: WordSized
+    begin: WordSized
+    length: WordSized
+  num_temps: 3
+  mir_op: StringSplit
 
 - name: Int32ToDouble
   result_type: WordSized
@@ -856,41 +958,111 @@
   operands:
     input: WordSized
 
+# Convert a value to a double.
 - name: ValueToDouble
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  mir_op: ToDouble
 
+# Convert a value to a float32.
 - name: ValueToFloat32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  mir_op: ToFloat32
 
 - name: ValueToInt32
   gen_boilerplate: false
 
+# Convert a value to a BigInt.
 - name: ValueToBigInt
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  mir_op: ToBigInt
 
+# Convert a double to an int32.
+#   Input: floating-point Register
+#   Output: 32-bit integer
+#   Bailout: if the double cannot be converted to an integer.
 - name: DoubleToInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+  mir_op: ToNumberInt32
 
+# Convert a float32 to an int32.
+#   Input: floating-point Register
+#   Output: 32-bit integer
+#   Bailout: if the float32 cannot be converted to an integer.
 - name: Float32ToInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+  mir_op: ToNumberInt32
 
+# Truncates a double to an int32.
+#   Input: floating-point Register
+#   Output: 32-bit integer
+#   Bailout: if the double when converted to an integer exceeds the int32
+#            bounds. No bailout for NaN or negative zero.
 - name: DoubleToIntegerInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+  mir_op: ToIntegerInt32
 
+# Truncates a float to an int32.
+#   Input: floating-point Register
+#   Output: 32-bit integer
+#   Bailout: if the double when converted to an integer exceeds the int32
+#            bounds. No bailout for NaN or negative zero.
 - name: Float32ToIntegerInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+  mir_op: ToIntegerInt32
 
+# Convert a double to a truncated int32.
+#   Input: floating-point Register
+#   Output: 32-bit integer
 - name: TruncateDToInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+  num_temps: 1
+  mir_op: TruncateToInt32
 
+# Convert a double to a truncated int32 with tls offset because we need it for
+# the slow ool path.
 - name: WasmBuiltinTruncateDToInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+    tls: WordSized
+  num_temps: 1
+  mir_op: WasmBuiltinTruncateToInt32
 
+# Convert a float32 to a truncated int32.
+#   Input: floating-point Register
+#   Output: 32-bit integer
 - name: TruncateFToInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+  num_temps: 1
+  mir_op: TruncateToInt32
 
+# Convert a float32 to a truncated int32 with tls offset because we need it for
+# the slow ool path.
 - name: WasmBuiltinTruncateFToInt32
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    in: WordSized
+    tls: WordSized
+  num_temps: 1
+  mir_op: WasmBuiltinTruncateToInt32
 
 - name: WasmTruncateToInt32
   result_type: WordSized
@@ -907,17 +1079,36 @@
 - name: ExtendInt32ToInt64
   gen_boilerplate: false
 
+# Convert a boolean value to a string.
 - name: BooleanToString
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: ToString
 
+
+# Convert an integer hosted on one definition to a string with a function call.
 - name: IntToString
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: ToString
 
+# Convert a double hosted on one definition to a string with a function call.
 - name: DoubleToString
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: WordSized
+  num_temps: 1
+  mir_op: ToString
 
+# Convert a primitive to a string with a function call.
 - name: ValueToString
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  num_temps: 1
+  mir_op: ToString
 
 - name: PowHalfD
   gen_boilerplate: false
@@ -1011,7 +1202,15 @@
   gen_boilerplate: false
 
 - name: BinaryBoolCache
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    lhs: BoxedValue
+    rhs: BoxedValue
+  # Takes two temps: these are intendend to be FloatReg0 and FloatReg1
+  # To allow the actual cache code to safely clobber those values without
+  # save and restore.
+  num_temps: 2
+  mir_op: BinaryCache
 
 - name: UnaryCache
   gen_boilerplate: false
@@ -1156,7 +1355,9 @@
     object: WordSized
 
 - name: GuardHasAttachedArrayBuffer
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+  num_temps: 1
 
 # Double to IntPtr, eligible for accessing into a TypedArray or DataView. If
 # the index isn't exactly representable as an IntPtr, depending on the
@@ -1221,11 +1422,25 @@
     elements: WordSized
     index: WordSized
 
+# Like LStoreElementV, but supports indexes >= initialized length.
 - name: StoreElementHoleV
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    elements: WordSized
+    index: WordSized
+    value: BoxedValue
+  num_temps: 1
+  mir_op: StoreElementHole
 
+# Like LStoreElementT, but supports indexes >= initialized length.
 - name: StoreElementHoleT
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    elements: WordSized
+    index: WordSized
+    value: WordSized
+  num_temps: 1
+  mir_op: StoreElementHole
 
 - name: ArrayPopShift
   gen_boilerplate: false
@@ -1356,13 +1571,21 @@
   num_temps: 1
 
 - name: ClampVToUint8
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  num_temps: 1
+  mir_op: ClampToUint8
 
 - name: LoadFixedSlotV
   gen_boilerplate: false
 
+# Load a typed value from an object's fixed slot.
 - name: LoadFixedSlotT
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+  mir_op: LoadFixedSlot
 
 - name: LoadFixedSlotAndUnbox
   result_type: WordSized
@@ -1398,11 +1621,19 @@
   call_instruction: true
   mir_op: true
 
+# Store a boxed value to an object's fixed slot.
 - name: StoreFixedSlotV
-  gen_boilerplate: false
+  operands:
+    obj: WordSized
+    value: BoxedValue
+  mir_op: StoreFixedSlot
 
+# Store a typed value to an object's fixed slot.
 - name: StoreFixedSlotT
-  gen_boilerplate: false
+  operands:
+    obj: WordSized
+    value: WordSized
+  mir_op: StoreFixedSlot
 
 - name: GetNameCache
   gen_boilerplate: false
@@ -1432,11 +1663,24 @@
 - name: LoadDynamicSlotV
   gen_boilerplate: false
 
+# Store a value to an object's dslots or a slots vector.
 - name: StoreDynamicSlotV
-  gen_boilerplate: false
+  operands:
+    slots: WordSized
+    value: BoxedValue
+  mir_op: StoreDynamicSlot
 
+# Store a typed value to an object's dslots or a slots vector. This has a
+# few advantages over LStoreDynamicSlotV:
+# 1) We can bypass storing the type tag if the slot has the same type as
+#    the value.
+# 2) Better Register allocation: we can store constants and FP regs directly
+#    without requiring a second Register for the value.
 - name: StoreDynamicSlotT
-  gen_boilerplate: false
+  operands:
+    slots: WordSized
+    value: WordSized
+  mir_op: StoreDynamicSlot
 
 # Read length field of a JSString*.
 - name: StringLength
@@ -1481,8 +1725,14 @@
   num_temps: 1
   mir_op: true
 
+# Round a single precision number and converts it to an int32.
+# Implements Math.round().
 - name: RoundF
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    num: WordSized
+  num_temps: 1
+  mir_op: Round
 
 # Truncates a double precision number and converts it to an int32.
 # Implements Math.trunc().
@@ -1506,8 +1756,13 @@
     num: WordSized
   mir_op: true
 
+# Rounds a single precision number accordingly to mir()->roundingMode(),
+# and keeps a single output.
 - name: NearbyIntF
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    num: WordSized
+  mir_op: NearbyInt
 
 # Load a function's call environment.
 - name: FunctionEnvironment
@@ -1547,13 +1802,27 @@
   mir_op: true
 
 - name: CallSetElement
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    index: BoxedValue
+    value: BoxedValue
+  call_instruction: true
+  mir_op: true
 
 - name: CallDeleteProperty
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  call_instruction: true
+  mir_op: DeleteProperty
 
 - name: CallDeleteElement
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+    index: BoxedValue
+  call_instruction: true
+  mir_op: DeleteElement
 
 # Patchable jump to stubs generated for a SetProperty cache.
 - name: SetPropertyCache
@@ -1574,7 +1843,11 @@
   mir_op: true
 
 - name: OptimizeSpreadCallCache
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  num_temps: 1
+  mir_op: true
 
 - name: IteratorMore
   gen_boilerplate: false
@@ -1646,29 +1919,78 @@
   num_temps: 1
   mir_op: true
 
+
+# Generational write barrier used when writing an object to another object.
 - name: PostWriteBarrierO
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: WordSized
+  num_temps: 1
+  mir_op: PostWriteBarrier
 
+# Generational write barrier used when writing a string to an object.
 - name: PostWriteBarrierS
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: WordSized
+  num_temps: 1
+  mir_op: PostWriteBarrier
 
+# Generational write barrier used when writing a BigInt to an object.
 - name: PostWriteBarrierBI
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: WordSized
+  num_temps: 1
+  mir_op: PostWriteBarrier
 
+# Generational write barrier used when writing a value to another object.
 - name: PostWriteBarrierV
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: BoxedValue
+  num_temps: 1
+  mir_op: PostWriteBarrier
 
+# Generational write barrier used when writing an object to another object's
+# elements.
 - name: PostWriteElementBarrierO
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: WordSized
+    index: WordSized
+  num_temps: 1
+  mir_op: PostWriteElementBarrier
 
+# Generational write barrier used when writing a string to an object's
+# elements.
 - name: PostWriteElementBarrierS
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: WordSized
+    index: WordSized
+  num_temps: 1
+  mir_op: PostWriteElementBarrier
 
+# Generational write barrier used when writing a BigInt to an object's
+# elements.
 - name: PostWriteElementBarrierBI
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    value: WordSized
+    index: WordSized
+  num_temps: 1
+  mir_op: PostWriteElementBarrier
 
+# Generational write barrier used when writing a value to another object's
+# elements.
 - name: PostWriteElementBarrierV
-  gen_boilerplate: false
+  operands:
+    object: WordSized
+    index: WordSized
+    value: BoxedValue
+  num_temps: 1
+  mir_op: PostWriteElementBarrier
 
 # Guard against an object's identity.
 - name: GuardObjectIdentity
@@ -1840,19 +2162,34 @@
   gen_boilerplate: false
 
 - name: InstanceOfO
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: InstanceOf
 
 - name: InstanceOfV
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    lhs: BoxedValue
+    rhs: WordSized
+  mir_op: InstanceOf
 
 - name: InstanceOfCache
   gen_boilerplate: false
 
 - name: IsCallableO
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+  mir_op: IsCallable
 
 - name: IsCallableV
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: BoxedValue
+  num_temps: 1
+  mir_op: IsCallable
 
 - name: IsConstructor
   result_type: WordSized
@@ -1866,10 +2203,17 @@
     object: WordSized
 
 - name: IsArrayO
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    object: WordSized
+  mir_op: IsArray
 
 - name: IsArrayV
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  num_temps: 1
+  mir_op: IsArray
 
 - name: IsTypedArray
   result_type: WordSized
@@ -2062,7 +2406,9 @@
   mir_op: true
 
 - name: WasmStackArgI64
-  gen_boilerplate: false
+  operands:
+    arg: Int64
+  mir_op: WasmStackArg
 
 - name: WasmNullConstant
   result_type: WordSized
@@ -2470,7 +2816,9 @@
   gen_boilerplate: false
 
 - name: WasmBoxValue
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    input: BoxedValue
 
 - name: WasmAnyRefFromJSObject
   result_type: WordSized
