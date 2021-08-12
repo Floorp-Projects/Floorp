@@ -3548,7 +3548,7 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
 }
 
 void CodeGenerator::visitFunctionWithProto(LFunctionWithProto* lir) {
-  Register envChain = ToRegister(lir->environmentChain());
+  Register envChain = ToRegister(lir->envChain());
   Register prototype = ToRegister(lir->prototype());
 
   pushArg(prototype);
@@ -3562,7 +3562,7 @@ void CodeGenerator::visitFunctionWithProto(LFunctionWithProto* lir) {
 
 void CodeGenerator::visitSetFunName(LSetFunName* lir) {
   pushArg(Imm32(lir->mir()->prefixKind()));
-  pushArg(ToValue(lir, LSetFunName::NameValue));
+  pushArg(ToValue(lir, LSetFunName::NameIndex));
   pushArg(ToRegister(lir->fun()));
 
   using Fn =
@@ -4664,7 +4664,7 @@ void CodeGenerator::visitInt64ToBigInt(LInt64ToBigInt* lir) {
 }
 
 void CodeGenerator::visitGuardValue(LGuardValue* lir) {
-  ValueOperand input = ToValue(lir, LGuardValue::Input);
+  ValueOperand input = ToValue(lir, LGuardValue::InputIndex);
   Value expected = lir->mir()->expected();
   Label bail;
   masm.branchTestValue(Assembler::NotEqual, input, expected, &bail);
@@ -4672,7 +4672,7 @@ void CodeGenerator::visitGuardValue(LGuardValue* lir) {
 }
 
 void CodeGenerator::visitGuardNullOrUndefined(LGuardNullOrUndefined* lir) {
-  ValueOperand input = ToValue(lir, LGuardNullOrUndefined::Input);
+  ValueOperand input = ToValue(lir, LGuardNullOrUndefined::InputIndex);
 
   ScratchTagScope tag(masm, input);
   masm.splitTagForTest(input, tag);
@@ -7250,7 +7250,7 @@ void CodeGenerator::visitInitElemGetterSetter(LInitElemGetterSetter* lir) {
 }
 
 void CodeGenerator::visitMutateProto(LMutateProto* lir) {
-  Register objReg = ToRegister(lir->getObject());
+  Register objReg = ToRegister(lir->object());
 
   pushArg(ToValue(lir, LMutateProto::ValueIndex));
   pushArg(objReg);
@@ -7493,7 +7493,7 @@ void CodeGenerator::visitLoadArgumentsObjectArg(LLoadArgumentsObjectArg* lir) {
 }
 
 void CodeGenerator::visitArgumentsObjectLength(LArgumentsObjectLength* lir) {
-  Register argsObj = ToRegister(lir->getArgsObject());
+  Register argsObj = ToRegister(lir->argsObject());
   Register out = ToRegister(lir->output());
 
   Label bail;
@@ -7514,7 +7514,7 @@ void CodeGenerator::visitGuardArgumentsObjectFlags(
 
 void CodeGenerator::visitReturnFromCtor(LReturnFromCtor* lir) {
   ValueOperand value = ToValue(lir, LReturnFromCtor::ValueIndex);
-  Register obj = ToRegister(lir->getObject());
+  Register obj = ToRegister(lir->object());
   Register output = ToRegister(lir->output());
 
   Label valueIsObject, end;
@@ -12304,12 +12304,13 @@ void CodeGenerator::visitBindNameCache(LBindNameCache* ins) {
 
 void CodeGenerator::visitHasOwnCache(LHasOwnCache* ins) {
   LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
-  TypedOrValueRegister value = toConstantOrRegister(ins, LHasOwnCache::Value,
-                                                    ins->mir()->value()->type())
-                                   .reg();
-  TypedOrValueRegister id =
-      toConstantOrRegister(ins, LHasOwnCache::Id, ins->mir()->idval()->type())
+  TypedOrValueRegister value =
+      toConstantOrRegister(ins, LHasOwnCache::ValueIndex,
+                           ins->mir()->value()->type())
           .reg();
+  TypedOrValueRegister id = toConstantOrRegister(ins, LHasOwnCache::IdIndex,
+                                                 ins->mir()->idval()->type())
+                                .reg();
   Register output = ToRegister(ins->output());
 
   IonHasOwnIC cache(liveRegs, value, id, output);
@@ -12319,11 +12320,11 @@ void CodeGenerator::visitHasOwnCache(LHasOwnCache* ins) {
 void CodeGenerator::visitCheckPrivateFieldCache(LCheckPrivateFieldCache* ins) {
   LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
   TypedOrValueRegister value =
-      toConstantOrRegister(ins, LCheckPrivateFieldCache::Value,
+      toConstantOrRegister(ins, LCheckPrivateFieldCache::ValueIndex,
                            ins->mir()->value()->type())
           .reg();
   TypedOrValueRegister id =
-      toConstantOrRegister(ins, LCheckPrivateFieldCache::Id,
+      toConstantOrRegister(ins, LCheckPrivateFieldCache::IdIndex,
                            ins->mir()->idval()->type())
           .reg();
   Register output = ToRegister(ins->output());
@@ -12378,7 +12379,7 @@ void CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins) {
 }
 
 void CodeGenerator::visitThrow(LThrow* lir) {
-  pushArg(ToValue(lir, LThrow::Value));
+  pushArg(ToValue(lir, LThrow::ValueIndex));
 
   using Fn = bool (*)(JSContext*, HandleValue);
   callVM<Fn, js::ThrowOperation>(lir);
@@ -13947,7 +13948,7 @@ void CodeGenerator::visitIsTypedArray(LIsTypedArray* lir) {
 
 void CodeGenerator::visitIsObject(LIsObject* ins) {
   Register output = ToRegister(ins->output());
-  ValueOperand value = ToValue(ins, LIsObject::Input);
+  ValueOperand value = ToValue(ins, LIsObject::ObjectIndex);
   masm.testObjectSet(Assembler::Equal, value, output);
 }
 
@@ -13958,7 +13959,7 @@ void CodeGenerator::visitIsObjectAndBranch(LIsObjectAndBranch* ins) {
 
 void CodeGenerator::visitIsNullOrUndefined(LIsNullOrUndefined* ins) {
   Register output = ToRegister(ins->output());
-  ValueOperand value = ToValue(ins, LIsNullOrUndefined::Input);
+  ValueOperand value = ToValue(ins, LIsNullOrUndefined::InputIndex);
 
   Label isNotNull, done;
   masm.branchTestNull(Assembler::NotEqual, value, &isNotNull);
@@ -14227,7 +14228,7 @@ void CodeGenerator::visitAssertShape(LAssertShape* ins) {
 
 void CodeGenerator::visitAssertResultV(LAssertResultV* ins) {
 #ifdef DEBUG
-  const ValueOperand value = ToValue(ins, LAssertResultV::Input);
+  const ValueOperand value = ToValue(ins, LAssertResultV::InputIndex);
   emitAssertResultV(value, ins->mirRaw());
 #else
   MOZ_CRASH("LAssertResultV is debug only");
@@ -14426,7 +14427,7 @@ void CodeGenerator::visitIncrementWarmUpCounter(LIncrementWarmUpCounter* ins) {
 }
 
 void CodeGenerator::visitLexicalCheck(LLexicalCheck* ins) {
-  ValueOperand inputValue = ToValue(ins, LLexicalCheck::Input);
+  ValueOperand inputValue = ToValue(ins, LLexicalCheck::InputIndex);
   Label bail;
   masm.branchTestMagicValue(Assembler::Equal, inputValue,
                             JS_UNINITIALIZED_LEXICAL, &bail);
@@ -14548,7 +14549,7 @@ void CodeGenerator::visitCheckIsObj(LCheckIsObj* ins) {
 }
 
 void CodeGenerator::visitCheckObjCoercible(LCheckObjCoercible* ins) {
-  ValueOperand checkValue = ToValue(ins, LCheckObjCoercible::CheckValue);
+  ValueOperand checkValue = ToValue(ins, LCheckObjCoercible::ValueIndex);
 
   using Fn = bool (*)(JSContext*, HandleValue);
   OutOfLineCode* ool = oolCallVM<Fn, ThrowObjectCoercible>(
@@ -14577,7 +14578,7 @@ void CodeGenerator::visitCheckClassHeritage(LCheckClassHeritage* ins) {
 }
 
 void CodeGenerator::visitCheckThis(LCheckThis* ins) {
-  ValueOperand thisValue = ToValue(ins, LCheckThis::ThisValue);
+  ValueOperand thisValue = ToValue(ins, LCheckThis::ValueIndex);
 
   using Fn = bool (*)(JSContext*);
   OutOfLineCode* ool =
@@ -14587,7 +14588,7 @@ void CodeGenerator::visitCheckThis(LCheckThis* ins) {
 }
 
 void CodeGenerator::visitCheckThisReinit(LCheckThisReinit* ins) {
-  ValueOperand thisValue = ToValue(ins, LCheckThisReinit::ThisValue);
+  ValueOperand thisValue = ToValue(ins, LCheckThisReinit::ThisValueIndex);
 
   using Fn = bool (*)(JSContext*);
   OutOfLineCode* ool =
@@ -14613,7 +14614,7 @@ void CodeGenerator::visitGenerator(LGenerator* lir) {
 
 void CodeGenerator::visitAsyncResolve(LAsyncResolve* lir) {
   Register generator = ToRegister(lir->generator());
-  ValueOperand valueOrReason = ToValue(lir, LAsyncResolve::ValueOrReasonInput);
+  ValueOperand valueOrReason = ToValue(lir, LAsyncResolve::ValueOrReasonIndex);
   AsyncFunctionResolveKind resolveKind = lir->mir()->resolveKind();
 
   pushArg(Imm32(static_cast<int32_t>(resolveKind)));
@@ -14626,7 +14627,7 @@ void CodeGenerator::visitAsyncResolve(LAsyncResolve* lir) {
 }
 
 void CodeGenerator::visitAsyncAwait(LAsyncAwait* lir) {
-  ValueOperand value = ToValue(lir, LAsyncAwait::ValueInput);
+  ValueOperand value = ToValue(lir, LAsyncAwait::ValueIndex);
   Register generator = ToRegister(lir->generator());
 
   pushArg(value);
@@ -14639,7 +14640,7 @@ void CodeGenerator::visitAsyncAwait(LAsyncAwait* lir) {
 }
 
 void CodeGenerator::visitCanSkipAwait(LCanSkipAwait* lir) {
-  ValueOperand value = ToValue(lir, LCanSkipAwait::ValueInput);
+  ValueOperand value = ToValue(lir, LCanSkipAwait::ValueIndex);
 
   pushArg(value);
 
@@ -14668,7 +14669,7 @@ void CodeGenerator::visitMaybeExtractAwaitValue(LMaybeExtractAwaitValue* lir) {
 }
 
 void CodeGenerator::visitDebugCheckSelfHosted(LDebugCheckSelfHosted* ins) {
-  ValueOperand checkValue = ToValue(ins, LDebugCheckSelfHosted::CheckValue);
+  ValueOperand checkValue = ToValue(ins, LDebugCheckSelfHosted::ValueIndex);
   pushArg(checkValue);
   using Fn = bool (*)(JSContext*, HandleValue);
   callVM<Fn, js::Debug_CheckSelfHosted>(ins);
@@ -14933,7 +14934,7 @@ void CodeGenerator::visitGetPrototypeOf(LGetPrototypeOf* lir) {
 }
 
 void CodeGenerator::visitObjectWithProto(LObjectWithProto* lir) {
-  pushArg(ToValue(lir, LObjectWithProto::PrototypeValue));
+  pushArg(ToValue(lir, LObjectWithProto::PrototypeIndex));
 
   using Fn = PlainObject* (*)(JSContext*, HandleValue);
   callVM<Fn, js::ObjectWithProtoOperation>(lir);
@@ -15005,7 +15006,7 @@ void CodeGenerator::visitSuperFunction(LSuperFunction* lir) {
 
 void CodeGenerator::visitInitHomeObject(LInitHomeObject* lir) {
   Register func = ToRegister(lir->function());
-  ValueOperand homeObject = ToValue(lir, LInitHomeObject::HomeObjectValue);
+  ValueOperand homeObject = ToValue(lir, LInitHomeObject::HomeObjectIndex);
 
   Address addr(func, FunctionExtended::offsetOfMethodHomeObjectSlot());
 
@@ -15022,7 +15023,7 @@ void CodeGenerator::visitIsTypedArrayConstructor(
 }
 
 void CodeGenerator::visitLoadValueTag(LLoadValueTag* lir) {
-  ValueOperand value = ToValue(lir, LLoadValueTag::Value);
+  ValueOperand value = ToValue(lir, LLoadValueTag::ValueIndex);
   Register output = ToRegister(lir->output());
 
   Register tag = masm.extractTag(value, output);
@@ -15843,7 +15844,7 @@ void CodeGenerator::visitWasmBoxValue(LWasmBoxValue* lir) {
 }
 
 void CodeGenerator::visitWasmAnyRefFromJSObject(LWasmAnyRefFromJSObject* lir) {
-  Register input = ToRegister(lir->getOperand(LWasmAnyRefFromJSObject::Input));
+  Register input = ToRegister(lir->input());
   Register output = ToRegister(lir->output());
   // See the definition of AnyRef for a discussion of pointer representation.
   if (input != output) {

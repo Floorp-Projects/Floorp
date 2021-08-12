@@ -62,6 +62,13 @@ def generate_header(c_out, includeguard, contents):
     )
 
 
+operand_types = {
+    "WordSized": "LAllocation",
+    "BoxedValue": "LBoxAllocation",
+    "Int64": "LInt64Allocation",
+}
+
+
 result_types = {
     "WordSized": "1",
     "BoxedValue": "BOX_PIECES",
@@ -69,20 +76,128 @@ result_types = {
 }
 
 
-def gen_lir_class(name, result_type, call_instruction, mir_op):
+def gen_helper_template_value(num_regular_allocs, num_value_allocs, num_int64_allocs):
+    template_str = ""
+    if num_value_allocs:
+        template_str += str(num_value_allocs) + " * BOX_PIECES + "
+    if num_int64_allocs:
+        template_str += str(num_int64_allocs) + " * INT64_PIECES + "
+    template_str += str(num_regular_allocs)
+    return template_str
+
+
+def build_index_def(num_specials_operands, index_value, num_reg_operands, piece):
+    if num_specials_operands:
+        return "  static const size_t {} = {} + {} * {};\\\n".format(
+            index_value, num_reg_operands, piece, num_specials_operands
+        )
+    else:
+        return "  static const size_t {} = {};\\\n".format(
+            index_value, num_reg_operands
+        )
+
+
+def gen_lir_class(name, result_type, operands, call_instruction, mir_op):
     """Generates class definition for a single LIR opcode."""
     class_name = "L" + name
+
+    # Operand getters.
+    oper_getters = []
+    # Operand setters.
+    oper_setters = []
+    # Operand index definitions.
+    oper_indices = []
+    # Operands for the class constructor.
+    constructor_opers = []
+
+    num_reg_operands = 0
+    num_value_operands = 0
+    num_int64_operands = 0
+    if operands:
+        # Get number of LAllocations to use for defining indices.
+        for operand in operands:
+            if operands[operand] == "WordSized":
+                num_reg_operands += 1
+
+        current_reg_oper = 0
+        for operand in operands:
+            op_type = operands[operand]
+            op_alloc_type = operand_types[op_type]
+            constructor_opers.append("const " + op_alloc_type + "& " + operand)
+            if op_type == "WordSized":
+                index_value = str(current_reg_oper)
+                current_reg_oper += 1
+                oper_getters.append(
+                    "  const "
+                    + op_alloc_type
+                    + "* "
+                    + operand
+                    + "() { return getOperand("
+                    + index_value
+                    + "); }"
+                )
+                oper_setters.append(
+                    "    setOperand(" + index_value + ", " + operand + ");"
+                )
+            elif op_type == "BoxedValue":
+                index_value = operand[0].upper() + operand[1:] + "Index"
+                oper_indices.append(
+                    build_index_def(
+                        num_value_operands, index_value, num_reg_operands, "BOX_PIECES"
+                    )
+                )
+                num_value_operands += 1
+                # No getters generated for BoxedValue operands.
+                oper_setters.append(
+                    "    setBoxOperand(" + index_value + ", " + operand + ");"
+                )
+            elif op_type == "Int64":
+                index_value = operand[0].upper() + operand[1:] + "Index"
+                oper_indices.append(
+                    build_index_def(
+                        num_int64_operands,
+                        index_value,
+                        num_reg_operands,
+                        "INT64_PIECES",
+                    )
+                )
+                num_int64_operands += 1
+                oper_getters.append(
+                    "  const "
+                    + op_alloc_type
+                    + " "
+                    + operand
+                    + "() { return getInt64Operand("
+                    + index_value
+                    + "); }"
+                )
+                oper_setters.append(
+                    "    setInt64Operand(" + index_value + ", " + operand + ");"
+                )
+            else:
+                raise Exception("Invalid operand type: " + op_type)
+
     code = "class {} : public LInstructionHelper<".format(class_name)
     if result_type:
         code += result_types[result_type] + ", "
     else:
         code += "0, "
-    code += "0, 0> {"
-    code += "\\\n public:\\\n  LIR_HEADER({})\\\n".format(name)
-    code += "  {}() : LInstructionHelper(classOpcode) {{\\\n".format(class_name)
+    code += gen_helper_template_value(
+        num_reg_operands, num_value_operands, num_int64_operands
+    )
+    code += ", 0> {{\\\n public:\\\n  LIR_HEADER({})\\\n".format(name)
+    code += "  explicit {}(".format(class_name)
+    code += ", ".join(constructor_opers)
+    code += ") : LInstructionHelper(classOpcode) {"
     if call_instruction:
-        code += "    this->setIsCall();\\\n"
-    code += "  }\\\n"
+        code += "\\\n    this->setIsCall();"
+    code += "\\\n"
+    code += "\\\n".join(oper_setters)
+    code += "\\\n  }\\\n"
+    code += "\\\n".join(oper_getters)
+    code += "\\\n"
+    if operands:
+        code += "\\\n".join(oper_indices)
     if mir_op:
         if mir_op is True:
             code += "  M{}* mir() const {{ return mir_->to{}(); }};\\\n".format(
@@ -117,6 +232,9 @@ def generate_lir_header(c_out, yaml_path):
             if result_type:
                 assert result_types[result_type]
 
+            operands = op.get("operands", None)
+            assert operands is None or OrderedDict
+
             gen_boilerplate = op.get("gen_boilerplate", True)
             assert isinstance(gen_boilerplate, bool)
 
@@ -127,7 +245,7 @@ def generate_lir_header(c_out, yaml_path):
             assert mir_op is None or True or str
 
             lir_op_classes.append(
-                gen_lir_class(name, result_type, call_instruction, mir_op)
+                gen_lir_class(name, result_type, operands, call_instruction, mir_op)
             )
 
         ops.append("_({})".format(name))
