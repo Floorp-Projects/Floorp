@@ -35,7 +35,20 @@ add_task(async function() {
   info("Check the resources after some resources are available");
   const messages = ["a", "b", "c"];
   await logMessages(tab.linkedBrowser, messages);
-  await waitUntil(() => availableResources.length >= messages.length);
+
+  try {
+    await waitFor(() => availableResources.length === messages.length);
+  } catch (e) {
+    ok(
+      false,
+      `Didn't receive the expected number of resources. Got ${
+        availableResources.length
+      }, expected ${messages.length} - ${availableResources
+        .map(r => r.message.arguments[0])
+        .join(" - ")}`
+    );
+  }
+
   assertResources(
     resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE),
     availableResources
@@ -55,12 +68,27 @@ add_task(async function() {
   );
 
   info("Append some resources again to test unwatching");
+  const newMessages = ["d", "e", "f"];
   await logMessages(tab.linkedBrowser, messages);
-  await waitUntil(
-    () =>
-      resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE)
-        .length === messages.length
-  );
+  try {
+    await waitFor(
+      () =>
+        resourceCommand.getAllResources(resourceCommand.TYPES.CONSOLE_MESSAGE)
+          .length === newMessages.length
+    );
+  } catch (e) {
+    const resources = resourceCommand.getAllResources(
+      resourceCommand.TYPES.CONSOLE_MESSAGE
+    );
+    ok(
+      false,
+      `Didn't receive the expected number of resources. Got ${
+        resources.length
+      }, expected ${messages.length} - ${resources
+        .map(r => r.message.arguments.join(" | "))
+        .join(" - ")}`
+    );
+  }
 
   info("Check the resources after unwatching");
   resourceCommand.unwatchResources([resourceCommand.TYPES.CONSOLE_MESSAGE], {
@@ -90,8 +118,8 @@ function assertResources(resources, expectedResources) {
 }
 
 function logMessages(browser, messages) {
-  return ContentTask.spawn(browser, { messages }, args => {
-    for (const message of args.messages) {
+  return SpecialPowers.spawn(browser, [messages], innerMessages => {
+    for (const message of innerMessages) {
       content.console.log(message);
     }
   });

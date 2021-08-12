@@ -3,8 +3,6 @@
 
 "use strict";
 
-console.log("[WORKER] started", globalThis.location.toString(), globalThis);
-
 globalThis.onmessage = function(e) {
   const { type, message } = e.data;
 

@@ -28,13 +28,7 @@ add_task(async function() {
   );
   const availableResources = [];
   const onAvailable = resources => {
-    // Ignore message coming from shared worker started by previous tests and
-    // logging late a console message
-    resources
-      .filter(r => {
-        return !r.message.arguments[0].startsWith("[WORKER] started");
-      })
-      .map(r => availableResources.push(r));
+    availableResources.push(...resources);
   };
   await resourceCommand.watchResources([CONSOLE_MESSAGE], { onAvailable });
 

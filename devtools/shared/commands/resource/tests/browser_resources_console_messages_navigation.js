@@ -35,13 +35,7 @@ async function testCrossProcessTabNavigation(browser, resourceCommand) {
   const onConsoleLogsComplete = new Promise(resolve => (doneResolve = resolve));
 
   const onAvailable = resources => {
-    messages.push(
-      // Ignore all unexpected messages from workers as they are not
-      // useful here and they are tested elsewhere.
-      ...resources.filter(
-        r => !r.message.arguments[0].startsWith("[WORKER] started")
-      )
-    );
+    messages.push(...resources);
     if (messages.length == 2) {
       doneResolve();
     }
