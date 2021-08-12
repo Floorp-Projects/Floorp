@@ -510,6 +510,18 @@ nsresult Http2Decompressor::OutputHeader(const nsACString& name,
     return NS_OK;
   }
 
+  // Bug 1663836: reject invalid HTTP response header names - RFC7540 Sec 10.3
+  const char* cFirst = name.BeginReading();
+  if (cFirst != nullptr && *cFirst == ':') {
+    ++cFirst;
+  }
+  if (!nsHttp::IsValidToken(cFirst, name.EndReading())) {
+    nsCString toLog(name);
+    LOG(("HTTP Decompressor invalid response header found. [%s]\n",
+         toLog.get()));
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   // Look for upper case characters in the name.
   for (const char* cPtr = name.BeginReading(); cPtr && cPtr < name.EndReading();
        ++cPtr) {

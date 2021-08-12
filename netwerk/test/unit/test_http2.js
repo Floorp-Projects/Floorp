@@ -563,6 +563,16 @@ function test_http2_header() {
   chan.asyncOpen(listener);
 }
 
+// Test to make sure headers with invalid characters in the name are rejected
+function test_http2_invalid_response_header() {
+  var listener = new Http2CheckListener();
+  listener.shouldSucceed = false;
+  var chan = makeChan(
+    "https://localhost:" + serverPort + "/invalid_response_header"
+  );
+  chan.asyncOpen(listener);
+}
+
 // Test to make sure cookies are split into separate fields before compression
 function test_http2_cookie_crumbling() {
   var chan = makeChan("https://localhost:" + serverPort + "/cookie_crumbling");
@@ -1304,6 +1314,7 @@ var tests = [
   test_http2_doubleheader,
   test_http2_xhr,
   test_http2_header,
+  test_http2_invalid_response_header,
   test_http2_cookie_crumbling,
   test_http2_multiplex,
   test_http2_big,

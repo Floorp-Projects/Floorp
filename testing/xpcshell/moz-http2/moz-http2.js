@@ -1678,6 +1678,15 @@ function handleRequest(req, res) {
     return;
   }
 
+  // response headers with invalid characters in the name
+  else if (u.pathname === "/invalid_response_header") {
+    res.setHeader("With Spaces", "Hello");
+    res.setHeader("Without-Spaces", "World");
+    res.writeHead(200);
+    res.end("");
+    return;
+  }
+
   res.setHeader("Content-Type", "text/html");
   if (req.httpVersionMajor != 2) {
     res.setHeader("Connection", "close");
