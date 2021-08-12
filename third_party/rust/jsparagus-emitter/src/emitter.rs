@@ -63,9 +63,10 @@ pub enum ThrowMsgKind {
     IteratorNoThrow = 1,
     CantDeleteSuper = 2,
     PrivateDoubleInit = 3,
-    MissingPrivateOnGet = 4,
-    MissingPrivateOnSet = 5,
-    AssignToPrivateMethod = 6,
+    PrivateBrandDoubleInit = 4,
+    MissingPrivateOnGet = 5,
+    MissingPrivateOnSet = 6,
+    AssignToPrivateMethod = 7,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -648,6 +649,11 @@ impl InstructionWriter {
         self.emit_op(Opcode::CheckPrivateField);
         self.write_u8(throw_condition as u8);
         self.write_u8(msg_kind as u8);
+    }
+
+    pub fn new_private_name(&mut self, name_index: GCThingIndex) {
+        self.emit_op(Opcode::NewPrivateName);
+        self.write_g_c_thing_index(name_index);
     }
 
     pub fn super_base(&mut self) {

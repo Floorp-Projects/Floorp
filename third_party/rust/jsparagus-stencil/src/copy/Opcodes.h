@@ -1162,13 +1162,21 @@
      *     maps to one of the messages in js.msg. Note: It's not possible to
      *     pass arguments to the message at the moment.
      *
-     *   Category: Control flow
      *   Category: Objects
      *   Type: Accessing properties
      *   Operands: ThrowCondition throwCondition, ThrowMsgKind msgKind
      *   Stack: obj, key => obj, key, (obj.hasOwnProperty(id))
      */ \
     MACRO(CheckPrivateField, check_private_field, NULL, 3, 2, 3, JOF_TWO_UINT8|JOF_CHECKSTRICT|JOF_IC) \
+    /*
+     * Push a new private name.
+     *
+     *   Category: Objects
+     *   Type: Accessing properties
+     *   Operands: uint32_t nameIndex
+     *   Stack: => private_name
+     */ \
+    MACRO(NewPrivateName, new_private_name, NULL, 5, 0, 1, JOF_ATOM) \
     /*
      * Push the SuperBase of the method `callee`. The SuperBase is
      * `callee.[[HomeObject]].[[GetPrototypeOf]]()`, the object where `super`
@@ -3514,7 +3522,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(227)                                   \
   MACRO(228)                                   \
   MACRO(229)                                   \
   MACRO(230)                                   \
