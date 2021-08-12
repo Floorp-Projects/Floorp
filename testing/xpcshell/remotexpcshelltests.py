@@ -515,6 +515,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["HOME"] = self.profileDir
         self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
         self.env["MOZ_ANDROID_DATA_DIR"] = self.remoteBinDir
+        self.env["MOZ_IN_AUTOMATION"] = "1"
 
         # Guard against intermittent failures to retrieve abi property;
         # without an abi, xpcshell cannot find greprefs.js and crashes.
