@@ -2643,10 +2643,6 @@ bool js::DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
     return obj;                                                               \
   }                                                                           \
                                                                               \
-  JS_PUBLIC_API bool JS_Is##Name##Array(JSObject* obj) {                      \
-    return js::Unwrap##Name##Array(obj) != nullptr;                           \
-  }                                                                           \
-                                                                              \
   JS_PUBLIC_API ExternalType* JS_Get##Name##ArrayLengthAndData(               \
       JSObject* obj, size_t* length, bool* isSharedMemory,                    \
       const JS::AutoRequireNoGC& nogc) {                                      \
