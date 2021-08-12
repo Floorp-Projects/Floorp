@@ -449,12 +449,12 @@ bool LIRGenerator::lowerCallArguments(MCall* call) {
 
     // Values take a slow path.
     if (arg->type() == MIRType::Value) {
-      LStackArgV* stack = new (alloc()) LStackArgV(argslot, useBox(arg));
+      LStackArgV* stack = new (alloc()) LStackArgV(useBox(arg), argslot);
       add(stack);
     } else {
       // Known types can move constant types and/or payloads.
       LStackArgT* stack = new (alloc())
-          LStackArgT(argslot, arg->type(), useRegisterOrConstant(arg));
+          LStackArgT(useRegisterOrConstant(arg), argslot, arg->type());
       add(stack);
     }
 

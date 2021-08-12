@@ -539,7 +539,7 @@ void LIRGeneratorARM::lowerPowOfTwoI(MPow* mir) {
   int32_t base = mir->input()->toConstant()->toInt32();
   MDefinition* power = mir->power();
 
-  auto* lir = new (alloc()) LPowOfTwoI(base, useRegister(power));
+  auto* lir = new (alloc()) LPowOfTwoI(useRegister(power), base);
   assignSnapshot(lir, mir->bailoutKind());
   define(lir, mir);
 }

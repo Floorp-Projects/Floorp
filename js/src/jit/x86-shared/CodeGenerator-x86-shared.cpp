@@ -73,12 +73,12 @@ void CodeGeneratorX86Shared::emitBranch(Assembler::Condition cond,
 
 void CodeGenerator::visitDouble(LDouble* ins) {
   const LDefinition* out = ins->getDef(0);
-  masm.loadConstantDouble(ins->getDouble(), ToFloatRegister(out));
+  masm.loadConstantDouble(ins->value(), ToFloatRegister(out));
 }
 
 void CodeGenerator::visitFloat32(LFloat32* ins) {
   const LDefinition* out = ins->getDef(0);
-  masm.loadConstantFloat32(ins->getFloat(), ToFloatRegister(out));
+  masm.loadConstantFloat32(ins->value(), ToFloatRegister(out));
 }
 
 void CodeGenerator::visitTestIAndBranch(LTestIAndBranch* test) {
@@ -2253,7 +2253,7 @@ void CodeGenerator::visitPopcntI64(LPopcntI64* lir) {
 void CodeGenerator::visitSimd128(LSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   const LDefinition* out = ins->getDef(0);
-  masm.loadConstantSimd128(ins->getSimd128(), ToFloatRegister(out));
+  masm.loadConstantSimd128(ins->simd128(), ToFloatRegister(out));
 #else
   MOZ_CRASH("No SIMD");
 #endif
