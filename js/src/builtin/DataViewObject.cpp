@@ -966,6 +966,8 @@ const JSClass DataViewObject::class_ = {
         JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     &DataViewObjectClassOps, &DataViewObject::classSpec_};
 
+const JSClass* const JS::DataView::ClassPtr = &DataViewObject::class_;
+
 const JSClass DataViewObject::protoClass_ = {
     "DataView.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     JS_NULL_CLASS_OPS, &DataViewObject::classSpec_};

@@ -494,3 +494,8 @@ JS_PUBLIC_API uint8_t* JS::GetSharedArrayBufferData(
 JS_PUBLIC_API bool JS::ContainsSharedArrayBuffer(JSContext* cx) {
   return cx->runtime()->hasLiveSABs();
 }
+
+const JSClass* const JS::ArrayBuffer::UnsharedClass =
+    &ArrayBufferObject::class_;
+const JSClass* const JS::ArrayBuffer::SharedClass =
+    &SharedArrayBufferObject::class_;
