@@ -6,7 +6,7 @@
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:uap2="http://schemas.microsoft.com/appx/manifest/uap/windows10/2" xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3" xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" IgnorableNamespaces="uap uap2 uap3 uap10 rescap">
   <Identity Name="@APPX_IDENTITY@" Publisher="@APPX_PUBLISHER@" Version="@APPX_VERSION@" ProcessorArchitecture="@APPX_ARCH@" />
   <Properties>
-    <DisplayName>@MOZ_APP_DISPLAYNAME@</DisplayName>
+    <DisplayName>@APPX_DISPLAYNAME@</DisplayName>
     <PublisherDisplayName>@MOZ_APP_VENDOR@</PublisherDisplayName>
     <Description>@APPX_DESCRIPTION@</Description>
     <Logo>Assets\StoreLogo.png</Logo>
