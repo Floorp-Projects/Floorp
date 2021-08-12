@@ -1266,9 +1266,20 @@ static bool IsNextFocusableElementTextControl(Element* aInputContent) {
   return !inputElement->ReadOnly();
 }
 
-static void GetActionHint(nsIContent& aContent, nsAString& aActionHint) {
-  // If enterkeyhint is set, we don't infer action hint.
-  if (!aActionHint.IsEmpty()) {
+static void GetActionHint(const IMEState& aState, const nsIContent& aContent,
+                          nsAString& aActionHint) {
+  MOZ_ASSERT(aContent.IsHTMLElement());
+
+  if (aState.IsEditable() && StaticPrefs::dom_forms_enterkeyhint()) {
+    nsGenericHTMLElement::FromNode(aContent)->GetEnterKeyHint(aActionHint);
+
+    // If enterkeyhint is set, we don't infer action hint.
+    if (!aActionHint.IsEmpty()) {
+      return;
+    }
+  }
+
+  if (!aContent.IsAnyOfHTMLElements(nsGkAtoms::input, nsGkAtoms::textarea)) {
     return;
   }
 
@@ -1370,11 +1381,6 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       nsContentUtils::IsInPrivateBrowsing(aPresContext->Document());
 
   if (aContent && aContent->IsHTMLElement()) {
-    if (aState.IsEditable() && StaticPrefs::dom_forms_enterkeyhint()) {
-      nsGenericHTMLElement::FromNode(aContent)->GetEnterKeyHint(
-          context.mActionHint);
-    }
-
     if (aContent->IsHTMLElement(nsGkAtoms::input)) {
       HTMLInputElement* inputElement = HTMLInputElement::FromNode(aContent);
       if (inputElement->HasBeenTypePassword() && aState.IsEditable()) {
@@ -1383,11 +1389,11 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
         inputElement->GetType(context.mHTMLInputType);
       }
 
-      GetActionHint(*aContent, context.mActionHint);
     } else if (aContent->IsHTMLElement(nsGkAtoms::textarea)) {
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
-      GetActionHint(*aContent, context.mActionHint);
     }
+
+    GetActionHint(aState, *aContent, context.mActionHint);
 
     if (aState.IsEditable() &&
         (StaticPrefs::dom_forms_inputmode() ||
