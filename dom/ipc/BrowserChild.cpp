@@ -368,8 +368,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
                NestedBrowserChildMap().end());
     NestedBrowserChildMap()[mUniqueId] = this;
   }
-  mCoalesceMouseMoveEvents =
-      Preferences::GetBool("dom.event.coalesce_mouse_move");
+  mCoalesceMouseMoveEvents = StaticPrefs::dom_events_coalesce_mousemove();
   if (mCoalesceMouseMoveEvents) {
     mCoalescedMouseEventFlusher = new CoalescedMouseMoveFlusher(this);
   }
