@@ -558,8 +558,10 @@ nsresult nsHttpDigestAuth::CalculateHA2(const nsCString& method,
   }
 
   nsresult rv = DigestHash(contents.get(), contents.Length(), algorithm);
-  if (NS_SUCCEEDED(rv)) rv = ExpandToHex(mHashBuf, result, algorithm);
-  return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return ExpandToHex(mHashBuf, result, algorithm);
 }
 
 nsresult nsHttpDigestAuth::ParseChallenge(const nsACString& aChallenge,
@@ -573,26 +575,41 @@ nsresult nsHttpDigestAuth::ParseChallenge(const nsACString& aChallenge,
     return NS_ERROR_INVALID_ARG;
   }
 
-  const nsCString& flat = PromiseFlatCString(aChallenge);
-  const char* challenge = flat.get();
+  const char* challenge = aChallenge.BeginReading();
+  const char* end = aChallenge.EndReading();
   const char* p = challenge + 6;  // first 6 characters are "Digest"
+  if (p >= end) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   *stale = false;
   *algorithm = ALGO_MD5;  // default is MD5
   *qop = 0;
 
   for (;;) {
-    while (*p && (*p == ',' || nsCRT::IsAsciiSpace(*p))) ++p;
-    if (!*p) break;
+    while (p < end && (*p == ',' || nsCRT::IsAsciiSpace(*p))) {
+      ++p;
+    }
+    if (p >= end) {
+      break;
+    }
 
     // name
     int32_t nameStart = (p - challenge);
-    while (*p && !nsCRT::IsAsciiSpace(*p) && *p != '=') ++p;
-    if (!*p) return NS_ERROR_INVALID_ARG;
+    while (p < end && !nsCRT::IsAsciiSpace(*p) && *p != '=') {
+      ++p;
+    }
+    if (p >= end) {
+      return NS_ERROR_INVALID_ARG;
+    }
     int32_t nameLength = (p - challenge) - nameStart;
 
-    while (*p && (nsCRT::IsAsciiSpace(*p) || *p == '=')) ++p;
-    if (!*p) return NS_ERROR_INVALID_ARG;
+    while (p < end && (nsCRT::IsAsciiSpace(*p) || *p == '=')) {
+      ++p;
+    }
+    if (p >= end) {
+      return NS_ERROR_INVALID_ARG;
+    }
 
     bool quoted = false;
     if (*p == '"') {
@@ -604,12 +621,18 @@ nsresult nsHttpDigestAuth::ParseChallenge(const nsACString& aChallenge,
     int32_t valueStart = (p - challenge);
     int32_t valueLength = 0;
     if (quoted) {
-      while (*p && *p != '"') ++p;
-      if (*p != '"') return NS_ERROR_INVALID_ARG;
+      while (p < end && *p != '"') {
+        ++p;
+      }
+      if (p >= end || *p != '"') {
+        return NS_ERROR_INVALID_ARG;
+      }
       valueLength = (p - challenge) - valueStart;
       ++p;
     } else {
-      while (*p && !nsCRT::IsAsciiSpace(*p) && *p != ',') ++p;
+      while (p < end && !nsCRT::IsAsciiSpace(*p) && *p != ',') {
+        ++p;
+      }
       valueLength = (p - challenge) - valueStart;
     }
 
