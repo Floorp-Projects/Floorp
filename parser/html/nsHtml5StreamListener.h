@@ -7,7 +7,6 @@
 
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "nsHtml5StreamParserPtr.h"
 #include "nsHtml5StreamParser.h"
 
 /**
@@ -38,14 +37,18 @@ class nsHtml5StreamListener : public nsIStreamListener,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-  inline nsHtml5StreamParser* GetDelegate() { return mDelegate; }
+  nsHtml5StreamParser* GetDelegate();
 
   void DropDelegate();
 
  private:
+  void DropDelegateImpl();
   virtual ~nsHtml5StreamListener();
 
-  nsHtml5StreamParserPtr mDelegate;
+  mozilla::Mutex mDelegateMutex;
+  // Owning pointer with manually-managed refcounting, protected by
+  // mDelegateMutex.
+  nsHtml5StreamParser* mDelegate;
 };
 
 #endif  // nsHtml5StreamListener_h
