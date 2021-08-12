@@ -62,19 +62,57 @@ def generate_header(c_out, includeguard, contents):
     )
 
 
+def gen_lir_class(name, mir_op):
+    """Generates class definition for a single LIR opcode."""
+    class_name = "L" + name
+    code = "class {} : public LInstructionHelper<0, 0, 0> {{".format(class_name)
+    code += "\\\n public:\\\n  LIR_HEADER({})\\\n".format(name)
+    code += "  {}() : LInstructionHelper(classOpcode) {{}}\\\n".format(class_name)
+    if mir_op:
+        if mir_op is True:
+            code += "  M{}* mir() const {{ return mir_->to{}(); }};\\\n".format(
+                name, name
+            )
+        else:
+            code += "  M{}* mir() const {{ return mir_->to{}(); }};\\\n".format(
+                mir_op, mir_op
+            )
+    code += "};\\\n"
+    return code
+
+
 def generate_lir_header(c_out, yaml_path):
     data = load_yaml(yaml_path)
 
     # LIR_OPCODE_LIST opcode.
     ops = []
 
+    # Generated LIR op class definitions.
+    lir_op_classes = []
+
     for op in data:
         name = op["name"]
+
+        gen_boilerplate = op.get("gen_boilerplate", True)
+        assert isinstance(gen_boilerplate, bool)
+
+        if gen_boilerplate:
+            gen_boilerplate = op.get("gen_boilerplate", True)
+            assert isinstance(gen_boilerplate, bool)
+
+            mir_op = op.get("mir_op", None)
+            assert mir_op is None or True or str
+
+            lir_op_classes.append(gen_lir_class(name, mir_op))
 
         ops.append("_({})".format(name))
 
     contents = "#define LIR_OPCODE_LIST(_)\\\n"
     contents += "\\\n".join(ops)
+    contents += "\n\n"
+
+    contents += "#define LIR_OPCODE_CLASS_GENERATED \\\n"
+    contents += "\\\n".join(lir_op_classes)
     contents += "\n\n"
 
     generate_header(c_out, "jit_LIROpsGenerated_h", contents)

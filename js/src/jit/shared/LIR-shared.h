@@ -16,6 +16,8 @@
 namespace js {
 namespace jit {
 
+LIR_OPCODE_CLASS_GENERATED
+
 class LBox : public LInstructionHelper<BOX_PIECES, 1, 0> {
   MIRType type_;
 
@@ -559,24 +561,6 @@ class LInitPropGetterSetter : public LCallInstructionHelper<0, 2, 0> {
   MInitPropGetterSetter* mir() const { return mir_->toInitPropGetterSetter(); }
 };
 
-class LCheckOverRecursed : public LInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(CheckOverRecursed)
-
-  LCheckOverRecursed() : LInstructionHelper(classOpcode) {}
-
-  MCheckOverRecursed* mir() const { return mir_->toCheckOverRecursed(); }
-};
-
-class LWasmTrap : public LInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(WasmTrap);
-
-  LWasmTrap() : LInstructionHelper(classOpcode) {}
-
-  const MWasmTrap* mir() const { return mir_->toWasmTrap(); }
-};
-
 template <size_t Defs, size_t Ops>
 class LWasmReinterpretBase : public LInstructionHelper<Defs, Ops, 0> {
   typedef LInstructionHelper<Defs, Ops, 0> Base;
@@ -656,14 +640,6 @@ class LRotateI64
   const LInt64Allocation input() { return getInt64Operand(Input); }
   const LDefinition* temp() { return getTemp(0); }
   LAllocation* count() { return getOperand(Count); }
-};
-
-class LInterruptCheck : public LInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(InterruptCheck)
-
-  LInterruptCheck() : LInstructionHelper(classOpcode) {}
-  MInterruptCheck* mir() const { return mir_->toInterruptCheck(); }
 };
 
 class LWasmInterruptCheck : public LInstructionHelper<0, 1, 0> {
@@ -1124,25 +1100,11 @@ class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4> {
   const LDefinition* getArgArgs() { return getTemp(3); }
 };
 
-class LBail : public LInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(Bail)
-
-  LBail() : LInstructionHelper(classOpcode) {}
-};
-
 class LUnreachable : public LControlInstructionHelper<0, 0, 0> {
  public:
   LIR_HEADER(Unreachable)
 
   LUnreachable() : LControlInstructionHelper(classOpcode) {}
-};
-
-class LEncodeSnapshot : public LInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(EncodeSnapshot)
-
-  LEncodeSnapshot() : LInstructionHelper(classOpcode) {}
 };
 
 class LUnreachableResultV : public LInstructionHelper<BOX_PIECES, 0, 0> {
@@ -7535,12 +7497,6 @@ class LWasmCompareExchangeHeap : public LInstructionHelper<1, 4, 4> {
   }
 };
 
-class LWasmFence : public LInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(WasmFence);
-  explicit LWasmFence() : LInstructionHelper(classOpcode) {}
-};
-
 class LWasmAtomicExchangeHeap : public LInstructionHelper<1, 3, 4> {
  public:
   LIR_HEADER(WasmAtomicExchangeHeap);
@@ -8259,15 +8215,6 @@ class LThrowMsg : public LCallInstructionHelper<0, 0, 0> {
   LThrowMsg() : LCallInstructionHelper(classOpcode) {}
 
   MThrowMsg* mir() { return mir_->toThrowMsg(); }
-};
-
-class LGlobalDeclInstantiation : public LInstructionHelper<0, 0, 0> {
- public:
-  LIR_HEADER(GlobalDeclInstantiation)
-
-  LGlobalDeclInstantiation() : LInstructionHelper(classOpcode) {}
-
-  MGlobalDeclInstantiation* mir() { return mir_->toGlobalDeclInstantiation(); }
 };
 
 class LMemoryBarrier : public LInstructionHelper<0, 0, 0> {
