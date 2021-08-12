@@ -57,12 +57,12 @@ nsHttpAuthManager::GetAuthIdentity(
 
   if (!aPath.IsEmpty()) {
     rv = auth_cache->GetAuthEntryForPath(
-        PromiseFlatCString(aScheme).get(), PromiseFlatCString(aHost).get(),
-        aPort, PromiseFlatCString(aPath).get(), originSuffix, &entry);
+        aScheme, aHost,
+        aPort, aPath, originSuffix, &entry);
   } else {
     rv = auth_cache->GetAuthEntryForDomain(
-        PromiseFlatCString(aScheme).get(), PromiseFlatCString(aHost).get(),
-        aPort, PromiseFlatCString(aRealm).get(), originSuffix, &entry);
+        aScheme, aHost,
+        aPort, aRealm, originSuffix, &entry);
   }
 
   if (NS_FAILED(rv)) return rv;
