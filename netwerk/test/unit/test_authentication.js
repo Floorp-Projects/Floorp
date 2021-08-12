@@ -218,7 +218,9 @@ Requestor.prototype = {
   prompt2: null,
 };
 
-function RealmTestRequestor() {}
+function RealmTestRequestor() {
+  this.promptRealm = "";
+}
 
 RealmTestRequestor.prototype = {
   QueryInterface: ChromeUtils.generateQI([
@@ -235,7 +237,7 @@ RealmTestRequestor.prototype = {
   },
 
   promptAuth: function realmtest_checkAuth(channel, level, authInfo) {
-    Assert.equal(authInfo.realm, '"foo_bar');
+    this.promptRealm = authInfo.realm;
 
     return false;
   },
@@ -419,9 +421,11 @@ add_task(async function test_ntlm() {
 add_task(async function test_basicrealm() {
   var chan = makeChan(URL + "/auth/realm", URL);
 
-  chan.notificationCallbacks = new RealmTestRequestor();
+  let requestor = new RealmTestRequestor();
+  chan.notificationCallbacks = requestor;
   listener.expectedCode = 401; // Unauthorized
   await openAndListen(chan);
+  Assert.equal(requestor.promptRealm, '"foo_bar');
 });
 
 add_task(async function test_nonascii() {
@@ -905,4 +909,285 @@ add_task(async function test_large_domain() {
 
   listener.expectedCode = 401; // Unauthorized
   await openAndListen(chan);
+});
+
+async function add_parse_realm_testcase(testcase) {
+  httpserv.registerPathHandler("/parse_realm", (metadata, response) => {
+    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+    response.setHeader("WWW-Authenticate", testcase.input, false);
+
+    let body = "failed";
+    response.bodyOutputStream.write(body, body.length);
+  });
+
+  let chan = makeChan(URL + "/parse_realm", URL);
+  let requestor = new RealmTestRequestor();
+  chan.notificationCallbacks = requestor;
+
+  listener.expectedCode = 401;
+  await openAndListen(chan);
+  Assert.equal(requestor.promptRealm, testcase.realm);
+}
+
+add_task(async function simplebasic() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="foo"`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasiclf() {
+  await add_parse_realm_testcase({
+    input: `Basic\r\n realm="foo"`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasicucase() {
+  await add_parse_realm_testcase({
+    input: `BASIC REALM="foo"`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasictok() {
+  await add_parse_realm_testcase({
+    input: `Basic realm=foo`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasictokbs() {
+  await add_parse_realm_testcase({
+    input: `Basic realm=\\f\\o\\o`,
+    scheme: `Basic`,
+    realm: `\\foo`,
+  });
+});
+
+add_task(async function simplebasicsq() {
+  await add_parse_realm_testcase({
+    input: `Basic realm='foo'`,
+    scheme: `Basic`,
+    realm: `'foo'`,
+  });
+});
+
+add_task(async function simplebasicpct() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="foo%20bar"`,
+    scheme: `Basic`,
+    realm: `foo%20bar`,
+  });
+});
+
+add_task(async function simplebasiccomma() {
+  await add_parse_realm_testcase({
+    input: `Basic , realm="foo"`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasiccomma2() {
+  await add_parse_realm_testcase({
+    input: `Basic, realm="foo"`,
+    scheme: `Basic`,
+    realm: ``,
+  });
+});
+
+add_task(async function simplebasicnorealm() {
+  await add_parse_realm_testcase({
+    input: `Basic`,
+    scheme: `Basic`,
+    realm: ``,
+  });
+});
+
+add_task(async function simplebasic2realms() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="foo", realm="bar"`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasicwsrealm() {
+  await add_parse_realm_testcase({
+    input: `Basic realm = "foo"`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasicrealmsqc() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="\\f\\o\\o"`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasicrealmsqc2() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="\\"foo\\""`,
+    scheme: `Basic`,
+    realm: `"foo"`,
+  });
+});
+
+add_task(async function simplebasicnewparam1() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="foo", bar="xyz",, a=b,,,c=d`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasicnewparam2() {
+  await add_parse_realm_testcase({
+    input: `Basic bar="xyz", realm="foo"`,
+    scheme: `Basic`,
+    realm: `foo`,
+  });
+});
+
+add_task(async function simplebasicrealmiso88591() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="foo-ä"`,
+    scheme: `Basic`,
+    realm: `foo-ä`,
+  });
+});
+
+add_task(async function simplebasicrealmutf8() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="foo-Ã¤"`,
+    scheme: `Basic`,
+    realm: `foo-Ã¤`,
+  });
+});
+
+add_task(async function simplebasicrealmrfc2047() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="=?ISO-8859-1?Q?foo-=E4?="`,
+    scheme: `Basic`,
+    realm: `=?ISO-8859-1?Q?foo-=E4?=`,
+  });
+});
+
+add_task(async function multibasicunknown() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="basic", Newauth realm="newauth"`,
+    scheme: `Basic`,
+    realm: `basic`,
+  });
+});
+
+add_task(async function multibasicunknownnoparam() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="basic", Newauth`,
+    scheme: `Basic`,
+    realm: `basic`,
+  });
+});
+
+add_task(async function multibasicunknown2() {
+  await add_parse_realm_testcase({
+    input: `Newauth realm="newauth", Basic realm="basic"`,
+    scheme: `Basic`,
+    realm: `basic`,
+  });
+});
+
+add_task(async function multibasicunknown2np() {
+  await add_parse_realm_testcase({
+    input: `Newauth, Basic realm="basic"`,
+    scheme: `Basic`,
+    realm: `basic`,
+  });
+});
+
+add_task(async function multibasicunknown2mf() {
+  httpserv.registerPathHandler("/parse_realm", (metadata, response) => {
+    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+    response.setHeader("WWW-Authenticate", `Newauth realm="newauth"`, false);
+    response.setHeader("WWW-Authenticate", `Basic realm="basic"`, false);
+
+    let body = "failed";
+    response.bodyOutputStream.write(body, body.length);
+  });
+
+  let chan = makeChan(URL + "/parse_realm", URL);
+  let requestor = new RealmTestRequestor();
+  chan.notificationCallbacks = requestor;
+
+  listener.expectedCode = 401;
+  await openAndListen(chan);
+  Assert.equal(requestor.promptRealm, "basic");
+});
+
+add_task(async function multibasicempty() {
+  await add_parse_realm_testcase({
+    input: `,Basic realm="basic"`,
+    scheme: `Basic`,
+    realm: `basic`,
+  });
+});
+
+add_task(async function multibasicqs() {
+  await add_parse_realm_testcase({
+    input: `Newauth realm="apps", type=1, title="Login to \"apps\"", Basic realm="simple"`,
+    scheme: `Basic`,
+    realm: `simple`,
+  });
+});
+
+add_task(async function multidisgscheme() {
+  await add_parse_realm_testcase({
+    input: `Newauth realm="Newauth Realm", basic=foo, Basic realm="Basic Realm"`,
+    scheme: `Basic`,
+    realm: `Basic Realm`,
+  });
+});
+
+add_task(async function unknown() {
+  await add_parse_realm_testcase({
+    input: `Newauth param="value"`,
+    scheme: `Basic`,
+    realm: ``,
+  });
+});
+
+add_task(async function parametersnotrequired() {
+  await add_parse_realm_testcase({ input: `A, B`, scheme: `Basic`, realm: `` });
+});
+
+add_task(async function disguisedrealm() {
+  await add_parse_realm_testcase({
+    input: `Basic foo="realm=nottherealm", realm="basic"`,
+    scheme: `Basic`,
+    realm: `basic`,
+  });
+});
+
+add_task(async function disguisedrealm2() {
+  await add_parse_realm_testcase({
+    input: `Basic nottherealm="nottherealm", realm="basic"`,
+    scheme: `Basic`,
+    realm: `basic`,
+  });
+});
+
+add_task(async function missingquote() {
+  await add_parse_realm_testcase({
+    input: `Basic realm="basic`,
+    scheme: `Basic`,
+    realm: `basic`,
+  });
 });

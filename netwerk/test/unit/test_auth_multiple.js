@@ -375,6 +375,7 @@ function setup() {
   Services.prefs.setBoolPref("network.auth.force-generic-ntlm", true);
   Services.prefs.setBoolPref("network.auth.force-generic-ntlm-v1", true);
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
+  Services.prefs.setBoolPref("network.http.sanitize-headers-in-logs", false);
 
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/path", auth_handler);
@@ -384,6 +385,7 @@ function setup() {
     Services.prefs.clearUserPref("network.auth.force-generic-ntlm");
     Services.prefs.clearUserPref("network.auth.force-generic-ntlm-v1");
     Services.prefs.clearUserPref("network.dns.native-is-localhost");
+    Services.prefs.clearUserPref("network.http.sanitize-headers-in-logs");
 
     await httpserv.stop();
   });
