@@ -2329,6 +2329,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   classStaticBlocks = rhs.classStaticBlocks;
   useStencilXDR = rhs.useStencilXDR;
   useOffThreadParseGlobal = rhs.useOffThreadParseGlobal;
+  useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 };
 
 void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
@@ -2416,6 +2417,8 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
 
   useStencilXDR = !UseOffThreadParseGlobal();
   useOffThreadParseGlobal = UseOffThreadParseGlobal();
+
+  useFdlibmForSinCosTan = math_use_fdlibm_for_sin_cos_tan();
 
   sourcePragmas_ = cx->options().sourcePragmas();
 
