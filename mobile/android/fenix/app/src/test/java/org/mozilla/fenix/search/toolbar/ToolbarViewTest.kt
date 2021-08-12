@@ -16,11 +16,9 @@ import io.mockk.verify
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -66,30 +64,6 @@ class ToolbarViewTest {
         MockKAnnotations.init(this)
         context = ContextThemeWrapper(testContext, R.style.NormalTheme)
         toolbar = spyk(BrowserToolbar(context))
-    }
-
-    @Test
-    fun `sets up interactor listeners`() {
-        lateinit var urlCommitListener: ((String) -> Boolean)
-        var editListener: Toolbar.OnEditListener? = null
-        every { toolbar.setOnUrlCommitListener(any()) } answers {
-            urlCommitListener = firstArg()
-        }
-        every { toolbar.setOnEditListener(any()) } answers {
-            editListener = firstArg()
-        }
-
-        buildToolbarView(isPrivate = false)
-
-        assertFalse(urlCommitListener("test"))
-        verify { interactor.onUrlCommitted("test") }
-
-        assertNotNull(editListener)
-        assertFalse(editListener!!.onCancelEditing())
-        verify { interactor.onEditingCanceled() }
-
-        editListener!!.onTextChanged("https://example.com")
-        verify { interactor.onTextChanged("https://example.com") }
     }
 
     @Test
