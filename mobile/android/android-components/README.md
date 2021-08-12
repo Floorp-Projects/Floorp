@@ -49,10 +49,6 @@ dependencies {
 
 Nightly builds are created every day from the `main` branch and published on [nightly.maven.mozilla.org](https://nightly.maven.mozilla.org).
 
-# API Reference
-
-The API reference docs are available at [mozac.org/api/](https://mozac.org/api/).
-
 # Components
 
 * 🔴 **In Development** - Not ready to be used in shipping products.
@@ -310,12 +306,7 @@ To check your style, run:
 ```
 
 ## Documentation ##
-We use `README.md` files and [Dokka](https://github.com/Kotlin/dokka), which you can generate with:
-
-```
-./gradlew dokka                          # Generate dokka for the entire repo
-./gradlew :browser-icons:dokka           # Generate dokka for a specified module
-```
+We use `README.md` files for each component.
 
 If you fix a bug or change an API, you should update [docs/changelog.md](https://github.com/mozilla-mobile/android-components/blob/main/docs/changelog.md).
 
