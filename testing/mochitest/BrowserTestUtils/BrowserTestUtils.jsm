@@ -453,6 +453,21 @@ var BrowserTestUtils = {
       } else if (typeof wantLoad == "function") {
         return wantLoad(url);
       }
+
+      // HTTPS-First (Bug 1704453) TODO: In case we are waiting
+      // for an http:// URL to be loaded and https-first is enabled,
+      // then we also return true in case the backend upgraded
+      // the load to https://.
+      let httpsFirstEnabled = Services.prefs.getBoolPref(
+        "dom.security.https_first"
+      );
+      if (httpsFirstEnabled && wantLoad.startsWith("http://")) {
+        let wantLoadHttps = wantLoad.replace("http://", "https://");
+        if (wantLoadHttps == url) {
+          return true;
+        }
+      }
+
       // It's a string.
       return wantLoad == url;
     }
