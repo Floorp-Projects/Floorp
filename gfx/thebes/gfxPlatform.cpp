@@ -2600,12 +2600,6 @@ bool gfxPlatform::WebRenderEnvvarEnabled() {
   return (env && *env == '1');
 }
 
-/*static*/
-bool gfxPlatform::WebRenderEnvvarDisabled() {
-  const char* env = PR_GetEnv("MOZ_WEBRENDER");
-  return (env && *env == '0');
-}
-
 /* static */ const char* gfxPlatform::WebRenderResourcePathOverride() {
   const char* resourcePath = PR_GetEnv("WR_RESOURCE_PATH");
   if (!resourcePath || resourcePath[0] == '\0') {
