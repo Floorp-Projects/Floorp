@@ -56,7 +56,7 @@
 #     static const size_t rhsIndex = BOX_PIECES; 
 #
 #   - attribute not specified (default): no code generated
-#   - list of operand names with their types: WordSized getters and setters
+#   - list of operand names with their types: operand getters and setters
 #     are generated and passed into the constructor
 #
 # num_temps
@@ -116,8 +116,10 @@
   result_type: WordSized
   mir_op: true
 
+# Formal argument for a function, returning a box. Formal arguments are
+# initially read from the stack.
 - name: Parameter
-  gen_boilerplate: false
+  result_type: BoxedValue
 
 # Stack offset for a word-sized immutable input value to a frame.
 - name: Callee
@@ -287,10 +289,20 @@
   call_instruction: true
 
 - name: ToPropertyKeyCache
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    input: BoxedValue
+  mir_op: true
 
+# Allocate an object for |new| on the caller-side,
+# when there is no templateObject or prototype known
 - name: CreateThis
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    callee: WordSized
+    newTarget: WordSized
+  call_instruction: true
+  mir_op: true
 
 # Allocate an object for |new| on the caller-side.
 # Always performs object initialization with a fast path.
@@ -314,8 +326,13 @@
 - name: GetInlinedArgument
   gen_boilerplate: false
 
+# Get argument from arguments object.
 - name: GetArgumentsObjectArg
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    argsObject: WordSized
+  num_temps: 1
+  mir_op: true
 
 # Set argument on arguments object.
 - name: SetArgumentsObjectArg
@@ -325,8 +342,13 @@
   num_temps: 1
   mir_op: true
 
+# Load an element from an arguments object.
 - name: LoadArgumentsObjectArg
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    argsObject: WordSized
+    index: WordSized
+  num_temps: 1
 
 # Return |arguments.length| unless it has been overridden.
 - name: ArgumentsObjectLength
@@ -356,7 +378,11 @@
   mir_op: true
 
 - name: ImplicitThis
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    env: WordSized
+  call_instruction: true
+  mir_op: true
 
 - name: StackArgT
   gen_boilerplate: false
@@ -405,13 +431,22 @@
   gen_boilerplate: false
 
 - name: LoadDOMExpandoValue
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    proxy: WordSized
+  mir_op: true
 
 - name: LoadDOMExpandoValueGuardGeneration
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    proxy: WordSized
+  mir_op: true
 
 - name: LoadDOMExpandoValueIgnoreGeneration
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    proxy: WordSized
+  mir_op: true
 
 - name: GuardDOMExpandoMissingOrGuardShape
   operands:
@@ -665,8 +700,11 @@
   operands:
     num: WordSized
 
+# Negative of an int64
 - name: NegI64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    num: Int64
 
 # Negative of double
 - name: NegD
@@ -680,8 +718,12 @@
   operands:
     num: WordSized
 
+# Absolute value of an integer.
 - name: AbsI
-  gen_boilerplate: false
+  result_type: WordSized
+  operands:
+    num: WordSized
+  mir_op: Abs
 
 # Absolute value of a double.
 - name: AbsD
@@ -708,8 +750,12 @@
     num: WordSized
   mir_op: Clz
 
+# Count leading zeroes on an int64.
 - name: ClzI64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    num: Int64
+  mir_op: Clz
 
 # Count trailing zeroes on an int32.
 - name: CtzI
@@ -718,8 +764,12 @@
     num: WordSized
   mir_op: Ctz
 
+# Count trailing zeroes on an int64.
 - name: CtzI64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    num: Int64
+  mir_op: Ctz
 
 # Count population on an int32.
 - name: PopcntI
@@ -729,8 +779,13 @@
   num_temps: 1
   mir_op: Popcnt
 
+# Count population on an int64.
 - name: PopcntI64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    num: Int64
+  num_temps: 1
+  mir_op: Popcnt
 
 - name: SqrtD
   result_type: WordSized
@@ -1077,7 +1132,10 @@
   mir_op: true
 
 - name: ExtendInt32ToInt64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    input: WordSized
+  mir_op: true
 
 # Convert a boolean value to a string.
 - name: BooleanToString
@@ -1085,7 +1143,6 @@
   operands:
     input: WordSized
   mir_op: ToString
-
 
 # Convert an integer hosted on one definition to a string with a function call.
 - name: IntToString
@@ -1123,8 +1180,12 @@
 - name: OsrEntry
   gen_boilerplate: false
 
+# Materialize a Value stored in an interpreter frame for OSR.
 - name: OsrValue
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    entry: WordSized
+  mir_op: true
 
 # Materialize a JSObject env chain stored in an interpreter frame for OSR.
 - name: OsrEnvironmentChain
@@ -1133,8 +1194,12 @@
     entry: WordSized
   mir_op: true
 
+# Materialize a JSObject env chain stored in an interpreter frame for OSR.
 - name: OsrReturnValue
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    entry: WordSized
+  mir_op: true
 
 - name: OsrArgumentsObject
   result_type: WordSized
@@ -1148,7 +1213,13 @@
   mir_op: true
 
 - name: RegExpMatcher
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    regexp: WordSized
+    string: WordSized
+    lastIndex: WordSized
+  call_instruction: true
+  mir_op: true
 
 - name: RegExpSearcher
   result_type: WordSized
@@ -1199,7 +1270,15 @@
   mir_op: true
 
 - name: BinaryValueCache
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    lhs: BoxedValue
+    rhs: BoxedValue
+  # Takes two temps: these are intended to be FloatReg0 and FloatReg1
+  # to allow the actual cache code to safely clobber those values without
+  # save and restore.
+  num_temps: 2
+  mir_op: BinaryCache
 
 - name: BinaryBoolCache
   result_type: WordSized
@@ -1213,7 +1292,10 @@
   mir_op: BinaryCache
 
 - name: UnaryCache
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    input: BoxedValue
+  mir_op_cast: true
 
 - name: ModuleMetadata
   result_type: WordSized
@@ -1487,7 +1569,12 @@
   gen_boilerplate: false
 
 - name: LoadTypedArrayElementHole
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+    index: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: LoadTypedArrayElementHoleBigInt
   gen_boilerplate: false
@@ -1577,8 +1664,12 @@
   num_temps: 1
   mir_op: ClampToUint8
 
+# Load a boxed value from an object's fixed slot.
 - name: LoadFixedSlotV
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+  mir_op: LoadFixedSlot
 
 # Load a typed value from an object's fixed slot.
 - name: LoadFixedSlotT
@@ -1635,17 +1726,35 @@
     value: WordSized
   mir_op: StoreFixedSlot
 
+# Note, Name ICs always return a Value. There are no V/T variants.
 - name: GetNameCache
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    envObj: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: CallGetIntrinsicValue
-  gen_boilerplate: false
+  result_type: BoxedValue
+  call_instruction: true
+  mir_op: true
 
 - name: GetPropSuperCache
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    obj: WordSized
+    receiver: BoxedValue
+    id: BoxedValue
+  mir_op: true
 
+# Patchable jump to stubs generated for a GetProperty cache, which loads a
+# boxed value.
 - name: GetPropertyCache
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    value: BoxedValue
+    id: BoxedValue
+  mir_op: true
 
 - name: BindNameCache
   result_type: WordSized
@@ -1660,8 +1769,12 @@
     environmentChain: WordSized
   mir_op: true
 
+# Load a value from an object's dslots or a slots vector.
 - name: LoadDynamicSlotV
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    in: WordSized
+  mir_op: LoadDynamicSlot
 
 # Store a value to an object's dslots or a slots vector.
 - name: StoreDynamicSlotV
@@ -1850,7 +1963,11 @@
   mir_op: true
 
 - name: IteratorMore
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    iterator: WordSized
+  num_temps: 1
+  mir_op: true
 
 - name: IsNoIterAndBranch
   gen_boilerplate: false
@@ -1865,8 +1982,11 @@
 - name: ArgumentsLength
   result_type: WordSized
 
+# Load a value from the actual arguments.
 - name: GetFrameArgument
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    index: WordSized
 
 # Create the rest parameter.
 - name: Rest
@@ -1899,17 +2019,34 @@
     input: WordSized
   mir_op: true
 
+# Convert a Boolean to an Int64, following ToBigInt.
 - name: BooleanToInt64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    input: WordSized
+  mir_op: ToInt64
 
+# Convert a String to an Int64, following ToBigInt.
 - name: StringToInt64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    input: WordSized
+  mir_op: ToInt64
 
+# Simulate ToBigInt on a Value and produce a matching Int64.
 - name: ValueToInt64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    input: BoxedValue
+  num_temps: 1
+  mir_op: ToInt64
 
+# Truncate a BigInt to an unboxed int64.
 - name: TruncateBigIntToInt64
-  gen_boilerplate: false
+  result_type: Int64
+  operands:
+    input: WordSized
+  mir_op: true
 
 # Create a new BigInt* from an unboxed int64.
 - name: Int64ToBigInt
@@ -1918,7 +2055,6 @@
     input: Int64
   num_temps: 1
   mir_op: true
-
 
 # Generational write barrier used when writing an object to another object.
 - name: PostWriteBarrierO
@@ -2072,13 +2208,27 @@
   num_temps: 1
 
 - name: ProxyGet
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    proxy: WordSized
+  num_temps: 1
+  call_instruction: true
+  mir_op: true
 
 - name: ProxyGetByValue
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    proxy: WordSized
+    id: BoxedValue
+  call_instruction: true
 
 - name: ProxyHasProp
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    proxy: WordSized
+    id: BoxedValue
+  call_instruction: true
+  mir_op: true
 
 - name: ProxySet
   operands:
@@ -2104,13 +2254,30 @@
   mir_op: true
 
 - name: MegamorphicLoadSlot
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+  num_temps: 3
+  call_instruction: true
+  mir_op: true
 
 - name: MegamorphicLoadSlotByValue
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+    id: BoxedValue
+  num_temps: 2
+  call_instruction: true
+  mir_op: true
 
 - name: MegamorphicStoreSlot
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+    rhs: BoxedValue
+  num_temps: 3
+  call_instruction: true
+  mir_op: true
 
 - name: MegamorphicHasProp
   result_type: WordSized
@@ -2523,16 +2690,21 @@
   call_instruction: true
 
 - name: NewTarget
-  gen_boilerplate: false
+  result_type: BoxedValue
 
 - name: ArrowNewTarget
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    callee: WordSized
 
 - name: Random
   gen_boilerplate: false
 
 - name: CheckReturn
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    returnValue: BoxedValue
+    thisValue: BoxedValue
 
 - name: CheckIsObj
   result_type: WordSized
@@ -2590,7 +2762,12 @@
   mir_op: true
 
 - name: MaybeExtractAwaitValue
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    value: BoxedValue
+    canSkip: WordSized
+  call_instruction: true
+  mir_op: true
 
 - name: DebugCheckSelfHosted
   operands:
@@ -2617,7 +2794,9 @@
   mir_op: true
 
 - name: GetPrototypeOf
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands: 
+    target: WordSized
 
 - name: ObjectWithProto
   result_type: WordSized
@@ -2636,7 +2815,10 @@
   mir_op: true
 
 - name: SuperFunction
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    callee: WordSized
+  num_temps: 1
 
 - name: InitHomeObject
   result_type: WordSized
@@ -2701,10 +2883,18 @@
   mir_op: true
 
 - name: CallGetSparseElement
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+    index: WordSized
+  call_instruction: true
 
 - name: CallNativeGetElement
-  gen_boilerplate: false
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+    index: WordSized
+  call_instruction: true
 
 - name: CallObjectHasSparseElement
   result_type: WordSized
