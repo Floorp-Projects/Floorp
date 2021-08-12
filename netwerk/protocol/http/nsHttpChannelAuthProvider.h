@@ -42,13 +42,13 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
  private:
   virtual ~nsHttpChannelAuthProvider();
 
-  const char* ProxyHost() const {
-    return mProxyInfo ? mProxyInfo->Host().get() : nullptr;
+  const nsCString& ProxyHost() const {
+    return mProxyInfo ? mProxyInfo->Host() : EmptyCString();
   }
 
   int32_t ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
 
-  const char* Host() const { return mHost.get(); }
+  const nsCString& Host() const { return mHost; }
   int32_t Port() const { return mPort; }
   bool UsingSSL() const { return mUsingSSL; }
 
