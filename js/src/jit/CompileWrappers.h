@@ -37,7 +37,6 @@ namespace gc {
 
 enum class AllocKind : uint8_t;
 
-class AllocSite;
 class FreeSpan;
 
 }  // namespace gc

@@ -25,14 +25,10 @@
 #include "jsmath.h"
 #include "jsnum.h"
 
-#include "builtin/Eval.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
-#include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"
-#include "gc/Nursery.h"
 #include "irregexp/RegExpTypes.h"
-#include "jit/BaselineCodeGen.h"
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/Invalidation.h"
@@ -45,13 +41,12 @@
 #include "jit/JitSpewer.h"
 #include "jit/JitZone.h"
 #include "jit/Linker.h"
-#include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
 #include "jit/RangeAnalysis.h"
 #include "jit/SafepointIndex.h"
 #include "jit/SharedICHelpers.h"
-#include "jit/StackSlotAllocator.h"
+#include "jit/SharedICRegisters.h"
 #include "jit/VMFunctions.h"
 #include "jit/WarpSnapshot.h"
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter}CallArgs, JSJitMethodCallArgsTraits, JSJitInfo
@@ -68,7 +63,6 @@
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/JSAtom.h"
 #include "vm/MatchPairs.h"
-#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringObject.h"
@@ -82,13 +76,10 @@
 #include "wasm/WasmStubs.h"
 
 #include "builtin/Boolean-inl.h"
-#include "jit/ABIFunctionList-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
-#include "jit/shared/Lowering-shared-inl.h"
 #include "jit/TemplateObject-inl.h"
 #include "jit/VMFunctionList-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;

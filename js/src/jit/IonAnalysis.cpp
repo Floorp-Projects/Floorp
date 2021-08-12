@@ -10,27 +10,14 @@
 #include <utility>  // for ::std::pair
 
 #include "jit/AliasAnalysis.h"
-#include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
-#include "jit/InlineScriptTree.h"
-#include "jit/Ion.h"
-#include "jit/IonOptimizationLevels.h"
-#include "jit/LIR.h"
-#include "jit/Lowering.h"
+#include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
-#include "jit/WarpBuilder.h"
-#include "jit/WarpOracle.h"
 #include "util/CheckedArithmetic.h"
-#include "vm/PlainObject.h"  // js::PlainObject
-#include "vm/RegExpObject.h"
-#include "vm/SelfHosting.h"
+#include "vm/TraceLogging.h"
+#include "vm/TraceLoggingTypes.h"
 
-#include "jit/InlineScriptTree-inl.h"
-#include "jit/JitScript-inl.h"
-#include "jit/shared/Lowering-shared-inl.h"
 #include "vm/BytecodeUtil-inl.h"
-#include "vm/JSObject-inl.h"
-#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::jit;

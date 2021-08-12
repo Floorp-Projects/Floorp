@@ -9,8 +9,6 @@
 #include <algorithm>
 
 #include "debugger/DebugAPI.h"
-#include "jit/BaselineJIT.h"
-#include "jit/Ion.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSContext.h"
 

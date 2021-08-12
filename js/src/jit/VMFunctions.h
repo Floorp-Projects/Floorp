@@ -17,7 +17,6 @@
 #include "NamespaceImports.h"
 
 #include "gc/Rooting.h"
-#include "jit/IonTypes.h"
 #include "js/ScalarType.h"
 #include "js/TypeDecls.h"
 
@@ -354,7 +353,6 @@ struct LastArg<HeadType, TailTypes...> {
                                   uint32_t argc, Value* argv,
                                   MutableHandleValue rval);
 
-class InterpreterStubExitFrameLayout;
 bool InvokeFromInterpreterStub(JSContext* cx,
                                InterpreterStubExitFrameLayout* frame);
 void* GetContextSensitiveInterpreterStub();

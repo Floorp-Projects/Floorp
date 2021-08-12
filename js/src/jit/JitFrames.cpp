@@ -11,14 +11,11 @@
 #include <algorithm>
 
 #include "builtin/ModuleObject.h"
-#include "gc/Marking.h"
-#include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonScript.h"
-#include "jit/JitcodeMap.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
@@ -29,8 +26,6 @@
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
 #include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue
-#include "vm/ArgumentsObject.h"
-#include "vm/GeckoProfiler.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
@@ -41,7 +36,6 @@
 #include "wasm/WasmInstance.h"
 
 #include "debugger/DebugAPI-inl.h"
-#include "gc/Nursery-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSScript-inl.h"

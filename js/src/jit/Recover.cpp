@@ -6,7 +6,6 @@
 
 #include "jit/Recover.h"
 
-#include "jsapi.h"
 #include "jsmath.h"
 
 #include "builtin/RegExp.h"
@@ -27,7 +26,6 @@
 #include "vm/StringType.h"
 
 #include "vm/Interpreter-inl.h"
-#include "vm/NativeObject-inl.h"
 
 using namespace js;
 using namespace js::jit;

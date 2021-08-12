@@ -6,14 +6,12 @@
 
 #include "jit/WarpOracle.h"
 
-#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ScopeExit.h"
 
 #include <algorithm>
 
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
-#include "jit/CacheIROpsGenerated.h"
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/JitRealm.h"
@@ -22,12 +20,9 @@
 #include "jit/MIRGenerator.h"
 #include "jit/TypeData.h"
 #include "jit/WarpBuilder.h"
-#include "jit/WarpCacheIRTranspiler.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
-#include "vm/GetterSetter.h"
-#include "vm/Opcodes.h"
 
 #include "jit/InlineScriptTree-inl.h"
 #include "vm/BytecodeIterator-inl.h"

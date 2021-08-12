@@ -9,8 +9,6 @@
 
 #include "mozilla/Attributes.h"
 
-#include "builtin/Array.h"
-
 #include "jit/MIR.h"
 #include "jit/Snapshots.h"
 

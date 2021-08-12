@@ -7,12 +7,11 @@
 #include "jit/TrialInlining.h"
 
 #include "jit/BaselineCacheIRCompiler.h"
+#include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/CacheIRHealth.h"
 #include "jit/Ion.h"  // TooManyFormalArguments
 
-#include "jit/BaselineFrame-inl.h"
-#include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 
 using mozilla::Maybe;

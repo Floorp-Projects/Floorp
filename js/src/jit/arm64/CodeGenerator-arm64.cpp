@@ -6,6 +6,7 @@
 
 #include "jit/arm64/CodeGenerator-arm64.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jsnum.h"
@@ -3570,7 +3571,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
     case LWasmPermuteSimd128::PERMUTE_8x16: {
       const SimdConstant::I8x16& mask = control.asInt8x16();
 #  ifdef DEBUG
-      DebugOnly<int> i;
+      mozilla::DebugOnly<int> i;
       for (i = 0; i < 16 && mask[i] == i; i++) {
       }
       MOZ_ASSERT(i < 16, "Should have been a MOVE operation");
@@ -3581,7 +3582,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
     case LWasmPermuteSimd128::PERMUTE_16x8: {
       const SimdConstant::I16x8& mask = control.asInt16x8();
 #  ifdef DEBUG
-      DebugOnly<int> i;
+      mozilla::DebugOnly<int> i;
       for (i = 0; i < 8 && mask[i] == i; i++) {
       }
       MOZ_ASSERT(i < 8, "Should have been a MOVE operation");
@@ -3592,7 +3593,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
     case LWasmPermuteSimd128::PERMUTE_32x4: {
       const SimdConstant::I32x4& mask = control.asInt32x4();
 #  ifdef DEBUG
-      DebugOnly<int> i;
+      mozilla::DebugOnly<int> i;
       for (i = 0; i < 4 && mask[i] == i; i++) {
       }
       MOZ_ASSERT(i < 4, "Should have been a MOVE operation");

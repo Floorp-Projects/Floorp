@@ -7,7 +7,6 @@
 #ifndef jit_Snapshot_h
 #define jit_Snapshot_h
 
-#include "mozilla/Alignment.h"
 #include "mozilla/Attributes.h"
 
 #include "jit/CompactBuffer.h"

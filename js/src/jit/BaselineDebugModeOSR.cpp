@@ -10,17 +10,15 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Invalidation.h"
-#include "jit/Ion.h"
-#include "jit/JitcodeMap.h"
+#include "jit/IonScript.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JSJitFrameIter.h"
-#include "jit/PerfSpewer.h"
 
 #include "jit/JitScript-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
-#include "jit/MacroAssembler-inl.h"
-#include "vm/Stack-inl.h"
+#include "vm/JSScript-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::jit;

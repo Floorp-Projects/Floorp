@@ -6,15 +6,12 @@
 
 #include "jit/x64/CodeGenerator-x64.h"
 
-#include "mozilla/MathAlgorithms.h"
-
 #include "jit/CodeGenerator.h"
 #include "jit/MIR.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
-#include "vm/JSScript-inl.h"
 
 using namespace js;
 using namespace js::jit;

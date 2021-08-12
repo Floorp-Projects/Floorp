@@ -12,21 +12,14 @@
 
 #include <algorithm>
 
-#include "jsfriendapi.h"
-
-#include "gc/GCProbes.h"
-#include "jit/ABIFunctions.h"
 #include "jit/AtomicOp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
-#include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitFrames.h"
 #include "jit/JitOptions.h"
 #include "jit/JitRuntime.h"
-#include "jit/Lowering.h"
-#include "jit/MIR.h"
 #include "jit/MoveEmitter.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
@@ -47,13 +40,9 @@
 #include "wasm/WasmTlsData.h"
 #include "wasm/WasmValidate.h"
 
-#include "gc/Nursery-inl.h"
-#include "jit/ABIFunctionList-inl.h"
-#include "jit/shared/Lowering-shared-inl.h"
 #include "jit/TemplateObject-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/Interpreter-inl.h"
-#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::jit;

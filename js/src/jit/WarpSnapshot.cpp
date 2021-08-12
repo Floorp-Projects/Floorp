@@ -7,18 +7,16 @@
 #include "jit/WarpSnapshot.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/IntegerPrintfMacros.h"
 
 #include <type_traits>
 
 #include "jit/CacheIRCompiler.h"
 #include "jit/CacheIRSpewer.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/GetterSetter.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"
-
-#include "vm/EnvironmentObject-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -401,9 +401,9 @@ class InterpreterFrameInfo : public FrameInfo {
 
   void popRegsAndSync(uint32_t uses);
 
-  void pop() { popn(1); }
+  inline void pop();
 
-  void popn(uint32_t n) { masm.addToStackPtr(Imm32(n * sizeof(Value))); }
+  inline void popn(uint32_t n);
 
   void popn(Register reg) {
     // sp := sp + reg * sizeof(Value)
