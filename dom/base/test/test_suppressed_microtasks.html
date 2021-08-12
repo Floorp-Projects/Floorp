@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test microtask suppression</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    var previousTask = -1;
+    function test() {
+      let win = window.open("about:blank");
+      win.onload = function() {
+        win.onmessage = function() {
+          win.start = win.performance.now();
+          win.onmessage = function() {
+            let period = win.performance.now() - win.start;
+            win.opener.ok(
+              period < 200,
+              "Running a task should be fast. Took " + period + "ms.");
+            win.onmessage = null;
+          }
+          win.postMessage("measurementMessage", "*");
+        }
+        win.postMessage("initialMessage", "*");
+
+        const last = 500000;
+        for (let i = 0; i < last + 1; ++i) {
+          window.queueMicrotask(function() {
+            // Check that once microtasks are unsuppressed, they are handled in
+            // the correct order.
+            if (previousTask !=  i - 1) {
+              // Explicitly optimize out cases which pass.
+              ok(false, "Microtasks should be handled in order.");
+            }
+            previousTask = i;
+            if (i == last) {
+              win.close();
+              SimpleTest.finish();
+            }
+          });
+        }
+
+        // Synchronous XMLHttpRequest suppresses microtasks.
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "slow.sjs", false);
+        xhr.send();
+      }
+    }
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
