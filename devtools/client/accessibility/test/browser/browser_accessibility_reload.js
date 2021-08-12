@@ -59,8 +59,11 @@ const tests = [
   },
   {
     desc: "Reload the page.",
-    setup: async ({ panel }) =>
-      panel.accessibilityProxy.commands.targetCommand.reloadTopLevelTarget(),
+    setup: async ({ panel }) => {
+      const onReloaded = panel.once("reloaded");
+      panel.accessibilityProxy.commands.targetCommand.reloadTopLevelTarget();
+      await onReloaded;
+    },
     expected: {
       tree: [
         {
@@ -76,7 +79,10 @@ const tests = [
   },
   {
     desc: "Navigate to a new page.",
-    setup: () => navigateTo(buildURL(TEST_URI_2)),
+    setup: async () => {
+      // `navigate` waits for the "reloaded" event so we don't need to do it explicitly here
+      await navigateTo(buildURL(TEST_URI_2));
+    },
     expected: {
       tree: [
         {
