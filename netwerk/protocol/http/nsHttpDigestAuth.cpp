@@ -23,6 +23,10 @@
 #include "nsICryptoHash.h"
 #include "nsComponentManagerUtils.h"
 
+#define DigestLength(algorithm)                                            \
+  (((algorithm) & (ALGO_SHA256 | ALGO_SHA256_SESS)) ? SHA256_DIGEST_LENGTH \
+                                                    : MD5_DIGEST_LENGTH)
+
 namespace mozilla {
 namespace net {
 
@@ -51,7 +55,8 @@ NS_IMPL_ISUPPORTS(nsHttpDigestAuth, nsIHttpAuthenticator)
 // nsHttpDigestAuth <protected>
 //-----------------------------------------------------------------------------
 
-nsresult nsHttpDigestAuth::MD5Hash(const char* buf, uint32_t len) {
+nsresult nsHttpDigestAuth::DigestHash(const char* buf, uint32_t len,
+                                      uint16_t algorithm) {
   nsresult rv;
 
   // Cache a reference to the nsICryptoHash instance since we'll be calling
@@ -64,7 +69,14 @@ nsresult nsHttpDigestAuth::MD5Hash(const char* buf, uint32_t len) {
     }
   }
 
-  rv = mVerifier->Init(nsICryptoHash::MD5);
+  uint32_t dlen;
+  if (algorithm & (ALGO_SHA256 | ALGO_SHA256_SESS)) {
+    rv = mVerifier->Init(nsICryptoHash::SHA256);
+    dlen = SHA256_DIGEST_LENGTH;
+  } else {
+    rv = mVerifier->Init(nsICryptoHash::MD5);
+    dlen = MD5_DIGEST_LENGTH;
+  }
   if (NS_FAILED(rv)) return rv;
 
   rv = mVerifier->Update((unsigned char*)buf, len);
@@ -74,7 +86,7 @@ nsresult nsHttpDigestAuth::MD5Hash(const char* buf, uint32_t len) {
   rv = mVerifier->Finish(false, hashString);
   if (NS_FAILED(rv)) return rv;
 
-  NS_ENSURE_STATE(hashString.Length() == sizeof(mHashBuf));
+  NS_ENSURE_STATE(hashString.Length() == dlen);
   memcpy(mHashBuf, hashString.get(), hashString.Length());
 
   return rv;
@@ -149,6 +161,14 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel* authChannel,
 
   nsresult rv = ParseChallenge(challenge, realm, domain, nonce, opaque, &stale,
                                &algorithm, &qop);
+
+  if (!(algorithm &
+        (ALGO_MD5 | ALGO_MD5_SESS | ALGO_SHA256 | ALGO_SHA256_SESS))) {
+    // they asked for an algorithm that we do not support yet (like SHA-512/256)
+    NS_WARNING("unsupported algorithm requested by Digest authentication");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   if (NS_FAILED(rv)) return rv;
 
   // if the challenge has the "stale" flag set, then the user identity is not
@@ -219,10 +239,11 @@ nsHttpDigestAuth::GenerateCredentials(
     return rv;
   }
 
-  char ha1_digest[EXPANDED_DIGEST_LENGTH + 1];
-  char ha2_digest[EXPANDED_DIGEST_LENGTH + 1];
-  char response_digest[EXPANDED_DIGEST_LENGTH + 1];
-  char upload_data_digest[EXPANDED_DIGEST_LENGTH + 1];
+  const uint32_t dhexlen = 2 * DigestLength(algorithm) + 1;
+  char ha1_digest[dhexlen];
+  char ha2_digest[dhexlen];
+  char response_digest[dhexlen];
+  char upload_data_digest[dhexlen];
 
   if (qop & QOP_AUTH_INT) {
     // we do not support auth-int "quality of protection" currently
@@ -258,7 +279,8 @@ nsHttpDigestAuth::GenerateCredentials(
 #endif
   }
 
-  if (!(algorithm & ALGO_MD5 || algorithm & ALGO_MD5_SESS)) {
+  if (!(algorithm &
+        (ALGO_MD5 | ALGO_MD5_SESS | ALGO_SHA256 | ALGO_SHA256_SESS))) {
     // they asked only for algorithms that we do not support
     NS_WARNING("unsupported algorithm requested by Digest authentication");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -309,11 +331,12 @@ nsHttpDigestAuth::GenerateCredentials(
   rv = CalculateHA1(cUser, cPass, realm, algorithm, nonce, cnonce, ha1_digest);
   if (NS_FAILED(rv)) return rv;
 
-  rv = CalculateHA2(httpMethod, path, qop, upload_data_digest, ha2_digest);
+  rv = CalculateHA2(httpMethod, path, algorithm, qop, upload_data_digest,
+                    ha2_digest);
   if (NS_FAILED(rv)) return rv;
 
-  rv = CalculateResponse(ha1_digest, ha2_digest, nonce, qop, nonce_count,
-                         cnonce, response_digest);
+  rv = CalculateResponse(ha1_digest, ha2_digest, algorithm, nonce, qop,
+                         nonce_count, cnonce, response_digest);
   if (NS_FAILED(rv)) return rv;
 
   //
@@ -346,6 +369,10 @@ nsHttpDigestAuth::GenerateCredentials(
     authString.AppendLiteral("\", algorithm=");
     if (algorithm & ALGO_MD5_SESS) {
       authString.AppendLiteral("MD5-sess");
+    } else if (algorithm & ALGO_SHA256) {
+      authString.AppendLiteral("SHA-256");
+    } else if (algorithm & ALGO_SHA256_SESS) {
+      authString.AppendLiteral("SHA-256-sess");
     } else {
       authString.AppendLiteral("MD5");
     }
@@ -391,10 +418,11 @@ nsHttpDigestAuth::GetAuthFlags(uint32_t* flags) {
 }
 
 nsresult nsHttpDigestAuth::CalculateResponse(
-    const char* ha1_digest, const char* ha2_digest, const nsCString& nonce,
-    uint16_t qop, const char* nonce_count, const nsCString& cnonce,
-    char* result) {
-  uint32_t len = 2 * EXPANDED_DIGEST_LENGTH + nonce.Length() + 2;
+    const char* ha1_digest, const char* ha2_digest, uint16_t algorithm,
+    const nsCString& nonce, uint16_t qop, const char* nonce_count,
+    const nsCString& cnonce, char* result) {
+  const uint32_t dhexlen = 2 * DigestLength(algorithm);
+  uint32_t len = 2 * dhexlen + nonce.Length() + 2;
 
   if (qop & QOP_AUTH || qop & QOP_AUTH_INT) {
     len += cnonce.Length() + NONCE_COUNT_LENGTH + 3;
@@ -408,7 +436,7 @@ nsresult nsHttpDigestAuth::CalculateResponse(
   nsAutoCString contents;
   contents.SetCapacity(len);
 
-  contents.Append(ha1_digest, EXPANDED_DIGEST_LENGTH);
+  contents.Append(ha1_digest, dhexlen);
   contents.Append(':');
   contents.Append(nonce);
   contents.Append(':');
@@ -425,17 +453,19 @@ nsresult nsHttpDigestAuth::CalculateResponse(
     }
   }
 
-  contents.Append(ha2_digest, EXPANDED_DIGEST_LENGTH);
+  contents.Append(ha2_digest, dhexlen);
 
-  nsresult rv = MD5Hash(contents.get(), contents.Length());
-  if (NS_SUCCEEDED(rv)) rv = ExpandToHex(mHashBuf, result);
+  nsresult rv = DigestHash(contents.get(), contents.Length(), algorithm);
+  if (NS_SUCCEEDED(rv)) rv = ExpandToHex(mHashBuf, result, algorithm);
   return rv;
 }
 
-nsresult nsHttpDigestAuth::ExpandToHex(const char* digest, char* result) {
+nsresult nsHttpDigestAuth::ExpandToHex(const char* digest, char* result,
+                                       uint16_t algorithm) {
   int16_t index, value;
+  const int16_t dlen = DigestLength(algorithm);
 
-  for (index = 0; index < DIGEST_LENGTH; index++) {
+  for (index = 0; index < dlen; index++) {
     value = (digest[index] >> 4) & 0xf;
     if (value < 10) {
       result[index * 2] = value + '0';
@@ -451,7 +481,7 @@ nsresult nsHttpDigestAuth::ExpandToHex(const char* digest, char* result) {
     }
   }
 
-  result[EXPANDED_DIGEST_LENGTH] = 0;
+  result[2 * dlen] = 0;
   return NS_OK;
 }
 
@@ -461,10 +491,10 @@ nsresult nsHttpDigestAuth::CalculateHA1(const nsCString& username,
                                         uint16_t algorithm,
                                         const nsCString& nonce,
                                         const nsCString& cnonce, char* result) {
+  const int16_t dhexlen = 2 * DigestLength(algorithm);
   int16_t len = username.Length() + password.Length() + realm.Length() + 2;
-  if (algorithm & ALGO_MD5_SESS) {
-    int16_t exlen =
-        EXPANDED_DIGEST_LENGTH + nonce.Length() + cnonce.Length() + 2;
+  if (algorithm & (ALGO_MD5_SESS | ALGO_SHA256_SESS)) {
+    int16_t exlen = dhexlen + nonce.Length() + cnonce.Length() + 2;
     if (exlen > len) len = exlen;
   }
 
@@ -478,36 +508,38 @@ nsresult nsHttpDigestAuth::CalculateHA1(const nsCString& username,
   contents.Append(password);
 
   nsresult rv;
-  rv = MD5Hash(contents.get(), contents.Length());
+  rv = DigestHash(contents.get(), contents.Length(), algorithm);
   if (NS_FAILED(rv)) return rv;
 
-  if (algorithm & ALGO_MD5_SESS) {
-    char part1[EXPANDED_DIGEST_LENGTH + 1];
-    rv = ExpandToHex(mHashBuf, part1);
+  if (algorithm & (ALGO_MD5_SESS | ALGO_SHA256_SESS)) {
+    char part1[dhexlen + 1];
+    rv = ExpandToHex(mHashBuf, part1, algorithm);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    contents.Assign(part1, EXPANDED_DIGEST_LENGTH);
+    contents.Assign(part1, dhexlen);
     contents.Append(':');
     contents.Append(nonce);
     contents.Append(':');
     contents.Append(cnonce);
 
-    rv = MD5Hash(contents.get(), contents.Length());
+    rv = DigestHash(contents.get(), contents.Length(), algorithm);
     if (NS_FAILED(rv)) return rv;
   }
 
-  return ExpandToHex(mHashBuf, result);
+  return ExpandToHex(mHashBuf, result, algorithm);
 }
 
 nsresult nsHttpDigestAuth::CalculateHA2(const nsCString& method,
-                                        const nsCString& path, uint16_t qop,
+                                        const nsCString& path,
+                                        uint16_t algorithm, uint16_t qop,
                                         const char* bodyDigest, char* result) {
   uint16_t methodLen = method.Length();
   uint32_t pathLen = path.Length();
   uint32_t len = methodLen + pathLen + 1;
+  const uint32_t dhexlen = 2 * DigestLength(algorithm);
 
   if (qop & QOP_AUTH_INT) {
-    len += EXPANDED_DIGEST_LENGTH + 1;
+    len += dhexlen + 1;
   }
 
   nsAutoCString contents;
@@ -519,11 +551,11 @@ nsresult nsHttpDigestAuth::CalculateHA2(const nsCString& method,
 
   if (qop & QOP_AUTH_INT) {
     contents.Append(':');
-    contents.Append(bodyDigest, EXPANDED_DIGEST_LENGTH);
+    contents.Append(bodyDigest, dhexlen);
   }
 
-  nsresult rv = MD5Hash(contents.get(), contents.Length());
-  if (NS_SUCCEEDED(rv)) rv = ExpandToHex(mHashBuf, result);
+  nsresult rv = DigestHash(contents.get(), contents.Length(), algorithm);
+  if (NS_SUCCEEDED(rv)) rv = ExpandToHex(mHashBuf, result, algorithm);
   return rv;
 }
 
@@ -606,6 +638,13 @@ nsresult nsHttpDigestAuth::ParseChallenge(const char* challenge,
       } else if (valueLength == 8 && nsCRT::strncasecmp(challenge + valueStart,
                                                         "MD5-sess", 8) == 0) {
         *algorithm |= ALGO_MD5_SESS;
+      } else if (valueLength == 7 && nsCRT::strncasecmp(challenge + valueStart,
+                                                        "SHA-256", 7) == 0) {
+        *algorithm |= ALGO_SHA256;
+      } else if (valueLength == 12 &&
+                 nsCRT::strncasecmp(challenge + valueStart, "SHA-256-sess",
+                                    12) == 0) {
+        *algorithm |= ALGO_SHA256_SESS;
       }
     } else if (nameLength == 3 &&
                nsCRT::strncasecmp(challenge + nameStart, "qop", 3) == 0) {
