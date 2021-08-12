@@ -47,14 +47,15 @@ void BrowserBridgeHost::ResumeLoad(uint64_t aPendingSwitchId) {
   Unused << mBridge->SendResumeLoad(aPendingSwitchId);
 }
 
-void BrowserBridgeHost::DestroyStart() { DestroyComplete(); }
+void BrowserBridgeHost::DestroyStart() {
+  // We don't clear the bridge until BrowserBridgeChild::ActorDestroy is called,
+  // which will end up calling DestroyComplete().
+  if (mBridge) {
+    Unused << mBridge->SendBeginDestroy();
+  }
+}
 
 void BrowserBridgeHost::DestroyComplete() {
-  if (!mBridge) {
-    return;
-  }
-
-  Unused << mBridge->Send__delete__(mBridge);
   mBridge = nullptr;
 }
 
