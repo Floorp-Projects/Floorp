@@ -19,8 +19,14 @@
 #   - true (default): auto generate boilerplate for this LIR opcode
 #   - false: do not generate boilerplate for this LIR opcode
 #
+# call_instruction
+# ================
+# Used to define call instructions. 
+#   - attribute not specified (default): no code generated
+#   - true: generates a call to setIsCall in the op's constructor
+#
 # mir_op
-# ======
+# ============
 # If a LIR instruction corresponds one-to-one with a particular MIR 
 # instruction, this will generate a method that returns that MIR 
 # instruction.
@@ -1422,10 +1428,12 @@
   gen_boilerplate: false
 
 - name: ThrowRuntimeLexicalError
-  gen_boilerplate: false
+  call_instruction: true
+  mir_op: true
 
 - name: ThrowMsg
-  gen_boilerplate: false
+  call_instruction: true
+  mir_op: true
 
 - name: GlobalDeclInstantiation
   mir_op: true
