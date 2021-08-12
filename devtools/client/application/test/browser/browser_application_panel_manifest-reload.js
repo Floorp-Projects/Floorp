@@ -19,7 +19,7 @@ add_task(async function() {
   selectPage(panel, "manifest");
 
   info("Waiting for the 'no manifest' message to appear");
-  await waitUntil(() => doc.querySelector(".js-manifest-empty") !== null);
+  await waitFor(() => doc.querySelector(".js-manifest-empty") !== null);
   ok(true, "Manifest page displays a 'no manifest' message");
 
   info("Navigating to a page with a manifest");
@@ -27,7 +27,7 @@ add_task(async function() {
   await navigateTo(url);
 
   info("Waiting for the manifest to show up");
-  await waitUntil(() => doc.querySelector(".js-manifest") !== null);
+  await waitFor(() => doc.querySelector(".js-manifest") !== null);
   ok(true, "Manifest displayed successfully");
 
   info("Navigating to a page with a manifest that fails to load");
@@ -35,20 +35,14 @@ add_task(async function() {
   await navigateTo(url);
 
   info("Waiting for the manifest to fail to load");
-  await waitUntil(
-    () => doc.querySelector(".js-manifest-loaded-error") !== null
-  );
+  await waitFor(() => doc.querySelector(".js-manifest-loaded-error") !== null);
   ok(true, "Manifest page displays loading error");
 
   info("Reloading");
   await navigateTo(url);
 
-  info("Waiting for the loading message to appear");
-  await waitUntil(() => doc.querySelector(".js-manifest-loading") !== null);
   info("Waiting for the manifest to fail to load");
-  await waitUntil(
-    () => doc.querySelector(".js-manifest-loaded-error") !== null
-  );
+  await waitFor(() => doc.querySelector(".js-manifest-loaded-error") !== null);
   ok(true, "Manifest page displays loading error");
 
   // close the tab
