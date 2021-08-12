@@ -34,14 +34,20 @@ using namespace media;
 using namespace layers;
 using MimeTypeResult = Maybe<nsLiteralCString>;
 
-static const char* GetModeName(webrtc::H264PacketizationMode aMode) {
-  if (aMode == webrtc::H264PacketizationMode::SingleNalUnit) {
-    return "SingleNalUnit";
+static const char* PacketModeStr(const webrtc::CodecSpecificInfo& aInfo) {
+  MOZ_ASSERT(aInfo.codecType != webrtc::VideoCodecType::kVideoCodecUnknown);
+
+  if (aInfo.codecType != webrtc::VideoCodecType::kVideoCodecH264) {
+    return "N/A";
   }
-  if (aMode == webrtc::H264PacketizationMode::NonInterleaved) {
-    return "NonInterleaved";
+  switch (aInfo.codecSpecific.H264.packetization_mode) {
+    case webrtc::H264PacketizationMode::SingleNalUnit:
+      return "SingleNalUnit";
+    case webrtc::H264PacketizationMode::NonInterleaved:
+      return "NonInterleaved";
+    default:
+      return "Unknown";
   }
-  return "Unknown";
 }
 
 static MimeTypeResult ConvertWebrtcCodecTypeToMimeType(
@@ -94,10 +100,6 @@ WebrtcMediaDataEncoder::WebrtcMediaDataEncoder()
 int32_t WebrtcMediaDataEncoder::InitEncode(
     const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
     size_t aMaxPayloadSize) {
-  MOZ_ASSERT(
-      aCodecSettings->codecType == webrtc::VideoCodecType::kVideoCodecH264,
-      "Only support h264 for now.");
-
   if (mEncoder) {
     // Clean existing encoder.
     Shutdown();
@@ -109,12 +111,25 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
   }
 
   LOG("Init encode, mimeType %s, mode %s", mInfo.mMimeType.get(),
-      GetModeName(mMode));
+      PacketModeStr(mCodecSpecific));
   if (!media::Await(do_AddRef(mTaskQueue), encoder->Init()).IsResolve()) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   mEncoder = std::move(encoder);
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+static void FillCodecSpecficInfo(const webrtc::VideoCodec* aCodecSettings,
+                                 webrtc::CodecSpecificInfo& aInfo) {
+  MOZ_ASSERT(aCodecSettings);
+
+  aInfo.codecType = aCodecSettings->codecType;
+  if (aCodecSettings->codecType == webrtc::VideoCodecType::kVideoCodecH264) {
+    aInfo.codecSpecific.H264.packetization_mode =
+        aCodecSettings->H264().packetizationMode == 1
+            ? webrtc::H264PacketizationMode::NonInterleaved
+            : webrtc::H264PacketizationMode::SingleNalUnit;
+  }
 }
 
 bool WebrtcMediaDataEncoder::SetupConfig(
@@ -127,9 +142,7 @@ bool WebrtcMediaDataEncoder::SetupConfig(
   }
   mInfo = VideoInfo(aCodecSettings->width, aCodecSettings->height);
   mInfo.mMimeType = mimeType.extract();
-  mMode = aCodecSettings->H264().packetizationMode == 1
-              ? webrtc::H264PacketizationMode::NonInterleaved
-              : webrtc::H264PacketizationMode::SingleNalUnit;
+  FillCodecSpecficInfo(aCodecSettings, mCodecSpecific);
   mMaxFrameRate = aCodecSettings->maxFramerate;
   // Those bitrates in codec setting are all kbps, so we have to covert them to
   // bps.
@@ -282,12 +295,8 @@ int32_t WebrtcMediaDataEncoder::Encode(
                   entries[idx].mSize);
           }
 
-          webrtc::CodecSpecificInfo codecSpecific;
-          codecSpecific.codecType = webrtc::kVideoCodecH264;
-          codecSpecific.codecSpecific.H264.packetization_mode = mMode;
-
           LOG_V("Send encoded image");
-          self->mCallback->OnEncodedImage(image, &codecSpecific, &header);
+          self->mCallback->OnEncodedImage(image, &mCodecSpecific, &header);
           self->mBitrateAdjuster.Update(image._size);
         }
       },
