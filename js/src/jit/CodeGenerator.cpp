@@ -3782,7 +3782,7 @@ void CodeGenerator::visitOsrReturnValue(LOsrReturnValue* lir) {
 }
 
 void CodeGenerator::visitStackArgT(LStackArgT* lir) {
-  const LAllocation* arg = lir->getArgument();
+  const LAllocation* arg = lir->arg();
   MIRType argType = lir->type();
   uint32_t argslot = lir->argslot();
   MOZ_ASSERT(argslot - 1u < graph.argumentSlotCount());
@@ -3881,11 +3881,11 @@ void CodeGenerator::visitMoveGroup(LMoveGroup* group) {
 }
 
 void CodeGenerator::visitInteger(LInteger* lir) {
-  masm.move32(Imm32(lir->getValue()), ToRegister(lir->output()));
+  masm.move32(Imm32(lir->i32()), ToRegister(lir->output()));
 }
 
 void CodeGenerator::visitInteger64(LInteger64* lir) {
-  masm.move64(Imm64(lir->getValue()), ToOutRegister64(lir));
+  masm.move64(Imm64(lir->i64()), ToOutRegister64(lir));
 }
 
 void CodeGenerator::visitPointer(LPointer* lir) {
@@ -15373,7 +15373,7 @@ void CodeGenerator::visitBigIntAsUintN32(LBigIntAsUintN32* ins) {
 }
 
 void CodeGenerator::visitGuardNonGCThing(LGuardNonGCThing* ins) {
-  ValueOperand input = ToValue(ins, LGuardNonGCThing::Input);
+  ValueOperand input = ToValue(ins, LGuardNonGCThing::InputIndex);
 
   Label bail;
   masm.branchTestGCThing(Assembler::Equal, input, &bail);
@@ -15381,8 +15381,8 @@ void CodeGenerator::visitGuardNonGCThing(LGuardNonGCThing* ins) {
 }
 
 void CodeGenerator::visitToHashableNonGCThing(LToHashableNonGCThing* ins) {
-  ValueOperand input = ToValue(ins, LToHashableNonGCThing::Input);
-  FloatRegister tempFloat = ToFloatRegister(ins->tempFloat());
+  ValueOperand input = ToValue(ins, LToHashableNonGCThing::InputIndex);
+  FloatRegister tempFloat = ToFloatRegister(ins->temp0());
   ValueOperand output = ToOutValue(ins);
 
   masm.toHashableNonGCThing(input, output, tempFloat);
@@ -15403,8 +15403,8 @@ void CodeGenerator::visitToHashableString(LToHashableString* ins) {
 }
 
 void CodeGenerator::visitToHashableValue(LToHashableValue* ins) {
-  ValueOperand input = ToValue(ins, LToHashableValue::Input);
-  FloatRegister tempFloat = ToFloatRegister(ins->tempFloat());
+  ValueOperand input = ToValue(ins, LToHashableValue::InputIndex);
+  FloatRegister tempFloat = ToFloatRegister(ins->temp0());
   ValueOperand output = ToOutValue(ins);
 
   Register str = output.scratchReg();
@@ -15417,8 +15417,8 @@ void CodeGenerator::visitToHashableValue(LToHashableValue* ins) {
 }
 
 void CodeGenerator::visitHashNonGCThing(LHashNonGCThing* ins) {
-  ValueOperand input = ToValue(ins, LHashNonGCThing::Input);
-  Register temp = ToRegister(ins->temp());
+  ValueOperand input = ToValue(ins, LHashNonGCThing::InputIndex);
+  Register temp = ToRegister(ins->temp0());
   Register output = ToRegister(ins->output());
 
   masm.prepareHashNonGCThing(input, output, temp);
@@ -15426,7 +15426,7 @@ void CodeGenerator::visitHashNonGCThing(LHashNonGCThing* ins) {
 
 void CodeGenerator::visitHashString(LHashString* ins) {
   Register input = ToRegister(ins->input());
-  Register temp = ToRegister(ins->temp());
+  Register temp = ToRegister(ins->temp0());
   Register output = ToRegister(ins->output());
 
   masm.prepareHashString(input, output, temp);
@@ -15441,80 +15441,80 @@ void CodeGenerator::visitHashSymbol(LHashSymbol* ins) {
 
 void CodeGenerator::visitHashBigInt(LHashBigInt* ins) {
   Register input = ToRegister(ins->input());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
   Register output = ToRegister(ins->output());
 
-  masm.prepareHashBigInt(input, output, temp1, temp2, temp3);
+  masm.prepareHashBigInt(input, output, temp0, temp1, temp2);
 }
 
 void CodeGenerator::visitHashObject(LHashObject* ins) {
   Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LHashObject::Input);
+  ValueOperand input = ToValue(ins, LHashObject::InputIndex);
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
   Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
   Register output = ToRegister(ins->output());
 
-  masm.prepareHashObject(setObj, input, output, temp1, temp2, temp3, temp4);
+  masm.prepareHashObject(setObj, input, output, temp0, temp1, temp2, temp3);
 }
 
 void CodeGenerator::visitHashValue(LHashValue* ins) {
   Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LHashValue::Input);
+  ValueOperand input = ToValue(ins, LHashValue::InputIndex);
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
   Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
   Register output = ToRegister(ins->output());
 
-  masm.prepareHashValue(setObj, input, output, temp1, temp2, temp3, temp4);
+  masm.prepareHashValue(setObj, input, output, temp0, temp1, temp2, temp3);
 }
 
 void CodeGenerator::visitSetObjectHasNonBigInt(LSetObjectHasNonBigInt* ins) {
   Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LSetObjectHasNonBigInt::Input);
+  ValueOperand input = ToValue(ins, LSetObjectHasNonBigInt::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
   Register output = ToRegister(ins->output());
 
-  masm.setObjectHasNonBigInt(setObj, input, hash, output, temp1, temp2);
+  masm.setObjectHasNonBigInt(setObj, input, hash, output, temp0, temp1);
 }
 
 void CodeGenerator::visitSetObjectHasBigInt(LSetObjectHasBigInt* ins) {
   Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LSetObjectHasBigInt::Input);
+  ValueOperand input = ToValue(ins, LSetObjectHasBigInt::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
   Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
   Register output = ToRegister(ins->output());
 
-  masm.setObjectHasBigInt(setObj, input, hash, output, temp1, temp2, temp3,
-                          temp4);
+  masm.setObjectHasBigInt(setObj, input, hash, output, temp0, temp1, temp2,
+                          temp3);
 }
 
 void CodeGenerator::visitSetObjectHasValue(LSetObjectHasValue* ins) {
   Register setObj = ToRegister(ins->setObject());
-  ValueOperand input = ToValue(ins, LSetObjectHasValue::Input);
+  ValueOperand input = ToValue(ins, LSetObjectHasValue::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
   Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
   Register output = ToRegister(ins->output());
 
-  masm.setObjectHasValue(setObj, input, hash, output, temp1, temp2, temp3,
-                         temp4);
+  masm.setObjectHasValue(setObj, input, hash, output, temp0, temp1, temp2,
+                         temp3);
 }
 
 void CodeGenerator::visitSetObjectHasValueVMCall(
     LSetObjectHasValueVMCall* ins) {
-  pushArg(ToValue(ins, LSetObjectHasValueVMCall::Input));
+  pushArg(ToValue(ins, LSetObjectHasValueVMCall::InputIndex));
   pushArg(ToRegister(ins->setObject()));
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
@@ -15523,46 +15523,46 @@ void CodeGenerator::visitSetObjectHasValueVMCall(
 
 void CodeGenerator::visitMapObjectHasNonBigInt(LMapObjectHasNonBigInt* ins) {
   Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectHasNonBigInt::Input);
+  ValueOperand input = ToValue(ins, LMapObjectHasNonBigInt::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
   Register output = ToRegister(ins->output());
 
-  masm.mapObjectHasNonBigInt(mapObj, input, hash, output, temp1, temp2);
+  masm.mapObjectHasNonBigInt(mapObj, input, hash, output, temp0, temp1);
 }
 
 void CodeGenerator::visitMapObjectHasBigInt(LMapObjectHasBigInt* ins) {
   Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectHasBigInt::Input);
+  ValueOperand input = ToValue(ins, LMapObjectHasBigInt::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
   Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
   Register output = ToRegister(ins->output());
 
-  masm.mapObjectHasBigInt(mapObj, input, hash, output, temp1, temp2, temp3,
-                          temp4);
+  masm.mapObjectHasBigInt(mapObj, input, hash, output, temp0, temp1, temp2,
+                          temp3);
 }
 
 void CodeGenerator::visitMapObjectHasValue(LMapObjectHasValue* ins) {
   Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectHasValue::Input);
+  ValueOperand input = ToValue(ins, LMapObjectHasValue::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
   Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
   Register output = ToRegister(ins->output());
 
-  masm.mapObjectHasValue(mapObj, input, hash, output, temp1, temp2, temp3,
-                         temp4);
+  masm.mapObjectHasValue(mapObj, input, hash, output, temp0, temp1, temp2,
+                         temp3);
 }
 
 void CodeGenerator::visitMapObjectHasValueVMCall(
     LMapObjectHasValueVMCall* ins) {
-  pushArg(ToValue(ins, LMapObjectHasValueVMCall::Input));
+  pushArg(ToValue(ins, LMapObjectHasValueVMCall::InputIndex));
   pushArg(ToRegister(ins->mapObject()));
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
@@ -15571,47 +15571,47 @@ void CodeGenerator::visitMapObjectHasValueVMCall(
 
 void CodeGenerator::visitMapObjectGetNonBigInt(LMapObjectGetNonBigInt* ins) {
   Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectGetNonBigInt::Input);
+  ValueOperand input = ToValue(ins, LMapObjectGetNonBigInt::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
-  Register temp2 = ToRegister(ins->temp2());
   ValueOperand output = ToOutValue(ins);
 
-  masm.mapObjectGetNonBigInt(mapObj, input, hash, output, temp1, temp2,
+  masm.mapObjectGetNonBigInt(mapObj, input, hash, output, temp0, temp1,
                              output.scratchReg());
 }
 
 void CodeGenerator::visitMapObjectGetBigInt(LMapObjectGetBigInt* ins) {
   Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectGetBigInt::Input);
+  ValueOperand input = ToValue(ins, LMapObjectGetBigInt::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
   Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
   ValueOperand output = ToOutValue(ins);
 
-  masm.mapObjectGetBigInt(mapObj, input, hash, output, temp1, temp2, temp3,
-                          temp4, output.scratchReg());
+  masm.mapObjectGetBigInt(mapObj, input, hash, output, temp0, temp1, temp2,
+                          temp3, output.scratchReg());
 }
 
 void CodeGenerator::visitMapObjectGetValue(LMapObjectGetValue* ins) {
   Register mapObj = ToRegister(ins->mapObject());
-  ValueOperand input = ToValue(ins, LMapObjectGetValue::Input);
+  ValueOperand input = ToValue(ins, LMapObjectGetValue::InputIndex);
   Register hash = ToRegister(ins->hash());
+  Register temp0 = ToRegister(ins->temp0());
   Register temp1 = ToRegister(ins->temp1());
   Register temp2 = ToRegister(ins->temp2());
   Register temp3 = ToRegister(ins->temp3());
-  Register temp4 = ToRegister(ins->temp4());
   ValueOperand output = ToOutValue(ins);
 
-  masm.mapObjectGetValue(mapObj, input, hash, output, temp1, temp2, temp3,
-                         temp4, output.scratchReg());
+  masm.mapObjectGetValue(mapObj, input, hash, output, temp0, temp1, temp2,
+                         temp3, output.scratchReg());
 }
 
 void CodeGenerator::visitMapObjectGetValueVMCall(
     LMapObjectGetValueVMCall* ins) {
-  pushArg(ToValue(ins, LMapObjectGetValueVMCall::Input));
+  pushArg(ToValue(ins, LMapObjectGetValueVMCall::InputIndex));
   pushArg(ToRegister(ins->mapObject()));
 
   using Fn =
