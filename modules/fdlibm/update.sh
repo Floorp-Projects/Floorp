@@ -5,7 +5,7 @@
 
 set -e
 
-API_BASE_URL=https://api.github.com/repos/freebsd/freebsd-src
+API_BASE_URL=https://api.github.com/repos/freebsd/freebsd
 
 get_commit() {
     curl -s "${API_BASE_URL}/commits?path=lib/msun/src&per_page=1" \

@@ -638,8 +638,6 @@ bool shell::compileOnly = false;
 bool shell::disableOOMFunctions = false;
 bool shell::defaultToSameCompartment = true;
 
-bool shell::useFdlibmForSinCosTan = false;
-
 #ifdef DEBUG
 bool shell::dumpEntrainedVariables = false;
 bool shell::OOM_printAllocationCount = false;
@@ -11276,7 +11274,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableTopLevelAwait = op.getBoolOption("enable-top-level-await");
   enableClassStaticBlocks = op.getBoolOption("enable-class-static-blocks");
   useOffThreadParseGlobal = op.getBoolOption("off-thread-parse-global");
-  useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
@@ -11310,7 +11307,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setClassStaticBlocks(enableClassStaticBlocks);
 
   JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
-  JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
 
   // Check --fast-warmup first because it sets default warm-up thresholds. These
   // thresholds can then be overridden below by --ion-eager and other flags.
@@ -12494,9 +12490,7 @@ int main(int argc, char** argv) {
       !op.addBoolOption('\0', "reprl", "Enable REPRL mode for fuzzing") ||
 #endif
       !op.addStringOption('\0', "telemetry-dir", "[directory]",
-                          "Output telemetry results in a directory") ||
-      !op.addBoolOption('\0', "use-fdlibm-for-sin-cos-tan",
-                        "Use fdlibm for Math.sin, Math.cos, and Math.tan")) {
+                          "Output telemetry results in a directory")) {
     return EXIT_FAILURE;
   }
 
