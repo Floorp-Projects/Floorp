@@ -221,10 +221,9 @@ nsHttpChannelAuthProvider::AddAuthorizationHeaders(
   nsHttpAuthCache* authCache = gHttpHandler->AuthCache(mIsPrivate);
 
   // check if proxy credentials should be sent
-  const char* proxyHost = ProxyHost();
-  if (proxyHost && UsingHttpProxy()) {
+  if (!ProxyHost().IsEmpty() && UsingHttpProxy()) {
     SetAuthorizationHeader(authCache, nsHttp::Proxy_Authorization, "http"_ns,
-                           nsDependentCString(proxyHost), ProxyPort(),
+                           ProxyHost(), ProxyPort(),
                            ""_ns,  // proxy has no path
                            mProxyIdent);
   }
@@ -245,8 +244,8 @@ nsHttpChannelAuthProvider::AddAuthorizationHeaders(
   nsAutoCString path, scheme;
   if (NS_SUCCEEDED(GetCurrentPath(path)) &&
       NS_SUCCEEDED(mURI->GetScheme(scheme))) {
-    SetAuthorizationHeader(authCache, nsHttp::Authorization, scheme,
-                           nsDependentCString(Host()), Port(), path, mIdent);
+    SetAuthorizationHeader(authCache, nsHttp::Authorization, scheme, Host(),
+                           Port(), path, mIdent);
   }
 
   return NS_OK;
