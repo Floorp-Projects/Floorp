@@ -1435,6 +1435,13 @@ bool nsRefreshDriver::CanDoCatchUpTick() {
     return false;
   }
 
+  if (mTickVsyncTime.IsNull()) {
+    // Don't try to run a catch-up tick before there has been at least one
+    // normal tick. The catch-up tick could affect negatively to the page load
+    // performance.
+    return false;
+  }
+
   return true;
 }
 
