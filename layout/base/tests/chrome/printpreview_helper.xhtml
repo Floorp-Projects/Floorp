@@ -1269,6 +1269,56 @@ async function runTest45() {
   let test = "print_page_size4.html";
   let ref = "print_page_size4_ref.html";
   await compareFiles(test, ref, fuzz);
+  requestAnimationFrame(() => setTimeout(runTest46));
+}
+
+// Test that small elements don't get clipped from the bottom of the page when
+// using a < 1.0 scaling factor.
+// TODO: enable this when bug 1725486 is fixed.
+async function runTest46_DISABLED() {
+  var fuzz = { maxDifferent: 0, maxDifference: 0 };
+  let test = "bug1722890.html";
+  let ref = "bug1722890_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        scaling: 0.5
+      }
+    },
+    ref: {
+      settings: {
+        scaling: 1.0
+      }
+    }
+  });
+  finish();
+}
+
+// Tests whether or not scaling from print preview tests actually works.
+// Scaling currently doesn't work, and this test will begin to fail if scaling
+// gets fixed. In that case, we can enable runTest46_DISABLED instead of this
+// test.
+// See bug 1725486 for this issue.
+async function runTest46() {
+  // We can't load the exact same thing twice, as that won't fire the second
+  // load event and the test will just timeout.
+  let src = '<div style="background: blue; width: 50px; height: 50px;"></div>';
+  let test = "data:text/html,<!-- test -->" + src;
+  let ref = "data:text/html,<!-- ref -->" + src;
+  await compareFiles(test, ref, {
+    test: {
+      settings: {
+        scaling: 0.5
+      }
+    },
+    ref: {
+      settings: {
+        scaling: 1.0
+      }
+    }
+  });
   finish();
 }
 
