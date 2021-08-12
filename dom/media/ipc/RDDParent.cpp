@@ -232,9 +232,9 @@ mozilla::ipc::IPCResult RDDParent::RecvRequestMemoryReport(
   return IPC_OK();
 }
 
+#if defined(XP_WIN)
 mozilla::ipc::IPCResult RDDParent::RecvGetUntrustedModulesData(
     GetUntrustedModulesDataResolver&& aResolver) {
-#if defined(XP_WIN)
   RefPtr<DllServices> dllSvc(DllServices::Get());
   dllSvc->GetUntrustedModulesData()->Then(
       GetMainThreadSerialEventTarget(), __func__,
@@ -243,10 +243,8 @@ mozilla::ipc::IPCResult RDDParent::RecvGetUntrustedModulesData(
       },
       [aResolver](nsresult aReason) { aResolver(Nothing()); });
   return IPC_OK();
-#else
-  return IPC_FAIL(this, "Unsupported on this platform");
-#endif  // defined(XP_WIN)
 }
+#endif  // defined(XP_WIN)
 
 mozilla::ipc::IPCResult RDDParent::RecvPreferenceUpdate(const Pref& aPref) {
   Preferences::SetPreference(aPref);
