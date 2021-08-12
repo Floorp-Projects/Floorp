@@ -6,11 +6,11 @@
 
 const EXPORTED_SYMBOLS = ["command"];
 
-class Command {
-  constructor(messageHandler) {
-    this.messageHandler = messageHandler;
-  }
+const { Module } = ChromeUtils.import(
+  "chrome://remote/content/shared/messagehandler/Module.jsm"
+);
 
+class Command extends Module {
   destroy() {}
 
   /**
