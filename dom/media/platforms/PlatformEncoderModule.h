@@ -7,6 +7,7 @@
 #if !defined(PlatformEncoderModule_h_)
 #  define PlatformEncoderModule_h_
 
+#  include "MP4Decoder.h"
 #  include "MediaData.h"
 #  include "MediaInfo.h"
 #  include "MediaResult.h"
@@ -17,6 +18,7 @@
 #  include "mozilla/TaskQueue.h"
 #  include "mozilla/dom/ImageBitmapBinding.h"
 #  include "nsISupportsImpl.h"
+#  include "VPXDecoder.h"
 
 namespace mozilla {
 
@@ -86,6 +88,71 @@ class MediaDataEncoder {
         : mApplication(aApplication), mComplexity(aComplexity) {
       MOZ_ASSERT(mComplexity <= 10);
     }
+  };
+
+// From webrtc::VideoCodecVP8. mResilience is a boolean value because while
+// VP8ResilienceMode has 3 values, kResilientFrames is not supported.
+#  define VPX_COMMON_SETTINGS         \
+    const Complexity mComplexity;     \
+    const bool mResilience;           \
+    const uint8_t mNumTemporalLayers; \
+    const bool mDenoising;            \
+    const bool mAutoResize;           \
+    const bool mFrameDropping;
+
+// See webrtc::VideoEncoder::GetDefaultVp(8|9)Settings().
+#  define VPX_COMMON_DEFAULTS(resize)                                          \
+    mComplexity(Complexity::Normal), mResilience(true), mNumTemporalLayers(1), \
+        mDenoising(true), mAutoResize(resize), mFrameDropping(0)
+
+  struct VPXSpecific final {
+    enum class Complexity { Normal, High, Higher, Max };
+    struct VP8 final {
+      VPX_COMMON_SETTINGS
+      // Ignore webrtc::VideoCodecVP8::errorConcealmentOn,
+      // for it's always false in the codebase (except libwebrtc test cases).
+
+      VP8() : VPX_COMMON_DEFAULTS(false /* auto resize */) {}
+      VP8(const Complexity aComplexity, const bool aResilience,
+          const uint8_t aNumTemporalLayers, const bool aDenoising,
+          const bool aAutoResize, const bool aFrameDropping)
+          : mComplexity(aComplexity),
+            mResilience(aResilience),
+            mNumTemporalLayers(aNumTemporalLayers),
+            mDenoising(aDenoising),
+            mAutoResize(aAutoResize),
+            mFrameDropping(aFrameDropping) {}
+    };
+
+    struct VP9 final {
+      VPX_COMMON_SETTINGS
+      // From webrtc::VideoCodecVP9.
+      bool mAdaptiveQp;
+      uint8_t mNumSpatialLayers;
+      bool mFlexible;
+
+      VP9()
+          : VPX_COMMON_DEFAULTS(true /* auto resize */),
+            mAdaptiveQp(true),
+            mNumSpatialLayers(1),
+            mFlexible(false) {}
+      VP9(const Complexity aComplexity, const bool aResilience,
+          const uint8_t aNumTemporalLayers, const bool aDenoising,
+          const bool aAutoResize, const bool aFrameDropping,
+          const bool aAdaptiveQp, const uint8_t aNumSpatialLayers,
+          const bool aFlexible)
+          : mComplexity(aComplexity),
+            mResilience(aResilience),
+            mNumTemporalLayers(aNumTemporalLayers),
+            mDenoising(aDenoising),
+            mAutoResize(aAutoResize),
+            mFrameDropping(aFrameDropping),
+            mAdaptiveQp(aAdaptiveQp),
+            mNumSpatialLayers(aNumSpatialLayers),
+            mFlexible(aFlexible) {}
+    };
+
+    VPXSpecific() = delete;
   };
 
   static bool IsVideo(const CodecType aCodec) {
@@ -208,17 +275,25 @@ class MediaDataEncoder {
 
  public:
   using H264Config = VideoConfig<H264Specific>;
+  using VP8Config = VideoConfig<VPXSpecific::VP8>;
+  using VP9Config = VideoConfig<VPXSpecific::VP9>;
 };
 
 struct MOZ_STACK_CLASS CreateEncoderParams final {
   union CodecSpecific {
     MediaDataEncoder::H264Specific mH264;
     MediaDataEncoder::OpusSpecific mOpus;
+    MediaDataEncoder::VPXSpecific::VP8 mVP8;
+    MediaDataEncoder::VPXSpecific::VP9 mVP9;
 
     explicit CodecSpecific(const MediaDataEncoder::H264Specific&& aH264)
         : mH264(aH264) {}
     explicit CodecSpecific(const MediaDataEncoder::OpusSpecific&& aOpus)
         : mOpus(aOpus) {}
+    explicit CodecSpecific(const MediaDataEncoder::VPXSpecific::VP8&& aVP8)
+        : mVP8(aVP8) {}
+    explicit CodecSpecific(const MediaDataEncoder::VPXSpecific::VP9&& aVP9)
+        : mVP9(aVP9) {}
   };
 
   CreateEncoderParams(const TrackInfo& aConfig,
@@ -253,7 +328,12 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
         mKeyframeInterval(aKeyframeInterval),
         mBitrate(aBitrate) {
     MOZ_ASSERT(mTaskQueue);
-    Set(std::forward<const Ts>(aCodecSpecific)...);
+    SetCodecSpecific(std::forward<const Ts>(aCodecSpecific)...);
+  }
+
+  template <typename T>
+  void SetCodecSpecific(const T&& aCodecSpecific) {
+    mCodecSpecific.emplace(std::forward<const T>(aCodecSpecific));
   }
 
   const MediaDataEncoder::H264Config ToH264Config() const {
@@ -270,6 +350,46 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
     return config;
   }
 
+  const MediaDataEncoder::VP8Config ToVP8Config() const {
+    const VideoInfo* info = mConfig.GetAsVideoInfo();
+    MOZ_ASSERT(info);
+
+    auto config = MediaDataEncoder::VP8Config(
+        CodecTypeForMime(info->mMimeType), mUsage, info->mImage, mPixelFormat,
+        mFramerate, mKeyframeInterval, mBitrate);
+    if (mCodecSpecific) {
+      config.SetCodecSpecific(mCodecSpecific.ref().mVP8);
+    }
+    return config;
+  }
+
+  const MediaDataEncoder::VP9Config ToVP9Config() const {
+    const VideoInfo* info = mConfig.GetAsVideoInfo();
+    MOZ_ASSERT(info);
+
+    auto config = MediaDataEncoder::VP9Config(
+        CodecTypeForMime(info->mMimeType), mUsage, info->mImage, mPixelFormat,
+        mFramerate, mKeyframeInterval, mBitrate);
+    if (mCodecSpecific) {
+      config.SetCodecSpecific(mCodecSpecific.ref().mVP9);
+    }
+    return config;
+  }
+
+  static MediaDataEncoder::CodecType CodecTypeForMime(
+      const nsACString& aMimeType) {
+    if (MP4Decoder::IsH264(aMimeType)) {
+      return MediaDataEncoder::CodecType::H264;
+    } else if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)) {
+      return MediaDataEncoder::CodecType::VP8;
+    } else if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)) {
+      return MediaDataEncoder::CodecType::VP9;
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unsupported Mimetype");
+      return MediaDataEncoder::CodecType::Unknown;
+    }
+  }
+
   const TrackInfo& mConfig;
   const MediaDataEncoder::Usage mUsage;
   const RefPtr<TaskQueue> mTaskQueue;
@@ -280,10 +400,6 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
   Maybe<CodecSpecific> mCodecSpecific;
 
  private:
-  template <typename T>
-  void Set(const T&& aCodecSpecific) {
-    mCodecSpecific.emplace(std::forward<const T>(aCodecSpecific));
-  }
 };
 
 }  // namespace mozilla
