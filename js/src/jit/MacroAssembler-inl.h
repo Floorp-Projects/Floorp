@@ -18,8 +18,10 @@
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
 #include "util/DifferentialTesting.h"
+#include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/Runtime.h"
+#include "vm/StringType.h"
 
 #include "jit/ABIFunctionList-inl.h"
 
@@ -919,6 +921,12 @@ void MacroAssembler::reserveStack(uint32_t amount) {
 }
 #endif  // !JS_CODEGEN_ARM64
 
+void MacroAssembler::loadObjClassUnsafe(Register obj, Register dest) {
+  loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
+  loadPtr(Address(dest, Shape::offsetOfBaseShape()), dest);
+  loadPtr(Address(dest, BaseShape::offsetOfClasp()), dest);
+}
+
 template <typename EmitPreBarrier>
 void MacroAssembler::storeObjShape(Register shape, Register obj,
                                    EmitPreBarrier emitPreBarrier) {
@@ -934,6 +942,16 @@ void MacroAssembler::storeObjShape(Shape* shape, Register obj,
   Address shapeAddr(obj, JSObject::offsetOfShape());
   emitPreBarrier(*this, shapeAddr);
   storePtr(ImmGCPtr(shape), shapeAddr);
+}
+
+void MacroAssembler::loadObjProto(Register obj, Register dest) {
+  loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
+  loadPtr(Address(dest, Shape::offsetOfBaseShape()), dest);
+  loadPtr(Address(dest, BaseShape::offsetOfProto()), dest);
+}
+
+void MacroAssembler::loadStringLength(Register str, Register dest) {
+  load32(Address(str, JSString::offsetOfLength()), dest);
 }
 
 void MacroAssembler::assertStackAlignment(uint32_t alignment,

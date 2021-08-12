@@ -40,8 +40,6 @@
 #include "util/Memory.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/FunctionFlags.h"
-#include "vm/JSObject.h"
-#include "vm/StringType.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmFrame.h"
 
@@ -4261,11 +4259,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
  public:
   // Unsafe here means the caller is responsible for Spectre mitigations if
   // needed. Prefer branchTestObjClass or one of the other masm helpers!
-  void loadObjClassUnsafe(Register obj, Register dest) {
-    loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
-    loadPtr(Address(dest, Shape::offsetOfBaseShape()), dest);
-    loadPtr(Address(dest, BaseShape::offsetOfClasp()), dest);
-  }
+  inline void loadObjClassUnsafe(Register obj, Register dest);
 
   template <typename EmitPreBarrier>
   inline void storeObjShape(Register shape, Register obj,
@@ -4274,15 +4268,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void storeObjShape(Shape* shape, Register obj,
                             EmitPreBarrier emitPreBarrier);
 
-  void loadObjProto(Register obj, Register dest) {
-    loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
-    loadPtr(Address(dest, Shape::offsetOfBaseShape()), dest);
-    loadPtr(Address(dest, BaseShape::offsetOfProto()), dest);
-  }
+  inline void loadObjProto(Register obj, Register dest);
 
-  void loadStringLength(Register str, Register dest) {
-    load32(Address(str, JSString::offsetOfLength()), dest);
-  }
+  inline void loadStringLength(Register str, Register dest);
 
   void loadStringChars(Register str, Register dest, CharEncoding encoding);
 
