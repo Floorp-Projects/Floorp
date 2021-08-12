@@ -7020,17 +7020,28 @@ static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
   array->ensureDenseInitializedLength(0, 2);
 
   JSObject* obj = args[1].isObject() ? &args[1].toObject() : nullptr;
-  auto view = JS::TypedArray<Scalar::Uint8>::unwrap(obj);
+  Rooted<JS::Uint8Array> view(cx, JS::Uint8Array::unwrap(obj));
   if (!view) {
     ReportUsageErrorASCII(cx, callee, "Second argument must be a Uint8Array");
     return false;
   }
-  size_t length;
-  bool isSharedMemory;
-  JS::AutoCheckCannotGC nogc(cx);
-  uint8_t* data = view.getLengthAndData(&length, &isSharedMemory, nogc);
 
-  if (isSharedMemory ||  // excluded views of SharedArrayBuffers
+  size_t length;
+  bool isSharedMemory = false;
+  uint8_t* data = nullptr;
+  {
+    // The hazard analysis does not track the data pointer, so it can neither
+    // tell that `data` is dead if ReportUsageErrorASCII is called, nor that
+    // its live range ends at the call to AsWritableChars(). Construct a
+    // temporary scope to hide from the analysis. This should really be replaced
+    // with a safer mechanism.
+    JS::AutoCheckCannotGC nogc(cx);
+    if (!view.isDetached()) {
+      data = view.get().getLengthAndData(&length, &isSharedMemory, nogc);
+    }
+  }
+
+  if (isSharedMemory ||  // exclude views of SharedArrayBuffers
       !data) {           // exclude views of detached ArrayBuffers
     ReportUsageErrorASCII(
         cx, callee,
