@@ -5,16 +5,16 @@
 package org.mozilla.fenix.share
 
 import android.view.ViewGroup
-import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.share_close.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.ShareCloseBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.share.listadapters.ShareTabsAdapter
 
@@ -26,18 +26,19 @@ class ShareCloseViewTest {
 
     @Before
     fun setup() {
-        container = FrameLayout(testContext)
+        container = ConstraintLayout(testContext)
         interactor = mockk(relaxUnitFun = true)
     }
 
     @Test
     fun `binds adapter and close button`() {
         ShareCloseView(container, interactor)
+        val binding = ShareCloseBinding.bind(container)
 
-        assertTrue(container.shared_site_list.layoutManager is LinearLayoutManager)
-        assertTrue(container.shared_site_list.adapter is ShareTabsAdapter)
+        assertTrue(binding.sharedSiteList.layoutManager is LinearLayoutManager)
+        assertTrue(binding.sharedSiteList.adapter is ShareTabsAdapter)
 
-        container.closeButton.performClick()
+        binding.closeButton.performClick()
         verify { interactor.onShareClosed() }
     }
 }

@@ -7,10 +7,8 @@ package org.mozilla.fenix.share
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.share_close.*
 import mozilla.components.concept.engine.prompt.ShareData
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ShareCloseBinding
 import org.mozilla.fenix.share.listadapters.ShareTabsAdapter
 
 /**
@@ -21,20 +19,23 @@ interface ShareCloseInteractor {
 }
 
 class ShareCloseView(
-    override val containerView: ViewGroup,
-    private val interactor: ShareCloseInteractor
-) : LayoutContainer {
+    val containerView: ViewGroup,
+    private val interactor: ShareCloseInteractor,
+) {
 
     val adapter = ShareTabsAdapter()
 
     init {
-        LayoutInflater.from(containerView.context)
-            .inflate(R.layout.share_close, containerView, true)
+        val binding = ShareCloseBinding.inflate(
+            LayoutInflater.from(containerView.context),
+            containerView,
+            true
+        )
 
-        closeButton.setOnClickListener { interactor.onShareClosed() }
+        binding.closeButton.setOnClickListener { interactor.onShareClosed() }
 
-        shared_site_list.layoutManager = LinearLayoutManager(containerView.context)
-        shared_site_list.adapter = adapter
+        binding.sharedSiteList.layoutManager = LinearLayoutManager(containerView.context)
+        binding.sharedSiteList.adapter = adapter
     }
 
     fun setTabs(tabs: List<ShareData>) {

@@ -7,9 +7,8 @@ package org.mozilla.fenix.share
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.share_to_account_devices.*
 import mozilla.components.concept.sync.Device
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ShareToAccountDevicesBinding
 import org.mozilla.fenix.share.listadapters.AccountDevicesShareAdapter
 import org.mozilla.fenix.share.listadapters.SyncShareOption
 
@@ -32,10 +31,13 @@ class ShareToAccountDevicesView(
     private val adapter = AccountDevicesShareAdapter(interactor)
 
     init {
-        LayoutInflater.from(containerView.context)
-            .inflate(R.layout.share_to_account_devices, containerView, true)
+        val binding = ShareToAccountDevicesBinding.inflate(
+            LayoutInflater.from(containerView.context),
+            containerView,
+            true
+        )
 
-        devicesList.adapter = adapter
+        binding.devicesList.adapter = adapter
     }
 
     fun setShareTargets(targets: List<SyncShareOption>) {
