@@ -2746,6 +2746,31 @@ const JSClass* const TypedArray_base::classes = TypedArrayObject::classes;
 JS_FOR_EACH_TYPED_ARRAY(INSTANTIATE)
 #undef INSTANTIATE
 
+JS::ArrayBufferOrView JS::ArrayBufferOrView::unwrap(JSObject* maybeWrapped) {
+  auto* ab = maybeWrapped->maybeUnwrapIf<ArrayBufferObjectMaybeShared>();
+  if (ab) {
+    return ArrayBufferOrView::fromObject(ab);
+  }
+
+  return ArrayBufferView::unwrap(maybeWrapped);
+}
+
+bool JS::ArrayBufferOrView::isDetached() const {
+  MOZ_ASSERT(obj);
+  if (obj->is<ArrayBufferObject>()) {
+    return obj->as<ArrayBufferObject>().isDetached();
+  } else {
+    return obj->as<ArrayBufferViewObject>().hasDetachedBuffer();
+  }
+}
+
+JS::TypedArray_base JS::TypedArray_base::fromObject(JSObject* unwrapped) {
+  if (unwrapped->is<TypedArrayObject>()) {
+    return TypedArray_base(unwrapped);
+  }
+  return TypedArray_base(nullptr);
+}
+
 // Template getLengthAndData function for TypedArrays, implemented here because
 // it requires internal APIs.
 template <js::Scalar::Type EType>
