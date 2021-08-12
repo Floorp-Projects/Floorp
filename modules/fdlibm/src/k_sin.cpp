@@ -11,8 +11,8 @@
  * ====================================================
  */
 
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
+//#include <sys/cdefs.h>
+//__FBSDID("$FreeBSD$");
 
 /* __kernel_sin( x, y, iy)
  * kernel sin function on ~[-pi/4, pi/4] (except on -0), pi/4 ~ 0.7854
@@ -44,7 +44,6 @@ __FBSDID("$FreeBSD$");
  *		sin(x) = x + (S1*x + (x *(r-y/2)+y))
  */
 
-#include "math.h"
 #include "math_private.h"
 
 static const double
