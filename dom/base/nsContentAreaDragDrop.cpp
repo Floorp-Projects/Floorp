@@ -468,8 +468,8 @@ nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
         mimeInfo->GetPrimaryExtension(primaryExtension);
         if (!primaryExtension.IsEmpty()) {
           rv = NS_MutateURI(imgUrl)
-                   .Apply(&nsIURLMutator::SetFileExtension, primaryExtension,
-                          nullptr)
+                   .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileExtension,
+                                           primaryExtension, nullptr))
                    .Finalize(imgUrl);
           NS_ENSURE_SUCCESS(rv, rv);
         }

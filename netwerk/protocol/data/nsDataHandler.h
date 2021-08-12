@@ -33,7 +33,7 @@ class nsDataHandler : public nsIProtocolHandler,
   // (the given spec will temporarily be modified but will be returned
   //  to the original before returning)
   // contentCharset and dataBuffer can be nullptr if they are not needed.
-  [[nodiscard]] static nsresult ParseURI(const nsACString& spec,
+  [[nodiscard]] static nsresult ParseURI(const nsCString& spec,
                                          nsCString& contentType,
                                          nsCString* contentCharset,
                                          bool& isBase64, nsCString* dataBuffer);
