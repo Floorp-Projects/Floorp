@@ -475,6 +475,78 @@ nsresult nsHttpChannelAuthProvider::PrepareForAuthentication(bool proxyAuth) {
 
   return NS_OK;
 }
+
+class MOZ_STACK_CLASS ChallengeParser final : Tokenizer {
+ public:
+  explicit ChallengeParser(const nsACString& aChallenges)
+      : Tokenizer(aChallenges, nullptr, "") {
+    Record();
+  }
+
+  Maybe<nsDependentCSubstring> GetNext() {
+    Token t;
+    nsDependentCSubstring result;
+
+    bool inQuote = false;
+
+    while (Next(t)) {
+      if (t.Type() == TOKEN_EOL) {
+        Claim(result, ClaimInclusion::EXCLUDE_LAST);
+        SkipWhites(WhiteSkipping::INCLUDE_NEW_LINE);
+        Record();
+        inQuote = false;
+        if (!result.IsEmpty()) {
+          return Some(result);
+        }
+      } else if (t.Equals(Token::Char(',')) && !inQuote &&
+                 StaticPrefs::
+                     network_auth_allow_multiple_challenges_same_line()) {
+        // Sometimes we get multiple challenges separated by a comma.
+        // This is not great, as it's slightly ambiguous. We check if something
+        // is a new challenge by matching agains <param_name> =
+        // If the , isn't followed by a word and = then most likely
+        // it is the name of an authType.
+
+        const char* prevCursorPos = mCursor;
+        const char* prevRollbackPos = mRollback;
+
+        auto hasWordAndEqual = [&]() {
+          SkipWhites();
+          nsDependentCSubstring word;
+          if (!ReadWord(word)) {
+            return false;
+          }
+          SkipWhites();
+          return Check(Token::Char('='));
+        };
+        if (!hasWordAndEqual()) {
+          // This is not a parameter. It means the `,` character starts a
+          // different challenge.
+          // We'll revert the cursor and return the contents so far.
+          mCursor = prevCursorPos;
+          mRollback = prevRollbackPos;
+          Claim(result, ClaimInclusion::EXCLUDE_LAST);
+          SkipWhites();
+          Record();
+          if (!result.IsEmpty()) {
+            return Some(result);
+          }
+        }
+      } else if (t.Equals(Token::Char('"'))) {
+        inQuote = !inQuote;
+      }
+    }
+
+    Claim(result, Tokenizer::ClaimInclusion::INCLUDE_LAST);
+    SkipWhites();
+    Record();
+    if (!result.IsEmpty()) {
+      return Some(result);
+    }
+    return Nothing{};
+  }
+};
+
 nsresult nsHttpChannelAuthProvider::GetCredentials(
     const nsACString& aChallenges, bool proxyAuth, nsCString& creds) {
   LOG(("nsHttpChannelAuthProvider::GetCredentials"));
@@ -492,32 +564,23 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(
 
   nsTArray<AuthChallenge> cc;
 
-  Tokenizer t(challenges);
-  nsDependentCSubstring line;
-  t.Record();
-  while (!t.CheckEOF()) {
-    Tokenizer::Token token1;
-    t.SkipUntil(Tokenizer::Token::NewLine());
-    t.Claim(line, Tokenizer::ClaimInclusion::INCLUDE_LAST);
-    if (!line.IsEmpty()) {
-      AuthChallenge ac{line, 0};
-      nsAutoCString realm, domain, nonce, opaque;
-      bool stale = false;
-      uint16_t qop = 0;
-      if (StringBeginsWith(ac.challenge, "Digest"_ns,
-                           nsCaseInsensitiveCStringComparator)) {
-        Unused << nsHttpDigestAuth::ParseChallenge(ac.challenge, realm, domain,
-                                                   nonce, opaque, &stale,
-                                                   &ac.algorithm, &qop);
-      }
-      cc.AppendElement(ac);
-    }
-
-    t.SkipWhites(Tokenizer::WhiteSkipping::INCLUDE_NEW_LINE);
-    if (t.CheckEOF()) {
+  ChallengeParser p(challenges);
+  while (true) {
+    auto next = p.GetNext();
+    if (next.isNothing()) {
       break;
     }
-    t.Record();
+    AuthChallenge ac{next.ref(), 0};
+    nsAutoCString realm, domain, nonce, opaque;
+    bool stale = false;
+    uint16_t qop = 0;
+    if (StringBeginsWith(ac.challenge, "Digest"_ns,
+                         nsCaseInsensitiveCStringComparator)) {
+      Unused << nsHttpDigestAuth::ParseChallenge(ac.challenge, realm, domain,
+                                                 nonce, opaque, &stale,
+                                                 &ac.algorithm, &qop);
+    }
+    cc.AppendElement(ac);
   }
 
   cc.StableSort([](const AuthChallenge& lhs, const AuthChallenge& rhs) {
@@ -1111,8 +1174,7 @@ void nsHttpChannelAuthProvider::GetIdentityFromURI(uint32_t authFlags,
   }
 }
 
-void nsHttpChannelAuthProvider::ParseRealm(const nsACString& aChallenge,
-                                           nsACString& realm) {
+static void OldParseRealm(const nsACString& aChallenge, nsACString& realm) {
   //
   // From RFC2617 section 1.2, the realm value is defined as such:
   //
@@ -1158,6 +1220,102 @@ void nsHttpChannelAuthProvider::ParseRealm(const nsACString& aChallenge,
       } else {
         realm.Assign(p);
       }
+    }
+  }
+}
+
+void nsHttpChannelAuthProvider::ParseRealm(const nsACString& aChallenge,
+                                           nsACString& realm) {
+  //
+  // From RFC2617 section 1.2, the realm value is defined as such:
+  //
+  //    realm       = "realm" "=" realm-value
+  //    realm-value = quoted-string
+  //
+  // but, we'll accept anything after the the "=" up to the first space, or
+  // end-of-line, if the string is not quoted.
+  //
+
+  if (!StaticPrefs::network_auth_use_new_parse_realm()) {
+    OldParseRealm(aChallenge, realm);
+    return;
+  }
+
+  Tokenizer t(aChallenge);
+
+  // The challenge begins with the authType.
+  // If we can't find that something has probably gone wrong.
+  t.SkipWhites();
+  nsDependentCSubstring authType;
+  if (!t.ReadWord(authType)) {
+    return;
+  }
+
+  // Will return true if the tokenizer advanced the cursor - false otherwise.
+  auto readParam = [&](nsDependentCSubstring& key, nsAutoCString& value) {
+    key.Rebind(EmptyCString(), 0);
+    value.Truncate();
+
+    t.SkipWhites();
+    if (!t.ReadWord(key)) {
+      return false;
+    }
+    t.SkipWhites();
+    if (!t.CheckChar('=')) {
+      return true;
+    }
+    t.SkipWhites();
+
+    Tokenizer::Token token1;
+
+    t.Record();
+    if (!t.Next(token1)) {
+      return true;
+    }
+    nsDependentCSubstring sub;
+    bool hasQuote = false;
+    if (token1.Equals(Tokenizer::Token::Char('"'))) {
+      hasQuote = true;
+    } else {
+      t.Claim(sub, Tokenizer::ClaimInclusion::INCLUDE_LAST);
+      value.Append(sub);
+    }
+    t.Record();
+    Tokenizer::Token token2;
+    while (t.Next(token2)) {
+      if (hasQuote && token2.Equals(Tokenizer::Token::Char('"')) &&
+          !token1.Equals(Tokenizer::Token::Char('\\'))) {
+        break;
+      }
+      if (!hasQuote && (token2.Type() == Tokenizer::TokenType::TOKEN_WS ||
+                        token2.Type() == Tokenizer::TokenType::TOKEN_EOL)) {
+        break;
+      }
+
+      t.Claim(sub, Tokenizer::ClaimInclusion::INCLUDE_LAST);
+      if (!sub.Equals(R"(\)")) {
+        value.Append(sub);
+      }
+      t.Record();
+      token1 = token2;
+    }
+    return true;
+  };
+
+  while (!t.CheckEOF()) {
+    nsDependentCSubstring key;
+    nsAutoCString value;
+    // If we couldn't read anything, and the input isn't followed by a ,
+    // then we exit.
+    if (!readParam(key, value) && !t.Check(Tokenizer::Token::Char(','))) {
+      break;
+    }
+    // When we find the first instance of realm we exit.
+    // Theoretically there should be only one instance and we should fail
+    // if there are more, but we're trying to preserve existing behaviour.
+    if (key.Equals("realm"_ns, nsCaseInsensitiveCStringComparator)) {
+      realm = value;
+      break;
     }
   }
 }
