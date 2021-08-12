@@ -666,11 +666,19 @@ bool GLContext::InitImpl() {
     }
   }
 
+  {
+    const auto versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
+    if (strstr(versionStr, "Mesa")) {
+      mIsMesa = true;
+    }
+  }
+
   if (ShouldSpew()) {
     printf_stderr("GL_VENDOR: %s\n", glVendorString);
     printf_stderr("mVendor: %s\n", vendorMatchStrings[size_t(mVendor)]);
     printf_stderr("GL_RENDERER: %s\n", glRendererString);
     printf_stderr("mRenderer: %s\n", rendererMatchStrings[size_t(mRenderer)]);
+    printf_stderr("mIsMesa: %i\n", int(mIsMesa));
   }
 
   ////////////////
@@ -732,8 +740,7 @@ bool GLContext::InitImpl() {
       MarkUnsupported(GLFeature::framebuffer_multisample);
     }
 
-    const auto versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
-    if (strstr(versionStr, "Mesa")) {
+    if (IsMesa()) {
       // DrawElementsInstanced hangs the driver.
       MarkUnsupported(GLFeature::robust_buffer_access_behavior);
     }
