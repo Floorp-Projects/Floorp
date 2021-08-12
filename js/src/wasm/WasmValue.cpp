@@ -28,6 +28,7 @@
 #include "vm/StringType.h"
 #include "wasm/TypedObject.h"
 #include "wasm/WasmJS.h"
+#include "wasm/WasmLog.h"
 
 #include "vm/JSObject-inl.h"
 
