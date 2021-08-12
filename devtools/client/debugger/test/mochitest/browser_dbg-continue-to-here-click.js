@@ -2,18 +2,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// Test cmd+click continuing to a line
+
 add_task(async function() {
   const dbg = await initDebugger("doc-pause-points.html", "pause-points.js");
   await selectSource(dbg, "pause-points.js");
   await waitForSelectedSource(dbg, "pause-points.js");
 
-  info("Test cmd+click continueing to a line");
+  info(
+    "Pause the debugger by clicking a button with a click handler containing a debugger statement"
+  );
   clickElementInTab("#sequences");
   await waitForPaused(dbg);
   await waitForInlinePreviews(dbg);
-  await cmdClickLine(dbg, 31);
-  await waitForPausedLine(dbg, 31);
-  assertDebugLine(dbg, 31, 4);
+  ok(true, "Debugger is paused");
+
+  info("Cmd+click on a line and check the debugger continues to that line");
+  const lineToContinueTo = 31;
+  await cmdClickLine(dbg, lineToContinueTo);
+
+  // continuing will resume and pause again. Let's wait until we resume so we can properly
+  // wait for the next pause.
+  await waitForState(dbg, () => !isPaused(dbg), "resumed");
+  // waitForPaused properly waits for the scopes to be available
+  await waitForPaused(dbg);
+
+  assertDebugLine(dbg, lineToContinueTo, 4);
+  ok(true, "Debugger continued to the expected line");
+
+  info("Resume");
   await resume(dbg);
   await waitForRequestsToSettle(dbg);
 });
