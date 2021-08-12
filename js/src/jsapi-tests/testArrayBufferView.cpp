@@ -11,22 +11,51 @@
 #include "jsapi-tests/tests.h"
 #include "vm/ProxyObject.h"
 #include "vm/Realm.h"
+#include "vm/Uint8Clamped.h"  // js::uint8_clamped_t
 
 #include "vm/Realm-inl.h"
+#include "vm/TypedArrayObject-inl.h"  // TypeIDOfType
 
 using namespace js;
 
+template <class ViewType>
+static JSObject* Create(JSContext* cx, size_t len) {
+  return ViewType::create(cx, len).asObject();
+}
+
+template <>
+JSObject* Create<JS::DataView>(JSContext* cx, size_t len) {
+  JS::Rooted<JSObject*> buffer(cx, JS::NewArrayBuffer(cx, len));
+  if (!buffer) {
+    return nullptr;
+  }
+  return JS_NewDataView(cx, buffer, 0, len);
+}
+
+template <class T>
+struct InternalType {
+  using Type = uint8_t;
+};
+
+#define INT_TYPE(ExternalType, NativeType, Name)          \
+  template <>                                             \
+  struct InternalType<JS::TypedArray<js::Scalar::Name>> { \
+    using Type = NativeType;                              \
+  };
+JS_FOR_EACH_TYPED_ARRAY(INT_TYPE)
+#undef INT_TYPE
+
 BEGIN_TEST(testArrayBufferView_type) {
-  CHECK((TestViewType<Scalar::Uint8, 7, 7>(cx)));
-  CHECK((TestViewType<Scalar::Int8, 33, 33>(cx)));
-  CHECK((TestViewType<Scalar::Uint8Clamped, 7, 7>(cx)));
-  CHECK((TestViewType<Scalar::Uint16, 3, 6>(cx)));
-  CHECK((TestViewType<Scalar::Int16, 17, 34>(cx)));
-  CHECK((TestViewType<Scalar::Uint32, 15, 60>(cx)));
-  CHECK((TestViewType<Scalar::Int32, 8, 32>(cx)));
-  CHECK((TestViewType<Scalar::Float32, 7, 28>(cx)));
-  CHECK((TestViewType<Scalar::Float64, 9, 72>(cx)));
-  CHECK((TestViewType<js::Scalar::MaxTypedArrayViewType, 8, 8>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Uint8>, 7, 7>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Int8>, 33, 33>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Uint8Clamped>, 7, 7>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Uint16>, 3, 6>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Int16>, 17, 34>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Uint32>, 15, 60>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Int32>, 8, 32>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Float32>, 7, 28>(cx)));
+  CHECK((TestViewType<JS::TypedArray<Scalar::Float64>, 9, 72>(cx)));
+  CHECK((TestViewType<JS::DataView, 8, 8>(cx)));
 
   JS::Rooted<JS::Value> hasTypedObject(cx);
   EVAL("typeof TypedObject !== 'undefined'", &hasTypedObject);
@@ -44,56 +73,44 @@ BEGIN_TEST(testArrayBufferView_type) {
   return true;
 }
 
-template <js::Scalar::Type EType>
-static JSObject* Create(JSContext* cx, size_t len) {
-  return JS::TypedArray<EType>::create(cx, len).asObject();
-}
-template <>
-JSObject* Create<js::Scalar::MaxTypedArrayViewType>(JSContext* cx, size_t len) {
-  JS::Rooted<JSObject*> buffer(cx, JS::NewArrayBuffer(cx, len));
-  if (!buffer) {
-    return nullptr;
-  }
-  return JS_NewDataView(cx, buffer, 0, len);
-}
+template <class T>
+struct ScalarTypeOf {
+  static constexpr js::Scalar::Type value = js::Scalar::MaxTypedArrayViewType;
+};
 
 template <js::Scalar::Type EType>
-static uint8_t* GetLengthAndData(JSObject* obj, size_t* len, bool* isShared,
-                                 JS::AutoAssertNoGC& nogc) {
-  return reinterpret_cast<uint8_t*>(
-      JS::TypedArray<EType>::unwrap(obj).getLengthAndData(len, isShared, nogc));
-}
-
-template <>
-uint8_t* GetLengthAndData<js::Scalar::MaxTypedArrayViewType>(
-    JSObject* obj, size_t* len, bool* isShared, JS::AutoAssertNoGC& nogc) {
-  uint8_t* data;
-  js::GetArrayBufferViewLengthAndData(obj, len, isShared, &data);
-  return data;
-}
-
-template <Scalar::Type EType, uint32_t ExpectedLength,
-          uint32_t ExpectedByteLength>
+struct ScalarTypeOf<JS::TypedArray<EType>> {
+  static constexpr js::Scalar::Type value = EType;
+};
+template <class ViewType, uint32_t ExpectedLength, uint32_t ExpectedByteLength>
 bool TestViewType(JSContext* cx) {
-  JS::Rooted<JSObject*> obj(cx, Create<EType>(cx, ExpectedLength));
+  JS::Rooted<JSObject*> obj(cx, Create<ViewType>(cx, ExpectedLength));
   CHECK(obj);
 
   CHECK(JS_IsArrayBufferViewObject(obj));
-
-  CHECK(JS_GetArrayBufferViewType(obj) == EType);
 
   CHECK(JS_GetArrayBufferViewByteLength(obj) == ExpectedByteLength);
 
   {
     JS::AutoCheckCannotGC nogc;
     bool shared1;
-    JSObject* view = js::UnwrapArrayBufferView(obj);
-    uint8_t* data1 = (uint8_t*)JS_GetArrayBufferViewData(obj, &shared1, nogc);
+    JSObject* unwrapped = js::UnwrapArrayBufferView(obj);
+    uint8_t* data1 =
+        (uint8_t*)JS_GetArrayBufferViewData(unwrapped, &shared1, nogc);
+
+    auto view = ViewType::unwrap(obj);
+    CHECK(JS_GetArrayBufferViewType(obj) == ScalarTypeOf<ViewType>::value);
+
+    if (JS_IsTypedArrayObject(unwrapped)) {
+      CHECK(unwrapped->as<TypedArrayObject>().type() ==
+            TypeIDOfType<typename InternalType<ViewType>::Type>::id);
+    }
 
     bool shared2;
     size_t len;
-    uint8_t* data2 = GetLengthAndData<EType>(view, &len, &shared2, nogc);
-    CHECK(obj == view);
+    uint8_t* data2 =
+        reinterpret_cast<uint8_t*>(view.getLengthAndData(&len, &shared2, nogc));
+    CHECK(obj == view.asObject());
     CHECK(data1 == data2);
     CHECK(shared1 == shared2);
     CHECK(len == ExpectedLength);
