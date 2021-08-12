@@ -129,7 +129,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsHtml5StreamParser)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5StreamParser)
   tmp->DropTimer();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   tmp->mExecutorFlusher = nullptr;
@@ -138,7 +137,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5StreamParser)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRequest)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   // hack: count the strongly owned edge wrapped in the runnable
@@ -266,7 +264,6 @@ nsHtml5StreamParser::~nsHtml5StreamParser() {
     MOZ_ASSERT(!mFlushTimer, "Flush timer was not dropped before dtor!");
   }
   mRequest = nullptr;
-  mObserver = nullptr;
   mUnicodeDecoder = nullptr;
   mSniffingBuffer = nullptr;
   mMetaScanner = nullptr;
@@ -1220,9 +1217,6 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
     }
   });
 
-  if (mObserver) {
-    mObserver->OnStartRequest(aRequest);
-  }
   mRequest = aRequest;
 
   mStreamState = STREAM_BEING_READ;
@@ -1402,20 +1396,6 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 
-nsresult nsHtml5StreamParser::CheckListenerChain() {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread!");
-  if (!mObserver) {
-    return NS_OK;
-  }
-  nsresult rv;
-  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
-      do_QueryInterface(mObserver, &rv);
-  if (NS_SUCCEEDED(rv) && retargetable) {
-    rv = retargetable->CheckListenerChain();
-  }
-  return rv;
-}
-
 void nsHtml5StreamParser::DoStopRequest() {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   MOZ_RELEASE_ASSERT(STREAM_BEING_READ == mStreamState,
@@ -1527,9 +1507,6 @@ nsresult nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
                                             nsresult status) {
   NS_ASSERTION(mRequest == aRequest, "Got Stop on wrong stream.");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  if (mObserver) {
-    mObserver->OnStopRequest(aRequest, status);
-  }
   nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
   if (NS_FAILED(mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
     NS_WARNING("Dispatching StopRequest event failed.");

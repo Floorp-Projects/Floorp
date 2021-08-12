@@ -15,10 +15,8 @@
 CParserContext::CParserContext(CParserContext* aPrevContext,
                                nsScanner* aScanner, void* aKey,
                                eParserCommands aCommand,
-                               nsIRequestObserver* aListener,
                                eAutoDetectResult aStatus, bool aCopyUnused)
-    : mListener(aListener),
-      mKey(aKey),
+    : mKey(aKey),
       mPrevContext(aPrevContext),
       mScanner(mozilla::WrapUnique(aScanner)),
       mDTDMode(eDTDMode_unknown),
