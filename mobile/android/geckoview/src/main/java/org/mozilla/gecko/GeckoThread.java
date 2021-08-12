@@ -588,6 +588,11 @@ public class GeckoThread extends Thread {
     }
 
     @WrapForJNI(calledFrom = "gecko")
+    private static int getStateOrdinal() {
+        return ((State)sNativeQueue.getState()).ordinal();
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
     private static void setState(final State newState) {
         checkAndSetState(null, newState);
     }

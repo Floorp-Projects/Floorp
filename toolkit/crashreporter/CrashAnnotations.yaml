@@ -298,6 +298,11 @@ ExperimentalFeatures:
   type: string
   ping: true
 
+GeckoViewThreadState:
+  description: >
+    The zero-based ordinal of the GeckoThread.State at the time of the crash.
+  type: integer
+
 GetHGlobalFromStreamFailure:
   description: >
     Error returned when invoking GetHGlobalFromStreamFailure() during the
