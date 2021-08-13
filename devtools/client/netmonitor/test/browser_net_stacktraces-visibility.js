@@ -24,9 +24,11 @@ add_task(async function() {
 
   info("Starting test... ");
 
-  const wait = waitForNetworkEvents(monitor, 2);
-  tab.linkedBrowser.reload();
-  await wait;
+  const allRequestsVisible = waitUntil(
+    () => document.querySelectorAll(".request-list-item").length == 2
+  );
+  await refreshTab(tab);
+  await allRequestsVisible;
 
   const onStackTracesVisible = waitUntil(
     () => document.querySelector("#stack-trace-panel .stack-trace .frame-link"),
