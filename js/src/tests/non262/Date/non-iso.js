@@ -46,6 +46,10 @@ assertEq(new Date("1997-03-8").getTime(),
          new Date("1997-03-08").getTime());
 assertEq(new Date("1997-3-8").getTime(),
          new Date("1997-03-08").getTime());
+assertEq(new Date("1997-03-08 11:19:10-07").getTime(),
+         new Date("1997-03-08 11:19:10-0700").getTime());
+assertEq(new Date("1997-03-08T11:19:10-07").getTime(),
+         new Date(NaN).getTime());
 assertEq(new Date("1997-3-8 ").getTime(),
          new Date("1997-03-08T").getTime()); // Date(NaN)
 assertEq(new Date("1997-3-8T11:19:20").getTime(),
