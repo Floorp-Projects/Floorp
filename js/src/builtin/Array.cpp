@@ -3958,13 +3958,7 @@ ArrayObject* js::NewDenseCopiedArray(
     return nullptr;
   }
 
-  MOZ_ASSERT(arr->getDenseCapacity() >= length);
-  MOZ_ASSERT(arr->getDenseInitializedLength() == 0);
-
-  if (values) {
-    arr->initDenseElements(values, length);
-  }
-
+  arr->initDenseElements(values, length);
   return arr;
 }
 
