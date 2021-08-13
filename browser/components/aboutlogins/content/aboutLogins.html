@@ -23,6 +23,7 @@
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
+    <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-section.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/menu-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
@@ -221,6 +222,12 @@
         </div>
         <img class="alert-icon" title="" src=""/>
       </li>
+    </template>
+
+    <template id="login-list-section-template">
+      <section class="login-list-section">
+        <span class="login-list-header" dir="auto"></span>
+      </section>
     </template>
 
     <template id="login-intro-template">
