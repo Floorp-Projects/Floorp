@@ -6,7 +6,7 @@
 
         <activity android:name=".autofill.AutofillUnlockActivity"
             android:exported="false"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+            android:theme="@style/Theme.AppCompat.Translucent" />
 
         <activity android:name=".autofill.AutofillConfirmActivity"
             android:exported="false"
