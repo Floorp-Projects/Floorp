@@ -3,10 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "Services",
   "resource://gre/modules/Services.jsm"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gFilterAdultEnabled",
+  "browser.newtabpage.activity-stream.filterAdult",
+  true
 );
 
 // Keep a Set of adult base domains for lookup (initialized at end of file)
@@ -38,21 +49,70 @@ function md5Hash(text) {
   return gCryptoHash.finish(true);
 }
 
-/**
- * Filter out any link objects that have a url with an adult base domain.
- */
-function filterAdult(links) {
-  return links.filter(({ url }) => {
+const FilterAdult = {
+  /**
+   * Filter out any link objects that have a url with an adult base domain.
+   *
+   * @param {string[]} links
+   *   An array of links to test.
+   * @returns {string[]}
+   *   A filtered array without adult links.
+   */
+  filter(links) {
+    if (!gFilterAdultEnabled) {
+      return links;
+    }
+
+    return links.filter(({ url }) => {
+      try {
+        const uri = Services.io.newURI(url);
+        return !gAdultSet.has(md5Hash(Services.eTLD.getBaseDomain(uri)));
+      } catch (ex) {
+        return true;
+      }
+    });
+  },
+
+  /**
+   * Determine if the supplied url is an adult url or not.
+   *
+   * @param {string} url
+   *   The url to test.
+   * @returns {boolean}
+   *   True if it is an adult url.
+   */
+  isAdultUrl(url) {
+    if (!gFilterAdultEnabled) {
+      return false;
+    }
     try {
       const uri = Services.io.newURI(url);
-      return !gAdultSet.has(md5Hash(Services.eTLD.getBaseDomain(uri)));
+      return gAdultSet.has(md5Hash(Services.eTLD.getBaseDomain(uri)));
     } catch (ex) {
-      return true;
+      return false;
     }
-  });
-}
+  },
 
-const EXPORTED_SYMBOLS = ["filterAdult"];
+  /**
+   * For tests, adds a domain to the adult list.
+   */
+  addDomainToList(url) {
+    gAdultSet.add(
+      md5Hash(Services.eTLD.getBaseDomain(Services.io.newURI(url)))
+    );
+  },
+
+  /**
+   * For tests, removes a domain to the adult list.
+   */
+  removeDomainFromList(url) {
+    gAdultSet.delete(
+      md5Hash(Services.eTLD.getBaseDomain(Services.io.newURI(url)))
+    );
+  },
+};
+
+const EXPORTED_SYMBOLS = ["FilterAdult"];
 
 // These are md5 hashes of base domains to be filtered out. Originally from:
 // https://hg.mozilla.org/mozilla-central/log/default/browser/base/content/newtab/newTab.inadjacent.json
