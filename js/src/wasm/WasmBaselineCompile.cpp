@@ -15240,6 +15240,28 @@ static void BitselectV128(MacroAssembler& masm, RegV128 rhs, RegV128 control,
 }
 #  endif
 
+#  ifdef ENABLE_WASM_RELAXED_SIMD
+static void RelaxedFmaF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                            RegV128 rsd) {
+  masm.fmaFloat32x4(rs1, rs2, rsd);
+}
+
+static void RelaxedFmsF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                            RegV128 rsd) {
+  masm.fmsFloat32x4(rs1, rs2, rsd);
+}
+
+static void RelaxedFmaF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                            RegV128 rsd) {
+  masm.fmaFloat64x2(rs1, rs2, rsd);
+}
+
+static void RelaxedFmsF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                            RegV128 rsd) {
+  masm.fmsFloat64x2(rs1, rs2, rsd);
+}
+#  endif
+
 void BaseCompiler::emitVectorAndNot() {
   // We want x & ~y but the available operation is ~x & y, so reverse the
   // operands.
@@ -16950,6 +16972,29 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitStoreLane(4));
           case uint32_t(SimdOp::V128Store64Lane):
             CHECK_NEXT(emitStoreLane(8));
+#  ifdef ENABLE_WASM_RELAXED_SIMD
+          case uint32_t(SimdOp::F32x4RelaxedFma):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchTernary1(RelaxedFmaF32x4, ValType::V128));
+          case uint32_t(SimdOp::F32x4RelaxedFms):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchTernary1(RelaxedFmsF32x4, ValType::V128));
+          case uint32_t(SimdOp::F64x2RelaxedFma):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchTernary1(RelaxedFmaF64x2, ValType::V128));
+          case uint32_t(SimdOp::F64x2RelaxedFms):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchTernary1(RelaxedFmsF64x2, ValType::V128));
+            break;
+#  endif
           default:
             break;
         }  // switch (op.b1)

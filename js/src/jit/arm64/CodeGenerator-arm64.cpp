@@ -2976,6 +2976,22 @@ void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
       masm.bitwiseSelectSimd128(lhs, rhs, controlDest);
       break;
     }
+    case wasm::SimdOp::F32x4RelaxedFma:
+      masm.fmaFloat32x4(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
+                        ToFloatRegister(ins->v0()));
+      break;
+    case wasm::SimdOp::F32x4RelaxedFms:
+      masm.fmsFloat32x4(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
+                        ToFloatRegister(ins->v0()));
+      break;
+    case wasm::SimdOp::F64x2RelaxedFma:
+      masm.fmaFloat64x2(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
+                        ToFloatRegister(ins->v0()));
+      break;
+    case wasm::SimdOp::F64x2RelaxedFms:
+      masm.fmsFloat64x2(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
+                        ToFloatRegister(ins->v0()));
+      break;
     default:
       MOZ_CRASH("NYI");
   }
