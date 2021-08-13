@@ -1,0 +1,23 @@
+<html>
+<head>
+    <script>
+      window.addEventListener('load', () => {
+        const el_0 = document.createElement('a')
+        const el_1 = document.createElement('b')
+        const el_2 = document.createElement('c')
+        document.documentElement.appendChild(el_0)
+        el_0.appendChild(el_1)
+        el_1.setAttribute('contenteditable', 'true')
+        el_1.appendChild(el_2)
+        el_2.outerHTML = '<s contenteditable=\'false\'><b contenteditable=\'true\'>'
+        const selection = self.getSelection()
+        selection.setBaseAndExtent(document, 0, document.documentElement, 0)
+        const range = selection.getRangeAt((260523900 % selection.rangeCount))
+        selection.selectAllChildren(el_1)
+        range.collapse(false)
+        range.setEndAfter(document.documentElement)
+        range.extractContents()
+      })
+    </script>
+</head>
+</html>
