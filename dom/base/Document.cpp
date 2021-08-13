@@ -17215,6 +17215,17 @@ StylePrefersColorScheme Document::PrefersColorScheme(
     }
   }
 
+  if (!nsContentUtils::IsChromeDoc(this)) {
+    switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {
+      case 0:
+        return StylePrefersColorScheme::Dark;
+      case 1:
+        return StylePrefersColorScheme::Light;
+      default:
+        break;
+    }
+  }
+
   const bool dark =
       !!LookAndFeel::GetInt(LookAndFeel::IntID::SystemUsesDarkTheme, 0);
   return dark ? StylePrefersColorScheme::Dark : StylePrefersColorScheme::Light;
