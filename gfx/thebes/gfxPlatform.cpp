@@ -2600,12 +2600,6 @@ bool gfxPlatform::WebRenderEnvvarEnabled() {
   return (env && *env == '1');
 }
 
-/*static*/
-bool gfxPlatform::WebRenderEnvvarDisabled() {
-  const char* env = PR_GetEnv("MOZ_WEBRENDER");
-  return (env && *env == '0');
-}
-
 /* static */ const char* gfxPlatform::WebRenderResourcePathOverride() {
   const char* resourcePath = PR_GetEnv("WR_RESOURCE_PATH");
   if (!resourcePath || resourcePath[0] == '\0') {
@@ -3433,19 +3427,6 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
     gfxCriticalNote << "Fallback WR to SW-WR";
     gfxVars::SetUseSoftwareWebRender(true);
     return true;
-  }
-
-  if (StaticPrefs::gfx_webrender_fallback_basic_AtStartup() &&
-      !DoesFissionForceWebRender()) {
-    // Fallback from WebRender or Software WebRender to Basic.
-    gfxCriticalNote << "Fallback (SW-)WR to Basic";
-    if (gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE)) {
-      gfxConfig::GetFeature(Feature::WEBRENDER_SOFTWARE)
-          .ForceDisable(aStatus, aMessage, aFailureId);
-    }
-    gfxVars::SetUseWebRender(false);
-    gfxVars::SetUseSoftwareWebRender(false);
-    return false;
   }
 
   MOZ_ASSERT(gfxVars::UseWebRender());

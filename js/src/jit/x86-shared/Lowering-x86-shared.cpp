@@ -503,7 +503,7 @@ void LIRGeneratorX86Shared::lowerPowOfTwoI(MPow* mir) {
   // x86 can't shift a non-ecx register.
   LAllocation powerAlloc =
       Assembler::HasBMI2() ? useRegister(power) : useFixed(power, ecx);
-  auto* lir = new (alloc()) LPowOfTwoI(base, powerAlloc);
+  auto* lir = new (alloc()) LPowOfTwoI(powerAlloc, base);
   assignSnapshot(lir, mir->bailoutKind());
   define(lir, mir);
 }

@@ -1323,9 +1323,11 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext,
       const bool& aShouldAddCount);
 
+#if defined(XP_WIN)
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);
+#endif  // defined(XP_WIN)
 
   mozilla::ipc::IPCResult RecvReportServiceWorkerShutdownProgress(
       uint32_t aShutdownStateId,

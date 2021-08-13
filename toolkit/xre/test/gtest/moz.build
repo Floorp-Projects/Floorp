@@ -10,22 +10,13 @@ UNIFIED_SOURCES = [
     "TestCompatVersionCompare.cpp",
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
-
 LOCAL_INCLUDES += [
     "/toolkit/components/remote",
-    "/toolkit/components/telemetry/other",
-    "/toolkit/components/telemetry/tests/gtest",
 ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
         "TestAssembleCommandLineWin.cpp",
-        "TestUntrustedModules.cpp",
-    ]
-    TEST_DIRS += [
-        "TestUntrustedModules_Dll1",
-        "TestUntrustedModules_Dll2",
     ]
 
 FINAL_LIBRARY = "xul-gtest"

@@ -140,7 +140,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       return null;
     }
 
-    let unescapedSearchString = Services.textToSubURI.unEscapeURIForUI(
+    let unescapedSearchString = UrlbarUtils.unEscapeURIForUI(
       queryContext.searchString
     );
     let [prefix, suffix] = UrlbarUtils.stripURLPrefix(unescapedSearchString);

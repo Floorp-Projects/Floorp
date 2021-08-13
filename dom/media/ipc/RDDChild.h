@@ -41,9 +41,11 @@ class RDDChild final : public PRDDChild,
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
+#if defined(XP_WIN)
   mozilla::ipc::IPCResult RecvGetModulesTrust(
       ModulePaths&& aModPaths, bool aRunAtNormalPriority,
       GetModulesTrustResolver&& aResolver);
+#endif  // defined(XP_WIN)
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
       const PDMFactory::MediaCodecsSupported& aSupported);
 

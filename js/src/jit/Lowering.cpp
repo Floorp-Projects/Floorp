@@ -449,12 +449,12 @@ bool LIRGenerator::lowerCallArguments(MCall* call) {
 
     // Values take a slow path.
     if (arg->type() == MIRType::Value) {
-      LStackArgV* stack = new (alloc()) LStackArgV(argslot, useBox(arg));
+      LStackArgV* stack = new (alloc()) LStackArgV(useBox(arg), argslot);
       add(stack);
     } else {
       // Known types can move constant types and/or payloads.
       LStackArgT* stack = new (alloc())
-          LStackArgT(argslot, arg->type(), useRegisterOrConstant(arg));
+          LStackArgT(useRegisterOrConstant(arg), argslot, arg->type());
       add(stack);
     }
 
@@ -4904,31 +4904,31 @@ void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
     return;
   }
 
-  LWasmReturn* lir = new (alloc()) LWasmReturn;
+  LAllocation returnReg;
   if (rval->type() == MIRType::Float32) {
-    lir->setOperand(0, useFixed(rval, ReturnFloat32Reg));
+    returnReg = useFixed(rval, ReturnFloat32Reg);
   } else if (rval->type() == MIRType::Double) {
-    lir->setOperand(0, useFixed(rval, ReturnDoubleReg));
+    returnReg = useFixed(rval, ReturnDoubleReg);
 #ifdef ENABLE_WASM_SIMD
   } else if (rval->type() == MIRType::Simd128) {
-    lir->setOperand(0, useFixed(rval, ReturnSimd128Reg));
+    returnReg = useFixed(rval, ReturnSimd128Reg);
 #endif
   } else if (rval->type() == MIRType::Int32 ||
              rval->type() == MIRType::RefOrNull) {
-    lir->setOperand(0, useFixed(rval, ReturnReg));
+    returnReg = useFixed(rval, ReturnReg);
   } else {
     MOZ_CRASH("Unexpected wasm return type");
   }
 
-  lir->setOperand(1, useFixed(tlsParam, WasmTlsReg));
-
+  LWasmReturn* lir =
+      new (alloc()) LWasmReturn(useFixed(tlsParam, WasmTlsReg), returnReg);
   add(lir);
 }
 
 void LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins) {
   MDefinition* tlsParam = ins->getOperand(0);
-  LWasmReturnVoid* lir = new (alloc()) LWasmReturnVoid;
-  lir->setOperand(0, useFixed(tlsParam, WasmTlsReg));
+  LWasmReturnVoid* lir =
+      new (alloc()) LWasmReturnVoid(useFixed(tlsParam, WasmTlsReg));
   add(lir);
 }
 

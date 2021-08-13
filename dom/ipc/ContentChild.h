@@ -529,8 +529,10 @@ class ContentChild final : public PContentChild,
       const bool& minimizeMemoryUsage, const Maybe<FileDescriptor>& DMDFile,
       const RequestMemoryReportResolver& aResolver);
 
+#if defined(XP_WIN)
   mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
       GetUntrustedModulesDataResolver&& aResolver);
+#endif  // defined(XP_WIN)
 
   mozilla::ipc::IPCResult RecvSetXPCOMProcessAttributes(
       XPCOMInitData&& aXPCOMInit, const StructuredCloneData& aInitialData,
