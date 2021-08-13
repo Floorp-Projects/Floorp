@@ -25,6 +25,7 @@ browser.jar:
   content/browser/aboutlogins/components/login-list.css                  (content/components/login-list.css)
   content/browser/aboutlogins/components/login-list.js                   (content/components/login-list.js)
   content/browser/aboutlogins/components/login-list-item.js              (content/components/login-list-item.js)
+  content/browser/aboutlogins/components/login-list-section.js           (content/components/login-list-section.js)
   content/browser/aboutlogins/components/menu-button.css                 (content/components/menu-button.css)
   content/browser/aboutlogins/components/menu-button.js                  (content/components/menu-button.js)
   content/browser/aboutlogins/icons/breached-website.svg                 (content/icons/breached-website.svg)
