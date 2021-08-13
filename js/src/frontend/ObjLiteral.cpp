@@ -219,7 +219,6 @@ static JSObject* InterpretObjLiteralArray(
   }
 
   return NewDenseCopiedArray(cx, elements.length(), elements.begin(),
-                             /* proto = */ nullptr,
                              NewObjectKind::TenuredObject);
 }
 
