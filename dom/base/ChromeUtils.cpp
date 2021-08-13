@@ -781,6 +781,26 @@ void ChromeUtils::GetBaseDomainFromPartitionKey(dom::GlobalObject& aGlobal,
   aBaseDomain = pkBaseDomain;
 }
 
+/* static */
+void ChromeUtils::GetPartitionKeyFromURL(dom::GlobalObject& aGlobal,
+                                         const nsAString& aURL,
+                                         nsAString& aPartitionKey,
+                                         ErrorResult& aRv) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aPartitionKey.Truncate();
+    aRv.Throw(rv);
+    return;
+  }
+
+  mozilla::OriginAttributes attrs;
+  attrs.SetPartitionKey(uri);
+
+  aPartitionKey = attrs.mPartitionKey;
+}
+
 #ifdef NIGHTLY_BUILD
 /* static */
 void ChromeUtils::GetRecentJSDevError(GlobalObject& aGlobal,
