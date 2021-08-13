@@ -1424,40 +1424,42 @@ JS_PUBLIC_API uint32_t JS_GetGCParameter(JSContext* cx, JSGCParamKey key) {
   return cx->runtime()->gc.getParameter(key);
 }
 
-JS_PUBLIC_API void JS_SetGCParametersBasedOnAvailableMemory(JSContext* cx,
-                                                            uint32_t availMem) {
+JS_PUBLIC_API void JS_SetGCParametersBasedOnAvailableMemory(
+    JSContext* cx, uint32_t availMemMB) {
   struct JSGCConfig {
     JSGCParamKey key;
     uint32_t value;
   };
 
   static const JSGCConfig minimal[] = {
-      {JSGC_SLICE_TIME_BUDGET_MS, 30},
+      {JSGC_SLICE_TIME_BUDGET_MS, 5},
       {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
-      {JSGC_LARGE_HEAP_SIZE_MIN, 40},
-      {JSGC_SMALL_HEAP_SIZE_MAX, 0},
+      {JSGC_LARGE_HEAP_SIZE_MIN, 250},
+      {JSGC_SMALL_HEAP_SIZE_MAX, 50},
       {JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH, 300},
       {JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH, 120},
       {JSGC_LOW_FREQUENCY_HEAP_GROWTH, 120},
-      {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
-      {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
-      {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
-      {JSGC_ALLOCATION_THRESHOLD, 1}};
+      {JSGC_ALLOCATION_THRESHOLD, 15},
+      {JSGC_MALLOC_THRESHOLD_BASE, 20},
+      {JSGC_SMALL_HEAP_INCREMENTAL_LIMIT, 200},
+      {JSGC_LARGE_HEAP_INCREMENTAL_LIMIT, 110},
+      {JSGC_URGENT_THRESHOLD_MB, 8}};
 
   static const JSGCConfig nominal[] = {
-      {JSGC_SLICE_TIME_BUDGET_MS, 30},
+      {JSGC_SLICE_TIME_BUDGET_MS, 5},
       {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1000},
       {JSGC_LARGE_HEAP_SIZE_MIN, 500},
       {JSGC_SMALL_HEAP_SIZE_MAX, 100},
       {JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH, 300},
       {JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH, 150},
       {JSGC_LOW_FREQUENCY_HEAP_GROWTH, 150},
-      {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
-      {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
-      {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
-      {JSGC_ALLOCATION_THRESHOLD, 30}};
+      {JSGC_ALLOCATION_THRESHOLD, 27},
+      {JSGC_MALLOC_THRESHOLD_BASE, 38},
+      {JSGC_SMALL_HEAP_INCREMENTAL_LIMIT, 140},
+      {JSGC_LARGE_HEAP_INCREMENTAL_LIMIT, 110},
+      {JSGC_URGENT_THRESHOLD_MB, 16}};
 
-  const auto& configSet = availMem > 512 ? nominal : minimal;
+  const auto& configSet = availMemMB > 512 ? nominal : minimal;
   for (const auto& config : configSet) {
     JS_SetGCParameter(cx, config.key, config.value);
   }
