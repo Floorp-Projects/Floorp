@@ -136,6 +136,7 @@ inline void NativeObject::initDenseElements(NativeObject* src,
 inline void NativeObject::initDenseElements(const Value* src, uint32_t count) {
   MOZ_ASSERT(getDenseInitializedLength() == 0);
   MOZ_ASSERT(count <= getDenseCapacity());
+  MOZ_ASSERT(src);
   MOZ_ASSERT(isExtensible());
 
   setDenseInitializedLength(count);
