@@ -14,6 +14,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import kotlinx.android.synthetic.main.activity_home.*
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ext.components
@@ -81,6 +82,7 @@ class StartupExcessiveResourceUseTest {
 
     private val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
+    @Ignore("See: https://github.com/mozilla-mobile/fenix/pull/20841#issuecomment-898630241c")
     @Test
     fun verifyRunBlockingAndStrictModeSuppresionCount() {
         uiDevice.waitForIdle() // wait for async UI to load.

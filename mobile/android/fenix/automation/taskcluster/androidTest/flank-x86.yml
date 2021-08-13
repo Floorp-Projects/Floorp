@@ -38,8 +38,8 @@ gcloud:
   performance-metrics: true
 
   test-targets:
-   - package org.mozilla.fenix.ui
-   - package org.mozilla.fenix.glean
+   - notPackage org.mozilla.fenix.screenshots
+   - notPackage org.mozilla.fenix.syncintegration
 
   device:
    - model: Pixel2
