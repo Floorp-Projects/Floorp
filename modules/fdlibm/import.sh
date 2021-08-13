@@ -2,7 +2,7 @@
 
 set -e
 
-BASE_URL=https://raw.githubusercontent.com/freebsd/freebsd/"${1}"/lib/msun/src
+BASE_URL=https://raw.githubusercontent.com/freebsd/freebsd-src/"${1}"/lib/msun/src
 
 download_source() {
     REMOTE_FILENAME=$1
@@ -46,7 +46,9 @@ download_source s_cbrt.c s_cbrt.cpp
 download_source s_ceil.c s_ceil.cpp
 download_source s_ceilf.c s_ceilf.cpp
 
-# Math.cos (not used due to poor performance)
+# Math.cos
+download_source s_cos.c s_cos.cpp
+download_source k_cos.c k_cos.cpp
 
 # Math.cosh
 download_source e_cosh.c e_cosh.cpp
@@ -81,14 +83,18 @@ download_source e_log2.c e_log2.cpp
 
 # Math.pow (not used due to poor performance)
 
-# Math.sin (not used due to poor performance)
+# Math.sin
+download_source s_sin.c s_sin.cpp
+download_source k_sin.c k_sin.cpp
 
 # Math.sinh
 download_source e_sinh.c e_sinh.cpp
 
 # Math.sqrt (not used due to poor performance)
 
-# Math.tan (not used due to poor performance)
+# Math.tan
+download_source s_tan.c s_tan.cpp
+download_source k_tan.c k_tan.cpp
 
 # Math.tanh
 download_source s_tanh.c s_tanh.cpp
@@ -98,6 +104,8 @@ download_source s_trunc.c s_trunc.cpp
 download_source s_truncf.c s_truncf.cpp
 
 # dependencies
+download_source e_rem_pio2.c e_rem_pio2.cpp
+download_source k_rem_pio2.c k_rem_pio2.cpp
 download_source k_exp.c k_exp.cpp
 download_source s_copysign.c s_copysign.cpp
 download_source s_fabs.c s_fabs.cpp
