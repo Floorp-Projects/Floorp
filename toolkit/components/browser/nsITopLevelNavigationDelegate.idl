@@ -22,7 +22,9 @@ interface nsITopLevelNavigationDelegate : nsISupports
   /**
    * @param nsIDocShell docShell The nsIDocShell performing the navigation.
    * @param nsIURI linkURI The URI that the nsIDocShell is trying to
-   *   navigate to.
+   *        navigate to.
+   * @param unsigned long loadType Contains a load type for the navigation as
+   *        specified by the load constants in nsIDocShell:LoadCommand.
    * @param nsIURI referrer
    *        The referrer of the load.
    * @param boolean hasPostData
@@ -34,10 +36,11 @@ interface nsITopLevelNavigationDelegate : nsISupports
    *        The CSP to be used for that load. That is the CSP that e.g. upgrades
    *        the load to HTTPS in case upgrade-insecure-requests is set.
    * @return boolean True if the nsIDocShell should proceed with the
-   *   navigation.
+   *         navigation.
    */
   bool shouldNavigate(in nsIDocShell docShell,
                       in nsIURI linkURI,
+                      in unsigned long loadType,
                       in nsIURI referrer,
                       in boolean hasPostData,
                       in nsIPrincipal triggeringPrincipal,
