@@ -8,7 +8,12 @@
 
 #UITourHighlightContainer {
   appearance: none;
+
+  /* Resets the native styles in windows and macOS */
+  border: none;
+  background-color: transparent;
   -moz-window-shadow: none;
+
   --panel-border-color: transparent;
   --panel-background: transparent;
   /* This is a buffer to compensate for the movement in the "wobble" effect,
