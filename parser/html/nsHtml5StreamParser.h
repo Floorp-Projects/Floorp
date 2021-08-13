@@ -191,6 +191,7 @@ class nsHtml5StreamParser final : public nsISupports {
   friend class nsHtml5StreamParserContinuation;
   friend class nsHtml5TimerKungFu;
   friend class nsHtml5StreamParserPtr;
+  friend class nsHtml5StreamListener;
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
