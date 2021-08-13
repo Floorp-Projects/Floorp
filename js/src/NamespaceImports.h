@@ -32,14 +32,10 @@ class ObjectOpResult;
 
 class JS_PUBLIC_API PropertyDescriptor;
 
-namespace Scalar {}
-
 }  // namespace JS
 
 // Do the importing.
 namespace js {
-
-namespace Scalar = JS::Scalar;
 
 using JS::BooleanValue;
 using JS::DoubleValue;

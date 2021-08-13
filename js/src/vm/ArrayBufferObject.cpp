@@ -1955,35 +1955,3 @@ JS_PUBLIC_API void JS::GetArrayBufferLengthAndData(JSObject* obj,
   *data = aobj.dataPointer();
   *isSharedMemory = false;
 }
-
-const JSClass* const JS::ArrayBuffer::UnsharedClass =
-    &ArrayBufferObject::class_;
-const JSClass* const JS::ArrayBuffer::SharedClass =
-    &SharedArrayBufferObject::class_;
-
-/* static */ JS::ArrayBuffer JS::ArrayBuffer::create(JSContext* cx,
-                                                     size_t nbytes) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  return JS::ArrayBuffer(ArrayBufferObject::createZeroed(cx, nbytes));
-}
-
-uint8_t* JS::ArrayBuffer::getLengthAndData(size_t* length, bool* isSharedMemory,
-                                           const JS::AutoRequireNoGC& nogc) {
-  auto* buffer = obj->maybeUnwrapAs<ArrayBufferObjectMaybeShared>();
-  if (!buffer) {
-    return nullptr;
-  }
-  *length = buffer->byteLength();
-  if (buffer->is<SharedArrayBufferObject>()) {
-    *isSharedMemory = true;
-    return buffer->dataPointerEither().unwrap();
-  }
-  *isSharedMemory = false;
-  return buffer->as<ArrayBufferObject>().dataPointer();
-};
-
-JS::ArrayBuffer JS::ArrayBuffer::unwrap(JSObject* maybeWrapped) {
-  auto* ab = maybeWrapped->maybeUnwrapIf<ArrayBufferObjectMaybeShared>();
-  return fromObject(ab);
-}
