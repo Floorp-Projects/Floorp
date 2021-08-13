@@ -974,6 +974,13 @@ done_date:
     ++i;
     NEED_NDIGITS(2, tzHour);
     /*
+     * Non-standard extension to the ISO date format:
+     * allow two digits for the time zone offset.
+     */
+    if (i >= length && !isStrict) {
+      goto done;
+    }
+    /*
      * Non-standard extension to the ISO date format (permitted by ES5):
      * allow "-0700" as a time zone offset, not just "-07:00".
      */
