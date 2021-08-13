@@ -855,6 +855,15 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverHandlesOnShowDynamicToolbar() {
+        val store: BrowserStore = mock()
+        val observer = EngineObserver("tab-id", store)
+
+        observer.onShowDynamicToolbar()
+        verify(store).dispatch(ContentAction.UpdateExpandedToolbarStateAction("tab-id", true))
+    }
+
+    @Test
     fun `onMediaActivated will update the store`() {
         val store = BrowserStore(
             initialState = BrowserState(

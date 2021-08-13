@@ -104,6 +104,14 @@ class ToolbarInteractorTest {
         override fun disableScrolling() {
             fail()
         }
+
+        override fun collapse() {
+            fail()
+        }
+
+        override fun expand() {
+            fail()
+        }
     }
 
     @Test

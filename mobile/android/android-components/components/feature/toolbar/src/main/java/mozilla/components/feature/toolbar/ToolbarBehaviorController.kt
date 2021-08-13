@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
@@ -36,12 +37,18 @@ class ToolbarBehaviorController(
         updatesScope = store.flowScoped { flow ->
             flow.mapNotNull { state ->
                 state.findCustomTabOrSelectedTab(customTabId)
-            }.ifChanged { tab ->
-                tab.content.loading
+            }.ifChanged {
+                arrayOf(it.content.loading, it.content.showToolbarAsExpanded)
             }.collect { state ->
+                if (state.content.showToolbarAsExpanded) {
+                    expandToolbar()
+                    store.dispatch(ContentAction.UpdateExpandedToolbarStateAction(state.id, false))
+                    return@collect
+                }
+
                 if (state.content.loading) {
                     disableScrolling()
-                } else {
+                } else if (!state.content.loading) {
                     enableScrolling()
                 }
             }
@@ -53,6 +60,11 @@ class ToolbarBehaviorController(
      */
     fun stop() {
         updatesScope?.cancel()
+    }
+
+    @VisibleForTesting
+    internal fun expandToolbar() {
+        toolbar.expand()
     }
 
     @VisibleForTesting

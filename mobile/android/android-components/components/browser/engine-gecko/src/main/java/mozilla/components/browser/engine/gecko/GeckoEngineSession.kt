@@ -884,6 +884,10 @@ class GeckoEngineSession(
                 notifyObservers { onMetaViewportFitChanged(layoutInDisplayCutoutMode) }
             }
         }
+
+        override fun onShowDynamicToolbar(geckoSession: GeckoSession) {
+            notifyObservers { onShowDynamicToolbar() }
+        }
     }
 
     private fun createContentBlockingDelegate() = object : ContentBlocking.Delegate {

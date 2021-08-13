@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **concept-toolbar**, **concept-engine**, **browser-engine-gecko**, **browser-state**, **feature-toolbar**, **browser-toolbar**,
+  * 🌟️ The toolbar now supports two new methods: `expand` and `collapse` to immediately execute this actions if the toolbar is dynamic. `expand` is used as of now as a callback for when GeckoView needs the toolbar to be shown depending on tab content changes.
+
 # 92.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v91.0.0...v92.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/139?closed=1)

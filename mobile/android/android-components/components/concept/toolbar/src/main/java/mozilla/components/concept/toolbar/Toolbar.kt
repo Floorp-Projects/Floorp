@@ -188,6 +188,16 @@ interface Toolbar {
     fun disableScrolling()
 
     /**
+     * Force the toolbar to expand.
+     */
+    fun expand()
+
+    /**
+     * Force the toolbar to collapse. Only if dynamic.
+     */
+    fun collapse()
+
+    /**
      * Listener to be invoked when the user edits the URL.
      */
     interface OnEditListener {

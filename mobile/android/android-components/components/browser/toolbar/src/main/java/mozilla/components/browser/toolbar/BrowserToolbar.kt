@@ -344,6 +344,18 @@ class BrowserToolbar @JvmOverloads constructor(
         }
     }
 
+    override fun expand() {
+        (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
+            (behavior as? BrowserToolbarBehavior)?.forceExpand(this@BrowserToolbar)
+        }
+    }
+
+    override fun collapse() {
+        (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
+            (behavior as? BrowserToolbarBehavior)?.forceCollapse(this@BrowserToolbar)
+        }
+    }
+
     internal fun onUrlEntered(url: String) {
         if (urlCommitListener?.invoke(url) != false) {
             // Return to display mode if there's no urlCommitListener or if it returned true. This lets

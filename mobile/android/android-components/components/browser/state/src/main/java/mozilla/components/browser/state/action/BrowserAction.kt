@@ -644,6 +644,11 @@ sealed class ContentAction : BrowserAction() {
      * Removes the [AppIntentState] of the [ContentState] with the given [sessionId].
      */
     data class ConsumeAppIntentAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Updates whether the toolbar should be forced to expand or have it follow the default behavior.
+     */
+    data class UpdateExpandedToolbarStateAction(val sessionId: String, val expanded: Boolean) : ContentAction()
 }
 
 /**

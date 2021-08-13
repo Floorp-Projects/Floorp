@@ -2199,6 +2199,23 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun onShowDynamicToolbarTriggersTheRightEvent() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider
+        )
+        val observer: EngineSession.Observer = mock()
+
+        // Verify the call to the observer.
+        engineSession.register(observer)
+        captureDelegates()
+
+        contentDelegate.value.onShowDynamicToolbar(geckoSession)
+
+        verify(observer).onShowDynamicToolbar()
+    }
+
+    @Test
     fun clearData() {
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
         val observer: EngineSession.Observer = mock()

@@ -279,6 +279,9 @@ internal object ContentStateReducer {
             is ContentAction.ConsumeAppIntentAction -> updateContentState(state, action.sessionId) {
                 it.copy(appIntent = null)
             }
+            is ContentAction.UpdateExpandedToolbarStateAction -> updateContentState(state, action.sessionId) {
+                it.copy(showToolbarAsExpanded = action.expanded)
+            }
         }
     }
     private fun consumeDownload(state: BrowserState, sessionId: String, downloadId: String): BrowserState {

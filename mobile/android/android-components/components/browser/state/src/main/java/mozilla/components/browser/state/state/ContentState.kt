@@ -60,6 +60,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * by web content.
  * @property desktopMode true if desktop mode is enabled, otherwise false.
  * @property appIntent the last received [AppIntentState].
+ * @property showToolbarAsExpanded whether the dynamic toolbar should be forced as expanded.
  */
 data class ContentState(
     val url: String,
@@ -93,5 +94,6 @@ data class ContentState(
     val refreshCanceled: Boolean = false,
     val recordingDevices: List<RecordingDevice> = emptyList(),
     val desktopMode: Boolean = false,
-    val appIntent: AppIntentState? = null
+    val appIntent: AppIntentState? = null,
+    val showToolbarAsExpanded: Boolean = false
 )

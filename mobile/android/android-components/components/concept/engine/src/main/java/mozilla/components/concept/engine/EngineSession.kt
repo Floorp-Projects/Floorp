@@ -92,6 +92,12 @@ abstract class EngineSession(
         fun onWindowRequest(windowRequest: WindowRequest) = Unit
 
         /**
+         * Based on the webpage current state the toolbar should be expanded to it's full height
+         * previously specified in [EngineView.setDynamicToolbarMaxHeight].
+         */
+        fun onShowDynamicToolbar() = Unit
+
+        /**
          * Notify that the given media session has become active.
          *
          * @param mediaSessionController The associated [MediaSession.Controller].

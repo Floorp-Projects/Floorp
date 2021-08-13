@@ -6,6 +6,7 @@ package mozilla.components.feature.toolbar
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.isActive
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -46,7 +47,7 @@ class ToolbarBehaviorControllerTest {
         controller.start()
 
         assertNotNull(controller.updatesScope)
-        verify(customTabContent, times(2)).loading
+        verify(customTabContent, times(3)).loading
         verify(normalTabContent, never()).loading
     }
 
@@ -70,7 +71,7 @@ class ToolbarBehaviorControllerTest {
 
         assertNotNull(controller.updatesScope)
         verify(customTabContent, never()).loading
-        verify(normalTabContent, times(2)).loading
+        verify(normalTabContent, times(3)).loading
     }
 
     @Test
@@ -134,5 +135,40 @@ class ToolbarBehaviorControllerTest {
         controller.enableScrolling()
 
         verify(toolbar).enableScrolling()
+    }
+
+    @Test
+    fun `Controller should expand the toolbar and set showToolbarAsExpanded to false when showToolbarAsExpanded is true`() {
+        val normalTabContent = ContentState("url", showToolbarAsExpanded = true)
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(TabSessionState("123", normalTabContent)),
+                    selectedTabId = "123"
+                )
+            )
+        )
+        val controller = spy(ToolbarBehaviorController(mock(), store))
+
+        controller.start()
+
+        verify(controller).expandToolbar()
+        verify(store).dispatch(ContentAction.UpdateExpandedToolbarStateAction("123", false))
+    }
+
+    @Test
+    fun `Controller should not expand the toolbar and not update the current state if showToolbarAsExpanded is false`() {
+        val normalTabContent = ContentState("url", showToolbarAsExpanded = false)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(TabSessionState("123", normalTabContent)),
+                selectedTabId = "123"
+            )
+        )
+        val controller = spy(ToolbarBehaviorController(mock(), store))
+
+        controller.start()
+
+        verify(controller, never()).expandToolbar()
     }
 }
