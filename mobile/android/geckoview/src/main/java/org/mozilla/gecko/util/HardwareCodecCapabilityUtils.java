@@ -225,7 +225,6 @@ public final class HardwareCodecCapabilityUtils {
         return null;
     }
 
-    @WrapForJNI
     public static boolean hasHWVP8(final boolean aIsEncoder) {
         return getHWCodecCapability(VP8_MIME_TYPE, aIsEncoder);
     }
@@ -233,11 +232,6 @@ public final class HardwareCodecCapabilityUtils {
     @WrapForJNI
     public static boolean hasHWVP9(final boolean aIsEncoder) {
         return getHWCodecCapability(VP9_MIME_TYPE, aIsEncoder);
-    }
-
-    @WrapForJNI
-    public static boolean hasHWH264(final boolean aIsEncoder) {
-        return getHWCodecCapability(H264_MIME_TYPE, aIsEncoder);
     }
 
     @WrapForJNI(calledFrom = "gecko")
