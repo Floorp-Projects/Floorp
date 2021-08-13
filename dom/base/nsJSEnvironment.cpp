@@ -1705,13 +1705,6 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
 
       sScheduler.NoteGCEnd();
 
-      using mozilla::ipc::IdleSchedulerChild;
-      IdleSchedulerChild* child =
-          IdleSchedulerChild::GetMainThreadIdleScheduler();
-      if (child) {
-        child->DoneGC();
-      }
-
       // May need to kill the GC runner
       sScheduler.KillGCRunner();
 

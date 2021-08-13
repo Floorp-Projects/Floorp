@@ -15,6 +15,14 @@ void CCGCScheduler::NoteGCBegin() {
   // be one slice.
   mInIncrementalGC = true;
   mReadyForMajorGC = false;
+
+  // Tell the parent process that we've started a GC (it might not know if
+  // we hit a threshold in the JS engine).
+  using mozilla::ipc::IdleSchedulerChild;
+  IdleSchedulerChild* child = IdleSchedulerChild::GetMainThreadIdleScheduler();
+  if (child) {
+    child->StartedGC();
+  }
 }
 
 void CCGCScheduler::NoteGCEnd() {
@@ -32,6 +40,12 @@ void CCGCScheduler::NoteGCEnd() {
   mCCollectedWaitingForGC = 0;
   mCCollectedZonesWaitingForGC = 0;
   mLikelyShortLivingObjectsNeedingGC = 0;
+
+  using mozilla::ipc::IdleSchedulerChild;
+  IdleSchedulerChild* child = IdleSchedulerChild::GetMainThreadIdleScheduler();
+  if (child) {
+    child->DoneGC();
+  }
 }
 
 void CCGCScheduler::NoteWontGC() {
@@ -56,30 +70,6 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
       if (!mbPromise) {
         // We can GC now.
         break;
-      }
-
-      if (mbPromise->IsResolved()) {
-        // The promise is already resolved so if we are going to do a GC,
-        // begin it now in the current idle time.
-        mbPromise->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [this, aDeadline, step](bool aMayGC) {
-              MOZ_ASSERT(!InIncrementalGC());
-              if (aMayGC) {
-                MOZ_ALWAYS_TRUE(NoteReadyForMajorGC());
-                GCRunnerFiredDoGC(aDeadline, step);
-              } else {
-                KillGCRunner();
-                NoteWontGC();
-              }
-            },
-            [this](mozilla::ipc::ResponseRejectReason r) {
-              if (!InIncrementalGC()) {
-                KillGCRunner();
-                NoteWontGC();
-              }
-            });
-        return true;
       }
 
       KillGCRunner();
@@ -137,6 +127,7 @@ bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
         child->DoneGC();
       }
       NoteWontGC();
+      KillGCRunner();
       return true;
     }
   }

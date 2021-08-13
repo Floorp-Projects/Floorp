@@ -85,19 +85,37 @@ RefPtr<IdleSchedulerChild::MayGCPromise> IdleSchedulerChild::MayGCNow() {
   return SendRequestGC()->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [self = RefPtr(this), wait_since](bool aIgnored) {
-        MOZ_ASSERT(self->mIsRequestingGC && !self->mIsDoingGC);
-        // The parent process always says yes, sometimes after a delay.
+        // Only one of these may be true at a time.
+        MOZ_ASSERT(!(self->mIsRequestingGC && self->mIsDoingGC));
 
-        Telemetry::AccumulateTimeDelta(Telemetry::GC_WAIT_FOR_IDLE_MS,
-                                       wait_since);
-        self->mIsRequestingGC = false;
-        self->mIsDoingGC = true;
-        return MayGCPromise::CreateAndResolve(true, __func__);
+        // The parent process always says yes, sometimes after a delay.
+        if (self->mIsRequestingGC) {
+          Telemetry::AccumulateTimeDelta(Telemetry::GC_WAIT_FOR_IDLE_MS,
+                                         wait_since);
+          self->mIsRequestingGC = false;
+          self->mIsDoingGC = true;
+          return MayGCPromise::CreateAndResolve(true, __func__);
+        }
+        return MayGCPromise::CreateAndResolve(false, __func__);
       },
       [self = RefPtr(this)](ResponseRejectReason reason) {
         self->mIsRequestingGC = false;
         return MayGCPromise::CreateAndReject(reason, __func__);
       });
+}
+
+void IdleSchedulerChild::StartedGC() {
+  // Only one of these may be true at a time.
+  MOZ_ASSERT(!(mIsRequestingGC && mIsDoingGC));
+
+  // If mRequestingGC was true then when the outstanding GC request returns
+  // it'll see that the GC has already started.
+  mIsRequestingGC = false;
+
+  if (!mIsDoingGC) {
+    SendStartedGC();
+    mIsDoingGC = true;
+  }
 }
 
 void IdleSchedulerChild::DoneGC() {

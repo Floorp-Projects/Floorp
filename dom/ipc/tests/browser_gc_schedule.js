@@ -261,7 +261,7 @@ add_task(async function gcAbort() {
   SpecialPowers.popPrefEnv();
 });
 
-add_task(async function gcJSInitiated() {
+add_task(async function gcJSInitiatedDuring() {
   SpecialPowers.pushPrefEnv({
     set: [["javascript.options.concurrent_multiprocess_gcs.max", 1]],
   });
@@ -281,6 +281,7 @@ add_task(async function gcJSInitiated() {
     SpecialPowers.Cu.getJSTestingFunctions().gcslice(1);
   });
   await tab0Waits.waitBegin;
+  info("GC on tab 0 has begun");
 
   // Request a GC in tab 1, this will be blocked by the ongoing GC in tab 0.
   var tab1Waits = startNextCollection(tabs[1], 1, waits);
@@ -291,6 +292,58 @@ add_task(async function gcJSInitiated() {
   });
 
   await tab1Waits.waitBegin;
+  info("GC on tab 1 has begun");
+
+  // The GC in tab 0 should still be running.
+  var state = await SpecialPowers.spawn(tabs[0].linkedBrowser, [], () => {
+    return SpecialPowers.Cu.getJSTestingFunctions().gcstate();
+  });
+  info("State of Tab 0 GC is " + state);
+  isnot(state, "NotActive", "GC is active in tab 0");
+
+  // Let the GCs complete, verify that a GC in a 3rd tab can acquire a token.
+  startNextCollection(tabs[2], 2, waits);
+
+  let order = await resolveInOrder(waits);
+  info("All GCs finished");
+  checkAllCompleted(
+    order,
+    Array.from({ length: num_tabs }, (_, n) => n)
+  );
+
+  for (var tab of tabs) {
+    BrowserTestUtils.removeTab(tab);
+  }
+
+  SpecialPowers.popPrefEnv();
+});
+
+add_task(async function gcJSInitiatedBefore() {
+  SpecialPowers.pushPrefEnv({
+    set: [["javascript.options.concurrent_multiprocess_gcs.max", 1]],
+  });
+
+  const num_tabs = 8;
+  var tabs = await setupTabs(num_tabs);
+
+  info("Tabs ready");
+  var waits = [];
+
+  // Start a GC on tab 0 to consume the scheduler's first "token".  Zeal mode 10
+  // will cause it to run in many slices.
+  info("Force a JS-initiated GC in tab 0");
+  var tab0Waits = startNextCollection(tabs[0], 0, waits, () => {
+    if (SpecialPowers.Cu.getJSTestingFunctions().gczeal) {
+      SpecialPowers.Cu.getJSTestingFunctions().gczeal(10);
+    }
+    SpecialPowers.Cu.getJSTestingFunctions().gcslice(1);
+  });
+  await tab0Waits.waitBegin;
+
+  info("Request GCs in remaining tabs");
+  for (var i = 1; i < num_tabs; i++) {
+    startNextCollection(tabs[i], i, waits);
+  }
 
   // The GC in tab 0 should still be running.
   var state = await SpecialPowers.spawn(tabs[0].linkedBrowser, [], () => {
@@ -299,10 +352,11 @@ add_task(async function gcJSInitiated() {
   info("State is " + state);
   isnot(state, "NotActive", "GC is active in tab 0");
 
-  // Let the GCs complete, verify that a GC in a 3rd tab can acquire a token.
-  startNextCollection(tabs[2], 2, waits);
-
   let order = await resolveInOrder(waits);
+  // We need these in the order they actually occurred, so far that's how
+  // they're returned, but we'll sort them to be sure.
+  order.sort((e1, e2) => e1.when - e2.when);
+  checkOneAtATime(order);
   checkAllCompleted(
     order,
     Array.from({ length: num_tabs }, (_, n) => n)
