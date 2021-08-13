@@ -255,4 +255,21 @@
         <item name="android:textSize">12sp</item>
         <item name="android:letterSpacing">0.03</item>
     </style>
+
+    <style name="PreferenceScreenHeader">
+        <item name="android:textColor">@color/preference_summary_text</item>
+        <item name="android:textSize">16sp</item>
+        <item name="fontFamily">@font/metropolis</item>
+        <item name="android:lineSpacingExtra">1sp</item>
+        <item name="android:letterSpacing">0.03</item>
+    </style>
+
+    <style name="PreferenceSectionHeader">
+        <item name="android:textColor">@color/preference_title_text</item>
+        <item name="android:textSize">14sp</item>
+        <item name="fontFamily">@font/metropolis</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
 </resources>

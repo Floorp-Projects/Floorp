@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <androidx.preference.PreferenceCategory
-        android:layout="@layout/focus_preference_category"
+        android:layout="@layout/preference_section_header_layout"
         android:title="@string/preference_advanced_summary">
         <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"

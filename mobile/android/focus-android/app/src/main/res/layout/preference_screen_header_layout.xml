@@ -2,15 +2,11 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.textview.MaterialTextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/title"
+    style="@style/PreferenceScreenHeader"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center_vertical"
+    android:layout_height="48dp"
     android:layout_marginStart="16dp"
-    android:layout_marginTop="12dp"
-    android:textAllCaps="false"
-    android:textColor="@color/preference_title_text"
-    android:textSize="14sp"
-    android:textStyle="bold" />
-
+    android:gravity="start|center_vertical" />
