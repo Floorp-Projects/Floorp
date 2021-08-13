@@ -1164,11 +1164,17 @@ pref("javascript.options.mem.gc_low_frequency_heap_growth", 150);
 // JSGC_ALLOCATION_THRESHOLD
 pref("javascript.options.mem.gc_allocation_threshold_mb", 27);
 
+// JSGC_MALLOC_THRESHOLD_BASE
+pref("javascript.options.mem.gc_malloc_threshold_base_mb", 38);
+
 // JSGC_SMALL_HEAP_INCREMENTAL_LIMIT
 pref("javascript.options.mem.gc_small_heap_incremental_limit", 140);
 
 // JSGC_LARGE_HEAP_INCREMENTAL_LIMIT
 pref("javascript.options.mem.gc_large_heap_incremental_limit", 110);
+
+// JSGC_URGENT_THRESHOLD_MB
+pref("javascript.options.mem.gc_urgent_threshold_mb", 16);
 
 // JSGC_MIN_EMPTY_CHUNK_COUNT
 pref("javascript.options.mem.gc_min_empty_chunk_count", 1);
