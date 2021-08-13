@@ -3827,6 +3827,28 @@ void MacroAssembler::nearestFloat64x2(FloatRegister src, FloatRegister dest) {
   Frintn(Simd2D(dest), Simd2D(src));
 }
 
+// Floating multiply-accumulate: srcDest [+-]= src1 * src2
+
+void MacroAssembler::fmaFloat32x4(FloatRegister src1, FloatRegister src2,
+                                  FloatRegister srcDest) {
+  Fmla(Simd4S(srcDest), Simd4S(src1), Simd4S(src2));
+}
+
+void MacroAssembler::fmsFloat32x4(FloatRegister src1, FloatRegister src2,
+                                  FloatRegister srcDest) {
+  Fmls(Simd4S(srcDest), Simd4S(src1), Simd4S(src2));
+}
+
+void MacroAssembler::fmaFloat64x2(FloatRegister src1, FloatRegister src2,
+                                  FloatRegister srcDest) {
+  Fmla(Simd2D(srcDest), Simd2D(src1), Simd2D(src2));
+}
+
+void MacroAssembler::fmsFloat64x2(FloatRegister src1, FloatRegister src2,
+                                  FloatRegister srcDest) {
+  Fmls(Simd2D(srcDest), Simd2D(src1), Simd2D(src2));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
