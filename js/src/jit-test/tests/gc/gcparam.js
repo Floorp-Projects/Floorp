@@ -52,6 +52,7 @@ testChangeParam("minEmptyChunkCount");
 testChangeParam("maxEmptyChunkCount");
 testChangeParam("compactingEnabled");
 testChangeParam("mallocThresholdBase");
+testChangeParam("urgentThreshold");
 testChangeParam("nurseryTimeoutForIdleCollectionMS");
 
 testMBParamValue("smallHeapSizeMax");
