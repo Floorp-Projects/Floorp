@@ -87,6 +87,19 @@ def guess_mozinfo_from_task(task):
     else:
         info["toolkit"] = "gtk"
 
+    # guess os_version
+    os_versions = {
+        "linux1804": "18.04",
+        "macosx1015": "10.15",
+        "macosx1100": "11.00",
+        "windows7": "6.1",
+        "windows10": "10.0",
+    }
+    for platform, version in os_versions.items():
+        if platform in task["test-platform"]:
+            info["os_version"] = version
+            break
+
     return info
 
 
