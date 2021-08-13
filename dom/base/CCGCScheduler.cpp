@@ -34,6 +34,14 @@ void CCGCScheduler::NoteGCEnd() {
   mLikelyShortLivingObjectsNeedingGC = 0;
 }
 
+void CCGCScheduler::NoteWontGC() {
+  mReadyForMajorGC = false;
+  mMajorGCReason = JS::GCReason::NO_REASON;
+  mWantAtLeastRegularGC = false;
+  // Don't clear the WantFullGC state, we will do a full GC the next time a
+  // GC happens for any other reason.
+}
+
 bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
   MOZ_ASSERT(!mDidShutdown, "GCRunner still alive during shutdown");
 
@@ -45,25 +53,61 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
     case GCRunnerAction::WaitToMajorGC: {
       RefPtr<CCGCScheduler::MayGCPromise> mbPromise =
           CCGCScheduler::MayGCNow(step.mReason);
-      if (!mbPromise || mbPromise->IsResolved()) {
-        // Only use the promise if it's not resolved yet, otherwise fall through
-        // and begin the GC in the current idle time with our current deadline.
+      if (!mbPromise) {
+        // We can GC now.
         break;
+      }
+
+      if (mbPromise->IsResolved()) {
+        // The promise is already resolved so if we are going to do a GC,
+        // begin it now in the current idle time.
+        mbPromise->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [this, aDeadline, step](bool aMayGC) {
+              MOZ_ASSERT(!InIncrementalGC());
+              if (aMayGC) {
+                MOZ_ALWAYS_TRUE(NoteReadyForMajorGC());
+                GCRunnerFiredDoGC(aDeadline, step);
+              } else {
+                KillGCRunner();
+                NoteWontGC();
+              }
+            },
+            [this](mozilla::ipc::ResponseRejectReason r) {
+              if (!InIncrementalGC()) {
+                KillGCRunner();
+                NoteWontGC();
+              }
+            });
+        return true;
       }
 
       KillGCRunner();
       mbPromise->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [this](bool aIgnored) {
-            if (!NoteReadyForMajorGC()) {
-              return;  // Another GC completed while waiting.
+          [this](bool aMayGC) {
+            if (aMayGC) {
+              if (!NoteReadyForMajorGC()) {
+                // Another GC started and maybe completed while waiting.
+                return;
+              }
+              // Recreate the GC runner with a 0 delay.  The new runner will
+              // continue in idle time.
+              KillGCRunner();
+              EnsureGCRunner(0);
+            } else if (!InIncrementalGC()) {
+              // We should kill the GC runner since we're done with it, but
+              // only if there's no incremental GC.
+              KillGCRunner();
+              NoteWontGC();
             }
-            // If a new runner was started, recreate it with a 0 delay. The new
-            // runner will continue in idle time.
-            KillGCRunner();
-            EnsureGCRunner(0);
           },
-          [](mozilla::ipc::ResponseRejectReason r) {});
+          [this](mozilla::ipc::ResponseRejectReason r) {
+            if (!InIncrementalGC()) {
+              KillGCRunner();
+              NoteWontGC();
+            }
+          });
 
       return true;
     }
@@ -73,9 +117,14 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
       break;
   }
 
+  return GCRunnerFiredDoGC(aDeadline, step);
+}
+
+bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
+                                      const GCRunnerStep& aStep) {
   // Run a GC slice, possibly the first one of a major GC.
   nsJSContext::IsShrinking is_shrinking = nsJSContext::NonShrinkingGC;
-  if (!InIncrementalGC() && step.mReason == JS::GCReason::USER_INACTIVE) {
+  if (!InIncrementalGC() && aStep.mReason == JS::GCReason::USER_INACTIVE) {
     if (!mUserIsActive) {
       mIsCompactingOnUserInactive = true;
       is_shrinking = nsJSContext::ShrinkingGC;
@@ -87,6 +136,7 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
       if (child) {
         child->DoneGC();
       }
+      NoteWontGC();
       return true;
     }
   }
@@ -95,7 +145,7 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
   TimeStamp startTimeStamp = TimeStamp::Now();
   TimeDuration budget = ComputeInterSliceGCBudget(aDeadline, startTimeStamp);
   TimeDuration duration = mGCUnnotifiedTotalTime;
-  nsJSContext::GarbageCollectNow(step.mReason, nsJSContext::IncrementalGC,
+  nsJSContext::GarbageCollectNow(aStep.mReason, nsJSContext::IncrementalGC,
                                  is_shrinking, budget.ToMilliseconds());
 
   mGCUnnotifiedTotalTime = TimeDuration();
@@ -206,6 +256,9 @@ void CCGCScheduler::PokeFullGC() {
         [](nsITimer* aTimer, void* aClosure) {
           CCGCScheduler* s = static_cast<CCGCScheduler*>(aClosure);
           s->KillFullGCTimer();
+
+          // Even if the GC is denied by the parent process, because we've
+          // set that we want a full GC we will get one eventually.
           s->SetNeedsFullGC();
           s->SetWantMajorGC(JS::GCReason::FULL_GC_TIMER);
           s->EnsureGCRunner(0);
@@ -304,6 +357,7 @@ void CCGCScheduler::KillFullGCTimer() {
 }
 
 void CCGCScheduler::KillGCRunner() {
+  MOZ_ASSERT(!(InIncrementalGC() && !mDidShutdown));
   if (mGCRunner) {
     mGCRunner->Cancel();
     mGCRunner = nullptr;
