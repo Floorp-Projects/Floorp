@@ -1745,7 +1745,7 @@
 # Block Insecure downloads from Secure Origins
 - name: dom.block_download_insecure
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Block all downloads in iframes with the sandboxed attribute
