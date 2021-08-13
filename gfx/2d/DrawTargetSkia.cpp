@@ -34,8 +34,6 @@
 #ifdef MOZ_WIDGET_COCOA
 #  include "BorrowedContext.h"
 #  include <ApplicationServices/ApplicationServices.h>
-#  include "ScaledFontMac.h"
-#  include "CGTextDrawing.h"
 #endif
 
 #ifdef XP_WIN
@@ -1089,33 +1087,7 @@ static bool SetupCGContext(DrawTargetSkia* aDT, CGContextRef aCGContext,
                      GfxMatrixToCGAffineTransform(aDT->GetTransform()));
   return true;
 }
-
-static bool SetupCGGlyphs(CGContextRef aCGContext, const GlyphBuffer& aBuffer,
-                          Vector<CGGlyph, 32>& aGlyphs,
-                          Vector<CGPoint, 32>& aPositions) {
-  // Flip again so we draw text in right side up. Transform (3) from the top
-  CGContextScaleCTM(aCGContext, 1, -1);
-
-  if (!aGlyphs.resizeUninitialized(aBuffer.mNumGlyphs) ||
-      !aPositions.resizeUninitialized(aBuffer.mNumGlyphs)) {
-    gfxDevCrash(LogReason::GlyphAllocFailedCG)
-        << "glyphs/positions allocation failed";
-    return false;
-  }
-
-  for (unsigned int i = 0; i < aBuffer.mNumGlyphs; i++) {
-    aGlyphs[i] = aBuffer.mGlyphs[i].mIndex;
-
-    // Flip the y coordinates so that text ends up in the right spot after the
-    // (3) flip Inversion from (4) in the comments.
-    aPositions[i] = CGPointMake(aBuffer.mGlyphs[i].mPosition.x,
-                                -aBuffer.mGlyphs[i].mPosition.y);
-  }
-
-  return true;
-}
-// End long comment about transforms. SetupCGContext and SetupCGGlyphs should
-// stay next to each other.
+// End long comment about transforms.
 
 // The context returned from this method will have the origin
 // in the top left and will have applied all the neccessary clips
@@ -1222,96 +1194,7 @@ void BorrowedCGContext::ReturnCGContextToDrawTarget(DrawTarget* aDT,
                                                     CGContextRef cg) {
   DrawTargetSkia* skiaDT = static_cast<DrawTargetSkia*>(aDT);
   skiaDT->ReturnCGContext(cg);
-  return;
 }
-
-static void SetFontColor(CGContextRef aCGContext, CGColorSpaceRef aColorSpace,
-                         const Pattern& aPattern) {
-  const DeviceColor& color = static_cast<const ColorPattern&>(aPattern).mColor;
-  CGColorRef textColor = ColorToCGColor(aColorSpace, color);
-  CGContextSetFillColorWithColor(aCGContext, textColor);
-  CGColorRelease(textColor);
-}
-
-/***
- * We need this to support subpixel AA text on OS X in two cases:
- * text in DrawTargets that are not opaque and text over vibrant backgrounds.
- * Skia normally doesn't support subpixel AA text on transparent backgrounds.
- * To get around this, we have to wrap the Skia bytes with a CGContext and ask
- * CG to draw the text.
- * In vibrancy cases, we have to use a private API,
- * CGContextSetFontSmoothingBackgroundColor, which sets the expected
- * background color the text will draw onto so that CG can render the text
- * properly. After that, we have to go back and fixup the pixels
- * such that their alpha values are correct.
- */
-bool DrawTargetSkia::FillGlyphsWithCG(ScaledFont* aFont,
-                                      const GlyphBuffer& aBuffer,
-                                      const Pattern& aPattern,
-                                      const DrawOptions& aOptions) {
-  MOZ_ASSERT(aFont->GetType() == FontType::MAC);
-  MOZ_ASSERT(aPattern.GetType() == PatternType::COLOR);
-
-  CGContextRef cgContext = BorrowCGContext(aOptions);
-  if (!cgContext) {
-    return false;
-  }
-
-  Vector<CGGlyph, 32> glyphs;
-  Vector<CGPoint, 32> positions;
-  if (!SetupCGGlyphs(cgContext, aBuffer, glyphs, positions)) {
-    ReturnCGContext(cgContext);
-    return false;
-  }
-
-  ScaledFontMac* macFont = static_cast<ScaledFontMac*>(aFont);
-  SetFontSmoothingBackgroundColor(cgContext, mColorSpace,
-                                  macFont->FontSmoothingBackgroundColor());
-  SetFontColor(cgContext, mColorSpace, aPattern);
-
-  CTFontDrawGlyphs(macFont->mCTFont, glyphs.begin(), positions.begin(),
-                   aBuffer.mNumGlyphs, cgContext);
-
-  // Calculate the area of the text we just drew
-  auto* bboxes = new CGRect[aBuffer.mNumGlyphs];
-  CTFontGetBoundingRectsForGlyphs(macFont->mCTFont, kCTFontOrientationDefault,
-                                  glyphs.begin(), bboxes, aBuffer.mNumGlyphs);
-  CGRect extents =
-      ComputeGlyphsExtents(bboxes, positions.begin(), aBuffer.mNumGlyphs, 1.0f);
-  delete[] bboxes;
-
-  CGAffineTransform cgTransform = CGContextGetCTM(cgContext);
-  extents = CGRectApplyAffineTransform(extents, cgTransform);
-
-  // Have to round it out to ensure we fully cover all pixels
-  Rect rect(extents.origin.x, extents.origin.y, extents.size.width,
-            extents.size.height);
-  rect.RoundOut();
-  extents = CGRectMake(rect.x, rect.y, rect.width, rect.height);
-
-  EnsureValidPremultipliedData(cgContext, extents);
-
-  ReturnCGContext(cgContext);
-  return true;
-}
-
-static bool HasFontSmoothingBackgroundColor(ScaledFont* aFont) {
-  // This should generally only be true if we have a popup context menu
-  if (aFont && aFont->GetType() == FontType::MAC) {
-    DeviceColor fontSmoothingBackgroundColor =
-        static_cast<ScaledFontMac*>(aFont)->FontSmoothingBackgroundColor();
-    return fontSmoothingBackgroundColor.a > 0;
-  }
-
-  return false;
-}
-
-static bool ShouldUseCGToFillGlyphs(ScaledFont* aFont,
-                                    const Pattern& aPattern) {
-  return HasFontSmoothingBackgroundColor(aFont) &&
-         aPattern.GetType() == PatternType::COLOR;
-}
-
 #endif
 
 static bool CanDrawFont(ScaledFont* aFont) {
@@ -1336,14 +1219,6 @@ void DrawTargetSkia::DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   }
 
   MarkChanged();
-
-#ifdef MOZ_WIDGET_COCOA
-  if (!aStrokeOptions && ShouldUseCGToFillGlyphs(aFont, aPattern)) {
-    if (FillGlyphsWithCG(aFont, aBuffer, aPattern, aOptions)) {
-      return;
-    }
-  }
-#endif
 
   ScaledFontBase* skiaFont = static_cast<ScaledFontBase*>(aFont);
   SkTypeface* typeface = skiaFont->GetSkTypeface();
