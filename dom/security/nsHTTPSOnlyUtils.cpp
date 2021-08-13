@@ -291,6 +291,14 @@ bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(
         }
       }
     }
+  } else {
+    // 6.1 We should only check if this load is triggered by a user gesture
+    // when the redirect chain is empty, since this information is only useful
+    // in our case here. When the redirect chain is not empty, this load is
+    // defnitely triggered by redirection, not a user gesture.
+    if (aLoadInfo->GetHasValidUserGestureActivation()) {
+      return false;
+    }
   }
 
   // 7. Meta redirects and JS based redirects (win.location). If the security
