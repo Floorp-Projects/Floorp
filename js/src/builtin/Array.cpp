@@ -3801,7 +3801,7 @@ static Shape* GetArrayShapeWithProto(JSContext* cx, HandleObject proto) {
 }
 
 Shape* GlobalObject::createArrayShapeWithDefaultProto(JSContext* cx) {
-  MOZ_ASSERT(!cx->global()->data().arrayShape);
+  MOZ_ASSERT(!cx->global()->data().arrayShapeWithDefaultProto);
 
   RootedObject proto(cx,
                      GlobalObject::getOrCreateArrayPrototype(cx, cx->global()));
@@ -3814,7 +3814,7 @@ Shape* GlobalObject::createArrayShapeWithDefaultProto(JSContext* cx) {
     return nullptr;
   }
 
-  cx->global()->data().arrayShape.init(shape);
+  cx->global()->data().arrayShapeWithDefaultProto.init(shape);
   return shape;
 }
 
