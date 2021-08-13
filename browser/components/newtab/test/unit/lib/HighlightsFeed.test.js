@@ -60,7 +60,9 @@ describe("Highlights Feed", () => {
       maybeCacheScreenshot: Screenshots.maybeCacheScreenshot,
       _shouldGetScreenshots: sinon.stub().returns(true),
     };
-    filterAdultStub = sinon.stub().returns([]);
+    filterAdultStub = {
+      filter: sinon.stub().returnsArg(0),
+    };
     shortURLStub = sinon
       .stub()
       .callsFake(site => site.url.match(/\/([^/]+)/)[1]);
@@ -71,6 +73,7 @@ describe("Highlights Feed", () => {
 
     globals.set("NewTabUtils", fakeNewTabUtils);
     globals.set("PageThumbs", fakePageThumbs);
+    globals.set("gFilterAdultEnabled", false);
     ({
       HighlightsFeed,
       SECTION_ID,
@@ -78,7 +81,7 @@ describe("Highlights Feed", () => {
       BOOKMARKS_RESTORE_SUCCESS_EVENT,
       BOOKMARKS_RESTORE_FAILED_EVENT,
     } = injector({
-      "lib/FilterAdult.jsm": { filterAdult: filterAdultStub },
+      "lib/FilterAdult.jsm": { FilterAdult: filterAdultStub },
       "lib/ShortURL.jsm": { shortURL: shortURLStub },
       "lib/SectionsManager.jsm": { SectionsManager: sectionsManagerStub },
       "lib/Screenshots.jsm": { Screenshots: fakeScreenshot },
@@ -96,7 +99,6 @@ describe("Highlights Feed", () => {
       state: {
         Prefs: {
           values: {
-            filterAdult: false,
             "section.highlights.includePocket": false,
             "section.highlights.includeDownloads": false,
           },
@@ -570,18 +572,12 @@ describe("Highlights Feed", () => {
 
       assert.propertyVal(highlights[0], "type", "history");
     });
-    it("should not filter out adult pages when pref is false", async () => {
-      await feed.fetchHighlights();
-
-      assert.notCalled(filterAdultStub);
-    });
-    it("should filter out adult pages when pref is true", async () => {
-      feed.store.state.Prefs.values.filterAdult = true;
-
+    it("should filter out adult pages", async () => {
+      filterAdultStub.filter = sinon.stub().returns([]);
       const highlights = await fetchHighlights();
 
       // The stub filters out everything
-      assert.calledOnce(filterAdultStub);
+      assert.calledOnce(filterAdultStub.filter);
       assert.equal(highlights.length, 0);
     });
     it("should not expose internal link properties", async () => {
