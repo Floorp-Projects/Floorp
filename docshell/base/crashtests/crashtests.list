@@ -19,4 +19,5 @@ load 1584467.html
 load 1614211-1.html
 load 1617315-1.html
 skip-if(Android) pref(dom.disable_open_during_load,false) load 1667491.html
+pref(dom.disable_open_during_load,false) load 1690169-1.html
 load 1672873.html

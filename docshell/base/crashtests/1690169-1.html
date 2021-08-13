@@ -1,0 +1,11 @@
+<script>
+var woff = "data:font/woff2;base64,";
+for (let i = 0; i < 20000; i++) {
+	woff += "d09GMgABAAAA";
+}
+window.onload = () => {
+    try { window.open('data:text/html,<spacer>', 'pu9', 'width=911').close() } catch (e) {}
+    document.getElementById('a').setAttribute('src', woff)
+}
+</script>
+<iframe id='a' hidden src='http://a'></iframe>
