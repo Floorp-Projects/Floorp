@@ -40,6 +40,7 @@ class IdleSchedulerParent final
   IPCResult RecvRunningPrioritizedOperation();
   IPCResult RecvPrioritizedOperationDone();
   IPCResult RecvRequestGC(RequestGCResolver&& aResolve);
+  IPCResult RecvStartedGC();
   IPCResult RecvDoneGC();
 
  private:

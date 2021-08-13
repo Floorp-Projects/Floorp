@@ -55,6 +55,10 @@ parent:
   // Ask if now would be a good time to GC
   async RequestGC() returns (bool may_gc);
 
+  // Let the parent know when we start a GC without asking first.
+  async StartedGC();
+
+  // Called for ending any kind of GC.
   async DoneGC();
 
   // This message is never sent. Each PIdleScheduler actor will stay alive as long as
