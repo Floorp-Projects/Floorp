@@ -26,8 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define WASM_PAGE_SIZE 65536
-
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
   abort();
@@ -96,31 +94,40 @@ void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs, uint32_t
   free(*p_func_type_structs);
 }
 
+#define WASM_PAGE_SIZE 65536
+
+#if UINTPTR_MAX == 0xffffffffffffffff
+// Reserve 8GiB, aligned to 4GB, max heap is 4GB
+# define WASM_HEAP_GUARD_PAGE_ALIGNMENT 0x100000000ull
+# define WASM_HEAP_RESERVE_SIZE 0x200000000ull
+# define WASM_HEAP_MAX_ALLOWED_PAGES 65536
+#elif UINTPTR_MAX == 0xffffffff
+// Reserve 16MB, aligned to 8MB, max heap is 8MB
+# define WASM_HEAP_GUARD_PAGE_ALIGNMENT 0x800000ul
+# define WASM_HEAP_RESERVE_SIZE 0x1000000ul
+# ifdef WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
+#   define WASM_HEAP_MAX_ALLOWED_PAGES 65536
+# else
+#   define WASM_HEAP_MAX_ALLOWED_PAGES 128
+# endif
+#else
+# error "Unknown pointer size"
+#endif
+
 void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
-  uint32_t byte_length = initial_pages * WASM_PAGE_SIZE;
-#if WASM_USING_GUARD_PAGES == 1
-  /* Reserve 8GiB, aligned to 4GB. */
-  const size_t heap_alignment = 0x100000000ull;
-  const size_t reserve_size = 0x200000000ull;
-  const uint32_t chosen_max_pages = max_pages;
-#else
-  /* Reserve 8MB, aligned to 8MB. */
-  const size_t heap_alignment = 0x800000ul;
-  const size_t reserve_size = 0x800000ul;
-  const uint32_t allowed_max_pages = reserve_size / WASM_PAGE_SIZE;
-  uint32_t chosen_max_pages = max_pages;
-  if (allowed_max_pages < max_pages) {
-    chosen_max_pages = allowed_max_pages;
-  }
-#endif
+  const uint32_t byte_length = initial_pages * WASM_PAGE_SIZE;
+  const uint32_t chosen_max_pages = (WASM_HEAP_MAX_ALLOWED_PAGES < max_pages)? WASM_HEAP_MAX_ALLOWED_PAGES : max_pages;
 
+#ifdef WASM_USE_GUARD_PAGES
+  // mmap based heaps with guard pages
+  // Guard pages already allocates memory incrementally thus we don't need to look at WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
   void* addr = NULL;
   const uint64_t retries = 10;
 
   for (uint64_t i = 0; i < retries; i++) {
-    addr = os_mmap_aligned(NULL, reserve_size, MMAP_PROT_NONE, MMAP_MAP_NONE, heap_alignment, 0 /* alignment_offset */);
+    addr = os_mmap_aligned(NULL, WASM_HEAP_RESERVE_SIZE, MMAP_PROT_NONE, MMAP_MAP_NONE, WASM_HEAP_GUARD_PAGE_ALIGNMENT, 0 /* alignment_offset */);
     if (addr) {
       break;
     }
@@ -139,6 +146,15 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   // Summary: malloc of a struct, followed by a write to the constant fields is still defined behavior iff
   //   there is no prior read of the field
   *(uint8_t**) &memory->data = addr;
+#else
+  // malloc based heaps
+# ifdef WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
+    memory->data = calloc(byte_length, 1);
+# else
+    const uint64_t heap_max_size = ((uint64_t) chosen_max_pages) * WASM_PAGE_SIZE;
+    *(uint8_t**) &memory->data = calloc(heap_max_size, 1);
+# endif
+#endif
 
   memory->size = byte_length;
   memory->pages = initial_pages;
@@ -150,12 +166,11 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 }
 
 void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
-#if WASM_USING_GUARD_PAGES == 1
-  const size_t reserve_size = 0x200000000ull;
+#ifdef WASM_USE_GUARD_PAGES
+  os_munmap(memory->data, WASM_HEAP_RESERVE_SIZE);
 #else
-  const size_t reserve_size = 0x800000ul;
+  free(memory->data);
 #endif
-  os_munmap(memory->data, reserve_size);
 
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_destroy(memory);
@@ -175,10 +190,25 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t new_size = new_pages * WASM_PAGE_SIZE;
   uint32_t delta_size = delta * WASM_PAGE_SIZE;
 
+#ifdef WASM_USE_GUARD_PAGES
+  // mmap based heaps with guard pages
   int ret = os_mmap_commit(memory->data + old_size, delta_size, MMAP_PROT_READ | MMAP_PROT_WRITE);
   if (ret != 0) {
     return (uint32_t)-1;
   }
+#else
+  // malloc based heaps --- if below macro is not defined, the max memory range is already allocated
+# ifdef WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
+    uint8_t* new_data = realloc(memory->data, new_size);
+    if (new_data == NULL) {
+      return (uint32_t)-1;
+    }
+#   if !WABT_BIG_ENDIAN
+      memset(new_data + old_size, 0, delta_size);
+#   endif
+    memory->data = new_data;
+#  endif
+#endif
 
 #if WABT_BIG_ENDIAN
   memmove(memory->data + new_size - old_size, memory->data, old_size);
@@ -206,7 +236,7 @@ void wasm_rt_deallocate_table(wasm_rt_table_t* table) {
   free(table->data);
 }
 
-#define SATURATING_U32_ADD(ret_ptr, a, b) { \
+#define WASM_SATURATING_U32_ADD(ret_ptr, a, b) { \
   if ((a) > (UINT32_MAX - (b))) {             \
     /* add will overflowed */               \
     *ret_ptr = UINT32_MAX;                  \
@@ -215,7 +245,7 @@ void wasm_rt_deallocate_table(wasm_rt_table_t* table) {
   }                                         \
 }
 
-#define CHECKED_U32_RET_SIZE_T_MULTIPLY(ret_ptr, a, b) { \
+#define WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY(ret_ptr, a, b) { \
   if ((a) > (SIZE_MAX / (b))) {                            \
     /* multiple will overflowed */                       \
     wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT);            \
@@ -228,7 +258,7 @@ void wasm_rt_deallocate_table(wasm_rt_table_t* table) {
 
 void wasm_rt_expand_table(wasm_rt_table_t* table) {
   uint32_t new_size = 0;
-  SATURATING_U32_ADD(&new_size, table->size, 32);
+  WASM_SATURATING_U32_ADD(&new_size, table->size, 32);
 
   if (new_size > table->max_size) {
     new_size = table->max_size;
@@ -240,7 +270,7 @@ void wasm_rt_expand_table(wasm_rt_table_t* table) {
   }
 
   size_t allocation_size = 0;
-  CHECKED_U32_RET_SIZE_T_MULTIPLY(&allocation_size, sizeof(wasm_rt_elem_t), new_size);
+  WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY(&allocation_size, sizeof(wasm_rt_elem_t), new_size);
   table->data = realloc(table->data, allocation_size);
   assert(table->data != 0);
 
@@ -252,4 +282,9 @@ void wasm2c_ensure_linked() {
   // We use this to ensure the dynamic library with the wasi symbols is loaded for the host application
 }
 
+#undef WASM_HEAP_GUARD_PAGE_ALIGNMENT
+#undef WASM_HEAP_RESERVE_SIZE
+#undef WASM_HEAP_MAX_ALLOWED_PAGES
 #undef WASM_PAGE_SIZE
+#undef WASM_SATURATING_U32_ADD
+#undef WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY
