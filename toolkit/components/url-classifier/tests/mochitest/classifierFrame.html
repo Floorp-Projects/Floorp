@@ -39,13 +39,13 @@ function checkLoads() {
 </script>
 
 <!-- Try loading from a malware javascript URI -->
-<script type="text/javascript" src="http://malware.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
+<script type="text/javascript" src="http://malware.mochi.test/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
 
 <!-- Try loading from an uwanted software css URI -->
-<link rel="stylesheet" type="text/css" href="http://unwanted.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
+<link rel="stylesheet" type="text/css" href="http://unwanted.mochi.test/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
 
 <!-- Try loading a marked-as-malware css through an @import from a clean URI -->
-<link rel="stylesheet" type="text/css" href="import.css"></link>
+<link rel="stylesheet" type="text/css" href="import2.css"></link>
 </head>
 
 <body onload="checkLoads()">
