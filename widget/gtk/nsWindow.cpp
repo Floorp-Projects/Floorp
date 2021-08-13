@@ -3957,28 +3957,6 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
     }
   }
 
-  // see if we can compress this event
-  // XXXldb Why skip every other motion event when we have multiple,
-  // but not more than that?
-  bool synthEvent = false;
-#ifdef MOZ_X11
-  XEvent xevent;
-
-  if (GdkIsX11Display()) {
-    while (XPending(GDK_WINDOW_XDISPLAY(aEvent->window))) {
-      XEvent peeked;
-      XPeekEvent(GDK_WINDOW_XDISPLAY(aEvent->window), &peeked);
-      if (peeked.xany.window != gdk_x11_window_get_xid(aEvent->window) ||
-          peeked.type != MotionNotify) {
-        break;
-      }
-
-      synthEvent = true;
-      XNextEvent(GDK_WINDOW_XDISPLAY(aEvent->window), &xevent);
-    }
-  }
-#endif /* MOZ_X11 */
-
   GdkWindowEdge edge;
   if (CheckResizerEdge(GetRefPoint(this, aEvent), edge)) {
     nsCursor cursor = eCursor_none;
@@ -4020,32 +3998,10 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
   // We have to ignore that and use last valid value
   if (pressure) mLastMotionPressure = pressure;
   event.mPressure = mLastMotionPressure;
+  event.mRefPoint = GetRefPoint(this, aEvent);
+  event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
-  guint modifierState;
-  if (synthEvent) {
-#ifdef MOZ_X11
-    event.mRefPoint.x = nscoord(xevent.xmotion.x);
-    event.mRefPoint.y = nscoord(xevent.xmotion.y);
-
-    modifierState = xevent.xmotion.state;
-
-    event.AssignEventTime(GetWidgetEventTime(xevent.xmotion.time));
-#else
-    event.mRefPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
-
-    modifierState = aEvent->state;
-
-    event.AssignEventTime(GetWidgetEventTime(aEvent->time));
-#endif /* MOZ_X11 */
-  } else {
-    event.mRefPoint = GetRefPoint(this, aEvent);
-
-    modifierState = aEvent->state;
-
-    event.AssignEventTime(GetWidgetEventTime(aEvent->time));
-  }
-
-  KeymapWrapper::InitInputEvent(event, modifierState);
+  KeymapWrapper::InitInputEvent(event, aEvent->state);
 
   DispatchInputEvent(&event);
 }
