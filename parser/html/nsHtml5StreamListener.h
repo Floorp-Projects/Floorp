@@ -7,8 +7,8 @@
 
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "nsHtml5StreamParserPtr.h"
 #include "nsHtml5StreamParser.h"
+#include "mozilla/ReentrantMonitor.h"
 
 /**
  * The purpose of this class is to reconcile the problem that
@@ -38,14 +38,23 @@ class nsHtml5StreamListener : public nsIStreamListener,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-  inline nsHtml5StreamParser* GetDelegate() { return mDelegate; }
+  // Main-thread-only
+  nsHtml5StreamParser* GetDelegate();
 
+  // Main-thread-only
   void DropDelegate();
 
  private:
+  void DropDelegateImpl();
   virtual ~nsHtml5StreamListener();
 
-  nsHtml5StreamParserPtr mDelegate;
+  // ReentrantMonitor instead of Mutex, because `GetDelegate()`
+  // can be called from within the Necko callbacks when Necko events
+  // are delivered on the main thread.
+  mozilla::ReentrantMonitor mDelegateMonitor;
+  // Owning pointer with manually-managed refcounting, protected by
+  // mDelegateMonitor.
+  nsHtml5StreamParser* mDelegate;
 };
 
 #endif  // nsHtml5StreamListener_h
