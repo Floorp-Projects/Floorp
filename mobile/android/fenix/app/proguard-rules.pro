@@ -32,17 +32,20 @@
 -keep class org.mozilla.gecko.util.DebugConfig { *; }
 
 ####################################################################################################
-# Force removal of slow Dispatchers.Main ServiceLoader
+# kotlinx.coroutines: use the fast service loader to init MainDispatcherLoader by including a rule
+# to rewrite this property to return true:
+# https://github.com/Kotlin/kotlinx.coroutines/blob/8c98180f177bbe4b26f1ed9685a9280fea648b9c/kotlinx-coroutines-core/jvm/src/internal/MainDispatchers.kt#L19
+#
+# R8 is expected to optimize the default implementation to avoid a performance issue but a bug in R8
+# as bundled with AGP v7.0.0 causes this optimization to fail so we use the fast service loader instead. See:
+# https://github.com/mozilla-mobile/focus-android/issues/5102#issuecomment-897854121
+#
+# The fast service loader appears to be as performant as the R8 optimization so it's not worth the
+# churn to later remove this workaround. If needed, the upstream fix is being handled in
+# https://issuetracker.google.com/issues/196302685
 ####################################################################################################
-# Allow R8 to optimize away the FastServiceLoader.
-# Together with ServiceLoader optimization in R8
-# this results in direct instantiation when loading Dispatchers.Main
 -assumenosideeffects class kotlinx.coroutines.internal.MainDispatcherLoader {
-    boolean FAST_SERVICE_LOADER_ENABLED return false;
-}
-
--assumenosideeffects class kotlinx.coroutines.internal.FastServiceLoader {
-    boolean ANDROID_DETECTED return true;
+    boolean FAST_SERVICE_LOADER_ENABLED return true;
 }
 
 ####################################################################################################
