@@ -58,7 +58,7 @@ html|input {
 }
 
 .textbox-search-clear {
-  list-style-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
+  list-style-image: url(resource://gre-resources/searchfield-cancel.svg);
 }
 
 :host([searchbutton]) .textbox-search-icon:not([disabled]),
