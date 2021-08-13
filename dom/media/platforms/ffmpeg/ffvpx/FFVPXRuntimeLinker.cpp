@@ -7,7 +7,6 @@
 #include "FFVPXRuntimeLinker.h"
 #include "FFmpegLibWrapper.h"
 #include "FFmpegLog.h"
-#include "BinaryPath.h"
 #include "mozilla/FileUtils.h"
 #include "nsLocalFile.h"
 #include "prmem.h"
@@ -15,6 +14,12 @@
 #ifdef XP_WIN
 #  include <windows.h>
 #endif
+
+// We use a known symbol located in lgpllibs to determine its location.
+// soundtouch happens to be always included in lgpllibs
+// Use abort() instead of exception in SoundTouch.
+#define ST_NO_EXCEPTION_HANDLING 1
+#include "soundtouch/SoundTouch.h"
 
 namespace mozilla {
 
@@ -63,22 +68,45 @@ bool FFVPXRuntimeLinker::Init() {
   sFFVPXLib.LinkVAAPILibs();
 #endif
 
-  nsCOMPtr<nsIFile> libFile;
-  if (NS_FAILED(mozilla::BinaryPath::GetFile(getter_AddRefs(libFile)))) {
+  // We retrieve the path of the lgpllibs library as this is where mozavcodec
+  // and mozavutil libs are located.
+  PathString lgpllibsname = GetLibraryName(nullptr, "lgpllibs");
+  if (lgpllibsname.IsEmpty()) {
+    return false;
+  }
+  PathString path = GetLibraryFilePathname(
+      lgpllibsname.get(), (PRFuncPtr)&soundtouch::SoundTouch::getVersionId);
+  if (path.IsEmpty()) {
+    return false;
+  }
+  RefPtr<nsLocalFile> xulFile = new nsLocalFile(path);
+  if (xulFile->NativePath().IsEmpty()) {
     return false;
   }
 
-  if (NS_FAILED(libFile->SetNativeLeafName(MOZ_DLL_PREFIX
-                                           "mozavutil" MOZ_DLL_SUFFIX ""_ns))) {
+  nsCOMPtr<nsIFile> rootDir;
+  if (NS_FAILED(xulFile->GetParent(getter_AddRefs(rootDir))) || !rootDir) {
+    return false;
+  }
+  PathString rootPath = rootDir->NativePath();
+
+  /* Get the platform-dependent library name of the module */
+  PathString libname = GetLibraryName(rootPath.get(), "mozavutil");
+  if (libname.IsEmpty()) {
+    return false;
+  }
+  RefPtr<nsLocalFile> libFile = new nsLocalFile(libname);
+  if (libFile->NativePath().IsEmpty()) {
     return false;
   }
   sFFVPXLib.mAVUtilLib = MozAVLink(libFile);
-
-  if (NS_FAILED(libFile->SetNativeLeafName(
-          MOZ_DLL_PREFIX "mozavcodec" MOZ_DLL_SUFFIX ""_ns))) {
-    return false;
+  libname = GetLibraryName(rootPath.get(), "mozavcodec");
+  if (!libname.IsEmpty()) {
+    libFile = new nsLocalFile(libname);
+    if (!libFile->NativePath().IsEmpty()) {
+      sFFVPXLib.mAVCodecLib = MozAVLink(libFile);
+    }
   }
-  sFFVPXLib.mAVCodecLib = MozAVLink(libFile);
   if (sFFVPXLib.Link() == FFmpegLibWrapper::LinkResult::Success) {
     sLinkStatus = LinkStatus_SUCCEEDED;
     return true;
