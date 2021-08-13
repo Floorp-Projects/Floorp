@@ -3672,7 +3672,7 @@ static inline bool ArrayConstructorImpl(JSContext* cx, CallArgs& args,
     }
   }
 
-  ArrayObject* obj = NewDensePartlyAllocatedArray(cx, length, proto);
+  ArrayObject* obj = NewDensePartlyAllocatedArrayWithProto(cx, length, proto);
   if (!obj) {
     return false;
   }
@@ -3929,10 +3929,17 @@ ArrayObject* js::NewDenseFullyAllocatedArray(
 }
 
 ArrayObject* js::NewDensePartlyAllocatedArray(
-    JSContext* cx, uint32_t length, HandleObject proto /* = nullptr */,
+    JSContext* cx, uint32_t length,
     NewObjectKind newKind /* = GenericObject */) {
-  return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, proto,
+  return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, nullptr,
                                                          newKind);
+}
+
+ArrayObject* js::NewDensePartlyAllocatedArrayWithProto(JSContext* cx,
+                                                       uint32_t length,
+                                                       HandleObject proto) {
+  return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, proto,
+                                                         GenericObject);
 }
 
 ArrayObject* js::NewDenseUnallocatedArray(
