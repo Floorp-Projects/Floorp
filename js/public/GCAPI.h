@@ -1154,7 +1154,7 @@ extern JS_PUBLIC_API uint32_t JS_GetGCParameter(JSContext* cx,
                                                 JSGCParamKey key);
 
 extern JS_PUBLIC_API void JS_SetGCParametersBasedOnAvailableMemory(
-    JSContext* cx, uint32_t availMem);
+    JSContext* cx, uint32_t availMemMB);
 
 /**
  * Create a new JSString whose chars member refers to external memory, i.e.,
