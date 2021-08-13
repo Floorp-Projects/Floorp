@@ -135,14 +135,14 @@ class BinaryPath {
 
 #elif defined(ANDROID)
   static nsresult Get(char aResult[MAXPATHLEN]) {
-    // On Android, we use the GRE_HOME variable that is set by the Java
-    // bootstrap code.
-    const char* greHome = getenv("GRE_HOME");
-    if (!greHome) {
+    // On Android, we use the MOZ_ANDROID_LIBDIR variable that is set by the
+    // Java bootstrap code.
+    const char* libDir = getenv("MOZ_ANDROID_LIBDIR");
+    if (!libDir) {
       return NS_ERROR_FAILURE;
     }
 
-    snprintf(aResult, MAXPATHLEN, "%s/%s", greHome, "dummy");
+    snprintf(aResult, MAXPATHLEN, "%s/%s", libDir, "dummy");
     aResult[MAXPATHLEN - 1] = '\0';
     return NS_OK;
   }
