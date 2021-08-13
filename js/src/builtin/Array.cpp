@@ -3757,10 +3757,13 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithShape(
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
+  MOZ_ASSERT(shape->slotSpan() == 0);
+  constexpr uint32_t slotSpan = 0;
+
   AutoSetNewObjectMetadata metadata(cx);
   ArrayObject* arr = ArrayObject::create(
       cx, allocKind, GetInitialHeap(newKind, &ArrayObject::class_, site), shape,
-      length, metadata);
+      length, slotSpan, metadata);
   if (!arr) {
     return nullptr;
   }
@@ -3987,8 +3990,8 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
   RootedShape shape(cx, templateObject->shape());
 
   gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
-  ArrayObject* arr =
-      ArrayObject::create(cx, allocKind, heap, shape, length, metadata);
+  ArrayObject* arr = ArrayObject::create(cx, allocKind, heap, shape, length,
+                                         shape->slotSpan(), metadata);
   if (!arr) {
     return nullptr;
   }
