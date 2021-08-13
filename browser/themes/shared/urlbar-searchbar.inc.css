@@ -297,25 +297,6 @@
   display: none;
 }
 
-/* Use system colors for low/high contrast mode */
-@media (prefers-contrast) {
-  #urlbar-search-mode-indicator {
-    background-color: Highlight;
-    outline-color: Highlight;
-    color: HighlightText;
-  }
-
-  #urlbar-search-mode-indicator-close {
-    fill: HighlightText;
-    fill-opacity: 1.0;
-  }
-}
-
-#urlbar-search-mode-indicator-title {
-  padding-inline: 0 3px;
-  opacity: var(--identity-box-label-opacity);
-}
-
 #urlbar-search-mode-indicator-close {
   background: url(chrome://global/skin/icons/close.svg) no-repeat center;
   background-size: 10px 10px;
@@ -324,7 +305,7 @@
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0.6;
   stroke-opacity: var(--identity-box-label-opacity);
-  fill: inherit;
+  fill: currentColor;
   border-radius: var(--urlbar-icon-border-radius);
 }
 
@@ -334,6 +315,25 @@
 #urlbar-search-mode-indicator-close:hover:active {
   background-color: hsla(0,0%,70%,.3);
 }
+
+/* Use system colors for low/high contrast mode */
+@media (prefers-contrast) {
+  #urlbar-search-mode-indicator {
+    background-color: Highlight;
+    outline-color: Highlight;
+    color: HighlightText;
+  }
+
+  #urlbar-search-mode-indicator-close {
+    fill-opacity: 1.0;
+  }
+}
+
+#urlbar-search-mode-indicator-title {
+  padding-inline: 0 3px;
+  opacity: var(--identity-box-label-opacity);
+}
+
 /* Page action panel */
 .pageAction-panel-button > .toolbarbutton-icon {
   width: 16px;
