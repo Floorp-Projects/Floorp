@@ -424,7 +424,7 @@ typedef enum JSGCParamKey {
    * The threshold is calculated by subtracting this value from the heap's
    * incremental limit.
    */
-  JSGC_URGENT_THRESHOLD_BYTES = 48,
+  JSGC_URGENT_THRESHOLD_MB = 48,
 } JSGCParamKey;
 
 /*
