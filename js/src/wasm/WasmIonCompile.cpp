@@ -5384,6 +5384,18 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitStoreLaneSimd128(f, 4));
           case uint32_t(SimdOp::V128Store64Lane):
             CHECK(EmitStoreLaneSimd128(f, 8));
+#  ifdef ENABLE_WASM_RELAXED_SIMD
+          case uint32_t(SimdOp::F32x4RelaxedFma):
+          case uint32_t(SimdOp::F32x4RelaxedFms):
+          case uint32_t(SimdOp::F64x2RelaxedFma):
+          case uint32_t(SimdOp::F64x2RelaxedFms): {
+            if (!f.moduleEnv().v128RelaxedEnabled()) {
+              return f.iter().unrecognizedOpcode(&op);
+            }
+            CHECK(EmitTernarySimd128(f, SimdOp(op.b1)));
+          }
+#  endif
+
           default:
             return f.iter().unrecognizedOpcode(&op);
         }  // switch (op.b1)

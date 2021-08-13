@@ -3455,6 +3455,20 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void nearestFloat64x2(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
+  // Floating multiply-accumulate: srcDest [+-]= src1 * src2
+
+  inline void fmaFloat32x4(FloatRegister src1, FloatRegister src2,
+                           FloatRegister srcDest) DEFINED_ON(x86_shared, arm64);
+
+  inline void fmsFloat32x4(FloatRegister src1, FloatRegister src2,
+                           FloatRegister srcDest) DEFINED_ON(x86_shared, arm64);
+
+  inline void fmaFloat64x2(FloatRegister src1, FloatRegister src2,
+                           FloatRegister srcDest) DEFINED_ON(x86_shared, arm64);
+
+  inline void fmsFloat64x2(FloatRegister src1, FloatRegister src2,
+                           FloatRegister srcDest) DEFINED_ON(x86_shared, arm64);
+
  public:
   // ========================================================================
   // Truncate floating point.
