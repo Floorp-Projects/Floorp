@@ -288,25 +288,33 @@ IPCResult IdleSchedulerParent::RecvRequestGC(RequestGCResolver&& aResolver) {
   return IPC_OK();
 }
 
-IPCResult IdleSchedulerParent::RecvDoneGC() {
-  MOZ_ASSERT(mDoingGC || mRequestingGC);
-  MOZ_ASSERT(mDoingGC != !!mRequestingGC);
-
-  if (mRequestingGC && !IsWaitingForIdle()) {
-    remove();
+IPCResult IdleSchedulerParent::RecvStartedGC() {
+  if (mDoingGC) {
+    return IPC_OK();
   }
+
+  mDoingGC = true;
+  sActiveGCs++;
 
   if (mRequestingGC) {
-    mRequestingGC.value()(false);
-    mRequestingGC = Nothing();
-    MOZ_ASSERT(sNumWaitingGC > 0);
     sNumWaitingGC--;
-  } else {
-    // mDoingGC is true.
-    sActiveGCs--;
-    mDoingGC = false;
+    // We have to respond to the request before dropping it, even though the
+    // content process is already doing the GC.
+    mRequestingGC.value()(true);
+    mRequestingGC = Nothing();
+    if (!IsWaitingForIdle()) {
+      remove();
+    }
+    sRecordGCTelemetry = true;
   }
 
+  return IPC_OK();
+}
+
+IPCResult IdleSchedulerParent::RecvDoneGC() {
+  MOZ_ASSERT(mDoingGC);
+  sActiveGCs--;
+  mDoingGC = false;
   sRecordGCTelemetry = true;
   Schedule(nullptr);
   return IPC_OK();
