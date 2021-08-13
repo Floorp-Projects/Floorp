@@ -2516,10 +2516,20 @@ var SessionStoreInternal = {
     this._crashedBrowsers.delete(browser.permanentKey);
     aTab.removeAttribute("crashed");
 
-    let { userTypedValue = "", userTypedClear = 0 } = browser;
+    let { userTypedValue = null, userTypedClear = 0 } = browser;
 
     let cacheState = TabStateCache.get(browser.permanentKey);
-    if (cacheState === undefined && userTypedValue) {
+
+    // cache the userTypedValue either if the there is no cache state at all
+    // (e.g. if it was already discarded before we got to cache its state) or
+    // or it may have been created but not including a userTypedValue (e.g.
+    // for a private tab we will cache `isPrivate: true` as soon as the tab
+    // is opened).
+    //
+    // In both cases we want to be sure that we are caching the userTypedValue
+    // if the browser element has one, otherwise the lazy tab will not be
+    // restored with the expected url once activated again (e.g. See Bug 1724205).
+    if (userTypedValue && !cacheState?.userTypedValue) {
       // Discard was likely called before state can be cached.  Update
       // the persistent tab state cache with browser information so a
       // restore will be successful.  This information is necessary for
