@@ -242,10 +242,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
         sponsoredBlockId,
       } = result.payload;
       // impression
+      //
+      // Set `search_query` and `matched_keywords` to empty string, both of
+      // them are required fields for the impression, so we need to keep them
+      // in the payload. See bug 1725492 for more details.
       PartnerLinkAttribution.sendContextualServicesPing(
         {
-          search_query: details.searchString,
-          matched_keywords: details.searchString,
+          search_query: "",
+          matched_keywords: "",
           advertiser: sponsoredAdvertiser,
           block_id: sponsoredBlockId,
           position: telemetryResultIndex,
