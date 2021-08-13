@@ -10,6 +10,9 @@
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Pagabalikan (Ginarekomendar)</string>
 
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">May nagsablag sa koneksyon</string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Indi makaangot</string>
 
@@ -26,9 +29,17 @@
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Mag-reload</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Sala nga Address</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Unknown Protocol</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Indi makita ang File</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Delekado na isyu sa site</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Dulot nga kabutigan sang site</string>
     </resources>
