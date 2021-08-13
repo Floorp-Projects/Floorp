@@ -40,7 +40,6 @@ toolkit.jar:
   skin/classic/global/icons/check-partial.svg              (../../shared/icons/check-partial.svg)
   skin/classic/global/icons/chevron.svg                    (../../shared/icons/chevron.svg)
   skin/classic/global/icons/close.svg                      (../../shared/icons/close.svg)
-  skin/classic/global/icons/searchfield-cancel.svg         (../../shared/icons/searchfield-cancel.svg)
   skin/classic/global/icons/columnpicker.svg               (../../shared/icons/columnpicker.svg)
   skin/classic/global/icons/delete.svg                     (../../shared/icons/delete.svg)
   skin/classic/global/icons/defaultFavicon.svg             (../../shared/icons/defaultFavicon.svg)
