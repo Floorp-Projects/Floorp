@@ -1099,7 +1099,7 @@ JSObject* js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj) {
     }
 
     return NewDenseCopiedArray(cx, values.length(), values.begin(),
-                               /* proto = */ nullptr, TenuredObject);
+                               TenuredObject);
   }
 
   Rooted<IdValueVector> properties(cx, IdValueVector(cx));
@@ -1226,7 +1226,7 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
 
     if (mode == XDR_DECODE) {
       obj.set(NewDenseCopiedArray(cx, values.length(), values.begin(),
-                                  /* proto = */ nullptr, TenuredObject));
+                                  TenuredObject));
       if (!obj) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
