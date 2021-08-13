@@ -2143,7 +2143,7 @@ pref("devtools.browsertoolbox.fission", false);
 #endif
 
 // This preference will enable watching top-level targets from the server side.
-pref("devtools.target-switching.server.enabled", true);
+pref("devtools.target-switching.server.enabled", false);
 
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);
