@@ -72,8 +72,13 @@ extern ArrayObject* NewDensePartlyAllocatedArrayWithProto(JSContext* cx,
 // Create a dense array from the given array values, which must be rooted.
 extern ArrayObject* NewDenseCopiedArray(JSContext* cx, uint32_t length,
                                         const Value* values,
-                                        HandleObject proto = nullptr,
                                         NewObjectKind newKind = GenericObject);
+
+// Like NewDenseCopiedArray, but the array will have |proto| as prototype (or
+// Array.prototype if |proto| is nullptr).
+extern ArrayObject* NewDenseCopiedArrayWithProto(JSContext* cx, uint32_t length,
+                                                 const Value* values,
+                                                 HandleObject proto);
 
 // Create a dense array based on templateObject with the given length.
 extern ArrayObject* NewDenseFullyAllocatedArrayWithTemplate(

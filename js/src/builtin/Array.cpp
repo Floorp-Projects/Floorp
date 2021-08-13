@@ -3511,7 +3511,7 @@ static bool array_isArray(JSContext* cx, unsigned argc, Value* vp) {
 static bool ArrayFromCallArgs(JSContext* cx, CallArgs& args,
                               HandleObject proto = nullptr) {
   ArrayObject* obj =
-      NewDenseCopiedArray(cx, args.length(), args.array(), proto);
+      NewDenseCopiedArrayWithProto(cx, args.length(), args.array(), proto);
   if (!obj) {
     return false;
   }
@@ -3951,9 +3951,20 @@ ArrayObject* js::NewDenseUnallocatedArray(
 // values must point at already-rooted Value objects
 ArrayObject* js::NewDenseCopiedArray(
     JSContext* cx, uint32_t length, const Value* values,
-    HandleObject proto /* = nullptr */,
     NewObjectKind newKind /* = GenericObject */) {
-  ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, proto, newKind);
+  ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, nullptr, newKind);
+  if (!arr) {
+    return nullptr;
+  }
+
+  arr->initDenseElements(values, length);
+  return arr;
+}
+
+ArrayObject* js::NewDenseCopiedArrayWithProto(JSContext* cx, uint32_t length,
+                                              const Value* values,
+                                              HandleObject proto) {
+  ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, proto, GenericObject);
   if (!arr) {
     return nullptr;
   }
