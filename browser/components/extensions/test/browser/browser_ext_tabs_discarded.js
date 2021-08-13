@@ -180,3 +180,59 @@ add_task(async function test_create_discarded() {
   await extension.awaitFinish("test-finished");
   await extension.unload();
 });
+
+add_task(async function test_discarded_private_tab_restored() {
+  let extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
+
+    background: async function() {
+      browser.tabs.onUpdated.addListener(
+        async (tabId, changeInfo, tab) => {
+          const { active, discarded, incognito } = tab;
+          if (!incognito || active || discarded) {
+            return;
+          }
+          await browser.tabs.discard(tabId);
+          browser.test.sendMessage("tab-discarded");
+        },
+        { properties: ["status"] }
+      );
+    },
+  });
+
+  // Open a private browsing window.
+  const privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  await extension.startup();
+
+  const newTab = await BrowserTestUtils.addTab(
+    privateWin.gBrowser,
+    "https://example.com/"
+  );
+  await extension.awaitMessage("tab-discarded");
+  is(newTab.getAttribute("pending"), "true", "private tab should be discarded");
+
+  const promiseTabLoaded = BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
+
+  info("Switching to the discarded background tab");
+  await BrowserTestUtils.switchTab(privateWin.gBrowser, newTab);
+
+  info("Wait for the restored tab to complete loading");
+  await promiseTabLoaded;
+  is(
+    newTab.hasAttribute("pending"),
+    false,
+    "discarded private tab should have been restored"
+  );
+
+  is(
+    newTab.linkedBrowser.currentURI.spec,
+    "https://example.com/",
+    "Got the expected url on the restored tab"
+  );
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(privateWin);
+});
