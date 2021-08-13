@@ -59,61 +59,61 @@ import mozilla.components.support.migration.GleanMetrics.Migration as MigrationP
 /**
  * Supported Fennec migrations and their current versions.
  */
-sealed class Migration(val currentVersion: Int) {
+sealed class Migration(val currentVersion: Int, val canonicalName: String) {
     /**
      * Migrates history (both "places" and "visits").
      */
-    object History : Migration(currentVersion = 1)
+    object History : Migration(currentVersion = 1, "History")
 
     /**
      * Migrates bookmarks. Must run after history was migrated.
      */
-    object Bookmarks : Migration(currentVersion = 1)
+    object Bookmarks : Migration(currentVersion = 1, "Bookmarks")
 
     /**
      * Migrates logins.
      */
-    object Logins : Migration(currentVersion = 1)
+    object Logins : Migration(currentVersion = 1, "Logins")
 
     /**
      * Migrates open tabs.
      */
-    object OpenTabs : Migration(currentVersion = 1)
+    object OpenTabs : Migration(currentVersion = 1, "OpenTabs")
 
     /**
      * Migrates FxA state.
      */
-    object FxA : Migration(currentVersion = 1)
+    object FxA : Migration(currentVersion = 1, "FxA")
 
     /**
      * Migrates Gecko(View) internal files.
      */
-    object Gecko : Migration(currentVersion = 1)
+    object Gecko : Migration(currentVersion = 1, "Gecko")
 
     /**
      * Migrates all Fennec settings backed by SharedPreferences.
      */
-    object Settings : Migration(currentVersion = 2)
+    object Settings : Migration(currentVersion = 2, "Settings")
 
     /**
      * Migrates / Disables all currently unsupported Add-ons.
      */
-    object Addons : Migration(currentVersion = 3)
+    object Addons : Migration(currentVersion = 3, "Addons")
 
     /**
      * Migrates Fennec's telemetry identifiers.
      */
-    object TelemetryIdentifiers : Migration(currentVersion = 1)
+    object TelemetryIdentifiers : Migration(currentVersion = 1, "TelemetryIdentifiers")
 
     /**
      * Migrates Fennec's default search engine.
      */
-    object SearchEngine : Migration(currentVersion = 1)
+    object SearchEngine : Migration(currentVersion = 1, "SearchEngine")
 
     /**
      * Migrates Fennec's pinned sites.
      */
-    object PinnedSites : Migration(currentVersion = 1)
+    object PinnedSites : Migration(currentVersion = 1, "PinnedSites")
 }
 
 /**
