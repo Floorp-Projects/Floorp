@@ -3640,13 +3640,6 @@ static inline bool ArrayConstructorImpl(JSContext* cx, CallArgs& args,
     if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Array, &proto)) {
       return false;
     }
-  } else {
-    // We're emulating |new Array(n)| with |std_Array(n)| in self-hosted JS,
-    // and the proto should be %ArrayPrototype% regardless of the callee.
-    proto = GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
-    if (!proto) {
-      return false;
-    }
   }
 
   if (args.length() != 1 || !args[0].isNumber()) {
