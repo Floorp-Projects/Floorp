@@ -129,6 +129,11 @@ class ChromeUtils {
                                             nsAString& aBaseDomain,
                                             ErrorResult& aRv);
 
+  static void GetPartitionKeyFromURL(dom::GlobalObject& aGlobal,
+                                     const nsAString& aURL,
+                                     nsAString& aPartitionKey,
+                                     ErrorResult& aRv);
+
   // Implemented in js/xpconnect/loader/ChromeScriptLoader.cpp
   static already_AddRefed<Promise> CompileScript(
       GlobalObject& aGlobal, const nsAString& aUrl,
