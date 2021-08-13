@@ -1362,7 +1362,7 @@ static bool intrinsic_TypedArrayInitFromPackedArray(JSContext* cx,
   MOZ_ASSERT(source->length() == target->length());
 
   switch (target->type()) {
-#define INIT_TYPED_ARRAY(_, T, N)                                      \
+#define INIT_TYPED_ARRAY(T, N)                                         \
   case Scalar::N: {                                                    \
     if (!ElementSpecific<T, UnsharedOps>::initFromIterablePackedArray( \
             cx, target, source)) {                                     \
