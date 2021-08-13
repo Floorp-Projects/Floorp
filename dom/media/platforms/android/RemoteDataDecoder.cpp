@@ -661,17 +661,23 @@ RefPtr<ShutdownPromise> RemoteDataDecoder::Shutdown() {
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
-static java::sdk::CryptoInfo::LocalRef GetCryptoInfoFromSample(
-    const MediaRawData* aSample) {
+using CryptoInfoResult = Result<java::sdk::CryptoInfo::LocalRef, nsresult>;
+
+static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
   auto& cryptoObj = aSample->mCrypto;
+  java::sdk::CryptoInfo::LocalRef cryptoInfo;
 
   if (!cryptoObj.IsEncrypted()) {
-    return nullptr;
+    return CryptoInfoResult(cryptoInfo);
   }
 
-  java::sdk::CryptoInfo::LocalRef cryptoInfo;
+  static bool supportsCBCS = java::CodecProxy::SupportsCBCS();
+  if (cryptoObj.mCryptoScheme == CryptoScheme::Cbcs && !supportsCBCS) {
+    return CryptoInfoResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
+  }
+
   nsresult rv = java::sdk::CryptoInfo::New(&cryptoInfo);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  NS_ENSURE_SUCCESS(rv, CryptoInfoResult(rv));
 
   uint32_t numSubSamples = std::min<uint32_t>(
       cryptoObj.mPlainSizes.Length(), cryptoObj.mEncryptedSizes.Length());
@@ -689,7 +695,7 @@ static java::sdk::CryptoInfo::LocalRef GetCryptoInfoFromSample(
   uint32_t codecSpecificDataSize = aSample->Size() - totalSubSamplesSize;
   // Size of codec specific data("CSD") for Android java::sdk::MediaCodec usage
   // should be included in the 1st plain size if it exists.
-  if (!plainSizes.IsEmpty()) {
+  if (codecSpecificDataSize > 0 && !plainSizes.IsEmpty()) {
     // This shouldn't overflow as the the plain size should be UINT16_MAX at
     // most, and the CSD should never be that large. Checked int acts like a
     // diagnostic assert here to help catch if we ever have insane inputs.
@@ -699,9 +705,26 @@ static java::sdk::CryptoInfo::LocalRef GetCryptoInfoFromSample(
   }
 
   static const int kExpectedIVLength = 16;
-  auto tempIV(cryptoObj.mIV);
+  nsTArray<uint8_t> tempIV(kExpectedIVLength);
+  jint mode;
+  switch (cryptoObj.mCryptoScheme) {
+    case CryptoScheme::None:
+      mode = java::sdk::MediaCodec::CRYPTO_MODE_UNENCRYPTED;
+      MOZ_ASSERT(cryptoObj.mIV.Length() <= kExpectedIVLength);
+      tempIV.AppendElements(cryptoObj.mIV);
+      break;
+    case CryptoScheme::Cenc:
+      mode = java::sdk::MediaCodec::CRYPTO_MODE_AES_CTR;
+      MOZ_ASSERT(cryptoObj.mIV.Length() <= kExpectedIVLength);
+      tempIV.AppendElements(cryptoObj.mIV);
+      break;
+    case CryptoScheme::Cbcs:
+      mode = java::sdk::MediaCodec::CRYPTO_MODE_AES_CBC;
+      MOZ_ASSERT(cryptoObj.mConstantIV.Length() <= kExpectedIVLength);
+      tempIV.AppendElements(cryptoObj.mConstantIV);
+      break;
+  }
   auto tempIVLength = tempIV.Length();
-  MOZ_ASSERT(tempIVLength <= kExpectedIVLength);
   for (size_t i = tempIVLength; i < kExpectedIVLength; i++) {
     // Padding with 0
     tempIV.AppendElement(0);
@@ -710,10 +733,13 @@ static java::sdk::CryptoInfo::LocalRef GetCryptoInfoFromSample(
   cryptoInfo->Set(numSubSamples, mozilla::jni::IntArray::From(plainSizes),
                   mozilla::jni::IntArray::From(cryptoObj.mEncryptedSizes),
                   mozilla::jni::ByteArray::From(cryptoObj.mKeyId),
-                  mozilla::jni::ByteArray::From(tempIV),
-                  java::sdk::MediaCodec::CRYPTO_MODE_AES_CTR);
+                  mozilla::jni::ByteArray::From(tempIV), mode);
+  if (mode == java::sdk::MediaCodec::CRYPTO_MODE_AES_CBC) {
+    java::CodecProxy::SetCryptoPatternIfNeeded(
+        cryptoInfo, cryptoObj.mCryptByteBlock, cryptoObj.mSkipByteBlock);
+  }
 
-  return cryptoInfo;
+  return CryptoInfoResult(cryptoInfo);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
@@ -726,8 +752,13 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
 
   SetState(State::DRAINABLE);
   mInputBufferInfo->Set(0, aSample->Size(), aSample->mTime.ToMicroseconds(), 0);
-  int64_t session = mJavaDecoder->Input(bytes, mInputBufferInfo,
-                                        GetCryptoInfoFromSample(aSample));
+  CryptoInfoResult crypto = GetCryptoInfoFromSample(aSample);
+  if (crypto.isErr()) {
+    return DecodePromise::CreateAndReject(
+        MediaResult(crypto.unwrapErr(), __func__), __func__);
+  }
+  int64_t session =
+      mJavaDecoder->Input(bytes, mInputBufferInfo, crypto.unwrap());
   if (session == java::CodecProxy::INVALID_SESSION) {
     return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
