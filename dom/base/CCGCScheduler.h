@@ -178,6 +178,7 @@ class CCGCScheduler {
       SetNeedsFullGC();
     }
   }
+
   // Ensure that the current runner does a cycle collection, and trigger a GC
   // after it finishes.
   void EnsureCCThenGC() {
