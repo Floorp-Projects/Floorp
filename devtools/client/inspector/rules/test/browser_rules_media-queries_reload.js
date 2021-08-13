@@ -22,6 +22,8 @@ const TEST_URI = `
   <div></div>
 `;
 
+ignoreGetGridsPromiseRejections();
+
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view: ruleView, toolbox } = await openRuleView();
