@@ -778,9 +778,9 @@ void NewObjectCache::fillProto(EntryIndex entry, const JSClass* clasp,
   return fill(entry, clasp, proto.raw(), kind, obj);
 }
 
-bool js::NewObjectWithTaggedProtoIsCachable(JSContext* cx,
-                                            Handle<TaggedProto> proto,
-                                            NewObjectKind newKind) {
+static bool NewObjectWithTaggedProtoIsCachable(JSContext* cx,
+                                               Handle<TaggedProto> proto,
+                                               NewObjectKind newKind) {
   return !cx->isHelperThreadContext() && proto.isObject() &&
          newKind == GenericObject && !proto.toObject()->is<GlobalObject>();
 }
