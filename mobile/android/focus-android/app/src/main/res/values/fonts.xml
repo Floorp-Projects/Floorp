@@ -5,6 +5,4 @@
 <resources>
     <string name="font_roboto_medium">sans-serif-medium</string>
     <string name="font_roboto_regular">sans-serif</string>
-    <string name="font_metropolis">metropolis</string>
-    <string name="font_inter">Inter</string>
 </resources>

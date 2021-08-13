@@ -184,14 +184,13 @@
     </style>
 
     <style name="PanelTitle" parent="Widget.MaterialComponents.TextView">
-        <item name="fontFamily">@string/font_inter</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/primaryTextColor</item>
         <item name="android:lineSpacingExtra">3sp</item>
     </style>
 
     <style name="PanelHeading" parent="Widget.MaterialComponents.TextView">
-        <item name="fontFamily">@string/font_metropolis</item>
+        <item name="fontFamily">@font/metropolis</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textColor">@color/primaryTextColor</item>
         <item name="android:textStyle">bold</item>
@@ -200,13 +199,12 @@
     </style>
 
     <style name="TrackerSwitchTitle" parent="Widget.MaterialComponents.TextView">
-        <item name="fontFamily">@string/font_inter</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/primaryTextColor</item>
     </style>
 
     <style name="TrackersCount" parent="Widget.MaterialComponents.TextView">
-        <item name="fontFamily">@string/font_metropolis</item>
+        <item name="fontFamily">@font/metropolis</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/primaryTextColor</item>
@@ -215,19 +213,16 @@
     </style>
 
     <style name="CaptionText" parent="Widget.MaterialComponents.TextView">
-        <item name="fontFamily">@string/font_inter</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">@color/disabledText</item>
     </style>
 
     <style name="SwitchTitle" parent="Widget.MaterialComponents.TextView">
-        <item name="fontFamily">@string/font_inter</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/primaryTextColor</item>
     </style>
 
     <style name="SwitchDescription" parent="Widget.MaterialComponents.TextView">
-        <item name="fontFamily">@string/font_inter</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">@color/disabledText</item>
     </style>
