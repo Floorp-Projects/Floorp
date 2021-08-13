@@ -913,7 +913,7 @@ def provided_program(env_var, when=None):
 @template
 def sysroot(host_or_target, target_sysroot=None):
     assert target_sysroot or host_or_target is target
-    bootstrap_target_when = target_is_linux
+    bootstrap_target_when = target_is_linux_or_wasi
     if host_or_target is host:
         host_or_target_str = "host"
         opt = "--with-host-sysroot"
