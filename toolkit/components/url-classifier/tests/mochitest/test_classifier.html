@@ -16,22 +16,21 @@
 var firstLoad = true;
 
 // Add some URLs to the malware database.
-// Note that we intentionally don't touch test-phish-simple, and will
-// use the URL registered by addMozEntries().  Otherwise, classifierHelper.resetDatabase()
-// will reset this table, and waitForInit() can't find the known phishing
-// URL in test-phish-simple, breaking the tests following this one.
 var testData = [
-  { url: "malware.example.com/",
+  { url: "malware.mochi.test/",
     db: "test-malware-simple",
   },
-  { url: "unwanted.example.com/",
+  { url: "unwanted.mochi.test/",
     db: "test-unwanted-simple",
   },
-  { url: "blocked.example.com/",
+  { url: "blocked.mochi.test/",
     db: "test-block-simple",
   },
-  { url: "harmful.example.com/",
+  { url: "harmful.mochi.test/",
     db: "test-harmful-simple",
+  },
+  { url: "phish.mochi.test/firefox/its-a-trap.html",
+    db: "test-phish-simple",
   },
 ];
 
@@ -40,27 +39,27 @@ const Ci = SpecialPowers.Ci;
 const Cr = SpecialPowers.Cr;
 
 var testURLs = [
-  { url: "http://example.com",
+  { url: "http://mochi.test",
     table: "",
     result: Cr.NS_OK,
   },
-  { url: "http://malware.example.com",
+  { url: "http://malware.mochi.test",
     table: "test-malware-simple",
     result: Cr.NS_ERROR_MALWARE_URI,
   },
-  { url: "http://unwanted.example.com",
+  { url: "http://unwanted.mochi.test",
     table: "test-unwanted-simple",
     result: Cr.NS_ERROR_UNWANTED_URI,
   },
-  { url: "http://itisatrap.org/firefox/its-a-trap.html",
-    table: "moztest-phish-simple",
+  { url: "http://phish.mochi.test/firefox/its-a-trap.html",
+    table: "test-phish-simple",
     result: Cr.NS_ERROR_PHISHING_URI,
   },
-  { url: "http://harmful.example.com",
+  { url: "http://harmful.mochi.test",
     table: "test-harmful-simple",
     result: Cr.NS_ERROR_HARMFUL_URI,
   },
-  { url: "http://blocked.example.com",
+  { url: "http://blocked.mochi.test",
     table: "test-block-simple",
     result: Cr.NS_ERROR_BLOCKED_URI,
   },
@@ -92,7 +91,7 @@ function testService() {
         return;
       }
       let test = testURLs.shift();
-      let tables = "test-malware-simple,test-unwanted-simple,moztest-phish-simple,test-block-simple,test-harmful-simple";
+      let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-block-simple,test-harmful-simple";
       let uri = SpecialPowers.Services.io.newURI(test.url);
       let prin = SpecialPowers.Services.scriptSecurityManager.createContentPrincipal(uri, {});
       SpecialPowers.doUrlClassify(prin, null, function(errorCode) {
@@ -118,6 +117,7 @@ function testService() {
 SpecialPowers.pushPrefEnv(
   {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
            ["urlclassifier.blockedTable", "test-block-simple"],
+           ["urlclassifier.phishTable", "test-phish-simple"],
            ["browser.safebrowsing.debug", true]]},
   function() {
     classifierHelper.waitForInit()
