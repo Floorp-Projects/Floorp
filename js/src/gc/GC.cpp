@@ -6851,13 +6851,13 @@ void GCRuntime::maybeStopPretenuring() {
 void GCRuntime::updateGCThresholdsAfterCollection(const AutoLockGC& lock) {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->clearGCSliceThresholds();
-    zone->updateGCStartThresholds(*this, gcOptions, lock);
+    zone->updateGCStartThresholds(*this, lock);
   }
 }
 
 void GCRuntime::updateAllGCStartThresholds(const AutoLockGC& lock) {
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-    zone->updateGCStartThresholds(*this, JS::GCOptions::Normal, lock);
+    zone->updateGCStartThresholds(*this, lock);
   }
 }
 
@@ -9538,6 +9538,6 @@ void GCRuntime::setPerformanceHint(PerformanceHint hint) {
 
   AutoLockGC lock(this);
   schedulingState.inPageLoad = inPageLoad;
-  atomsZone->updateGCStartThresholds(*this, gcOptions, lock);
+  atomsZone->updateGCStartThresholds(*this, lock);
   maybeTriggerGCAfterAlloc(atomsZone);
 }

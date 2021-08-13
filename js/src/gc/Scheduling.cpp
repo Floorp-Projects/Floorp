@@ -479,12 +479,9 @@ double HeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
 
 /* static */
 size_t GCHeapThreshold::computeZoneTriggerBytes(
-    double growthFactor, size_t lastBytes, JS::GCOptions options,
-    const GCSchedulingTunables& tunables, const AutoLockGC& lock) {
-  size_t baseMin = options == JS::GCOptions::Shrink
-                       ? tunables.minEmptyChunkCount(lock) * ChunkSize
-                       : tunables.gcZoneAllocThresholdBase();
-  size_t base = std::max(lastBytes, baseMin);
+    double growthFactor, size_t lastBytes, const GCSchedulingTunables& tunables,
+    const AutoLockGC& lock) {
+  size_t base = std::max(lastBytes, tunables.gcZoneAllocThresholdBase());
   double trigger = double(base) * growthFactor;
   double triggerMax =
       double(tunables.gcMaxBytes()) / tunables.largeHeapIncrementalLimit();
@@ -492,7 +489,6 @@ size_t GCHeapThreshold::computeZoneTriggerBytes(
 }
 
 void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
-                                           JS::GCOptions options,
                                            const GCSchedulingTunables& tunables,
                                            const GCSchedulingState& state,
                                            bool isAtomsZone,
@@ -507,7 +503,7 @@ void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
   }
 
   startBytes_ =
-      computeZoneTriggerBytes(growthFactor, lastBytes, options, tunables, lock);
+      computeZoneTriggerBytes(growthFactor, lastBytes, tunables, lock);
 
   setIncrementalLimitFromStartBytes(lastBytes, tunables);
 }
