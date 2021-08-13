@@ -2206,7 +2206,16 @@ Toolbox.prototype = {
 
     // Highlight the button when a child frame is selected and visible.
     const selectedFrame = this.frameMap.get(this.selectedFrameId) || {};
-    const isVisible = this._commandIsVisible(this.frameButton);
+
+    // We need to do something a bit different to avoid some test failures. This function
+    // can be called from onWillNavigate, and the current target might have this `traits`
+    // property nullifed, which is unfortunate as that's what isTargetSupported is checking,
+    // so it will throw.
+    // So here, we check first if the button isn't going to be visible anyway (it only checks
+    // for this.frameMap size) so we don't call _commandIsVisible.
+    const isVisible = !this.frameButton.isCurrentlyVisible()
+      ? false
+      : this._commandIsVisible(this.frameButton);
 
     this.frameButton.isVisible = isVisible;
 
@@ -3012,7 +3021,7 @@ Toolbox.prototype = {
   /**
    * Fired when user just started navigating away to another web page.
    */
-  async _onWillNavigate() {
+  async _onWillNavigate({ isFrameSwitching } = {}) {
     // On navigate, the server will resume all paused threads, but due to an
     // issue which can cause loosing outgoing messages/RDP packets, the THREAD_STATE
     // resources for the resumed state might not get received. So let assume it happens
@@ -3025,8 +3034,11 @@ Toolbox.prototype = {
       }
     }
 
-    // Clearing the error count as soon as we navigate
+    // Clearing the error count and the iframe list as soon as we navigate
     this.setErrorCount(0);
+    if (!isFrameSwitching) {
+      this._updateFrames({ destroyAll: true });
+    }
     this.updateToolboxButtons();
     const toolId = this.currentToolId;
     // For now, only inspector, webconsole, netmonitor and accessibility fire "reloaded" event
@@ -4373,7 +4385,9 @@ Toolbox.prototype = {
         resource.name === "will-navigate" &&
         resource.targetFront.isTopLevel
       ) {
-        this._onWillNavigate();
+        this._onWillNavigate({
+          isFrameSwitching: resource.isFrameSwitching,
+        });
         // While we will call `setErrorCount(0)` from onWillNavigate, we also need to reset
         // `errors` local variable in order to clear previous errors processed in the same
         // throttling bucket as this will-navigate resource.

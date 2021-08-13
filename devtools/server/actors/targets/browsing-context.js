@@ -996,18 +996,6 @@ const browsingContextTargetPrototype = {
     });
   },
 
-  _notifyDocShellDestroyAll() {
-    // Only top level target uses frameUpdate in order to update the iframe dropdown.
-    // This may eventually be replaced by Target listening and target switching.
-    if (!this.isTopLevelTarget) {
-      return;
-    }
-
-    this.emit("frameUpdate", {
-      destroyAll: true,
-    });
-  },
-
   /**
    * Creates and manages the thread actor as part of the Browsing Context Target pool.
    * This sets up the content window for being debugged
@@ -1475,9 +1463,6 @@ const browsingContextTargetPrototype = {
     let reset = false;
 
     if (window == this._originalWindow && !isFrameSwitching) {
-      // Clear the iframe list if the original top-level document changes.
-      this._notifyDocShellDestroyAll();
-
       // If the top level document changes and we are targeting an iframe, we
       // need to reset to the upcoming new top level document. But for this
       // will-navigate event, we will dispatch on the old window. (The inspector
