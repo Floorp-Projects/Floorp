@@ -18,9 +18,11 @@
 
 namespace js {
 
-/* static */ inline ArrayObject* ArrayObject::createArray(
+/* static */ inline ArrayObject* ArrayObject::create(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
     uint32_t length, AutoSetNewObjectMetadata& metadata, gc::AllocSite* site) {
+  debugCheckNewObject(shape, kind, heap);
+
   const JSClass* clasp = &ArrayObject::class_;
   MOZ_ASSERT(shape);
   MOZ_ASSERT(shape->getObjectClass() == clasp);

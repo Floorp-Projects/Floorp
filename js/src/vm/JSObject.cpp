@@ -3769,11 +3769,15 @@ bool js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) {
 void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
                                    js::gc::InitialHeap heap) {
   const JSClass* clasp = shape->getObjectClass();
-  MOZ_ASSERT(clasp != &ArrayObject::class_);
 
   if (!ClassCanHaveFixedData(clasp)) {
-    MOZ_ASSERT(shape);
-    MOZ_ASSERT(gc::GetGCKindSlots(allocKind, clasp) == shape->numFixedSlots());
+    if (clasp == &ArrayObject::class_) {
+      // Arrays can store the ObjectElements header inline.
+      MOZ_ASSERT(shape->numFixedSlots() == 0);
+    } else {
+      MOZ_ASSERT(gc::GetGCKindSlots(allocKind, clasp) ==
+                 shape->numFixedSlots());
+    }
   }
 
   // Assert background finalization is used when possible.

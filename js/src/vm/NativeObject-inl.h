@@ -429,6 +429,7 @@ inline NativeObject* NativeObject::create(
   const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(clasp->isNativeObject());
   MOZ_ASSERT(!clasp->isJSFunction(), "should use JSFunction::create");
+  MOZ_ASSERT(clasp != &ArrayObject::class_, "should use ArrayObject::create");
 
   size_t nDynamicSlots =
       calculateDynamicSlots(shape->numFixedSlots(), shape->slotSpan(), clasp);
