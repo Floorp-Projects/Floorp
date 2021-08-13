@@ -48,6 +48,21 @@ class HTMLEditUtils final {
   }
 
   /**
+   * IsNeverContentEditableElementByUser() returns true if the element's content
+   * is never editable by user.  E.g., the content is always replaced by
+   * native anonymous node or something.
+   */
+  static bool IsNeverElementContentsEditableByUser(const nsIContent& aContent) {
+    return aContent.IsElement() &&
+           (!HTMLEditUtils::IsContainerNode(aContent) ||
+            aContent.IsAnyOfHTMLElements(
+                nsGkAtoms::applet, nsGkAtoms::colgroup, nsGkAtoms::frameset,
+                nsGkAtoms::head, nsGkAtoms::html, nsGkAtoms::iframe,
+                nsGkAtoms::meter, nsGkAtoms::picture, nsGkAtoms::progress,
+                nsGkAtoms::select, nsGkAtoms::textarea));
+  }
+
+  /**
    * IsNonEditableReplacedContent() returns true when aContent is an inclusive
    * descendant of a replaced element whose content shouldn't be editable by
    * user's operation.
@@ -104,7 +119,7 @@ class HTMLEditUtils final {
   /**
    * IsInlineElement() returns true if aElement is an element node but
    * shouldn't be treated as a block or aElement is not an element.
-   * XXX This looks odd.  For example, how about a comment node?
+   * XXX This name is wrong.  Must be renamed to IsInlineContent() or something.
    */
   static bool IsInlineElement(const nsIContent& aContent) {
     return !IsBlockElement(aContent);
@@ -703,6 +718,13 @@ class HTMLEditUtils final {
     MOZ_ASSERT_IF(
         aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
         !aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode));
+    // editor shouldn't touch child nodes which are replaced with native
+    // anonymous nodes.
+    if (aNode.IsElement() &&
+        HTMLEditUtils::IsNeverElementContentsEditableByUser(
+            *aNode.AsElement())) {
+      return nullptr;
+    }
     for (nsIContent* content = aNode.GetLastChild(); content;) {
       if (aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode) &&
           !EditorUtils::IsEditableContent(*content,
@@ -716,7 +738,8 @@ class HTMLEditUtils final {
           HTMLEditUtils::IsBlockElement(*content)) {
         return content;
       }
-      if (!content->HasChildren()) {
+      if (!content->HasChildren() ||
+          HTMLEditUtils::IsNeverElementContentsEditableByUser(*content)) {
         return content;
       }
       if (aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode) &&
@@ -739,6 +762,13 @@ class HTMLEditUtils final {
     MOZ_ASSERT_IF(
         aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
         !aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode));
+    // editor shouldn't touch child nodes which are replaced with native
+    // anonymous nodes.
+    if (aNode.IsElement() &&
+        HTMLEditUtils::IsNeverElementContentsEditableByUser(
+            *aNode.AsElement())) {
+      return nullptr;
+    }
     for (nsIContent* content = aNode.GetFirstChild(); content;) {
       if (aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode) &&
           !EditorUtils::IsEditableContent(*content,
@@ -752,7 +782,8 @@ class HTMLEditUtils final {
           HTMLEditUtils::IsBlockElement(*content)) {
         return content;
       }
-      if (!content->HasChildren()) {
+      if (!content->HasChildren() ||
+          HTMLEditUtils::IsNeverElementContentsEditableByUser(*content)) {
         return content;
       }
       if (aLeafNodeTypes.contains(LeafNodeType::LeafNodeOrNonEditableNode) &&
