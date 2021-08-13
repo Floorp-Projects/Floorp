@@ -324,7 +324,7 @@ sm-linux64-wasi/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - sysroot-x86_64-linux-gnu
-            - wasi-sysroot-12
+            - sysroot-wasm32-wasi
 
 sm-msan-linux64/opt:
     description: "Spidermonkey Memory Sanitizer"
