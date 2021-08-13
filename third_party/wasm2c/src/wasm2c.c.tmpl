@@ -5,11 +5,11 @@
 #include <stdlib.h>
 %%declarations
 #if defined(_MSC_VER)
-  #define UNLIKELY(x) (x)
-  #define LIKELY(x) (x)
+#  define UNLIKELY(x) (x)
+#  define LIKELY(x) (x)
 #else
-  #define UNLIKELY(x) __builtin_expect(!!(x), 0)
-  #define LIKELY(x) __builtin_expect(!!(x), 1)
+#  define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#  define LIKELY(x) __builtin_expect(!!(x), 1)
 #endif
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
@@ -28,32 +28,37 @@
 
 
 #if defined(WASM_CHECK_SHADOW_MEMORY)
-#define WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, ptr, ptr_size)  wasm2c_shadow_memory_load(mem, func_name, ptr, ptr_size)
-#define WASM2C_SHADOW_MEMORY_STORE(mem, func_name, ptr, ptr_size) wasm2c_shadow_memory_store(mem, func_name, ptr, ptr_size)
-#define WASM2C_SHADOW_MEMORY_RESERVE(mem, ptr, ptr_size)          wasm2c_shadow_memory_reserve(mem, ptr, ptr_size)
-#define WASM2C_SHADOW_MEMORY_DLMALLOC(mem, ptr, ptr_size)         wasm2c_shadow_memory_dlmalloc(mem, ptr, ptr_size)
-#define WASM2C_SHADOW_MEMORY_DLFREE(mem, ptr)                     wasm2c_shadow_memory_dlfree(mem, ptr)
-#define WASM2C_SHADOW_MEMORY_MARK_GLOBALS_HEAP_BOUNDARY(mem, ptr) wasm2c_shadow_memory_mark_globals_heap_boundary(mem, ptr)
+#  define WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, ptr, ptr_size)  wasm2c_shadow_memory_load(mem, func_name, ptr, ptr_size)
+#  define WASM2C_SHADOW_MEMORY_STORE(mem, func_name, ptr, ptr_size) wasm2c_shadow_memory_store(mem, func_name, ptr, ptr_size)
+#  define WASM2C_SHADOW_MEMORY_RESERVE(mem, ptr, ptr_size)          wasm2c_shadow_memory_reserve(mem, ptr, ptr_size)
+#  define WASM2C_SHADOW_MEMORY_DLMALLOC(mem, ptr, ptr_size)         wasm2c_shadow_memory_dlmalloc(mem, ptr, ptr_size)
+#  define WASM2C_SHADOW_MEMORY_DLFREE(mem, ptr)                     wasm2c_shadow_memory_dlfree(mem, ptr)
+#  define WASM2C_SHADOW_MEMORY_MARK_GLOBALS_HEAP_BOUNDARY(mem, ptr) wasm2c_shadow_memory_mark_globals_heap_boundary(mem, ptr)
 #else
-#define WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, ptr, ptr_size)
-#define WASM2C_SHADOW_MEMORY_STORE(mem, func_name, ptr, ptr_size)
-#define WASM2C_SHADOW_MEMORY_RESERVE(mem, ptr, ptr_size)
-#define WASM2C_SHADOW_MEMORY_DLMALLOC(mem, ptr, ptr_size)
-#define WASM2C_SHADOW_MEMORY_DLFREE(mem, ptr)
-#define WASM2C_SHADOW_MEMORY_MARK_GLOBALS_HEAP_BOUNDARY(mem, ptr)
+#  define WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, ptr, ptr_size)
+#  define WASM2C_SHADOW_MEMORY_STORE(mem, func_name, ptr, ptr_size)
+#  define WASM2C_SHADOW_MEMORY_RESERVE(mem, ptr, ptr_size)
+#  define WASM2C_SHADOW_MEMORY_DLMALLOC(mem, ptr, ptr_size)
+#  define WASM2C_SHADOW_MEMORY_DLFREE(mem, ptr)
+#  define WASM2C_SHADOW_MEMORY_MARK_GLOBALS_HEAP_BOUNDARY(mem, ptr)
 #endif
 
-#if WASM_USING_GUARD_PAGES == 1
-#define MEMCHECK(mem, a, t)
+#ifdef WASM_USE_GUARD_PAGES
+#  define MEMCHECK(mem, a, t)
 #else
-#define MEMCHECK(mem, a, t)  \
-  if (UNLIKELY((a) + sizeof(t) > mem->size)) (void) TRAP(OOB)
+#  define MEMCHECK(mem, a, t) if (UNLIKELY((a) + sizeof(t) > mem->size)) { (void) TRAP(OOB); }
+#endif
+
+#if defined(WASM_USE_GUARD_PAGES) && UINTPTR_MAX == 0xffffffff
+// on 32-bit platforms we have to mask memory access into range
+#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr & 0x7fffff]
+#else
+#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr]
 #endif
 
 #if defined(WASM_USING_GLOBAL_HEAP)
-#define MEM_ACCESS_REF(mem, addr) (char*) addr
-#else
-#define MEM_ACCESS_REF(mem, addr) &mem->data[addr]
+#  undef MEM_ACCESS_REF
+#  define MEM_ACCESS_REF(mem, addr) (char*) addr
 #endif
 
 #if WABT_BIG_ENDIAN
@@ -140,23 +145,23 @@ DEFINE_STORE(i64_store16, u16, u64);
 DEFINE_STORE(i64_store32, u32, u64);
 
 #if defined(_MSC_VER)
-  #include <intrin.h>
+#include <intrin.h>
 
 // Adapted from https://github.com/nemequ/portable-snippets/blob/master/builtin/builtin.h
 
 static inline int I64_CLZ(unsigned long long v) {
   unsigned long r = 0;
-  #if defined(_M_AMD64) || defined(_M_ARM)
+#if defined(_M_AMD64) || defined(_M_ARM)
     if (_BitScanReverse64(&r, v)) {
       return 63 - r;
     }
-  #else
+#else
     if (_BitScanReverse(&r, (unsigned long) (v >> 32))) {
       return 31 - r;
     } else if (_BitScanReverse(&r, (unsigned long) v)) {
       return 63 - r;
     }
-  #endif
+#endif
   return 64;
 }
 
@@ -173,17 +178,17 @@ static inline int I64_CTZ(unsigned long long v) {
     return 64;
   }
   unsigned long r = 0;
-  #if defined(_M_AMD64) || defined(_M_ARM)
+#if defined(_M_AMD64) || defined(_M_ARM)
     _BitScanForward64(&r, v);
     return (int) r;
-  #else
+#else
     if (_BitScanForward(&r, (unsigned int) (v))) {
       return (int) (r);
     }
 
     _BitScanForward(&r, (unsigned int) (v >> 32));
     return (int) (r + 32);
-  #endif
+#endif
 }
 
 static inline int I32_CTZ(unsigned long v) {
@@ -209,12 +214,12 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 #undef POPCOUNT_DEFINE_PORTABLE
 
 #else
-  #define I32_CLZ(x) ((x) ? __builtin_clz(x) : 32)
-  #define I64_CLZ(x) ((x) ? __builtin_clzll(x) : 64)
-  #define I32_CTZ(x) ((x) ? __builtin_ctz(x) : 32)
-  #define I64_CTZ(x) ((x) ? __builtin_ctzll(x) : 64)
-  #define I32_POPCNT(x) (__builtin_popcount(x))
-  #define I64_POPCNT(x) (__builtin_popcountll(x))
+#  define I32_CLZ(x) ((x) ? __builtin_clz(x) : 32)
+#  define I64_CLZ(x) ((x) ? __builtin_clzll(x) : 64)
+#  define I32_CTZ(x) ((x) ? __builtin_ctz(x) : 32)
+#  define I64_CTZ(x) ((x) ? __builtin_ctzll(x) : 64)
+#  define I32_POPCNT(x) (__builtin_popcount(x))
+#  define I64_POPCNT(x) (__builtin_popcountll(x))
 #endif
 
 #define DIV_S(ut, min, x, y)                                 \

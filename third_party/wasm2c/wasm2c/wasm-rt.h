@@ -43,17 +43,20 @@ extern "C" {
 #define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
 
-/** Check if we should use guard page model. This is enabled if
- * --- the os is 64-bit
- * --- the user has not asked for the use of explicit bounds checks
+/** Check if we should use guard page model.
+ * This is enabled by default unless WASM_USE_EXPLICIT_BOUNDS_CHECKS is defined.
  */
-#if !defined(WASM_USING_GUARD_PAGES)
-  #if !defined(WASM_USE_EXPLICIT_BOUNDS_CHECKS) && UINTPTR_MAX == 0xffffffffffffffff
-    #define WASM_USING_GUARD_PAGES 1
-  #else
-    #define WASM_USING_GUARD_PAGES 0
-  #endif
+#if defined(WASM_USE_GUARD_PAGES) && defined(WASM_USE_EXPLICIT_BOUNDS_CHECKS)
+#  error "Cannot define both WASM_USE_GUARD_PAGES and WASM_USE_EXPLICIT_BOUNDS_CHECKS"
+#elif !defined(WASM_USE_GUARD_PAGES) && !defined(WASM_USE_EXPLICIT_BOUNDS_CHECKS)
+// default to guard pages
+#  define WASM_USE_GUARD_PAGES
 #endif
+
+/** Define WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC if you want the runtime to incrementally allocate heap/linear memory
+ * Note that this memory may be moved when it needs to expand
+ */
+
 #if defined(_MSC_VER)
 #define WASM_RT_NO_RETURN __declspec(noreturn)
 #else
@@ -106,7 +109,11 @@ typedef struct {
 /** A Memory object. */
 typedef struct {
   /** The linear memory data, with a byte length of `size`. */
+#if defined(WASM_USE_GUARD_PAGES) || !defined(WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC)
   uint8_t* const data;
+#else
+  uint8_t* data;
+#endif
   /** The current and maximum page count for this Memory object. If there is no
    * maximum, `max_pages` is 0xffffffffu (i.e. UINT32_MAX). */
   uint32_t pages, max_pages;
