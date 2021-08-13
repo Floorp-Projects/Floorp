@@ -437,7 +437,7 @@ static const double HelperThreadRatio = 0.5;
 /* JSGC_MAX_HELPER_THREADS */
 static const size_t MaxHelperThreads = 8;
 
-/* JSGC_URGENT_THRESHOLD_BYTES */
+/* JSGC_URGENT_THRESHOLD_MB */
 static const size_t UrgentThresholdBytes = 16 * 1024 * 1024;
 
 }  // namespace TuningDefaults
@@ -598,7 +598,7 @@ class GCSchedulingTunables {
   MainThreadOrGCTaskData<size_t> mallocThresholdBase_;
 
   /*
-   * JSGC_URGENT_THRESHOLD_BYTES
+   * JSGC_URGENT_THRESHOLD_MB
    *
    * The base value used to compute the GC trigger for malloc allocated memory.
    */
