@@ -3186,7 +3186,7 @@
   arguments:
     simd128: SimdConstant
 
-- name: WasmBitselectSimd128
+- name: WasmTernarySimd128
   gen_boilerplate: false
 
 - name: WasmBinarySimd128

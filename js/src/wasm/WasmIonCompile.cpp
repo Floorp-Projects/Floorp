@@ -783,16 +783,17 @@ class FunctionCompiler {
   }
 
   // (v128, v128, v128) -> v128 effect-free operations
-  MDefinition* bitselectSimd128(MDefinition* v1, MDefinition* v2,
-                                MDefinition* control) {
+  MDefinition* ternarySimd128(MDefinition* v0, MDefinition* v1, MDefinition* v2,
+                              SimdOp op) {
     if (inDeadCode()) {
       return nullptr;
     }
 
-    MOZ_ASSERT(v1->type() == MIRType::Simd128);
-    MOZ_ASSERT(v2->type() == MIRType::Simd128);
-    MOZ_ASSERT(control->type() == MIRType::Simd128);
-    auto* ins = MWasmBitselectSimd128::New(alloc(), v1, v2, control);
+    MOZ_ASSERT(v0->type() == MIRType::Simd128 &&
+               v1->type() == MIRType::Simd128 &&
+               v2->type() == MIRType::Simd128);
+
+    auto* ins = MWasmTernarySimd128::New(alloc(), v0, v1, v2, op);
     curBlock_->add(ins);
     return ins;
   }
@@ -4390,6 +4391,18 @@ static bool EmitBinarySimd128(FunctionCompiler& f, bool commutative,
   return true;
 }
 
+static bool EmitTernarySimd128(FunctionCompiler& f, wasm::SimdOp op) {
+  MDefinition* v0;
+  MDefinition* v1;
+  MDefinition* v2;
+  if (!f.iter().readTernary(ValType::V128, &v0, &v1, &v2)) {
+    return false;
+  }
+
+  f.iter().setResult(f.ternarySimd128(v0, v1, v2, op));
+  return true;
+}
+
 static bool EmitShiftSimd128(FunctionCompiler& f, SimdOp op) {
   MDefinition* lhs;
   MDefinition* rhs;
@@ -4453,18 +4466,6 @@ static bool EmitReplaceLaneSimd128(FunctionCompiler& f, ValType laneType,
   }
 
   f.iter().setResult(f.replaceLaneSimd128(lhs, rhs, laneIndex, op));
-  return true;
-}
-
-static bool EmitBitselectSimd128(FunctionCompiler& f) {
-  MDefinition* v1;
-  MDefinition* v2;
-  MDefinition* control;
-  if (!f.iter().readVectorSelect(&v1, &v2, &control)) {
-    return false;
-  }
-
-  f.iter().setResult(f.bitselectSimd128(v1, v2, control));
   return true;
 }
 
@@ -4558,6 +4559,7 @@ static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
   f.storeLaneSimd128(laneSize, addr, laneIndex, src);
   return true;
 }
+
 #endif
 
 static bool EmitIntrinsic(FunctionCompiler& f, IntrinsicOp op) {
@@ -5344,7 +5346,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F64x2ReplaceLane):
             CHECK(EmitReplaceLaneSimd128(f, ValType::F64, 2, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128Bitselect):
-            CHECK(EmitBitselectSimd128(f));
+            CHECK(EmitTernarySimd128(f, SimdOp(op.b1)));
           case uint32_t(SimdOp::V8x16Shuffle):
             CHECK(EmitShuffleSimd128(f));
           case uint32_t(SimdOp::V8x16LoadSplat):
