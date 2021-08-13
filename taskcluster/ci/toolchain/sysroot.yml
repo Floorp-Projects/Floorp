@@ -63,6 +63,23 @@ sysroot-x86_64-linux-gnu-x11:
         arguments:
             - amd64
 
+sysroot-wasm32-wasi:
+    description: "Sysroot for wasi"
+    attributes:
+        local-toolchain: true
+    run-on-projects: [trunk]
+    treeherder:
+        symbol: TL(sysroot-wasi)
+    run:
+        script: build-sysroot-wasi.sh
+        toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
+    fetches:
+        fetch:
+            - clang-12
+            - wasi-sdk
+        toolchain:
+            - linux64-clang-12
+
 sysroot-aarch64-linux-gnu:
     description: "Sysroot for linux64 aarch64 builds"
     attributes:

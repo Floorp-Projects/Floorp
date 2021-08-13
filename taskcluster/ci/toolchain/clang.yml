@@ -166,7 +166,7 @@ linux64-clang-trunk:
             - linux64-binutils
             - linux64-gcc-7
             - linux64-toolchain-sysroot
-            - wasi-sysroot
+            - wasm32-wasi-compiler-rt
 
 linux64-clang-11-android-cross:
     description: "Clang 11 toolchain build"
@@ -384,7 +384,7 @@ linux64-clang-12:
             - linux64-binutils
             - linux64-gcc-7
             - linux64-toolchain-sysroot
-            - wasi-sysroot-12
+            - wasm32-wasi-compiler-rt-12
 
 linux64-clang-12-android-cross:
     description: "Clang 12 toolchain build"
@@ -502,7 +502,7 @@ macosx64-clang-12:
             - linux64-clang-12-macosx-cross
             - linux64-gcc-7
             - macosx64-sdk-10.12
-            - wasi-sysroot-12
+            - wasm32-wasi-compiler-rt-12
 
 macosx64-aarch64-clang-12:
     description: "Clang 12 toolchain build"
@@ -534,7 +534,7 @@ macosx64-aarch64-clang-12:
             - linux64-clang-12-macosx-cross
             - linux64-gcc-7
             - macosx64-sdk-11.0
-            - wasi-sysroot-12
+            - wasm32-wasi-compiler-rt-12
 
 win64-clang-12:
     description: "Clang-cl 12 toolchain build"
@@ -565,7 +565,7 @@ win64-clang-12:
             - cmake
             - ninja
         toolchain:
-            - wasi-sysroot-12
+            - wasm32-wasi-compiler-rt-12
 
 win64-clang-12-2stage:
     description: "Clang-cl 12 toolchain 2-stage quick build"

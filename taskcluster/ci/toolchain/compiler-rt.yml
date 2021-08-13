@@ -106,3 +106,16 @@ macosx64-aarch64-compiler-rt-12:
             - linux64-cctools-port-clang-12
             - linux64-clang-12
             - macosx64-sdk-11.0
+
+wasm32-wasi-compiler-rt-12:
+    description: "wasm32-wasi Compiler-rt for Clang 12 toolchain build"
+    treeherder:
+        symbol: TL(wasi-crt-12)
+    worker-type: b-linux-xlarge
+    run:
+        script: build-compiler-rt-wasi.sh
+        toolchain-alias: wasm32-wasi-compiler-rt
+    fetches:
+        fetch:
+            - clang-12
+            - wasi-sdk
