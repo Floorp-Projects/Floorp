@@ -89,3 +89,8 @@ user_pref("toolkit.telemetry.server", "https://127.0.0.1/telemetry-dummy/");
 user_pref("telemetry.fog.test.localhost_port", -1);
 user_pref("startup.homepage_welcome_url", "");
 user_pref("startup.homepage_welcome_url.additional", "");
+// Ensures that system principal triggered about:blank load within the current
+// process to avoid performing process switches in the middle of warm load
+// tests (bug 1725270). Can be removed once non-about:blank intermediate pages
+// are used instead (bug 1724261).
+user_pref("browser.tabs.remote.systemTriggeredAboutBlankAnywhere", true);

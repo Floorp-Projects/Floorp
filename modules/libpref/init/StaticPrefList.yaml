@@ -1277,6 +1277,15 @@
   value: false
   mirror: always
 
+# Testing-only pref to force system-triggered about:blank loads to not change
+# content processes. This is used for performance tests which load an
+# about:blank document between navigations for historical reasons to avoid
+# unnecessary process switches.
+- name: browser.tabs.remote.systemTriggeredAboutBlankAnywhere
+  type: bool
+  value: false
+  mirror: always
+
 - name: browser.tabs.remote.desktopbehavior
   type: bool
   value: false

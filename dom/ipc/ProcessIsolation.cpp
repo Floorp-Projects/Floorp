@@ -502,6 +502,21 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
     behavior = IsolationBehavior::WebContent;
   }
 
+  // If we're running in a test which is requesting that system-triggered
+  // about:blank documents load within the current process, override the
+  // behaviour for loads which meet the requirements.
+  if (StaticPrefs::browser_tabs_remote_systemTriggeredAboutBlankAnywhere() &&
+      NS_IsAboutBlank(aChannelCreationURI)) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
+        resultOrPrecursor->GetIsNullPrincipal()) {
+      MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+              ("Forcing system-principal triggered about:blank load to "
+               "complete in the current process"));
+      behavior = IsolationBehavior::Anywhere;
+    }
+  }
+
   // If we're loading for a specific extension, we'll need to perform a
   // BCG-switching load to get our toplevel extension window in the correct
   // BrowsingContextGroup.
