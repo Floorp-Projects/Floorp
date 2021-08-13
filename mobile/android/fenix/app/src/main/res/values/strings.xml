@@ -619,8 +619,10 @@
     <string name="studies_remove">Remove</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Active</string>
-    <!-- Description for studies, it indicates why Firefox use studies and links to an article for more information. The %1 will be replaced with the corresponding article URL -->
-    <string name="studies_description"><![CDATA[Firefox may install and run studies from time to time. <a href="%1$s">Learn more</a>]]></string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox may install and run studies from time to time.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Learn more</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
