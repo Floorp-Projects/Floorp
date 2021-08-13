@@ -127,26 +127,22 @@ add_task(
     );
 
     const frameUpdates = unwatchFrameUpdates();
+    const [frameUpdate] = frameUpdates;
 
     equal(
       frameUpdates.length,
-      2,
-      "Expect 2 frameUpdate events to have been received"
-    );
-    Assert.deepEqual(
-      frameUpdates[0],
-      { destroyAll: true },
-      "Got the expected frame update when the addon was shutting down"
+      1,
+      "Expect 1 frameUpdate events to have been received"
     );
     equal(
-      frameUpdates[1].frames?.length,
+      frameUpdate.frames?.length,
       1,
-      "Expect 1 frame in the second frameUpdate event "
+      "Expect 1 frame in the frameUpdate event "
     );
     Assert.deepEqual(
       {
-        url: frameUpdates[1].frames[0].url,
-        addonID: frameUpdates[1].frames[0].addonID,
+        url: frameUpdate.frames[0].url,
+        addonID: frameUpdate.frames[0].addonID,
       },
       {
         url: bgPageURL,
