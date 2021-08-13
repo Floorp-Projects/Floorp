@@ -10,8 +10,8 @@
  * ====================================================
  */
 
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
+//#include <sys/cdefs.h>
+//__FBSDID("$FreeBSD$");
 
 /* cos(x)
  * Return cosine function of x.
@@ -46,7 +46,6 @@ __FBSDID("$FreeBSD$");
 
 #include <float.h>
 
-#include "math.h"
 #define INLINE_REM_PIO2
 #include "math_private.h"
 #include "e_rem_pio2.c"
@@ -83,7 +82,3 @@ cos(double x)
 	    }
 	}
 }
-
-#if (LDBL_MANT_DIG == 53)
-__weak_reference(cos, cosl);
-#endif

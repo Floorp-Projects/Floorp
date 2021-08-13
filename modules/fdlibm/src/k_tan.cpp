@@ -11,8 +11,8 @@
  */
 
 /* INDENT OFF */
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
+//#include <sys/cdefs.h>
+//__FBSDID("$FreeBSD$");
 
 /* __kernel_tan( x, y, k )
  * kernel tan function on ~[-pi/4, pi/4] (except on -0), pi/4 ~ 0.7854
@@ -49,7 +49,6 @@ __FBSDID("$FreeBSD$");
  *		       = 1 - 2*(tan(y) - (tan(y)^2)/(1+tan(y)))
  */
 
-#include "math.h"
 #include "math_private.h"
 static const double xxx[] = {
 		 3.33333333333334091986e-01,	/* 3FD55555, 55555563 */

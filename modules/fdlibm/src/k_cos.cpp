@@ -11,8 +11,8 @@
  * ====================================================
  */
 
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
+//#include <sys/cdefs.h>
+//__FBSDID("$FreeBSD$");
 
 /*
  * __kernel_cos( x,  y )
@@ -53,7 +53,6 @@ __FBSDID("$FreeBSD$");
  *	   any extra precision in w.
  */
 
-#include "math.h"
 #include "math_private.h"
 
 static const double
