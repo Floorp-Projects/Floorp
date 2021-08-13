@@ -222,7 +222,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_MALLOC_THRESHOLD_BASE:
       mallocThresholdBase_ = value * 1024 * 1024;
       break;
-    case JSGC_URGENT_THRESHOLD_BYTES:
+    case JSGC_URGENT_THRESHOLD_MB:
       urgentThresholdBytes_ = value * 1024 * 1024;
       break;
     default:
@@ -363,7 +363,7 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_MALLOC_THRESHOLD_BASE:
       mallocThresholdBase_ = TuningDefaults::MallocThresholdBase;
       break;
-    case JSGC_URGENT_THRESHOLD_BYTES:
+    case JSGC_URGENT_THRESHOLD_MB:
       urgentThresholdBytes_ = TuningDefaults::UrgentThresholdBytes;
       break;
     default:
