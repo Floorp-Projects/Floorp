@@ -179,33 +179,42 @@ class DevToolsFrameChild extends JSWindowActorChild {
           acceptTopLevelTarget,
         })
       ) {
-        // Bail if there is already an existing BrowsingContextTargetActor.
-        // This means we are reloading or navigating (same-process) a Target
-        // which has not been created using the Watcher, but from the client.
-        // Most likely the initial target of a local-tab toolbox.
-        const existingTarget = this._getTargetActorForWatcherActorID(
-          watcherActorID,
-          browserId
-        );
+        // If this was triggered because of a navigation, we want to retrieve the existing
+        // target we were debugging so we can destroy it before creating the new target.
+        // This is important because we had cases where the destruction of an old target
+        // was unsetting a flag on the **new** target document, breaking the toolbox (See Bug 1721398).
 
-        // Bail when there is already a target for a watcher + browserId pair,
-        // unless this target was created from a JSWindowActor target. The old JSWindowActor
-        // target will still be around for a short time when the new one is
-        // created.
-        // Also force overriding the first message manager based target in case of BFCache navigations
+        // We're checking for an existing target given a watcherActorID + browserId + browsingContext
+        // Note that a target switch might create a new browsing context, so we wouldn't
+        // retrieve the existing target here. We are okay with this as:
+        // - this shouldn't happen much
+        // - in such case we weren't seeing the issue of Bug 1721398 (the old target can't access the new document)
+        const existingTarget = this._findTargetActor({
+          watcherActorID,
+          browserId,
+          browsingContextId: this.manager.browsingContext.id,
+        });
+
+        // Bail if there is already an existing BrowsingContextTargetActor which wasn't
+        // created from a JSWIndowActor.
+        // This means we are reloading or navigating (same-process) a Target
+        // which has not been created using the Watcher, but from the client (most likely
+        // the initial target of a local-tab toolbox).
+        // However, we force overriding the first message manager based target in case of
+        // BFCache navigations.
         if (
           existingTarget &&
           !existingTarget.createdFromJsWindowActor &&
           !isBFCache
         ) {
-          return;
+          continue;
         }
 
         // If we decide to instantiate a new target and there was one before,
         // first destroy the previous one.
         // Otherwise its destroy sequence will be executed *after* the new one
         // is being initialized and may easily revert changes made against platform API.
-        // (typically toggle platform boolean attributes back to default...)
+        // (typically toggle platform boolean attributes back to default…)
         if (existingTarget) {
           existingTarget.destroy({ isTargetSwitching: true });
         }
@@ -503,34 +512,62 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
   }
 
-  _getTargetActorForWatcherActorID(watcherActorID, browserId) {
+  /**
+   * Return an existing target given a WatcherActor id, a browserId and an optional
+   * browsing context id.
+   * /!\ Note that we may have multiple targets for a given (watcherActorId, browserId) couple,
+   * for example if we have 2 remote iframes sharing the same origin, which is why you
+   * might want to pass a specific browsing context id to filter the list down.
+   *
+   * @param {Object} options
+   * @param {Object} options.watcherActorID
+   * @param {Object} options.browserId
+   * @param {Object} options.browsingContextId: Optional browsing context id to narrow the
+   *                 search to a specific browsing context.
+   *
+   * @returns {BrowsingContextTargetActor|null}
+   */
+  _findTargetActor({ watcherActorID, browserId, browsingContextId }) {
+    // First let's check if a target was created for this watcher actor in this specific
+    // DevToolsFrameChild instance.
     const connectionInfo = this._connections.get(watcherActorID);
     let targetActor = connectionInfo ? connectionInfo.actor : null;
-    // We might not get the target actor created by DevToolsFrameChild.
-    // For the Tab top-level target for content toolbox,
-    // we are still using the "message manager connector",
-    // so that they keep working across navigation.
-    // We will surely remove all of this. "Message manager connector", and
-    // this special codepath once we are ready to make the top level target to
-    // be destroyed on navigations. See bug 1602748 for more context.
+
+    // If we couldn't find such target, we want to see if a target was created for this
+    // (watcherActorId,browserId, {browsingContextId}) in another DevToolsFrameChild instance.
+    // This might be the case if we're navigating to a new page with server side target
+    // enabled and we want to retrieve the target of the page we're navigating from.
     if (!targetActor && this.manager.browsingContext.browserId == browserId) {
       // Ensure retrieving the one target actor related to this connection.
       // This allows to distinguish actors created for various toolboxes.
       // For ex, regular toolbox versus browser console versus browser toolbox
       const connectionPrefix = watcherActorID.replace(/watcher\d+$/, "");
-      targetActor = TargetActorRegistry.getTargetActor(
+      const targetActors = TargetActorRegistry.getTargetActors(
         browserId,
         connectionPrefix
       );
+
+      if (!browsingContextId) {
+        targetActor = targetActors[0] || null;
+      } else {
+        targetActor = targetActors.find(
+          actor => actor.browsingContextID === browsingContextId
+        );
+      }
     }
+
     return targetActor;
   }
 
   _addWatcherDataEntry(watcherActorID, browserId, type, entries) {
-    const targetActor = this._getTargetActorForWatcherActorID(
+    // /!\ We may have an issue here as there could be multiple targets for a given
+    // (watcherActorID,browserId) pair.
+    // This should be clarified as part of Bug 1725623.
+    const targetActor = this._findTargetActor({
       watcherActorID,
-      browserId
-    );
+      browserId,
+    });
+
     if (!targetActor) {
       throw new Error(
         `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowserId:${browserId}`
@@ -540,10 +577,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
   }
 
   _removeWatcherDataEntry(watcherActorID, browserId, type, entries) {
-    const targetActor = this._getTargetActorForWatcherActorID(
+    // /!\ We may have an issue here as there could be multiple targets for a given
+    // (watcherActorID,browserId) pair.
+    // This should be clarified as part of Bug 1725623.
+    const targetActor = this._findTargetActor({
       watcherActorID,
-      browserId
-    );
+      browserId,
+    });
     // By the time we are calling this, the target may already have been destroyed.
     if (targetActor) {
       return targetActor.removeWatcherDataEntry(type, entries);
@@ -612,10 +652,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
       for (const [watcherActorID, watchedData] of watchedDataByWatcherActor) {
         const { browserId, isServerTargetSwitchingEnabled } = watchedData;
 
-        const existingTarget = this._getTargetActorForWatcherActorID(
+        // /!\ We may have an issue here as there could be multiple targets for a given
+        // (watcherActorID,browserId) pair.
+        // This should be clarified as part of Bug 1725623.
+        const existingTarget = this._findTargetActor({
           watcherActorID,
-          browserId
-        );
+          browserId,
+        });
 
         if (!existingTarget) {
           continue;
@@ -653,7 +696,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
       if (allActorsAreDestroyed) {
         // Completely clear this JSWindow Actor.
-        // Do this after having called _getTargetActorForWatcherActorID,
+        // Do this after having called _findTargetActor,
         // as it would clear the registered target actors.
         this.didDestroy();
       }
