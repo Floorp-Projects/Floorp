@@ -1,7 +1,7 @@
 packages.txt:build/common_virtualenv_packages.txt
-# glean_sdk may not be installable if a wheel isn't available
+# glean-sdk may not be installable if a wheel isn't available
 # and it has to be built from source.
-pypi-optional:glean_sdk==36.0.0:telemetry will not be collected
+pypi-optional:glean-sdk==36.0.0:telemetry will not be collected
 # Mach gracefully handles the case where `psutil` is unavailable.
 pypi-optional:psutil==5.8.0:telemetry will be missing some data
 pypi:zstandard==0.15.2
