@@ -25,6 +25,7 @@ use std::rc::Rc;
 use std::slice;
 use std::str;
 use std::time::Instant;
+use std::borrow::Cow;
 use thin_vec::ThinVec;
 use xpcom::{interfaces::nsrefcnt, AtomicRefcnt, RefCounted, RefPtr};
 
@@ -582,6 +583,15 @@ pub enum Http3Event {
     NoEvent,
 }
 
+fn sanitize_header(mut y: Cow<[u8]>) -> Cow<[u8]> {
+    for i in 0..y.len() {
+        if matches!(y[i], b'\n' | b'\r'| b'\0') {
+            y.to_mut()[i] = b' ';
+        }
+    }
+    y
+}
+
 fn convert_h3_to_h1_headers(headers: Vec<Header>, ret_headers: &mut ThinVec<u8>) -> nsresult {
     if headers.iter().filter(|&h| h.name() == ":status").count() != 1 {
         return NS_ERROR_ILLEGAL_VALUE;
@@ -598,9 +608,9 @@ fn convert_h3_to_h1_headers(headers: Vec<Header>, ret_headers: &mut ThinVec<u8>)
     ret_headers.extend_from_slice(b"\r\n");
 
     for hdr in headers.iter().filter(|&h| h.name() != ":status") {
-        ret_headers.extend_from_slice(hdr.name().as_bytes());
+        ret_headers.extend_from_slice(&sanitize_header(Cow::from(hdr.name().as_bytes())));
         ret_headers.extend_from_slice(b": ");
-        ret_headers.extend_from_slice(hdr.value().as_bytes());
+        ret_headers.extend_from_slice(&sanitize_header(Cow::from(hdr.value().as_bytes())));
         ret_headers.extend_from_slice(b"\r\n");
     }
     ret_headers.extend_from_slice(b"\r\n");
