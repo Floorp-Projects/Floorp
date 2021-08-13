@@ -2099,7 +2099,7 @@ with only_when(requires_wasm_sandboxing & compile_environment):
 
     @depends(
         "--with-wasi-sysroot",
-        bootstrap_path("wasi-sysroot/share/wasi-sysroot", when=bootstrap_wasi_sysroot),
+        bootstrap_path("sysroot-wasm32-wasi", when=bootstrap_wasi_sysroot),
     )
     @imports("os")
     def wasi_sysroot(wasi_sysroot, bootstrapped_sysroot):

@@ -12,7 +12,7 @@
     "ranlib": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ranlib",
     "libtool": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-libtool",
     "ld": "{MOZ_FETCHES_DIR}/clang/bin/clang",
-    "wasi-sysroot": "{MOZ_FETCHES_DIR}/wasi-sysroot",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
     "patches": [
       "static-llvm-symbolizer_clang_12.patch",
       "compiler-rt-cross-compile.patch",

@@ -58,7 +58,7 @@ jobs:
                 - linux64-cbindgen
                 - linux64-dump_syms
                 - sysroot-x86_64-linux-gnu
-                - wasi-sysroot
+                - sysroot-wasm32-wasi
 
     macosx64-searchfox/debug:
         description: "MacOS X x64 Debug Cross-compile Searchfox"
@@ -99,7 +99,7 @@ jobs:
                 - linux64-dump_syms
                 - macosx64-sdk-10.12
                 - sysroot-x86_64-linux-gnu
-                - wasi-sysroot
+                - sysroot-wasm32-wasi
 
     win64-searchfox/debug:
         description: "Win64 Searchfox Debug (clang-cl)"

@@ -181,27 +181,6 @@ browsertime:
         toolchain:
             - linux64-node
 
-wasi-sysroot-12:
-    description: "wasi sysroot build using clang-12"
-    attributes:
-        local-toolchain: true
-    treeherder:
-        symbol: TL(wasi-sysroot-12)
-    worker-type: b-linux-xlarge
-    run-on-projects: [trunk]
-    run:
-        script: build-wasi-sysroot.sh
-        sparse-profile: null
-        toolchain-alias: wasi-sysroot
-        toolchain-artifact: public/build/wasi-sysroot.tar.xz
-    fetches:
-        fetch:
-            - clang-12
-            - wasi-sdk
-        toolchain:
-            - linux64-binutils
-            - linux64-gcc-7
-
 wrench-deps:
     description: "Downloads all the crates needed for building wrench"
     treeherder:

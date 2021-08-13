@@ -94,7 +94,7 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - sysroot-x86_64-linux-gnu
-                - wasi-sysroot
+                - sysroot-wasm32-wasi
 
     macosx64-shippable/opt:
         description: "MacOS X x64 Cross-compile Instrumented"
@@ -133,7 +133,7 @@ jobs:
                 - linux64-node
                 - macosx64-sdk-10.12
                 - sysroot-x86_64-linux-gnu
-                - wasi-sysroot
+                - sysroot-wasm32-wasi
 
     android-x86-shippable/opt:
         description: "Android 5.0 x86 PGO instrumented"

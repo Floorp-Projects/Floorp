@@ -55,7 +55,7 @@ macosx64/debug:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64/opt:
     description: "MacOS X x64 Cross-compile"
@@ -84,7 +84,7 @@ macosx64/opt:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64-asan-fuzzing/opt:
     description: "MacOS X x64 Cross-compile Fuzzing ASAN"
@@ -111,7 +111,7 @@ macosx64-asan-fuzzing/opt:
             - linux64-sccache
             - macosx64-llvm-symbolizer
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
 
@@ -141,7 +141,7 @@ macosx64-fuzzing/debug:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
 
@@ -179,7 +179,7 @@ macosx64-x64-devedition/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64-aarch64-devedition/opt:
     description: "MacOS X Dev Edition Aarch64 (shippable)"
@@ -217,7 +217,7 @@ macosx64-aarch64-devedition/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - macosx64-sdk-11.0
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition Universal"
@@ -383,7 +383,7 @@ macosx64-noopt/debug:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
@@ -409,7 +409,7 @@ macosx64-add-on-devel/opt:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64-x64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
@@ -441,7 +441,7 @@ macosx64-x64-shippable/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64-aarch64-shippable/opt:
     description: "MacOS X aarch64 Cross-compile"
@@ -476,7 +476,7 @@ macosx64-aarch64-shippable/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - macosx64-sdk-11.0
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64-shippable/opt:
     description: "MacOS X Universal"
@@ -643,7 +643,7 @@ macosx64-ccov/opt:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
 
 macosx64-gcp/debug:
     description: "MacOS X x64 Cross-compile - built on GCP"
@@ -673,7 +673,7 @@ macosx64-gcp/debug:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
     optimization:
         skip-unless-backstop: null
 
@@ -704,4 +704,4 @@ macosx64-gcp/opt:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
-            - wasi-sysroot
+            - sysroot-wasm32-wasi

@@ -25,7 +25,7 @@ job-defaults:
             - linux64-nasm
             - linux64-node
             - sysroot-x86_64-linux-gnu
-            - wasi-sysroot
+            - sysroot-wasm32-wasi
     when:
         # Extension list from https://hg.mozilla.org/mozilla-central/file/default/python/mozbuild/mozbuild/mach_commands.py#l1664
         files-changed:
