@@ -929,3 +929,14 @@ async function removeContentPageElementAttribute(selector, attribute) {
     }
   );
 }
+
+function ignoreGetGridsPromiseRejections() {
+  const { PromiseTestUtils } = ChromeUtils.import(
+    "resource://testing-common/PromiseTestUtils.jsm"
+  );
+  // Once Bug 1655422 is done we should cleanup the functions
+  // added globally. See Bug 1725565
+  PromiseTestUtils.allowMatchingRejectionsGlobally(
+    /Connection closed.*getGrids failed/
+  );
+}
