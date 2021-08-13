@@ -266,11 +266,7 @@ nsDocLoader::Stop(void) {
   // after this, since mDocumentRequest will be null after the
   // DocLoaderIsEmpty() call.
   mChildrenInOnload.Clear();
-  nsCOMPtr<nsIDocShell> ds = do_QueryInterface(GetAsSupports(this));
-  Document* doc = ds ? ds->GetExtantDocument() : nullptr;
-  if (doc) {
-    doc->ClearOOPChildrenLoading();
-  }
+  mOOPChildrenLoading.Clear();
 
   // Make sure to call DocLoaderIsEmpty now so that we reset mDocumentRequest,
   // etc, as needed.  We could be getting into here from a subframe onload, in
@@ -310,9 +306,7 @@ bool nsDocLoader::IsBusy() {
   //   3. It's currently flushing layout in DocLoaderIsEmpty().
   //
 
-  nsCOMPtr<nsIDocShell> ds = do_QueryInterface(GetAsSupports(this));
-  Document* doc = ds ? ds->GetExtantDocument() : nullptr;
-  if (!mChildrenInOnload.IsEmpty() || (doc && doc->HasOOPChildrenLoading()) ||
+  if (!mChildrenInOnload.IsEmpty() || !mOOPChildrenLoading.IsEmpty() ||
       mIsFlushingLayout) {
     return true;
   }
