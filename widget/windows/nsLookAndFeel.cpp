@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsLookAndFeel.h"
+#include <stdint.h>
 #include <windows.h>
 #include <shellapi.h>
 #include "nsStyleConsts.h"
@@ -369,6 +370,18 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::CaretBlinkTime:
       aResult = static_cast<int32_t>(::GetCaretBlinkTime());
       break;
+    case IntID::CaretBlinkCount: {
+      int32_t timeout = GetSystemParam(SPI_GETCARETTIMEOUT, 5000);
+      auto blinkTime = ::GetCaretBlinkTime();
+      if (timeout <= 0 || blinkTime <= 0) {
+        aResult = -1;
+        break;
+      }
+      // 2 * blinkTime because this integer is a full blink cycle.
+      aResult = std::ceil(float(timeout) / (2.0f * float(blinkTime)));
+      break;
+    }
+
     case IntID::CaretWidth:
       aResult = 1;
       break;

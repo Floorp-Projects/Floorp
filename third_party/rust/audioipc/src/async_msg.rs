@@ -8,9 +8,7 @@
 #[cfg(unix)]
 use crate::msg::{RecvMsg, SendMsg};
 use bytes::{Buf, BufMut};
-#[cfg(unix)]
-use futures::Async;
-use futures::Poll;
+use futures::{Async, Poll};
 #[cfg(unix)]
 use iovec::IoVec;
 #[cfg(unix)]
@@ -164,5 +162,33 @@ impl AsyncSendMsg for super::AsyncMessageStream {
             }
             Err(e) => Err(e),
         }
+    }
+}
+
+// AsyncRecvMsg/AsyncSendMsg are implemented for convenience on Windows and don't use the _cmsg parameter.
+#[cfg(windows)]
+impl AsyncRecvMsg for super::AsyncMessageStream {
+    fn recv_msg_buf<B>(&mut self, buf: &mut B, _cmsg: &mut B) -> Poll<(usize, i32), io::Error>
+    where
+        B: BufMut,
+    {
+        // _cmsg unused on Windows.  Pass through to read_buf.
+        match <super::AsyncMessageStream>::read_buf(self, buf) {
+            Ok(Async::Ready(n)) => Ok(Async::Ready((n, 0))),
+            Ok(Async::NotReady) => Ok(Async::NotReady),
+            Err(e) => Err(e),
+        }
+    }
+}
+
+#[cfg(windows)]
+impl AsyncSendMsg for super::AsyncMessageStream {
+    fn send_msg_buf<B, C>(&mut self, buf: &mut B, _cmsg: &C) -> Poll<usize, io::Error>
+    where
+        B: Buf,
+        C: Buf,
+    {
+        // _cmsg unused on Windows.  Pass through to write_buf.
+        <super::AsyncMessageStream>::write_buf(self, buf)
     }
 }

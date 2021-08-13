@@ -1392,12 +1392,12 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
 
 void CodeGenerator::visitDouble(LDouble* ins) {
   ARMFPRegister output(ToFloatRegister(ins->getDef(0)), 64);
-  masm.Fmov(output, ins->getDouble());
+  masm.Fmov(output, ins->value());
 }
 
 void CodeGenerator::visitFloat32(LFloat32* ins) {
   ARMFPRegister output(ToFloatRegister(ins->getDef(0)), 32);
-  masm.Fmov(output, ins->getFloat());
+  masm.Fmov(output, ins->value());
 }
 
 void CodeGenerator::visitTestDAndBranch(LTestDAndBranch* test) {
@@ -2228,7 +2228,7 @@ void CodeGenerator::visitSubI64(LSubI64* lir) {
 void CodeGenerator::visitPopcntI(LPopcntI* ins) {
   Register input = ToRegister(ins->input());
   Register output = ToRegister(ins->output());
-  Register temp = ToRegister(ins->temp());
+  Register temp = ToRegister(ins->temp0());
   masm.popcnt32(input, output, temp);
 }
 
@@ -2960,7 +2960,7 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
 void CodeGenerator::visitSimd128(LSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   const LDefinition* out = ins->getDef(0);
-  masm.loadConstantSimd128(ins->getSimd128(), ToFloatRegister(out));
+  masm.loadConstantSimd128(ins->simd128(), ToFloatRegister(out));
 #else
   MOZ_CRASH("No SIMD");
 #endif

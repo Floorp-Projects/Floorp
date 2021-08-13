@@ -41,7 +41,10 @@ LOCAL_INCLUDES += [
     "/accessible/ipc/other",
     "/accessible/xpcom",
     "/accessible/xul",
+    "/layout/generic",
     "/other-licenses/atk-1.0",
+    "/widget",
+    "/widget/gtk",
 ]
 
 FINAL_LIBRARY = "xul"

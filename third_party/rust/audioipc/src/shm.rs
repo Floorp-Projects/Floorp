@@ -47,7 +47,7 @@ mod unix {
     use super::*;
     use memmap2::{MmapMut, MmapOptions};
     use std::fs::File;
-    use std::os::unix::io::FromRawFd;
+    use std::os::unix::io::{AsRawFd, FromRawFd};
 
     #[cfg(target_os = "android")]
     fn open_shm_file(_id: &str, size: usize) -> Result<File> {
@@ -139,8 +139,6 @@ mod unix {
 
     #[cfg(not(target_os = "android"))]
     fn allocate_file(file: &File, size: usize) -> Result<()> {
-        use std::os::unix::io::AsRawFd;
-
         // First, set the file size.  This may create a sparse file on
         // many systems, which can fail with SIGBUS when accessed via a
         // mapping and the lazy backing allocation fails due to low disk
@@ -190,12 +188,13 @@ mod unix {
     }
 
     pub struct SharedMem {
+        file: File,
         _mmap: MmapMut,
         view: SharedMemView,
     }
 
     impl SharedMem {
-        pub fn new(id: &str, size: usize) -> Result<(SharedMem, PlatformHandle)> {
+        pub fn new(id: &str, size: usize) -> Result<SharedMem> {
             let file = open_shm_file(id, size)?;
             let mut mmap = unsafe { MmapOptions::new().map_mut(&file)? };
             assert_eq!(mmap.len(), size);
@@ -203,21 +202,30 @@ mod unix {
                 ptr: mmap.as_mut_ptr() as _,
                 size,
             };
-            let handle = PlatformHandle::from(file);
-            Ok((SharedMem { _mmap: mmap, view }, handle))
+            Ok(SharedMem {
+                file,
+                _mmap: mmap,
+                view,
+            })
         }
 
-        pub unsafe fn from(handle: &PlatformHandle, size: usize) -> Result<SharedMem> {
-            let mut mmap = {
-                let file = File::from_raw_fd(handle.into_raw());
-                MmapOptions::new().map_mut(&file)?
-            };
+        pub unsafe fn make_handle(&self) -> Result<PlatformHandle> {
+            PlatformHandle::duplicate(self.file.as_raw_fd()).map_err(|e| e.into())
+        }
+
+        pub unsafe fn from(handle: PlatformHandle, size: usize) -> Result<SharedMem> {
+            let file = File::from_raw_fd(handle.into_raw());
+            let mut mmap = MmapOptions::new().map_mut(&file)?;
             assert_eq!(mmap.len(), size);
             let view = SharedMemView {
                 ptr: mmap.as_mut_ptr() as _,
                 size,
             };
-            Ok(SharedMem { _mmap: mmap, view })
+            Ok(SharedMem {
+                file,
+                _mmap: mmap,
+                view,
+            })
         }
 
         pub unsafe fn unsafe_view(&self) -> SharedMemView {
@@ -262,16 +270,14 @@ mod windows {
             unsafe {
                 let ok = UnmapViewOfFile(self.view.ptr);
                 assert_ne!(ok, 0);
-                if self.handle != INVALID_HANDLE_VALUE {
-                    let ok = CloseHandle(self.handle);
-                    assert_ne!(ok, 0);
-                }
+                let ok = CloseHandle(self.handle);
+                assert_ne!(ok, 0);
             }
         }
     }
 
     impl SharedMem {
-        pub fn new(_id: &str, size: usize) -> Result<(SharedMem, PlatformHandle)> {
+        pub fn new(_id: &str, size: usize) -> Result<SharedMem> {
             unsafe {
                 let handle = CreateFileMappingA(
                     INVALID_HANDLE_VALUE,
@@ -290,26 +296,25 @@ mod windows {
                     return Err(std::io::Error::last_os_error().into());
                 }
 
-                let handle2 = PlatformHandle::duplicate(handle)?;
-                Ok((
-                    SharedMem {
-                        handle,
-                        view: SharedMemView { ptr, size },
-                    },
-                    handle2,
-                ))
+                Ok(SharedMem {
+                    handle,
+                    view: SharedMemView { ptr, size },
+                })
             }
         }
 
-        pub unsafe fn from(handle: &PlatformHandle, size: usize) -> Result<SharedMem> {
-            let ptr = MapViewOfFile(handle.as_raw(), FILE_MAP_ALL_ACCESS, 0, 0, size);
+        pub unsafe fn make_handle(&self) -> Result<PlatformHandle> {
+            PlatformHandle::duplicate(self.handle).map_err(|e| e.into())
+        }
+
+        pub unsafe fn from(handle: PlatformHandle, size: usize) -> Result<SharedMem> {
+            let handle = handle.into_raw();
+            let ptr = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
             if ptr.is_null() {
                 return Err(std::io::Error::last_os_error().into());
             }
             Ok(SharedMem {
-                // A invalid `handle` means this is a non-owning `SharedMem`.  See `Drop` impl.
-                // TODO: This can be made *owning* after further `PlatformHandle` ownership refactoring.
-                handle: INVALID_HANDLE_VALUE,
+                handle,
                 view: SharedMemView { ptr, size },
             })
         }

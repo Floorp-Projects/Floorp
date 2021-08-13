@@ -356,7 +356,7 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
 #endif
   if (!JS_SetProperty(cx, info, "osx", value)) {
     return false;
-}
+  }
 
 #ifdef JS_CODEGEN_ARM64
   value = BooleanValue(true);

@@ -414,7 +414,7 @@ function Search(queryContext, listener, provider) {
   // We want to store the original string for case sensitive searches.
   this._originalSearchString = queryContext.searchString;
   this._trimmedOriginalSearchString = queryContext.trimmedSearchString;
-  let unescapedSearchString = Services.textToSubURI.unEscapeURIForUI(
+  let unescapedSearchString = UrlbarUtils.unEscapeURIForUI(
     this._trimmedOriginalSearchString
   );
   let [prefix, suffix] = UrlbarUtils.stripURLPrefix(unescapedSearchString);

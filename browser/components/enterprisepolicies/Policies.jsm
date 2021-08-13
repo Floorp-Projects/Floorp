@@ -1707,16 +1707,14 @@ var Policies = {
     onBeforeUIStartup(manager, param) {
       if (typeof param === "boolean") {
         setAndLockPref("privacy.sanitize.sanitizeOnShutdown", param);
-        if (param) {
-          setAndLockPref("privacy.clearOnShutdown.cache", true);
-          setAndLockPref("privacy.clearOnShutdown.cookies", true);
-          setAndLockPref("privacy.clearOnShutdown.downloads", true);
-          setAndLockPref("privacy.clearOnShutdown.formdata", true);
-          setAndLockPref("privacy.clearOnShutdown.history", true);
-          setAndLockPref("privacy.clearOnShutdown.sessions", true);
-          setAndLockPref("privacy.clearOnShutdown.siteSettings", true);
-          setAndLockPref("privacy.clearOnShutdown.offlineApps", true);
-        }
+        setAndLockPref("privacy.clearOnShutdown.cache", param);
+        setAndLockPref("privacy.clearOnShutdown.cookies", param);
+        setAndLockPref("privacy.clearOnShutdown.downloads", param);
+        setAndLockPref("privacy.clearOnShutdown.formdata", param);
+        setAndLockPref("privacy.clearOnShutdown.history", param);
+        setAndLockPref("privacy.clearOnShutdown.sessions", param);
+        setAndLockPref("privacy.clearOnShutdown.siteSettings", param);
+        setAndLockPref("privacy.clearOnShutdown.offlineApps", param);
       } else {
         let locked = true;
         // Needed to preserve original behavior in perpetuity.
