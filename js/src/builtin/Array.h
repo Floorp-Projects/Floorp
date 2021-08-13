@@ -61,8 +61,13 @@ extern ArrayObject* NewDenseFullyAllocatedArray(
 // Create a dense array with length == 'length', initialized length set to 0,
 // and capacity == 'length' clamped to EagerAllocationMaxLength.
 extern ArrayObject* NewDensePartlyAllocatedArray(
-    JSContext* cx, uint32_t length, HandleObject proto = nullptr,
-    NewObjectKind newKind = GenericObject);
+    JSContext* cx, uint32_t length, NewObjectKind newKind = GenericObject);
+
+// Like NewDensePartlyAllocatedArray, but the array will have |proto| as
+// prototype (or Array.prototype if |proto| is nullptr).
+extern ArrayObject* NewDensePartlyAllocatedArrayWithProto(JSContext* cx,
+                                                          uint32_t length,
+                                                          HandleObject proto);
 
 // Create a dense array from the given array values, which must be rooted.
 extern ArrayObject* NewDenseCopiedArray(JSContext* cx, uint32_t length,
