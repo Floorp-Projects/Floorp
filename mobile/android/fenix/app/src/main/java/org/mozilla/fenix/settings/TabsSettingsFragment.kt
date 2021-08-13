@@ -61,7 +61,6 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         radioOneMonth = requirePreference(R.string.pref_key_close_tabs_after_one_month)
 
         startOnHomeRadioFourHours = requirePreference(R.string.pref_key_start_on_home_after_four_hours)
-        startOnHomeRadioFourHours = requirePreference(R.string.pref_key_start_on_home_after_four_hours)
         startOnHomeRadioAlways = requirePreference(R.string.pref_key_start_on_home_always)
         startOnHomeRadioNever = requirePreference(R.string.pref_key_start_on_home_never)
 
