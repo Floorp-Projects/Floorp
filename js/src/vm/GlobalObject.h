@@ -141,7 +141,7 @@ class GlobalObjectData {
   HeapPtr<JSFunction*> eval;
 
   // Cached shape for new arrays with Array.prototype as prototype.
-  HeapPtr<Shape*> arrayShape;
+  HeapPtr<Shape*> arrayShapeWithDefaultProto;
 
   // Whether the |globalThis| property has been resolved on the global object.
   bool globalThisResolved = false;
@@ -940,10 +940,13 @@ class GlobalObject : public NativeObject {
     data().sourceURLsHolder.unbarrieredSet(nullptr);
   }
 
-  Shape* maybeArrayShape() const { return data().arrayShape; }
+  Shape* maybeArrayShapeWithDefaultProto() const {
+    return data().arrayShapeWithDefaultProto;
+  }
 
   static Shape* getArrayShapeWithDefaultProto(JSContext* cx) {
-    if (Shape* shape = cx->global()->data().arrayShape; MOZ_LIKELY(shape)) {
+    if (Shape* shape = cx->global()->data().arrayShapeWithDefaultProto;
+        MOZ_LIKELY(shape)) {
       return shape;
     }
     return createArrayShapeWithDefaultProto(cx);

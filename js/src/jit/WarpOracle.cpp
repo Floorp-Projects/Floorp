@@ -448,7 +448,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       }
 
       case JSOp::Rest: {
-        if (Shape* shape = script_->global().maybeArrayShape()) {
+        if (Shape* shape =
+                script_->global().maybeArrayShapeWithDefaultProto()) {
           if (!AddOpSnapshot<WarpRest>(alloc_, opSnapshots, offset, shape)) {
             return abort(AbortReason::Alloc);
           }

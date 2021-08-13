@@ -1173,5 +1173,5 @@ void GlobalObjectData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &throwTypeError, "global-throw-type-error");
   TraceNullableEdge(trc, &eval, "global-eval");
 
-  TraceNullableEdge(trc, &arrayShape, "global-array-shape");
+  TraceNullableEdge(trc, &arrayShapeWithDefaultProto, "global-array-shape");
 }
