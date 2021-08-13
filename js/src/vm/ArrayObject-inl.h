@@ -18,20 +18,21 @@
 
 namespace js {
 
-/* static */ inline ArrayObject* ArrayObject::createArrayInternal(
+/* static */ inline ArrayObject* ArrayObject::createArray(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
-    AutoSetNewObjectMetadata&, gc::AllocSite* site) {
-  const JSClass* clasp = shape->getObjectClass();
+    uint32_t length, AutoSetNewObjectMetadata& metadata, gc::AllocSite* site) {
+  const JSClass* clasp = &ArrayObject::class_;
   MOZ_ASSERT(shape);
-  MOZ_ASSERT(clasp == &ArrayObject::class_);
+  MOZ_ASSERT(shape->getObjectClass() == clasp);
   MOZ_ASSERT(clasp->isNativeObject());
-  MOZ_ASSERT_IF(clasp->hasFinalize(), heap == gc::TenuredHeap);
+  MOZ_ASSERT(!clasp->hasFinalize());
 
   // Arrays can use their fixed slots to store elements, so can't have shapes
   // which allow named properties to be stored in the fixed slots.
   MOZ_ASSERT(shape->numFixedSlots() == 0);
 
-  size_t nDynamicSlots = calculateDynamicSlots(0, shape->slotSpan(), clasp);
+  size_t slotSpan = shape->slotSpan();
+  size_t nDynamicSlots = calculateDynamicSlots(0, slotSpan, clasp);
   JSObject* obj =
       js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp, site);
   if (!obj) {
@@ -48,29 +49,18 @@ namespace js {
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
   cx->realm()->setObjectPendingMetadata(cx, aobj);
 
-  return aobj;
-}
-
-/* static */ inline ArrayObject* ArrayObject::createArray(
-    JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
-    uint32_t length, AutoSetNewObjectMetadata& metadata, gc::AllocSite* site) {
-  ArrayObject* obj = createArrayInternal(cx, kind, heap, shape, metadata, site);
-  if (!obj) {
-    return nullptr;
-  }
-
   uint32_t capacity =
       gc::GetGCKindSlots(kind) - ObjectElements::VALUES_PER_HEADER;
 
-  obj->setFixedElements();
-  new (obj->getElementsHeader()) ObjectElements(capacity, length);
+  aobj->setFixedElements();
+  new (aobj->getElementsHeader()) ObjectElements(capacity, length);
 
-  if (size_t span = shape->slotSpan()) {
-    obj->initializeSlotRange(0, span);
+  if (slotSpan > 0) {
+    aobj->initializeSlotRange(0, slotSpan);
   }
 
-  gc::gcprobes::CreateObject(obj);
-  return obj;
+  gc::gcprobes::CreateObject(aobj);
+  return aobj;
 }
 
 }  // namespace js

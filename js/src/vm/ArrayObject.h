@@ -47,15 +47,6 @@ class ArrayObject : public NativeObject {
                                          HandleShape shape, uint32_t length,
                                          AutoSetNewObjectMetadata& metadata,
                                          gc::AllocSite* site = nullptr);
-
- private:
-  // Helper for the above methods.
-  static inline ArrayObject* createArrayInternal(JSContext* cx,
-                                                 gc::AllocKind kind,
-                                                 gc::InitialHeap heap,
-                                                 HandleShape shape,
-                                                 AutoSetNewObjectMetadata&,
-                                                 gc::AllocSite* site = nullptr);
 };
 
 }  // namespace js
