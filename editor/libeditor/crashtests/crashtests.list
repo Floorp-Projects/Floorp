@@ -128,6 +128,7 @@ load 1596516.html
 load 1605741.html
 load 1613521.html
 load 1618906.html
+asserts(1-2) load 1623166.html # assertions in WSRunScanner::GetEditableBlockParentOrTopmostEditableInlineContent() ("indent" causes one in all platforms, the other is caused by "removeList" command enabled check only on Linux (and perhaps, Android))
 load 1623913.html
 load 1624005.html # throws
 load 1624007.html
