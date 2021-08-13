@@ -77,7 +77,7 @@ bool IdleSchedulerChild::SetPaused() {
 
 RefPtr<IdleSchedulerChild::MayGCPromise> IdleSchedulerChild::MayGCNow() {
   if (mIsRequestingGC || mIsDoingGC) {
-    return nullptr;
+    return MayGCPromise::CreateAndResolve(false, __func__);
   }
   TimeStamp wait_since = TimeStamp::Now();
 
