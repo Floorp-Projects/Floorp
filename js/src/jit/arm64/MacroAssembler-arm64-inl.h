@@ -3570,13 +3570,13 @@ void MacroAssembler::narrowInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
 
 void MacroAssembler::narrowInt16x8(FloatRegister lhs, FloatRegister rhs,
                                    FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
   if (rhs == dest) {
-    Sqxtn2(Simd16B(dest), Simd8H(rhs));
-    Sqxtn(Simd8B(dest), Simd8H(lhs));
-  } else {
-    Sqxtn(Simd8B(dest), Simd8H(lhs));
-    Sqxtn2(Simd16B(dest), Simd8H(rhs));
+    Mov(scratch, SimdReg(rhs));
+    rhs = scratch;
   }
+  Sqxtn(Simd8B(dest), Simd8H(lhs));
+  Sqxtn2(Simd16B(dest), Simd8H(rhs));
 }
 
 void MacroAssembler::unsignedNarrowInt16x8(FloatRegister rhs,
@@ -3592,13 +3592,13 @@ void MacroAssembler::unsignedNarrowInt16x8(FloatRegister rhs,
 
 void MacroAssembler::unsignedNarrowInt16x8(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
   if (rhs == dest) {
-    Sqxtun2(Simd16B(dest), Simd8H(rhs));
-    Sqxtun(Simd8B(dest), Simd8H(lhs));
-  } else {
-    Sqxtun(Simd8B(dest), Simd8H(lhs));
-    Sqxtun2(Simd16B(dest), Simd8H(rhs));
+    Mov(scratch, SimdReg(rhs));
+    rhs = scratch;
   }
+  Sqxtun(Simd8B(dest), Simd8H(lhs));
+  Sqxtun2(Simd16B(dest), Simd8H(rhs));
 }
 
 void MacroAssembler::narrowInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
@@ -3613,13 +3613,13 @@ void MacroAssembler::narrowInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
 
 void MacroAssembler::narrowInt32x4(FloatRegister lhs, FloatRegister rhs,
                                    FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
   if (rhs == dest) {
-    Sqxtn2(Simd8H(dest), Simd4S(rhs));
-    Sqxtn(Simd4H(dest), Simd4S(lhs));
-  } else {
-    Sqxtn(Simd4H(dest), Simd4S(lhs));
-    Sqxtn2(Simd8H(dest), Simd4S(rhs));
+    Mov(scratch, SimdReg(rhs));
+    rhs = scratch;
   }
+  Sqxtn(Simd4H(dest), Simd4S(lhs));
+  Sqxtn2(Simd8H(dest), Simd4S(rhs));
 }
 
 void MacroAssembler::unsignedNarrowInt32x4(FloatRegister rhs,
@@ -3635,13 +3635,13 @@ void MacroAssembler::unsignedNarrowInt32x4(FloatRegister rhs,
 
 void MacroAssembler::unsignedNarrowInt32x4(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
   if (rhs == dest) {
-    Sqxtun2(Simd8H(dest), Simd4S(rhs));
-    Sqxtun(Simd4H(dest), Simd4S(lhs));
-  } else {
-    Sqxtun(Simd4H(dest), Simd4S(lhs));
-    Sqxtun2(Simd8H(dest), Simd4S(rhs));
+    Mov(scratch, SimdReg(rhs));
+    rhs = scratch;
   }
+  Sqxtun(Simd4H(dest), Simd4S(lhs));
+  Sqxtun2(Simd8H(dest), Simd4S(rhs));
 }
 
 // Integer to integer widening
