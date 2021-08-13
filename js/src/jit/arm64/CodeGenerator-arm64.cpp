@@ -2966,35 +2966,12 @@ void CodeGenerator::visitSimd128(LSimd128* ins) {
 #endif
 }
 
-void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
+void CodeGenerator::visitWasmBitselectSimd128(LWasmBitselectSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
-  switch (ins->simdOp()) {
-    case wasm::SimdOp::V128Bitselect: {
-      FloatRegister lhs = ToFloatRegister(ins->v0());
-      FloatRegister rhs = ToFloatRegister(ins->v1());
-      FloatRegister controlDest = ToFloatRegister(ins->v2());
-      masm.bitwiseSelectSimd128(lhs, rhs, controlDest);
-      break;
-    }
-    case wasm::SimdOp::F32x4RelaxedFma:
-      masm.fmaFloat32x4(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
-                        ToFloatRegister(ins->v0()));
-      break;
-    case wasm::SimdOp::F32x4RelaxedFms:
-      masm.fmsFloat32x4(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
-                        ToFloatRegister(ins->v0()));
-      break;
-    case wasm::SimdOp::F64x2RelaxedFma:
-      masm.fmaFloat64x2(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
-                        ToFloatRegister(ins->v0()));
-      break;
-    case wasm::SimdOp::F64x2RelaxedFms:
-      masm.fmsFloat64x2(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
-                        ToFloatRegister(ins->v0()));
-      break;
-    default:
-      MOZ_CRASH("NYI");
-  }
+  FloatRegister lhs = ToFloatRegister(ins->lhs());
+  FloatRegister rhs = ToFloatRegister(ins->rhs());
+  FloatRegister controlDest = ToFloatRegister(ins->control());
+  masm.bitwiseSelectSimd128(lhs, rhs, controlDest);
 #else
   MOZ_CRASH("No SIMD");
 #endif

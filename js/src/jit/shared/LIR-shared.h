@@ -3457,41 +3457,30 @@ class LIonToWasmCallI64 : public LIonToWasmCallBase<INT64_PIECES> {
 // Wasm SIMD.
 
 // (v128, v128, v128) -> v128 effect-free operation.
-// temp is FPR.
-class LWasmTernarySimd128 : public LInstructionHelper<1, 3, 1> {
-  wasm::SimdOp op_;
-
+// temp is FPR (and always in use).
+class LWasmBitselectSimd128 : public LInstructionHelper<1, 3, 1> {
  public:
-  LIR_HEADER(WasmTernarySimd128)
+  LIR_HEADER(WasmBitselectSimd128)
 
-  static constexpr uint32_t V0 = 0;
-  static constexpr uint32_t V1 = 1;
-  static constexpr uint32_t V2 = 2;
+  static constexpr uint32_t Lhs = 0;
+  static constexpr uint32_t LhsDest = 0;
+  static constexpr uint32_t Rhs = 1;
+  static constexpr uint32_t Control = 2;
 
-  LWasmTernarySimd128(wasm::SimdOp op, const LAllocation& v0,
-                      const LAllocation& v1, const LAllocation& v2)
-      : LInstructionHelper(classOpcode), op_(op) {
-    setOperand(V0, v0);
-    setOperand(V1, v1);
-    setOperand(V2, v2);
-  }
-
-  LWasmTernarySimd128(wasm::SimdOp op, const LAllocation& v0,
-                      const LAllocation& v1, const LAllocation& v2,
-                      const LDefinition& temp)
-      : LInstructionHelper(classOpcode), op_(op) {
-    setOperand(V0, v0);
-    setOperand(V1, v1);
-    setOperand(V2, v2);
+  LWasmBitselectSimd128(const LAllocation& lhs, const LAllocation& rhs,
+                        const LAllocation& control, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(Lhs, lhs);
+    setOperand(Rhs, rhs);
+    setOperand(Control, control);
     setTemp(0, temp);
   }
 
-  const LAllocation* v0() { return getOperand(V0); }
-  const LAllocation* v1() { return getOperand(V1); }
-  const LAllocation* v2() { return getOperand(V2); }
+  const LAllocation* lhs() { return getOperand(Lhs); }
+  const LAllocation* lhsDest() { return getOperand(LhsDest); }
+  const LAllocation* rhs() { return getOperand(Rhs); }
+  const LAllocation* control() { return getOperand(Control); }
   const LDefinition* temp() { return getTemp(0); }
-
-  wasm::SimdOp simdOp() const { return op_; }
 };
 
 // (v128, v128) -> v128 effect-free operations
