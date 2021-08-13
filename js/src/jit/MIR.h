@@ -9930,23 +9930,20 @@ class MRotate : public MBinaryInstruction, public NoTypePolicy::Data {
 // Wasm SIMD.
 //
 // See comment in WasmIonCompile.cpp for a justification for these nodes.
-
 // (v128, v128, v128) -> v128 effect-free operation.
-class MWasmTernarySimd128 : public MTernaryInstruction,
-                            public NoTypePolicy::Data {
-  wasm::SimdOp simdOp_;
-
-  MWasmTernarySimd128(MDefinition* v0, MDefinition* v1, MDefinition* v2,
-                      wasm::SimdOp simdOp)
-      : MTernaryInstruction(classOpcode, v0, v1, v2), simdOp_(simdOp) {
+class MWasmBitselectSimd128 : public MTernaryInstruction,
+                              public NoTypePolicy::Data {
+  MWasmBitselectSimd128(MDefinition* lhs, MDefinition* rhs,
+                        MDefinition* control)
+      : MTernaryInstruction(classOpcode, lhs, rhs, control) {
     setMovable();
     setResultType(MIRType::Simd128);
   }
 
  public:
-  INSTRUCTION_HEADER(WasmTernarySimd128)
+  INSTRUCTION_HEADER(WasmBitselectSimd128)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, v0), (1, v1), (2, v2))
+  NAMED_OPERANDS((0, lhs), (1, rhs), (2, control))
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
@@ -9955,15 +9952,13 @@ class MWasmTernarySimd128 : public MTernaryInstruction,
 #ifdef ENABLE_WASM_SIMD
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
-  // If the control mask of a bitselect allows the operation to be specialized
-  // as a shuffle and it is profitable to specialize it on this platform, return
-  // true and the appropriate shuffle mask.
-  bool specializeBitselectConstantMaskAsShuffle(int8_t shuffle[16]);
+  // If the control mask allows the operation to be specialized as a shuffle
+  // and it is profitable to specialize it on this platform, return true and
+  // the appropriate shuffle mask.
+  bool specializeConstantMaskAsShuffle(int8_t shuffle[16]);
 #endif
 
-  wasm::SimdOp simdOp() const { return simdOp_; }
-
-  ALLOW_CLONE(MWasmTernarySimd128)
+  ALLOW_CLONE(MWasmBitselectSimd128)
 };
 
 // (v128, v128) -> v128 effect-free operations.

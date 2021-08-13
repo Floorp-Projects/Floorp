@@ -132,7 +132,6 @@ enum class OpKind {
   Nop,
   Unary,
   Binary,
-  Ternary,
   Comparison,
   Conversion,
   Load,
@@ -200,6 +199,7 @@ enum class OpKind {
   LoadLane,
   StoreLane,
   VectorShift,
+  VectorSelect,
   VectorShuffle,
 #  endif
 #  ifdef ENABLE_WASM_EXCEPTIONS
@@ -532,8 +532,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readBinary(ValType operandType, Value* lhs, Value* rhs);
   [[nodiscard]] bool readComparison(ValType operandType, Value* lhs,
                                     Value* rhs);
-  [[nodiscard]] bool readTernary(ValType operandType, Value* v0, Value* v1,
-                                 Value* v2);
   [[nodiscard]] bool readLoad(ValType resultType, uint32_t byteSize,
                               LinearMemoryAddress<Value>* addr);
   [[nodiscard]] bool readStore(ValType resultType, uint32_t byteSize,
@@ -647,6 +645,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                      uint32_t* laneIndex, Value* baseValue,
                                      Value* operand);
   [[nodiscard]] bool readVectorShift(Value* baseValue, Value* shift);
+  [[nodiscard]] bool readVectorSelect(Value* v1, Value* v2, Value* controlMask);
   [[nodiscard]] bool readVectorShuffle(Value* v1, Value* v2, V128* selectMask);
   [[nodiscard]] bool readV128Const(V128* value);
   [[nodiscard]] bool readLoadSplat(uint32_t byteSize,
@@ -1762,28 +1761,6 @@ inline bool OpIter<Policy>::readComparison(ValType operandType, Value* lhs,
   }
 
   infalliblePush(ValType::I32);
-
-  return true;
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readTernary(ValType operandType, Value* v0,
-                                        Value* v1, Value* v2) {
-  MOZ_ASSERT(Classify(op_) == OpKind::Ternary);
-
-  if (!popWithType(operandType, v2)) {
-    return false;
-  }
-
-  if (!popWithType(operandType, v1)) {
-    return false;
-  }
-
-  if (!popWithType(operandType, v0)) {
-    return false;
-  }
-
-  infalliblePush(operandType);
 
   return true;
 }
@@ -3248,7 +3225,7 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* relativeDepth, Value* rtt,
                                 branchTargetType, values);
 }
 
-#endif  // ENABLE_WASM_GC
+#endif // ENABLE_WASM_GC
 
 #ifdef ENABLE_WASM_SIMD
 
@@ -3318,6 +3295,28 @@ inline bool OpIter<Policy>::readVectorShift(Value* baseValue, Value* shift) {
   }
 
   if (!popWithType(ValType::V128, baseValue)) {
+    return false;
+  }
+
+  infalliblePush(ValType::V128);
+
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readVectorSelect(Value* v1, Value* v2,
+                                             Value* controlMask) {
+  MOZ_ASSERT(Classify(op_) == OpKind::VectorSelect);
+
+  if (!popWithType(ValType::V128, controlMask)) {
+    return false;
+  }
+
+  if (!popWithType(ValType::V128, v2)) {
+    return false;
+  }
+
+  if (!popWithType(ValType::V128, v1)) {
     return false;
   }
 

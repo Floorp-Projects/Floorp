@@ -1,4 +1,4 @@
-// |jit-test| --wasm-relaxed-simd; skip-if: !wasmSimdEnabled()
+// |jit-test| skip-if: !wasmSimdExperimentalEnabled()
 
 // Experimental opcodes.  We have no text parsing support for these yet.  The
 // tests will be cleaned up and moved into ad-hack.js if the opcodes are
@@ -63,43 +63,4 @@ function V128StoreExpr(addr, v) {
             SimdPrefix, V128StoreCode, 4, varU32(0)];
 }
 
-// FMA/FMS, https://github.com/WebAssembly/relaxed-simd/issues/27
-
-function fma(a, x, y) { return a + (x * y) }
-function fms(a, x, y) { return a - (x * y) }
-
-var fas = [0, 100, 500, 700];
-var fxs = [10, 20, 30, 40];
-var fys = [-2, -3, -4, -5];
-var das = [0, 100];
-var dxs = [10, 20];
-var dys = [-2, -3];
-
-for ( let [opcode, as, xs, ys, operator] of [[F32x4RelaxedFmaCode, fas, fxs, fys, fma],
-                                             [F32x4RelaxedFmsCode, fas, fxs, fys, fms],
-                                             [F64x2RelaxedFmaCode, das, dxs, dys, fma],
-                                             [F64x2RelaxedFmsCode, das, dxs, dys, fms]] ) {
-    var k = xs.length;
-    var ans = iota(k).map((i) => operator(as[i], xs[i], ys[i]))
-
-    var ins = wasmEval(moduleWithSections([
-        sigSection([v2vSig]),
-        declSection([0]),
-        memorySection(1),
-        exportSection([{funcIndex: 0, name: "run"},
-                       {memIndex: 0, name: "mem"}]),
-        bodySection([
-            funcBody({locals:[],
-                      body: [...V128StoreExpr(0, [...V128Load(16),
-                                                  ...V128Load(32),
-                                                  ...V128Load(48),
-                                                  SimdPrefix, varU32(opcode)])]})])]));
-
-    var mem = new (k == 4 ? Float32Array : Float64Array)(ins.exports.mem.buffer);
-    set(mem, k, as);
-    set(mem, 2*k, xs);
-    set(mem, 3*k, ys);
-    ins.exports.run();
-    var result = get(mem, 0, k);
-    assertSame(result, ans);
-}
+// (Currently no tests here but there were some in the past and there will be more in the future.)

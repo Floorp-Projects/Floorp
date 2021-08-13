@@ -560,7 +560,7 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I64x2ShrU:
           WASM_SIMD_OP(OpKind::VectorShift);
         case SimdOp::V128Bitselect:
-          WASM_SIMD_OP(OpKind::Ternary);
+          WASM_SIMD_OP(OpKind::VectorSelect);
         case SimdOp::V8x16Shuffle:
           WASM_SIMD_OP(OpKind::VectorShuffle);
         case SimdOp::V128Const:
@@ -591,11 +591,6 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::V128Store32Lane:
         case SimdOp::V128Store64Lane:
           WASM_SIMD_OP(OpKind::StoreLane);
-        case SimdOp::F32x4RelaxedFma:
-        case SimdOp::F32x4RelaxedFms:
-        case SimdOp::F64x2RelaxedFma:
-        case SimdOp::F64x2RelaxedFms:
-          WASM_SIMD_OP(OpKind::Ternary);
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
         case SimdOp::MozWHSELFTEST:
         case SimdOp::MozWHPMADDUBSW:
