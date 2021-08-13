@@ -9225,10 +9225,10 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       if (referrerInfo) {
         referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
       }
-      rv = delegate->ShouldNavigate(this, aLoadState->URI(), referrer,
-                                    !!aLoadState->PostDataStream(),
-                                    aLoadState->TriggeringPrincipal(),
-                                    aLoadState->Csp(), &shouldNavigate);
+      rv = delegate->ShouldNavigate(
+          this, aLoadState->URI(), aLoadState->LoadType(), referrer,
+          !!aLoadState->PostDataStream(), aLoadState->TriggeringPrincipal(),
+          aLoadState->Csp(), &shouldNavigate);
       if (NS_SUCCEEDED(rv) && !shouldNavigate) {
         return NS_OK;
       }
