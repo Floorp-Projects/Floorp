@@ -27,7 +27,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
         private const val FORCE_SHOW_DISABLE_TIPS_INTERVAL = 30
 
         fun createAllowlistTip(context: Context): Tip {
-            val id = R.string.tip_explain_allowlist
+            val id = R.string.tip_explain_allowlist2
             val name = context.resources.getString(id)
             val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.ALLOWLIST)
 
@@ -57,7 +57,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
         }
 
         fun createTrackingProtectionTip(context: Context): Tip {
-            val id = R.string.tip_disable_tracking_protection
+            val id = R.string.tip_disable_tracking_protection2
             val name = context.resources.getString(id)
 
             val shouldDisplayTrackingProtection = {
@@ -166,7 +166,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
         }
 
         fun createRequestDesktopTip(context: Context): Tip {
-            val id = R.string.tip_request_desktop
+            val id = R.string.tip_request_desktop2
             val name = context.resources.getString(id)
             val requestDesktopURL =
                     "https://support.mozilla.org/kb/switch-desktop-view-firefox-focus-android"

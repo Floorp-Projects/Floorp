@@ -934,7 +934,7 @@ object TelemetryWrapper {
         val telemetryValue = when (tipId) {
             R.string.tip_open_in_new_tab -> Value.OPEN_IN_NEW_TAB_TIP
             R.string.tip_add_to_homescreen -> Value.ADD_TO_HOMESCREEN_TIP
-            R.string.tip_disable_tracking_protection -> Value.DISABLE_TRACKING_PROTECTION_TIP
+            R.string.tip_disable_tracking_protection2 -> Value.DISABLE_TRACKING_PROTECTION_TIP
             R.string.tip_set_default_browser -> Value.DEFAULT_BROWSER_TIP
             R.string.tip_autocomplete_url -> Value.AUTOCOMPLETE_URL_TIP
             R.string.tip_disable_tips2 -> Value.DISABLE_TIPS_TIP

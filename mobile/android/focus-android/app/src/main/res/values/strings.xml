@@ -307,7 +307,7 @@
     <string name="preference_category_security">Security</string>
 
     <string name="preference_category_performance">Performance</string>
-    <string name="preference_performance_block_webfonts">Block Web fonts</string>
+    <string name="preference_performance_block_webfonts">Block web fonts</string>
     <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
     <string name="preference_performance_block_webfonts_summary">May result in missing icons or images</string>
 
@@ -660,6 +660,11 @@
     <string name="tip_disable_tracking_protection">Site behaving unexpectedly?\n
     Try turning off Tracking Protection</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Site missing content or acting strange?\n
+    Try turning off Tracking Protection</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Get one-tap access to sites you use most%1$s Menu > Add to Home screen]]></string>
@@ -684,17 +689,21 @@
     </string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Rather see the full desktop site?%1$s Menu > Request desktop site]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Want to see the full version of a site? Switch on Desktop Site from the %1$s menu></string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Turn off tips on the start screen</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Trusted site?\n
-        Allowlist disables Tracking Protection for sites you know and trust.
+    <string name="tip_explain_allowlist2">Want to keep Tracking Protection off for a site you trust?\n
+        Add it to the Allowlist in Settings
     </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Why yes, we do have a fresh new look! Read more about this and other updates to %1$s.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">New tab opened</string>
@@ -715,7 +724,7 @@
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Exceptions</string>
     <!-- Description for the exceptions preference screen-->
-    <string name="preference_exceptions_description">You have disabled Content Blocking for these websites.</string>
+    <string name="preference_exceptions_description">You have disabled content blocking for these websites.</string>
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">Remove</string>
     <!-- Button to remove all websites from the exception list -->
