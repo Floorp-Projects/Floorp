@@ -2253,16 +2253,42 @@ bool JSStructuredCloneReader::readTypedArray(uint32_t arrayType,
   RootedObject obj(context(), nullptr);
 
   switch (arrayType) {
-#define CREATE_FROM_BUFFER(ExternalType, NativeType, Name)             \
-  case Scalar::Name:                                                   \
-    obj = JS::TypedArray<Scalar::Name>::fromBuffer(context(), buffer,  \
-                                                   byteOffset, nelems) \
-              .asObject();                                             \
-    break;
-
-    JS_FOR_EACH_TYPED_ARRAY(CREATE_FROM_BUFFER)
-#undef CREATE_FROM_BUFFER
-
+    case Scalar::Int8:
+      obj = JS_NewInt8ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::Uint8:
+      obj = JS_NewUint8ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::Int16:
+      obj = JS_NewInt16ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::Uint16:
+      obj = JS_NewUint16ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::Int32:
+      obj = JS_NewInt32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::Uint32:
+      obj = JS_NewUint32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::Float32:
+      obj = JS_NewFloat32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::Float64:
+      obj = JS_NewFloat64ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::Uint8Clamped:
+      obj = JS_NewUint8ClampedArrayWithBuffer(context(), buffer, byteOffset,
+                                              nelems);
+      break;
+    case Scalar::BigInt64:
+      obj =
+          JS_NewBigInt64ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
+    case Scalar::BigUint64:
+      obj =
+          JS_NewBigUint64ArrayWithBuffer(context(), buffer, byteOffset, nelems);
+      break;
     default:
       MOZ_CRASH("Can't happen: arrayType range checked above");
   }
