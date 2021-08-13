@@ -7191,6 +7191,14 @@
   mirror: always
   rust: true
 
+# An override for prefers-color-scheme for content documents.
+#
+# Dark (0), light (1), or system (2).
+- name: layout.css.prefers-color-scheme.content-override
+  type: RelaxedAtomicInt32
+  value: 2
+  mirror: always
+
 # Dictates whether or not the forced-colors media query is enabled.
 - name: layout.css.forced-colors.enabled
   type: RelaxedAtomicBool
