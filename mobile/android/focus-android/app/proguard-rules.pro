@@ -139,10 +139,9 @@
 # as bundled with AGP v7.0.0 causes this optimization to fail so we use the fast service loader instead. See:
 # https://github.com/mozilla-mobile/focus-android/issues/5102#issuecomment-897854121
 #
-# The fast service loader appears to be as performant as the R8 optimization, however, this proguard
-# implementation is more fragile because it relies upon the coroutines source not changing. We
-# should back this out when the R8 bug is solved. We are tracking this in:
-# https://github.com/mozilla-mobile/focus-android/issues/5121
+# The fast service loader appears to be as performant as the R8 optimization so it's not worth the
+# churn to later remove this workaround. If needed, the upstream fix is being handled in
+# https://issuetracker.google.com/issues/196302685
 ####################################################################################################
 -assumenosideeffects class kotlinx.coroutines.internal.MainDispatcherLoader {
     boolean FAST_SERVICE_LOADER_ENABLED return true;
