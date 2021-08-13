@@ -3724,90 +3724,6 @@ ArrayObject* js::ArrayConstructorOneArg(JSContext* cx,
   return res;
 }
 
-static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
-  MOZ_ASSERT(key == JSProto_Array);
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateObjectPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
-  RootedShape shape(cx, SharedShape::getInitialShape(
-                            cx, &ArrayObject::class_, cx->realm(),
-                            TaggedProto(proto), gc::AllocKind::OBJECT0));
-  if (!shape) {
-    return nullptr;
-  }
-
-  shape = AddLengthProperty(cx, shape);
-  if (!shape) {
-    return nullptr;
-  }
-
-  AutoSetNewObjectMetadata metadata(cx);
-  return ArrayObject::createArray(cx, gc::AllocKind::OBJECT4, gc::TenuredHeap,
-                                  shape, 0, metadata);
-}
-
-static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
-                               JS::HandleObject proto) {
-  // Add Array.prototype[@@unscopables]. ECMA-262 draft (2016 Mar 19) 22.1.3.32.
-  RootedObject unscopables(
-      cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr));
-  if (!unscopables) {
-    return false;
-  }
-
-  RootedValue value(cx, BooleanValue(true));
-  if (!DefineDataProperty(cx, unscopables, cx->names().at, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().copyWithin, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().entries, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().fill, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().find, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().findIndex, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().flat, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().flatMap, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().includes, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().keys, value) ||
-      !DefineDataProperty(cx, unscopables, cx->names().values, value)) {
-    return false;
-  }
-
-  RootedId id(cx, SYMBOL_TO_JSID(
-                      cx->wellKnownSymbols().get(JS::SymbolCode::unscopables)));
-  value.setObject(*unscopables);
-  return DefineDataProperty(cx, proto, id, value, JSPROP_READONLY);
-}
-
-static const JSClassOps ArrayObjectClassOps = {
-    array_addProperty,  // addProperty
-    nullptr,            // delProperty
-    nullptr,            // enumerate
-    nullptr,            // newEnumerate
-    nullptr,            // resolve
-    nullptr,            // mayResolve
-    nullptr,            // finalize
-    nullptr,            // call
-    nullptr,            // hasInstance
-    nullptr,            // construct
-    nullptr,            // trace
-};
-
-static const ClassSpec ArrayObjectClassSpec = {
-    GenericCreateConstructor<ArrayConstructor, 1, gc::AllocKind::FUNCTION,
-                             &jit::JitInfo_Array>,
-    CreateArrayPrototype,
-    array_static_methods,
-    array_static_props,
-    array_methods,
-    nullptr,
-    array_proto_finish};
-
-const JSClass ArrayObject::class_ = {
-    "Array",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) | JSCLASS_DELAY_METADATA_BUILDER,
-    &ArrayObjectClassOps, &ArrayObjectClassSpec};
-
 /*
  * Array allocation functions.
  */
@@ -3917,7 +3833,8 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
 template <uint32_t maxLength>
 static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithProto(JSContext* cx,
                                                         uint32_t length,
-                                                        HandleObject proto) {
+                                                        HandleObject proto,
+                                                        NewObjectKind newKind) {
   RootedShape shape(cx);
   if (!proto || proto == cx->global()->maybeGetArrayPrototype()) {
     shape = GlobalObject::getArrayShapeWithDefaultProto(cx);
@@ -3928,9 +3845,78 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithProto(JSContext* cx,
     return nullptr;
   }
 
-  return NewArrayWithShape<maxLength>(cx, shape, length, GenericObject,
-                                      nullptr);
+  return NewArrayWithShape<maxLength>(cx, shape, length, newKind, nullptr);
 }
+
+static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
+  MOZ_ASSERT(key == JSProto_Array);
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateObjectPrototype(cx, cx->global()));
+  if (!proto) {
+    return nullptr;
+  }
+
+  return NewArrayWithProto<0>(cx, 0, proto, TenuredObject);
+}
+
+static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
+                               JS::HandleObject proto) {
+  // Add Array.prototype[@@unscopables]. ECMA-262 draft (2016 Mar 19) 22.1.3.32.
+  RootedObject unscopables(
+      cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr));
+  if (!unscopables) {
+    return false;
+  }
+
+  RootedValue value(cx, BooleanValue(true));
+  if (!DefineDataProperty(cx, unscopables, cx->names().at, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().copyWithin, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().entries, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().fill, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().find, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().findIndex, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().flat, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().flatMap, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().includes, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().keys, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().values, value)) {
+    return false;
+  }
+
+  RootedId id(cx, SYMBOL_TO_JSID(
+                      cx->wellKnownSymbols().get(JS::SymbolCode::unscopables)));
+  value.setObject(*unscopables);
+  return DefineDataProperty(cx, proto, id, value, JSPROP_READONLY);
+}
+
+static const JSClassOps ArrayObjectClassOps = {
+    array_addProperty,  // addProperty
+    nullptr,            // delProperty
+    nullptr,            // enumerate
+    nullptr,            // newEnumerate
+    nullptr,            // resolve
+    nullptr,            // mayResolve
+    nullptr,            // finalize
+    nullptr,            // call
+    nullptr,            // hasInstance
+    nullptr,            // construct
+    nullptr,            // trace
+};
+
+static const ClassSpec ArrayObjectClassSpec = {
+    GenericCreateConstructor<ArrayConstructor, 1, gc::AllocKind::FUNCTION,
+                             &jit::JitInfo_Array>,
+    CreateArrayPrototype,
+    array_static_methods,
+    array_static_props,
+    array_methods,
+    nullptr,
+    array_proto_finish};
+
+const JSClass ArrayObject::class_ = {
+    "Array",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) | JSCLASS_DELAY_METADATA_BUILDER,
+    &ArrayObjectClassOps, &ArrayObjectClassSpec};
 
 ArrayObject* js::NewDenseEmptyArray(JSContext* cx) {
   return NewArray<0>(cx, 0, GenericObject);
@@ -3955,8 +3941,8 @@ ArrayObject* js::NewDensePartlyAllocatedArray(
 ArrayObject* js::NewDensePartlyAllocatedArrayWithProto(JSContext* cx,
                                                        uint32_t length,
                                                        HandleObject proto) {
-  return NewArrayWithProto<ArrayObject::EagerAllocationMaxLength>(cx, length,
-                                                                  proto);
+  return NewArrayWithProto<ArrayObject::EagerAllocationMaxLength>(
+      cx, length, proto, GenericObject);
 }
 
 ArrayObject* js::NewDenseUnallocatedArray(
@@ -3981,7 +3967,8 @@ ArrayObject* js::NewDenseCopiedArray(
 ArrayObject* js::NewDenseCopiedArrayWithProto(JSContext* cx, uint32_t length,
                                               const Value* values,
                                               HandleObject proto) {
-  ArrayObject* arr = NewArrayWithProto<UINT32_MAX>(cx, length, proto);
+  ArrayObject* arr =
+      NewArrayWithProto<UINT32_MAX>(cx, length, proto, GenericObject);
   if (!arr) {
     return nullptr;
   }
