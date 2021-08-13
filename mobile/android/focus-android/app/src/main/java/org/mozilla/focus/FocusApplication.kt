@@ -49,6 +49,8 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         if (isMainProcess()) {
             PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
+            components.engine.warmUp()
+
             TelemetryWrapper.init(this)
             components.metrics.initialize(this)
             FactsProcessor.initialize()
@@ -60,8 +62,6 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
 
             visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this@FocusApplication)
             registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
-
-            components.engine.warmUp()
 
             storeLink.start()
 
