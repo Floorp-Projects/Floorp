@@ -926,15 +926,28 @@ bool js::ObjectMayHaveExtraIndexedProperties(JSObject* obj) {
   } while (true);
 }
 
-static bool AddLengthProperty(JSContext* cx, HandleArrayObject obj) {
-  // Add the 'length' property for a newly created array.
+static Shape* AddLengthProperty(JSContext* cx, HandleShape shape) {
+  // Add the 'length' property for a newly created array shape.
 
-  MOZ_ASSERT(obj->empty());
+  MOZ_ASSERT(shape->propMapLength() == 0);
+  MOZ_ASSERT(shape->getObjectClass() == &ArrayObject::class_);
 
   RootedId lengthId(cx, NameToId(cx->names().length));
   constexpr PropertyFlags flags = {PropertyFlag::CustomDataProperty,
                                    PropertyFlag::Writable};
-  return NativeObject::addCustomDataProperty(cx, obj, lengthId, flags);
+
+  Rooted<SharedPropMap*> map(cx, shape->sharedPropMap());
+  uint32_t mapLength = shape->propMapLength();
+  ObjectFlags objectFlags = shape->objectFlags();
+
+  if (!SharedPropMap::addCustomDataProperty(cx, &ArrayObject::class_, &map,
+                                            &mapLength, lengthId, flags,
+                                            &objectFlags)) {
+    return nullptr;
+  }
+
+  return SharedShape::getPropMapShape(cx, shape->base(), shape->numFixedSlots(),
+                                      map, mapLength, objectFlags);
 }
 
 static bool IsArrayConstructor(const JSObject* obj) {
@@ -3726,15 +3739,14 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  AutoSetNewObjectMetadata metadata(cx);
-  RootedArrayObject arrayProto(
-      cx, ArrayObject::createArray(cx, gc::AllocKind::OBJECT4, gc::TenuredHeap,
-                                   shape, 0, metadata));
-  if (!arrayProto || !AddLengthProperty(cx, arrayProto)) {
+  shape = AddLengthProperty(cx, shape);
+  if (!shape) {
     return nullptr;
   }
 
-  return arrayProto;
+  AutoSetNewObjectMetadata metadata(cx);
+  return ArrayObject::createArray(cx, gc::AllocKind::OBJECT4, gc::TenuredHeap,
+                                  shape, 0, metadata);
 }
 
 static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
@@ -3818,84 +3830,23 @@ static inline bool EnsureNewArrayElements(JSContext* cx, ArrayObject* obj,
 }
 
 template <uint32_t maxLength>
-static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
-                                               HandleObject protoArg,
-                                               NewObjectKind newKind,
-                                               gc::AllocSite* site = nullptr) {
+static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithShape(
+    JSContext* cx, HandleShape shape, uint32_t length, NewObjectKind newKind,
+    gc::AllocSite* site = nullptr) {
+  // The shape must already have the |length| property defined on it.
+  MOZ_ASSERT(shape->propMapLength() == 1);
+  MOZ_ASSERT(shape->lastProperty().key() == NameToId(cx->names().length));
+
   gc::AllocKind allocKind = GuessArrayGCKind(length);
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
-  RootedObject proto(cx, protoArg);
-  if (!proto) {
-    proto = GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
-    if (!proto) {
-      return nullptr;
-    }
-  }
-
-  Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-  bool isCachable =
-      NewObjectWithTaggedProtoIsCachable(cx, taggedProto, newKind);
-  if (isCachable) {
-    NewObjectCache& cache = cx->caches().newObjectCache;
-    NewObjectCache::EntryIndex entry = -1;
-    if (cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry)) {
-      gc::InitialHeap heap =
-          GetInitialHeap(newKind, &ArrayObject::class_, site);
-      AutoSetNewObjectMetadata metadata(cx);
-      JSObject* obj = cache.newObjectFromHit(cx, entry, heap, site);
-      if (obj) {
-        /* Fixup the elements pointer and length, which may be incorrect. */
-        ArrayObject* arr = &obj->as<ArrayObject>();
-        arr->setFixedElements();
-        arr->setLength(length);
-        if (maxLength > 0 &&
-            !EnsureNewArrayElements(cx, arr, std::min(maxLength, length))) {
-          return nullptr;
-        }
-        return arr;
-      }
-    }
-  }
-
-  /*
-   * Get a shape with zero fixed slots, regardless of the size class.
-   * See JSObject::createArray.
-   */
-  RootedShape shape(cx, SharedShape::getInitialShape(
-                            cx, &ArrayObject::class_, cx->realm(),
-                            TaggedProto(proto), gc::AllocKind::OBJECT0));
-  if (!shape) {
-    return nullptr;
-  }
-
   AutoSetNewObjectMetadata metadata(cx);
-  RootedArrayObject arr(
-      cx,
-      ArrayObject::createArray(
-          cx, allocKind, GetInitialHeap(newKind, &ArrayObject::class_, site),
-          shape, length, metadata));
+  ArrayObject* arr = ArrayObject::createArray(
+      cx, allocKind, GetInitialHeap(newKind, &ArrayObject::class_, site), shape,
+      length, metadata);
   if (!arr) {
     return nullptr;
-  }
-
-  if (arr->empty()) {
-    if (!AddLengthProperty(cx, arr)) {
-      return nullptr;
-    }
-    shape = arr->shape();
-    SharedShape::insertInitialShape(cx, shape);
-    if (proto == cx->global()->maybeGetArrayPrototype()) {
-      cx->global()->setArrayShape(shape);
-    }
-  }
-
-  if (isCachable) {
-    NewObjectCache& cache = cx->caches().newObjectCache;
-    NewObjectCache::EntryIndex entry = -1;
-    cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry);
-    cache.fillProto(entry, &ArrayObject::class_, taggedProto, allocKind, arr);
   }
 
   if (maxLength > 0 &&
@@ -3907,45 +3858,118 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
   return arr;
 }
 
+static Shape* GetArrayShapeWithProto(JSContext* cx, HandleObject proto) {
+  // Get a shape with zero fixed slots, because arrays store the ObjectElements
+  // header inline.
+  RootedShape shape(
+      cx, SharedShape::getInitialShape(cx, &ArrayObject::class_, cx->realm(),
+                                       TaggedProto(proto), /* nfixed = */ 0));
+  if (!shape) {
+    return nullptr;
+  }
+
+  // Add the |length| property and use the new shape as initial shape for new
+  // arrays.
+  if (shape->propMapLength() == 0) {
+    shape = AddLengthProperty(cx, shape);
+    if (!shape) {
+      return nullptr;
+    }
+    SharedShape::insertInitialShape(cx, shape);
+  } else {
+    MOZ_ASSERT(shape->propMapLength() == 1);
+    MOZ_ASSERT(shape->lastProperty().key() == NameToId(cx->names().length));
+  }
+
+  return shape;
+}
+
+Shape* GlobalObject::createArrayShapeWithDefaultProto(JSContext* cx) {
+  MOZ_ASSERT(!cx->global()->data().arrayShape);
+
+  RootedObject proto(cx,
+                     GlobalObject::getOrCreateArrayPrototype(cx, cx->global()));
+  if (!proto) {
+    return nullptr;
+  }
+
+  Shape* shape = GetArrayShapeWithProto(cx, proto);
+  if (!shape) {
+    return nullptr;
+  }
+
+  cx->global()->data().arrayShape.init(shape);
+  return shape;
+}
+
+template <uint32_t maxLength>
+static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
+                                               NewObjectKind newKind,
+                                               gc::AllocSite* site = nullptr) {
+  RootedShape shape(cx, GlobalObject::getArrayShapeWithDefaultProto(cx));
+  if (!shape) {
+    return nullptr;
+  }
+
+  return NewArrayWithShape<maxLength>(cx, shape, length, newKind, site);
+}
+
+template <uint32_t maxLength>
+static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithProto(JSContext* cx,
+                                                        uint32_t length,
+                                                        HandleObject proto) {
+  RootedShape shape(cx);
+  if (!proto || proto == cx->global()->maybeGetArrayPrototype()) {
+    shape = GlobalObject::getArrayShapeWithDefaultProto(cx);
+  } else {
+    shape = GetArrayShapeWithProto(cx, proto);
+  }
+  if (!shape) {
+    return nullptr;
+  }
+
+  return NewArrayWithShape<maxLength>(cx, shape, length, GenericObject,
+                                      nullptr);
+}
+
 ArrayObject* js::NewDenseEmptyArray(JSContext* cx) {
-  return NewArray<0>(cx, 0, nullptr, GenericObject);
+  return NewArray<0>(cx, 0, GenericObject);
 }
 
 ArrayObject* js::NewTenuredDenseEmptyArray(JSContext* cx) {
-  return NewArray<0>(cx, 0, nullptr, TenuredObject);
+  return NewArray<0>(cx, 0, TenuredObject);
 }
 
 ArrayObject* js::NewDenseFullyAllocatedArray(
     JSContext* cx, uint32_t length, NewObjectKind newKind /* = GenericObject */,
     gc::AllocSite* site /* = nullptr */) {
-  return NewArray<UINT32_MAX>(cx, length, nullptr, newKind, site);
+  return NewArray<UINT32_MAX>(cx, length, newKind, site);
 }
 
 ArrayObject* js::NewDensePartlyAllocatedArray(
     JSContext* cx, uint32_t length,
     NewObjectKind newKind /* = GenericObject */) {
-  return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, nullptr,
-                                                         newKind);
+  return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, newKind);
 }
 
 ArrayObject* js::NewDensePartlyAllocatedArrayWithProto(JSContext* cx,
                                                        uint32_t length,
                                                        HandleObject proto) {
-  return NewArray<ArrayObject::EagerAllocationMaxLength>(cx, length, proto,
-                                                         GenericObject);
+  return NewArrayWithProto<ArrayObject::EagerAllocationMaxLength>(cx, length,
+                                                                  proto);
 }
 
 ArrayObject* js::NewDenseUnallocatedArray(
     JSContext* cx, uint32_t length,
     NewObjectKind newKind /* = GenericObject */) {
-  return NewArray<0>(cx, length, nullptr, newKind);
+  return NewArray<0>(cx, length, newKind);
 }
 
 // values must point at already-rooted Value objects
 ArrayObject* js::NewDenseCopiedArray(
     JSContext* cx, uint32_t length, const Value* values,
     NewObjectKind newKind /* = GenericObject */) {
-  ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, nullptr, newKind);
+  ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, newKind);
   if (!arr) {
     return nullptr;
   }
@@ -3957,7 +3981,7 @@ ArrayObject* js::NewDenseCopiedArray(
 ArrayObject* js::NewDenseCopiedArrayWithProto(JSContext* cx, uint32_t length,
                                               const Value* values,
                                               HandleObject proto) {
-  ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, proto, GenericObject);
+  ArrayObject* arr = NewArrayWithProto<UINT32_MAX>(cx, length, proto);
   if (!arr) {
     return nullptr;
   }
