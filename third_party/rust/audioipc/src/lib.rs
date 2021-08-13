@@ -23,15 +23,7 @@ pub mod codec;
 pub mod core;
 #[allow(deprecated)]
 pub mod errors;
-#[cfg(unix)]
-pub mod fd_passing;
-#[cfg(unix)]
-pub use crate::fd_passing as platformhandle_passing;
-#[cfg(windows)]
-pub mod handle_passing;
-#[cfg(windows)]
-pub use handle_passing as platformhandle_passing;
-pub mod frame;
+pub mod framing;
 pub mod messages;
 #[cfg(unix)]
 mod msg;
@@ -47,15 +39,10 @@ mod tokio_named_pipes;
 
 pub use crate::messages::{ClientMessage, ServerMessage};
 
-// TODO: Remove hardcoded size and allow allocation based on cubeb backend requirements.
-pub const SHM_AREA_SIZE: usize = 2 * 1024 * 1024;
-
 #[cfg(unix)]
 use std::os::unix::io::IntoRawFd;
 #[cfg(windows)]
 use std::os::windows::io::IntoRawHandle;
-
-use std::cell::RefCell;
 
 // This must match the definition of
 // ipc::FileDescriptor::PlatformHandleType in Gecko.
@@ -65,59 +52,14 @@ pub type PlatformHandleType = std::os::windows::raw::HANDLE;
 pub type PlatformHandleType = libc::c_int;
 
 // This stands in for RawFd/RawHandle.
-#[derive(Clone, Debug)]
-pub struct PlatformHandle(RefCell<Inner>);
+#[derive(Debug)]
+pub struct PlatformHandle(PlatformHandleType);
 
-#[derive(Clone, Debug)]
-struct Inner {
-    handle: PlatformHandleType,
-    owned: bool,
-}
-
-unsafe impl Send for PlatformHandle {}
-
+#[cfg(unix)]
 pub const INVALID_HANDLE_VALUE: PlatformHandleType = -1isize as PlatformHandleType;
 
-// Custom serialization to treat HANDLEs as i64.  This is not valid in
-// general, but after sending the HANDLE value to a remote process we
-// use it to create a valid HANDLE via DuplicateHandle.
-// To avoid duplicating the serialization code, we're lazy and treat
-// file descriptors as i64 rather than i32.
-impl serde::Serialize for PlatformHandle {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let h = self.0.borrow();
-        serializer.serialize_i64(h.handle as i64)
-    }
-}
-
-struct PlatformHandleVisitor;
-impl<'de> serde::de::Visitor<'de> for PlatformHandleVisitor {
-    type Value = PlatformHandle;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str("an integer between -2^63 and 2^63")
-    }
-
-    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        let owned = cfg!(windows);
-        Ok(PlatformHandle::new(value as PlatformHandleType, owned))
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for PlatformHandle {
-    fn deserialize<D>(deserializer: D) -> Result<PlatformHandle, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        deserializer.deserialize_i64(PlatformHandleVisitor)
-    }
-}
+#[cfg(windows)]
+pub const INVALID_HANDLE_VALUE: PlatformHandleType = winapi::um::handleapi::INVALID_HANDLE_VALUE;
 
 #[cfg(unix)]
 fn valid_handle(handle: PlatformHandleType) -> bool {
@@ -126,65 +68,116 @@ fn valid_handle(handle: PlatformHandleType) -> bool {
 
 #[cfg(windows)]
 fn valid_handle(handle: PlatformHandleType) -> bool {
-    const NULL_HANDLE_VALUE: PlatformHandleType = 0isize as PlatformHandleType;
-    handle != INVALID_HANDLE_VALUE && handle != NULL_HANDLE_VALUE
+    handle != INVALID_HANDLE_VALUE && !handle.is_null()
 }
 
 impl PlatformHandle {
-    pub fn new(raw: PlatformHandleType, owned: bool) -> PlatformHandle {
+    pub fn new(raw: PlatformHandleType) -> PlatformHandle {
         assert!(valid_handle(raw));
-        let inner = Inner { handle: raw, owned };
-        PlatformHandle(RefCell::new(inner))
+        PlatformHandle(raw)
     }
 
     #[cfg(windows)]
     pub fn from<T: IntoRawHandle>(from: T) -> PlatformHandle {
-        PlatformHandle::new(from.into_raw_handle(), true)
+        PlatformHandle::new(from.into_raw_handle())
     }
 
     #[cfg(unix)]
     pub fn from<T: IntoRawFd>(from: T) -> PlatformHandle {
-        PlatformHandle::new(from.into_raw_fd(), true)
+        PlatformHandle::new(from.into_raw_fd())
     }
 
     #[allow(clippy::missing_safety_doc)]
-    #[allow(clippy::wrong_self_convention)]
-    pub unsafe fn into_raw(&self) -> PlatformHandleType {
-        let mut h = self.0.borrow_mut();
-        assert!(h.owned);
-        h.owned = false;
-        h.handle
+    pub unsafe fn into_raw(self) -> PlatformHandleType {
+        let handle = self.0;
+        std::mem::forget(self);
+        handle
     }
 
-    #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn as_raw(&self) -> PlatformHandleType {
-        self.0.borrow().handle
+    #[cfg(unix)]
+    pub fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle, std::io::Error> {
+        unsafe {
+            let newfd = libc::dup(h);
+            if !valid_handle(newfd) {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(PlatformHandle::from(newfd))
+        }
     }
 
     #[cfg(windows)]
     pub fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle, std::io::Error> {
-        let dup = unsafe { platformhandle_passing::duplicate_platformhandle(h, None, false) }?;
-        Ok(PlatformHandle::new(dup, true))
+        let dup = unsafe { duplicate_platform_handle(h, None) }?;
+        Ok(PlatformHandle::new(dup))
     }
 }
 
 impl Drop for PlatformHandle {
     fn drop(&mut self) {
-        let inner = self.0.borrow();
-        if inner.owned {
-            unsafe { close_platformhandle(inner.handle) }
-        }
+        unsafe { close_platform_handle(self.0) }
     }
 }
 
 #[cfg(unix)]
-unsafe fn close_platformhandle(handle: PlatformHandleType) {
+unsafe fn close_platform_handle(handle: PlatformHandleType) {
     libc::close(handle);
 }
 
 #[cfg(windows)]
-unsafe fn close_platformhandle(handle: PlatformHandleType) {
+unsafe fn close_platform_handle(handle: PlatformHandleType) {
     winapi::um::handleapi::CloseHandle(handle);
+}
+
+#[cfg(windows)]
+use winapi::shared::minwindef::DWORD;
+
+// Duplicate `source_handle`.
+// - If `target_pid` is `Some(...)`, `source_handle` is closed.
+// - If `target_pid` is `None`, `source_handle` is not closed.
+#[cfg(windows)]
+pub(crate) unsafe fn duplicate_platform_handle(
+    source_handle: PlatformHandleType,
+    target_pid: Option<DWORD>,
+) -> Result<PlatformHandleType, std::io::Error> {
+    use winapi::shared::minwindef::FALSE;
+    use winapi::um::{handleapi, processthreadsapi, winnt};
+
+    let source = processthreadsapi::GetCurrentProcess();
+    let (target, close_source) = if let Some(pid) = target_pid {
+        let target = processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE, FALSE, pid);
+        if !valid_handle(target) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "invalid target process",
+            ));
+        }
+        (target, true)
+    } else {
+        (source, false)
+    };
+
+    let mut target_handle = std::ptr::null_mut();
+    let mut options = winnt::DUPLICATE_SAME_ACCESS;
+    if close_source {
+        options |= winnt::DUPLICATE_CLOSE_SOURCE;
+    }
+    let ok = handleapi::DuplicateHandle(
+        source,
+        source_handle,
+        target,
+        &mut target_handle,
+        0,
+        FALSE,
+        options,
+    );
+    handleapi::CloseHandle(target);
+    if ok == FALSE {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "DuplicateHandle failed",
+        ));
+    }
+    Ok(target_handle)
 }
 
 #[cfg(unix)]

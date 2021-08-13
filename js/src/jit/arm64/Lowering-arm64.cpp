@@ -462,7 +462,7 @@ void LIRGeneratorARM64::lowerPowOfTwoI(MPow* mir) {
   int32_t base = mir->input()->toConstant()->toInt32();
   MDefinition* power = mir->power();
 
-  auto* lir = new (alloc()) LPowOfTwoI(base, useRegister(power));
+  auto* lir = new (alloc()) LPowOfTwoI(useRegister(power), base);
   assignSnapshot(lir, mir->bailoutKind());
   define(lir, mir);
 }
@@ -633,7 +633,8 @@ void LIRGenerator::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins) {
   // memory base.  This follows from the definition of
   // FunctionCompiler::maybeLoadMemoryBase() in WasmIonCompile.cpp.
   MOZ_ASSERT(!ins->hasMemoryBase());
-  auto* lir = new (alloc()) LAsmJSLoadHeap(baseAlloc, limitAlloc);
+  auto* lir =
+      new (alloc()) LAsmJSLoadHeap(baseAlloc, limitAlloc, LAllocation());
   define(lir, ins);
 }
 
@@ -654,7 +655,7 @@ void LIRGenerator::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins) {
   // See comment in LIRGenerator::visitAsmJSStoreHeap just above.
   MOZ_ASSERT(!ins->hasMemoryBase());
   add(new (alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value()),
-                                    limitAlloc),
+                                    limitAlloc, LAllocation()),
       ins);
 }
 

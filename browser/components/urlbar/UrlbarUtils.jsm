@@ -1162,6 +1162,20 @@ var UrlbarUtils = {
     }
     return "unknown";
   },
+
+  /**
+   * Unescape the given uri to use as UI.
+   * NOTE: If the length of uri is over MAX_TEXT_LENGTH,
+   *       return the given uri as it is.
+   *
+   * @param {string} uri will be unescaped.
+   * @returns {string} Unescaped uri.
+   */
+  unEscapeURIForUI(uri) {
+    return uri.length > UrlbarUtils.MAX_TEXT_LENGTH
+      ? uri
+      : Services.textToSubURI.unEscapeURIForUI(uri);
+  },
 };
 
 XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {

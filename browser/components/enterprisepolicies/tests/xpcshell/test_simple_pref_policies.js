@@ -229,6 +229,23 @@ const POLICIES_TESTS = [
 
   {
     policies: {
+      SanitizeOnShutdown: false,
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": false,
+      "privacy.clearOnShutdown.cache": false,
+      "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown.downloads": false,
+      "privacy.clearOnShutdown.formdata": false,
+      "privacy.clearOnShutdown.history": false,
+      "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown.siteSettings": false,
+      "privacy.clearOnShutdown.offlineApps": false,
+    },
+  },
+
+  {
+    policies: {
       SanitizeOnShutdown: {
         Cache: true,
       },

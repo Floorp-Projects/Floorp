@@ -4,8 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"]:
+Library("dllservices_mozglue")
 
+if CONFIG["MOZ_WIDGET_TOOLKIT"]:
     SOURCES += [
         # This file contains a |using namespace mozilla;| statement
         "WindowsDllBlocklist.cpp",
@@ -35,6 +36,10 @@ DELAYLOAD_DLLS += [
     "wintrust.dll",
 ]
 
+EXPORTS += [
+    "nsWindowsDllInterceptor.h",
+]
+
 EXPORTS.mozilla += [
     "Authenticode.h",
     "CacheNtDllThunk.h",
@@ -61,6 +66,11 @@ GeneratedFile(
     entry_point="gen_blocklists",
     inputs=["WindowsDllBlocklistDefs.in"]
 )
+
 EXPORTS.mozilla += ["!" + hdr for hdr in blocklist_files]
+
+DIRS += [
+    "interceptor",
+]
 
 FINAL_LIBRARY = "mozglue"

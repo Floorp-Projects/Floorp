@@ -437,12 +437,13 @@ publishing {
                         omniSuffix = "-omni"
                     }
 
-                    if (mozconfig.substs.MOZ_UPDATE_CHANNEL == 'release') {
-                        // Release artifacts don't specify the channel, for the sake of simplicity.
-                        artifactId = 'geckoview$omniSuffix'
-                    } else {
-                        artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}$omniSuffix"
+                    def channelSuffix = ""
+                    // Release artifacts don't specify the channel, for the sake of simplicity.
+                    if (mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
+                        channelSuffix = "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
                     }
+
+                    artifactId = "geckoview$channelSuffix$omniSuffix"
 
                     if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
                         // In automation, per-architecture artifacts identify
