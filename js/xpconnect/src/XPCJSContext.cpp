@@ -1048,6 +1048,10 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setErgnomicBrandChecks(ergnomicBrandChecksEnabled)
       .setTopLevelAwait(topLevelAwaitEnabled);
 
+  JS::SetUseFdlibmForSinCosTan(
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "use_fdlibm_for_sin_cos_tan") ||
+      Preferences::GetBool("privacy.resistFingerprinting"));
+
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
     bool safeMode = false;

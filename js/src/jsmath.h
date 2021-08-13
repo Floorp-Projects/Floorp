@@ -109,16 +109,20 @@ extern double math_log_impl(double x);
 extern bool math_log_handle(JSContext* cx, HandleValue val,
                             MutableHandleValue res);
 
+extern bool math_use_fdlibm_for_sin_cos_tan();
+
 extern bool math_sin(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern double math_sin_impl(double x);
+extern double math_sin_fdlibm_impl(double x);
+extern double math_sin_native_impl(double x);
 
 extern bool math_sin_handle(JSContext* cx, HandleValue val,
                             MutableHandleValue res);
 
 extern bool math_cos(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern double math_cos_impl(double x);
+extern double math_cos_fdlibm_impl(double x);
+extern double math_cos_native_impl(double x);
 
 extern bool math_exp(JSContext* cx, unsigned argc, js::Value* vp);
 
@@ -126,7 +130,8 @@ extern double math_exp_impl(double x);
 
 extern bool math_tan(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern double math_tan_impl(double x);
+extern double math_tan_fdlibm_impl(double x);
+extern double math_tan_native_impl(double x);
 
 extern bool math_log10(JSContext* cx, unsigned argc, js::Value* vp);
 

@@ -167,6 +167,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   uint32_t introductionOffset = 0;
   bool hasIntroductionInfo = false;
 
+  bool useFdlibmForSinCosTan = false;
+
  protected:
   TransitiveCompileOptions() = default;
 
