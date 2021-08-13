@@ -2009,12 +2009,22 @@ void nsJSContext::EnsureStatics() {
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
+      "javascript.options.mem.gc_malloc_threshold_base_mb",
+      (void*)JSGC_MALLOC_THRESHOLD_BASE);
+
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackInt,
       "javascript.options.mem.gc_small_heap_incremental_limit",
       (void*)JSGC_SMALL_HEAP_INCREMENTAL_LIMIT);
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
       "javascript.options.mem.gc_large_heap_incremental_limit",
       (void*)JSGC_LARGE_HEAP_INCREMENTAL_LIMIT);
+
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackInt,
+      "javascript.options.mem.gc_urgent_threshold_mb",
+      (void*)JSGC_URGENT_THRESHOLD_MB);
 
   Preferences::RegisterCallbackAndCall(SetIncrementalCCPrefChangedCallback,
                                        "dom.cycle_collector.incremental");
