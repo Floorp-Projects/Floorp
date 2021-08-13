@@ -56,9 +56,6 @@ class ArrayObject : public NativeObject {
                                                  HandleShape shape,
                                                  AutoSetNewObjectMetadata&,
                                                  gc::AllocSite* site = nullptr);
-
-  static inline ArrayObject* finishCreateArray(
-      ArrayObject* obj, HandleShape shape, AutoSetNewObjectMetadata& metadata);
 };
 
 }  // namespace js

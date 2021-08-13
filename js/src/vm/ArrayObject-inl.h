@@ -51,18 +51,6 @@ namespace js {
   return aobj;
 }
 
-/* static */ inline ArrayObject* ArrayObject::finishCreateArray(
-    ArrayObject* obj, HandleShape shape, AutoSetNewObjectMetadata& metadata) {
-  size_t span = shape->slotSpan();
-  if (span) {
-    obj->initializeSlotRange(0, span);
-  }
-
-  gc::gcprobes::CreateObject(obj);
-
-  return obj;
-}
-
 /* static */ inline ArrayObject* ArrayObject::createArray(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
     uint32_t length, AutoSetNewObjectMetadata& metadata, gc::AllocSite* site) {
@@ -77,7 +65,12 @@ namespace js {
   obj->setFixedElements();
   new (obj->getElementsHeader()) ObjectElements(capacity, length);
 
-  return finishCreateArray(obj, shape, metadata);
+  if (size_t span = shape->slotSpan()) {
+    obj->initializeSlotRange(0, span);
+  }
+
+  gc::gcprobes::CreateObject(obj);
+  return obj;
 }
 
 }  // namespace js
