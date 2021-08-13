@@ -52,6 +52,12 @@ using mozilla::NumberEqualsInt32;
 using mozilla::PositiveInfinity;
 using mozilla::WrappingMultiply;
 
+static mozilla::Atomic<bool, mozilla::Relaxed> sUseFdlibmForSinCosTan;
+
+JS_PUBLIC_API void JS::SetUseFdlibmForSinCosTan(bool value) {
+  sUseFdlibmForSinCosTan = value;
+}
+
 template <UnaryMathFunctionType F>
 static bool math_function(JSContext* cx, HandleValue val,
                           MutableHandleValue res) {
@@ -206,13 +212,25 @@ bool js::math_clz32(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-double js::math_cos_impl(double x) {
+bool js::math_use_fdlibm_for_sin_cos_tan() { return sUseFdlibmForSinCosTan; }
+
+double js::math_cos_fdlibm_impl(double x) {
+  MOZ_ASSERT(sUseFdlibmForSinCosTan);
+  AutoUnsafeCallWithABI unsafe;
+  return fdlibm::cos(x);
+}
+
+double js::math_cos_native_impl(double x) {
+  MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
   return cos(x);
 }
 
 bool js::math_cos(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_cos_impl>(cx, argc, vp);
+  if (sUseFdlibmForSinCosTan) {
+    return math_function<math_cos_fdlibm_impl>(cx, argc, vp);
+  }
+  return math_function<math_cos_native_impl>(cx, argc, vp);
 }
 
 double js::math_exp_impl(double x) {
@@ -582,18 +600,31 @@ js::math_round(JSContext* cx, unsigned argc, Value* vp) {
   return math_round_handle(cx, args[0], args.rval());
 }
 
-double js::math_sin_impl(double x) {
+double js::math_sin_fdlibm_impl(double x) {
+  MOZ_ASSERT(sUseFdlibmForSinCosTan);
+  AutoUnsafeCallWithABI unsafe;
+  return fdlibm::sin(x);
+}
+
+double js::math_sin_native_impl(double x) {
+  MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
   return sin(x);
 }
 
 bool js::math_sin_handle(JSContext* cx, HandleValue val,
                          MutableHandleValue res) {
-  return math_function<math_sin_impl>(cx, val, res);
+  if (sUseFdlibmForSinCosTan) {
+    return math_function<math_sin_fdlibm_impl>(cx, val, res);
+  }
+  return math_function<math_sin_native_impl>(cx, val, res);
 }
 
 bool js::math_sin(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_sin_impl>(cx, argc, vp);
+  if (sUseFdlibmForSinCosTan) {
+    return math_function<math_sin_fdlibm_impl>(cx, argc, vp);
+  }
+  return math_function<math_sin_native_impl>(cx, argc, vp);
 }
 
 double js::math_sqrt_impl(double x) {
@@ -610,13 +641,23 @@ bool js::math_sqrt(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_sqrt_impl>(cx, argc, vp);
 }
 
-double js::math_tan_impl(double x) {
+double js::math_tan_fdlibm_impl(double x) {
+  MOZ_ASSERT(sUseFdlibmForSinCosTan);
+  AutoUnsafeCallWithABI unsafe;
+  return fdlibm::tan(x);
+}
+
+double js::math_tan_native_impl(double x) {
+  MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
   return tan(x);
 }
 
 bool js::math_tan(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_tan_impl>(cx, argc, vp);
+  if (sUseFdlibmForSinCosTan) {
+    return math_function<math_tan_fdlibm_impl>(cx, argc, vp);
+  }
+  return math_function<math_tan_native_impl>(cx, argc, vp);
 }
 
 double js::math_log10_impl(double x) {
@@ -885,13 +926,22 @@ UnaryMathFunctionType js::GetUnaryMathFunctionPtr(UnaryMathFunction fun) {
     case UnaryMathFunction::Log:
       return math_log_impl;
     case UnaryMathFunction::Sin:
-      return math_sin_impl;
+      if (sUseFdlibmForSinCosTan) {
+        return math_sin_fdlibm_impl;
+      }
+      return math_sin_native_impl;
     case UnaryMathFunction::Cos:
-      return math_cos_impl;
+      if (sUseFdlibmForSinCosTan) {
+        return math_cos_fdlibm_impl;
+      }
+      return math_cos_native_impl;
     case UnaryMathFunction::Exp:
       return math_exp_impl;
     case UnaryMathFunction::Tan:
-      return math_tan_impl;
+      if (sUseFdlibmForSinCosTan) {
+        return math_tan_fdlibm_impl;
+      }
+      return math_tan_native_impl;
     case UnaryMathFunction::ATan:
       return math_atan_impl;
     case UnaryMathFunction::ASin:
