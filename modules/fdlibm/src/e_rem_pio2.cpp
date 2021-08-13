@@ -13,8 +13,8 @@
  * Optimized by Bruce D. Evans.
  */
 
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
+//#include <sys/cdefs.h>
+//__FBSDID("$FreeBSD$");
 
 /* __ieee754_rem_pio2(x,y)
  * 
@@ -24,7 +24,6 @@ __FBSDID("$FreeBSD$");
 
 #include <float.h>
 
-#include "math.h"
 #include "math_private.h"
 
 /*
