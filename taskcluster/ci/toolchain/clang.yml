@@ -120,7 +120,6 @@ linux64-clang-10:
             - linux64-binutils
             - linux64-gcc-7
             - linux64-toolchain-sysroot
-            - wasi-sysroot
 
 linux64-clang-11:
     description: "Clang 11 toolchain build"
@@ -144,7 +143,6 @@ linux64-clang-11:
             - linux64-binutils
             - linux64-gcc-7
             - linux64-toolchain-sysroot
-            - wasi-sysroot-11
 
 linux64-clang-trunk:
     description: "Clang trunk toolchain build"
@@ -281,7 +279,6 @@ macosx64-clang-11:
             - linux64-clang-11-macosx-cross
             - linux64-gcc-7
             - macosx64-sdk-10.12
-            - wasi-sysroot-11
 
 macosx64-aarch64-clang-11:
     description: "Clang 11 toolchain build"
@@ -312,7 +309,6 @@ macosx64-aarch64-clang-11:
             - linux64-clang-11-macosx-cross
             - linux64-gcc-7
             - macosx64-sdk-11.0
-            - wasi-sysroot-11
 
 win64-clang-11:
     description: "Clang-cl 11 toolchain build"
@@ -341,8 +337,6 @@ win64-clang-11:
             - clang-11
             - cmake
             - ninja
-        toolchain:
-            - wasi-sysroot-11
 
 win64-clang-11-2stage:
     description: "Clang-cl 11 toolchain 2-stage quick build"
