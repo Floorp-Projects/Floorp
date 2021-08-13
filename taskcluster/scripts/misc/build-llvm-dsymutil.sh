@@ -17,8 +17,6 @@ cmake \
   -DCMAKE_C_COMPILER=$MOZ_FETCHES_DIR/gcc/bin/gcc \
   ..
 
-export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/gcc/lib64
-
 ninja dsymutil llvm-symbolizer
 
 tar --xform='s,^,llvm-dsymutil/,' -Jcf llvm-dsymutil.tar.xz bin/dsymutil bin/llvm-symbolizer
