@@ -8,7 +8,6 @@
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "ml": "ml64.exe",
-    "wasi-sysroot": "{MOZ_FETCHES_DIR}/wasi-sysroot",
     "patches": [
       "unpoison-thread-stacks_clang_10.patch",
       "downgrade-mangling-error.patch",
