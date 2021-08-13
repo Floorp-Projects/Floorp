@@ -5079,7 +5079,7 @@ JSObject* js::CreateThisWithTemplate(JSContext* cx,
 ArrayObject* js::NewArrayOperation(
     JSContext* cx, uint32_t length,
     NewObjectKind newKind /* = GenericObject */) {
-  return NewDenseFullyAllocatedArray(cx, length, nullptr, newKind);
+  return NewDenseFullyAllocatedArray(cx, length, newKind);
 }
 
 ArrayObject* js::NewArrayObjectBaselineFallback(JSContext* cx, uint32_t length,
@@ -5087,8 +5087,7 @@ ArrayObject* js::NewArrayObjectBaselineFallback(JSContext* cx, uint32_t length,
                                                 gc::AllocSite* site) {
   NewObjectKind newKind =
       site->initialHeap() == gc::TenuredHeap ? TenuredObject : GenericObject;
-  ArrayObject* array =
-      NewDenseFullyAllocatedArray(cx, length, nullptr, newKind, site);
+  ArrayObject* array = NewDenseFullyAllocatedArray(cx, length, newKind, site);
   // It's important that we allocate an object with the alloc kind we were
   // expecting so that a new arena gets allocated if the current arena for that
   // kind is full.
@@ -5101,8 +5100,7 @@ ArrayObject* js::NewArrayObjectOptimizedFallback(JSContext* cx, uint32_t length,
                                                  gc::AllocKind allocKind,
                                                  NewObjectKind newKind) {
   gc::AllocSite* site = cx->zone()->optimizedAllocSite();
-  ArrayObject* array =
-      NewDenseFullyAllocatedArray(cx, length, nullptr, newKind, site);
+  ArrayObject* array = NewDenseFullyAllocatedArray(cx, length, newKind, site);
   // It's important that we allocate an object with the alloc kind we were
   // expecting so that a new arena gets allocated if the current arena for that
   // kind is full.
