@@ -3059,6 +3059,10 @@ static void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
 static void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
 static void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
 static void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
+#ifdef ENABLE_WASM_SIMD
+static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
+                             RegV128 rs3);
+#endif
 
 // The baseline compiler proper.
 
@@ -3076,6 +3080,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   friend void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
   friend void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
   friend void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
+#ifdef ENABLE_WASM_SIMD
+  friend RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
+                               RegV128 rs3);
+#endif
 
   using Local = BaseStackFrame::Local;
   using LabelVector = Vector<NonAssertingLabel, 8, SystemAllocPolicy>;
@@ -8525,14 +8533,6 @@ class BaseCompiler final : public BaseCompilerInterface {
                                  RegType rd),
                  RegType (BaseCompiler::*rhsPopper)() = nullptr);
 
-  template <typename CompilerType, typename ValType>
-  void emitTernary(void (*op)(CompilerType&, ValType src0, ValType src1,
-                              ValType srcDest));
-
-  template <typename CompilerType, typename ValType>
-  void emitTernary(void (*op)(CompilerType&, ValType src0, ValType src1,
-                              ValType srcDest, ValType temp));
-
   template <typename R>
   [[nodiscard]] bool emitInstanceCallOp(const SymbolicAddressSignature& fn,
                                         R reader);
@@ -8670,6 +8670,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitLoadExtend(Scalar::Type viewType);
   [[nodiscard]] bool emitLoadLane(uint32_t laneSize);
   [[nodiscard]] bool emitStoreLane(uint32_t laneSize);
+  [[nodiscard]] bool emitBitselect();
   [[nodiscard]] bool emitVectorShuffle();
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   [[nodiscard]] bool emitVectorShiftRightI64x2();
@@ -8807,33 +8808,6 @@ void BaseCompiler::emitBinop(void (*op)(CompilerType& masm, RhsType src,
   op(selectCompiler<CompilerType>(), rs, rsd);
   free(rs);
   push(rsd);
-}
-
-template <typename CompilerType, typename ValType>
-void BaseCompiler::emitTernary(void (*op)(CompilerType&, ValType src0,
-                                          ValType src1, ValType srcDest)) {
-  ValType src2 = pop<ValType>();
-  ValType src1 = pop<ValType>();
-  ValType srcDest = pop<ValType>();
-  op(selectCompiler<CompilerType>(), src1, src2, srcDest);
-  free(src2);
-  free(src1);
-  push(srcDest);
-}
-
-template <typename CompilerType, typename ValType>
-void BaseCompiler::emitTernary(void (*op)(CompilerType&, ValType src0,
-                                          ValType src1, ValType srcDest,
-                                          ValType temp)) {
-  ValType src2 = pop<ValType>();
-  ValType src1 = pop<ValType>();
-  ValType srcDest = pop<ValType>();
-  ValType temp = need<ValType>();
-  op(selectCompiler<CompilerType>(), src1, src2, srcDest, temp);
-  free(temp);
-  free(src2);
-  free(src1);
-  push(srcDest);
 }
 
 template <typename RhsDestType, typename LhsType>
@@ -15222,43 +15196,23 @@ static void PromoteF32x4ToF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.convertFloat32x4ToFloat64x2(rs, rd);
 }
 
+// Bitselect: rs1: ifTrue, rs2: ifFalse, rs3: control
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-static void BitselectV128(MacroAssembler& masm, RegV128 rhs, RegV128 control,
-                          RegV128 lhsDest, RegV128 temp) {
-  // Ideally, we would have temp=control, and we can probably get away with
-  // just doing that, but don't worry about it yet.
-  masm.bitwiseSelectSimd128(control, lhsDest, rhs, lhsDest, temp);
+static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
+                             RegV128 rs3) {
+  // On x86, certain register assignments will result in more compact code: we
+  // want output=rs1 and tmp=rs3.  Attend to this after we see what other
+  // platforms want/need.
+  RegV128 tmp = bc.needV128();  // Distinguished tmp, for now
+  bc.masm.bitwiseSelectSimd128(rs3, rs1, rs2, rs1, tmp);
+  bc.freeV128(tmp);
+  return rs1;
 }
 #  elif defined(JS_CODEGEN_ARM64)
-static void BitselectV128(MacroAssembler& masm, RegV128 rhs, RegV128 control,
-                          RegV128 lhsDest, RegV128 temp) {
-  // The masm interface is not great for the baseline compiler here, but it's
-  // optimal for Ion, so just work around it.
-  masm.moveSimd128(control, temp);
-  masm.bitwiseSelectSimd128(lhsDest, rhs, temp);
-  masm.moveSimd128(temp, lhsDest);
-}
-#  endif
-
-#  ifdef ENABLE_WASM_RELAXED_SIMD
-static void RelaxedFmaF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                            RegV128 rsd) {
-  masm.fmaFloat32x4(rs1, rs2, rsd);
-}
-
-static void RelaxedFmsF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                            RegV128 rsd) {
-  masm.fmsFloat32x4(rs1, rs2, rsd);
-}
-
-static void RelaxedFmaF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                            RegV128 rsd) {
-  masm.fmaFloat64x2(rs1, rs2, rsd);
-}
-
-static void RelaxedFmsF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                            RegV128 rsd) {
-  masm.fmsFloat64x2(rs1, rs2, rsd);
+static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
+                             RegV128 rs3) {
+  bc.masm.bitwiseSelectSimd128(rs1, rs2, rs3);
+  return rs3;
 }
 #  endif
 
@@ -15502,6 +15456,36 @@ bool BaseCompiler::emitStoreLane(uint32_t laneSize) {
   return storeCommon(&access, AccessCheck(), type);
 }
 
+bool BaseCompiler::emitBitselect() {
+  Nothing unused_a, unused_b, unused_c;
+
+  if (!iter_.readVectorSelect(&unused_a, &unused_b, &unused_c)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  RegV128 rs3 = popV128();  // Control
+  RegV128 rs2 = popV128();  // 'false' vector
+  RegV128 rs1 = popV128();  // 'true' vector
+
+  RegV128 result = BitselectV128(*this, rs1, rs2, rs3);
+
+  if (rs1 != result) {
+    freeV128(rs1);
+  }
+  if (rs2 != result) {
+    freeV128(rs2);
+  }
+  if (rs3 != result) {
+    freeV128(rs3);
+  }
+  pushV128(result);
+  return true;
+}
+
 bool BaseCompiler::emitVectorShuffle() {
   Nothing unused_a, unused_b;
   V128 shuffleMask;
@@ -15611,10 +15595,7 @@ bool BaseCompiler::emitBody() {
   initControl(controlItem(), ResultType::Empty());
 
   for (;;) {
-    Nothing unused_a, unused_b, unused_c;
-    (void)unused_a;
-    (void)unused_b;
-    (void)unused_c;
+    Nothing unused_a, unused_b;
 
 #ifdef DEBUG
     performRegisterLeakCheck();
@@ -15646,10 +15627,6 @@ bool BaseCompiler::emitBody() {
 #define dispatchUnary2(arg1, arg2, type) \
   iter_.readUnary(type, &unused_a) &&    \
       (deadCode_ || (emitUnop(arg1, arg2), true))
-
-#define dispatchTernary1(arg1, type)                          \
-  iter_.readTernary(type, &unused_a, &unused_b, &unused_c) && \
-      (deadCode_ || (emitTernary(arg1), true))
 
 #define dispatchComparison0(doEmit, operandType, compareOp)  \
   iter_.readComparison(operandType, &unused_a, &unused_b) && \
@@ -16917,7 +16894,7 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2ShrU):
             CHECK_NEXT(dispatchVectorVariableShift(ShiftRightUI64x2));
           case uint32_t(SimdOp::V128Bitselect):
-            CHECK_NEXT(dispatchTernary1(BitselectV128, ValType::V128));
+            CHECK_NEXT(emitBitselect());
           case uint32_t(SimdOp::V8x16Shuffle):
             CHECK_NEXT(emitVectorShuffle());
           case uint32_t(SimdOp::V128Const): {
@@ -16972,29 +16949,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitStoreLane(4));
           case uint32_t(SimdOp::V128Store64Lane):
             CHECK_NEXT(emitStoreLane(8));
-#  ifdef ENABLE_WASM_RELAXED_SIMD
-          case uint32_t(SimdOp::F32x4RelaxedFma):
-            if (!moduleEnv_.v128RelaxedEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(dispatchTernary1(RelaxedFmaF32x4, ValType::V128));
-          case uint32_t(SimdOp::F32x4RelaxedFms):
-            if (!moduleEnv_.v128RelaxedEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(dispatchTernary1(RelaxedFmsF32x4, ValType::V128));
-          case uint32_t(SimdOp::F64x2RelaxedFma):
-            if (!moduleEnv_.v128RelaxedEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(dispatchTernary1(RelaxedFmaF64x2, ValType::V128));
-          case uint32_t(SimdOp::F64x2RelaxedFms):
-            if (!moduleEnv_.v128RelaxedEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(dispatchTernary1(RelaxedFmsF64x2, ValType::V128));
-            break;
-#  endif
           default:
             break;
         }  // switch (op.b1)

@@ -896,8 +896,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readVectorShift(&nothing, &nothing));
 
           case uint32_t(SimdOp::V128Bitselect):
-            CHECK(
-                iter.readTernary(ValType::V128, &nothing, &nothing, &nothing));
+            CHECK(iter.readVectorSelect(&nothing, &nothing, &nothing));
 
           case uint32_t(SimdOp::V8x16Shuffle): {
             V128 mask;
@@ -1006,19 +1005,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readStoreLane(8, &addr, &noIndex, &nothing));
           }
-
-#  ifdef ENABLE_WASM_RELAXED_SIMD
-          case uint32_t(SimdOp::F32x4RelaxedFma):
-          case uint32_t(SimdOp::F32x4RelaxedFms):
-          case uint32_t(SimdOp::F64x2RelaxedFma):
-          case uint32_t(SimdOp::F64x2RelaxedFms): {
-            if (!env.v128RelaxedEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
-            CHECK(
-                iter.readTernary(ValType::V128, &nothing, &nothing, &nothing));
-          }
-#  endif
 
           default:
             return iter.unrecognizedOpcode(&op);
