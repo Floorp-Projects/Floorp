@@ -813,22 +813,28 @@ void LIRGenerator::visitCopySign(MCopySign* ins) {
 // their first input register, leading to a pattern of useRegisterAtStart +
 // defineReuseInput.
 
-void LIRGenerator::visitWasmBitselectSimd128(MWasmBitselectSimd128* ins) {
+void LIRGenerator::visitWasmTernarySimd128(MWasmTernarySimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
-  MOZ_ASSERT(ins->lhs()->type() == MIRType::Simd128);
-  MOZ_ASSERT(ins->rhs()->type() == MIRType::Simd128);
-  MOZ_ASSERT(ins->control()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->v0()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->v1()->type() == MIRType::Simd128);
+  MOZ_ASSERT(ins->v2()->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
-  // Enforcing lhs == output avoids one setup move.  We would like to also
-  // enforce merging the control with the temp (with usRegisterAtStart(control)
-  // and tempCopy()), but the register allocator ignores those constraints
-  // at present.
-
-  auto* lir = new (alloc()) LWasmBitselectSimd128(
-      useRegisterAtStart(ins->lhs()), useRegister(ins->rhs()),
-      useRegister(ins->control()), tempSimd128());
-  defineReuseInput(lir, ins, LWasmBitselectSimd128::LhsDest);
+  switch (ins->simdOp()) {
+    case wasm::SimdOp::V128Bitselect: {
+      // Enforcing lhs == output avoids one setup move.  We would like to also
+      // enforce merging the control with the temp (with
+      // usRegisterAtStart(control) and tempCopy()), but the register allocator
+      // ignores those constraints at present.
+      auto* lir = new (alloc()) LWasmTernarySimd128(
+          ins->simdOp(), useRegisterAtStart(ins->v0()), useRegister(ins->v1()),
+          useRegister(ins->v2()), tempSimd128());
+      defineReuseInput(lir, ins, LWasmTernarySimd128::V0);
+      break;
+    }
+    default:
+      MOZ_CRASH("NYI");
+  }
 #else
   MOZ_CRASH("No SIMD");
 #endif
@@ -971,13 +977,16 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
 }
 
 #ifdef ENABLE_WASM_SIMD
-bool MWasmBitselectSimd128::specializeConstantMaskAsShuffle(
+bool MWasmTernarySimd128::specializeBitselectConstantMaskAsShuffle(
     int8_t shuffle[16]) {
+  if (simdOp() != wasm::SimdOp::V128Bitselect) {
+    return false;
+  }
+
   // Optimization when control vector is a mask with all 0 or all 1 per lane.
   // On x86, there is no bitselect, blend operations will be a win,
   // e.g. via PBLENDVB or PBLENDW.
-  SimdConstant constant =
-      static_cast<MWasmFloatConstant*>(control())->toSimd128();
+  SimdConstant constant = static_cast<MWasmFloatConstant*>(v2())->toSimd128();
   const SimdConstant::I8x16& bytes = constant.asInt8x16();
   for (int8_t i = 0; i < 16; i++) {
     if (bytes[i] == -1) {

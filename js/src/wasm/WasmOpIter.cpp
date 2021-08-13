@@ -560,7 +560,7 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I64x2ShrU:
           WASM_SIMD_OP(OpKind::VectorShift);
         case SimdOp::V128Bitselect:
-          WASM_SIMD_OP(OpKind::VectorSelect);
+          WASM_SIMD_OP(OpKind::Ternary);
         case SimdOp::V8x16Shuffle:
           WASM_SIMD_OP(OpKind::VectorShuffle);
         case SimdOp::V128Const:

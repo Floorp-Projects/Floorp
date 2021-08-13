@@ -1134,8 +1134,8 @@ void LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins) {
               ins);
 }
 
-void LIRGenerator::visitWasmBitselectSimd128(MWasmBitselectSimd128* ins) {
-  MOZ_CRASH("bitselect NYI");
+void LIRGenerator::visitWasmTernarySimd128(MWasmTernarySimd128* ins) {
+  MOZ_CRASH("ternary SIMD NYI");
 }
 
 void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
@@ -1143,7 +1143,7 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
 }
 
 #ifdef ENABLE_WASM_SIMD
-bool MWasmBitselectSimd128::specializeConstantMaskAsShuffle(
+bool MWasmTernarySimd128::specializeBitselectConstantMaskAsShuffle(
     int8_t shuffle[16]) {
   return false;
 }

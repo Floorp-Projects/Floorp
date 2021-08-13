@@ -2966,12 +2966,19 @@ void CodeGenerator::visitSimd128(LSimd128* ins) {
 #endif
 }
 
-void CodeGenerator::visitWasmBitselectSimd128(LWasmBitselectSimd128* ins) {
+void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
-  FloatRegister lhs = ToFloatRegister(ins->lhs());
-  FloatRegister rhs = ToFloatRegister(ins->rhs());
-  FloatRegister controlDest = ToFloatRegister(ins->control());
-  masm.bitwiseSelectSimd128(lhs, rhs, controlDest);
+  switch (ins->simdOp()) {
+    case wasm::SimdOp::V128Bitselect: {
+      FloatRegister lhs = ToFloatRegister(ins->v0());
+      FloatRegister rhs = ToFloatRegister(ins->v1());
+      FloatRegister controlDest = ToFloatRegister(ins->v2());
+      masm.bitwiseSelectSimd128(lhs, rhs, controlDest);
+      break;
+    }
+    default:
+      MOZ_CRASH("NYI");
+  }
 #else
   MOZ_CRASH("No SIMD");
 #endif
