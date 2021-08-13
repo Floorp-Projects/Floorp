@@ -30,6 +30,8 @@ const TEST_URI = `
   </div>
 `;
 
+ignoreGetGridsPromiseRejections();
+
 add_task(async function() {
   // Disable bfcache for Fission for now.
   // If Fission is disabled, the pref is no-op.
@@ -42,9 +44,6 @@ add_task(async function() {
   const { gridInspector, inspector } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { highlighters, store } = inspector;
-
-  // Don't track reflows since this might cause intermittent failures.
-  inspector.off("reflow-in-selected-target", gridInspector.onReflow);
 
   await selectNode("#grid1", inspector);
   const gridList = doc.getElementById("grid-list");
