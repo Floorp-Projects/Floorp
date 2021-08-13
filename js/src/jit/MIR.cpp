@@ -4528,11 +4528,12 @@ bool MWasmLoadGlobalCell::congruentTo(const MDefinition* ins) const {
 }
 
 #ifdef ENABLE_WASM_SIMD
-MDefinition* MWasmBitselectSimd128::foldsTo(TempAllocator& alloc) {
-  if (control()->op() == MDefinition::Opcode::WasmFloatConstant) {
+MDefinition* MWasmTernarySimd128::foldsTo(TempAllocator& alloc) {
+  if (simdOp() == wasm::SimdOp::V128Bitselect &&
+      v2()->op() == MDefinition::Opcode::WasmFloatConstant) {
     int8_t shuffle[16];
-    if (specializeConstantMaskAsShuffle(shuffle)) {
-      return MWasmShuffleSimd128::New(alloc, lhs(), rhs(),
+    if (specializeBitselectConstantMaskAsShuffle(shuffle)) {
+      return MWasmShuffleSimd128::New(alloc, v0(), v1(),
                                       SimdConstant::CreateX16(shuffle));
     }
   }

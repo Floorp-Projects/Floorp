@@ -896,7 +896,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readVectorShift(&nothing, &nothing));
 
           case uint32_t(SimdOp::V128Bitselect):
-            CHECK(iter.readVectorSelect(&nothing, &nothing, &nothing));
+            CHECK(
+                iter.readTernary(ValType::V128, &nothing, &nothing, &nothing));
 
           case uint32_t(SimdOp::V8x16Shuffle): {
             V128 mask;

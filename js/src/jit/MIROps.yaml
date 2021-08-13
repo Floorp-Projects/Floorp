@@ -2559,9 +2559,6 @@
 - name: Rotate
   gen_boilerplate: false
 
-- name: WasmBitselectSimd128
-  gen_boilerplate: false
-
 - name: WasmBinarySimd128
   gen_boilerplate: false
 
@@ -2610,6 +2607,9 @@
   congruent_to: custom
   alias_set: none
   clone: true
+
+- name: WasmTernarySimd128
+  gen_boilerplate: false
 
 - name: WasmScalarToSimd128
   gen_boilerplate: false
