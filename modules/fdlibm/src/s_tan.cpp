@@ -47,7 +47,7 @@
 
 #define INLINE_REM_PIO2
 #include "math_private.h"
-#include "e_rem_pio2.c"
+#include "e_rem_pio2.cpp"
 
 double
 tan(double x)
