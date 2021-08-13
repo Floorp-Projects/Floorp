@@ -5,10 +5,11 @@
  * Tests that interactions are not recorded for sites on the blocklist.
  */
 
-const ALLOWED_TEST_URL = "https://example.com/";
+const ALLOWED_TEST_URL = "http://mochi.test:8888/";
 const BLOCKED_TEST_URL = "https://example.com/browser";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
   InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
 });
 
@@ -75,7 +76,7 @@ async function loadBlockedUrl(expectRecording) {
   });
 }
 
-add_task(async function test() {
+add_task(async function test_regexp() {
   info("Record BLOCKED_TEST_URL because it is not yet blocklisted.");
   await loadBlockedUrl(true);
 
@@ -95,4 +96,10 @@ add_task(async function test() {
     JSON.stringify([])
   );
   await loadBlockedUrl(true);
+});
+
+add_task(async function test_adult() {
+  FilterAdult.addDomainToList("https://example.com/browser");
+  await loadBlockedUrl(false);
+  FilterAdult.removeDomainFromList("https://example.com/browser");
 });

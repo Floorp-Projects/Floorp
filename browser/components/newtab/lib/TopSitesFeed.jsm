@@ -38,7 +38,7 @@ const {
 
 ChromeUtils.defineModuleGetter(
   this,
-  "filterAdult",
+  "FilterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm"
 );
 ChromeUtils.defineModuleGetter(
@@ -810,9 +810,7 @@ this.TopSitesFeed = class TopSitesFeed {
     const dedupedUnpinned = [...dedupedFrecent, ...dedupedDefaults];
 
     // Remove adult sites if we need to
-    const checkedAdult = prefValues.filterAdult
-      ? filterAdult(dedupedUnpinned)
-      : dedupedUnpinned;
+    const checkedAdult = FilterAdult.filter(dedupedUnpinned);
 
     // Insert the original pinned sites into the deduped frecent and defaults.
     let withPinned = insertPinned(checkedAdult, pinned);
