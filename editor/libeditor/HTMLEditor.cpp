@@ -748,10 +748,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     bool aIgnoreIfSelectionInEditingHost) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // Use editing host.  If you use root element here, selection may be
-  // moved to <head> element, e.g., if there is a text node in <script>
-  // element.  So, we should use active editing host.
-  RefPtr<Element> editingHost = GetActiveEditingHost();
+  RefPtr<Element> editingHost = GetActiveEditingHost(LimitInBodyElement::No);
   if (NS_WARN_IF(!editingHost)) {
     return NS_OK;
   }
@@ -768,98 +765,116 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     }
   }
 
-  // Find first editable and visible node.
-  EditorRawDOMPoint pointToPutCaret(editingHost, 0);
-  for (;;) {
-    WSScanResult forwardScanFromPointToPutCaretResult =
-        WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
-                                                         pointToPutCaret);
-    if (forwardScanFromPointToPutCaretResult.Failed()) {
-      NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary failed");
-      return NS_ERROR_FAILURE;
-    }
-    // If we meet a non-editable node first, we should move caret to start of
-    // the editing host (perhaps, user may want to insert something before
-    // the first non-editable node? Chromium behaves so).
-    if (forwardScanFromPointToPutCaretResult.GetContent() &&
-        !forwardScanFromPointToPutCaretResult.IsContentEditable()) {
-      pointToPutCaret.Set(editingHost, 0);
-      break;
+  for (nsIContent* leafContent = HTMLEditUtils::GetFirstLeafContent(
+           *editingHost,
+           {LeafNodeType::LeafNodeOrNonEditableNode,
+            LeafNodeType::LeafNodeOrChildBlock},
+           editingHost);
+       leafContent;) {
+    // If we meet a non-editable node first, we should move caret to start
+    // of the container block or editing host.
+    if (!EditorUtils::IsEditableContent(*leafContent, EditorType::HTML)) {
+      MOZ_ASSERT(leafContent->GetParent());
+      MOZ_ASSERT(EditorUtils::IsEditableContent(*leafContent->GetParent(),
+                                                EditorType::HTML));
+      Element* container =
+          HTMLEditUtils::GetAncestorBlockElement(*leafContent, editingHost);
+      nsresult rv = CollapseSelectionTo(EditorDOMPoint(container, 0));
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "HTMLEditor::CollapseSelectionTo() failed");
+      return rv;
     }
 
-    // WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() reaches "special
-    // content" when it meets empty inline element.  In this case, we should go
-    // to next sibling.  For example, if current editor is: <div
-    // contenteditable><span></span><b><br></b></div> then, we should put caret
-    // at the <br> element.  So, let's check if found node is an empty inline
-    // container element.
-    if (forwardScanFromPointToPutCaretResult.ReachedSpecialContent() &&
-        forwardScanFromPointToPutCaretResult.GetContent() &&
-        HTMLEditUtils::CanNodeContain(
-            *forwardScanFromPointToPutCaretResult.GetContent()
-                 ->NodeInfo()
-                 ->NameAtom(),
-            *nsGkAtoms::textTagName)) {
-      pointToPutCaret =
-          forwardScanFromPointToPutCaretResult.RawPointAfterContent();
+    // When we meet an empty inline element, we should look for a next sibling.
+    // For example, if current editor is:
+    // <div contenteditable><span></span><b><br></b></div>
+    // then, we should put caret at the <br> element.  So, let's check if found
+    // node is an empty inline container element.
+    if (leafContent->IsElement() &&
+        HTMLEditUtils::IsInlineElement(*leafContent) &&
+        !HTMLEditUtils::IsNeverElementContentsEditableByUser(*leafContent) &&
+        HTMLEditUtils::CanNodeContain(*leafContent, *nsGkAtoms::textTagName)) {
+      // Chromium collaps selection to start of the editing host when this is
+      // the last leaf content.  So, we don't need special handling here.
+      leafContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+          *leafContent, *editingHost,
+          {LeafNodeType::LeafNodeOrNonEditableNode,
+           LeafNodeType::LeafNodeOrChildBlock},
+          editingHost);
       continue;
     }
 
-    // If there is editable and visible text node, move caret at start of it.
-    if (forwardScanFromPointToPutCaretResult.InNormalWhiteSpacesOrText()) {
-      pointToPutCaret = forwardScanFromPointToPutCaretResult.RawPoint();
-      break;
+    if (Text* text = leafContent->GetAsText()) {
+      // If there is editable and visible text node, move caret at first of
+      // the visible character.
+      WSScanResult scanResultInTextNode =
+          WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+              editingHost, EditorRawDOMPoint(text, 0));
+      if (scanResultInTextNode.InNormalWhiteSpacesOrText() &&
+          scanResultInTextNode.TextPtr() == text) {
+        nsresult rv = CollapseSelectionTo(scanResultInTextNode.Point());
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "HTMLEditor::CollapseSelectionTo() failed");
+        return rv;
+      }
+      // If it's an invisible text node, keep scanning next leaf.
+      leafContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+          *leafContent, *editingHost,
+          {LeafNodeType::LeafNodeOrNonEditableNode,
+           LeafNodeType::LeafNodeOrChildBlock},
+          editingHost);
+      continue;
     }
 
-    // If there is editable <br> or something inline special element like
-    // <img>, <input>, etc, move caret before it.
-    if (forwardScanFromPointToPutCaretResult.ReachedBRElement() ||
-        forwardScanFromPointToPutCaretResult.ReachedSpecialContent()) {
-      pointToPutCaret =
-          forwardScanFromPointToPutCaretResult.RawPointAtContent();
-      break;
+    // If there is editable <br> or something void element like <img>, <input>,
+    // <hr> etc, move caret before it.
+    if (!HTMLEditUtils::CanNodeContain(*leafContent, *nsGkAtoms::textTagName) ||
+        HTMLEditUtils::IsNeverElementContentsEditableByUser(*leafContent)) {
+      MOZ_ASSERT(leafContent->GetParent());
+      if (EditorUtils::IsEditableContent(*leafContent, EditorType::HTML)) {
+        nsresult rv = CollapseSelectionTo(EditorDOMPoint(leafContent));
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "HTMLEditor::CollapseSelectionTo() failed");
+        return rv;
+      }
+      MOZ_ASSERT_UNREACHABLE(
+          "How do we reach editable leaf in non-editable element?");
+      // But if it's not editable, let's put caret at start of editing host
+      // for now.
+      nsresult rv = CollapseSelectionTo(EditorDOMPoint(editingHost, 0));
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "HTMLEditor::CollapseSelectionTo() failed");
+      return rv;
     }
 
-    // If there is no visible/editable node except another block element in
-    // current editing host, we should move caret to very first of the editing
-    // host.
-    // XXX This may not make sense, but Chromium behaves so.  Therefore, the
-    //     reason why we do this is just compatibility with Chromium.
-    if (!forwardScanFromPointToPutCaretResult.ReachedOtherBlockElement()) {
-      pointToPutCaret.Set(editingHost, 0);
-      break;
+    // If we meet non-empty block element, we need to scan its child too.
+    if (HTMLEditUtils::IsBlockElement(*leafContent) &&
+        !HTMLEditUtils::IsEmptyNode(
+            *leafContent, {EmptyCheckOption::TreatSingleBRElementAsVisible}) &&
+        !HTMLEditUtils::IsNeverElementContentsEditableByUser(*leafContent)) {
+      leafContent = HTMLEditUtils::GetFirstLeafContent(
+          *leafContent,
+          {LeafNodeType::LeafNodeOrNonEditableNode,
+           LeafNodeType::LeafNodeOrChildBlock},
+          editingHost);
+      continue;
     }
 
-    // By definition of WSRunScanner, a block element terminates a white-space
-    // run. That is, although we are calling a method that is named
-    // "ScanNextVisibleNodeOrBlockBoundary", the node returned might not
-    // be visible/editable!
-
-    // However, we were given a block that is not a container.  Since the
-    // block can not contain anything that's visible, such a block only
-    // makes sense if it is visible by itself, like a <hr>.  We want to
-    // place the caret in front of that block.
-    if (!forwardScanFromPointToPutCaretResult.GetContent() ||
-        !HTMLEditUtils::IsContainerNode(
-            *forwardScanFromPointToPutCaretResult.GetContent())) {
-      pointToPutCaret =
-          forwardScanFromPointToPutCaretResult.RawPointAtContent();
-      break;
-    }
-
-    // If the given block does not contain any visible/editable items, we want
-    // to skip it and continue our search.
-    if (HTMLEditUtils::IsEmptyNode(
-            *forwardScanFromPointToPutCaretResult.GetContent(),
-            {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
-      // Skip the empty block
-      pointToPutCaret =
-          forwardScanFromPointToPutCaretResult.RawPointAfterContent();
-    } else {
-      pointToPutCaret.Set(forwardScanFromPointToPutCaretResult.GetContent(), 0);
-    }
+    // Otherwise, we must meet an empty block element or a data node like
+    // comment node.  Let's ignore it.
+    leafContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+        *leafContent, *editingHost,
+        {LeafNodeType::LeafNodeOrNonEditableNode,
+         LeafNodeType::LeafNodeOrChildBlock},
+        editingHost);
   }
-  nsresult rv = CollapseSelectionTo(pointToPutCaret);
+
+  // If there is no visible/editable node except another block element in
+  // current editing host, we should move caret to very first of the editing
+  // host.
+  // XXX This may not make sense, but Chromium behaves so.  Therefore, the
+  //     reason why we do this is just compatibility with Chromium.
+  nsresult rv = CollapseSelectionTo(EditorDOMPoint(editingHost, 0));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionTo() failed");
   return rv;

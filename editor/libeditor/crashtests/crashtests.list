@@ -27,7 +27,7 @@ load 499844-1.html
 load 503709-1.xhtml
 load 513375-1.xhtml
 load 535632-1.xhtml
-asserts(1) load 574558-1.xhtml # assertion in constructor of TextFragmentData (initialized for non-editable content)
+load 574558-1.xhtml
 load 580151-1.xhtml
 load 582138-1.xhtml
 load 612565-1.html
@@ -75,7 +75,7 @@ load 1274050.html
 load 1317704.html
 load 1317718.html
 load 1324505.html
-asserts(1) needs-focus load 1343918.html # assertion in WSRunScanner::GetEditableBlockParentOrTopmostEditableInlineContent()
+needs-focus load 1343918.html
 load 1344097.html
 load 1345015.html
 load 1348851.html
