@@ -54,7 +54,6 @@ class GlobalScope;
 class GlobalLexicalEnvironmentObject;
 class PlainObject;
 class RegExpStatics;
-class RegExpStaticsObject;
 
 // Data attached to a GlobalObject. This is freed when clearing the Realm's
 // global_ only because this way we don't need to add a finalizer to all
@@ -119,9 +118,6 @@ class GlobalObjectData {
   // The WindowProxy associated with this global.
   HeapPtr<JSObject*> windowProxy;
 
-  // Global state for regular expressions.
-  HeapPtr<RegExpStaticsObject*> regExpStatics;
-
   // Functions and other top-level values for self-hosted code.
   HeapPtr<NativeObject*> intrinsicsHolder;
 
@@ -143,10 +139,14 @@ class GlobalObjectData {
   // Cached shape for new arrays with Array.prototype as prototype.
   HeapPtr<Shape*> arrayShapeWithDefaultProto;
 
+  // Global state for regular expressions.
+  UniquePtr<RegExpStatics> regExpStatics;
+
   // Whether the |globalThis| property has been resolved on the global object.
   bool globalThisResolved = false;
 
   void trace(JSTracer* trc);
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static constexpr size_t offsetOfLexicalEnvironment() {
     static_assert(sizeof(lexicalEnvironment) == sizeof(uintptr_t),
@@ -213,7 +213,7 @@ class GlobalObject : public NativeObject {
   void releaseData(JSFreeOp* fop);
 
   size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
-    return mallocSizeOf(maybeData());
+    return maybeData() ? data().sizeOfIncludingThis(mallocSizeOf) : 0;
   }
 
   void setOriginalEval(JSFunction* evalFun) {
