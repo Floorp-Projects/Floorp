@@ -25,7 +25,7 @@ const { Dedupe } = ChromeUtils.import(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "filterAdult",
+  "FilterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm"
 );
 ChromeUtils.defineModuleGetter(
@@ -217,9 +217,7 @@ this.HighlightsFeed = class HighlightsFeed {
     const orderedPages = this._orderHighlights(manyPages);
 
     // Remove adult highlights if we need to
-    const checkedAdult = this.store.getState().Prefs.values.filterAdult
-      ? filterAdult(orderedPages)
-      : orderedPages;
+    const checkedAdult = FilterAdult.filter(orderedPages);
 
     // Remove any Highlights that are in Top Sites already
     const [, deduped] = this.dedupe.group(

@@ -151,7 +151,12 @@ NS_IMETHODIMP
 nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot) {
   NS_ENSURE_ARG(aIsBuiltInRoot);
 
-  pkix::Result rv = IsCertBuiltInRoot(mCert.get(), *aIsBuiltInRoot);
+  pkix::Input certInput;
+  pkix::Result rv = certInput.Init(mCert->derCert.data, mCert->derCert.len);
+  if (rv != pkix::Result::Success) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = IsCertBuiltInRoot(certInput, *aIsBuiltInRoot);
   if (rv != pkix::Result::Success) {
     return NS_ERROR_FAILURE;
   }

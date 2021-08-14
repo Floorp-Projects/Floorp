@@ -203,13 +203,6 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "filterAdult",
-    {
-      title: "Remove adult pages from sites, highlights, etc.",
-      value: true,
-    },
-  ],
-  [
     "showSearch",
     {
       title: "Show the Search bar",
