@@ -781,6 +781,11 @@ def using_compiler_wrapper(compiler_wrapper):
 set_config("MOZ_USING_COMPILER_WRAPPER", using_compiler_wrapper)
 
 
+@dependable
+def wasm():
+    return split_triplet("wasm32-wasi", allow_wasi=True)
+
+
 @template
 def default_c_compilers(host_or_target, other_c_compiler=None):
     """Template defining the set of default C compilers for the host and
@@ -789,7 +794,7 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
     from init.configure.
     `other_c_compiler` is the `target` C compiler when `host_or_target` is `host`.
     """
-    assert host_or_target in {host, target}
+    assert host_or_target in {host, target, wasm}
 
     other_c_compiler = () if other_c_compiler is None else (other_c_compiler,)
 
@@ -802,6 +807,8 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
         elif host_or_target.kernel == "Darwin":
             types = ("clang",)
             supported = ("clang", "gcc")
+        elif host_or_target.kernel == "WASI":
+            supported = types = ("clang",)
         else:
             supported = types = ("clang", "gcc")
 
@@ -1049,7 +1056,7 @@ def compiler(
     `other_c_compiler` is the result of the `compiler` template for the
     language 'C' for `target`.
     """
-    assert host_or_target in {host, target}
+    assert host_or_target in {host, target, wasm}
     assert language in ("C", "C++")
     assert language == "C" or c_compiler is not None
     assert host_or_target is target or other_compiler is not None
@@ -1058,16 +1065,19 @@ def compiler(
     host_or_target_str = {
         host: "host",
         target: "target",
+        wasm: "wasm",
     }[host_or_target]
 
     sysroot = {
         host: host_sysroot,
         target: target_sysroot,
+        wasm: dependable(lambda: namespace(path=None)),
     }[host_or_target]
 
     multiarch_dir = {
         host: host_multiarch_dir,
         target: target_multiarch_dir,
+        wasm: never,
     }[host_or_target]
 
     var = {
@@ -1075,6 +1085,8 @@ def compiler(
         ("C++", target): "CXX",
         ("C", host): "HOST_CC",
         ("C++", host): "HOST_CXX",
+        ("C", wasm): "WASM_CC",
+        ("C++", wasm): "WASM_CXX",
     }[language, host_or_target]
 
     default_compilers = {
@@ -1352,19 +1364,21 @@ def compiler(
         linker_var = {
             target: "LD",
             host: "HOST_LD",
-        }[host_or_target]
+        }.get(host_or_target)
 
-        @deprecated_option(env=linker_var, nargs=1)
-        def linker(value):
-            if value:
-                return value[0]
+        if linker_var:
 
-        @depends(linker)
-        def unused_linker(linker):
-            if linker:
-                log.warning(
-                    "The value of %s is not used by this build system." % linker_var
-                )
+            @deprecated_option(env=linker_var, nargs=1)
+            def linker(value):
+                if value:
+                    return value[0]
+
+            @depends(linker)
+            def unused_linker(linker):
+                if linker:
+                    log.warning(
+                        "The value of %s is not used by this build system." % linker_var
+                    )
 
     return valid_compiler
 
