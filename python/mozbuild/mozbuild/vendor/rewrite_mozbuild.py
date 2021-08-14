@@ -187,7 +187,14 @@ import fileinput
 import subprocess
 
 from pprint import pprint
-from mozbuild.frontend.sandbox import alphabetical_sorted
+
+try:
+    from mozbuild.frontend.sandbox import alphabetical_sorted
+except Exception:
+
+    def alphabetical_sorted(iterable, key=lambda x: x.lower(), reverse=False):
+        return sorted(iterable, key=key, reverse=reverse)
+
 
 statistics = {
     "guess_candidates": {},
@@ -245,7 +252,7 @@ def _pad_whitespace(source):
     return result
 
 
-def ast_get_source_segment(source, node):
+def ast_get_source_segment(source, node, padded=False):
     """Get source code segment of the *source* that generated *node*.
     If some location information (`lineno`, `end_lineno`, `col_offset`,
     or `end_col_offset`) is missing, return None.
@@ -758,8 +765,7 @@ def edit_moz_build_file_to_add_file(
 
 
 def edit_moz_build_file_to_remove_file(
-    normalized_mozbuild_filename,
-    unnormalized_filename_to_remove,
+    normalized_mozbuild_filename, unnormalized_filename_to_remove
 ):
     """
     This function edits the moz.build file in-place
@@ -1140,10 +1146,12 @@ def test_all_third_party_files(gecko_root, all_mozbuild_filenames_normalized):
 
 if __name__ == "__main__":
     gecko_root = get_gecko_root()
-
     os.chdir(gecko_root)
+
     add_file_to_moz_build_file(
-        "third_party/dav1d/src/arm/32/ipred16.S", "media/libdav1d", "third_party/dav1d/"
+        "third_party/jpeg-xl/lib/jxl/enc_photon_noise.cc",
+        "media/libjxl",
+        "third_party/jpeg-xl",
     )
 
     # all_mozbuild_filenames_normalized = get_all_mozbuild_filenames(gecko_root)
