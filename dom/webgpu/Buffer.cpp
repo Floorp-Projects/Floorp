@@ -58,10 +58,15 @@ void Buffer::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
+      // Note: even if the buffer is considered mapped,
+      // the shmem may be empty before the mapAsync callback
+      // is resolved.
+      if (mMapped && mMapped->mShmem.IsReadable()) {
+        // Note: if the bridge is closed, all associated shmems are already
+        // deleted.
+        bridge->DeallocShmem(mMapped->mShmem);
+      }
       bridge->SendBufferDestroy(mId);
-    }
-    if (bridge && mMapped) {
-      bridge->DeallocShmem(mMapped->mShmem);
     }
   }
 }
