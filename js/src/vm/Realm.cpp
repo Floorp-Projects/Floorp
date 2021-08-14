@@ -60,7 +60,6 @@ Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
       creationOptions_(options.creationOptions()),
       behaviors_(options.behaviors()),
       objects_(zone_),
-      varNames_(zone_),
       randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
       debuggers_(zone_),
       wasm(runtime_) {
@@ -258,17 +257,6 @@ ObjectRealm::getNonSyntacticLexicalEnvironment(JSObject* key) const {
   return &lexicalEnv->as<NonSyntacticLexicalEnvironmentObject>();
 }
 
-bool Realm::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name) {
-  MOZ_ASSERT(name);
-
-  if (varNames_.put(name)) {
-    return true;
-  }
-
-  ReportOutOfMemory(cx);
-  return false;
-}
-
 void Realm::traceGlobal(JSTracer* trc) {
   // Trace things reachable from the realm's global. Note that these edges
   // must be swept too in case the realm is live but the global is not.
@@ -276,11 +264,6 @@ void Realm::traceGlobal(JSTracer* trc) {
   savedStacks_.trace(trc);
 
   DebugAPI::traceFromRealm(trc, this);
-
-  // Atoms are always tenured.
-  if (!JS::RuntimeHeapIsMinorCollecting()) {
-    varNames_.trace(trc);
-  }
 }
 
 void ObjectRealm::trace(JSTracer* trc) {
@@ -413,8 +396,6 @@ void Realm::traceWeakObjectRealm(JSTracer* trc) {
   objects_.traceWeakNativeIterators(trc);
 }
 
-void Realm::tracekWeakVarNames(JSTracer* trc) { varNames_.traceWeak(trc); }
-
 void Realm::traceWeakTemplateObjects(JSTracer* trc) {
   TraceWeakEdge(trc, &mappedArgumentsTemplate_,
                 "Realm::mappedArgumentsTemplate_");
@@ -457,7 +438,6 @@ void Realm::clearTables() {
   MOZ_ASSERT(objects_.enumerators->next() == objects_.enumerators);
 
   savedStacks_.clear();
-  varNames_.clear();
 }
 
 // Check to see if this individual realm is recording allocations. Debuggers or
@@ -620,7 +600,7 @@ void Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                    size_t* realmObject, size_t* realmTables,
                                    size_t* innerViewsArg,
                                    size_t* objectMetadataTablesArg,
-                                   size_t* savedStacksSet, size_t* varNamesSet,
+                                   size_t* savedStacksSet,
                                    size_t* nonSyntacticLexicalEnvironmentsArg,
                                    size_t* jitRealm) {
   *realmObject += mallocSizeOf(this);
@@ -631,7 +611,6 @@ void Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                   nonSyntacticLexicalEnvironmentsArg);
 
   *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);
-  *varNamesSet += varNames_.shallowSizeOfExcludingThis(mallocSizeOf);
 
   if (jitRealm_) {
     *jitRealm += jitRealm_->sizeOfIncludingThis(mallocSizeOf);

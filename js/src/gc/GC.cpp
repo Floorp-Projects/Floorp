@@ -2584,7 +2584,6 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
     r->traceWeakRegExps(trc);
     r->traceWeakSavedStacks(trc);
-    r->tracekWeakVarNames(trc);
     r->traceWeakObjects(trc);
     r->traceWeakSelfHostingScriptSource(trc);
     r->sweepDebugEnvironments();
@@ -5495,10 +5494,6 @@ void GCRuntime::updateAtomsBitmap() {
   // For convenience sweep these tables non-incrementally as part of bitmap
   // sweeping; they are likely to be much smaller than the main atoms table.
   rt->symbolRegistry().sweep();
-  SweepingTracer trc(rt);
-  for (RealmsIter realm(this); !realm.done(); realm.next()) {
-    realm->tracekWeakVarNames(&trc);
-  }
 }
 
 void GCRuntime::sweepCCWrappers() {

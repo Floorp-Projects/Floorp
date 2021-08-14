@@ -1695,6 +1695,12 @@ static void ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
                  "Data for global objects.");
   }
 
+  if (classInfo.objectsMallocHeapGlobalVarNamesSet > 0) {
+    REPORT_BYTES(path + "objects/malloc-heap/global-varnames-set"_ns, KIND_HEAP,
+                 classInfo.objectsMallocHeapGlobalVarNamesSet,
+                 "Set of global names.");
+  }
+
   if (classInfo.objectsMallocHeapMisc > 0) {
     REPORT_BYTES(path + "objects/malloc-heap/misc"_ns, KIND_HEAP,
                  classInfo.objectsMallocHeapMisc, "Miscellaneous object data.");
