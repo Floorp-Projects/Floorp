@@ -217,10 +217,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed() {
 }
 
 void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
-  if (mFrameLoader) {
-    mFrameLoader->DestroyComplete();
-  }
-
   if (!mBrowsingContext) {
     // This BBC was never valid, skip teardown.
     return;
