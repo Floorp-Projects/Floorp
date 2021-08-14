@@ -543,7 +543,12 @@ void GatherEKUTelemetry(const UniqueCERTCertList& certList) {
     return;
   }
   bool isBuiltIn = false;
-  Result rv = IsCertBuiltInRoot(rootCert, isBuiltIn);
+  Input rootInput;
+  Result rv = rootInput.Init(rootCert->derCert.data, rootCert->derCert.len);
+  if (rv != Result::Success) {
+    return;
+  }
+  rv = IsCertBuiltInRoot(rootInput, isBuiltIn);
   if (rv != Success || !isBuiltIn) {
     return;
   }
@@ -759,8 +764,28 @@ static void CollectCertTelemetry(
     CertVerifier::OCSPStaplingStatus aOcspStaplingStatus,
     KeySizeStatus aKeySizeStatus, SHA1ModeResult aSha1ModeResult,
     const PinningTelemetryInfo& aPinningTelemetryInfo,
-    const UniqueCERTCertList& aBuiltCertChain,
+    const nsTArray<nsTArray<uint8_t>>& aBuiltCertChain,
     const CertificateTransparencyInfo& aCertificateTransparencyInfo) {
+  UniqueCERTCertList builtCertChainList(CERT_NewCertList());
+  if (!builtCertChainList) {
+    return;
+  }
+  CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());
+  for (const auto& certBytes : aBuiltCertChain) {
+    SECItem certDERItem = {siBuffer, const_cast<uint8_t*>(certBytes.Elements()),
+                           AssertedCast<unsigned int>(certBytes.Length())};
+    UniqueCERTCertificate cert(
+        CERT_NewTempCertificate(certDB, &certDERItem, nullptr, false, true));
+    if (!cert) {
+      return;
+    }
+    if (CERT_AddCertToListTail(builtCertChainList.get(), cert.get()) !=
+        SECSuccess) {
+      return;
+    }
+    Unused << cert.release();  // cert is now owned by certList.
+  }
+
   uint32_t evStatus = (aCertVerificationResult != Success) ? 0  // 0 = Failure
                       : (aEVStatus != EVStatus::EV)        ? 1  // 1 = DV
                                                            : 2;        // 2 = EV
@@ -793,8 +818,8 @@ static void CollectCertTelemetry(
   }
 
   if (aCertVerificationResult == Success) {
-    GatherSuccessfulValidationTelemetry(aBuiltCertChain);
-    GatherCertificateTransparencyTelemetry(aBuiltCertChain,
+    GatherSuccessfulValidationTelemetry(builtCertChainList);
+    GatherCertificateTransparencyTelemetry(builtCertChainList,
                                            aEVStatus == EVStatus::EV,
                                            aCertificateTransparencyInfo);
   }
@@ -839,7 +864,7 @@ Result AuthCertificate(
     const Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     const Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags,
     Time time, uint32_t certVerifierFlags,
-    /*out*/ UniqueCERTCertList& builtCertChain,
+    /*out*/ nsTArray<nsTArray<uint8_t>>& builtCertChain,
     /*out*/ EVStatus& evStatus,
     /*out*/ CertificateTransparencyInfo& certificateTransparencyInfo,
     /*out*/ bool& aIsCertChainRootBuiltInRoot) {
@@ -991,6 +1016,18 @@ PRErrorCode AuthCertificateParseResults(
 
 }  // unnamed namespace
 
+static nsTArray<nsTArray<uint8_t>> CreateCertBytesArray(
+    const UniqueCERTCertList& aCertChain) {
+  nsTArray<nsTArray<uint8_t>> certsBytes;
+  for (CERTCertListNode* n = CERT_LIST_HEAD(aCertChain);
+       !CERT_LIST_END(n, aCertChain); n = CERT_LIST_NEXT(n)) {
+    nsTArray<uint8_t> certBytes;
+    certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
+    certsBytes.AppendElement(std::move(certBytes));
+  }
+  return certsBytes;
+}
+
 /*static*/
 SECStatus SSLServerCertVerificationJob::Dispatch(
     uint64_t addrForLogging, void* aPinArg,
@@ -1053,26 +1090,23 @@ SSLServerCertVerificationJob::Run() {
   }
 
   TimeStamp jobStartTime = TimeStamp::Now();
-  UniqueCERTCertList builtCertChain;
   EVStatus evStatus;
   CertificateTransparencyInfo certificateTransparencyInfo;
   bool isCertChainRootBuiltInRoot = false;
+  nsTArray<nsTArray<uint8_t>> certBytesArray;
   Result rv = AuthCertificate(
       *certVerifier, mPinArg, mCert, mPeerCertChain, mHostName,
       mOriginAttributes, mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
-      mProviderFlags, mTime, mCertVerifierFlags, builtCertChain, evStatus,
+      mProviderFlags, mTime, mCertVerifierFlags, certBytesArray, evStatus,
       certificateTransparencyInfo, isCertChainRootBuiltInRoot);
 
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
-  nsTArray<nsTArray<uint8_t>> certBytesArray;
   if (rv == Success) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX, jobStartTime,
         TimeStamp::Now());
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
 
-    certBytesArray =
-        TransportSecurityInfo::CreateCertBytesArray(builtCertChain);
     mResultTask->Dispatch(
         nsc, std::move(certBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
@@ -1202,7 +1236,7 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
   }
 
   nsTArray<nsTArray<uint8_t>> peerCertsBytes =
-      TransportSecurityInfo::CreateCertBytesArray(peerCertChain);
+      CreateCertBytesArray(peerCertChain);
 
   // SSL_PeerStapledOCSPResponses will never return a non-empty response if
   // OCSP stapling wasn't enabled because libssl wouldn't have let the server

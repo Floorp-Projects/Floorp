@@ -55,19 +55,13 @@ static bool CertDNIsInList(const nsTArray<uint8_t>& aCert,
 }
 
 template <size_t T>
-static bool CertSPKIIsInList(const nsTArray<uint8_t>& aCert,
+static bool CertSPKIIsInList(Input aCertInput,
                              const DataAndLength (&aSpkiList)[T]) {
-  Input certInput;
-  mozilla::pkix::Result rv = certInput.Init(aCert.Elements(), aCert.Length());
-  if (rv != Success) {
-    return false;
-  }
-
   // we don't use the certificate for path building, so this parameter doesn't
   // matter
   EndEntityOrCA notUsedForPaths = EndEntityOrCA::MustBeEndEntity;
-  BackCert cert(certInput, notUsedForPaths, nullptr);
-  rv = cert.Init();
+  BackCert cert(aCertInput, notUsedForPaths, nullptr);
+  mozilla::pkix::Result rv = cert.Init();
   if (rv != Success) {
     return false;
   }
@@ -135,10 +129,9 @@ static bool CertMatchesStaticData(const nsTArray<uint8_t>& aCert,
 // "not distrusted." Otherwise, due to the precondition holding, the chain is
 // "distrusted."
 template <size_t T>
-static nsresult CheckForSymantecDistrust(
-    const nsTArray<nsTArray<uint8_t>>& intCerts,
-    const DataAndLength (&allowlist)[T],
-    /* out */ bool& isDistrusted) {
+static nsresult CheckForSymantecDistrust(const nsTArray<Input>& intCerts,
+                                         const DataAndLength (&allowlist)[T],
+                                         /* out */ bool& isDistrusted) {
   // PRECONDITION: The rootCert is already verified as being one of the
   // affected Symantec roots
 
