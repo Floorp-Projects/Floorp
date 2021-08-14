@@ -661,7 +661,7 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
   MOZ_ASSERT(global->isUnqualifiedVarObj());
 
   {
-    auto data = cx->make_unique<GlobalObjectData>();
+    auto data = cx->make_unique<GlobalObjectData>(cx->zone());
     if (!data) {
       return nullptr;
     }
@@ -927,6 +927,17 @@ RegExpStatics* GlobalObject::getRegExpStatics(JSContext* cx,
   return global->data().regExpStatics.get();
 }
 
+bool GlobalObject::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name) {
+  MOZ_ASSERT(name);
+
+  if (!data().varNames.put(name)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
+}
+
 /* static */
 NativeObject* GlobalObject::getIntrinsicsHolder(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
@@ -1150,7 +1161,14 @@ void GlobalObject::releaseData(JSFreeOp* fop) {
   fop->delete_(this, data, MemoryUse::GlobalObjectData);
 }
 
+GlobalObjectData::GlobalObjectData(Zone* zone) : varNames(zone) {}
+
 void GlobalObjectData::trace(JSTracer* trc) {
+  // Atoms are always tenured.
+  if (!JS::RuntimeHeapIsMinorCollecting()) {
+    varNames.trace(trc);
+  }
+
   for (auto& ctorWithProto : builtinConstructors) {
     TraceNullableEdge(trc, &ctorWithProto.constructor, "global-builtin-ctor");
     TraceNullableEdge(trc, &ctorWithProto.prototype,
@@ -1179,11 +1197,15 @@ void GlobalObjectData::trace(JSTracer* trc) {
   }
 }
 
-size_t GlobalObjectData::sizeOfIncludingThis(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  size_t size = mallocSizeOf(this);
+void GlobalObjectData::addSizeOfIncludingThis(
+    mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info) const {
+  info->objectsMallocHeapGlobalData += mallocSizeOf(this);
+
   if (regExpStatics) {
-    size += regExpStatics->sizeOfIncludingThis(mallocSizeOf);
+    info->objectsMallocHeapGlobalData +=
+        regExpStatics->sizeOfIncludingThis(mallocSizeOf);
   }
-  return size;
+
+  info->objectsMallocHeapGlobalVarNamesSet +=
+      varNames.shallowSizeOfExcludingThis(mallocSizeOf);
 }

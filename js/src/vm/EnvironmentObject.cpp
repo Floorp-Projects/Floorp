@@ -3446,7 +3446,7 @@ bool js::CheckLexicalNameConflict(
   RootedId id(cx, NameToId(name));
   mozilla::Maybe<PropertyInfo> prop;
   if (varObj->is<GlobalObject>() &&
-      varObj->as<GlobalObject>().realm()->isInVarNames(name)) {
+      varObj->as<GlobalObject>().isInVarNames(name)) {
     // ES 15.1.11 step 5.a
     redeclKind = "var";
   } else if ((prop = lexicalEnv->lookup(cx, name))) {
@@ -3579,7 +3579,7 @@ static bool InitGlobalOrEvalDeclarations(
         }
 
         if (varObj->is<GlobalObject>()) {
-          if (!varObj->as<GlobalObject>().realm()->addToVarNames(cx, name)) {
+          if (!varObj->as<GlobalObject>().addToVarNames(cx, name)) {
             return false;
           }
         }
@@ -3657,7 +3657,7 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
       }
 
       if (varObj->is<GlobalObject>()) {
-        if (!varObj->as<GlobalObject>().realm()->addToVarNames(cx, name)) {
+        if (!varObj->as<GlobalObject>().addToVarNames(cx, name)) {
           return false;
         }
       }
@@ -3689,7 +3689,7 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
 
       // Careful: the presence of a shape, even one appearing to derive from
       // a variable declaration, doesn't mean it's in [[VarNames]].
-      if (!varObj->as<GlobalObject>().realm()->addToVarNames(cx, name)) {
+      if (!varObj->as<GlobalObject>().addToVarNames(cx, name)) {
         return false;
       }
     }

@@ -311,16 +311,6 @@ class JS::Realm : public JS::shadow::Realm {
   js::ObjectRealm objects_;
   friend js::ObjectRealm& js::ObjectRealm::get(const JSObject*);
 
-  // The global environment record's [[VarNames]] list that contains all
-  // names declared using FunctionDeclaration, GeneratorDeclaration, and
-  // VariableDeclaration declarations in global code in this realm.
-  // Names are only removed from this list by a |delete IdentifierReference|
-  // that successfully removes that global property.
-  using VarNamesSet =
-      GCHashSet<js::WeakHeapPtr<JSAtom*>, js::DefaultHasher<JSAtom*>,
-                js::ZoneAllocPolicy>;
-  VarNamesSet varNames_;
-
   friend class js::AutoSetNewObjectMetadata;
   js::NewObjectMetadataState objectMetadataState_{js::ImmediateMetadata()};
 
@@ -466,7 +456,7 @@ class JS::Realm : public JS::shadow::Realm {
                               size_t* realmObject, size_t* realmTables,
                               size_t* innerViewsArg,
                               size_t* objectMetadataTablesArg,
-                              size_t* savedStacksSet, size_t* varNamesSet,
+                              size_t* savedStacksSet,
                               size_t* nonSyntacticLexicalEnvironmentsArg,
                               size_t* jitRealm);
 
@@ -553,15 +543,6 @@ class JS::Realm : public JS::shadow::Realm {
   void purge();
 
   void fixupAfterMovingGC(JSTracer* trc);
-
-  // Add a name to [[VarNames]].  Reports OOM on failure.
-  [[nodiscard]] bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
-  void tracekWeakVarNames(JSTracer* trc);
-
-  void removeFromVarNames(JS::Handle<JSAtom*> name) { varNames_.remove(name); }
-
-  // Whether the given name is in [[VarNames]].
-  bool isInVarNames(JS::Handle<JSAtom*> name) { return varNames_.has(name); }
 
   void enter() { enterRealmDepthIgnoringJit_++; }
   void leave() {

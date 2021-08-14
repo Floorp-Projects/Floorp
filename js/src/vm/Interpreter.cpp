@@ -4837,7 +4837,7 @@ bool js::DeleteNameOperation(JSContext* cx, HandlePropertyName name,
   if (status) {
     // Deleting a name from the global object removes it from [[VarNames]].
     if (pobj == scope && scope->is<GlobalObject>()) {
-      scope->as<GlobalObject>().realm()->removeFromVarNames(name);
+      scope->as<GlobalObject>().removeFromVarNames(name);
     }
   }
 
