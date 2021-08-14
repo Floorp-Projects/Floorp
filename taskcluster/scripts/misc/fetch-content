@@ -471,12 +471,18 @@ def repack_archive(
                 # tweak it.
                 origtar = tarfile.open(fileobj=ifh, mode="r|")
                 with ctx.stream_writer(fh) as compressor, tarfile.open(
-                    fileobj=compressor, mode="w:"
+                    fileobj=compressor,
+                    mode="w:",
+                    format=origtar.format,
                 ) as tar:
                     for tarinfo in origtar:
                         if tarinfo.isdir():
                             continue
                         tarinfo.name = filter(tarinfo.name)
+                        if "path" in tarinfo.pax_headers:
+                            tarinfo.pax_headers["path"] = filter(
+                                tarinfo.pax_headers["path"]
+                            )
                         if tarinfo.isfile():
                             tar.addfile(tarinfo, origtar.extractfile(tarinfo))
                         else:
