@@ -84,6 +84,10 @@ class RegExpStatics {
     TraceNullableEdge(trc, &pendingInput, "res->pendingInput");
   }
 
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) + matches.sizeOfExcludingThis(mallocSizeOf);
+  }
+
   /* Value creators. */
 
   bool createPendingInput(JSContext* cx, MutableHandleValue out);

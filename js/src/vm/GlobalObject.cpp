@@ -1183,9 +1183,7 @@ size_t GlobalObjectData::sizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = mallocSizeOf(this);
   if (regExpStatics) {
-    // XXX: should really call RegExpStatics::sizeOfIncludingThis() here
-    // instead, but the extra memory it would measure is insignificant.
-    size += mallocSizeOf(regExpStatics.get());
+    size += regExpStatics->sizeOfIncludingThis(mallocSizeOf);
   }
   return size;
 }
