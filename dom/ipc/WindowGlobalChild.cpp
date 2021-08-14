@@ -405,7 +405,7 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
   }
 
   auto deleteBridge =
-      MakeScopeExit([&] { bridge->SendBeginDestroy(); });
+      MakeScopeExit([&] { BrowserBridgeChild::Send__delete__(bridge); });
 
   // Immediately tear down the actor if we don't have a valid FrameContext.
   if (NS_WARN_IF(aFrameContext.IsNullOrDiscarded())) {
