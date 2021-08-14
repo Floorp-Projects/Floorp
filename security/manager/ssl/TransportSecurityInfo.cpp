@@ -1153,19 +1153,6 @@ uint16_t TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
   return nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
 }
 
-// static
-nsTArray<nsTArray<uint8_t>> TransportSecurityInfo::CreateCertBytesArray(
-    const UniqueCERTCertList& aCertChain) {
-  nsTArray<nsTArray<uint8_t>> certsBytes;
-  for (CERTCertListNode* n = CERT_LIST_HEAD(aCertChain);
-       !CERT_LIST_END(n, aCertChain); n = CERT_LIST_NEXT(n)) {
-    nsTArray<uint8_t> certBytes;
-    certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
-    certsBytes.AppendElement(std::move(certBytes));
-  }
-  return certsBytes;
-}
-
 NS_IMETHODIMP
 TransportSecurityInfo::GetIsDomainMismatch(bool* aIsDomainMismatch) {
   NS_ENSURE_ARG_POINTER(aIsDomainMismatch);
