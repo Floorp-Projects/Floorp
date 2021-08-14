@@ -851,6 +851,38 @@ def get_file_reference_modes(source_assignments):
     return modes
 
 
+def renormalize_filename(
+    mode,
+    moz_yaml_dir,
+    vendoring_dir,
+    normalized_mozbuild_filename,
+    normalized_filename_to_act_on,
+):
+    """
+    Edit the normalized_filename_to_act_on to either
+     - Make it an absolute path from gecko root (if we're in that mode)
+     - Get a relative path from the vendoring directory to the yaml directory where the
+       moz.build file is (If they are in separate directories)
+    """
+    if mode == HAS_ABSOLUTE:
+        # If the moz.build file uses absolute paths from the gecko root, this is easy,
+        # all we need to do is prepend a '/' to indicate that
+        normalized_filename_to_act_on = "/" + normalized_filename_to_act_on
+    elif moz_yaml_dir and vendoring_dir:
+        # To re-normalize it in this case, we:
+        #   (a) get the path from gecko_root to the moz.build file we are considering
+        #   (b) compute a relative path from that directory to the file we want
+        #   (c) because (b) started at the moz.build file's directory, it is not
+        #       normalized to the gecko_root. Therefore we need to normalize it by
+        #       prepending (a)
+        a = os.path.dirname(normalized_mozbuild_filename)
+        b = os.path.relpath(normalized_filename_to_act_on, start=a)
+        c = os.path.join(a, b)
+        normalized_filename_to_act_on = c
+
+    return normalized_filename_to_act_on
+
+
 #########################################################
 # PUBLIC API
 #########################################################
@@ -889,21 +921,13 @@ def remove_file_from_moz_build_file(
         modes = get_file_reference_modes(source_assignments)
 
         for mode in modes:
-            if mode == HAS_ABSOLUTE:
-                normalized_filename_to_remove = "/" + normalized_filename_to_remove
-            elif moz_yaml_dir and vendoring_dir:
-                # Here is where we re-normalize the filename. For the rest of the algorithm, we
-                #    will be using this re-normalized filename.
-                # To re-normalize it, we:
-                #   (a) get the path from gecko_root to the moz.build file we are considering
-                #   (b) compute a relative path from that directory to the file we want
-                #   (c) because (b) started at the moz.build file's directory, it is not
-                #       normalized to the gecko_root. Therefore we need to normalize it by
-                #       prepending (a)
-                a = os.path.dirname(normalized_mozbuild_filename)
-                b = os.path.relpath(normalized_filename_to_remove, start=a)
-                c = os.path.join(a, b)
-                normalized_filename_to_remove = c
+            normalized_filename_to_remove = renormalize_filename(
+                mode,
+                moz_yaml_dir,
+                vendoring_dir,
+                normalized_mozbuild_filename,
+                normalized_filename_to_remove,
+            )
 
             for key in source_assignments:
                 normalized_source_filename_list = source_assignments[key]
@@ -954,21 +978,13 @@ def add_file_to_moz_build_file(
         modes = get_file_reference_modes(source_assignments)
 
         for mode in modes:
-            if mode == HAS_ABSOLUTE:
-                normalized_filename_to_add = "/" + normalized_filename_to_add
-            elif moz_yaml_dir and vendoring_dir:
-                # Here is where we re-normalize the filename. For the rest of the algorithm, we
-                #    will be using this re-normalized filename.
-                # To re-normalize it, we:
-                #   (a) get the path from gecko_root to the moz.build file we are considering
-                #   (b) compute a relative path from that directory to the file we want
-                #   (c) because (b) started at the moz.build file's directory, it is not
-                #       normalized to the gecko_root. Therefore we need to normalize it by
-                #       prepending (a)
-                a = os.path.dirname(normalized_mozbuild_filename)
-                b = os.path.relpath(normalized_filename_to_add, start=a)
-                c = os.path.join(a, b)
-                normalized_filename_to_add = c
+            normalized_filename_to_add = renormalize_filename(
+                mode,
+                moz_yaml_dir,
+                vendoring_dir,
+                normalized_mozbuild_filename,
+                normalized_filename_to_add,
+            )
 
             possible_assignments = find_all_posible_assignments_from_filename(
                 source_assignments, normalized_filename_to_add
