@@ -71,10 +71,17 @@ queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
   --dpkgopt=path-include="/usr/lib/*" \
   --dpkgopt=path-include="/usr/lib32/*" \
   --dpkgopt=path-exclude="/usr/lib/debug/*" \
+  --dpkgopt=path-exclude="/usr/lib/python*" \
   --dpkgopt=path-exclude="/usr/lib/valgrind/*" \
   --dpkgopt=path-include="/usr/share/pkgconfig/*" \
   --keyring=/usr/share/keyrings/debian-archive-removed-keys.gpg \
   -v
+
+# Remove files that are created despite the path-exclude=*.
+rm -rf $sysroot/etc $sysroot/dev $sysroot/tmp $sysroot/var
+
+# Remove empty directories
+find $sysroot -depth -type d -empty -delete
 
 # Adjust symbolic links to link into the sysroot instead of absolute
 # paths that end up pointing at the host system.
