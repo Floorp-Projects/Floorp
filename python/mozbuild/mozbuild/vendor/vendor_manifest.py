@@ -19,6 +19,7 @@ from mozbuild.base import MozbuildObject
 from mozbuild.vendor.rewrite_mozbuild import (
     add_file_to_moz_build_file,
     remove_file_from_moz_build_file,
+    MozBuildRewriteException,
 )
 
 DEFAULT_EXCLUDE_FILES = [".git*"]
@@ -302,7 +303,7 @@ class VendorManifest(MozbuildObject):
         for f in files_added:
             try:
                 add_file_to_moz_build_file(f, moz_yaml_dir, vendoring_dir)
-            except Exception:
+            except MozBuildRewriteException:
                 self.log(
                     logging.ERROR,
                     "vendor",
@@ -314,7 +315,7 @@ class VendorManifest(MozbuildObject):
         for f in files_removed:
             try:
                 remove_file_from_moz_build_file(f, moz_yaml_dir, vendoring_dir)
-            except Exception:
+            except MozBuildRewriteException:
                 self.log(
                     logging.ERROR,
                     "vendor",
