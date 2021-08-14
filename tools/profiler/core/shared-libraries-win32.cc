@@ -118,9 +118,11 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     nsAutoCString versionStr;
     uint64_t version;
     if (headers.GetVersionInfo(version)) {
-      versionStr.AppendPrintf("%d.%d.%d.%d", (version >> 48) & 0xFFFF,
-                              (version >> 32) & 0xFFFF,
-                              (version >> 16) & 0xFFFF, version & 0xFFFF);
+      versionStr.AppendPrintf("%u.%u.%u.%u",
+                              static_cast<uint32_t>((version >> 48) & 0xFFFFu),
+                              static_cast<uint32_t>((version >> 32) & 0xFFFFu),
+                              static_cast<uint32_t>((version >> 16) & 0xFFFFu),
+                              static_cast<uint32_t>(version & 0xFFFFu));
     }
 
     const nsString& pdbNameStr =
