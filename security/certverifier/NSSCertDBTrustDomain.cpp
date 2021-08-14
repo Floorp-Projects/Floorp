@@ -22,6 +22,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Services.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "mozpkix/Result.h"
@@ -30,6 +31,7 @@
 #include "mozpkix/pkixutil.h"
 #include "nsCRTGlue.h"
 #include "nsIObserverService.h"
+#include "nsNetCID.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
@@ -73,7 +75,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     const Vector<Input>& thirdPartyRootInputs,
     const Vector<Input>& thirdPartyIntermediateInputs,
     const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
-    /*out*/ UniqueCERTCertList& builtChain,
+    /*out*/ nsTArray<nsTArray<uint8_t>>& builtChain,
     /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional*/ const char* hostname)
     : mCertDBTrustType(certDBTrustType),
@@ -1091,9 +1093,13 @@ SECStatus GetCertNotBeforeValue(const CERTCertificate* cert,
   return DER_DecodeTimeChoice(&distrustTime, &cert->validity.notBefore);
 }
 
-nsresult isDistrustedCertificateChain(const UniqueCERTCertList& certList,
-                                      const SECTrustType certDBTrustType,
-                                      bool& isDistrusted) {
+nsresult isDistrustedCertificateChain(
+    const nsTArray<nsTArray<uint8_t>>& certArray,
+    const SECTrustType certDBTrustType, bool& isDistrusted) {
+  if (certArray.Length() == 0) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Set the default result to be distrusted.
   isDistrusted = true;
 
@@ -1103,98 +1109,121 @@ nsresult isDistrustedCertificateChain(const UniqueCERTCertList& certList,
     return NS_OK;
   }
 
-  // Allocate objects and retreive the root and end-entity certificates.
-  const CERTCertificate* certRoot = CERT_LIST_TAIL(certList)->cert;
-  const CERTCertificate* certLeaf = CERT_LIST_HEAD(certList)->cert;
+  SECStatus runnableRV = SECFailure;
 
-  // Set isDistrusted to false if there is no distrust for the root.
-  if (!certRoot->distrust) {
-    isDistrusted = false;
-    return NS_OK;
-  }
+  RefPtr<Runnable> isDistrustedChainTask =
+      NS_NewRunnableFunction("isDistrustedCertificateChain", [&]() {
+        // Allocate objects and retreive the root and end-entity certificates.
+        CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());
+        const nsTArray<uint8_t>& certRootDER = certArray.LastElement();
+        SECItem certRootDERItem = {
+            siBuffer, const_cast<unsigned char*>(certRootDER.Elements()),
+            AssertedCast<unsigned int>(certRootDER.Length())};
+        UniqueCERTCertificate certRoot(CERT_NewTempCertificate(
+            certDB, &certRootDERItem, nullptr, false, true));
+        if (!certRoot) {
+          runnableRV = SECFailure;
+          return;
+        }
+        const nsTArray<uint8_t>& certLeafDER = certArray.ElementAt(0);
+        SECItem certLeafDERItem = {
+            siBuffer, const_cast<unsigned char*>(certLeafDER.Elements()),
+            AssertedCast<unsigned int>(certLeafDER.Length())};
+        UniqueCERTCertificate certLeaf(CERT_NewTempCertificate(
+            certDB, &certLeafDERItem, nullptr, false, true));
+        if (!certLeaf) {
+          runnableRV = SECFailure;
+          return;
+        }
 
-  // Create a pointer to refer to the selected distrust struct.
-  SECItem* distrustPtr = nullptr;
-  if (certDBTrustType == trustSSL) {
-    distrustPtr = &certRoot->distrust->serverDistrustAfter;
-  }
-  if (certDBTrustType == trustEmail) {
-    distrustPtr = &certRoot->distrust->emailDistrustAfter;
-  }
+        // Set isDistrusted to false if there is no distrust for the root.
+        if (!certRoot->distrust) {
+          isDistrusted = false;
+          runnableRV = SECSuccess;
+          return;
+        }
 
-  // Get validity for the current end-entity certificate
-  // and get the distrust field for the root certificate.
-  PRTime certRootDistrustAfter;
-  PRTime certLeafNotBefore;
+        // Create a pointer to refer to the selected distrust struct.
+        SECItem* distrustPtr = nullptr;
+        if (certDBTrustType == trustSSL) {
+          distrustPtr = &certRoot->distrust->serverDistrustAfter;
+        }
+        if (certDBTrustType == trustEmail) {
+          distrustPtr = &certRoot->distrust->emailDistrustAfter;
+        }
 
-  SECStatus rv = GetCertDistrustAfterValue(distrustPtr, certRootDistrustAfter);
-  if (rv != SECSuccess) {
+        // Get validity for the current end-entity certificate
+        // and get the distrust field for the root certificate.
+        PRTime certRootDistrustAfter;
+        PRTime certLeafNotBefore;
+
+        runnableRV =
+            GetCertDistrustAfterValue(distrustPtr, certRootDistrustAfter);
+        if (runnableRV != SECSuccess) {
+          return;
+        }
+
+        runnableRV = GetCertNotBeforeValue(certLeaf.get(), certLeafNotBefore);
+        if (runnableRV != SECSuccess) {
+          return;
+        }
+
+        // Compare the validity of the end-entity certificate with
+        // the distrust value of the root.
+        if (certLeafNotBefore <= certRootDistrustAfter) {
+          isDistrusted = false;
+        }
+
+        runnableRV = SECSuccess;
+      });
+  nsCOMPtr<nsIEventTarget> socketThread(
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID));
+  if (!socketThread) {
     return NS_ERROR_FAILURE;
   }
-
-  rv = GetCertNotBeforeValue(certLeaf, certLeafNotBefore);
-  if (rv != SECSuccess) {
+  nsresult rv =
+      SyncRunnable::DispatchToThread(socketThread, isDistrustedChainTask);
+  if (NS_FAILED(rv) || runnableRV != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
-
-  // Compare the validity of the end-entity certificate with
-  // the distrust value of the root.
-  if (certLeafNotBefore <= certRootDistrustAfter) {
-    isDistrusted = false;
-  }
-
   return NS_OK;
 }
 
-Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
+Result NSSCertDBTrustDomain::IsChainValid(const DERArray& reversedDERArray,
+                                          Time time,
                                           const CertPolicyId& requiredPolicy) {
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("NSSCertDBTrustDomain: IsChainValid"));
 
-  UniqueCERTCertList certList;
-  SECStatus srv =
-      ConstructCERTCertListFromReversedDERArray(certArray, certList);
-  if (srv != SECSuccess) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-  if (CERT_LIST_EMPTY(certList)) {
+  size_t numCerts = reversedDERArray.GetLength();
+  if (numCerts < 1) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  nsTArray<nsTArray<uint8_t>> certArray;
+  for (size_t i = numCerts; i > 0; --i) {
+    const Input* derInput = reversedDERArray.GetDER(i - 1);
+    certArray.EmplaceBack(derInput->UnsafeGetData(), derInput->GetLength());
   }
 
-  // Modernization in-progress: Keep certList as a CERTCertList for storage into
-  // the mBuiltChain variable at the end.
-  nsTArray<RefPtr<nsIX509Cert>> nssCertList;
-  nsresult nsrv = nsNSSCertificateDB::ConstructCertArrayFromUniqueCertList(
-      certList, nssCertList);
-
-  if (NS_FAILED(nsrv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  nsCOMPtr<nsIX509Cert> rootCert;
-  nsrv = nsNSSCertificate::GetRootCertificate(nssCertList, rootCert);
-  if (NS_FAILED(nsrv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  UniqueCERTCertificate root(rootCert->GetCert());
-  if (!root) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
   bool isBuiltInRoot = false;
-  nsrv = rootCert->GetIsBuiltInRoot(&isBuiltInRoot);
-  if (NS_FAILED(nsrv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+
+  const nsTArray<uint8_t>& rootBytes = certArray.LastElement();
+  Input rootInput;
+  Result rv = rootInput.Init(rootBytes.Elements(), rootBytes.Length());
+  if (rv != Success) {
+    return rv;
   }
+  rv = IsCertBuiltInRoot(rootInput, isBuiltInRoot);
+  if (rv != Result::Success) {
+    return rv;
+  }
+  nsresult nsrv;
   // If mHostname isn't set, we're not verifying in the context of a TLS
   // handshake, so don't verify key pinning in those cases.
   if (mHostname) {
     nsTArray<Span<const uint8_t>> derCertSpanList;
-    size_t numCerts = certArray.GetLength();
-    for (size_t i = numCerts; i > 0; --i) {
-      const Input* der = certArray.GetDER(i - 1);
-      if (!der) {
-        return Result::FATAL_ERROR_LIBRARY_FAILURE;
-      }
-      derCertSpanList.EmplaceBack(der->UnsafeGetData(), der->GetLength());
+    for (const auto& certDER : certArray) {
+      derCertSpanList.EmplaceBack(certDER.Elements(), certDER.Length());
     }
 
     bool chainHasValidPins;
@@ -1214,7 +1243,7 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   if (isBuiltInRoot) {
     bool isDistrusted;
     nsrv =
-        isDistrustedCertificateChain(certList, mCertDBTrustType, isDistrusted);
+        isDistrustedCertificateChain(certArray, mCertDBTrustType, isDistrusted);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
@@ -1230,15 +1259,23 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   // This algorithm only applies if we are verifying in the context of a TLS
   // handshake. To determine this, we check mHostname: If it isn't set, this is
   // not TLS, so don't run the algorithm.
-  nsTArray<uint8_t> rootCertDER(root.get()->derCert.data,
-                                root.get()->derCert.len);
+  const nsTArray<uint8_t>& rootCertDER = certArray.LastElement();
   if (mHostname && CertDNIsInList(rootCertDER, RootSymantecDNs)) {
-    nsTArray<nsTArray<uint8_t>> intCerts;
-
-    nsrv = nsNSSCertificate::GetIntermediatesAsDER(nssCertList, intCerts);
-    if (NS_FAILED(nsrv)) {
+    if (numCerts <= 1) {
       // This chain is supposed to be complete, so this is an error.
       return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
+    }
+    nsTArray<Input> intCerts;
+
+    for (size_t i = 1; i < certArray.Length() - 1; ++i) {
+      const nsTArray<uint8_t>& certBytes = certArray.ElementAt(i);
+      Input certInput;
+      rv = certInput.Init(certBytes.Elements(), certBytes.Length());
+      if (rv != Success) {
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      }
+
+      intCerts.EmplaceBack(certInput);
     }
 
     bool isDistrusted = false;
@@ -1253,7 +1290,7 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     }
   }
 
-  mBuiltChain = std::move(certList);
+  mBuiltChain = std::move(certArray);
 
   return Success;
 }
@@ -1699,7 +1736,6 @@ void SaveIntermediateCerts(const nsTArray<nsTArray<uint8_t>>& certList) {
     if (index == 1 || index == certList.Length()) {
       continue;
     }
-
     SECItem certDERItem = {siBuffer,
                            const_cast<unsigned char*>(certDER.Elements()),
                            AssertedCast<unsigned int>(certDER.Length())};

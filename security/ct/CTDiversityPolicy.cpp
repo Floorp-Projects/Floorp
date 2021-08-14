@@ -30,8 +30,8 @@ void GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
 }
 
 Result CTDiversityPolicy::GetDependentOperators(
-    const CERTCertList* builtChain, const CTLogOperatorList& operators,
-    CTLogOperatorList& dependentOperators) {
+    const nsTArray<nsTArray<uint8_t>>& builtChain,
+    const CTLogOperatorList& operators, CTLogOperatorList& dependentOperators) {
   return Success;
 }
 

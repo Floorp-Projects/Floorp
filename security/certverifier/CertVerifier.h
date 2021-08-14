@@ -159,7 +159,7 @@ class CertVerifier {
   mozilla::pkix::Result VerifyCert(
       CERTCertificate* cert, SECCertificateUsage usage,
       mozilla::pkix::Time time, void* pinArg, const char* hostname,
-      /*out*/ UniqueCERTCertList& builtChain, Flags flags = 0,
+      /*out*/ nsTArray<nsTArray<uint8_t>>& builtChain, Flags flags = 0,
       /*optional in*/
       const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates = Nothing(),
       /*optional in*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponseArg =
@@ -177,7 +177,7 @@ class CertVerifier {
   mozilla::pkix::Result VerifySSLServerCert(
       const UniqueCERTCertificate& peerCert, mozilla::pkix::Time time,
       void* pinarg, const nsACString& hostname,
-      /*out*/ UniqueCERTCertList& builtChain,
+      /*out*/ nsTArray<nsTArray<uint8_t>>& builtChain,
       /*optional*/ Flags flags = 0,
       /*optional*/ const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates =
           Nothing(),
@@ -256,7 +256,8 @@ class CertVerifier {
 
   void LoadKnownCTLogs();
   mozilla::pkix::Result VerifyCertificateTransparencyPolicy(
-      NSSCertDBTrustDomain& trustDomain, const UniqueCERTCertList& builtChain,
+      NSSCertDBTrustDomain& trustDomain,
+      const nsTArray<nsTArray<uint8_t>>& builtChain,
       mozilla::pkix::Input sctsFromTLS, mozilla::pkix::Time time,
       /*optional out*/ CertificateTransparencyInfo* ctInfo);
 
@@ -267,7 +268,7 @@ class CertVerifier {
   bool SHA1ModeMoreRestrictiveThanGivenMode(SHA1Mode mode);
 };
 
-mozilla::pkix::Result IsCertBuiltInRoot(CERTCertificate* cert, bool& result);
+mozilla::pkix::Result IsCertBuiltInRoot(pkix::Input certInput, bool& result);
 mozilla::pkix::Result CertListContainsExpectedKeys(const CERTCertList* certList,
                                                    const char* hostname,
                                                    mozilla::pkix::Time time);

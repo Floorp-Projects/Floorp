@@ -1262,7 +1262,7 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
 
-  UniqueCERTCertList resultChain;
+  nsTArray<nsTArray<uint8_t>> resultChain;
   EVStatus evStatus;
   mozilla::pkix::Result result;
 
@@ -1289,11 +1289,14 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
   }
 
   if (result == mozilla::pkix::Success) {
-    nsresult rv = nsNSSCertificateDB::ConstructCertArrayFromUniqueCertList(
-        resultChain, aVerifiedChain);
-
-    if (NS_FAILED(rv)) {
-      return rv;
+    for (const auto& certDER : resultChain) {
+      RefPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
+          const_cast<char*>(reinterpret_cast<const char*>(certDER.Elements())),
+          static_cast<int>(certDER.Length()));
+      if (!cert) {
+        return NS_ERROR_FAILURE;
+      }
+      aVerifiedChain.AppendElement(cert);
     }
 
     if (evStatus == EVStatus::EV) {
