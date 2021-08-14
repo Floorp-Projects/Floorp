@@ -856,6 +856,10 @@ def get_file_reference_modes(source_assignments):
 #########################################################
 
 
+class MozBuildRewriteException(Exception):
+    pass
+
+
 def remove_file_from_moz_build_file(
     normalized_filename_to_remove, moz_yaml_dir=None, vendoring_dir=None
 ):
@@ -913,7 +917,7 @@ def remove_file_from_moz_build_file(
                     return
 
         normalized_filename_to_remove = original_normalized_filename_to_remove
-    raise Exception("Could not remove file")
+    raise MozBuildRewriteException("Could not remove file")
 
 
 def add_file_to_moz_build_file(
@@ -1014,7 +1018,7 @@ def add_file_to_moz_build_file(
             )
             return
 
-    assert False, "Could not find a single moz.build file to edit"
+    raise MozBuildRewriteException("Could not find a single moz.build file to edit")
 
 
 #########################################################
