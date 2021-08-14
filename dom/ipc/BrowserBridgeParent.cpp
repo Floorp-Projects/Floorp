@@ -141,9 +141,6 @@ void BrowserBridgeParent::Destroy() {
     mBrowserParent->SetBrowserBridgeParent(nullptr);
     mBrowserParent = nullptr;
   }
-  if (CanSend()) {
-    Unused << Send__delete__(this);
-  }
 }
 
 IPCResult BrowserBridgeParent::RecvShow(const OwnerShowInfo& aOwnerInfo) {
@@ -195,11 +192,6 @@ IPCResult BrowserBridgeParent::RecvRenderLayers(
 IPCResult BrowserBridgeParent::RecvNavigateByKey(
     const bool& aForward, const bool& aForDocumentNavigation) {
   Unused << mBrowserParent->SendNavigateByKey(aForward, aForDocumentNavigation);
-  return IPC_OK();
-}
-
-IPCResult BrowserBridgeParent::RecvBeginDestroy() {
-  Destroy();
   return IPC_OK();
 }
 
