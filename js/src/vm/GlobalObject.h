@@ -65,7 +65,16 @@ class GlobalObjectData {
   void operator=(const GlobalObjectData&) = delete;
 
  public:
-  GlobalObjectData() = default;
+  explicit GlobalObjectData(Zone* zone);
+
+  // The global environment record's [[VarNames]] list that contains all
+  // names declared using FunctionDeclaration, GeneratorDeclaration, and
+  // VariableDeclaration declarations in global code in this global's realm.
+  // Names are only removed from this list by a |delete IdentifierReference|
+  // that successfully removes that global property.
+  using VarNamesSet =
+      GCHashSet<HeapPtr<JSAtom*>, DefaultHasher<JSAtom*>, ZoneAllocPolicy>;
+  VarNamesSet varNames;
 
   // The original values for built-in constructors (with their prototype
   // objects) based on JSProtoKey.
@@ -146,7 +155,8 @@ class GlobalObjectData {
   bool globalThisResolved = false;
 
   void trace(JSTracer* trc);
-  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                              JS::ClassInfo* info) const;
 
   static constexpr size_t offsetOfLexicalEnvironment() {
     static_assert(sizeof(lexicalEnvironment) == sizeof(uintptr_t),
@@ -212,8 +222,11 @@ class GlobalObject : public NativeObject {
   void traceData(JSTracer* trc) { data().trace(trc); }
   void releaseData(JSFreeOp* fop);
 
-  size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
-    return maybeData() ? data().sizeOfIncludingThis(mallocSizeOf) : 0;
+  void addSizeOfData(mozilla::MallocSizeOf mallocSizeOf,
+                     JS::ClassInfo* info) const {
+    if (maybeData()) {
+      data().addSizeOfIncludingThis(mallocSizeOf, info);
+    }
   }
 
   void setOriginalEval(JSFunction* evalFun) {
@@ -886,6 +899,14 @@ class GlobalObject : public NativeObject {
   // Infallibly test whether the given value is the eval function for this
   // global.
   bool valueIsEval(const Value& val);
+
+  void removeFromVarNames(JSAtom* name) { data().varNames.remove(name); }
+
+  // Whether the given name is in [[VarNames]].
+  bool isInVarNames(JSAtom* name) { return data().varNames.has(name); }
+
+  // Add a name to [[VarNames]].  Reports OOM on failure.
+  [[nodiscard]] bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
 
   // Implemented in vm/Iteration.cpp.
   static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
