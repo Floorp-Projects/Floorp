@@ -32,7 +32,6 @@ class HomeFragmentStoreTest {
     private lateinit var accountManager: FxaAccountManager
     private lateinit var onboarding: FenixOnboarding
     private lateinit var browsingModeManager: BrowsingModeManager
-    private lateinit var dispatchModeChanges: (mode: Mode) -> Unit
     private lateinit var currentMode: CurrentMode
     private lateinit var homeFragmentState: HomeFragmentState
     private lateinit var homeFragmentStore: HomeFragmentStore
@@ -43,7 +42,6 @@ class HomeFragmentStoreTest {
         accountManager = mockk(relaxed = true)
         onboarding = mockk(relaxed = true)
         browsingModeManager = mockk(relaxed = true)
-        dispatchModeChanges = mockk(relaxed = true)
 
         every { context.components.backgroundServices.accountManager } returns accountManager
         every { onboarding.userHasBeenOnboarded() } returns true
@@ -52,9 +50,8 @@ class HomeFragmentStoreTest {
         currentMode = CurrentMode(
             context,
             onboarding,
-            browsingModeManager,
-            dispatchModeChanges
-        )
+            browsingModeManager
+        ) {}
 
         homeFragmentState = HomeFragmentState(
             collections = emptyList(),
