@@ -32,6 +32,12 @@ class Vendor(MachCommandBase):
         default=False,
     )
     @CommandArgument(
+        "--add-to-exports",
+        action="store_true",
+        help="Will attempt to add new header files into any relevant EXPORTS block",
+        default=False,
+    )
+    @CommandArgument(
         "--ignore-modified",
         action="store_true",
         help="Ignore modified files in current checkout",
@@ -51,6 +57,7 @@ class Vendor(MachCommandBase):
         revision,
         ignore_modified=False,
         check_for_update=False,
+        add_to_exports=False,
         verify=False,
     ):
         """
@@ -84,7 +91,9 @@ class Vendor(MachCommandBase):
         from mozbuild.vendor.vendor_manifest import VendorManifest
 
         vendor_command = command_context._spawn(VendorManifest)
-        vendor_command.vendor(library, manifest, revision, check_for_update)
+        vendor_command.vendor(
+            library, manifest, revision, check_for_update, add_to_exports
+        )
 
         sys.exit(0)
 
