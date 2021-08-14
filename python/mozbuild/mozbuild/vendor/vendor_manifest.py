@@ -26,7 +26,7 @@ DEFAULT_EXCLUDE_FILES = [".git*"]
 
 
 class VendorManifest(MozbuildObject):
-    def vendor(self, yaml_file, manifest, revision, check_for_update):
+    def vendor(self, yaml_file, manifest, revision, check_for_update, add_to_exports):
         self.manifest = manifest
         if "vendor-directory" not in self.manifest["vendoring"]:
             self.manifest["vendoring"]["vendor-directory"] = os.path.dirname(yaml_file)
@@ -84,7 +84,9 @@ class VendorManifest(MozbuildObject):
 
         self.log(logging.INFO, "vendor", {}, "Updating moz.build files")
         self.update_moz_build(
-            self.manifest["vendoring"]["vendor-directory"], os.path.dirname(yaml_file)
+            self.manifest["vendoring"]["vendor-directory"],
+            os.path.dirname(yaml_file),
+            add_to_exports,
         )
 
         self.log(
@@ -278,13 +280,14 @@ class VendorManifest(MozbuildObject):
             else:
                 assert False, "Unknown action supplied (how did this pass validation?)"
 
-    def update_moz_build(self, vendoring_dir, moz_yaml_dir):
+    def update_moz_build(self, vendoring_dir, moz_yaml_dir, add_to_exports):
         if vendoring_dir == moz_yaml_dir:
             vendoring_dir = moz_yaml_dir = None
 
         # If you edit this (especially for header files) you should double check
         # rewrite_mozbuild.py around 'assignment_type'
-        source_suffixes = [".cc", ".c", ".cpp", ".h", ".hpp", ".S", ".asm"]
+        source_suffixes = [".cc", ".c", ".cpp", ".S", ".asm"]
+        header_suffixes = [".h", ".hpp"]
 
         files_removed = self.repository.get_changed_files(diff_filter="D")
         files_added = self.repository.get_changed_files(diff_filter="A")
@@ -293,6 +296,22 @@ class VendorManifest(MozbuildObject):
         files_added = [
             f for f in files_added if any([f.endswith(s) for s in source_suffixes])
         ]
+        header_files_to_add = [
+            f for f in files_added if any([f.endswith(s) for s in header_suffixes])
+        ]
+        if add_to_exports:
+            files_added += header_files_to_add
+        elif header_files_to_add:
+            self.log(
+                logging.WARNIGN,
+                "header_files_warning",
+                {},
+                (
+                    "We found %s header files in the update, pass --add-to-exports if you want"
+                    + " to attempt to include them in EXPORTS blocks: %s"
+                )
+                % (len(header_files_to_add), header_files_to_add),
+            )
 
         self.log(
             logging.DEBUG,
