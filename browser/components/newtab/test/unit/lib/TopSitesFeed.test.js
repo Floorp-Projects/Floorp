@@ -92,7 +92,9 @@ describe("Top Sites Feed", () => {
       maybeCacheScreenshot: sandbox.spy(Screenshots.maybeCacheScreenshot),
       _shouldGetScreenshots: sinon.stub().returns(true),
     };
-    filterAdultStub = sinon.stub().returns([]);
+    filterAdultStub = {
+      filter: sinon.stub().returnsArg(0),
+    };
     shortURLStub = sinon
       .stub()
       .callsFake(site =>
@@ -105,6 +107,7 @@ describe("Top Sites Feed", () => {
     };
     globals.set("PageThumbs", fakePageThumbs);
     globals.set("NewTabUtils", fakeNewTabUtils);
+    globals.set("gFilterAdultEnabled", false);
     sandbox.spy(global.XPCOMUtils, "defineLazyGetter");
     FakePrefs.prototype.prefs["default.sites"] = "https://foo.com/";
     ({ TopSitesFeed, DEFAULT_TOP_SITES } = injector({
@@ -115,7 +118,7 @@ describe("Top Sites Feed", () => {
         TOP_SITES_DEFAULT_ROWS,
         TOP_SITES_MAX_SITES_PER_ROW,
       },
-      "lib/FilterAdult.jsm": { filterAdult: filterAdultStub },
+      "lib/FilterAdult.jsm": { FilterAdult: filterAdultStub },
       "lib/Screenshots.jsm": { Screenshots: fakeScreenshot },
       "lib/TippyTopProvider.jsm": { TippyTopProvider: FakeTippyTopProvider },
       "lib/ShortURL.jsm": { shortURL: shortURLStub },
@@ -138,7 +141,7 @@ describe("Top Sites Feed", () => {
         return this.state;
       },
       state: {
-        Prefs: { values: { filterAdult: false, topSitesRows: 2 } },
+        Prefs: { values: { topSitesRows: 2 } },
         TopSites: { rows: Array(12).fill("site") },
       },
       dbStorage: { getDbTable: sandbox.stub().returns(storage) },
@@ -260,19 +263,14 @@ describe("Top Sites Feed", () => {
 
         assert.propertyVal(result[0], "typedBonus", true);
       });
-      it("should not filter out adult sites when pref is false", async () => {
-        await feed.getLinksWithDefaults();
-
-        assert.notCalled(filterAdultStub);
-      });
-      it("should filter out non-pinned adult sites when pref is true", async () => {
-        feed.store.state.Prefs.values.filterAdult = true;
+      it("should filter out non-pinned adult sites", async () => {
+        filterAdultStub.filter = sinon.stub().returns([]);
         fakeNewTabUtils.pinnedLinks.links = [{ url: "https://foo.com/" }];
 
         const result = await feed.getLinksWithDefaults();
 
         // The stub filters out everything
-        assert.calledOnce(filterAdultStub);
+        assert.calledOnce(filterAdultStub.filter);
         assert.equal(result.length, 1);
         assert.equal(result[0].url, fakeNewTabUtils.pinnedLinks.links[0].url);
       });

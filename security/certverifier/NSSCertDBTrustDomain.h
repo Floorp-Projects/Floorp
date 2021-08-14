@@ -136,7 +136,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       const Vector<mozilla::pkix::Input>& thirdPartyRootInputs,
       const Vector<mozilla::pkix::Input>& thirdPartyIntermediateInputs,
       const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
-      /*out*/ UniqueCERTCertList& builtChain,
+      /*out*/ nsTArray<nsTArray<uint8_t>>& builtChain,
       /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
       /*optional*/ const char* hostname = nullptr);
 
@@ -258,7 +258,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   const Vector<mozilla::pkix::Input>&
       mThirdPartyIntermediateInputs;                             // non-owning
   const Maybe<nsTArray<nsTArray<uint8_t>>>& mExtraCertificates;  // non-owning
-  UniqueCERTCertList& mBuiltChain;                               // non-owning
+  nsTArray<nsTArray<uint8_t>>& mBuiltChain;                      // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname;  // non-owning - only used for pinning checks
   nsCOMPtr<nsICertStorage> mCertStorage;

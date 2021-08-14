@@ -91,9 +91,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   static uint16_t ConvertCertificateTransparencyInfoToStatus(
       const mozilla::psm::CertificateTransparencyInfo& info);
 
-  static nsTArray<nsTArray<uint8_t>> CreateCertBytesArray(
-      const UniqueCERTCertList& aCertChain);
-
   // Use errorCode == 0 to indicate success;
   virtual void SetCertVerificationResult(PRErrorCode errorCode){};
 
