@@ -116,6 +116,10 @@ class VectorMatchPairs : public MatchPairs {
   bool allocOrExpandArray(size_t pairCount);
 
   bool initArrayFrom(VectorMatchPairs& copyFrom);
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return vec_.sizeOfExcludingThis(mallocSizeOf);
+  }
 };
 
 } /* namespace js */
