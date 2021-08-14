@@ -7,7 +7,11 @@
 <body>
 
 <a href="#anchor">Click to scroll to anchor</a><div style="height:5000px"></div><a name="anchor">FAIL</a>
-<script>window.parent.runTest()</script>
+<script>
+window.addEventListener("load", () => {
+  window.parent.runTest();
+});
+</script>
 
 </body>
 </html>
