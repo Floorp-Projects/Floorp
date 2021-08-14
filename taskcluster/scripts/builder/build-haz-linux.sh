@@ -177,8 +177,6 @@ trap grab_artifacts EXIT
 export HAZ_OBJDIR="$WORKSPACE/obj-analyzed-$PROJECT"
 mkdir -p "$HAZ_OBJDIR"
 
-export LD_LIBRARY_PATH="$MOZ_FETCHES_DIR/gcc/lib64:$LD_LIBRARY_PATH"
-
 # Gather the information from the source tree by compiling it.
 $GECKO_PATH/mach hazards gather --application=$PROJECT --haz-objdir="$HAZ_OBJDIR" --work-dir="$ANALYSIS_DIR"
 
