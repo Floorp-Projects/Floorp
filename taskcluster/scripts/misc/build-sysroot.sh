@@ -64,6 +64,7 @@ queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
   $dist \
   $sysroot \
   - \
+  --aptopt=/etc/apt/apt.conf.d/99taskcluster \
   --dpkgopt=path-exclude="*" \
   --dpkgopt=path-include="/lib/*" \
   --dpkgopt=path-include="/lib32/*" \
