@@ -35,16 +35,16 @@
 //!  - backdrop filters (see add_backdrop_filter)
 //!
 
-use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, PrimitiveFlags};
+use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, BuiltDisplayList, PrimitiveFlags};
 use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, ComponentTransferFuncType, RasterSpace};
 use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData, SharedFontInstanceMap};
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
-use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
-use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDisplayItem, ImageMask, ItemTag};
+use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor, ScrollSensitivity};
+use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
-use api::{ReferenceTransformBinding, Rotation, FillRule};
+use api::{ReferenceTransformBinding, Rotation, FillRule, SpatialTreeItem, ReferenceFrameDescriptor};
 use api::units::*;
 use crate::image_tiling::simplify_repeated_primitive;
 use crate::clip::{ClipChainId, ClipItemKey, ClipStore, ClipItemKeyKind};
@@ -498,6 +498,43 @@ impl<'a> SceneBuilder<'a> {
         }
     }
 
+    fn build_spatial_tree_for_display_list(
+        &mut self,
+        dl: &BuiltDisplayList,
+        pipeline_id: PipelineId,
+    ) {
+        dl.iter_spatial_tree(|item| {
+            match item {
+                SpatialTreeItem::ScrollFrame(descriptor) => {
+                    let parent_space = self.get_space(descriptor.parent_space);
+                    self.build_scroll_frame(
+                        descriptor,
+                        parent_space,
+                        pipeline_id,
+                    );
+                }
+                SpatialTreeItem::ReferenceFrame(descriptor) => {
+                    let parent_space = self.get_space(descriptor.parent_spatial_id);
+                    self.build_reference_frame(
+                        descriptor,
+                        parent_space,
+                        pipeline_id,
+                    );
+                }
+                SpatialTreeItem::StickyFrame(descriptor) => {
+                    let parent_space = self.get_space(descriptor.parent_spatial_id);
+                    self.build_sticky_frame(
+                        descriptor,
+                        parent_space,
+                    );
+                }
+                SpatialTreeItem::Invalid => {
+                    unreachable!();
+                }
+            }
+        });
+    }
+
     fn build_all(&mut self, root_pipeline: &ScenePipeline) {
         enum ContextKind<'a> {
             Root,
@@ -520,6 +557,10 @@ impl<'a> SceneBuilder<'a> {
         self.push_root(
             root_pipeline.pipeline_id,
             &root_pipeline.viewport_size,
+        );
+        self.build_spatial_tree_for_display_list(
+            &root_pipeline.display_list.display_list,
+            root_pipeline.pipeline_id,
         );
 
         let mut stack = vec![BuildContext {
@@ -578,66 +619,9 @@ impl<'a> SceneBuilder<'a> {
                         traversal = subtraversal;
                         continue 'outer;
                     }
-                    DisplayItem::PushReferenceFrame(ref info) => {
+                    DisplayItem::PushReferenceFrame(..) => {
                         profile_scope!("build_reference_frame");
-                        let parent_space = self.get_space(info.parent_spatial_id);
                         let mut subtraversal = item.sub_iter();
-
-                        let transform = match info.reference_frame.transform {
-                            ReferenceTransformBinding::Static { binding } => binding,
-                            ReferenceTransformBinding::Computed { scale_from, vertical_flip, rotation } => {
-                                let content_size = &self.iframe_size.last().unwrap();
-
-                                let mut transform = if let Some(scale_from) = scale_from {
-                                    // If we have a 90/270 degree rotation, then scale_from
-                                    // and content_size are in different coordinate spaces and
-                                    // we need to swap width/height for them to be correct.
-                                    match rotation {
-                                        Rotation::Degree0 |
-                                        Rotation::Degree180 => {
-                                            LayoutTransform::scale(
-                                                content_size.width / scale_from.width,
-                                                content_size.height / scale_from.height,
-                                                1.0
-                                            )
-                                        },
-                                        Rotation::Degree90 |
-                                        Rotation::Degree270 => {
-                                            LayoutTransform::scale(
-                                                content_size.height / scale_from.width,
-                                                content_size.width / scale_from.height,
-                                                1.0
-                                            )
-
-                                        }
-                                    }
-                                } else {
-                                    LayoutTransform::identity()
-                                };
-
-                                if vertical_flip {
-                                    let content_size = &self.iframe_size.last().unwrap();
-                                    transform = transform
-                                        .then_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
-                                        .pre_scale(1.0, -1.0, 1.0);
-                                }
-
-                                let rotate = rotation.to_matrix(**content_size);
-                                let transform = transform.then(&rotate);
-
-                                PropertyBinding::Value(transform)
-                            },
-                        };
-
-                        self.push_reference_frame(
-                            info.reference_frame.id,
-                            Some(parent_space),
-                            bc.pipeline_id,
-                            info.reference_frame.transform_style,
-                            transform,
-                            info.reference_frame.kind,
-                            info.origin.to_vector(),
-                        );
 
                         let new_context = BuildContext {
                             pipeline_id: bc.pipeline_id,
@@ -656,27 +640,10 @@ impl<'a> SceneBuilder<'a> {
                         profile_scope!("iframe");
 
                         let space = self.get_space(info.space_and_clip.spatial_id);
-                        let (size, subtraversal) = match self.push_iframe(info, space) {
+                        let subtraversal = match self.push_iframe(info, space) {
                             Some(pair) => pair,
                             None => continue,
                         };
-
-                        // Get a clip-chain id for the root clip for this pipeline. We will
-                        // add that as an unconditional clip to any tile cache created within
-                        // this iframe. This ensures these clips are handled by the tile cache
-                        // compositing code, which is more efficient and accurate than applying
-                        // these clips individually to each primitive.
-                        let clip_id = ClipId::root(info.pipeline_id);
-                        let clip_chain_id = self.get_clip_chain(clip_id);
-
-                        // If this is a root iframe, force a new tile cache both before and after
-                        // adding primitives for this iframe.
-                        if self.iframe_size.is_empty() {
-                            self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
-                            assert!(self.root_iframe_clip.is_none());
-                            self.root_iframe_clip = Some(clip_chain_id);
-                        }
-                        self.iframe_size.push(size);
 
                         let new_context = BuildContext {
                             pipeline_id: info.pipeline_id,
@@ -736,7 +703,7 @@ impl<'a> SceneBuilder<'a> {
 
     fn build_sticky_frame(
         &mut self,
-        info: &StickyFrameDisplayItem,
+        info: &StickyFrameDescriptor,
         parent_node_index: SpatialNodeIndex,
     ) {
         let sticky_frame_info = StickyFrameInfo::new(
@@ -755,9 +722,72 @@ impl<'a> SceneBuilder<'a> {
         self.id_to_index_mapper.add_spatial_node(info.id, index);
     }
 
+    fn build_reference_frame(
+        &mut self,
+        info: &ReferenceFrameDescriptor,
+        parent_space: SpatialNodeIndex,
+        pipeline_id: PipelineId,
+    ) {
+        let transform = match info.reference_frame.transform {
+            ReferenceTransformBinding::Static { binding } => binding,
+            ReferenceTransformBinding::Computed { scale_from, vertical_flip, rotation } => {
+                let content_size = &self.iframe_size.last().unwrap();
+
+                let mut transform = if let Some(scale_from) = scale_from {
+                    // If we have a 90/270 degree rotation, then scale_from
+                    // and content_size are in different coordinate spaces and
+                    // we need to swap width/height for them to be correct.
+                    match rotation {
+                        Rotation::Degree0 |
+                        Rotation::Degree180 => {
+                            LayoutTransform::scale(
+                                content_size.width / scale_from.width,
+                                content_size.height / scale_from.height,
+                                1.0
+                            )
+                        },
+                        Rotation::Degree90 |
+                        Rotation::Degree270 => {
+                            LayoutTransform::scale(
+                                content_size.height / scale_from.width,
+                                content_size.width / scale_from.height,
+                                1.0
+                            )
+
+                        }
+                    }
+                } else {
+                    LayoutTransform::identity()
+                };
+
+                if vertical_flip {
+                    let content_size = &self.iframe_size.last().unwrap();
+                    transform = transform
+                        .then_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
+                        .pre_scale(1.0, -1.0, 1.0);
+                }
+
+                let rotate = rotation.to_matrix(**content_size);
+                let transform = transform.then(&rotate);
+
+                PropertyBinding::Value(transform)
+            },
+        };
+
+        self.push_reference_frame(
+            info.reference_frame.id,
+            Some(parent_space),
+            pipeline_id,
+            info.reference_frame.transform_style,
+            transform,
+            info.reference_frame.kind,
+            info.origin.to_vector(),
+        );
+    }
+
     fn build_scroll_frame(
         &mut self,
-        info: &ScrollFrameDisplayItem,
+        info: &ScrollFrameDescriptor,
         parent_node_index: SpatialNodeIndex,
         pipeline_id: PipelineId,
     ) {
@@ -783,7 +813,7 @@ impl<'a> SceneBuilder<'a> {
         &mut self,
         info: &IframeDisplayItem,
         spatial_node_index: SpatialNodeIndex,
-    ) -> Option<(LayoutSize, BuiltDisplayListIter<'a>)> {
+    ) -> Option<BuiltDisplayListIter<'a>> {
         let iframe_pipeline_id = info.pipeline_id;
         let pipeline = match self.scene.pipelines.get(&iframe_pipeline_id) {
             Some(pipeline) => pipeline,
@@ -834,7 +864,29 @@ impl<'a> SceneBuilder<'a> {
             LayoutVector2D::zero(),
         );
 
-        Some((info.bounds.size(), pipeline.display_list.iter()))
+        // Get a clip-chain id for the root clip for this pipeline. We will
+        // add that as an unconditional clip to any tile cache created within
+        // this iframe. This ensures these clips are handled by the tile cache
+        // compositing code, which is more efficient and accurate than applying
+        // these clips individually to each primitive.
+        let clip_id = ClipId::root(info.pipeline_id);
+        let clip_chain_id = self.get_clip_chain(clip_id);
+
+        // If this is a root iframe, force a new tile cache both before and after
+        // adding primitives for this iframe.
+        if self.iframe_size.is_empty() {
+            self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
+            assert!(self.root_iframe_clip.is_none());
+            self.root_iframe_clip = Some(clip_chain_id);
+        }
+        self.iframe_size.push(info.bounds.size());
+
+        self.build_spatial_tree_for_display_list(
+            &pipeline.display_list.display_list,
+            iframe_pipeline_id,
+        );
+
+        Some(pipeline.display_list.iter())
     }
 
     fn get_space(
@@ -1343,25 +1395,6 @@ impl<'a> SceneBuilder<'a> {
                     &clips,
                 );
             },
-            DisplayItem::ScrollFrame(ref info) => {
-                profile_scope!("scrollframe");
-
-                let parent_space = self.get_space(info.parent_space);
-                self.build_scroll_frame(
-                    info,
-                    parent_space,
-                    pipeline_id,
-                );
-            }
-            DisplayItem::StickyFrame(ref info) => {
-                profile_scope!("stickyframe");
-
-                let parent_space = self.get_space(info.parent_spatial_id);
-                self.build_sticky_frame(
-                    info,
-                    parent_space,
-                );
-            }
             DisplayItem::BackdropFilter(ref info) => {
                 profile_scope!("backdrop");
 
