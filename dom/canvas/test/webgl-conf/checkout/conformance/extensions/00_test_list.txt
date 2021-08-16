@@ -1,7 +1,6 @@
 --min-version 1.0.3 --max-version 1.9.9 angle-instanced-arrays.html
 --min-version 1.0.3 --max-version 1.9.9 angle-instanced-arrays-out-of-bounds.html
 --min-version 1.0.3 --max-version 1.9.9 ext-blend-minmax.html
---min-version 1.0.4 ext-color-buffer-half-float.html
 --min-version 1.0.4 ext-float-blend.html
 --min-version 1.0.4 ext-texture-compression-bptc.html
 --min-version 1.0.4 ext-texture-compression-rgtc.html
@@ -11,7 +10,6 @@
 --min-version 1.0.3 --max-version 1.9.9 ext-sRGB.html
 --min-version 1.0.2 ext-texture-filter-anisotropic.html
 --min-version 1.0.2 get-extension.html
---min-version 1.0.4 khr-parallel-shader-compile.html
 --max-version 1.9.9 oes-standard-derivatives.html
 --max-version 1.9.9 oes-texture-float-with-canvas.html
 --max-version 1.9.9 oes-texture-float-with-image-data.html
@@ -35,7 +33,7 @@ webgl-debug-shaders.html
 --min-version 1.0.4 webgl-compressed-texture-etc.html
 --min-version 1.0.4 webgl-compressed-texture-etc1.html
 --min-version 1.0.3 webgl-compressed-texture-pvrtc.html
---min-version 1.0.4 s3tc-and-rgtc.html
+--min-version 1.0.2 webgl-compressed-texture-s3tc.html
 --min-version 1.0.4 webgl-compressed-texture-s3tc-srgb.html
 --min-version 1.0.3 webgl-compressed-texture-size-limit.html
 --min-version 1.0.2 --max-version 1.9.9 webgl-depth-texture.html

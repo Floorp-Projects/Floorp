@@ -42,7 +42,6 @@ ACCEPTABLE_ERRATA_KEYS = set(
 
 def ChooseSubsuite(name):
     # name: generated/test_2_conformance2__vertex_arrays__vertex-array-object.html
-    assert " " not in name, name
 
     split = name.split("__")
 
@@ -137,9 +136,11 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
         for line in fIn:
             lineNum += 1
 
-            curLine = line.strip()
-            if not curLine:
+            line = line.rstrip()
+            if not line:
                 continue
+
+            curLine = line.lstrip()
             if curLine.startswith("//"):
                 continue
             if curLine.startswith("#"):
@@ -147,16 +148,15 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
 
             webgl1 = allowWebGL1
             webgl2 = allowWebGL2
-            parts = curLine.split()
-            while parts[0].startswith("--"):  # '--min-version 1.0.2 foo.html'
-                flag = parts.pop(0)
+            while curLine.startswith("--"):  # '--min-version 1.0.2 foo.html'
+                (flag, curLine) = curLine.split(" ", 1)
                 if flag == "--min-version":
-                    minVersion = parts.pop(0)
+                    (minVersion, curLine) = curLine.split(" ", 1)
                     if not IsVersionLess(minVersion, "2.0.0"):  # >= 2.0.0
                         webgl1 = False
                         break
                 elif flag == "--max-version":
-                    maxVersion = parts.pop(0)
+                    (maxVersion, curLine) = curLine.split(" ", 1)
                     if IsVersionLess(maxVersion, "2.0.0"):
                         webgl2 = False
                         break
@@ -170,22 +170,20 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
                 continue
 
             assert webgl1 or webgl2
-            assert len(parts) == 1, parts
-            testOrManifest = parts[0]
 
-            split = testOrManifest.rsplit(".", 1)
+            split = curLine.rsplit(".", 1)
             assert len(split) == 2, "Bad split for `line`: " + line
             (name, ext) = split
 
             if ext == "html":
-                newTestFilePathStr = pathStr + "/" + testOrManifest
+                newTestFilePathStr = pathStr + "/" + curLine
                 entry = TestEntry(newTestFilePathStr, webgl1, webgl2)
                 out_testList.append(entry)
                 continue
 
             assert ext == "txt", "Bad `ext` on `line`: " + line
 
-            split = testOrManifest.rsplit("/", 1)
+            split = curLine.rsplit("/", 1)
             nextListFile = split[-1]
             nextPathStr = ""
             if len(split) != 1:
@@ -457,7 +455,7 @@ def WriteManifest(wrapperPathStrList, supportPathStrList):
 # Internals
 
 
-kManifestHeaderRegex = re.compile(r"\[([^]]*)\]")
+kManifestHeaderRegex = re.compile(r"[[]([^]]*)[]]")
 
 
 def LoadINI(path):

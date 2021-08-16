@@ -24,7 +24,6 @@ draw-buffers.html
 element-index-uint.html
 --min-version 2.0.1 framebuffer-completeness-draw-framebuffer.html
 framebuffer-completeness-unaffected.html
---min-version 2.0.1 framebuffer-mismatched-attachment-targets.html
 --min-version 2.0.1 framebuffer-render-to-layer.html
 --min-version 2.0.1 framebuffer-render-to-layer-angle-issue.html
 --min-version 2.0.1 framebuffer-texture-changing-base-level.html
@@ -37,7 +36,6 @@ instanced-arrays.html
 --min-version 2.0.1 line-rendering-quality.html
 --min-version 2.0.1 multisampling-fragment-evaluation.html
 out-of-bounds-index-buffers-after-copying.html
---min-version 2.0.1 rasterizer-discard-and-implicit-clear.html
 --min-version 2.0.1 read-draw-when-missing-image.html
 rgb-format-support.html
 uniform-block-buffer-size.html

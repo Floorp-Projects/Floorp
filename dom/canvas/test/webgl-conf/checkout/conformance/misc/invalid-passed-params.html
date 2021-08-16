@@ -126,15 +126,12 @@ for (var i = 0; i < invalidSet.length; ++i) {
   // Backslash as line-continuation is allowed in WebGL 2.0.
   if (contextVersion > 1 && invalidSet[i] == '\\')
     continue;
-  // With recent specification changes from
-  // https://github.com/KhronosGroup/WebGL/pull/3206 , shaderSource no
-  // longer generates INVALID_VALUE.
   var validShaderSource = generateShaderSource(undefined, invalidSet[i]);
   context.shaderSource(vShader, validShaderSource);
   shouldBe("context.getError()", "context.NO_ERROR");
   var invalidShaderSource = generateShaderSource(invalidSet[i], undefined);
   context.shaderSource(vShader, invalidShaderSource);
-  shouldBe("context.getError()", "context.NO_ERROR");
+  shouldBe("context.getError()", "context.INVALID_VALUE");
 }
 
 debug("");
