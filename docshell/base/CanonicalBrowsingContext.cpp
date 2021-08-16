@@ -2549,11 +2549,25 @@ void CanonicalBrowsingContext::CloneDocumentTreeInto(
               [source = MaybeDiscardedBrowsingContext{aSource},
                data = std::move(aPrintData)](
                   BrowserParent* aBp) -> RefPtr<GenericNonExclusivePromise> {
+                RefPtr<BrowserBridgeParent> bridge =
+                    aBp->GetBrowserBridgeParent();
                 return aBp->SendCloneDocumentTreeIntoSelf(source, data)
                     ->Then(
                         GetMainThreadSerialEventTarget(), __func__,
-                        [](BrowserParent::CloneDocumentTreeIntoSelfPromise::
-                               ResolveOrRejectValue&& aValue) {
+                        [bridge](
+                            BrowserParent::CloneDocumentTreeIntoSelfPromise::
+                                ResolveOrRejectValue&& aValue) {
+                          // We're cloning a remote iframe, so we created a
+                          // BrowserBridge which makes us register an OOP load
+                          // (see Document::OOPChildLoadStarted), even though
+                          // this isn't a real load. We call
+                          // SendMaybeFireEmbedderLoadEvents here so that we do
+                          // register the end of the load (see
+                          // Document::OOPChildLoadDone).
+                          if (bridge) {
+                            Unused << bridge->SendMaybeFireEmbedderLoadEvents(
+                                EmbedderElementEventType::NoEvent);
+                          }
                           if (aValue.IsResolve() && aValue.ResolveValue()) {
                             return GenericNonExclusivePromise::CreateAndResolve(
                                 true, __func__);
