@@ -39,7 +39,7 @@ namespace {
 
 #define XPCOM_SHUTDOWN_OBSERVER_TOPIC "xpcom-shutdown"
 
-typedef nsTHashMap<nsCStringHashKey, LSDatabase*> LSDatabaseHashtable;
+using LSDatabaseHashtable = nsTHashMap<nsCStringHashKey, LSDatabase*>;
 
 StaticAutoPtr<LSDatabaseHashtable> gLSDatabases;
 
