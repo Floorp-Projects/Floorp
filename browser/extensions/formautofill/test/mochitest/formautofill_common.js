@@ -131,9 +131,8 @@ function checkFieldValue(elem, expectedValue) {
 }
 
 async function triggerAutofillAndCheckProfile(profile) {
-  const adaptedProfile = _getAdaptedProfile(profile);
+  let adaptedProfile = _getAdaptedProfile(profile);
   const promises = [];
-
   for (const [fieldName, value] of Object.entries(adaptedProfile)) {
     info(`triggerAutofillAndCheckProfile: ${fieldName}`);
     const element = document.getElementById(fieldName);
