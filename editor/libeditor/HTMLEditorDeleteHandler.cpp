@@ -3599,6 +3599,10 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteUnnecessaryNodesAndCollapseSelection(
     const EditorDOMPoint& aSelectionStartPoint,
     const EditorDOMPoint& aSelectionEndPoint) {
   MOZ_ASSERT(aHTMLEditor.IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(EditorUtils::IsEditableContent(
+      *aSelectionStartPoint.ContainerAsContent(), EditorType::HTML));
+  MOZ_ASSERT(EditorUtils::IsEditableContent(
+      *aSelectionEndPoint.ContainerAsContent(), EditorType::HTML));
 
   EditorDOMPoint atCaret(aSelectionStartPoint);
   EditorDOMPoint selectionEndPoint(aSelectionEndPoint);
@@ -3640,7 +3644,11 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteUnnecessaryNodesAndCollapseSelection(
   }
 
   if (NS_WARN_IF(!atCaret.IsInContentNode()) ||
-      NS_WARN_IF(!selectionEndPoint.IsInContentNode())) {
+      NS_WARN_IF(!selectionEndPoint.IsInContentNode()) ||
+      NS_WARN_IF(!EditorUtils::IsEditableContent(*atCaret.ContainerAsContent(),
+                                                 EditorType::HTML)) ||
+      NS_WARN_IF(!EditorUtils::IsEditableContent(
+          *selectionEndPoint.ContainerAsContent(), EditorType::HTML))) {
     return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
   }
 
@@ -3659,15 +3667,22 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteUnnecessaryNodesAndCollapseSelection(
         NS_SUCCEEDED(rv),
         "AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode() "
         "failed to remove start node, but ignored");
-    rv = DeleteNodeIfInvisibleAndEditableTextNode(
-        aHTMLEditor, MOZ_KnownLive(*selectionEndPoint.ContainerAsContent()));
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    // If we've not handled the selection end container, and it's still
+    // editable, let's handle it.
+    if (atCaret.ContainerAsContent() !=
+            selectionEndPoint.ContainerAsContent() &&
+        EditorUtils::IsEditableContent(*selectionEndPoint.ContainerAsContent(),
+                                       EditorType::HTML)) {
+      nsresult rv = DeleteNodeIfInvisibleAndEditableTextNode(
+          aHTMLEditor, MOZ_KnownLive(*selectionEndPoint.ContainerAsContent()));
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode() "
+          "failed to remove end node, but ignored");
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode() "
-        "failed to remove end node, but ignored");
   }
 
   nsresult rv = aHTMLEditor.CollapseSelectionTo(
@@ -3688,7 +3703,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode(
     return NS_OK;
   }
 
-  if (!HTMLEditUtils::IsSimplyEditableNode(*text) ||
+  if (!HTMLEditUtils::IsRemovableFromParentNode(*text) ||
       HTMLEditUtils::IsVisibleTextNode(*text,
                                        aHTMLEditor.GetActiveEditingHost())) {
     return NS_OK;
