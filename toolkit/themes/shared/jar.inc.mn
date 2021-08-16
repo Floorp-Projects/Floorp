@@ -7,8 +7,7 @@
 # be specified once. As a result, the source file paths are relative
 # to the location of the actual manifest.
 
-toolkit.jar:
-% skin global classic/1.0 %skin/classic/global/
+#include minimal-toolkit.jar.inc.mn
 % skin help classic/1.0 %skin/classic/help/
 % skin mozapps classic/1.0 %skin/classic/mozapps/
   skin/classic/global/about.css                            (../../shared/about.css)
@@ -66,7 +65,6 @@ toolkit.jar:
   skin/classic/global/icons/print.svg                      (../../shared/icons/print.svg)
   skin/classic/global/icons/undo.svg                       (../../shared/icons/undo.svg)
   skin/classic/global/icons/radio.svg                      (../../shared/icons/radio.svg)
-  skin/classic/global/icons/resizer.svg                    (../../shared/icons/resizer.svg)
   skin/classic/global/icons/reload.svg                     (../../shared/icons/reload.svg)
   skin/classic/global/icons/search-glass.svg               (../../shared/icons/search-glass.svg)
   skin/classic/global/icons/security.svg                   (../../shared/icons/security.svg)
@@ -106,25 +104,6 @@ toolkit.jar:
   skin/classic/global/reader/RM-Content-Width-Plus-44x16.svg           (../../shared/reader/RM-Content-Width-Plus-44x16.svg)
   skin/classic/global/reader/RM-Line-Height-Minus-38x14.svg            (../../shared/reader/RM-Line-Height-Minus-38x14.svg)
   skin/classic/global/reader/RM-Line-Height-Plus-38x24.svg             (../../shared/reader/RM-Line-Height-Plus-38x24.svg)
-  skin/classic/global/media/audio-muted.svg                (../../shared/media/audio-muted.svg)
-  skin/classic/global/media/audioNoAudioButton.svg         (../../shared/media/audioNoAudioButton.svg)
-  skin/classic/global/media/audio.svg                      (../../shared/media/audio.svg)
-  skin/classic/global/media/castingButton-ready.svg        (../../shared/media/castingButton-ready.svg)
-  skin/classic/global/media/castingButton-active.svg       (../../shared/media/castingButton-active.svg)
-  skin/classic/global/media/closedCaptionButton-cc-off.svg (../../shared/media/closedCaptionButton-cc-off.svg)
-  skin/classic/global/media/closedCaptionButton-cc-on.svg  (../../shared/media/closedCaptionButton-cc-on.svg)
-  skin/classic/global/media/fullscreenEnterButton.svg      (../../shared/media/fullscreenEnterButton.svg)
-  skin/classic/global/media/fullscreenExitButton.svg       (../../shared/media/fullscreenExitButton.svg)
-  skin/classic/global/media/TopLevelImageDocument.css      (../../shared/media/TopLevelImageDocument.css)
-  skin/classic/global/media/TopLevelVideoDocument.css      (../../shared/media/TopLevelVideoDocument.css)
-  skin/classic/global/media/imagedoc-lightnoise.png        (../../shared/media/imagedoc-lightnoise.png)
-  skin/classic/global/media/imagedoc-darknoise.png         (../../shared/media/imagedoc-darknoise.png)
-* skin/classic/global/media/videocontrols.css              (../../shared/media/videocontrols.css)
-  skin/classic/global/media/pause-fill.svg                 (../../shared/media/pause-fill.svg)
-  skin/classic/global/media/play-fill.svg                  (../../shared/media/play-fill.svg)
-  skin/classic/global/media/error.png                      (../../shared/media/error.png)
-  skin/classic/global/media/throbber.png                   (../../shared/media/throbber.png)
-  skin/classic/global/media/stalled.png                    (../../shared/media/stalled.png)
   skin/classic/global/pictureinpicture/player.css           (../../shared/pictureinpicture/player.css)
   skin/classic/global/media/picture-in-picture-open.svg     (../../shared/media/picture-in-picture-open.svg)
   skin/classic/global/media/picture-in-picture-closed.svg   (../../shared/media/picture-in-picture-closed.svg)
