@@ -30,6 +30,8 @@ from mach.decorators import (
 )
 from mozbuild.base import MachCommandBase
 
+from taskgraph.main import commands as taskgraph_commands
+
 logger = logging.getLogger("taskcluster")
 
 
@@ -66,91 +68,42 @@ class ShowTaskGraphSubCommand(SubCommand):
     """A SubCommand with TaskGraph-specific arguments"""
 
     def __call__(self, func):
-        after = SubCommand.__call__(self, func)
-        args = [
-            CommandArgument(
-                "--root",
-                "-r",
-                help="root of the taskgraph definition relative to topsrcdir",
+        name = func.__name__.replace("_", "-").split("-", 1)[1]
+        args = taskgraph_commands[name].func.args
+
+        extra_args = [
+            (
+                ["--target-kind"],
+                {
+                    "default": None,
+                    "help": "only return tasks that are of the given kind, "
+                    "or their dependencies.",
+                },
             ),
-            CommandArgument(
-                "--quiet", "-q", action="store_true", help="suppress all logging output"
+            (
+                ["-o", "--output-file"],
+                {
+                    "default": None,
+                    "help": "file path to store generated output.",
+                },
             ),
-            CommandArgument(
-                "--verbose",
-                "-v",
-                action="store_true",
-                help="include debug-level logging output",
-            ),
-            CommandArgument(
-                "--json",
-                "-J",
-                action="store_const",
-                dest="format",
-                const="json",
-                help="Output task graph as a JSON object",
-            ),
-            CommandArgument(
-                "--labels",
-                "-L",
-                action="store_const",
-                dest="format",
-                const="labels",
-                help="Output the label for each task in the task graph (default)",
-            ),
-            CommandArgument(
-                "--parameters",
-                "-p",
-                default="project=mozilla-central",
-                help="parameters file (.yml or .json; see "
-                "`taskcluster/docs/parameters.rst`)`",
-            ),
-            CommandArgument(
-                "--no-optimize",
-                dest="optimize",
-                action="store_false",
-                default="true",
-                help="do not remove tasks from the graph that are found in the "
-                "index (a.k.a. optimize the graph)",
-            ),
-            CommandArgument(
-                "--tasks-regex",
-                "--tasks",
-                default=None,
-                help="only return tasks with labels matching this regular "
-                "expression.",
-            ),
-            CommandArgument(
-                "--target-kind",
-                default=None,
-                help="only return tasks that are of the given kind, "
-                "or their dependencies.",
-            ),
-            CommandArgument(
-                "-F",
-                "--fast",
-                dest="fast",
-                default=False,
-                action="store_true",
-                help="enable fast task generation for local debugging.",
-            ),
-            CommandArgument(
-                "-o",
-                "--output-file",
-                default=None,
-                help="file path to store generated output.",
-            ),
-            CommandArgument(
-                "--diff",
-                const="default",
-                nargs="?",
-                default=None,
-                help="Generate and diff the current taskgraph against another revision. "
-                "Without args the base revision will be used. A revision specifier such as "
-                "the hash or `.~1` (hg) or `HEAD~1` (git) can be used as well.",
+            (
+                ["--diff"],
+                {
+                    "const": "default",
+                    "nargs": "?",
+                    "default": None,
+                    "help": "Generate and diff the current taskgraph against another revision. "
+                    "Without args the base revision will be used. A revision specifier such as "
+                    "the hash or `.~1` (hg) or `HEAD~1` (git) can be used as well.",
+                },
             ),
         ]
-        for arg in args:
+        extra_args.reverse()  # ensures args displayed in same order they're defined
+
+        after = SubCommand.__call__(self, func)
+        for arg in extra_args + args:
+            arg = CommandArgument(*arg[0], **arg[1])
             after = arg(after)
         return after
 
@@ -188,7 +141,7 @@ class MachCommands(MachCommandBase):
     @ShowTaskGraphSubCommand(
         "taskgraph", "target-graph", description="Show the target taskgraph"
     )
-    def taskgraph_target_taskgraph(self, command_context, **options):
+    def taskgraph_target_graph(self, command_context, **options):
         return self.show_taskgraph(command_context, "target_task_graph", options)
 
     @ShowTaskGraphSubCommand(
@@ -614,6 +567,9 @@ class MachCommands(MachCommandBase):
         import taskgraph
         import taskgraph.generator
         import taskgraph.parameters
+
+        if not options["parameters"]:
+            options["parameters"] = "project=mozilla-central"
 
         if options["fast"]:
             taskgraph.fast = True
