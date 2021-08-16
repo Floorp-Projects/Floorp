@@ -38,12 +38,10 @@ add_task(async function runRTPTestAnimation() {
     }
 
     let expectedPrecision = data.precision;
-    var isRounded = function() {
-      return "Placeholder for eslint";
-    };
-    let evalStr = "var isRounded = " + data.isRoundedFunc;
+    // eslint beleives that isrounded is available in this scope, but if you
+    // remove the assignment, you will see it is not
     // eslint-disable-next-line
-    eval(evalStr);
+    let isRounded = eval(data.isRoundedFunc);
 
     const testDiv = content.document.getElementById("testDiv");
     const animation = testDiv.animate({ opacity: [0, 1] }, 100000);

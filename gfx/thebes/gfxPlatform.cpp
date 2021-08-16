@@ -28,7 +28,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -947,15 +946,9 @@ void gfxPlatform::Init() {
   }
 
   gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
-
   Preferences::RegisterCallback(
       FrameRatePrefChanged,
       nsDependentCString(StaticPrefs::GetPrefName_layout_frame_rate()));
-  Preferences::RegisterCallback(
-      FrameRatePrefChanged,
-      nsDependentCString(
-          StaticPrefs::GetPrefName_privacy_resistFingerprinting()));
-
   // Set up the vsync source for the parent process.
   ReInitFrameRate();
 
@@ -2997,26 +2990,17 @@ bool gfxPlatform::IsInLayoutAsapMode() {
   // the second is that the compositor goes ASAP and the refresh driver
   // goes at whatever the configurated rate is. This only checks the version
   // talos uses, which is the refresh driver and compositor are in lockstep.
-  // Ignore privacy_resistFingerprinting to preserve ASAP mode there.
   return StaticPrefs::layout_frame_rate() == 0;
-}
-
-static int LayoutFrameRateFromPrefs() {
-  auto val = StaticPrefs::layout_frame_rate();
-  if (StaticPrefs::privacy_resistFingerprinting()) {
-    val = 60;
-  }
-  return val;
 }
 
 /* static */
 bool gfxPlatform::ForceSoftwareVsync() {
-  return LayoutFrameRateFromPrefs() > 0;
+  return StaticPrefs::layout_frame_rate() > 0;
 }
 
 /* static */
 int gfxPlatform::GetSoftwareVsyncRate() {
-  int preferenceRate = LayoutFrameRateFromPrefs();
+  int preferenceRate = StaticPrefs::layout_frame_rate();
   if (preferenceRate <= 0) {
     return gfxPlatform::GetDefaultFrameRate();
   }

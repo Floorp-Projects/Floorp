@@ -12,12 +12,10 @@
 add_task(async function runRTPTestDOM() {
   let runTests = async function(data) {
     let expectedPrecision = data.precision;
-    var isRounded = function() {
-      return "Placeholder for eslint";
-    };
-    let evalStr = "var isRounded = " + data.isRoundedFunc;
+    // eslint beleives that isrounded is available in this scope, but if you
+    // remove the assignment, you will see it is not
     // eslint-disable-next-line
-    eval(evalStr);
+    let isRounded = eval(data.isRoundedFunc);
 
     // Prepare for test of AudioContext.currentTime
     // eslint-disable-next-line
@@ -77,12 +75,10 @@ add_task(async function runRTPTestDOM() {
 let runWorkerTest = async function(data) {
   let expectedPrecision = data.precision;
   await new Promise(resolve => {
-    var isRounded = function() {
-      return "Placeholder for eslint";
-    };
-    let evalStr = "var isRounded = " + data.isRoundedFunc;
+    // eslint beleives that isrounded is available in this scope, but if you
+    // remove the assignment, you will see it is not
     // eslint-disable-next-line
-    eval(evalStr);
+    let isRounded = eval(data.isRoundedFunc);
 
     let worker = new content.Worker(
       "coop_header.sjs?crossOriginIsolated=true&worker=true"
