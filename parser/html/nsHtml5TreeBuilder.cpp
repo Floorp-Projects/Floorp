@@ -3183,7 +3183,7 @@ void nsHtml5TreeBuilder::endTagTemplateInHead() {
     errStrayEndTag(nsGkAtoms::_template);
     return;
   }
-  generateImpliedEndTags();
+  generateImpliedEndTagsThoroughly();
   if (!!MOZ_UNLIKELY(mViewSource) && !isCurrent(nsGkAtoms::_template)) {
     errUnclosedElements(eltPos, nsGkAtoms::_template);
   }
@@ -3319,6 +3319,31 @@ void nsHtml5TreeBuilder::generateImpliedEndTags() {
       case OPTGROUP:
       case RB_OR_RTC:
       case RT_OR_RP: {
+        pop();
+        continue;
+      }
+      default: {
+        return;
+      }
+    }
+  }
+}
+
+void nsHtml5TreeBuilder::generateImpliedEndTagsThoroughly() {
+  for (;;) {
+    switch (stack[currentPtr]->getGroup()) {
+      case CAPTION:
+      case COLGROUP:
+      case DD_OR_DT:
+      case LI:
+      case OPTGROUP:
+      case OPTION:
+      case P:
+      case RB_OR_RTC:
+      case RT_OR_RP:
+      case TBODY_OR_THEAD_OR_TFOOT:
+      case TD_OR_TH:
+      case TR: {
         pop();
         continue;
       }
