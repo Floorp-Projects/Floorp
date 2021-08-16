@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "25.4.0",
+  "version": "25.5.0",
 
   "applications": {
     "gecko": {
@@ -124,6 +124,7 @@
     "shims/tracking-pixel.png",
     "shims/vast2.xml",
     "shims/vast3.xml",
+    "shims/vidible.js",
     "shims/vmad.xml"
   ]
 }
