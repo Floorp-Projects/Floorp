@@ -144,17 +144,13 @@ RefPtr<mozilla::CheckWordPromise> mozSpellChecker::CheckWords(
 
 nsresult mozSpellChecker::CheckWord(const nsAString& aWord, bool* aIsMisspelled,
                                     nsTArray<nsString>* aSuggestions) {
+  if (XRE_IsContentProcess()) {
+    // Use async version (CheckWords or Suggest) on content process
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult result;
   bool correct;
-
-  if (XRE_IsContentProcess()) {
-    MOZ_ASSERT(aSuggestions, "Use CheckWords if content process");
-    if (!mEngine->SendCheckAndSuggest(nsString(aWord), aIsMisspelled,
-                                      aSuggestions)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    return NS_OK;
-  }
 
   if (!mSpellCheckingEngine) {
     return NS_ERROR_NULL_POINTER;
