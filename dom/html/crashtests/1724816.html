@@ -1,0 +1,14 @@
+<script>
+window.onload = () => {
+  window[0].focus()
+  a.close()
+  a.showModal()
+  document.execCommand("selectAll", false)
+}
+function go() {
+  document.onselectstart = document.createElement("frameset").onload
+}
+</script>
+<details open="true" ontoggle="go()">a</details>
+<iframe></iframe>
+<dialog id="a" tabindex="3">a</dialog>
