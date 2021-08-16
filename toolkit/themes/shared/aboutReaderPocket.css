@@ -1,0 +1,93 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#pocket-cta-container {
+  box-shadow: 0 2px 8px var(--toolbar-box-shadow);
+  margin: calc(var(--body-padding) * -1);
+  margin-top: 20px;
+  padding: 24px 0;
+  position: relative;
+}
+
+#pocket-cta-only {
+  display: none;
+}
+
+.pocket-cta-container-cta-only #pocket-cta-only {
+  display: block;
+}
+
+.pocket-cta {
+  padding-inline-start: 90px;
+  background: url("chrome://global/skin/reader/RM-Pocket-Glyph.svg") no-repeat 16px 4px;
+}
+
+.pocket-cta-inner {
+  width: 936px;
+  margin: auto;
+}
+
+.pocket-cta-header {
+  font-weight: 900;
+}
+
+.pocket-button {
+  background: #008078;
+  border-radius: 4px;
+  border: 0;
+  color: #FBFBFE;
+  font-size: 16px;
+  line-height: 24px;
+  padding: 8px 24px;
+}
+
+.pocket-dismiss-cta {
+  cursor: pointer;
+  display: inline-block;
+  position: absolute;
+  inset-inline-end: 80px;
+  top: 80px;
+  border: 0;
+  width: 18px;
+  height: 18px;
+  background: no-repeat center/contain url("chrome://global/skin/icons/close.svg");
+}
+
+/* Medium breakpoint */
+@media (max-width: 1128px) {
+  .pocket-cta-inner {
+    width: 600px;
+  }
+
+  .pocket-dismiss-cta {
+    inset-inline-end: 40px;
+  }
+}
+
+/* Small breakpoint */
+@media (max-width: 790px) {
+  .pocket-cta-inner {
+    width: 330px;
+    text-align: center;
+  }
+
+  .pocket-cta-header,
+  .pocket-cta-subhead {
+    text-align: start;
+  }
+
+  .pocket-cta {
+    padding: 66px 0 0;
+    background: url("chrome://global/skin/reader/RM-Pocket-Glyph.svg") no-repeat center 0;
+  }
+
+  .pocket-button {
+    padding: 8px;
+  }
+
+  .pocket-dismiss-cta {
+    inset-inline-end: 20px;
+    top: 20px;
+  }
+}
