@@ -1,4 +1,4 @@
-// |jit-test| --enable-class-static-blocks;
+// |jit-test| 
 
 Reflect.parse(`class A {
   static { print('hi'); }
