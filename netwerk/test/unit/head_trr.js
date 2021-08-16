@@ -8,9 +8,12 @@
 /* import-globals-from head_cookies.js */
 /* import-globals-from head_channels.js */
 
-/* globals require, __dirname, global, Buffer */
+/* globals require, __dirname, global, Buffer, process */
 
 const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 let gDNS;
 
 /// Sets the TRR related prefs and adds the certificate we use for the HTTP2
@@ -31,7 +34,11 @@ function trr_test_setup() {
   Services.prefs.setBoolPref("network.http.spdy.enabled", true);
   Services.prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   // the TRR server is on 127.0.0.1
-  Services.prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
+  if (AppConstants.platform == "android") {
+    Services.prefs.setCharPref("network.trr.bootstrapAddr", "10.0.2.2");
+  } else {
+    Services.prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
+  }
 
   // make all native resolve calls "secretly" resolve localhost instead
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
@@ -279,7 +286,36 @@ class TRRServerCode {
     global.dnsPacket = require(`${__dirname}/../dns-packet`);
     global.ip = require(`${__dirname}/../node-ip`);
 
-    return global.server.address().port;
+    let serverPort = global.server.address().port;
+
+    if (process.env.MOZ_ANDROID_DATA_DIR) {
+      // When creating a server on Android we must make sure that the port
+      // is forwarded from the host machine to the emulator.
+      let adb_path = "adb";
+      if (process.env.MOZ_FETCHES_DIR) {
+        adb_path = `${process.env.MOZ_FETCHES_DIR}/android-sdk-linux/platform-tools/adb`;
+      }
+
+      await new Promise(resolve => {
+        const { exec } = require("child_process");
+        exec(
+          `${adb_path} reverse tcp:${serverPort} tcp:${serverPort}`,
+          (error, stdout, stderr) => {
+            if (error) {
+              console.log(`error: ${error.message}`);
+              return;
+            }
+            if (stderr) {
+              console.log(`stderr: ${stderr}`);
+            }
+            // console.log(`stdout: ${stdout}`);
+            resolve();
+          }
+        );
+      });
+    }
+
+    return serverPort;
   }
 
   static getRequestCount(domain, type) {

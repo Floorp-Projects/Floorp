@@ -1,9 +1,6 @@
 "use strict";
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 const gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(
   Ci.nsIPrefBranch
 );
