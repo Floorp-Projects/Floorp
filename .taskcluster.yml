@@ -251,6 +251,7 @@ tasks:
                                 --owner='${ownerEmail}'
                                 --level='${repository.level}'
                                 --tasks-for='${tasks_for}'
+                                --repository-type=hg
                                 --base-repository="$GECKO_BASE_REPOSITORY"
                                 --head-repository="$GECKO_HEAD_REPOSITORY"
                                 --head-ref="$GECKO_HEAD_REF"
