@@ -18,8 +18,6 @@ import time
 import traceback
 from functools import partial
 
-from six import text_type
-
 from mach.decorators import (
     Command,
     CommandArgument,
@@ -110,6 +108,91 @@ class ShowTaskGraphSubCommand(SubCommand):
         return after
 
 
+def get_taskgraph_command_parser(name):
+    """Given a command name, obtain its argument parser.
+
+    Args:
+        name (str): Name of the command.
+
+    Returns:
+        ArgumentParser: An ArgumentParser instance.
+    """
+    command = taskgraph_commands[name]
+    parser = argparse.ArgumentParser()
+    for arg in command.func.args:
+        parser.add_argument(*arg[0], **arg[1])
+
+    return parser
+
+
+def get_taskgraph_decision_parser():
+    parser = get_taskgraph_command_parser("decision")
+
+    extra_args = [
+        (
+            ["--optimize-target-tasks"],
+            {
+                "type": lambda flag: strtobool(flag),
+                "nargs": "?",
+                "const": "true",
+                "help": "If specified, this indicates whether the target "
+                "tasks are eligible for optimization. Otherwise, the default "
+                "for the project is used.",
+            },
+        ),
+        (
+            ["--include-push-tasks"],
+            {
+                "action": "store_true",
+                "help": "Whether tasks from the on-push graph should be re-used "
+                "in this graph. This allows cron graphs to avoid rebuilding "
+                "jobs that were built on-push.",
+            },
+        ),
+        (
+            ["--rebuild-kind"],
+            {
+                "dest": "rebuild_kinds",
+                "action": "append",
+                "default": argparse.SUPPRESS,
+                "help": "Kinds that should not be re-used from the on-push graph.",
+            },
+        ),
+        (
+            ["--comm-base-repository"],
+            {
+                "required": False,
+                "help": "URL for 'base' comm-* repository to clone",
+            },
+        ),
+        (
+            ["--comm-head-repository"],
+            {
+                "required": False,
+                "help": "URL for 'head' comm-* repository to fetch revision from",
+            },
+        ),
+        (
+            ["--comm-head-ref"],
+            {
+                "required": False,
+                "help": "comm-* Reference (this is same as rev usually for hg)",
+            },
+        ),
+        (
+            ["--comm-head-rev"],
+            {
+                "required": False,
+                "help": "Commit revision to use from head comm-* repository",
+            },
+        ),
+    ]
+    for arg in extra_args:
+        parser.add_argument(*arg[0], **arg[1])
+
+    return parser
+
+
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command(
@@ -181,118 +264,11 @@ class MachCommands(MachCommandBase):
     def taskgraph_actions(self, command_context, **options):
         return self.show_actions(command_context, options)
 
-    @SubCommand("taskgraph", "decision", description="Run the decision task")
-    @CommandArgument(
-        "--root",
-        "-r",
-        type=text_type,
-        help="root of the taskgraph definition relative to topsrcdir",
-    )
-    @CommandArgument(
-        "--base-repository",
-        type=text_type,
-        required=True,
-        help='URL for "base" repository to clone',
-    )
-    @CommandArgument(
-        "--head-repository",
-        type=text_type,
-        required=True,
-        help='URL for "head" repository to fetch revision from',
-    )
-    @CommandArgument(
-        "--head-ref",
-        type=text_type,
-        required=True,
-        help="Reference (this is same as rev usually for hg)",
-    )
-    @CommandArgument(
-        "--head-rev",
-        type=text_type,
-        required=True,
-        help="Commit revision to use from head repository",
-    )
-    @CommandArgument(
-        "--comm-base-repository",
-        type=text_type,
-        required=False,
-        help='URL for "base" comm-* repository to clone',
-    )
-    @CommandArgument(
-        "--comm-head-repository",
-        type=text_type,
-        required=False,
-        help='URL for "head" comm-* repository to fetch revision from',
-    )
-    @CommandArgument(
-        "--comm-head-ref",
-        type=text_type,
-        required=False,
-        help="comm-* Reference (this is same as rev usually for hg)",
-    )
-    @CommandArgument(
-        "--comm-head-rev",
-        type=text_type,
-        required=False,
-        help="Commit revision to use from head comm-* repository",
-    )
-    @CommandArgument(
-        "--project",
-        type=text_type,
-        required=True,
-        help="Project to use for creating task graph. Example: --project=try",
-    )
-    @CommandArgument(
-        "--pushlog-id", type=text_type, dest="pushlog_id", required=True, default="0"
-    )
-    @CommandArgument("--pushdate", dest="pushdate", required=True, type=int, default=0)
-    @CommandArgument(
-        "--owner",
-        type=text_type,
-        required=True,
-        help="email address of who owns this graph",
-    )
-    @CommandArgument(
-        "--level", type=text_type, required=True, help="SCM level of this repository"
-    )
-    @CommandArgument(
-        "--target-tasks-method",
-        type=text_type,
-        help="method for selecting the target tasks to generate",
-    )
-    @CommandArgument(
-        "--optimize-target-tasks",
-        type=lambda flag: strtobool(flag),
-        nargs="?",
-        const="true",
-        help="If specified, this indicates whether the target "
-        "tasks are eligible for optimization. Otherwise, "
-        "the default for the project is used.",
-    )
-    @CommandArgument(
-        "--try-task-config-file",
-        type=text_type,
-        help="path to try task configuration file",
-    )
-    @CommandArgument(
-        "--tasks-for",
-        type=text_type,
-        required=True,
-        help="the tasks_for value used to generate this task",
-    )
-    @CommandArgument(
-        "--include-push-tasks",
-        action="store_true",
-        help="Whether tasks from the on-push graph should be re-used "
-        "in this graph. This allows cron graphs to avoid rebuilding "
-        "jobs that were built on-push.",
-    )
-    @CommandArgument(
-        "--rebuild-kind",
-        dest="rebuild_kinds",
-        action="append",
-        default=argparse.SUPPRESS,
-        help="Kinds that should not be re-used from the on-push graph.",
+    @SubCommand(
+        "taskgraph",
+        "decision",
+        description="Run the decision task",
+        parser=get_taskgraph_decision_parser,
     )
     def taskgraph_decision(self, command_context, **options):
         """Run the decision task: generate a task graph and submit to
@@ -300,13 +276,10 @@ class MachCommands(MachCommandBase):
         and requires a great many arguments.  Commands like `mach taskgraph
         optimized` are better suited to use on the command line, and can take
         the parameters file generated by a decision task."""
-
-        import taskgraph.decision
-
         try:
             self.setup_logging(command_context)
             start = time.monotonic()
-            ret = taskgraph.decision.taskgraph_decision(options)
+            ret = taskgraph_commands["decision"].func(options)
             end = time.monotonic()
             if os.environ.get("MOZ_AUTOMATION") == "1":
                 perfherder_data = {
@@ -635,23 +608,6 @@ class MachCommands(MachCommandBase):
         except Exception:
             traceback.print_exc()
             sys.exit(1)
-
-
-def get_taskgraph_command_parser(name):
-    """Given a command name, obtain its argument parser.
-
-    Args:
-        name (str): Name of the command.
-
-    Returns:
-        ArgumentParser: An ArgumentParser instance.
-    """
-    command = taskgraph_commands[name]
-    parser = argparse.ArgumentParser()
-    for arg in command.func.args:
-        parser.add_argument(*arg[0], **arg[1])
-
-    return parser
 
 
 @CommandProvider
