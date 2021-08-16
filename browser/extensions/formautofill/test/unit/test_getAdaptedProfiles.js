@@ -38,6 +38,10 @@ const DEFAULT_CREDITCARD_RECORD = {
   "cc-exp": "2025-01",
 };
 
+const getCCExpMonthFormatted = () => {
+  return DEFAULT_CREDITCARD_RECORD["cc-exp-month"].toString().padStart(2, "0");
+};
+
 const TESTCASES = [
   {
     description: "Address form with street-address",
@@ -1065,6 +1069,19 @@ const TESTCASES = [
     expectedResult: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
   },
   {
+    description: "Use placeholder to adjust cc-exp-month field [mm].",
+    document: `<form>
+                <input autocomplete="cc-number">
+                <input autocomplete="cc-exp-month" placeholder="MM">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp-month-formatted": getCCExpMonthFormatted(),
+      }),
+    ],
+  },
+  {
     description: "Test maxlength=2 on numeric fields.",
     document: `<form>
                  <input autocomplete="cc-number">
@@ -1088,6 +1105,8 @@ const TESTCASES = [
     profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
     expectedResult: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
   },
+  // Bug 1687679: The default value of an expiration month, when filled in an input element,
+  // is a two character length string. Because of this, testing a maxlength of 1 is invalid.
   {
     description: "Test maxlength=1 on numeric fields.",
     document: `<form>
@@ -1099,6 +1118,7 @@ const TESTCASES = [
     expectedResult: [
       Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
         "cc-exp-year": 5,
+        "cc-exp-month": 1,
       }),
     ],
   },

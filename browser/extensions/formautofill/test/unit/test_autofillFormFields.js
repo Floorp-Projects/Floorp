@@ -263,8 +263,8 @@ const TESTCASES = [
       guid: "123",
       "cc-number": "4111111111111111",
       "cc-name": "test name",
-      "cc-exp-month": "06",
-      "cc-exp-year": "25",
+      "cc-exp-month": 6,
+      "cc-exp-year": 25,
     },
     expectedResult: {
       "street-addr": "",
@@ -274,7 +274,57 @@ const TESTCASES = [
       tel: "",
       "cc-number": "4111111111111111",
       "cc-name": "test name",
+      "cc-exp-month": "6",
+      "cc-exp-year": "25",
+    },
+  },
+  {
+    description:
+      "Fill credit card fields in a form with a placeholder on expiration month input field",
+    document: `<form>
+              <input id="cc-number" autocomplete="cc-number">
+              <input id="cc-name" autocomplete="cc-name">
+              <input id="cc-exp-month" autocomplete="cc-exp-month" placeholder="MM">
+              <input id="cc-exp-year" autocomplete="cc-exp-year">
+              </form>
+              `,
+    focusedInputId: "cc-number",
+    profileData: {
+      guid: "123",
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": 6,
+      "cc-exp-year": 25,
+    },
+    expectedResult: {
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
       "cc-exp-month": "06",
+      "cc-exp-year": "25",
+    },
+  },
+  {
+    description:
+      "Fill credit card fields in a form without a placeholder on expiration month input field",
+    document: `<form>
+              <input id="cc-number" autocomplete="cc-number">
+              <input id="cc-name" autocomplete="cc-name">
+              <input id="cc-exp-month" autocomplete="cc-exp-month">
+              <input id="cc-exp-year" autocomplete="cc-exp-year">
+              </form>
+              `,
+    focusedInputId: "cc-number",
+    profileData: {
+      guid: "123",
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": 6,
+      "cc-exp-year": 25,
+    },
+    expectedResult: {
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": "6",
       "cc-exp-year": "25",
     },
   },
@@ -480,6 +530,31 @@ const TESTCASES_FILL_SELECT = [
     },
     expectedResult: {
       country: "XX",
+    },
+  },
+  {
+    description:
+      "Fill credit card expiration month field in a form with select field",
+    document: `<form>
+              <input id="cc-number" autocomplete="cc-number">
+              <input id="cc-name" autocomplete="cc-name">
+              <select id="cc-exp-month" autocomplete="cc-exp-month">
+                <option value="">MM</option>
+                <option value="6">06</option>
+              </select></form>`,
+    focusedInputId: "cc-number",
+    profileData: {
+      guid: "123",
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": 6,
+      "cc-exp-year": 25,
+    },
+    expectedResult: {
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": "6",
+      "cc-exp-year": "2025",
     },
   },
 ];

@@ -38,7 +38,11 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/focus-leak/browser.ini",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += [
+    "test/unit/heuristics/third_party/xpcshell.ini",
+    "test/unit/heuristics/xpcshell.ini",
+    "test/unit/xpcshell.ini",
+]
 
 MOCHITEST_MANIFESTS += [
     "test/mochitest/creditCard/mochitest.ini",
