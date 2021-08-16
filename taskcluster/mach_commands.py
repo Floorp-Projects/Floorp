@@ -17,6 +17,7 @@ import sys
 import tempfile
 import time
 import traceback
+from functools import partial
 
 import six
 from six import text_type
@@ -663,6 +664,23 @@ class MachCommands(MachCommandBase):
             sys.exit(1)
 
 
+def get_taskgraph_command_parser(name):
+    """Given a command name, obtain its argument parser.
+
+    Args:
+        name (str): Name of the command.
+
+    Returns:
+        ArgumentParser: An ArgumentParser instance.
+    """
+    command = taskgraph_commands[name]
+    parser = argparse.ArgumentParser()
+    for arg in command.func.args:
+        parser.add_argument(*arg[0], **arg[1])
+
+    return parser
+
+
 @CommandProvider
 class TaskClusterImagesProvider(MachCommandBase):
     @Command(
@@ -670,64 +688,20 @@ class TaskClusterImagesProvider(MachCommandBase):
         category="ci",
         description="Load a pre-built Docker image. Note that you need to "
         "have docker installed and running for this to work.",
+        parser=partial(get_taskgraph_command_parser, "load-image"),
     )
-    @CommandArgument(
-        "--task-id",
-        help="Load the image at public/image.tar.zst in this task, "
-        "rather than searching the index",
-    )
-    @CommandArgument(
-        "-t",
-        "--tag",
-        help="tag that the image should be loaded as. If not "
-        "image will be loaded with tag from the tarball",
-        metavar="name:tag",
-    )
-    @CommandArgument(
-        "image_name",
-        nargs="?",
-        help="Load the image of this name based on the current "
-        "contents of the tree (as built for mozilla-central "
-        "or mozilla-inbound)",
-    )
-    def load_image(self, command_context, image_name, task_id, tag):
-        from taskgraph.docker import load_image_by_name, load_image_by_task_id
-
-        if not image_name and not task_id:
-            print("Specify either IMAGE-NAME or TASK-ID")
-            sys.exit(1)
-        try:
-            if task_id:
-                ok = load_image_by_task_id(task_id, tag)
-            else:
-                ok = load_image_by_name(image_name, tag)
-            if not ok:
-                sys.exit(1)
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
+    def load_image(self, command_context, **kwargs):
+        taskgraph_commands["load-image"].func(kwargs)
 
     @Command(
-        "taskcluster-build-image", category="ci", description="Build a Docker image"
+        "taskcluster-build-image",
+        category="ci",
+        description="Build a Docker image",
+        parser=partial(get_taskgraph_command_parser, "build-image"),
     )
-    @CommandArgument("image_name", help="Name of the image to build")
-    @CommandArgument(
-        "-t", "--tag", help="tag that the image should be built as.", metavar="name:tag"
-    )
-    @CommandArgument(
-        "--context-only",
-        help="File name the context tarball should be written to."
-        "with this option it will only build the context.tar.",
-        metavar="context.tar",
-    )
-    def build_image(self, command_context, image_name, tag, context_only):
-        from taskgraph.docker import build_context, build_image
-
+    def build_image(self, command_context, **kwargs):
         try:
-            if context_only is None:
-                build_image(image_name, tag, os.environ)
-            else:
-                build_context(image_name, context_only, os.environ)
+            taskgraph_commands["build-image"].func(kwargs)
         except Exception:
             traceback.print_exc()
             sys.exit(1)
