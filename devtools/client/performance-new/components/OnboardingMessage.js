@@ -35,7 +35,8 @@ const Localized = createFactory(
 const Services = require("Services");
 const { openDocLink } = require("devtools/client/shared/link");
 
-const LEARN_MORE_URL = "https://profiler.firefox.com/docs";
+const LEARN_MORE_URL =
+  "https://developer.mozilla.org/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler";
 const ONBOARDING_PREF = "devtools.performance.new-panel-onboarding";
 
 /**
