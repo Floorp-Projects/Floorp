@@ -111,6 +111,9 @@
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Mga pangunahing site</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Balikan ang naiwan</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Ipakita lahat</string>
 

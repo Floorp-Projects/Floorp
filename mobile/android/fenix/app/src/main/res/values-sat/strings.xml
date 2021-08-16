@@ -360,7 +360,7 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ᱠᱷᱟᱛᱟ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Preference for enabling url autocomplete-->
-    <string name="preferences_enable_autocomplete_urls">URLs ᱟᱪᱛᱮ ᱯᱩᱨᱟᱹᱣᱼᱜ ᱢᱟ</string>
+    <string name="preferences_enable_autocomplete_urls">URLs ᱟᱡ ᱛᱮ ᱯᱩᱨᱟᱹᱣᱼᱜ ᱢᱟ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ᱞᱤᱝᱠ ᱠᱚ ᱮᱯ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
 
@@ -897,7 +897,7 @@
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">ᱥᱟᱱᱟᱢ ᱥᱟᱭᱤᱴ ᱨᱮ ᱪᱷᱟᱹᱲ ᱠᱚ ᱯᱷᱟᱨᱪᱟᱭ ᱢᱮ</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
-    <string name="preference_browser_feature_autoplay">ᱟᱪᱛᱮ ᱮᱱᱮᱡ</string>
+    <string name="preference_browser_feature_autoplay">ᱟᱡ ᱛᱮ ᱮᱱᱮᱡ</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">ᱠᱮᱢᱨᱟ</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -1122,7 +1122,7 @@
     <string name="preference_accessibility_font_size_title">ᱪᱤᱠᱤ ᱨᱮᱭᱟᱜ ᱢᱟᱯ</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_2">ᱟᱪᱛᱮ ᱪᱤᱠᱤ ᱥᱟᱡᱟᱣ</string>
+    <string name="preference_accessibility_auto_size_2">ᱟᱡ ᱛᱮ ᱪᱤᱠᱤ ᱥᱟᱡᱟᱣ</string>
 
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">ᱪᱤᱠᱤ ᱢᱟᱞ ᱫᱚ ᱮᱱᱰᱨᱚᱭᱮᱰ ᱥᱟᱡᱟᱣ ᱥᱟᱞᱟᱜ ᱥᱚᱢᱟᱱᱚᱜᱼᱟ ᱾ ᱪᱤᱠᱤ ᱢᱟᱯ ᱵᱚᱸᱫᱚ ᱞᱟᱹᱜᱤᱫ ᱱᱚᱰᱮ ᱢᱮᱱᱮᱡ ᱢᱮ ᱾</string>
@@ -1160,9 +1160,9 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">ᱵᱽᱨᱟᱣᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱢᱮ ᱟᱲᱟᱜ ᱜᱷᱚᱲᱤ</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱟᱪᱛᱮ ᱢᱮᱴᱟᱣ ᱛᱟᱦᱮᱱᱟᱭ ᱡᱚᱠᱷᱚᱱ ᱟᱢ \&quot;ᱟᱲᱟᱹᱜ\&quot; ᱵᱟᱪᱷᱟᱣ ᱛᱟᱦᱮᱱᱟᱢ ᱢᱩᱞ ᱢᱮᱱᱩ ᱠᱷᱚᱱ</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱟᱡ ᱛᱮ ᱢᱮᱴᱟᱣ ᱛᱟᱦᱮᱱᱟᱭ ᱡᱚᱠᱷᱚᱱ ᱟᱢ \&quot;ᱟᱲᱟᱹᱜ\&quot; ᱵᱟᱪᱷᱟᱣ ᱛᱟᱦᱮᱱᱟᱢ ᱢᱩᱞ ᱢᱮᱱᱩ ᱠᱷᱚᱱ</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱟᱪᱛᱮ ᱢᱮᱴᱟᱣ ᱛᱟᱦᱮᱱᱟᱭ ᱡᱚᱠᱷᱚᱱ ᱟᱢ \&quot;ᱟᱲᱟᱹᱜ\&quot; ᱵᱟᱪᱷᱟᱣ ᱛᱟᱦᱮᱱᱟᱢ ᱢᱩᱞ ᱢᱮᱱᱩ ᱠᱷᱚᱱ</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱟᱡ ᱛᱮ ᱢᱮᱴᱟᱣ ᱛᱟᱦᱮᱱᱟᱭ ᱡᱚᱠᱷᱚᱱ ᱟᱢ \&quot;ᱟᱲᱟᱹᱜ\&quot; ᱵᱟᱪᱷᱟᱣ ᱛᱟᱦᱮᱱᱟᱢ ᱢᱩᱞ ᱢᱮᱱᱩ ᱠᱷᱚᱱ</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">ᱟᱲᱟᱹᱜ ᱢᱮ</string>
 
@@ -1288,7 +1288,7 @@
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description_2">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱵᱮᱴᱨᱭ ᱵᱚᱪᱚᱛ ᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱢᱮᱫ ᱵᱟᱧᱪᱟᱣ ᱛᱟᱢ ᱧᱩᱛ ᱩᱭᱦᱟᱹᱨ ᱪᱟᱹᱞᱩ ᱠᱟᱛᱮ ᱾</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">ᱟᱪᱛᱮ</string>
+    <string name="onboarding_theme_automatic_title">ᱟᱡ ᱛᱮ</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_summary">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱦᱟᱛᱟᱣ ᱟᱭ</string>
     <!-- Theme setting for dark mode -->
@@ -1485,7 +1485,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">ᱛᱤᱥ ᱦᱚᱸ ᱟᱞᱳᱢ ᱥᱟᱺᱪᱟᱣᱼᱟ</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">ᱟᱪᱛᱮ ᱯᱮᱨᱮᱡᱽ</string>
+    <string name="preferences_passwords_autofill">ᱟᱡ ᱛᱮ ᱯᱮᱨᱮᱡᱽ</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ᱞᱚᱜᱤᱱ ᱠᱚ ᱥᱤᱸᱠ ᱢᱮ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->

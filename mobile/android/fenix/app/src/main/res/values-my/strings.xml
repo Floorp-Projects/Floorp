@@ -50,6 +50,11 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_bookmarks">မကြာသေးမီက သိမ်းဆည်းခဲ့သည်</string>
 
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">လတ်တလောသိမ်းထားသောစာမျက်နှာများ</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">အားလုံးပြပါ</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ကို Mozilla မှ ထုတ်လုပ်သည်။</string>
 
@@ -67,6 +72,9 @@
     <string name="cfr_pos_button_text">ဖြတ်လမ်းထည့်ပါ</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">နေပါစေ</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">အပြင်အဆင်များသို့ သွားပါ</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -141,6 +149,9 @@
 
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">ထည့်ပါ</string>
+
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">ပြင်ဆင်</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -352,6 +363,8 @@
     <string name="preferences_marketing_data">စျေးကွက်ရှာဖွေရေးအချက်အလက်</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">သင်ဘယ် လုပ်ဆောင်ချက်များ ကို %1$s တွင် သုံးသည် ကို ကျွန်တော်တို့၏ မိုဘိုင်း မာကတ်တာ Leanplum နှင့် မျှဝေပေးပါ</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">လေ့လာရေး</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">စမ်းသပ်ချက်များ</string>
     <!-- Summary for experiments preferences -->
@@ -398,6 +411,10 @@
     <string name="preference_auto_battery_theme">ဘက်ထရီချွေတာခြင်းဖြင့်သတ်မှတ်မည်</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">ကိရိယာအခင်းအကျင်းကိုလိုက်နာပါ</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">ပြန်လည်စတင်ရန်ဆွဲပါ</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -491,9 +508,13 @@
     <string name="collection_rename">စုဆောင်းမှုအမည်ပြောင်းပါ</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">တပ်ဗ်များကို ဖွင့်ပါ</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">အမည်ပြောင်းပါ</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">ဖယ်ရှားပါ</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">မှတ်တမ်းမှ ဖျက်ပါ</string>
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">သိမ်းရန်</string>
 
@@ -532,6 +553,12 @@
     <string name="history_older">အဟောင်းတွေ</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">မှတ်တမ်းများ ဒီမှာ မရှိပါ</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">ဖွင့်ပါ</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">ဖယ်ရှားပါ</string>
 
 
     <!-- Crashes -->
@@ -665,6 +692,8 @@
     <string name="preference_option_autoplay_allowed_wifi_subtext">အသံ နှင့် ဗွီဒီယို ကိုဝိုင်ဖိုင်တွင် ဖွင့်နိုင်သည်</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">အသံကိုသာပိတ်ပါ</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">အသံကိုသာပိတ်ပါ</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">အသံ နှင့် ဗီဒီယိုကို ခွင့်ပြုပါ။</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
@@ -770,6 +799,9 @@
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">မှပံ့ပိုးသည်</string>
 
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">စျေးကွက်ရှာဖွေရေး</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">စုဆောင်းမှုကိုဖျက်လိုက်သည်</string>
@@ -856,6 +888,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">သိုလှောင်မှုနေရာလွတ်သည်</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">ဆိုဒ်ခွင့်ပြုချက်များ</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">ဆွဲယူထားသည့်ဖိုင်များ</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">ကြည့်ရှုမှုအချက်အလက်များ ဖျက်ပါ</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -879,6 +913,9 @@
     <string name="preferences_delete_browsing_data_snackbar">ကြည့်ရှုမှုအချက်အလက်များ ဖျက်ပြီး</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">ကြည့်ရှုမှုအချက်အလက်များ ဖျက်နေသည်…</string>
+
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Nightly ကိုရယူပါ</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

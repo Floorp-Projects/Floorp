@@ -4,6 +4,7 @@
     <string name="app_name_private_5">خصوصی %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (خصوصی)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">گزینه‌های بیشتر</string>
@@ -91,13 +92,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">رد کردن</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">طرح بندی برگه های باز را تغییر دهید. به تنظیمات بروید و شبکه را در زیر نمای برگه انتخاب کنید.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">برو به تنظیمات</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">رد کردن</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">زبانه جدید</string>
@@ -166,7 +160,7 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">قدرت گرفته توسط %1$s</string>
     <!-- Browser menu button to put the current page in reader mode -->
-    <string name="browser_menu_read">نمای خواننده</string>
+    <string name="browser_menu_read">نمای مطالعه</string>
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
     <string name="browser_menu_read_close">بستن نمای مطالعه</string>
     <!-- Browser menu button to open the current page in an external app -->
@@ -180,6 +174,10 @@
     <string name="browser_menu_add">افزودن</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">ویرایش</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">صفحه خانگی</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -540,8 +538,6 @@
     <string name="library_new_tab">زبانهٔ جدید</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">پیدا کردن در صفحه</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">زبانه‌های همگام‌سازی شده</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">فهرست خواندن</string>
     <!-- Menu Item Label for Search in Library -->
@@ -1018,6 +1014,8 @@
     <string name="notification_pbm_action_delete_and_open">حذف و باز کنید</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">قدرت گرفته توسط</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">مجموعه حذف شده</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1618,7 +1616,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">رشته جست‌و‌جو برای استفاده</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">درخواست را با “%s” جایگزین کنید. مثال: \nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">درخواست را با “%s” جایگزین کنید. مثال: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">بیشتر بدانید</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->

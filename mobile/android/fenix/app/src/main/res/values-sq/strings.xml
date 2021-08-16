@@ -4,6 +4,7 @@
     <string name="app_name_private_5">%s Privat</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Privat)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Më tepër mundësi</string>
@@ -45,6 +46,17 @@
     <string name="tab_tray_enter_multiselect_content_description">U hy në mënyrën përzgjedhje e shumëfishtë, përzgjidhni skeda që të ruhen te një koleksion</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">E përzgjedhur</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Ruajtur së fundi</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Faqerojtës ruajtur së fundi</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Shfaqi krejt</string>
+
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Shfaq butonin e krejt faqerojtësve të ruajtur</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s prodhohet nga Mozilla.</string>
@@ -99,6 +111,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Sajte kryesues</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Hidhu mbrapa</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Shfaqi krejt</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1024,6 +1042,17 @@
     <string name="notification_pbm_action_delete_and_open">Fshije dhe Hape</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Bazuar Në</string>
+
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketing</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s është i shpejtë dhe privat</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Bëjeni %1$s-in shfletuesin tuaj parazgjedhje</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Koleksioni u fshi</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1572,9 +1601,9 @@
     <string name="credit_cards_card_number">Numër Karte</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Datë Skadimi</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Muaj Date Skadimi</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Vit Date Skadimi</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Emër në Kartë</string>
@@ -1633,7 +1662,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Varg kërkimi për t’u përdorur</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Zëvendësoni kërkesën me “%s”. Shembull:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Zëvendësoni kërkesën me “%s”. Shembull:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Mësoni Më Tepër</string>
 

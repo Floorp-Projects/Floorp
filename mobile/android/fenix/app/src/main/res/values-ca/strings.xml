@@ -1009,7 +1009,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Usades recentment</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Inicia la sessió per sincronitzar</string>
+    <string name="sync_menu_sign_in">Inicia sessió per sincronitzar</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Inicia la sessió al Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
