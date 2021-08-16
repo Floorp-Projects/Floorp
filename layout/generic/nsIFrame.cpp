@@ -6917,7 +6917,7 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const {
   nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
   nsPoint rootScreenPos(0, 0);
   nsPoint rootFrameOffsetInParent(0, 0);
-  nsIFrame* rootFrameParent = nsLayoutUtils::GetCrossDocParentFrame(
+  nsIFrame* rootFrameParent = nsLayoutUtils::GetCrossDocParentFrameInProcess(
       rootFrame, &rootFrameOffsetInParent);
   if (rootFrameParent) {
     nsRect parentScreenRectAppUnits =
