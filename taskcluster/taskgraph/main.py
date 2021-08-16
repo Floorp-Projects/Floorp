@@ -290,14 +290,14 @@ def image_digest(args):
 @argument(
     "--message",
     required=False,
-    help="(ignored - deprecated)",
+    help=argparse.SUPPRESS,
 )
 @argument(
     "--project",
     required=True,
     help="Project to use for creating task graph. Example: --project=try",
 )
-@argument("--pushlog-id", dest="pushlog_id", required=True, default=0)
+@argument("--pushlog-id", dest="pushlog_id", required=True, default="0")
 @argument("--pushdate", dest="pushdate", required=True, type=int, default=0)
 @argument("--owner", required=True, help="email address of who owns this graph")
 @argument("--level", required=True, help="SCM level of this repository")
@@ -305,7 +305,9 @@ def image_digest(args):
     "--target-tasks-method", help="method for selecting the target tasks to generate"
 )
 @argument(
-    "--repository-type", required=True, help='Type of repository, either "hg" or "git"'
+    "--repository-type",
+    required=True,
+    help='Type of repository, either "hg" or "git"',
 )
 @argument("--base-repository", required=True, help='URL for "base" repository to clone')
 @argument(
