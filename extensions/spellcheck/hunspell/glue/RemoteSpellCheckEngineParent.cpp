@@ -53,17 +53,6 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheckAsync(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheckAndSuggest(
-    const nsString& aWord, bool* aIsMisspelled,
-    nsTArray<nsString>* aSuggestions) {
-  nsresult rv = mSpellChecker->CheckWord(aWord, aIsMisspelled, aSuggestions);
-  if (NS_FAILED(rv)) {
-    aSuggestions->Clear();
-    *aIsMisspelled = false;
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSuggest(
     const nsString& aWord, uint32_t aCount, SuggestResolver&& aResolve) {
   nsTArray<nsString> suggestions;
