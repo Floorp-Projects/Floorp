@@ -17,8 +17,19 @@ SoftwareVsyncSource::SoftwareVsyncSource() {
 }
 
 SoftwareVsyncSource::~SoftwareVsyncSource() {
-  MOZ_ASSERT(NS_IsMainThread());
+  // VsyncSource::Display must be destroyed on the main thread.
+  // Take a strong-ref and enqueue a task for the main thread to release it.
+  auto strongRef = mGlobalDisplay;
   mGlobalDisplay = nullptr;
+
+  if (!NS_IsMainThread()) {
+    const auto fnRun = [strongRef]() {};  // Copy the strong-ref.
+    strongRef = nullptr;
+
+    already_AddRefed<mozilla::Runnable> runnable =
+        NS_NewRunnableFunction("enqueue ~SoftwareDisplay", fnRun);
+    NS_DispatchToMainThread(std::move(runnable), 0);
+  }
 }
 
 SoftwareDisplay::SoftwareDisplay() : mVsyncEnabled(false) {

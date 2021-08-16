@@ -159,12 +159,26 @@ nsRFPService* nsRFPService::GetOrCreate() {
   return sRFPService;
 }
 
+constexpr double RFP_TIME_ATOM_MS = 16.667;  // 60Hz, 1000/60 but rounded.
+/*
+In RFP RAF always runs at 60Hz, so we're ~0.02% off of 1000/60 here.
+```js
+extra_frames_per_frame = 16.667 / (1000/60) - 1 // 0.00028
+sec_per_extra_frame = 1 / (extra_frames_per_frame * 60) // 833.33
+min_per_extra_frame = sec_per_extra_frame / 60 // 13.89
+```
+We expect an extra frame every ~14 minutes, which is enough to be smooth.
+16.67 would be ~1.4 minutes, which is OK, but is more noticable.
+Put another way, if this is the only unacceptable hitch you have across 14
+minutes, I'm impressed, and we might revisit this.
+*/
+
 /* static */
 double nsRFPService::TimerResolution() {
   double prefValue = StaticPrefs::
       privacy_resistFingerprinting_reduceTimerPrecision_microseconds();
   if (StaticPrefs::privacy_resistFingerprinting()) {
-    return std::max(100000.0, prefValue);
+    return std::max(RFP_TIME_ATOM_MS * 1000.0, prefValue);
   }
   return prefValue;
 }
