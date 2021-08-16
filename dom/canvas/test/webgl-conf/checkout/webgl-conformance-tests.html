@@ -52,7 +52,7 @@ found in the LICENSE.txt file.
     position:fixed;
     top:180px;
     left:0;
-    right:10%;
+    right: calc(10% + 50px);
     bottom:0px;
     overflow:auto;
     min-height: 200px;
@@ -90,7 +90,7 @@ found in the LICENSE.txt file.
     width: 90%;
     height: calc(100% - 170px);
     bottom: 0px;
-    left: calc(91% - 15px);
+    left: calc(90% - 50px);
     transition: left 0.15s;
   }
   #iframe-container.iframe-shown {
@@ -193,7 +193,7 @@ window.onbeforeunload = function() {
   return false;
 }
 
-var DEFAULT_CONFORMANCE_TEST_VERSION = "1.0.4 (beta)";
+var DEFAULT_CONFORMANCE_TEST_VERSION = "2.0.1 (beta)";
 
 var OPTIONS = {
   version: DEFAULT_CONFORMANCE_TEST_VERSION,
