@@ -42,14 +42,17 @@ internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
  * @property engineView The [EngineView]] this feature component should show context menus for.
  * @param tabId Optional id of a tab. Instead of showing context menus for the currently selected tab this feature will
  * show only context menus for this tab if an id is provided.
+ * @param additionalNote which it will be attached to the bottom of context menu but for a specific [HitResult]
  */
+@Suppress("LongParameterList")
 class ContextMenuFeature(
     private val fragmentManager: FragmentManager,
     private val store: BrowserStore,
     private val candidates: List<ContextMenuCandidate>,
     private val engineView: EngineView,
     private val useCases: ContextMenuUseCases,
-    private val tabId: String? = null
+    private val tabId: String? = null,
+    private val additionalNote: (HitResult) -> String? = { null }
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 
@@ -104,7 +107,7 @@ class ContextMenuFeature(
         // We know that we are going to show a context menu. Now is the time to perform the haptic feedback.
         engineView.asView().performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
-        val fragment = ContextMenuFragment.create(tab, hitResult.getLink(), ids, labels)
+        val fragment = ContextMenuFragment.create(tab, hitResult.getLink(), ids, labels, additionalNote(hitResult))
         fragment.feature = this
         fragment.show(fragmentManager, FRAGMENT_TAG)
     }

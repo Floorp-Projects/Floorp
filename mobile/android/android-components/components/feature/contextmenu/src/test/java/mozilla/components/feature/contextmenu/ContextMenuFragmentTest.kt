@@ -31,8 +31,9 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val title = "Hello World"
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
         doReturn(testContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
@@ -49,8 +50,9 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val title = "Hello World"
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         val inflater = LayoutInflater.from(testContext)
         val view = fragment.createDialogTitleView(inflater)
@@ -67,8 +69,9 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val title = "Hello World"
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         val inflater = LayoutInflater.from(testContext)
         val view = fragment.createDialogTitleView(inflater)
@@ -88,8 +91,10 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val title = "Hello World"
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
-        val fragment = ContextMenuFragment.create(tab, title, ids, labels)
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
+        doReturn(testContext).`when`(fragment).requireContext()
 
         val inflater = LayoutInflater.from(testContext)
         val view = fragment.createDialogContentView(inflater)
@@ -118,8 +123,10 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val title = "Hello World"
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
+        doReturn(testContext).`when`(fragment).requireContext()
         doNothing().`when`(fragment).dismiss()
 
         val inflater = LayoutInflater.from(testContext)
@@ -140,10 +147,11 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val title = "Hello World"
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val feature: ContextMenuFeature = mock()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
         fragment.feature = feature
         doNothing().`when`(fragment).dismiss()
 
@@ -159,11 +167,12 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
         val titleString = "test title"
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.IMAGE("https://www.mozilla.org", titleString)
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals(titleString, fragment.title)
     }
@@ -174,11 +183,12 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
         val titleString = " "
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.IMAGE("https://www.mozilla.org", titleString)
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("https://www.mozilla.org", fragment.title)
     }
@@ -188,11 +198,12 @@ class ContextMenuFragmentTest {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.IMAGE("https://www.mozilla.org")
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("https://www.mozilla.org", fragment.title)
     }
@@ -202,11 +213,12 @@ class ContextMenuFragmentTest {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.IMAGE_SRC("https://www.mozilla.org", "https://another.com")
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("https://another.com", fragment.title)
     }
@@ -216,11 +228,12 @@ class ContextMenuFragmentTest {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.UNKNOWN("https://www.mozilla.org")
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("https://www.mozilla.org", fragment.title)
     }
@@ -231,11 +244,12 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
         val titleString = " "
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.AUDIO("https://www.mozilla.org", titleString)
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("https://www.mozilla.org", fragment.title)
     }
@@ -245,11 +259,12 @@ class ContextMenuFragmentTest {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.AUDIO("https://www.mozilla.org")
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("https://www.mozilla.org", fragment.title)
     }
@@ -260,11 +275,12 @@ class ContextMenuFragmentTest {
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
         val titleString = " "
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.VIDEO("https://www.mozilla.org", titleString)
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("https://www.mozilla.org", fragment.title)
     }
@@ -274,11 +290,12 @@ class ContextMenuFragmentTest {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.VIDEO("https://www.mozilla.org")
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("https://www.mozilla.org", fragment.title)
     }
@@ -288,11 +305,12 @@ class ContextMenuFragmentTest {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.EMAIL("https://www.mozilla.org")
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("about:blank", fragment.title)
     }
@@ -302,11 +320,12 @@ class ContextMenuFragmentTest {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.GEO("https://www.mozilla.org")
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("about:blank", fragment.title)
     }
@@ -316,11 +335,12 @@ class ContextMenuFragmentTest {
         val ids = listOf("A", "B", "C")
         val labels = listOf("Item A", "Item B", "Item C")
         val tab = createTab("https://www.mozilla.org")
+        val additionalNote = "Additional note"
 
         val hitResult = HitResult.PHONE("https://www.mozilla.org")
         val title = hitResult.getLink()
 
-        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels))
+        val fragment = spy(ContextMenuFragment.create(tab, title, ids, labels, additionalNote))
 
         assertEquals("about:blank", fragment.title)
     }
