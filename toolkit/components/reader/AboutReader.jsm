@@ -1248,6 +1248,12 @@ AboutReader.prototype = {
 
       // TODO: Show the corresponding CTA version. This is just a placeholder visualization.
       elPocketCTAWrapper.classList.add(`pocket-cta-container-${ctaVersion}`);
+
+      this._doc
+        .querySelector(`.pocket-dismiss-cta`)
+        .addEventListener(`click`, e => {
+          elPocketCTAWrapper.hidden = true;
+        });
     }
   },
 };

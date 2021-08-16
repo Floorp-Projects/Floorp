@@ -10,6 +10,7 @@
   <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
   <meta name="viewport" content="width=device-width; user-scalable=0" />
   <link rel="stylesheet" href="chrome://global/skin/aboutReader.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://global/skin/aboutReaderPocket.css" type="text/css"/>
 </head>
 
 <body>
@@ -69,8 +70,17 @@
       <div class="reader-message"></div>
     </div>
     <div aria-owns="toolbar"></div>
+  </div>
 
-    <div id="pocket-cta-container" hidden></div>
+  <div id="pocket-cta-container" hidden>
+    <div class="pocket-cta-inner" id="pocket-cta-only">
+      <div class="pocket-cta">
+        <header class="pocket-cta-header">Save anything from across the web in Pocket, your personal library.</header>
+        <p class="pocket-cta-subhead">As part of the Firefox family, Pocket provides a quiet, calm space that’s perfect for reading. It strips away all the distractions of the internet so you can really focus.</p>
+        <a href="https://getpocket.com/signup" class="pocket-button pocket-sign-up"><strong>Sign Up</strong> - it's free</a>
+      </div>
+      <button class="pocket-dismiss-cta"></button>
+    </div>
   </div>
 </body>
 
