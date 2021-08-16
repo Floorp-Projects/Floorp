@@ -70,7 +70,7 @@ class LSRequestResponse;
  * parent Datastore at the moment the Snapshot was created.
  */
 class LSObject final : public Storage {
-  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+  using PrincipalInfo = mozilla::ipc::PrincipalInfo;
 
   friend nsGlobalWindowInner;
 
