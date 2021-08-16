@@ -112,7 +112,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        api-level: [28]
+        api-level: [30]
         target: [google_apis]
     steps:
       - name: Checkout
@@ -123,7 +123,7 @@ jobs:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
           arch: x86_64
-          profile: pixel_2
+          profile: pixel_3
           script:
             "JAVA_HOME=$JAVA_HOME_11_X64 && ./gradlew connectedFocusDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
             org.mozilla.focus.activity.ThreeDotMainMenuTest#browserMenuItemsTest"
