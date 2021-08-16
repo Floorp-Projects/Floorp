@@ -44,7 +44,7 @@ class QuotaManager;
 class QuotaManagerService final : public nsIQuotaManagerService,
                                   public nsIObserver,
                                   public hal::BatteryObserver {
-  typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
+  using PBackgroundChild = mozilla::ipc::PBackgroundChild;
 
   class BackgroundCreateCallback;
   class PendingRequestInfo;
