@@ -1776,11 +1776,12 @@ os.environment:
   launch_method:
     bug_numbers:
       - 1685213
+      - 1725298
     description: >
       Records how Firefox was started on Windows.
       Currently will be one of "Desktop", "StartMenu" (including pins),
       "Taskbar", "OtherShortcut", or "Other"
-    expires: "94"
+    expires: "100"
     kind: string
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
@@ -1814,8 +1815,9 @@ os.environment:
   is_taskbar_pinned:
     bug_numbers:
       - 1685213
+      - 1725298
     description: Whether this app was pinned to taskbar on startup
-    expires: "94"
+    expires: "100"
     kind: boolean
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
