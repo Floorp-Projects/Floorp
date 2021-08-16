@@ -72,7 +72,7 @@
 #include "LayerUserData.h"
 #include "ClientLayerManager.h"
 #include "mozilla/dom/NotifyPaintEvent.h"
-
+#include "nsFontCache.h"
 #include "nsFrameLoader.h"
 #include "nsContentUtils.h"
 #include "nsPIWindowRoot.h"
@@ -140,9 +140,9 @@ bool nsPresContext::IsDOMPaintEventPending() {
 }
 
 void nsPresContext::ForceReflowForFontInfoUpdate() {
-  // Flush the device context's font cache, so that we won't risk getting
+  // Flush the font cache, so that we won't risk getting
   // stale nsFontMetrics objects from it.
-  DeviceContext()->FlushFontCache();
+  FlushFontCache();
 
   // If there's a user font set, discard any src:local() faces it may have
   // loaded because their font entries may no longer be valid.
@@ -288,6 +288,11 @@ void nsPresContext::Destroy() {
     mEventManager->NotifyDestroyPresContext(this);
     mEventManager->SetPresContext(nullptr);
     mEventManager = nullptr;
+  }
+
+  if (mFontCache) {
+    mFontCache->Destroy();
+    mFontCache = nullptr;
   }
 
   // Unregister preference callbacks
@@ -468,9 +473,7 @@ void nsPresContext::AppUnitsPerDevPixelChanged() {
 
   InvalidatePaintedLayers();
 
-  if (mDeviceContext) {
-    mDeviceContext->FlushFontCache();
-  }
+  FlushFontCache();
 
   MediaFeatureValuesChanged(
       {RestyleHint::RecascadeSubtree(), NS_STYLE_HINT_REFLOW,
@@ -677,7 +680,7 @@ void nsPresContext::UpdateAfterPreferencesChanged() {
   mPresShell->UpdatePreferenceStyles();
 
   InvalidatePaintedLayers();
-  mDeviceContext->FlushFontCache();
+  FlushFontCache();
 
   // Preferences require rerunning selector matching because we rebuild
   // the pref style sheet for some preference changes.
@@ -705,7 +708,7 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
   }
 
   if (mDeviceContext->SetFullZoom(mFullZoom)) {
-    mDeviceContext->FlushFontCache();
+    FlushFontCache();
   }
   mCurAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
 
@@ -776,6 +779,39 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
   mInitialized = true;
 #endif
 
+  return NS_OK;
+}
+
+void nsPresContext::InitFontCache() {
+  if (!mFontCache) {
+    mFontCache = new nsFontCache();
+    mFontCache->Init(this);
+  }
+}
+
+void nsPresContext::UpdateFontCacheUserFonts(gfxUserFontSet* aUserFontSet) {
+  if (mFontCache) {
+    mFontCache->UpdateUserFonts(aUserFontSet);
+  }
+}
+
+already_AddRefed<nsFontMetrics> nsPresContext::GetMetricsFor(
+    const nsFont& aFont, const nsFontMetrics::Params& aParams) {
+  InitFontCache();
+  return mFontCache->GetMetricsFor(aFont, aParams);
+}
+
+nsresult nsPresContext::FlushFontCache(void) {
+  if (mFontCache) {
+    mFontCache->Flush();
+  }
+  return NS_OK;
+}
+
+nsresult nsPresContext::FontMetricsDeleted(const nsFontMetrics* aFontMetrics) {
+  if (mFontCache) {
+    mFontCache->FontMetricsDeleted(aFontMetrics);
+  }
   return NS_OK;
 }
 
@@ -894,7 +930,7 @@ void nsPresContext::DetachPresShell() {
 
 void nsPresContext::DocumentCharSetChanged(NotNull<const Encoding*> aCharSet) {
   UpdateCharSet(aCharSet);
-  mDeviceContext->FlushFontCache();
+  FlushFontCache();
 
   // If a document contains one or more <script> elements, frame construction
   // might happen earlier than the UpdateCharSet(), so we need to restyle

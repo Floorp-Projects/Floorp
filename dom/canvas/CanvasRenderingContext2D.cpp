@@ -2419,14 +2419,14 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
   }
 
   virtual float GetExLength() const override {
-    nsDeviceContext* dc = mPresContext->DeviceContext();
     nsFontMetrics::Params params;
     params.language = mFontLanguage;
     params.explicitLanguage = mExplicitLanguage;
     params.textPerf = mPresContext->GetTextPerfMetrics();
     params.fontStats = mPresContext->GetFontMatchingStats();
     params.featureValueLookup = mPresContext->GetFontFeatureValuesLookup();
-    RefPtr<nsFontMetrics> fontMetrics = dc->GetMetricsFor(mFont, params);
+    RefPtr<nsFontMetrics> fontMetrics =
+        mPresContext->GetMetricsFor(mFont, params);
     return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
                                    AppUnitsPerCSSPixel());
   }
@@ -3264,8 +3264,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   params.userFontSet = c->GetUserFontSet();
   params.textPerf = c->GetTextPerfMetrics();
   params.fontStats = c->GetFontMatchingStats();
-  RefPtr<nsFontMetrics> metrics =
-      c->DeviceContext()->GetMetricsFor(resizedFont, params);
+  RefPtr<nsFontMetrics> metrics = c->GetMetricsFor(resizedFont, params);
 
   gfxFontGroup* newFontGroup = metrics->GetThebesFontGroup();
   CurrentState().fontGroup = newFontGroup;
