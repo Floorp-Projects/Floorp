@@ -34,7 +34,7 @@ class LocalStorageCacheBridge;
 class StorageUsageBridge;
 class StorageUsage;
 
-typedef mozilla::storage::StatementCache<mozIStorageStatement> StatementCache;
+using StatementCache = mozilla::storage::StatementCache<mozIStorageStatement>;
 
 // XXX Fix me!
 //     1. Move comments to StorageDBThread/StorageDBChild.
@@ -129,7 +129,7 @@ class StorageDBThread final {
   // (pre)loading the whole origin data, cleaning.
   class DBOperation {
    public:
-    typedef enum {
+    enum OperationType {
       // Only operation that reads data from the database
       opPreload,
       // The same as opPreload, just executed with highest priority
@@ -155,7 +155,7 @@ class StorageDBThread final {
       opClearMatchingOrigin,
       // Clear all data matching an OriginAttributesPattern regardless a domain
       opClearMatchingOriginAttributes,
-    } OperationType;
+    };
 
     explicit DBOperation(const OperationType aType,
                          LocalStorageCacheBridge* aCache = nullptr,
