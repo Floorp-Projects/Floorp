@@ -27,3 +27,4 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == view-source:bug673094-1.
 == bug1636607-1.html bug1636607-1-ref.html
 == bug1636607-2.html bug1636607-2-ref.html
 == view-source:bug1319410-1.html bug1319410-1-ref.html
+== view-source:bug1650087-1.html bug1650087-1-ref.html
