@@ -1,0 +1,93 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ *  This defines the look-and-feel styling of the error pages.
+ *  (see: netError.xhtml)
+ *
+ *  Original styling by William Price <bugzilla@mob.rice.edu>
+ *  Updated by: Michael Ventnor <m.ventnor@gmail.com>
+ */
+
+html {
+  background: -moz-Dialog;
+}
+
+body {
+  margin: 0;
+  padding: 0 1em;
+  color: FieldText;
+  font: message-box;
+}
+
+h1 {
+  margin: 0 0 .6em 0;
+  border-bottom: 1px solid ThreeDLightShadow;
+  font-size: 160%;
+}
+
+ul, ol {
+  margin: 0;
+  margin-inline-start: 1.5em;
+  padding: 0;
+}
+
+ul > li, ol > li {
+  margin-bottom: .5em;
+}
+
+ul {
+  list-style: square;
+}
+
+#errorPageContainer {
+  position: relative;
+  min-width: 13em;
+  max-width: 52em;
+  margin: 4em auto;
+  border: 1px solid ThreeDShadow;
+  border-radius: 10px;
+  padding: 3em;
+  padding-inline-start: 30px;
+  background-color: Field;
+}
+
+#errorLongContent,
+#errorTitle {
+  margin-inline-start: 80px;
+}
+
+#errorShortDesc > p {
+  overflow: auto;
+  border-bottom: 1px solid ThreeDLightShadow;
+  padding-bottom: 1em;
+  font-size: 130%;
+  white-space: pre-wrap;
+}
+
+#errorLongDesc {
+  padding-inline-end: 3em;
+  font-size: 110%;
+}
+
+#errorTryAgain {
+  margin-top: 2em;
+  margin-inline-start: 80px;
+}
+
+#errorContainer {
+  display: none;
+}
+
+#securityOverrideDiv {
+  padding-top: 10px;
+}
+
+#securityOverrideContent {
+  background-color: InfoBackground;
+  color: InfoText;
+  padding: 10px;
+  border-radius: 10px;
+  display: none;
+}
