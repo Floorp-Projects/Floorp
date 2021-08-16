@@ -2992,6 +2992,12 @@ void nsFocusManager::UpdateCaret(bool aMoveCaretToFocus, bool aUpdateVisibility,
     MoveCaretToFocus(presShell, aContent);
   }
 
+  // The above MoveCaretToFocus call may run scripts which
+  // may clear mFocusWindow
+  if (!mFocusedWindow) {
+    return;
+  }
+
   if (!aUpdateVisibility) {
     return;
   }
