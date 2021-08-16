@@ -132,7 +132,7 @@ void errExpectedSystemId();
 
 void errMissingSpaceBeforeDoctypeName();
 
-void errHyphenHyphenBang();
+void errNestedComment();
 
 void errNcrControlChar();
 
