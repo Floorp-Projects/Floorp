@@ -9,6 +9,7 @@ fboinvalidate/00_test_list.txt
 fborender/00_test_list.txt
 fragmentoutput/00_test_list.txt
 framebufferblit/00_test_list.txt
+multisample/00_test_list.txt
 primitiverestart/00_test_list.txt
 shaderindexing/00_test_list.txt
 shadermatrix/00_test_list.txt
@@ -43,7 +44,6 @@ instancedrendering.html
 integerstatequery.html
 internalformatquery.html
 lifetime.html
-multisample.html
 negativebufferapi.html
 negativefragmentapi.html
 negativeshaderapi.html
