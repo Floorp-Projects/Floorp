@@ -9364,6 +9364,8 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
   ApplySizeConstraints();
 }
 
+nsWindow* nsWindow::GetFocusedWindow() { return gFocusWindow; }
+
 #ifdef MOZ_WAYLAND
 void nsWindow::SetEGLNativeWindowSize(
     const LayoutDeviceIntSize& aEGLWindowSize) {
@@ -9374,8 +9376,6 @@ void nsWindow::SetEGLNativeWindowSize(
                                             aEGLWindowSize.height);
   moz_container_wayland_set_scale_factor(mContainer);
 }
-
-nsWindow* nsWindow::GetFocusedWindow() { return gFocusWindow; }
 #endif
 
 LayoutDeviceIntSize nsWindow::GetMozContainerSize() {
