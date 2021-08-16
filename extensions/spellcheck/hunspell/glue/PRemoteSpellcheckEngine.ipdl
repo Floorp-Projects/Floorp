@@ -14,8 +14,6 @@ parent:
 
   async CheckAsync(nsString[] aWord) returns (bool[] aIsMisspelled);
 
-  sync CheckAndSuggest(nsString aWord) returns (bool aIsMisspelled, nsString[] aSuggestions);
-
   sync SetDictionary(nsCString aDictionary) returns (bool success);
 
   async Suggest(nsString aWord, uint32_t aCount) returns (nsString[] aSuggestions);
