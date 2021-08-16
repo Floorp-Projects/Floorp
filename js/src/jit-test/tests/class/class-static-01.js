@@ -1,4 +1,4 @@
-// |jit-test| --enable-class-static-blocks;
+// |jit-test| 
 load(libdir + "asserts.js");
 
 // Parse

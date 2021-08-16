@@ -1,4 +1,4 @@
-// |jit-test| --enable-class-static-blocks
+// |jit-test|
 
 // Test that the sourceStart/sourceEnd values of scripts match the current
 // expectations. These values are internal details and slightly arbitrary so

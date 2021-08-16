@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) shell-option(--enable-class-static-blocks)
+// |reftest| skip-if(!xulRuntime.shell)
 // Classes
 function testClassStaticBlock() {
 
