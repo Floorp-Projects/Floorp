@@ -22,7 +22,7 @@ class gfxContext;
 class gfxFontGroup;
 class gfxUserFontSet;
 class gfxTextPerfMetrics;
-class nsDeviceContext;
+class nsPresContext;
 class nsAtom;
 struct nsBoundingMetrics;
 struct FontMatchingStats;
@@ -40,7 +40,7 @@ class DrawTarget;
  * nsFontList. The style system uses the nsFont struct for various
  * font properties, one of which is font-family, which can contain a
  * *list* of font names. The nsFont struct is "realized" by asking the
- * device context to cough up an nsFontMetrics object, which contains
+ * pres context to cough up an nsFontMetrics object, which contains
  * a list of real font handles, one for each font mentioned in
  * font-family (and for each fallback when we fall off the end of that
  * list).
@@ -68,14 +68,14 @@ class nsFontMetrics final {
   };
 
   nsFontMetrics(const nsFont& aFont, const Params& aParams,
-                nsDeviceContext* aContext);
+                nsPresContext* aContext);
 
   // Used by stylo
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsFontMetrics)
 
   /**
    * Destroy this font metrics. This breaks the association between
-   * the font metrics and the device context.
+   * the font metrics and the pres context.
    */
   void Destroy();
 
@@ -250,9 +250,9 @@ class nsFontMetrics final {
   nsFont mFont;
   RefPtr<gfxFontGroup> mFontGroup;
   RefPtr<nsAtom> mLanguage;
-  // Pointer to the device context for which this fontMetrics object was
+  // Pointer to the pres context for which this fontMetrics object was
   // created.
-  nsDeviceContext* MOZ_NON_OWNING_REF mDeviceContext;
+  nsPresContext* MOZ_NON_OWNING_REF mPresContext;
   int32_t mP2A;
 
   // The font orientation (horizontal or vertical) for which these metrics

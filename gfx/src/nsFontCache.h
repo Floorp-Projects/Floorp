@@ -18,7 +18,7 @@
 
 class gfxUserFontSet;
 class nsAtom;
-class nsDeviceContext;
+class nsPresContext;
 struct nsFont;
 
 class nsFontCache final : public nsIObserver {
@@ -28,7 +28,7 @@ class nsFontCache final : public nsIObserver {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  void Init(nsDeviceContext* aContext);
+  void Init(nsPresContext* aContext);
   void Destroy();
 
   already_AddRefed<nsFontMetrics> GetMetricsFor(
@@ -52,7 +52,7 @@ class nsFontCache final : public nsIObserver {
 
   ~nsFontCache() = default;
 
-  nsDeviceContext* mContext;  // owner
+  nsPresContext* mContext;  // owner
   RefPtr<nsAtom> mLocaleLanguage;
 
   // We may not flush older entries immediately the array reaches

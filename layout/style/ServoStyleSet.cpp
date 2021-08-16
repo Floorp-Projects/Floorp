@@ -348,7 +348,7 @@ void ServoStyleSet::PreTraverseSync() {
     uint64_t generation = userFontSet->GetGeneration();
     if (generation != mUserFontSetUpdateGeneration) {
       mDocument->GetFonts()->CacheFontLoadability();
-      presContext->DeviceContext()->UpdateFontCacheUserFonts(userFontSet);
+      presContext->UpdateFontCacheUserFonts(userFontSet);
       mUserFontSetUpdateGeneration = generation;
     }
   }

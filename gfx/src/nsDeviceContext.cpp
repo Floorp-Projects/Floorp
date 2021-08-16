@@ -63,43 +63,7 @@ nsDeviceContext::nsDeviceContext()
   MOZ_ASSERT(NS_IsMainThread(), "nsDeviceContext created off main thread");
 }
 
-nsDeviceContext::~nsDeviceContext() {
-  if (mFontCache) {
-    mFontCache->Destroy();
-  }
-}
-
-void nsDeviceContext::InitFontCache() {
-  if (!mFontCache) {
-    mFontCache = new nsFontCache();
-    mFontCache->Init(this);
-  }
-}
-
-void nsDeviceContext::UpdateFontCacheUserFonts(gfxUserFontSet* aUserFontSet) {
-  if (mFontCache) {
-    mFontCache->UpdateUserFonts(aUserFontSet);
-  }
-}
-
-already_AddRefed<nsFontMetrics> nsDeviceContext::GetMetricsFor(
-    const nsFont& aFont, const nsFontMetrics::Params& aParams) {
-  InitFontCache();
-  return mFontCache->GetMetricsFor(aFont, aParams);
-}
-
-nsresult nsDeviceContext::FlushFontCache(void) {
-  if (mFontCache) mFontCache->Flush();
-  return NS_OK;
-}
-
-nsresult nsDeviceContext::FontMetricsDeleted(
-    const nsFontMetrics* aFontMetrics) {
-  if (mFontCache) {
-    mFontCache->FontMetricsDeleted(aFontMetrics);
-  }
-  return NS_OK;
-}
+nsDeviceContext::~nsDeviceContext() = default;
 
 bool nsDeviceContext::IsPrinterContext() { return mPrintTarget != nullptr; }
 
