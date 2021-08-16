@@ -197,8 +197,8 @@ int DAV1DDecoder::GetPicture(DecodedData& aData, MediaResult& aResult) {
   }
 
   return gfxUtils::CicpToColorSpace(
-      static_cast<qcms_MatrixCoefficients>(aPicture.seq_hdr->mtrx),
-      static_cast<qcms_ColourPrimaries>(aPicture.seq_hdr->pri), aLogger);
+      static_cast<gfx::CICP::MatrixCoefficients>(aPicture.seq_hdr->mtrx),
+      static_cast<gfx::CICP::ColourPrimaries>(aPicture.seq_hdr->pri), aLogger);
 }
 
 already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(

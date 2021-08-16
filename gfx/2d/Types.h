@@ -198,6 +198,117 @@ inline bool IsOpaque(SurfaceFormat aFormat) {
   }
 }
 
+// These are standardized Coding-independent Code Points
+// See [Rec. ITU-T H.273
+// (12/2016)](https://www.itu.int/rec/T-REC-H.273-201612-I/en)
+//
+// We deliberately use an unscoped enum with fixed uint8_t representation since
+// all possible values [0, 255] are legal, but it's unwieldy to declare 200+
+// "RESERVED" enumeration values. Having a fixed underlying type avoids any
+// potential UB and avoids the need for a cast when passing these values across
+// FFI to functions like qcms_profile_create_cicp.
+namespace CICP {
+enum ColourPrimaries : uint8_t {
+  CP_RESERVED_MIN = 0,  // 0, 3, [13, 21], [23, 255] are all reserved
+  CP_BT709 = 1,
+  CP_UNSPECIFIED = 2,
+  CP_BT470M = 4,
+  CP_BT470BG = 5,
+  CP_BT601 = 6,
+  CP_SMPTE240 = 7,
+  CP_GENERIC_FILM = 8,
+  CP_BT2020 = 9,
+  CP_XYZ = 10,
+  CP_SMPTE431 = 11,
+  CP_SMPTE432 = 12,
+  CP_EBU3213 = 22,
+};
+
+inline bool IsReserved(ColourPrimaries aIn) {
+  switch (aIn) {
+    case CP_BT709:
+    case CP_UNSPECIFIED:
+    case CP_BT470M:
+    case CP_BT470BG:
+    case CP_BT601:
+    case CP_SMPTE240:
+    case CP_GENERIC_FILM:
+    case CP_BT2020:
+    case CP_XYZ:
+    case CP_SMPTE431:
+    case CP_SMPTE432:
+    case CP_EBU3213:
+      return false;
+    default:
+      return true;
+  }
+}
+
+enum TransferCharacteristics : uint8_t {
+  TC_RESERVED_MIN = 0,  // 0, 3, [19, 255] are all reserved
+  TC_BT709 = 1,
+  TC_UNSPECIFIED = 2,
+  TC_BT470M = 4,
+  TC_BT470BG = 5,
+  TC_BT601 = 6,
+  TC_SMPTE240 = 7,
+  TC_LINEAR = 8,
+  TC_LOG_100 = 9,
+  TC_LOG_100_SQRT10 = 10,
+  TC_IEC61966 = 11,
+  TC_BT_1361 = 12,
+  TC_SRGB = 13,
+  TC_BT2020_10BIT = 14,
+  TC_BT2020_12BIT = 15,
+  TC_SMPTE2084 = 16,
+  TC_SMPTE428 = 17,
+  TC_HLG = 18,
+};
+
+inline bool IsReserved(TransferCharacteristics aIn) {
+  switch (aIn) {
+    case TC_BT709:
+    case TC_UNSPECIFIED:
+    case TC_BT470M:
+    case TC_BT470BG:
+    case TC_BT601:
+    case TC_SMPTE240:
+    case TC_LINEAR:
+    case TC_LOG_100:
+    case TC_LOG_100_SQRT10:
+    case TC_IEC61966:
+    case TC_BT_1361:
+    case TC_SRGB:
+    case TC_BT2020_10BIT:
+    case TC_BT2020_12BIT:
+    case TC_SMPTE2084:
+    case TC_SMPTE428:
+    case TC_HLG:
+      return false;
+    default:
+      return true;
+  }
+}
+
+enum MatrixCoefficients : uint8_t {
+  MC_IDENTITY = 0,
+  MC_BT709 = 1,
+  MC_UNSPECIFIED = 2,
+  MC_RESERVED_MIN = 3,  // 3, [15, 255] are all reserved
+  MC_FCC = 4,
+  MC_BT470BG = 5,
+  MC_BT601 = 6,
+  MC_SMPTE240 = 7,
+  MC_YCGCO = 8,
+  MC_BT2020_NCL = 9,
+  MC_BT2020_CL = 10,
+  MC_SMPTE2085 = 11,
+  MC_CHROMAT_NCL = 12,
+  MC_CHROMAT_CL = 13,
+  MC_ICTCP = 14,
+};
+}  // namespace CICP
+
 // The matrix coeffiecients used for YUV to RGB conversion.
 enum class YUVColorSpace : uint8_t {
   BT601,

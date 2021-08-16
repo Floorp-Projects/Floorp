@@ -132,63 +132,6 @@ typedef struct
 	qcms_CIE_xyY blue;
 } qcms_CIE_xyYTRIPLE;
 
-/* same values as iccread.rs */
-typedef enum {
-    cp_Reserved,
-    cp_Bt709 = 1,
-    cp_Unspecified = 2,
-    cp_Bt470M = 4,
-    cp_Bt470Bg = 5,
-    cp_Bt601 = 6,
-    cp_Smpte240 = 7,
-    cp_Generic_film = 8,
-    cp_Bt2020 = 9,
-    cp_Xyz = 10,
-    cp_Smpte431 = 11,
-    cp_Smpte432 = 12,
-    cp_Ebu3213 = 22,
-} qcms_ColourPrimaries;
-
-/* same values as iccread.rs */
-typedef enum {
-    tc_Reserved,
-    tc_Bt709 = 1,
-    tc_Unspecified = 2,
-    tc_Bt470M = 4,
-    tc_Bt470Bg = 5,
-    tc_Bt601 = 6,
-    tc_Smpte240 = 7,
-    tc_Linear = 8,
-    tc_Log_100 = 9,
-    tc_Log_100_sqrt10 = 10,
-    tc_Iec61966 = 11,
-    tc_Bt_1361 = 12,
-    tc_Srgb = 13,
-    tc_Bt2020_10bit = 14,
-    tc_Bt2020_12bit = 15,
-    tc_Smpte2084 = 16,
-    tc_Smpte428 = 17,
-    tc_Hlg = 18,
-} qcms_TransferCharacteristics;
-
-/* Not used by qcms, but provided for CICP completeness */
-typedef enum {
-    mc_Identity = 0,
-    mc_Bt709 = 1,
-    mc_Unspecified = 2,
-    mc_Fcc = 4,
-    mc_Bt470Bg = 5,
-    mc_Bt601 = 6,
-    mc_Smpte240 = 7,
-    mc_YCgCo = 8,
-    mc_Bt2020_Ncl = 9,
-    mc_Bt2020_Cl = 10,
-    mc_Smpte2085 = 11,
-    mc_Chromat_Ncl = 12,
-    mc_Chromat_Cl = 13,
-    mc_ICtCp = 14,
-} qcms_MatrixCoefficients;
-
 qcms_profile* qcms_profile_create_rgb_with_gamma_set(
                 qcms_CIE_xyY white_point,
                 qcms_CIE_xyYTRIPLE primaries,
@@ -208,9 +151,9 @@ void qcms_data_create_rgb_with_gamma(
                 void **mem,
                 size_t *size);
 
-qcms_profile* qcms_profile_create_cicp(
-                qcms_ColourPrimaries cp,
-                qcms_TransferCharacteristics tc);
+/* Don't use enums here because they can't go safely across FFI */
+qcms_profile* qcms_profile_create_cicp(uint8_t colour_primaries,
+                                       uint8_t transfer_characteristics);
 
 qcms_profile* qcms_profile_from_memory(const void *mem, size_t size);
 
