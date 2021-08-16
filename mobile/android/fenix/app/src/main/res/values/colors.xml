@@ -360,7 +360,6 @@
     <color name="private_browsing_button_accent_color">@color/foundation_private_theme</color>
     <color name="white_color">@color/photonLightGrey05</color>
     <color name="neutral_text">@color/white_color</color>
-    <color name="disabled_text">#cccccc</color>
     <color name="text_scale_example_text_color">#232749</color>
     <color name="sync_error_background_color">#FFF36E</color>
     <color name="sync_error_text_color">#960E18</color>

@@ -23,6 +23,7 @@
         app:layout_constraintBottom_toTopOf="@id/microphoneLabel"
         app:layout_constraintEnd_toStartOf="@id/cameraStatus"
         app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?primaryText"
         tools:visibility="visible" />
 
     <TextView
@@ -48,6 +49,7 @@
         app:layout_constraintBottom_toTopOf="@id/notificationLabel"
         app:layout_constraintEnd_toStartOf="@id/microphoneStatus"
         app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?primaryText"
         tools:visibility="visible" />
 
     <TextView
@@ -73,6 +75,7 @@
         app:layout_constraintBottom_toTopOf="@id/locationLabel"
         app:layout_constraintEnd_toStartOf="@id/notificationStatus"
         app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?primaryText"
         tools:visibility="visible" />
 
     <TextView
@@ -98,6 +101,7 @@
         app:layout_constraintBottom_toTopOf="@id/persistentStorageLabel"
         app:layout_constraintEnd_toStartOf="@id/locationStatus"
         app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?primaryText"
         tools:visibility="visible" />
 
     <TextView
@@ -123,6 +127,7 @@
         app:layout_constraintBottom_toTopOf="@id/mediaKeySystemAccessLabel"
         app:layout_constraintEnd_toStartOf="@id/persistentStorageStatus"
         app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?primaryText"
         tools:visibility="visible" />
 
     <TextView
@@ -148,6 +153,7 @@
         app:layout_constraintBottom_toTopOf="@id/autoplayLabel"
         app:layout_constraintEnd_toStartOf="@id/mediaKeySystemAccessStatus"
         app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?primaryText"
         tools:visibility="visible" />
 
     <TextView
@@ -174,6 +180,7 @@
         app:layout_constraintBottom_toTopOf="@id/mediaKeySystemAccessLabel"
         app:layout_constraintEnd_toStartOf="@id/autoplayStatus"
         app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?primaryText"
         tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatSpinner

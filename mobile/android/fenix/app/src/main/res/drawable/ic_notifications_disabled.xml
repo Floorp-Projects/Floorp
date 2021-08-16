@@ -9,8 +9,8 @@
         android:viewportHeight="24">
     <path
         android:pathData="M11.732,8.5h4.518a0.75,0.75 0,0 0,0 -1.5h-6.018l1.5,1.5zM3.28,2.22a0.75,0.75 0,1 0,-1.061 1.061L3.3,4.361c-0.18,0.343 -0.3,0.723 -0.3,1.139v9A2.5,2.5 0,0 0,5.5 17h5.036l5,4h1.607v-2.797l2.577,2.577a0.748,0.748 0,0 0,1.06 0,0.75 0.75,0 0,0 0,-1.061L3.28,2.22zM15.643,19.165 L11.063,15.501L5.301,15.501l-0.8,-0.8v-9.14L9.939,11L7.75,11a0.75,0.75 0,0 0,0 1.5h3.689l4.203,4.203v2.462h0.001z"
-        android:fillColor="@color/disabled_text"/>
+        android:fillColor="?primaryText"/>
     <path
         android:pathData="M18.5,3H6.232l1.5,1.5H18.7l0.8,0.8v9.4l-0.784,0.784 1.122,1.122A2.494,2.494 0,0 0,21 14.5v-9A2.5,2.5 0,0 0,18.5 3z"
-        android:fillColor="@color/disabled_text"/>
+        android:fillColor="?primaryText"/>
  </vector>
