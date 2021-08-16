@@ -11,7 +11,7 @@ namespace mozilla {
 RefPtr<MediaDataDecoder::InitPromise> MediaDataDecoderProxy::Init() {
   MOZ_ASSERT(!mIsShutdown);
 
-  if (!mProxyThread) {
+  if (!mProxyThread || mProxyThread->IsOnCurrentThread()) {
     return mProxyDecoder->Init();
   }
   return InvokeAsync(mProxyThread, __func__, [self = RefPtr{this}] {
@@ -23,7 +23,7 @@ RefPtr<MediaDataDecoder::DecodePromise> MediaDataDecoderProxy::Decode(
     MediaRawData* aSample) {
   MOZ_ASSERT(!mIsShutdown);
 
-  if (!mProxyThread) {
+  if (!mProxyThread || mProxyThread->IsOnCurrentThread()) {
     return mProxyDecoder->Decode(aSample);
   }
   RefPtr<MediaRawData> sample = aSample;
@@ -39,7 +39,7 @@ bool MediaDataDecoderProxy::CanDecodeBatch() const {
 RefPtr<MediaDataDecoder::DecodePromise> MediaDataDecoderProxy::DecodeBatch(
     nsTArray<RefPtr<MediaRawData>>&& aSamples) {
   MOZ_ASSERT(!mIsShutdown);
-  if (!mProxyThread) {
+  if (!mProxyThread || mProxyThread->IsOnCurrentThread()) {
     return mProxyDecoder->DecodeBatch(std::move(aSamples));
   }
   return InvokeAsync(
@@ -52,7 +52,7 @@ RefPtr<MediaDataDecoder::DecodePromise> MediaDataDecoderProxy::DecodeBatch(
 RefPtr<MediaDataDecoder::FlushPromise> MediaDataDecoderProxy::Flush() {
   MOZ_ASSERT(!mIsShutdown);
 
-  if (!mProxyThread) {
+  if (!mProxyThread || mProxyThread->IsOnCurrentThread()) {
     return mProxyDecoder->Flush();
   }
   return InvokeAsync(mProxyThread, __func__, [self = RefPtr{this}] {
@@ -63,7 +63,7 @@ RefPtr<MediaDataDecoder::FlushPromise> MediaDataDecoderProxy::Flush() {
 RefPtr<MediaDataDecoder::DecodePromise> MediaDataDecoderProxy::Drain() {
   MOZ_ASSERT(!mIsShutdown);
 
-  if (!mProxyThread) {
+  if (!mProxyThread || mProxyThread->IsOnCurrentThread()) {
     return mProxyDecoder->Drain();
   }
   return InvokeAsync(mProxyThread, __func__, [self = RefPtr{this}] {
@@ -78,7 +78,7 @@ RefPtr<ShutdownPromise> MediaDataDecoderProxy::Shutdown() {
   mIsShutdown = true;
 #endif
 
-  if (!mProxyThread) {
+  if (!mProxyThread || mProxyThread->IsOnCurrentThread()) {
     return mProxyDecoder->Shutdown();
   }
   // We chain another promise to ensure that the proxied decoder gets destructed
@@ -110,7 +110,7 @@ bool MediaDataDecoderProxy::IsHardwareAccelerated(
 void MediaDataDecoderProxy::SetSeekThreshold(const media::TimeUnit& aTime) {
   MOZ_ASSERT(!mIsShutdown);
 
-  if (!mProxyThread) {
+  if (!mProxyThread || mProxyThread->IsOnCurrentThread()) {
     mProxyDecoder->SetSeekThreshold(aTime);
     return;
   }
