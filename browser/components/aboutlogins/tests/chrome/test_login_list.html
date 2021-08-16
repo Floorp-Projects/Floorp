@@ -479,6 +479,9 @@ add_task(async function test_sorted_list() {
   gLoginList._logins[guid1].login.title = "a";
   gLoginList._logins[guid2].login.title = "b";
   gLoginList._logins[guid3].login.title = "c";
+  gLoginList._logins[guid1].login.username = "a";
+  gLoginList._logins[guid2].login.username = "b";
+  gLoginList._logins[guid3].login.username = "c";
   gLoginList._logins[guid1].login.timePasswordChanged = 1;
   gLoginList._logins[guid2].login.timePasswordChanged = 2;
   gLoginList._logins[guid3].login.timePasswordChanged = 0;
@@ -536,6 +539,27 @@ add_task(async function test_sorted_list() {
   is(loginListItems[0].classList.contains("breached"), true, "Breached login should be displayed at top of list");
   is(!loginListItems[1].classList.contains("breached"), true, "Non-breached login should be displayed below breached");
 
+  // sort by username
+  loginSort.value = "username";
+  dispatchChangeEvent(loginSort);
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item, [hidden])");
+  let username1 = gLoginList._logins[loginListItems[0].dataset.guid].login.username;
+  let username2 = gLoginList._logins[loginListItems[1].dataset.guid].login.username;
+  let username3 = gLoginList._logins[loginListItems[2].dataset.guid].login.username;
+  is(username1.localeCompare(username2), -1, "Logins sorted by username. First: " + username1 + "; Second: " + username2);
+  is(username2.localeCompare(username3), -1, "Logins sorted by username. Second: " + username2 + "; Third: " + username3);
+
+  // sort by username in reverse alphabetical order
+  loginSort.value = "username-reverse";
+  dispatchChangeEvent(loginSort);
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item, [hidden])");
+  username1 = gLoginList._logins[loginListItems[0].dataset.guid].login.username;
+  username2 = gLoginList._logins[loginListItems[1].dataset.guid].login.username;
+  username3 = gLoginList._logins[loginListItems[2].dataset.guid].login.username;
+  testDescription = "Logins sorted by username in reverse alphabetical order.";
+  is(username3.localeCompare(username2), -1, `${testDescription} First: ${username3} Second: ${username2}`);
+  is(username2.localeCompare(username1), -1, `${testDescription} Second: ${username2} Third: ${username1}`);
+  
   // sort by name when there are no breached logins
   gLoginList.setBreaches(new Map());
   loginSort.value = "alerts";
