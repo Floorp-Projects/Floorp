@@ -424,9 +424,9 @@ void nsHtml5Tokenizer::errMissingSpaceBeforeDoctypeName() {
   }
 }
 
-void nsHtml5Tokenizer::errHyphenHyphenBang() {
+void nsHtml5Tokenizer::errNestedComment() {
   if (MOZ_LIKELY(mViewSource)) {
-    mViewSource->AddErrorToCurrentNode("errHyphenHyphenBang");
+    mViewSource->AddErrorToCurrentNode("errNestedComment");
   }
 }
 
