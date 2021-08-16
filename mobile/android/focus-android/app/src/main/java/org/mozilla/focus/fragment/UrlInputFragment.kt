@@ -174,20 +174,23 @@ class UrlInputFragment :
         searchSuggestionsViewModel = ViewModelProvider(requireActivity()).get(SearchSuggestionsViewModel::class.java)
 
         childFragmentManager.beginTransaction()
-                .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
-                .commit()
+            .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
+            .commit()
 
-        searchSuggestionsViewModel.selectedSearchSuggestion.observe(viewLifecycleOwner, Observer {
-            val isSuggestion = searchSuggestionsViewModel.searchQuery.value != it
-            it?.let {
-                if (searchSuggestionsViewModel.alwaysSearch) {
-                    onSearch(it, false, true)
-                } else {
-                    onSearch(it, isSuggestion)
+        searchSuggestionsViewModel.selectedSearchSuggestion.observe(
+            viewLifecycleOwner,
+            Observer {
+                val isSuggestion = searchSuggestionsViewModel.searchQuery.value != it
+                it?.let {
+                    if (searchSuggestionsViewModel.alwaysSearch) {
+                        onSearch(it, false, true)
+                    } else {
+                        onSearch(it, isSuggestion)
+                    }
+                    searchSuggestionsViewModel.clearSearchSuggestion()
                 }
-                searchSuggestionsViewModel.clearSearchSuggestion()
             }
-        })
+        )
     }
 
     override fun onResume() {
@@ -242,8 +245,8 @@ class UrlInputFragment :
 
         // Only make the second line clickable if applicable
         val linkStartIndex =
-                if (tipText.contains("\n")) tipText.indexOf("\n") + 2
-                else 0
+            if (tipText.contains("\n")) tipText.indexOf("\n") + 2
+            else 0
 
         keyboardLinearLayout.homeViewTipsLabel.movementMethod = LinkMovementMethod()
         homeViewTipsLabel.setText(tipText, TextView.BufferType.SPANNABLE)
@@ -368,7 +371,8 @@ class UrlInputFragment :
         super.onStart()
 
         activity?.let {
-            if (Settings.getInstance(it.applicationContext).shouldShowFirstrun()) return@onStart }
+            if (Settings.getInstance(it.applicationContext).shouldShowFirstrun()) return@onStart
+        }
     }
 
     override fun onStop() {
@@ -462,10 +466,10 @@ class UrlInputFragment :
         job.invokeOnCompletion {
             requireActivity().runOnUiThread {
                 val messageId =
-                        if (!duplicateURL)
-                            R.string.preference_autocomplete_add_confirmation
-                        else
-                            R.string.preference_autocomplete_duplicate_url_error
+                    if (!duplicateURL)
+                        R.string.preference_autocomplete_add_confirmation
+                    else
+                        R.string.preference_autocomplete_duplicate_url_error
 
                 ViewUtils.showBrandedSnackbar(requireView(), messageId, 0)
                 animateAndDismiss()
@@ -526,10 +530,12 @@ class UrlInputFragment :
 
         isAnimating = true
 
-        val xyOffset = (if (isOverlay)
-            (urlInputContainerView?.layoutParams as FrameLayout.LayoutParams).bottomMargin
-        else
-            0).toFloat()
+        val xyOffset = (
+            if (isOverlay)
+                (urlInputContainerView?.layoutParams as FrameLayout.LayoutParams).bottomMargin
+            else
+                0
+            ).toFloat()
 
         if (urlInputBackgroundView != null) {
             val width = urlInputBackgroundView.width.toFloat()

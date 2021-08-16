@@ -6,15 +6,15 @@
 package org.mozilla.focus.fragment
 
 import android.os.Bundle
-import androidx.fragment.app.DialogFragment
-import androidx.appcompat.app.AlertDialog
 import android.text.TextUtils
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.fragment.app.DialogFragment
 import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 import org.mozilla.focus.shortcut.HomeScreen

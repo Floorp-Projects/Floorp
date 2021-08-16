@@ -88,7 +88,7 @@ task ktlint(type: JavaExec, group: "verification") {
     description = "Check Kotlin code style."
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
-    args "app/**/*.kt", "!**/build", "buildSrc/**/*.kt"
+    args "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
 }
 
 
@@ -96,5 +96,5 @@ task ktlintFormat(type: JavaExec, group: "formatting") {
     description = "Fix Kotlin code style deviations."
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
-    args "-F", "app/**/*.kt", "!**/build", "buildSrc/**/*.kt"
+    args "-F", "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
 }

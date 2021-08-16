@@ -22,10 +22,10 @@ import org.mozilla.focus.settings.GeneralSettingsFragment
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment
 import org.mozilla.focus.settings.MozillaSettingsFragment
-import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
 import org.mozilla.focus.settings.RemoveSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.SearchSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
+import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.collections.forEach as withEach
@@ -48,9 +48,11 @@ class MainActivityNavigation(
         val crashReporterIsVisible = browserFragment?.crashReporterIsVisible() ?: false
 
         if (isShowingBrowser && !crashReporterIsVisible) {
-            ViewUtils.showBrandedSnackbar(activity.findViewById(android.R.id.content),
+            ViewUtils.showBrandedSnackbar(
+                activity.findViewById(android.R.id.content),
                 R.string.feedback_erase2,
-                activity.resources.getInteger(R.integer.erase_snackbar_delay))
+                activity.resources.getInteger(R.integer.erase_snackbar_delay)
+            )
         }
 
         // We add the url input fragment to the layout if it doesn't exist yet.

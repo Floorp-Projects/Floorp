@@ -62,39 +62,48 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         searchSuggestionsViewModel = ViewModelProvider(requireActivity())
             .get(SearchSuggestionsViewModel::class.java)
 
-        searchSuggestionsViewModel.searchQuery.observe(viewLifecycleOwner, Observer {
-            searchView.text = it
-            searchView.contentDescription = requireContext().getString(R.string.search_hint, it)
-        })
-
-        searchSuggestionsViewModel.suggestions.observe(viewLifecycleOwner, Observer { suggestions ->
-            launch(IO) {
-                suggestions?.apply { (suggestionList.adapter as SuggestionsAdapter).refresh(this) }
+        searchSuggestionsViewModel.searchQuery.observe(
+            viewLifecycleOwner,
+            Observer {
+                searchView.text = it
+                searchView.contentDescription = requireContext().getString(R.string.search_hint, it)
             }
-        })
+        )
 
-        searchSuggestionsViewModel.state.observe(viewLifecycleOwner, Observer { state ->
-            enable_search_suggestions_container.visibility = View.GONE
-            no_suggestions_container.visibility = View.GONE
-            suggestionList.visibility = View.GONE
-
-            when (state) {
-                is State.ReadyForSuggestions ->
-                    suggestionList.visibility = View.VISIBLE
-                is State.NoSuggestionsAPI ->
-                    no_suggestions_container.visibility = if (state.givePrompt) {
-                        View.VISIBLE
-                    } else {
-                        View.GONE
-                    }
-                is State.Disabled ->
-                    enable_search_suggestions_container.visibility = if (state.givePrompt) {
-                        View.VISIBLE
-                    } else {
-                        View.GONE
-                    }
+        searchSuggestionsViewModel.suggestions.observe(
+            viewLifecycleOwner,
+            Observer { suggestions ->
+                launch(IO) {
+                    suggestions?.apply { (suggestionList.adapter as SuggestionsAdapter).refresh(this) }
+                }
             }
-        })
+        )
+
+        searchSuggestionsViewModel.state.observe(
+            viewLifecycleOwner,
+            Observer { state ->
+                enable_search_suggestions_container.visibility = View.GONE
+                no_suggestions_container.visibility = View.GONE
+                suggestionList.visibility = View.GONE
+
+                when (state) {
+                    is State.ReadyForSuggestions ->
+                        suggestionList.visibility = View.VISIBLE
+                    is State.NoSuggestionsAPI ->
+                        no_suggestions_container.visibility = if (state.givePrompt) {
+                            View.VISIBLE
+                        } else {
+                            View.GONE
+                        }
+                    is State.Disabled ->
+                        enable_search_suggestions_container.visibility = if (state.givePrompt) {
+                            View.VISIBLE
+                        } else {
+                            View.GONE
+                        }
+                }
+            }
+        )
     }
 
     override fun onCreateView(
@@ -113,8 +122,10 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         enable_search_suggestions_subtitle.movementMethod = LinkMovementMethod.getInstance()
         enable_search_suggestions_subtitle.highlightColor = Color.TRANSPARENT
 
-        suggestionList.layoutManager = LinearLayoutManager(activity,
-                RecyclerView.VERTICAL, false)
+        suggestionList.layoutManager = LinearLayoutManager(
+            activity,
+            RecyclerView.VERTICAL, false
+        )
         suggestionList.adapter = SuggestionsAdapter {
             searchSuggestionsViewModel.selectSearchSuggestion(it)
         }
@@ -154,9 +165,9 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
             override fun getNewListSize(): Int = newSuggestions.size
             override fun areItemsTheSame(p0: Int, p1: Int): Boolean = true
             override fun areContentsTheSame(p0: Int, p1: Int): Boolean =
-                    oldSuggestions[p0] == newSuggestions[p1]
+                oldSuggestions[p0] == newSuggestions[p1]
             override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? =
-                    newSuggestions[newItemPosition]
+                newSuggestions[newItemPosition]
         }
 
         private var suggestions: List<SpannableStringBuilder> = listOf()
@@ -199,8 +210,9 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             return SuggestionViewHolder(
-                    LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                    clickListener)
+                LayoutInflater.from(parent.context).inflate(viewType, parent, false),
+                clickListener
+            )
         }
     }
 }
@@ -228,7 +240,7 @@ private class SuggestionViewHolder(
         )
 
         val backgroundDrawableArray =
-                suggestionText.context.obtainStyledAttributes(intArrayOf(R.attr.selectableItemBackground))
+            suggestionText.context.obtainStyledAttributes(intArrayOf(R.attr.selectableItemBackground))
         val backgroundDrawable = backgroundDrawableArray.getDrawable(0)
         backgroundDrawableArray.recycle()
         suggestionText.background = backgroundDrawable

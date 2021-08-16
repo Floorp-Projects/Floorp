@@ -5,11 +5,11 @@
 package org.mozilla.focus.menu.home
 
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.menu_item.view.*
 import org.mozilla.focus.R
 import org.mozilla.focus.whatsnew.WhatsNew
@@ -25,8 +25,8 @@ class HomeMenuAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items: List<MenuItem> = listOf(
-            MenuItem(R.id.help, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_help)),
-            MenuItem(R.id.settings, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_settings))
+        MenuItem(R.id.help, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_help)),
+        MenuItem(R.id.settings, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_settings))
     )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
