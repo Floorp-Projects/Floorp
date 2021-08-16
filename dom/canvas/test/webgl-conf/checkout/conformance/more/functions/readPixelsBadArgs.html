@@ -11,6 +11,10 @@ found in the LICENSE.txt file.
 <script type="application/javascript" src="../unit.js"></script>
 <script type="application/javascript" src="../util.js"></script>
 <script type="application/javascript" src="../../../js/webgl-test-utils.js"></script>
+</head><body>
+<canvas id="gl" width="16" height="16"></canvas>
+<canvas id="c" width="128" height="128"></canvas>
+<img id="i">
 <script type="application/javascript">
 var wtu = WebGLTestUtils;
 var defaultImgUrl = "https://get.webgl.org/conformance-resources/opengl_logo.jpg";
@@ -92,12 +96,18 @@ Tests.testReadPixelsSOPCanvas = function(gl) {
 }
 
 Tests.endUnit = function(gl) {
-}
+};
 
-wtu.setupImageForCrossOriginTest("#i", defaultImgUrl, localImgUrl, initTests);
+(async function() {
+  const img = document.getElementById('i');
+  try {
+    await wtu.awaitOrTimeout(wtu.loadCrossOriginImage(img, defaultImgUrl, localImgUrl));
+  } catch (e) {
+    testFailed(`Image setup failed (${e}).`);
+    finishTest();
+    return;
+  }
+  initTests();
+})();
 </script>
-</head><body>
-<canvas id="gl" width="16" height="16"></canvas>
-<canvas id="c" width="128" height="128"></canvas>
-<img id="i">
 </body></html>
