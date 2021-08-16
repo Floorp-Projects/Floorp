@@ -62,9 +62,12 @@ add_task(async function testFilterFeatures() {
   // Manually modify the labels of the features that were just added, so that the test
   // can rely on consistent search terms.
   for (let definition of definitions) {
-    doc.getElementById(definition.id).label = definition.title;
-    doc.getElementById(definition.id + "-description").textContent =
-      definition.description;
+    let mainItem = doc.getElementById(definition.id);
+    mainItem.label = definition.title;
+    mainItem.removeAttribute("data-l10n-id");
+    let descItem = doc.getElementById(definition.id + "-description");
+    descItem.textContent = definition.description;
+    descItem.removeAttribute("data-l10n-id");
   }
 
   // First, check that all of the items are visible by default.
@@ -72,7 +75,7 @@ add_task(async function testFilterFeatures() {
     checkVisibility(
       doc.getElementById(definition.id),
       true,
-      "item " + definition.id + " not initially hidden"
+      `${definition.id} should be initially visible`
     );
   }
 
@@ -83,8 +86,11 @@ add_task(async function testFilterFeatures() {
     checkVisibility(
       doc.getElementById(definition.id),
       definition.result,
-      "item " + definition.id + " after first search"
+      `${definition.id} should be ${
+        definition.result ? "visible" : "hidden"
+      } after first search`
     );
+    info("Text for item was: " + doc.getElementById(definition.id).textContent);
   }
 
   // Further restrict the search to only a single item.
@@ -95,7 +101,9 @@ add_task(async function testFilterFeatures() {
     checkVisibility(
       doc.getElementById(definition.id),
       shouldBeVisible,
-      "item " + definition.id + " after further search"
+      `${definition.id} should be ${
+        shouldBeVisible ? "visible" : "hidden"
+      } after further search`
     );
     shouldBeVisible = false;
   }
@@ -116,7 +124,7 @@ add_task(async function testFilterFeatures() {
     checkVisibility(
       doc.getElementById(definition.id),
       true,
-      "item " + definition.id + " not hidden after search cleared"
+      `${definition.id} should be visible after search cleared`
     );
   }
 
@@ -129,7 +137,9 @@ add_task(async function testFilterFeatures() {
       checkVisibility(
         doc.getElementById(definition.id),
         definition.result,
-        "item " + definition.id + " after next search"
+        `${definition.id} should be ${
+          definition.result ? "visible" : "hidden"
+        } after next search`
       );
     }
 
@@ -143,10 +153,7 @@ add_task(async function testFilterFeatures() {
       checkVisibility(
         doc.getElementById(definition.id),
         true,
-        "item " +
-          definition.id +
-          " not hidden after category change to " +
-          category
+        `${definition.id} should be visible after category change to ${category}`
       );
     }
   }
