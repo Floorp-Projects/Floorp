@@ -12,14 +12,25 @@ import six
 import tarfile
 from io import BytesIO
 
+from taskgraph.generator import load_tasks_for_kind
 from taskgraph.optimize.strategies import IndexSearch
+from taskgraph.parameters import Parameters
 from taskgraph.util import docker
 from taskgraph.util.taskcluster import (
     get_artifact_url,
     get_session,
 )
-from taskgraph.generator import load_tasks_for_kind
 from . import GECKO
+
+
+def get_image_digest(image_name):
+    params = Parameters(
+        level=os.environ.get("MOZ_SCM_LEVEL", "3"),
+        strict=False,
+    )
+    tasks = load_tasks_for_kind(params, "docker-image")
+    task = tasks["docker-image-{}".format(image_name)]
+    return task.attributes["cached_task"]["digest"]
 
 
 def load_image_by_name(image_name, tag=None):

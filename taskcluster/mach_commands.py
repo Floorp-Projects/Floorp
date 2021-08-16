@@ -544,6 +544,16 @@ class TaskClusterImagesProvider(MachCommandBase):
             traceback.print_exc()
             sys.exit(1)
 
+    @Command(
+        "taskcluster-image-digest",
+        category="ci",
+        description="Print the digest of the image of this name based on the "
+        "current contents of the tree.",
+        parser=partial(get_taskgraph_command_parser, "build-image"),
+    )
+    def image_digest(self, command_context, **kwargs):
+        taskgraph_commands["image-digest"].func(kwargs)
+
 
 @CommandProvider
 class TaskClusterPartialsData(MachCommandBase):
