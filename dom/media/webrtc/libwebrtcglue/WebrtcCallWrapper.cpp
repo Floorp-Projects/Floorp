@@ -50,15 +50,11 @@ webrtc::Call* WebrtcCallWrapper::Call() const {
   return mCall.get();
 }
 
-bool WebrtcCallWrapper::UnsetRemoteSSRC(uint32_t ssrc) {
+void WebrtcCallWrapper::UnsetRemoteSSRC(uint32_t aSsrc) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   for (auto conduit : mConduits) {
-    if (!conduit->UnsetRemoteSSRC(ssrc)) {
-      return false;
-    }
+    conduit->UnsetRemoteSSRC(aSsrc);
   }
-
-  return true;
 }
 
 void WebrtcCallWrapper::RegisterConduit(MediaSessionConduit* conduit) {

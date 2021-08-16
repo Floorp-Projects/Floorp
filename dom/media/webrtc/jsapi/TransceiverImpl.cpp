@@ -304,22 +304,17 @@ void TransceiverImpl::InitVideo() {
 
 void TransceiverImpl::InitConduitControl() {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mConduit);
   ConduitControlState control(this, mDtmf, mReceiver);
-  auto self = nsMainThreadPtrHandle<TransceiverImpl>(
-      new nsMainThreadPtrHolder<TransceiverImpl>(
-          "TransceiverImpl::InitConduitControl::self", this, false));
   mCallWrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
-      __func__,
-      [conduit = mConduit, control = std::move(control), self]() mutable {
+      __func__, [conduit = mConduit, control = std::move(control)]() mutable {
         conduit->AsVideoSessionConduit().apply(
             [&](VideoSessionConduit* aConduit) {
-              self->mConduitController = new VideoConduitController(
-                  aConduit, self->mCallWrapper->mCallThread, &control);
+              aConduit->InitControl(&control);
             });
         conduit->AsAudioSessionConduit().apply(
             [&](AudioSessionConduit* aConduit) {
-              self->mConduitController = new AudioConduitController(
-                  aConduit, self->mCallWrapper->mCallThread, &control);
+              aConduit->InitControl(&control);
             });
       }));
 }
@@ -392,12 +387,11 @@ nsresult TransceiverImpl::UpdateConduit() {
     mLocalMid = std::string();
   }
 
+  mReceiving = false;
   mReceiver->Stop();
 
-  mTransmitPipeline->Stop();
-
-  mReceiving = false;
   mTransmitting = false;
+  mTransmitPipeline->Stop();
 
   // NOTE(pkerr) - the Call API requires the both local_ssrc and remote_ssrc be
   // set to a non-zero value or the CreateVideo...Stream call will fail.
@@ -424,19 +418,17 @@ nsresult TransceiverImpl::UpdateConduit() {
     return rv;
   }
 
-  if (mJsepTransceiver->mRecvTrack.GetActive()) {
-    mReceiving = true;
+  if ((mReceiving = mJsepTransceiver->mRecvTrack.GetActive())) {
     mReceiver->Start();
   }
 
-  if (mJsepTransceiver->mSendTrack.GetActive()) {
+  if ((mTransmitting = mJsepTransceiver->mSendTrack.GetActive())) {
     if (!mSendTrack) {
       MOZ_MTLOG(ML_WARNING,
                 mPCHandle << "[" << mLocalMid.Ref() << "]: " << __FUNCTION__
                           << " Starting transmit conduit without send track!");
     }
 
-    mTransmitting = true;
     mTransmitPipeline->Start();
   }
 
@@ -1049,15 +1041,11 @@ void TransceiverImpl::Stop() {
     mDtmf->StopPlayout();
   }
 
-  mConduit = nullptr;
-
-  auto self = nsMainThreadPtrHandle<TransceiverImpl>(
-      new nsMainThreadPtrHolder<TransceiverImpl>(
-          "TransceiverImpl::Shutdown_m::self", this, false));
-  mCallWrapper->mCallThread->Dispatch(
-      NS_NewRunnableFunction(__func__, [self = std::move(self)] {
-        self->mConduitController->Shutdown();
-        self->mConduitController = nullptr;
+  mCallWrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [conduit = std::move(mConduit)]() mutable {
+        if (conduit) {
+          conduit->Shutdown();
+        }
       }));
 }
 

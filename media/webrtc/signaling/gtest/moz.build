@@ -44,6 +44,7 @@ if (
         "jsep_session_unittest.cpp",
         "jsep_track_unittest.cpp",
         "mediapipeline_unittest.cpp",
+        "MockCall.cpp",
         "sdp_unittests.cpp",
         "videoconduit_unittests.cpp",
     ]
