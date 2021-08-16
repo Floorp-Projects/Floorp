@@ -25,7 +25,7 @@ const wtu = WebGLTestUtils;
 const gl = wtu.create3DContext();
 
 (function() {
-    if (!wtu.isWebGL2(gl)) {
+    if (!(gl instanceof WebGL2RenderingContext)) {
         if (!gl.getExtension("OES_texture_float")) {
             testPassed("No OES_texture_float support -- this is legal");
             return;
