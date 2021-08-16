@@ -625,7 +625,7 @@ bool shell::enablePrivateClassMethods = false;
 bool shell::enableTopLevelAwait = true;
 bool shell::enableErgonomicBrandChecks = true;
 bool shell::useOffThreadParseGlobal = true;
-bool shell::enableClassStaticBlocks = false;
+bool shell::enableClassStaticBlocks = true;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -11274,7 +11274,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableErgonomicBrandChecks =
       !op.getBoolOption("disable-ergonomic-brand-checks");
   enableTopLevelAwait = op.getBoolOption("enable-top-level-await");
-  enableClassStaticBlocks = op.getBoolOption("enable-class-static-blocks");
+  enableClassStaticBlocks = !op.getBoolOption("disable-class-static-blocks");
   useOffThreadParseGlobal = op.getBoolOption("off-thread-parse-global");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
@@ -12259,8 +12259,10 @@ int main(int argc, char** argv) {
           "Disable ergonomic brand checks for private class fields") ||
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
+      !op.addBoolOption('\0', "disable-class-static-blocks",
+                        "Disable class static blocks") ||
       !op.addBoolOption('\0', "enable-class-static-blocks",
-                        "Enable class static blocks") ||
+                        "(no-op) Enable class static blocks") ||
       !op.addBoolOption('\0', "off-thread-parse-global",
                         "Use parseGlobal in all off-thread compilation") ||
       !op.addBoolOption('\0', "no-large-arraybuffers",

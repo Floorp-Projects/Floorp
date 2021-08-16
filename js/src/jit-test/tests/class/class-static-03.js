@@ -1,4 +1,4 @@
-// |jit-test| --enable-class-static-blocks;
+// |jit-test|
 
 var g = newGlobal({ newCompartment: true });
 var dbg = new Debugger;
