@@ -2,38 +2,55 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>EmptyFunctionBlock:AnimatedProgressBar.kt$AnimatedProgressBar.&lt;no name provided&gt;${}</ID>
+    <ID>AbsentOrWrongFileLicense:AddToHomescreenDialogFragment.kt$org.mozilla.focus.fragment.AddToHomescreenDialogFragment.kt</ID>
+    <ID>AbsentOrWrongFileLicense:AppConstants.kt$org.mozilla.focus.utils.AppConstants.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Browser.kt$org.mozilla.focus.GleanMetrics.Browser.kt</ID>
+    <ID>AbsentOrWrongFileLicense:BrowserMenu.kt$org.mozilla.focus.menu.browser.BrowserMenu.kt</ID>
+    <ID>AbsentOrWrongFileLicense:BrowserMenuAdapter.kt$org.mozilla.focus.menu.browser.BrowserMenuAdapter.kt</ID>
+    <ID>AbsentOrWrongFileLicense:BrowserSearch.kt$org.mozilla.focus.GleanMetrics.BrowserSearch.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Features.kt$org.mozilla.focus.utils.Features.kt</ID>
+    <ID>AbsentOrWrongFileLicense:FileUtils.kt$org.mozilla.focus.utils.FileUtils.kt</ID>
+    <ID>AbsentOrWrongFileLicense:FirstrunFragment.kt$org.mozilla.focus.fragment.FirstrunFragment.kt</ID>
+    <ID>AbsentOrWrongFileLicense:FirstrunPagerAdapter.kt$org.mozilla.focus.firstrun.FirstrunPagerAdapter.kt</ID>
+    <ID>AbsentOrWrongFileLicense:FocusApplication.kt$org.mozilla.focus.FocusApplication.kt</ID>
+    <ID>AbsentOrWrongFileLicense:GleanBuildInfo.kt$org.mozilla.focus.GleanMetrics.GleanBuildInfo.kt</ID>
+    <ID>AbsentOrWrongFileLicense:ImageSelectTest.kt$org.mozilla.focus.activity.ImageSelectTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:InstallFirefoxActivity.kt$org.mozilla.focus.activity.InstallFirefoxActivity.kt</ID>
+    <ID>AbsentOrWrongFileLicense:LearnMoreSwitchPreference.kt$org.mozilla.focus.settings.LearnMoreSwitchPreference.kt</ID>
+    <ID>AbsentOrWrongFileLicense:LegacyIds.kt$org.mozilla.focus.GleanMetrics.LegacyIds.kt</ID>
+    <ID>AbsentOrWrongFileLicense:MobileMetricsPingStorageTest.kt$org.mozilla.focus.utils.MobileMetricsPingStorageTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Pings.kt$org.mozilla.focus.GleanMetrics.Pings.kt</ID>
+    <ID>AbsentOrWrongFileLicense:PreferenceSwitch.kt$org.mozilla.focus.settings.privacy.PreferenceSwitch.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SearchEnginePreference.kt$org.mozilla.focus.search.SearchEnginePreference.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SearchRobot.kt$org.mozilla.focus.activity.robots.SearchRobot.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SearchSuggestionsViewModelTest.kt$org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModelTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SettingsBlockToggleTest.kt$org.mozilla.focus.activity.SettingsBlockToggleTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SettingsTest.kt$org.mozilla.focus.activity.SettingsTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SmokeTest.kt$org.mozilla.focus.testAnnotations.SmokeTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SupportUtils.kt$org.mozilla.focus.utils.SupportUtils.kt</ID>
+    <ID>AbsentOrWrongFileLicense:SupportUtilsTest.kt$org.mozilla.focus.utils.SupportUtilsTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:TelemetryWrapper.kt$org.mozilla.focus.telemetry.TelemetryWrapper.kt</ID>
+    <ID>AbsentOrWrongFileLicense:Theme.kt$org.mozilla.focus.theme.Theme.kt</ID>
+    <ID>AbsentOrWrongFileLicense:ToggleBlockTest.kt$org.mozilla.focus.activity.ToggleBlockTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:TransitionDrawableGroup.kt$org.mozilla.focus.animation.TransitionDrawableGroup.kt</ID>
+    <ID>AbsentOrWrongFileLicense:URLExceptionTest.kt$org.mozilla.focus.activity.URLExceptionTest.kt</ID>
+    <ID>AbsentOrWrongFileLicense:ViewUtils.kt$org.mozilla.focus.utils.ViewUtils.kt</ID>
+    <ID>CollapsibleIfStatements:MainActivity.kt$MainActivity$if (!isTaskRoot) { if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) &amp;&amp; Intent.ACTION_MAIN == intent.action) { finish() return } }</ID>
+    <ID>CollapsibleIfStatements:UrlInputFragment.kt$UrlInputFragment.&lt;no name provided&gt;$if (reverse) { if (isOverlay) { dismiss() } }</ID>
     <ID>EmptyFunctionBlock:AutocompleteListFragment.kt$AutocompleteListFragment.&lt;no name provided&gt;${}</ID>
-    <ID>EmptyFunctionBlock:CustomTabTest.kt$CustomTabTest${}</ID>
     <ID>EmptyFunctionBlock:ExceptionsListFragment.kt$ExceptionsListFragment.&lt;no name provided&gt;${}</ID>
     <ID>EmptyFunctionBlock:FirstrunFragment.kt$FirstrunFragment.&lt;no name provided&gt;${}</ID>
     <ID>EmptyFunctionBlock:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.&lt;no name provided&gt;${}</ID>
     <ID>EmptyFunctionBlock:TabSheetFragment.kt$TabSheetFragment${}</ID>
-    <ID>FunctionOnlyReturningConstant:Settings.kt$Settings$fun shouldBlockImages(): Boolean</ID>
     <ID>ImplicitDefaultLocale:LocalizedContent.kt$LocalizedContent$String.format( "%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode.toString() + engineIndicator )</ID>
-    <ID>ImplicitDefaultLocale:URLMismatchTest.kt$URLMismatchTest$String.format("mozilla focus - %s Search", "google")</ID>
     <ID>LongMethod:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexMethod") override fun onClick(view: View)</ID>
     <ID>LongMethod:BrowserMenuAdapter.kt$BrowserMenuAdapter$private fun initializeMenu(url: String, customTabConfig: CustomTabConfig?)</ID>
-    <ID>LongMethod:MultitaskingTest.kt$MultitaskingTest$@Test fun testVisitingMultipleSites()</ID>
-    <ID>LongMethod:UrlInputFragment.kt$UrlInputFragment$ // This method correctly triggers a complexity warning. This method is indeed very and too complex. // However refactoring it is not trivial at this point so we ignore the warning for now. @Suppress("ComplexMethod") private fun playVisibilityAnimation(reverse: Boolean)</ID>
     <ID>MatchingDeclarationName:SettingsSearchMenuRobot.kt$SearchSettingsRobot</ID>
-    <ID>MaxLineLength:MobileMetricsPingStorageTest.kt$MobileMetricsPingStorageTest$private val file = File("${(ApplicationProvider.getApplicationContext() as FocusApplication).cacheDir}/${MobileMetricsPingStorage.STORAGE_FOLDER}/${MobileMetricsPingStorage.FILE_NAME}")</ID>
-    <ID>MaxLineLength:StringTest.kt$StringTest$"http://amazon.com/Mockingjay-Hunger-Games-Suzanne-Collins/dp/0545663261/ref=pd_sim_14_2?_encoding=UTF8&amp;psc=1&amp;refRID=90ZHE3V976TKBGDR9VAM"</ID>
-    <ID>MaxLineLength:StringTest.kt$StringTest$"https://www.nytimes.com/2017/08/30/world/europe/princess-diana-death-anniversary.html?hp&amp;action=click&amp;pgtype=Homepage&amp;clickSource=story-heading&amp;module=second-column-region&amp;region=top-news&amp;WT.nav=top-news"</ID>
-    <ID>MaxLineLength:StringTest.kt$StringTest$"https://www.wsj.com/articles/mexican-presidential-candidate-calls-for-nafta-talks-to-be-suspended-1504137175"</ID>
-    <ID>MaxLineLength:SwitchLocaleTest.kt$SwitchLocaleTest$/* re-enter settings and general settings, change it back to system locale, verify the locale is changed */</ID>
-    <ID>MaxLineLength:UriTest.kt$UriTest$assertTruncatedHost("yahoo.com", "https://de.search.yahoo.com/search?p=mozilla&amp;fr=yfp-t&amp;fp=1&amp;toggle=1&amp;cop=mss&amp;ei=UTF-8")</ID>
     <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val BLOCKING_ENABLED = "blocking_enabled"</ID>
     <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val REQUEST_DESKTOP = "request_desktop"</ID>
     <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val TITLE = "title"</ID>
     <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val URL = "url"</ID>
     <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$val FRAGMENT_TAG = "add-to-homescreen-prompt-dialog"</ID>
-    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val CLOSING_DELAY = 300</ID>
-    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val CLOSING_DURATION = 300</ID>
-    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val DEFAULT_DURATION = 1000</ID>
-    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val DEFAULT_RESOURCE_ID = 0</ID>
-    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val PROGRESS_DURATION = 200</ID>
-    <ID>MayBeConst:BiometricAuthenticationDialogFragment.kt$BiometricAuthenticationDialogFragment.Companion$val FRAGMENT_TAG = "biometric-dialog-fragment"</ID>
     <ID>MayBeConst:CrashReporterFragment.kt$CrashReporterFragment.Companion$val FRAGMENT_TAG = "crash-reporter"</ID>
     <ID>MayBeConst:Features.kt$Features.Companion$val SEARCH_TERMS_OR_URL: Boolean = true</ID>
     <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val DEFAULT_ICON_CHAR = '?'</ID>
@@ -41,7 +58,6 @@
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_ENGINE_NAME_KEY = "search-engine-name"</ID>
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_QUERY_KEY = "search-query"</ID>
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SUPER_STATE_KEY = "super-state"</ID>
-    <ID>MayBeConst:SettingsActivity.kt$SettingsActivity.Companion$@JvmField val ACTIVITY_RESULT_LOCALE_CHANGED = 1</ID>
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val ACTION = "action"</ID>
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val ERROR = "error"</ID>
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val HISTOGRAM = "histogram"</ID>
@@ -152,9 +168,6 @@
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SELECTION = "selection"</ID>
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SETTINGS = "settings"</ID>
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SKIP = "skip"</ID>
-    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SURVEY_TIP = "survey_tip"</ID>
-    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SURVEY_TIP_ES = "survey_tip_es"</ID>
-    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SURVEY_TIP_FR = "survey_tip_fr"</ID>
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val TAB = "tab"</ID>
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val URL = "url"</ID>
     <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val WHATS_NEW = "whats_new"</ID>
@@ -162,47 +175,10 @@
     <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ANIMATION_BROWSER_SCREEN = "browser_screen"</ID>
     <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ANIMATION_DURATION = 200</ID>
     <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_ANIMATION = "animation"</ID>
-    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_HEIGHT = "height"</ID>
     <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_SESSION_UUID = "sesssion_uuid"</ID>
-    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_WIDTH = "width"</ID>
-    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_X = "x"</ID>
-    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_Y = "y"</ID>
     <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val TIPS_ALPHA = 0.65f</ID>
-    <ID>MemberNameEqualsClassName:AddToHomescreenTest.kt$AddToHomescreenTest$@Ignore("Flaky test, will be refactored") @Test @Throws(UiObjectNotFoundException::class) @Suppress("LongMethod") fun AddToHomeScreenTest()</ID>
-    <ID>MemberNameEqualsClassName:FirstRunDialogueTest.kt$FirstRunDialogueTest$@Test fun FirstRunDialogueTest()</ID>
-    <ID>NewLineAtEndOfFile:Components.kt$org.mozilla.focus.Components.kt</ID>
     <ID>NewLineAtEndOfFile:SupportUtilsTest.kt$org.mozilla.focus.utils.SupportUtilsTest.kt</ID>
     <ID>NewLineAtEndOfFile:TestFocusApplication.kt$org.mozilla.focus.TestFocusApplication.kt</ID>
-    <ID>ReturnCount:IconGenerator.kt$IconGenerator.Companion$ private fun getRepresentativeSnippet(url: String?): String?</ID>
-    <ID>ReturnCount:IntentProcessor.kt$IntentProcessor$ fun handleIntent(context: Context, intent: SafeIntent, savedInstanceState: Bundle?): Result</ID>
-    <ID>ReturnCount:IntentUtils.kt$IntentUtils$private fun handleUnsupportedLink(context: Context, intent: Intent): Boolean</ID>
     <ID>ReturnCount:MainActivity.kt$MainActivity$override fun onBackPressed()</ID>
-    <ID>ReturnCount:SearchEngineWriter.kt$SearchEngineWriter.Companion$private fun xmlToString(doc: Document): String?</ID>
-    <ID>ReturnCount:String.kt$ fun String.beautifyUrl(): String</ID>
-    <ID>SwallowedException:BiometricAuthenticationHandler.kt$BiometricAuthenticationHandler$catch (err: KeyPermanentlyInvalidatedException) { false }</ID>
-    <ID>SwallowedException:BrowserFragment.kt$BrowserFragment$catch (e: IllegalStateException) { // It can happen that at this point in time the activity is already in the background // and onSaveInstanceState() has already been called. Fragment transactions are not // allowed after that anymore. It's probably safe to guess that the user might not // be interested in adding to homescreen now. }</ID>
-    <ID>SwallowedException:BrowserFragment.kt$BrowserFragment$catch (e: IllegalStateException) { // It can happen that at this point in time the activity is already in the background // and onSaveInstanceState() has already been called. Fragment transactions are not // allowed after that anymore. }</ID>
-    <ID>SwallowedException:BrowserFragment.kt$BrowserFragment$catch (e: PendingIntent.CanceledException) { // There's really nothing we can do here... }</ID>
-    <ID>SwallowedException:IntentUtils.kt$IntentUtils$catch (e: URISyntaxException) { return false }</ID>
-    <ID>SwallowedException:LocalizedContent.kt$LocalizedContent$catch (e: PackageManager.NameNotFoundException) { // Nothing to do if we can't find the package name. }</ID>
-    <ID>SwallowedException:ManualAddSearchEngineSettingsFragment.kt$ManualAddSearchEngineSettingsFragment.Companion$catch (e: IOException) { Log.d(LOGTAG, "Failure to get response code from server: returning invalid search query") false }</ID>
-    <ID>SwallowedException:MobileMetricsPingStorage.kt$MobileMetricsPingStorage$catch (e: FileNotFoundException) { null }</ID>
-    <ID>SwallowedException:MobileMetricsPingStorage.kt$MobileMetricsPingStorage$catch (e: IOException) { atomicFile.failWrite(stream) }</ID>
-    <ID>SwallowedException:MobileMetricsPingStorage.kt$MobileMetricsPingStorage$catch (e: JSONException) { null }</ID>
-    <ID>SwallowedException:SearchEngineWriter.kt$SearchEngineWriter.Companion$catch (e: TransformerConfigurationException) { return null }</ID>
-    <ID>SwallowedException:SearchEngineWriter.kt$SearchEngineWriter.Companion$catch (e: TransformerException) { return null }</ID>
-    <ID>SwallowedException:SearchSuggestionsFetcher.kt$SearchSuggestionsFetcher$catch (ex: SearchSuggestionClient.FetchException) { listOf&lt;String&gt;() }</ID>
-    <ID>SwallowedException:SearchSuggestionsFetcher.kt$SearchSuggestionsFetcher$catch (ex: SearchSuggestionClient.ResponseParserException) { listOf&lt;String&gt;() }</ID>
-    <ID>SwallowedException:SupportUtils.kt$SupportUtils$catch (e: ActivityNotFoundException) { // In some cases, a matching Activity may not exist (according to the Android docs). openDefaultBrowserSumoPage(context) }</ID>
-    <ID>UnusedPrivateMember:CustomTabTest.kt$CustomTabTest$private val TEST_PAGE_HEADER_ID = "header"</ID>
-    <ID>UnusedPrivateMember:CustomTabTest.kt$CustomTabTest$private val TEST_PAGE_HEADER_TEXT = "focus test page"</ID>
-    <ID>UnusedPrivateMember:URLAutocompleteTest.kt$URLAutocompleteTest$// From API 23 and below private val CustomURLRow_old = Espresso.onData(Matchers.anything()) .inAdapterView( AllOf.allOf( ViewMatchers.withId(android.R.id.list), childAtPosition( ViewMatchers.withClassName(Matchers.`is`("android.widget.LinearLayout")), 0 ) ) ) .atPosition(4)</ID>
-    <ID>UnusedPrivateMember:URLAutocompleteTest.kt$URLAutocompleteTest$// From API 24 and above private val CustomURLRow = Espresso.onData(Matchers.anything()) .inAdapterView( AllOf.allOf( ViewMatchers.withId(android.R.id.list), childAtPosition( ViewMatchers.withId(android.R.id.list_container), 0 ) ) ) .atPosition(4)</ID>
-    <ID>UnusedPrivateMember:URLAutocompleteTest.kt$URLAutocompleteTest$private fun toggleTopsiteAC()</ID>
-    <ID>UnusedPrivateMember:WhatsNewTest.kt$WhatsNewTest$i</ID>
-    <ID>UtilityClassWithPublicConstructor:Features.kt$Features</ID>
-    <ID>UtilityClassWithPublicConstructor:FileUtils.kt$FileUtils</ID>
-    <ID>UtilityClassWithPublicConstructor:IconGenerator.kt$IconGenerator</ID>
-    <ID>UtilityClassWithPublicConstructor:SearchEngineWriter.kt$SearchEngineWriter</ID>
   </CurrentIssues>
 </SmellBaseline>
