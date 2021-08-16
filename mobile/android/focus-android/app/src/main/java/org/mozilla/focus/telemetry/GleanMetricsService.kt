@@ -85,8 +85,7 @@ class GleanMetricsService(context: Context) : MetricsService {
                     Browser.defaultSearchEngine.set(getDefaultSearchEngineIdentifierForTelemetry(context))
                 }
 
-                // Disabled until data-review r+
-                // activationPing.checkAndSend()
+                activationPing.checkAndSend()
             }
         }
     }

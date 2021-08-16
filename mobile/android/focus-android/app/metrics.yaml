@@ -113,6 +113,26 @@ browser:
       - android-probes@mozilla.com
     expires: "2022-11-01"
 
+activation:
+  activation_id:
+    type: uuid
+    lifetime: user
+    description: |
+      An alternate identifier, not correlated with the client_id, generated once
+      and only sent with the activation ping.
+    send_in_pings:
+      - activation
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/4545
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/issues/4901
+    data_sensitivity:
+      - highly_sensitive
+    notification_emails:
+      - android-probes@mozilla.com
+      - jalmeida@mozilla.com
+    expires: never
+
 legacy_ids:
   client_id:
     type: uuid
