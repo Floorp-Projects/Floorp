@@ -417,6 +417,32 @@ const AVAILABLE_SHIMS = [
     matches: ["*://media.richrelevance.com/rrserver/js/1.2/p13n.js"],
     onlyIfBlockedByETP: true,
   },
+  {
+    id: "Vidible",
+    branch: ["nightly"],
+    platform: "all",
+    name: "Vidible",
+    bug: "1713710",
+    file: "vidible.js",
+    logos: ["play.svg"],
+    matches: [
+      "*://*.vidible.tv/*/vidible-min.js*",
+      "*://vdb-cdn-files.s3.amazonaws.com/*/vidible-min.js*",
+    ],
+    needsShimHelpers: ["optIn"],
+    onlyIfBlockedByETP: true,
+    unblocksOnOptIn: [
+      "*://delivery.vidible.tv/jsonp/pid=*/vid=*/*.js*",
+      "*://delivery.vidible.tv/placement/*",
+      "*://img.vidible.tv/prod/*",
+      "*://cdn-ssl.vidible.tv/prod/player/js/*.js",
+      "*://hlsrv.vidible.tv/prod/*.m3u8*",
+      "*://videos.vidible.tv/prod/*.key*",
+      "*://videos.vidible.tv/prod/*.mp4*",
+      "*://videos.vidible.tv/prod/*.webm*",
+      "*://videos.vidible.tv/prod/*.ts*",
+    ],
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;

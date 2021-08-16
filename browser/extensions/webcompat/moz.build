@@ -113,6 +113,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/tracking-pixel.png",
     "shims/vast2.xml",
     "shims/vast3.xml",
+    "shims/vidible.js",
     "shims/vmad.xml",
 ]
 
