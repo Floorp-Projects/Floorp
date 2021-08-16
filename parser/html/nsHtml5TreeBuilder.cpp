@@ -605,7 +605,7 @@ void nsHtml5TreeBuilder::eof() {
           NS_HTML5_BREAK(eofloop);
         }
         if (MOZ_UNLIKELY(mViewSource)) {
-          errUnclosedElements(eltPos, nsGkAtoms::_template);
+          errListUnclosedStartTags(0);
         }
         while (currentPtr >= eltPos) {
           pop();
