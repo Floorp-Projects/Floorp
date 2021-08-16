@@ -35,12 +35,12 @@ plugins {
     // limitations of the gradle plugin. We've decided to stick with duplication for now since the
     // other methods involve using undocumented APIs
     // https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations
-    id("io.gitlab.arturbosch.detekt").version("1.16.0")
+    id("io.gitlab.arturbosch.detekt").version("1.18.0")
 }
 
 detekt {
     // The version number is duplicated, please refer to plugins block for more details
-    version = "1.16.0"
+    version = "1.18.0"
     buildUponDefaultConfig = true
     input = files("$projectDir/app")
     config = files("$projectDir/quality/detekt.yml")
