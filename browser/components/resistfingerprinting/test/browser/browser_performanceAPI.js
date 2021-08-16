@@ -4,12 +4,10 @@ add_task(async function runRPTests() {
   let runTests = async function(data) {
     let timerlist = data.list;
     let expectedPrecision = data.precision;
-    var isRounded = function() {
-      return "Placeholder for eslint";
-    };
-    let evalStr = "var isRounded = " + data.isRoundedFunc;
+    // eslint beleives that isrounded is available in this scope, but if you
+    // remove the assignment, you will see it is not
     // eslint-disable-next-line
-    eval(evalStr);
+    let isRounded = eval(data.isRoundedFunc);
 
     ok(
       isRounded(content.performance.timeOrigin, expectedPrecision),
@@ -106,12 +104,10 @@ add_task(async function runRTPTests() {
   let runTests = async function(data) {
     let timerlist = data.list;
     let expectedPrecision = data.precision;
-    var isRounded = function() {
-      return "Placeholder for eslint";
-    };
-    let evalStr = "var isRounded = " + data.isRoundedFunc;
+    // eslint beleives that isrounded is available in this scope, but if you
+    // remove the assignment, you will see it is not
     // eslint-disable-next-line
-    eval(evalStr);
+    let isRounded = eval(data.isRoundedFunc);
 
     ok(
       isRounded(content.performance.timeOrigin, expectedPrecision),
