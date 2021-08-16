@@ -741,7 +741,7 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    <!-- Label for the total number of trackers blocked. %s represents the number of trackers blocked. -->
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
     <string name="trackers_count_note">Trackers blocked since %s</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">Content</string>
