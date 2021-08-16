@@ -135,7 +135,7 @@ void MaybeCollectGarbageOnIPCMessage() {
 }
 
 class MOZ_STACK_CLASS AutoSetCurrentTransaction final {
-  typedef mozilla::ipc::BackgroundChildImpl BackgroundChildImpl;
+  using BackgroundChildImpl = mozilla::ipc::BackgroundChildImpl;
 
   Maybe<IDBTransaction&> const mTransaction;
   Maybe<IDBTransaction&> mPreviousTransaction;
@@ -829,7 +829,7 @@ bool WorkerPermissionOperationCompleted::WorkerRun(
 }
 
 class MOZ_STACK_CLASS AutoSetCurrentFileHandle final {
-  typedef mozilla::ipc::BackgroundChildImpl BackgroundChildImpl;
+  using BackgroundChildImpl = mozilla::ipc::BackgroundChildImpl;
 
   IDBFileHandle* const mFileHandle;
   IDBFileHandle* mPreviousFileHandle;

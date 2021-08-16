@@ -48,9 +48,9 @@ class PBackgroundIDBDatabaseFileChild;
 }  // namespace indexedDB
 
 class IDBDatabase final : public DOMEventTargetHelper {
-  typedef mozilla::dom::indexedDB::DatabaseSpec DatabaseSpec;
-  typedef mozilla::dom::StorageType StorageType;
-  typedef mozilla::dom::quota::PersistenceType PersistenceType;
+  using DatabaseSpec = mozilla::dom::indexedDB::DatabaseSpec;
+  using StorageType = mozilla::dom::StorageType;
+  using PersistenceType = mozilla::dom::quota::PersistenceType;
 
   class Observer;
   friend class Observer;
