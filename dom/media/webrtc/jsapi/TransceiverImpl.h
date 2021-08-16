@@ -188,7 +188,6 @@ class TransceiverImpl : public nsISupports,
   RefPtr<WebrtcCallWrapper> mCallWrapper;
   RefPtr<MediaSessionConduit> mConduit;
   // Call thread only.
-  RefPtr<MediaConduitController> mConduitController;
   RefPtr<MediaPipelineTransmit> mTransmitPipeline;
   // The spec says both RTCRtpReceiver and RTCRtpSender have a slot for
   // an RTCDtlsTransport.  They are always the same, so we'll store it

@@ -81,6 +81,23 @@ void WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF) {
   listener.Disconnect();
 }
 
+/**
+ * Helper that, given that canonicals have just been updated on the current
+ * thread, will block its execution until mirrors and their watchers have
+ * executed on aTarget.
+ */
+inline void WaitForMirrors(const RefPtr<nsISerialEventTarget>& aTarget) {
+  Unused << WaitFor(InvokeAsync(aTarget, __func__, [] {
+    return GenericPromise::CreateAndResolve(true, "WaitForMirrors resolver");
+  }));
+}
+
+/**
+ * Short form of WaitForMirrors that assumes mirrors are on the current thread
+ * (like canonicals).
+ */
+inline void WaitForMirrors() { WaitForMirrors(GetCurrentSerialEventTarget()); }
+
 }  // namespace mozilla
 
 #endif  // WAITFOR_H_

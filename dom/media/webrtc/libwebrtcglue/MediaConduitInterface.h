@@ -39,9 +39,10 @@ struct RTCRtpSourceEntry;
 
 enum class MediaSessionConduitLocalDirection : int { kSend, kRecv };
 
+class VideoConduitControlInterface;
+class AudioConduitControlInterface;
 class VideoSessionConduit;
 class AudioSessionConduit;
-class RtpRtcpConfig;
 class WebrtcCallWrapper;
 
 using RtpExtList = std::vector<webrtc::RtpExtension>;
@@ -166,11 +167,6 @@ class MediaSessionConduit {
   virtual Maybe<DOMHighResTimeStamp> LastRtcpReceived() const = 0;
   virtual DOMHighResTimeStamp GetNow() const = 0;
 
-  virtual MediaConduitErrorCode StopTransmitting() = 0;
-  virtual MediaConduitErrorCode StartTransmitting() = 0;
-  virtual MediaConduitErrorCode StopReceiving() = 0;
-  virtual MediaConduitErrorCode StartReceiving() = 0;
-
   /**
    * Function to attach transmitter transport end-point of the Media conduit.
    * @param aTransport: Reference to the concrete teansport implementation
@@ -196,35 +192,10 @@ class MediaSessionConduit {
   virtual MediaConduitErrorCode SetReceiverTransport(
       RefPtr<TransportInterface> aTransport) = 0;
 
-  /* Sets the local SSRCs
-   * @return true iff the local ssrcs == aSSRCs upon return
-   * Note: this is an ordered list and {a,b,c} != {b,a,c}
-   */
-  virtual bool SetLocalSSRCs(const Ssrcs& aSSRCs, const Ssrcs& aRtxSSRCs) = 0;
   virtual Ssrcs GetLocalSSRCs() const = 0;
 
-  /**
-   * Adds negotiated RTP header extensions to the the conduit. Unknown
-   * extensions are ignored.
-   * @param aDirection the local direction to set the RTP header extensions for
-   * @param aExtensions the RTP header extensions to set
-   * @return if all extensions were set it returns a success code,
-   *         if an extension fails to set it may immediately return an error
-   *         code
-   * TODO webrtc.org 64 update: make return type void again
-   */
-  virtual MediaConduitErrorCode SetLocalRTPExtensions(
-      MediaSessionConduitLocalDirection aDirection,
-      const RtpExtList& aExtensions) = 0;
-
   virtual bool GetRemoteSSRC(Ssrc* ssrc) const = 0;
-  virtual bool SetRemoteSSRC(Ssrc ssrc, Ssrc rtxSsrc) = 0;
-  virtual bool UnsetRemoteSSRC(Ssrc ssrc) = 0;
-  virtual bool SetLocalCNAME(const char* cname) = 0;
-
-  virtual bool SetLocalMID(const std::string& mid) = 0;
-
-  virtual void SetSyncGroup(const std::string& group) = 0;
+  virtual void UnsetRemoteSSRC(Ssrc ssrc) = 0;
 
   virtual bool HasCodecPluginID(uint64_t aPluginID) const = 0;
 
@@ -371,6 +342,12 @@ class VideoSessionConduit : public MediaSessionConduit {
   }
 
   /**
+   * Hooks up mControl Mirrors with aControl Canonicals, and sets up
+   * mWatchManager to react on Mirror changes.
+   */
+  virtual void InitControl(VideoConduitControlInterface* aControl) = 0;
+
+  /**
    * Function to attach Renderer end-point of the Media-Video conduit.
    * @param aRenderer : Reference to the concrete Video renderer implementation
    * Note: Multiple invocations of this API shall remove an existing renderer
@@ -382,8 +359,7 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   virtual void DisableSsrcChanges() = 0;
 
-  bool SetRemoteSSRC(Ssrc ssrc, Ssrc rtxSsrc) override = 0;
-  bool UnsetRemoteSSRC(Ssrc ssrc) override = 0;
+  void UnsetRemoteSSRC(Ssrc ssrc) override = 0;
 
   /**
    * Function to deliver a capture video frame for encoding and transport.
@@ -395,33 +371,6 @@ class VideoSessionConduit : public MediaSessionConduit {
    */
   virtual MediaConduitErrorCode SendVideoFrame(
       const webrtc::VideoFrame& frame) = 0;
-
-  virtual MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) = 0;
-
-  /**
-   * Function to configure send codec for the video session
-   * @param sendSessionConfig: CodecConfiguration
-   * @result: On Success, the video engine is configured with passed in codec
-   *          for send. On failure, video engine transmit functionality is
-   *          disabled.
-   * NOTE: This API can be invoked multiple time. Invoking this API may involve
-   *       restarting transmission sub-system on the engine
-   *
-   */
-  virtual MediaConduitErrorCode ConfigureSendMediaCodec(
-      const VideoCodecConfig& sendSessionConfig,
-      const RtpRtcpConfig& aRtpRtcpConfig) = 0;
-
-  /**
-   * Function to configurelist of receive codecs for the video session
-   * @param sendSessionConfig: CodecConfiguration
-   * NOTE: This API can be invoked multiple time. Invoking this API may involve
-   *       restarting reception sub-system on the engine
-   *
-   */
-  virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<VideoCodecConfig>& recvCodecConfigList,
-      const RtpRtcpConfig& aRtpRtcpConfig) = 0;
 
   /**
    * These methods allow unit tests to double-check that the
@@ -484,6 +433,12 @@ class AudioSessionConduit : public MediaSessionConduit {
   }
 
   /**
+   * Hooks up mControl Mirrors with aControl Canonicals, and sets up
+   * mWatchManager to react on Mirror changes.
+   */
+  virtual void InitControl(AudioConduitControlInterface* aControl) = 0;
+
+  /**
    * Function to deliver externally captured audio sample for encoding and
    * transport
    * @param frame [in]: AudioFrame in upstream's format for forwarding to the
@@ -518,25 +473,6 @@ class AudioSessionConduit : public MediaSessionConduit {
    * @param freq: Sampling rate (in Hz) to check
    */
   virtual bool IsSamplingFreqSupported(int freq) const = 0;
-
-  /**
-   * Function to configure send codec for the audio session
-   * @param sendSessionConfig: CodecConfiguration
-   * NOTE: See VideoConduit for more information
-   */
-  virtual MediaConduitErrorCode ConfigureSendMediaCodec(
-      const AudioCodecConfig& sendCodecConfig) = 0;
-
-  /**
-   * Function to configure list of receive codecs for the audio session
-   * @param sendSessionConfig: CodecConfiguration
-   * NOTE: See VideoConduit for more information
-   */
-  virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<AudioCodecConfig>& recvCodecConfigList) = 0;
-
-  virtual bool InsertDTMFTone(unsigned char payloadType, int payloadFrequency,
-                              int eventCode, int lengthMs) = 0;
 
   virtual Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const = 0;
   virtual Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const = 0;
