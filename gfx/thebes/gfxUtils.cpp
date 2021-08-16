@@ -1194,37 +1194,37 @@ const float kIdentityNarrowYCbCrToRGB_RowMajor[16] = {
 //
 // See Rec. ITU-T H.273 (12/2016) for details on CICP
 /* static */ Maybe<gfx::YUVColorSpace> gfxUtils::CicpToColorSpace(
-    const qcms_MatrixCoefficients aMatrixCoefficients,
-    const qcms_ColourPrimaries aColourPrimaries, LazyLogModule& aLogger) {
+    const CICP::MatrixCoefficients aMatrixCoefficients,
+    const CICP::ColourPrimaries aColourPrimaries, LazyLogModule& aLogger) {
   switch (aMatrixCoefficients) {
-    case mc_Bt2020_Ncl:
-    case mc_Bt2020_Cl:
+    case CICP::MatrixCoefficients::MC_BT2020_NCL:
+    case CICP::MatrixCoefficients::MC_BT2020_CL:
       return Some(gfx::YUVColorSpace::BT2020);
-    case mc_Bt601:
+    case CICP::MatrixCoefficients::MC_BT601:
       return Some(gfx::YUVColorSpace::BT601);
-    case mc_Bt709:
+    case CICP::MatrixCoefficients::MC_BT709:
       return Some(gfx::YUVColorSpace::BT709);
-    case mc_Identity:
+    case CICP::MatrixCoefficients::MC_IDENTITY:
       return Some(gfx::YUVColorSpace::Identity);
-    case mc_Chromat_Ncl:
-    case mc_Chromat_Cl:
-    case mc_Unspecified:
+    case CICP::MatrixCoefficients::MC_CHROMAT_NCL:
+    case CICP::MatrixCoefficients::MC_CHROMAT_CL:
+    case CICP::MatrixCoefficients::MC_UNSPECIFIED:
       switch (aColourPrimaries) {
-        case cp_Bt601:
+        case CICP::ColourPrimaries::CP_BT601:
           return Some(gfx::YUVColorSpace::BT601);
-        case cp_Bt709:
+        case CICP::ColourPrimaries::CP_BT709:
           return Some(gfx::YUVColorSpace::BT709);
-        case cp_Bt2020:
+        case CICP::ColourPrimaries::CP_BT2020:
           return Some(gfx::YUVColorSpace::BT2020);
         default:
           MOZ_LOG(aLogger, LogLevel::Debug,
-                  ("Couldn't infer color matrix from primaries: %u",
+                  ("Couldn't infer color matrix from primaries: %hhu",
                    aColourPrimaries));
           return {};
       }
     default:
       MOZ_LOG(aLogger, LogLevel::Debug,
-              ("Unsupported color matrix value: %u", aMatrixCoefficients));
+              ("Unsupported color matrix value: %hhu", aMatrixCoefficients));
       return {};
   }
 }

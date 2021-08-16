@@ -178,7 +178,8 @@ class gfxUtils {
       mozilla::gfx::YUVColorSpace aYUVColorSpace);
 
   static mozilla::Maybe<mozilla::gfx::YUVColorSpace> CicpToColorSpace(
-      const qcms_MatrixCoefficients, const qcms_ColourPrimaries,
+      const mozilla::gfx::CICP::MatrixCoefficients,
+      const mozilla::gfx::CICP::ColourPrimaries,
       mozilla::LazyLogModule& aLogger);
 
   /**
