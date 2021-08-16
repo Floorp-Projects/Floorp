@@ -77,19 +77,6 @@ class StrictEnhancedTrackingProtectionTest {
     }
 
     @Test
-    fun testStrictVisitContentShield() {
-        val trackingProtectionTest =
-            TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
-
-        navigationToolbar {
-        }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
-
-        enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionShield()
-        }
-    }
-
-    @Test
     fun testStrictVisitProtectionSheet() {
         val trackingProtectionTest =
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
@@ -97,9 +84,7 @@ class StrictEnhancedTrackingProtectionTest {
         navigationToolbar {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
-        enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionShield()
-        }.openEnhancedTrackingProtectionSheet {
+        enhancedTrackingProtection {}.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
         }
     }
@@ -113,7 +98,6 @@ class StrictEnhancedTrackingProtectionTest {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionShield()
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
         }.disableEnhancedTrackingProtectionFromSheet {
@@ -139,7 +123,6 @@ class StrictEnhancedTrackingProtectionTest {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionShield()
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
         }.disableEnhancedTrackingProtectionFromSheet {
@@ -167,7 +150,6 @@ class StrictEnhancedTrackingProtectionTest {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionShield()
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
         }.openDetails {

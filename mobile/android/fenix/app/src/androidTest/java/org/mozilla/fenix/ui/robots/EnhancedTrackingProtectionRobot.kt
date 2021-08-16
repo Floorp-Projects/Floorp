@@ -33,8 +33,6 @@ class EnhancedTrackingProtectionRobot {
 
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
 
-    fun verifyEnhancedTrackingProtectionShield() = assertEnhancedTrackingProtectionShield()
-
     fun verifyEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) =
         assertEnhancedTrackingProtectionSheetStatus(status, state)
 
@@ -52,15 +50,7 @@ class EnhancedTrackingProtectionRobot {
     class Transition {
         fun openEnhancedTrackingProtectionSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
             openEnhancedTrackingProtectionSheet().click()
-
             EnhancedTrackingProtectionRobot().interact()
-            return Transition()
-        }
-
-        fun closeNotificationPopup(interact: BrowserRobot.() -> Unit): Transition {
-            closeButton().click()
-
-            BrowserRobot().interact()
             return Transition()
         }
 
@@ -80,6 +70,7 @@ class EnhancedTrackingProtectionRobot {
         }
 
         fun openProtectionSettings(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): Transition {
+            onView(withId(R.id.trackingProtectionDetails)).click()
             openEnhancedTrackingProtectionSettings().click()
 
             SettingsSubMenuEnhancedTrackingProtectionRobot().interact()
@@ -121,10 +112,8 @@ private fun assertEnhancedTrackingProtectionDetailsStatus(status: String) {
     mDevice.waitNotNull(Until.findObjects(By.textContains(status)))
 }
 
-private fun closeButton() = onView(ViewMatchers.withId(R.id.close_onboarding))
-
 private fun openEnhancedTrackingProtectionSheet() =
-    onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+    onView(withId(R.id.mozac_browser_toolbar_security_indicator))
 
 private fun disableEnhancedTrackingProtection() =
     onView(ViewMatchers.withResourceName("switch_widget"))
@@ -133,7 +122,7 @@ private fun openEnhancedTrackingProtectionSettings() =
     onView(ViewMatchers.withId(R.id.protection_settings))
 
 private fun openEnhancedTrackingProtectionDetails() =
-    onView(ViewMatchers.withId(R.id.tracking_content))
+    onView(ViewMatchers.withId(R.id.trackingProtectionDetails))
 
 private fun assertTrackingCookiesBlocked() {
     mDevice.findObject(UiSelector().resourceId("$packageName:id/cross_site_tracking"))

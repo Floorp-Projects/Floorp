@@ -50,8 +50,6 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     fun verifyEnhancedTrackingProtectionOptions() = assertEnhancedTrackingProtectionOptions()
 
-    fun verifyEnhancedTrackingProtectionOptionsGrayedOut() = assertEnhancedTrackingProtectionOptionsGrayedOut()
-
     fun verifyTrackingProtectionSwitchEnabled() = assertTrackingProtectionSwitchEnabled()
 
     fun switchEnhancedTrackingProtectionToggle() = onView(withResourceName("switch_widget")).click()
