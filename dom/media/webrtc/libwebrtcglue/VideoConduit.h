@@ -9,11 +9,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/StateMirroring.h"
 #include "mozilla/UniquePtr.h"
 #include "nsITimer.h"
 
 #include "MediaConduitInterface.h"
 #include "common/MediaEngineWrapper.h"
+#include "RtpRtcpConfig.h"
 #include "RunningStat.h"
 #include "RtpPacketQueue.h"
 #include "transport/runnable_utils.h"
@@ -71,10 +73,6 @@ class WebrtcVideoConduit
   // Returns true when both encoder and decoder are HW accelerated.
   static bool HasH264Hardware();
 
-  MediaConduitErrorCode SetLocalRTPExtensions(
-      MediaSessionConduitLocalDirection aDirection,
-      const RtpExtList& aExtensions) override;
-
   /**
    * Function to attach Renderer end-point for the Media-Video conduit.
    * @param aRenderer : Reference to the concrete mozilla Video renderer
@@ -100,49 +98,12 @@ class WebrtcVideoConduit
   Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
   DOMHighResTimeStamp GetNow() const override;
 
-  MediaConduitErrorCode StopTransmitting() override;
-  MediaConduitErrorCode StartTransmitting() override;
-  MediaConduitErrorCode StopReceiving() override;
-  MediaConduitErrorCode StartReceiving() override;
-
   void OnFrameDelivered() override;
 
   MediaConduitErrorCode StopTransmittingLocked();
   MediaConduitErrorCode StartTransmittingLocked();
   MediaConduitErrorCode StopReceivingLocked();
   MediaConduitErrorCode StartReceivingLocked();
-
-  /**
-   * Function to configure sending codec mode for different content
-   */
-  MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) override;
-
-  /**
-   * Function to configure send codec for the video session
-   * @param sendSessionConfig: CodecConfiguration
-   * @result: On Success, the video engine is configured with passed in codec
-   *          for send
-   *          On failure, video engine transmit functionality is disabled.
-   * NOTE: This API can be invoked multiple time. Invoking this API may involve
-   * restarting transmission sub-system on the engine.
-   */
-  MediaConduitErrorCode ConfigureSendMediaCodec(
-      const VideoCodecConfig& codecInfo,
-      const RtpRtcpConfig& aRtpRtcpConfig) override;
-
-  /**
-   * Function to configure list of receive codecs for the video session
-   * @param sendSessionConfig: CodecConfiguration
-   * @result: On Success, the video engine is configured with passed in codec
-   *          for send
-   *          Also the playout is enabled.
-   *          On failure, video engine transmit functionality is disabled.
-   * NOTE: This API can be invoked multiple time. Invoking this API may involve
-   * restarting transmission sub-system on the engine.
-   */
-  MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<VideoCodecConfig>& codecConfigList,
-      const RtpRtcpConfig& aRtpRtcpConfig) override;
 
   /**
    * Register Transport for this Conduit. RTP and RTCP frames from the
@@ -222,6 +183,12 @@ class WebrtcVideoConduit
                      Options aOptions, std::string aPCHandle);
   virtual ~WebrtcVideoConduit();
 
+  // Call thread.
+  void InitControl(VideoConduitControlInterface* aControl) override;
+
+  // Called when a parameter in mControl has changed. Call thread.
+  void OnControlConfigChange();
+
   // Necessary Init steps on main thread.
   MediaConduitErrorCode Init();
   // Necessary Init steps on the Call thread.
@@ -232,15 +199,15 @@ class WebrtcVideoConduit
   // Any thread.
   bool GetRemoteSSRC(uint32_t* ssrc) const override;
 
-  // Call thread only.
-  bool SetLocalSSRCs(const std::vector<uint32_t>& ssrcs,
-                     const std::vector<uint32_t>& rtxSsrcs) override;
-  bool SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) override;
-  bool UnsetRemoteSSRC(uint32_t ssrc) override;
-  bool SetLocalCNAME(const char* cname) override;
-  bool SetLocalMID(const std::string& mid) override;
-  void SetSyncGroup(const std::string& group) override;
+  void UnsetRemoteSSRC(uint32_t ssrc) override;
   bool SetRemoteSSRCLocked(uint32_t ssrc, uint32_t rtxSsrc);
+
+  // Creating a recv stream or a send stream requires a local ssrc to be
+  // configured. This method will generate one if needed.
+  void EnsureLocalSSRC();
+  // Creating a recv stream requires a remote ssrc to be configured. This method
+  // will generate one if needed.
+  void EnsureRemoteSSRC();
 
   Maybe<webrtc::VideoReceiveStream::Stats> GetReceiverStats() const override;
   Maybe<webrtc::VideoSendStream::Stats> GetSenderStats() const override;
@@ -308,6 +275,45 @@ class WebrtcVideoConduit
   // thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;
 
+  struct Control {
+    // Mirrors that map to VideoConduitControlInterface for control. Call thread
+    // only.
+    Mirror<bool> mReceiving;
+    Mirror<bool> mTransmitting;
+    Mirror<Ssrcs> mLocalSsrcs;
+    Mirror<Ssrcs> mLocalRtxSsrcs;
+    Mirror<std::string> mLocalCname;
+    Mirror<std::string> mLocalMid;
+    Mirror<Ssrc> mRemoteSsrc;
+    Mirror<Ssrc> mRemoteRtxSsrc;
+    Mirror<std::string> mSyncGroup;
+    Mirror<RtpExtList> mLocalRecvRtpExtensions;
+    Mirror<RtpExtList> mLocalSendRtpExtensions;
+    Mirror<Maybe<VideoCodecConfig>> mSendCodec;
+    Mirror<Maybe<RtpRtcpConfig>> mSendRtpRtcpConfig;
+    Mirror<std::vector<VideoCodecConfig>> mRecvCodecs;
+    Mirror<Maybe<RtpRtcpConfig>> mRecvRtpRtcpConfig;
+    Mirror<webrtc::VideoCodecMode> mCodecMode;
+
+    // For caching mRemoteSsrc and mRemoteRtxSsrc, since another caller may
+    // change the remote ssrc in the stream config directly.
+    Ssrc mConfiguredRemoteSsrc = 0;
+    Ssrc mConfiguredRemoteRtxSsrc = 0;
+    // For tracking changes to mSendCodec and mSendRtpRtcpConfig.
+    Maybe<VideoCodecConfig> mConfiguredSendCodec;
+    Maybe<RtpRtcpConfig> mConfiguredSendRtpRtcpConfig;
+    // For tracking changes to mRecvCodecs and mRecvRtpRtcpConfig.
+    std::vector<VideoCodecConfig> mConfiguredRecvCodecs;
+    Maybe<RtpRtcpConfig> mConfiguredRecvRtpRtcpConfig;
+
+    Control() = delete;
+    explicit Control(const RefPtr<AbstractThread>& aCallThread);
+  } mControl;
+
+  // WatchManager allowing Mirrors to trigger functions that will update the
+  // webrtc.org configuration.
+  WatchManager<WebrtcVideoConduit> mWatchManager;
+
   mutable Mutex mMutex;
 
   // Decoder factory used by mRecvStream when it needs new decoders. This is
@@ -347,9 +353,6 @@ class WebrtcVideoConduit
       mEngineTransmitting;  // If true ==> Transmit Subsystem is up and running
   mozilla::Atomic<bool>
       mEngineReceiving;  // if true ==> Receive Subsystem up and running
-
-  // Local database of currently applied receive codecs. Call thread only.
-  std::vector<VideoCodecConfig> mRecvCodecList;
 
   // Written only on the Call thread. Guarded by mMutex, except for reads on the
   // Call thread.
@@ -409,10 +412,6 @@ class WebrtcVideoConduit
   static const unsigned int sAlphaDen = 8;
   static const unsigned int sRoundingPadding = 1024;
 
-  // Call thread only.
-  webrtc::VideoCodecMode mActiveCodecMode;
-  webrtc::VideoCodecMode mCodecMode;
-
   // WEBRTC.ORG Call API
   // Const so can be accessed on any thread. All methods are called on the Call
   // thread.
@@ -427,7 +426,7 @@ class WebrtcVideoConduit
   webrtc::VideoEncoderConfig mEncoderConfig;
 
   // Written only on the Call thread. Guarded by mMutex, except for reads on the
-  // Call thread. Calls can happen on any thread.
+  // Call thread. Calls can happen under mMutex on any thread.
   RefPtr<rtc::RefCountedObject<VideoStreamFactory>> mVideoStreamFactory;
 
   // Call thread only.
@@ -438,7 +437,7 @@ class WebrtcVideoConduit
   bool mAllowSsrcChange = true;
 
   // Accessed only on mStsThread.
-  bool mWaitingForInitialSsrc = true;
+  bool mWaitingForSignaledSsrc = true;
 
   // Accessed during configuration/signaling (call),
   // and when receiving packets (sts).
