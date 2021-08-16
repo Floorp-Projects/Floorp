@@ -94,6 +94,8 @@ class CustomTabSessionTitleObserverTest {
         override fun dismissMenu() = Unit
         override fun enableScrolling() = Unit
         override fun disableScrolling() = Unit
+        override fun collapse() = Unit
+        override fun expand() = Unit
     }
 }
 
