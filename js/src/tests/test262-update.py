@@ -44,7 +44,6 @@ FEATURE_CHECK_NEEDED = {
 RELEASE_OR_BETA = set([])
 SHELL_OPTIONS = {
     "top-level-await": "--enable-top-level-await",
-    "class-static-block": "--enable-class-static-blocks",
 }
 
 
