@@ -21,9 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1382545
 
   function runTest() {
     // No matter what we set the precision to, if we're in ResistFingerprinting mode
-    // we use the larger of the precision pref and the constant 100ms
+    // we use the larger of the precision pref and the constant RFP time-atom
     if (resistFingerprinting) {
-      expectedPrecision = expectedPrecision < 100000 ? 100000 : expectedPrecision;
+      const RFP_TIME_ATOM_MS = 16.667;
+      expectedPrecision = Math.max(1000*RFP_TIME_ATOM_MS, expectedPrecision);
     }
     window.open("file_animation_api.html");
   }
