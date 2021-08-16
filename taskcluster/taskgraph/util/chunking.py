@@ -46,7 +46,6 @@ def guess_mozinfo_from_task(task):
         "asan": "asan" in task["build-attributes"]["build_platform"],
         "bits": 32 if "32" in task["build-attributes"]["build_platform"] else 64,
         "ccov": "ccov" in task["build-attributes"]["build_platform"],
-        "crashreporter": True,
         "debug": task["build-attributes"]["build_type"] == "debug",
         "e10s": task["attributes"]["e10s"],
         "fission": task["attributes"].get("unittest_variant") == "fission",
@@ -64,6 +63,12 @@ def guess_mozinfo_from_task(task):
                 task["build-attributes"]["build_platform"]
             )
         )
+
+    # crashreporter is disabled for asan / tsan builds
+    if info["asan"] or info["tsan"]:
+        info["crashreporter"] = False
+    else:
+        info["crashreporter"] = True
 
     info["appname"] = "fennec" if info["os"] == "android" else "firefox"
 
