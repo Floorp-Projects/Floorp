@@ -66,10 +66,12 @@ let setupPerformanceAPISpoofAndDisableTest = async function(
   let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
 
   // No matter what we set the precision to, if we're in ResistFingerprinting mode
-  // we use the larger of the precision pref and the constant 100ms
+  // we use the larger of the precision pref and the RFP time-atom constant
   if (resistFingerprinting) {
-    expectedPrecision = expectedPrecision < 100 ? 100 : expectedPrecision;
+    const RFP_TIME_ATOM_MS = 16.667;
+    expectedPrecision = Math.max(RFP_TIME_ATOM_MS, expectedPrecision);
   }
+
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [
@@ -94,10 +96,10 @@ let setupPerformanceAPISpoofAndDisableTest = async function(
   await BrowserTestUtils.closeWindow(win);
 };
 
-let isTimeValueRounded = (x, expectedPrecision) => {
-  let rounded = Math.floor(x / expectedPrecision) * expectedPrecision;
+const isTimeValueRounded = function(x, expectedPrecision) {
+  const nearestExpected = Math.round(x / expectedPrecision) * expectedPrecision;
   // First we do the perfectly normal check that should work just fine
-  if (rounded === x || x === 0) {
+  if (x === nearestExpected) {
     return true;
   }
 
@@ -108,17 +110,22 @@ let isTimeValueRounded = (x, expectedPrecision) => {
   // our epsilon.
   // To be clear, this error is introduced in our re-calculation of 'rounded'
   // above in JavaScript.
-  if (Math.abs(rounded - x + expectedPrecision) < 0.0005) {
-    return true;
-  } else if (Math.abs(rounded - x) < 0.0005) {
+  const error = Math.abs(x - nearestExpected);
+  if (Math.abs(error) < 0.0005) {
     return true;
   }
 
   // Then we handle the case where you're sub-millisecond and the timer is not
   // We check that the timer is not sub-millisecond by assuming it is not if it
   // returns an even number of milliseconds
-  if (expectedPrecision < 1 && Math.round(x) == x) {
-    if (Math.round(rounded) == x) {
+  if (
+    Math.round(expectedPrecision) != expectedPrecision &&
+    Math.round(x) == x
+  ) {
+    let acceptableIntRounding = false;
+    acceptableIntRounding |= Math.floor(nearestExpected) == x;
+    acceptableIntRounding |= Math.ceil(nearestExpected) == x;
+    if (acceptableIntRounding) {
       return true;
     }
   }
@@ -129,12 +136,10 @@ let isTimeValueRounded = (x, expectedPrecision) => {
       expectedPrecision +
       " Measured Value: " +
       x +
-      " Rounded Vaue: " +
-      rounded +
-      " Fuzzy1: " +
-      Math.abs(rounded - x + expectedPrecision) +
-      " Fuzzy 2: " +
-      Math.abs(rounded - x)
+      " Nearest Expected Vaue: " +
+      nearestExpected +
+      " Error: " +
+      error
   );
 
   return false;
@@ -169,9 +174,10 @@ let setupAndRunCrossOriginIsolatedTest = async function(
   );
 
   // No matter what we set the precision to, if we're in ResistFingerprinting
-  // mode we use the larger of the precision pref and the constant 100ms
+  // mode we use the larger of the precision pref and the RFP time-atom constant
   if (resistFingerprinting) {
-    expectedPrecision = expectedPrecision < 100 ? 100 : expectedPrecision;
+    const RFP_TIME_ATOM_MS = 16.667;
+    expectedPrecision = Math.max(RFP_TIME_ATOM_MS, expectedPrecision);
   }
   await SpecialPowers.spawn(
     tab.linkedBrowser,
