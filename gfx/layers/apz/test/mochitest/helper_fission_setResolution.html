@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>setResolutionAndScaleTo is properly delivered to OOP iframes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+async function test() {
+  let iframeElement = document.getElementById("testframe");
+
+  const scale = 2.0;
+
+  SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(scale);
+  await promiseApzFlushedRepaints(window);
+  await waitUntilApzStable();
+
+  const originalWidth = originalHeight = 100;
+  // eslint-disable-next-line no-unused-vars
+  let { _x, _y, width, height } = await SpecialPowers.spawn(
+    iframeElement,
+    [originalWidth, originalHeight],
+    // eslint-disable-next-line no-shadow
+    (width, height) => {
+      // nsIDOMWindowUtils.toScreenRect uses the iframe's transform which should
+      // have been informed from APZ.
+      return SpecialPowers.DOMWindowUtils.toScreenRect(0, 0, width, height);
+    }
+  );
+
+  is(width, scale * originalWidth,
+     "The resolution value should be properly delivered into OOP iframes");
+  is(height, scale * originalHeight,
+     "The resolution value should be properly delivered into OOP iframes");
+}
+
+  </script>
+  <style>
+    body, html {
+        margin: 0;
+    }
+  </style>
+</head>
+<body>
+<iframe id="testframe"></iframe>
+</body>
+</html>
