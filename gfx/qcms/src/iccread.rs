@@ -994,7 +994,6 @@ pub extern "C" fn qcms_white_point_sRGB() -> qcms_CIE_xyY {
 
 /// See [Rec. ITU-T H.273 (12/2016)](https://www.itu.int/rec/T-REC-H.273-201612-I/en) Table 2
 /// Values 0, 3, 13–21, 23–255 are all reserved so all map to the same variant
-#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ColourPrimaries {
     /// For future use by ITU-T | ISO/IEC
@@ -1159,7 +1158,6 @@ impl ColourPrimaries {
 
 /// See [Rec. ITU-T H.273 (12/2016)](https://www.itu.int/rec/T-REC-H.273-201612-I/en) Table 3
 /// Values 0, 3, 19–255 are all reserved so all map to the same variant
-#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TransferCharacteristics {
     /// For future use by ITU-T | ISO/IEC
