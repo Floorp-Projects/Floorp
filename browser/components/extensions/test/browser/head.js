@@ -82,7 +82,7 @@ var {
 
 // The extension tests can run a lot slower under ASAN.
 if (AppConstants.ASAN) {
-  requestLongerTimeout(5);
+  SimpleTest.requestLongerTimeout(10);
 }
 
 function loadTestSubscript(filePath) {
