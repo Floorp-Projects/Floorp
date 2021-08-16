@@ -1,0 +1,19 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include ../../shared/minimal-toolkit.jar.inc.mn
+
+# These are the CSS files that must exist:
+#  about pages:
+   skin/classic/global/about.css
+   skin/classic/global/aboutMemory.css
+   skin/classic/global/aboutNetworking.css
+   skin/classic/global/aboutSupport.css
+
+#  network error page:
+   skin/classic/global/netError.css
+
+#  XUL support:
+   skin/classic/global/scrollbars.css
+   skin/classic/global/tooltip.css
