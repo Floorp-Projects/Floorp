@@ -2,6 +2,72 @@
   "data": [
     {
       "stash": {
+        "blocked": [
+          "{2b072bb6-1644-4f0c-b2d8-51c3497e9936}:0.6",
+          "pinterest_pal@ext:1.0",
+          "private_srch@com:1.0",
+          "image_search@me:1.0",
+          "private_search@net:1.0",
+          "rotten-seeker@ext:1.0",
+          "{8ec40194-b274-4799-85be-2bbd4abf4773}:0.6",
+          "private_search@net:1.1",
+          "search_the_gif@com:1.1",
+          "movie-tab@com:1.0",
+          "social_tab@net:1.0",
+          "appfortogo@com:1.1.8",
+          "image_scout@net:1.0",
+          "social_search@net:1.0",
+          "toptab@com:1.1.4",
+          "movies_hunt@com:1.0",
+          "giph_search@net:1.1",
+          "private_search@net:1.2",
+          "translate_this@com:1.0",
+          "tag_context_search@best:1.0",
+          "goingfinder@com:1.1.3"
+        ],
+        "unblocked": []
+      },
+      "schema": 1628858284962,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1628879709984,
+      "id": "3bc0ac7f-3f18-463d-a7e8-fb2b22c7f5ad",
+      "last_modified": 1628879876659
+    },
+    {
+      "stash": {
+        "blocked": [
+          "privateviewaddons@foxcoo.com:1.0",
+          "private-view-web-android@vipmeg.com:3.0",
+          "{fa7c2753-333f-4c0e-b306-e4cb1f14d510}:1.0.6",
+          "smartsecure@live:2.0.0.81",
+          "{fa7c2753-333f-4c0e-b306-e4cb1f14d510}:1.0.1",
+          "{fa7c2753-333f-4c0e-b306-e4cb1f14d510}:1.0.8",
+          "{fa7c2753-333f-4c0e-b306-e4cb1f14d510}:1.0.7",
+          "@SearchFoxXYZ-ext:1.0.0",
+          "newtabsearch@emailmoji.com:1.1.0",
+          "protectme@live:2.0.0.79",
+          "protectgo@live:2.0.0.19",
+          "safesearch@live:2.0.0.90",
+          "newtabsearch@emailmoji.com:1.0.9",
+          "{fa7c2753-333f-4c0e-b306-e4cb1f14d510}:1.0.4",
+          "@SearchFoxClubExt-ext:1.0.0",
+          "newtabsearch@emailmoji.com:1.0.5",
+          "newtabsearch@emailmoji.com:1.0.7",
+          "securedme@live:2.0.0.24",
+          "{fa7c2753-333f-4c0e-b306-e4cb1f14d510}:1.0.5",
+          "{fa7c2753-333f-4c0e-b306-e4cb1f14d510}:1.1.0",
+          "{fa7c2753-333f-4c0e-b306-e4cb1f14d510}:1.0.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1628840621936,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1628858109529,
+      "id": "dbf812a4-6544-4e27-ab4b-72349073cb88",
+      "last_modified": 1628858284903
+    },
+    {
+      "stash": {
         "blocked": [],
         "unblocked": []
       },
