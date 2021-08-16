@@ -4191,8 +4191,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetFontMetricsForComputedStyle(
   // which would be lossy.  Fortunately, in such cases, aInflation is
   // guaranteed to be 1.0f.
   if (aInflation == 1.0f && aVariantWidth == NS_FONT_VARIANT_WIDTH_NORMAL) {
-    return aPresContext->DeviceContext()->GetMetricsFor(styleFont->mFont,
-                                                        params);
+    return aPresContext->GetMetricsFor(styleFont->mFont, params);
   }
 
   nsFont font = styleFont->mFont;
@@ -4203,7 +4202,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetFontMetricsForComputedStyle(
     font.size = {0};
   }
   font.variantWidth = aVariantWidth;
-  return aPresContext->DeviceContext()->GetMetricsFor(font, params);
+  return aPresContext->GetMetricsFor(font, params);
 }
 
 nsIFrame* nsLayoutUtils::FindChildContainingDescendant(
@@ -9742,7 +9741,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   params.textPerf = aPresContext->GetTextPerfMetrics();
   params.fontStats = aPresContext->GetFontMatchingStats();
   params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
-  return aPresContext->DeviceContext()->GetMetricsFor(font, params);
+  return aPresContext->GetMetricsFor(font, params);
 }
 
 /* static */

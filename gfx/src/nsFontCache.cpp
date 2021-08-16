@@ -16,7 +16,7 @@ NS_IMPL_ISUPPORTS(nsFontCache, nsIObserver)
 // The Init and Destroy methods are necessary because it's not
 // safe to call AddObserver from a constructor or RemoveObserver
 // from a destructor.  That should be fixed.
-void nsFontCache::Init(nsDeviceContext* aContext) {
+void nsFontCache::Init(nsPresContext* aContext) {
   mContext = aContext;
   // register as a memory-pressure observer to free font resources
   // in low-memory situations.

@@ -863,8 +863,7 @@ bool nsMathMLChar::SetFontFamily(nsPresContext* aPresContext,
     params.textPerf = aPresContext->GetTextPerfMetrics();
     params.fontStats = aPresContext->GetFontMatchingStats();
     params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
-    RefPtr<nsFontMetrics> fm =
-        aPresContext->DeviceContext()->GetMetricsFor(font, params);
+    RefPtr<nsFontMetrics> fm = aPresContext->GetMetricsFor(font, params);
     // Set the font if it is an unicode table or if the same family name has
     // been found.
     const bool shouldSetFont = [&] {
@@ -1389,8 +1388,7 @@ nsresult nsMathMLChar::StretchInternal(
   params.userFontSet = presContext->GetUserFontSet();
   params.textPerf = presContext->GetTextPerfMetrics();
   params.fontStats = presContext->GetFontMatchingStats();
-  RefPtr<nsFontMetrics> fm =
-      presContext->DeviceContext()->GetMetricsFor(font, params);
+  RefPtr<nsFontMetrics> fm = presContext->GetMetricsFor(font, params);
   uint32_t len = uint32_t(mData.Length());
   mGlyphs[0] = fm->GetThebesFontGroup()->MakeTextRun(
       static_cast<const char16_t*>(mData.get()), len, aDrawTarget,
