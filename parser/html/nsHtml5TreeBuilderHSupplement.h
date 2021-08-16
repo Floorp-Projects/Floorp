@@ -233,6 +233,8 @@ void errEndTagViolatesNestingRules(nsAtom* aName);
 
 void errEndWithUnclosedElements(nsAtom* aName);
 
+void errListUnclosedStartTags(int32_t aIgnored);
+
 void MarkAsBroken(nsresult aRv);
 
 /**

@@ -1745,3 +1745,9 @@ void nsHtml5TreeBuilder::errEndWithUnclosedElements(nsAtom* aName) {
     mViewSource->AddErrorToCurrentRun("errEndWithUnclosedElements", aName);
   }
 }
+
+void nsHtml5TreeBuilder::errListUnclosedStartTags(int32_t aIgnored) {
+  if (MOZ_UNLIKELY(mViewSource)) {
+    mViewSource->AddErrorToCurrentRun("errListUnclosedStartTags");
+  }
+}
