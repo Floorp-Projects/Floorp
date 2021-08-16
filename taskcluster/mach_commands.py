@@ -319,116 +319,25 @@ class MachCommands(MachCommandBase):
         "taskgraph",
         "action-callback",
         description="Run action callback used by action tasks",
-    )
-    @CommandArgument(
-        "--root",
-        "-r",
-        default="taskcluster/ci",
-        help="root of the taskgraph definition relative to topsrcdir",
+        parser=partial(get_taskgraph_command_parser, "action-callback"),
     )
     def action_callback(self, command_context, **options):
-        from taskgraph.actions import trigger_action_callback
-        from taskgraph.actions.util import get_parameters
-
-        try:
-            self.setup_logging(command_context)
-
-            # the target task for this action (or null if it's a group action)
-            task_id = json.loads(os.environ.get("ACTION_TASK_ID", "null"))
-            # the target task group for this action
-            task_group_id = os.environ.get("ACTION_TASK_GROUP_ID", None)
-            input = json.loads(os.environ.get("ACTION_INPUT", "null"))
-            callback = os.environ.get("ACTION_CALLBACK", None)
-            root = options["root"]
-
-            parameters = get_parameters(task_group_id)
-
-            return trigger_action_callback(
-                task_group_id=task_group_id,
-                task_id=task_id,
-                input=input,
-                callback=callback,
-                parameters=parameters,
-                root=root,
-                test=False,
-            )
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
+        self.setup_logging(command_context)
+        taskgraph_commands["action-callback"].func(options)
 
     @SubCommand(
         "taskgraph",
         "test-action-callback",
         description="Run an action callback in a testing mode",
-    )
-    @CommandArgument(
-        "--root",
-        "-r",
-        default="taskcluster/ci",
-        help="root of the taskgraph definition relative to topsrcdir",
-    )
-    @CommandArgument(
-        "--parameters",
-        "-p",
-        default="project=mozilla-central",
-        help="parameters file (.yml or .json; see "
-        "`taskcluster/docs/parameters.rst`)`",
-    )
-    @CommandArgument(
-        "--task-id", default=None, help="TaskId to which the action applies"
-    )
-    @CommandArgument(
-        "--task-group-id", default=None, help="TaskGroupId to which the action applies"
-    )
-    @CommandArgument("--input", default=None, help="Action input (.yml or .json)")
-    @CommandArgument(
-        "callback", default=None, help="Action callback name (Python function name)"
+        parser=partial(get_taskgraph_command_parser, "test-action-callback"),
     )
     def test_action_callback(self, command_context, **options):
-        import taskgraph.actions
-        import taskgraph.parameters
-        from taskgraph.util import yaml
+        self.setup_logging(command_context)
 
-        def load_data(filename):
-            with open(filename) as f:
-                if filename.endswith(".yml"):
-                    return yaml.load_stream(f)
-                elif filename.endswith(".json"):
-                    return json.load(f)
-                else:
-                    raise Exception("unknown filename {}".format(filename))
+        if not options["parameters"]:
+            options["parameters"] = "project=mozilla-central"
 
-        try:
-            self.setup_logging(command_context)
-            task_id = options["task_id"]
-
-            if options["input"]:
-                input = load_data(options["input"])
-            else:
-                input = None
-
-            parameters = taskgraph.parameters.load_parameters_file(
-                options["parameters"],
-                strict=False,
-                # FIXME: There should be a way to parameterize this.
-                trust_domain="gecko",
-            )
-            parameters.check()
-
-            root = options["root"]
-
-            return taskgraph.actions.trigger_action_callback(
-                task_group_id=options["task_group_id"],
-                task_id=task_id,
-                input=input,
-                callback=options["callback"],
-                parameters=parameters,
-                root=root,
-                test=True,
-            )
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
+        taskgraph_commands["test-action-callback"].func(options)
 
     def setup_logging(self, command_context, quiet=False, verbose=True):
         """
