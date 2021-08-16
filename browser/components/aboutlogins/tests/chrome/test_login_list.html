@@ -559,7 +559,7 @@ add_task(async function test_sorted_list() {
   testDescription = "Logins sorted by username in reverse alphabetical order.";
   is(username3.localeCompare(username2), -1, `${testDescription} First: ${username3} Second: ${username2}`);
   is(username2.localeCompare(username1), -1, `${testDescription} Second: ${username2} Third: ${username1}`);
-  
+
   // sort by name when there are no breached logins
   gLoginList.setBreaches(new Map());
   loginSort.value = "alerts";
