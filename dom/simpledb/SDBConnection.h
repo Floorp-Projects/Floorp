@@ -36,9 +36,9 @@ class SDBRequest;
 class SDBRequestParams;
 
 class SDBConnection final : public nsISDBConnection {
-  typedef mozilla::dom::quota::PersistenceType PersistenceType;
-  typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
-  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+  using PersistenceType = mozilla::dom::quota::PersistenceType;
+  using PBackgroundChild = mozilla::ipc::PBackgroundChild;
+  using PrincipalInfo = mozilla::ipc::PrincipalInfo;
 
   nsCOMPtr<nsISDBCloseCallback> mCloseCallback;
 
