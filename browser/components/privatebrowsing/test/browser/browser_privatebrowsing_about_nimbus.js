@@ -285,11 +285,6 @@ add_task(async function test_experiment_bottom_promo() {
       true,
       "Should have a button CTA"
     );
-    is(
-      content.document.querySelector(".promo-image-small img").src,
-      "chrome://browser/content/assets/vpn-logo.svg",
-      "Should have logo image"
-    );
     ok(
       content.document.querySelector(".promo.bottom"),
       "Should have .bottom for the promo section"
@@ -327,8 +322,6 @@ add_task(async function test_experiment_below_search_promo() {
       promoHeader: "Need more privacy?",
       promoTitle:
         "Mozilla VPN. Security, reliability and speed — on every device,  anywhere you go.",
-      promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
-      promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
       infoTitleEnabled: false,
     },
   });
@@ -342,16 +335,6 @@ add_task(async function test_experiment_below_search_promo() {
         .classList.contains("button"),
       true,
       "Should have a button CTA"
-    );
-    is(
-      content.document.querySelector(".promo-image-small img").src,
-      "chrome://browser/content/assets/vpn-logo.svg",
-      "Should have logo image"
-    );
-    is(
-      content.document.querySelector(".promo-image-large img").src,
-      "chrome://browser/content/assets/moz-vpn.svg",
-      "Should have a product image"
     );
     ok(
       content.document.querySelector(".promo.below-search"),
@@ -382,8 +365,6 @@ add_task(async function test_experiment_top_promo() {
       promoHeader: "Need more privacy?",
       promoTitle:
         "Mozilla VPN. Security, reliability and speed — on every device, anywhere you go.",
-      promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
-      promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
       infoTitleEnabled: false,
     },
   });
@@ -394,16 +375,6 @@ add_task(async function test_experiment_top_promo() {
     ok(
       !content.document.querySelector("#info-title"),
       "Should remove the infoTitle element"
-    );
-    is(
-      content.document.querySelector(".promo-image-small img").src,
-      "chrome://browser/content/assets/vpn-logo.svg",
-      "Should have logo image"
-    );
-    is(
-      content.document.querySelector(".promo-image-large img").src,
-      "chrome://browser/content/assets/moz-vpn.svg",
-      "Should have a product image"
     );
     ok(
       content.document.querySelector(".promo.top"),

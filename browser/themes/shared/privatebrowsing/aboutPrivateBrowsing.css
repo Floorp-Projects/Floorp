@@ -86,15 +86,6 @@ p {
   min-width: 70vw;
 }
 
-.promo-image-large {
-  margin-inline-end: 6px;
-  min-width: 160px;
-}
-
-.promo-image-small {
-  display: none;
-}
-
 .promo.top {
   background: rgba(255, 255, 255, .2);
   position: absolute;
@@ -102,11 +93,6 @@ p {
   left: 0;
   right: 0;
   border-bottom: 1px solid rgba(255, 255, 255, .3);
-}
-
-.promo.top .promo-image-large {
-  min-width: 100px;
-  margin-inline: 6px;
 }
 
 .promo.top ~ .container {
@@ -118,21 +104,12 @@ p {
     min-width: 680px;
   }
 
-  .promo-image-large {
-    margin-inline-end: 36px;
-    min-width: 200px;
-  }
-
-  .promo-image-small {
-    display: block;
+  .promo .vpn-promo {
+    font-weight: 700;
   }
 
   .promo.top {
     padding: 10px 22%;
-  }
-
-  .promo.top .promo-image-large {
-    min-width: 120px;
   }
 
   .promo.top .vpn-promo {
@@ -270,7 +247,6 @@ p {
 
 .info {
   margin-top: 64px;
-  background-color: rgba(0, 0, 0, 0.2);
   background-image: url("chrome://browser/skin/indicator-private-browsing.svg");
   background-position: left 32px top 20px;
   background-repeat: no-repeat;
@@ -331,10 +307,9 @@ p {
 
 .promo-content {
   width: 100%;
-}
-
-.promo-image-large img {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .promo-cta {
@@ -343,7 +318,11 @@ p {
   align-items: center;
 }
 
-.promo-cta .button {
+.promo-content  p {
+  max-width: 236px;
+}
+
+.vpn-promo.button {
   text-decoration: none;
   padding: 11px 15px;
   margin: 8px 0;
@@ -354,8 +333,17 @@ p {
   font-weight: 600;
 }
 
-.promo.bottom .promo-cta {
-  display: unset;
+.vpn-promo.button:hover {
+  background-color: var(--in-content-primary-button-background-hover);
+}
+
+.vpn-promo.button:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+.vpn-promo.button a {
+  text-decoration: none;
+  font-weight: normal;
 }
 
 .promo.bottom h1 {
@@ -384,14 +372,6 @@ p {
 
 .promo.bottom {
   margin-top: 30px;
-}
-
-.promo.bottom .promo-image-small {
-  margin-top: 40px;
-}
-
-.promo.bottom .promo-image-small img {
-  height: 40px;
 }
 
 .promo.top > .promo-content {
