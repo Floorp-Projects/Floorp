@@ -295,7 +295,8 @@ EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
 EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
     const CreateDecoderParams& aParams,
     already_AddRefed<MediaDataDecoder> aProxyDecoder, CDMProxy* aProxy)
-    : MediaDataDecoderProxy(std::move(aProxyDecoder)),
+    : MediaDataDecoderProxy(std::move(aProxyDecoder),
+                            do_AddRef(GetCurrentSerialEventTarget())),
       mThread(GetCurrentSerialEventTarget()),
       mSamplesWaitingForKey(new SamplesWaitingForKey(
           aProxy, aParams.mType, aParams.mOnWaitingForKeyEvent)),
