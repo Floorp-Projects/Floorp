@@ -47,7 +47,7 @@ class UsageInfo;
 // to participate in centralized quota and storage handling.
 class Client {
  public:
-  typedef Atomic<bool> AtomicBool;
+  using AtomicBool = Atomic<bool>;
 
   enum Type {
     IDB = 0,

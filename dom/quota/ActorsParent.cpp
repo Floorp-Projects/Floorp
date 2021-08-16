@@ -1944,8 +1944,8 @@ mozilla::Atomic<bool> gShutdown(false);
 // A time stamp that can only be accessed on the main thread.
 TimeStamp gLastOSWake;
 
-typedef nsTArray<CheckedUnsafePtr<NormalOriginOperationBase>>
-    NormalOriginOpArray;
+using NormalOriginOpArray =
+    nsTArray<CheckedUnsafePtr<NormalOriginOperationBase>>;
 StaticAutoPtr<NormalOriginOpArray> gNormalOriginOps;
 
 // Constants for temporary storage limit computing.
