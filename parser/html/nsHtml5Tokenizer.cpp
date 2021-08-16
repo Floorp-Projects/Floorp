@@ -1517,10 +1517,7 @@ stateloop:
             }
             case '<': {
               appendStrBuf(c);
-              state = P::transition(mViewSource.get(),
-                                    nsHtml5Tokenizer::COMMENT_LESSTHAN,
-                                    reconsume, pos);
-              NS_HTML5_CONTINUE(stateloop);
+              continue;
             }
             case '-': {
               appendStrBuf(c);
@@ -1539,6 +1536,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1548,6 +1546,7 @@ stateloop:
             }
           }
         }
+        [[fallthrough]];
       }
       case COMMENT_LESSTHAN_BANG: {
         for (;;) {
@@ -1580,6 +1579,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1589,6 +1589,7 @@ stateloop:
             }
           }
         }
+        [[fallthrough]];
       }
       case COMMENT_LESSTHAN_BANG_DASH: {
         for (;;) {
@@ -1622,6 +1623,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
+              [[fallthrough]];
             }
             default: {
               appendStrBuf(c);
@@ -1631,6 +1633,7 @@ stateloop:
             }
           }
         }
+        [[fallthrough]];
       }
       case COMMENT_LESSTHAN_BANG_DASH_DASH: {
         for (;;) {
@@ -1682,6 +1685,7 @@ stateloop:
             }
             case '\0': {
               c = 0xfffd;
+              [[fallthrough]];
             }
             case '!': {
               if (P::reportErrors) {
@@ -1709,6 +1713,7 @@ stateloop:
             }
           }
         }
+        [[fallthrough]];
       }
       case COMMENT_START_DASH: {
         if (++pos == endPos) {
