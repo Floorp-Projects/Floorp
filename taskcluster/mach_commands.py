@@ -10,7 +10,6 @@ import argparse
 import json
 import logging
 import os
-import re
 import shlex
 import subprocess
 import sys
@@ -19,7 +18,6 @@ import time
 import traceback
 from functools import partial
 
-import six
 from six import text_type
 
 from mach.decorators import (
@@ -31,7 +29,10 @@ from mach.decorators import (
 )
 from mozbuild.base import MachCommandBase
 
-from taskgraph.main import commands as taskgraph_commands
+from taskgraph.main import (
+    commands as taskgraph_commands,
+    get_filtered_taskgraph,
+)
 
 logger = logging.getLogger("taskcluster")
 
@@ -588,7 +589,7 @@ class MachCommands(MachCommandBase):
             )
 
             tg = getattr(tgg, graph_attr)
-            tg = self.get_filtered_taskgraph(tg, options["tasks_regex"])
+            tg = get_filtered_taskgraph(tg, options["tasks_regex"])
 
             format_method = getattr(
                 self, "format_taskgraph_" + (options["format"] or "labels")
@@ -607,34 +608,6 @@ class MachCommands(MachCommandBase):
         return json.dumps(
             taskgraph.to_json(), sort_keys=True, indent=2, separators=(",", ": ")
         )
-
-    def get_filtered_taskgraph(self, taskgraph, tasksregex):
-        from taskgraph.graph import Graph
-        from taskgraph.taskgraph import TaskGraph
-
-        """
-        This class method filters all the tasks on basis of a regular expression
-        and returns a new TaskGraph object
-        """
-        # return original taskgraph if no regular expression is passed
-        if not tasksregex:
-            return taskgraph
-        named_links_dict = taskgraph.graph.named_links_dict()
-        filteredtasks = {}
-        filterededges = set()
-        regexprogram = re.compile(tasksregex)
-
-        for key in taskgraph.graph.visit_postorder():
-            task = taskgraph.tasks[key]
-            if regexprogram.match(task.label):
-                filteredtasks[key] = task
-                for depname, dep in six.iteritems(named_links_dict[key]):
-                    if regexprogram.match(dep):
-                        filterededges.add((key, dep, depname))
-        filtered_taskgraph = TaskGraph(
-            filteredtasks, Graph(set(filteredtasks), filterededges)
-        )
-        return filtered_taskgraph
 
     def show_actions(self, command_context, options):
         import taskgraph
