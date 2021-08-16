@@ -835,7 +835,7 @@ ne_read_float(nestegg_io * io, double * val, uint64_t length)
   union {
     uint64_t u;
     struct {
-#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+#if defined(__FLOAT_WORD_ORDER__) && __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
       uint32_t _pad;
       float f;
 #else
