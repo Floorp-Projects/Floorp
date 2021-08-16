@@ -2827,7 +2827,7 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
     // event, continue the loop to check its parent, if any.
   }
 
-  nsIFrame* newFrame = nsLayoutUtils::GetCrossDocParentFrame(
+  nsIFrame* newFrame = nsLayoutUtils::GetCrossDocParentFrameInProcess(
       aTargetFrame->PresShell()->GetRootFrame());
   aOptions =
       static_cast<ComputeScrollTargetOptions>(aOptions & ~START_FROM_PARENT);
