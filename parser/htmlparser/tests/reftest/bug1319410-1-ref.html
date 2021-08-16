@@ -1,0 +1,6 @@
+<html><head><meta name="viewport" content="width=device-width"><title>file:///opt/Projects/gecko/parser/htmlparser/tests/reftest/bug1319410-1.html</title><link rel="stylesheet" type="text/css" href="resource://content-accessible/viewsource.css"></head><body id="viewsource" class="highlight" style="tab-size: 4"><pre id="line1"><span></span><span class="doctype">&lt;!DOCTYPE html&gt;</span><span>
+<span id="line2"></span></span><span class="comment">&lt;!-- -- --&gt;</span><span>
+<span id="line3"></span></span><span class="error comment" title="Saw “<!--” within a comment. Probable cause: Nested comment (not allowed).">&lt;!-- &lt;!-- --&gt;</span><span> --&gt;
+<span id="line4"></span></span><span class="error comment" title="Premature end of comment. Use “-->” to end a comment properly.">&lt;!--&gt;</span><span>
+<span id="line5"></span></span><span>&lt;!--&lt;!--&gt;
+<span id="line6"></span></span></pre></body></html>
