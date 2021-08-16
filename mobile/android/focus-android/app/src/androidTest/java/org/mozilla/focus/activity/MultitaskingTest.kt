@@ -24,7 +24,6 @@ import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
 import org.mozilla.focus.testAnnotations.SmokeTest
-import org.mozilla.focus.utils.FeatureFlags
 
 /**
  * Open multiple sessions and verify that the trash icon changes to a tabs counter
@@ -65,12 +64,6 @@ class MultitaskingTest {
         val secondPageTitle = webServer.hostName + "/tab2.html"
         val eraseBrowsingButtonText = getStringResource(R.string.tabs_tray_action_erase)
 
-        // Establish feedback message id
-        val feedbackEraseId = if (FeatureFlags.isMvp)
-            R.string.feedback_erase2
-        else
-            R.string.feedback_erase
-
         // Load website: Erase button visible, Tabs button not
         searchScreen {
         }.loadPage(firstPageUrl) {
@@ -94,7 +87,7 @@ class MultitaskingTest {
 
         // Remove all tabs via the tabs tray
         }.eraseBrowsingHistoryFromTabsTray {
-            verifySnackBarText(getStringResource(feedbackEraseId))
+            verifySnackBarText(getStringResource(R.string.feedback_erase2))
             TestCase.assertTrue(store.state.privateTabs.isEmpty())
         }
     }

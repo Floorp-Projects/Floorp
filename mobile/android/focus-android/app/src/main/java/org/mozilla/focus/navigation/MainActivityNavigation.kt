@@ -27,7 +27,6 @@ import org.mozilla.focus.settings.RemoveSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.SearchSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.collections.forEach as withEach
 
@@ -49,12 +48,8 @@ class MainActivityNavigation(
         val crashReporterIsVisible = browserFragment?.crashReporterIsVisible() ?: false
 
         if (isShowingBrowser && !crashReporterIsVisible) {
-            val feedbackEraseId = if (FeatureFlags.isMvp)
-                R.string.feedback_erase2
-            else
-                R.string.feedback_erase
             ViewUtils.showBrandedSnackbar(activity.findViewById(android.R.id.content),
-                feedbackEraseId,
+                R.string.feedback_erase2,
                 activity.resources.getInteger(R.integer.erase_snackbar_delay))
         }
 

@@ -16,7 +16,6 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.whatsnew.WhatsNew
 
@@ -66,9 +65,7 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (FeatureFlags.isMvp) {
-            inflater.inflate(R.menu.menu_settings_main, menu)
-        }
+        inflater.inflate(R.menu.menu_settings_main, menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

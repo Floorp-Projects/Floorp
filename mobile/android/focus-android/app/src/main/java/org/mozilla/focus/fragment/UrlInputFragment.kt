@@ -24,8 +24,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.firstrun_page.*
 import kotlinx.android.synthetic.main.firstrun_page.view.*
-import kotlinx.android.synthetic.main.fragment_urlinput.*
-import kotlinx.android.synthetic.main.fragment_urlinput.view.*
+import kotlinx.android.synthetic.main.fragment_urlinput2.*
+import kotlinx.android.synthetic.main.fragment_urlinput2.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -56,7 +56,6 @@ import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Features
-import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 import org.mozilla.focus.utils.SearchUtils
 import org.mozilla.focus.utils.Settings
@@ -295,11 +294,7 @@ class UrlInputFragment :
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = if (FeatureFlags.isMvp) {
-        inflater.inflate(R.layout.fragment_urlinput2, container, false)
-    } else {
-        inflater.inflate(R.layout.fragment_urlinput, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.fragment_urlinput2, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         toolbarIntegration.set(
@@ -325,12 +320,7 @@ class UrlInputFragment :
         if (isOverlay) {
             keyboardLinearLayout?.visibility = View.GONE
         } else {
-            val backgroundId = if (FeatureFlags.isMvp) {
-                R.drawable.dark_background
-            } else {
-                R.drawable.background_gradient
-            }
-            backgroundView?.setBackgroundResource(backgroundId)
+            backgroundView?.setBackgroundResource(R.drawable.dark_background)
 
             dismissView?.visibility = View.GONE
 

@@ -1,5 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -9,15 +8,14 @@ import android.app.Activity
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.view.Gravity
-import androidx.annotation.StringRes
-import com.google.android.material.snackbar.Snackbar
-import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
+import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import com.google.android.material.snackbar.Snackbar
 import org.mozilla.focus.R
 import java.lang.ref.WeakReference
 
@@ -97,26 +95,9 @@ object ViewUtils {
         val snackbarView = snackbar.view
         val snackbarTextView = snackbarView.findViewById<View>(R.id.snackbar_text) as TextView
         snackbarTextView.setTextColor(ContextCompat.getColor(context, R.color.snackbarTextColor))
-        if (FeatureFlags.isMvp) {
-            snackbarView.setBackgroundResource(R.drawable.background_snackbar)
-        } else {
-            snackbarView.setBackgroundColor(ContextCompat.getColor(context, R.color.snackbarBackground))
-            snackbarTextView.gravity = Gravity.CENTER
-            snackbarTextView.textAlignment = View.TEXT_ALIGNMENT_CENTER
-        }
+        snackbarView.setBackgroundResource(R.drawable.background_snackbar)
 
         view.postDelayed({ snackbar.show() }, delayMillis.toLong())
-    }
-
-    fun getBrandedSnackbar(view: View, @StringRes resId: Int): Snackbar {
-        val context = view.context
-        val snackbar = Snackbar.make(view, resId, Snackbar.LENGTH_LONG)
-        val snackbarView = snackbar.view
-        snackbarView.setBackgroundColor(ContextCompat.getColor(context, R.color.snackbarBackground))
-        val snackbarTextView = snackbarView.findViewById<TextView>(R.id.snackbar_text)
-        snackbarTextView.setTextColor(ContextCompat.getColor(context, R.color.snackbarTextColor))
-        snackbar.setActionTextColor(ContextCompat.getColor(context, R.color.snackbarActionText))
-        return snackbar
     }
 
     fun isRTL(view: View): Boolean {

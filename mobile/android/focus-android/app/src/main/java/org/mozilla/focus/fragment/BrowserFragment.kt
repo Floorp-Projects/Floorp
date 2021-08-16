@@ -54,7 +54,6 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
-import org.mozilla.focus.browser.BrowserMenuControllerAdapter
 import org.mozilla.focus.browser.DisplayToolbar
 import org.mozilla.focus.browser.binding.BlockingThemeBinding
 import org.mozilla.focus.browser.binding.TabCountBinding
@@ -78,7 +77,6 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSIONS
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSIONS
 import org.mozilla.focus.utils.Browsers
-import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
@@ -236,9 +234,7 @@ class BrowserFragment :
         )
 
         customizeToolbar(view)
-        if (FeatureFlags.isMvp) {
-            customizeFindInPage(view)
-        }
+        customizeFindInPage(view)
 
         val customTabConfig = tab.ifCustomTab()?.config
         if (customTabConfig != null) {
@@ -269,17 +265,13 @@ class BrowserFragment :
             ::openInBrowser
         )
 
-        if (FeatureFlags.isMvp) {
-            if (tab.ifCustomTab()?.config == null) {
-                val browserMenu = DefaultBrowserMenu(
-                    context = requireContext(),
-                    store = requireComponents.store,
-                    onItemTapped = { controller.handleMenuInteraction(it) }
-                )
-                browserToolbar.display.menuBuilder = browserMenu.menuBuilder
-            }
-        } else {
-            browserToolbar.display.menuController = BrowserMenuControllerAdapter(this)
+        if (tab.ifCustomTab()?.config == null) {
+            val browserMenu = DefaultBrowserMenu(
+                context = requireContext(),
+                store = requireComponents.store,
+                onItemTapped = { controller.handleMenuInteraction(it) }
+            )
+            browserToolbar.display.menuBuilder = browserMenu.menuBuilder
         }
 
         toolbarIntegration.set(
@@ -531,16 +523,12 @@ class BrowserFragment :
         // Notify the user their session has been erased if Talk Back is enabled:
         if (context != null) {
             val manager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-            val feedbackEraseId = if (FeatureFlags.isMvp)
-                R.string.feedback_erase2
-            else
-                R.string.feedback_erase
             if (manager.isEnabled) {
                 val event = AccessibilityEvent.obtain()
                 event.eventType = AccessibilityEvent.TYPE_ANNOUNCEMENT
                 event.className = javaClass.name
                 event.packageName = requireContext().packageName
-                event.text.add(getString(feedbackEraseId))
+                event.text.add(getString(R.string.feedback_erase2))
             }
         }
 
