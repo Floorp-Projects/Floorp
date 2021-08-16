@@ -1351,7 +1351,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         break eofloop;
                     }
                     if (errorHandler != null) {
-                        errUnclosedElements(eltPos, "template");
+                        errListUnclosedStartTags(0);
                     }
                     while (currentPtr >= eltPos) {
                         pop();
