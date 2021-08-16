@@ -382,10 +382,11 @@ class nsWindow final : public nsBaseWidget {
                                             bool aFlippedX, bool aFlippedY);
   static bool IsToplevelWindowTransparent();
 
+  static nsWindow* GetFocusedWindow();
+
 #ifdef MOZ_WAYLAND
   bool GetCSDDecorationOffset(int* aDx, int* aDy);
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
-  static nsWindow* GetFocusedWindow();
   void WaylandDragWorkaround(GdkEventButton* aEvent);
 
   wl_display* GetWaylandDisplay();
