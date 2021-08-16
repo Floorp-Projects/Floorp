@@ -377,6 +377,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
   int32_t findLastInScopeHn();
   void generateImpliedEndTagsExceptFor(nsAtom* name);
   void generateImpliedEndTags();
+  void generateImpliedEndTagsThoroughly();
   bool isSecondOnStackBody();
   void documentModeInternal(nsHtml5DocumentMode m,
                             nsHtml5String publicIdentifier,
