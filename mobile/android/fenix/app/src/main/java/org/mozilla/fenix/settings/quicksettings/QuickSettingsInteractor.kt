@@ -32,8 +32,8 @@ class QuickSettingsInteractor(
         controller.handleTrackingProtectionToggled(isEnabled)
     }
 
-    override fun onBlockedItemsClicked() {
-        controller.handleBlockedItemsClicked()
+    override fun onDetailsClicked() {
+        controller.handleDetailsClicked()
     }
 
     override fun onConnectionDetailsClicked() {

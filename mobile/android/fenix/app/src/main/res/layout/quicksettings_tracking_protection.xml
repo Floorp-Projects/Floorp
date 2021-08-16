@@ -15,14 +15,14 @@
         android:layout_height="wrap_content"
         android:minHeight="@dimen/tracking_protection_item_height"
         android:text="@string/preference_enhanced_tracking_protection"
-        app:layout_constraintBottom_toTopOf="@id/trackingProtectionBlockedItems"
+        app:layout_constraintBottom_toTopOf="@id/trackingProtectionDetails"
         app:layout_constraintTop_toTopOf="parent"
         app:switchDescription="@string/etp_panel_on"
         app:switchIcon="@drawable/ic_tracking_protection"
         app:switchTitle="@string/preference_enhanced_tracking_protection" />
 
     <TextView
-        android:id="@+id/trackingProtectionBlockedItems"
+        android:id="@+id/trackingProtectionDetails"
         style="@style/QuickSettingsText.Icon"
         android:layout_width="0dp"
         android:layout_height="@dimen/quicksettings_item_height"

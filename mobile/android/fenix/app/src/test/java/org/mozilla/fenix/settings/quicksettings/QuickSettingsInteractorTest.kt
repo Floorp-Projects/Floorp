@@ -67,10 +67,10 @@ class QuickSettingsInteractorTest {
 
     @Test
     fun `onBlockedItemsClicked should delegate the controller`() {
-        interactor.onBlockedItemsClicked()
+        interactor.onDetailsClicked()
 
         verify {
-            controller.handleBlockedItemsClicked()
+            controller.handleDetailsClicked()
         }
     }
 

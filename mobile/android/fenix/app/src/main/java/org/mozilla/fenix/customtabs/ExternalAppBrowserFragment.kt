@@ -36,6 +36,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -178,19 +179,21 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
 
     override fun navToQuickSettingsSheet(tab: SessionState, sitePermissions: SitePermissions?) {
         requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
-            val directions = ExternalAppBrowserFragmentDirections
-                .actionGlobalQuickSettingsSheetDialogFragment(
-                    sessionId = tab.id,
-                    url = tab.content.url,
-                    title = tab.content.title,
-                    isSecured = tab.content.securityInfo.secure,
-                    sitePermissions = sitePermissions,
-                    gravity = getAppropriateLayoutGravity(),
-                    certificateName = tab.content.securityInfo.issuer,
-                    permissionHighlights = tab.content.permissionHighlights,
-                    isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
-                )
-            nav(R.id.externalAppBrowserFragment, directions)
+            runIfFragmentIsAttached {
+                val directions = ExternalAppBrowserFragmentDirections
+                    .actionGlobalQuickSettingsSheetDialogFragment(
+                        sessionId = tab.id,
+                        url = tab.content.url,
+                        title = tab.content.title,
+                        isSecured = tab.content.securityInfo.secure,
+                        sitePermissions = sitePermissions,
+                        gravity = getAppropriateLayoutGravity(),
+                        certificateName = tab.content.securityInfo.issuer,
+                        permissionHighlights = tab.content.permissionHighlights,
+                        isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
+                    )
+                nav(R.id.externalAppBrowserFragment, directions)
+            }
         }
     }
 

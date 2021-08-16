@@ -11,22 +11,25 @@ import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_connection_details_dialog.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.android.FenixDialogFragment
+import org.mozilla.fenix.databinding.FragmentConnectionDetailsDialogBinding
 import org.mozilla.fenix.ext.requireComponents
 
 @ExperimentalCoroutinesApi
 class ConnectionPanelDialogFragment : FenixDialogFragment() {
     @VisibleForTesting
-    private lateinit var connectionView: WebsiteInfoView
+    private lateinit var connectionView: ConnectionDetailsView
     private val args by navArgs<ConnectionPanelDialogFragmentArgs>()
+    private var _binding: FragmentConnectionDetailsDialogBinding? = null
 
     override val gravity: Int get() = args.gravity
     override val layoutId: Int = R.layout.fragment_connection_details_dialog
+    // This property is only valid between onCreateView and onDestroyView.
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,10 +48,12 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
         )
 
         val interactor = ConnectionDetailsInteractor(controller)
-        connectionView = WebsiteInfoView(
-            container = rootView.connectionDetailsInfoLayout,
-            interactor = interactor,
-            isDetailsMode = true
+        _binding = FragmentConnectionDetailsDialogBinding.bind(rootView)
+
+        connectionView = ConnectionDetailsView(
+            binding.connectionDetailsInfoLayout,
+            icons = requireComponents.core.icons,
+            interactor = interactor
         )
 
         return rootView

@@ -85,7 +85,7 @@ class TrackingProtectionPanelInteractorTest {
 
     @Test
     fun `WHEN openDetails is called THEN store should dispatch EnterDetailsMode action with the right category`() {
-        interactor.openDetails(TrackingProtectionCategory.FINGERPRINTERS, true, {}, {})
+        interactor.openDetails(TrackingProtectionCategory.FINGERPRINTERS, true)
 
         verify {
             store.dispatch(

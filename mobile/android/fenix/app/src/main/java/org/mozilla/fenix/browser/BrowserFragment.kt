@@ -38,6 +38,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.theme.ThemeManager
@@ -305,20 +306,22 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     override fun navToQuickSettingsSheet(tab: SessionState, sitePermissions: SitePermissions?) {
         requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
-            val isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
-            val directions =
-                BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
-                    sessionId = tab.id,
-                    url = tab.content.url,
-                    title = tab.content.title,
-                    isSecured = tab.content.securityInfo.secure,
-                    sitePermissions = sitePermissions,
-                    gravity = getAppropriateLayoutGravity(),
-                    certificateName = tab.content.securityInfo.issuer,
-                    permissionHighlights = tab.content.permissionHighlights,
-                    isTrackingProtectionEnabled = isTrackingProtectionEnabled
-                )
-            nav(R.id.browserFragment, directions)
+            runIfFragmentIsAttached {
+                val isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
+                val directions =
+                    BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
+                        sessionId = tab.id,
+                        url = tab.content.url,
+                        title = tab.content.title,
+                        isSecured = tab.content.securityInfo.secure,
+                        sitePermissions = sitePermissions,
+                        gravity = getAppropriateLayoutGravity(),
+                        certificateName = tab.content.securityInfo.issuer,
+                        permissionHighlights = tab.content.permissionHighlights,
+                        isTrackingProtectionEnabled = isTrackingProtectionEnabled
+                    )
+                nav(R.id.browserFragment, directions)
+            }
         }
     }
 

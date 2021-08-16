@@ -65,9 +65,9 @@ interface QuickSettingsController {
     fun handleTrackingProtectionToggled(isEnabled: Boolean)
 
     /**
-     * @see [TrackingProtectionInteractor.onBlockedItemsClicked]
+     * @see [TrackingProtectionInteractor.onDetailsClicked]
      */
-    fun handleBlockedItemsClicked()
+    fun handleDetailsClicked()
 
     /**
      * Navigates to the connection details. Called when a user clicks on the
@@ -196,7 +196,7 @@ class DefaultQuickSettingsController(
         quickSettingsStore.dispatch(TrackingProtectionAction.ToggleTrackingProtectionEnabled(isEnabled))
     }
 
-    override fun handleBlockedItemsClicked() {
+    override fun handleDetailsClicked() {
         navController().popBackStack()
 
         val state = quickSettingsStore.state.trackingProtectionState

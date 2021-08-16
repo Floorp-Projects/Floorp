@@ -36,7 +36,7 @@
             android:paddingVertical="8dp">
 
             <ImageView
-                android:id="@+id/favicon_image"
+                android:id="@+id/faviconImage"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:importantForAccessibility="no"

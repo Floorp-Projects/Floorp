@@ -6,7 +6,6 @@ package org.mozilla.fenix.settings.quicksettings
 
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
@@ -14,6 +13,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.trackingprotection.TrackingProtectionState
+import org.mozilla.fenix.trackingprotection.TrackingProtectionState.Mode.Normal
 
 class QuickSettingsFragmentReducerTest {
 
@@ -30,7 +30,11 @@ class QuickSettingsFragmentReducerTest {
         val map =
             mapOf<PhoneFeature, WebsitePermission>(PhoneFeature.CAMERA to toggleablePermission)
         val infoState = WebsiteInfoState("", "", WebsiteSecurityUiValues.SECURE, "")
-        val state = QuickSettingsFragmentState(infoState, map)
+        val tpState = TrackingProtectionState(
+            null, "", false, emptyList(),
+            Normal, ""
+        )
+        val state = QuickSettingsFragmentState(infoState, map, tpState)
         val newState = quickSettingsFragmentReducer(
             state,
             WebsitePermissionAction.TogglePermission(
@@ -59,7 +63,11 @@ class QuickSettingsFragmentReducerTest {
         val map =
             mapOf<PhoneFeature, WebsitePermission>(PhoneFeature.AUTOPLAY to permissionPermission)
         val infoState = WebsiteInfoState("", "", WebsiteSecurityUiValues.SECURE, "")
-        val state = QuickSettingsFragmentState(infoState, map)
+        val tpState = TrackingProtectionState(
+            null, "", false, emptyList(),
+            Normal, ""
+        )
+        val state = QuickSettingsFragmentState(infoState, map, tpState)
         val autoplayValue = AutoplayValue.AllowAll(
             label = "newLabel",
             rules = createTestRule(),
@@ -78,14 +86,14 @@ class QuickSettingsFragmentReducerTest {
     @Test
     fun `TrackingProtectionAction - ToggleTrackingProtectionEnabled`() = runBlocking {
         val state = QuickSettingsFragmentState(
-            webInfoState = mock(),
-            websitePermissionsState = mock(),
+            webInfoState = WebsiteInfoState("", "", WebsiteSecurityUiValues.SECURE, ""),
+            websitePermissionsState = emptyMap(),
             trackingProtectionState = TrackingProtectionState(
                 tab = null,
                 url = "https://www.firefox.com",
                 isTrackingProtectionEnabled = true,
                 listTrackers = listOf(),
-                mode = TrackingProtectionState.Mode.Normal,
+                mode = Normal,
                 lastAccessedCategory = ""
             )
         )

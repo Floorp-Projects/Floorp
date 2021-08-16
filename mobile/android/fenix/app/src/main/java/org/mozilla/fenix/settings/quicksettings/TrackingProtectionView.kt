@@ -5,12 +5,9 @@
 package org.mozilla.fenix.settings.quicksettings
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.quicksettings_tracking_protection.*
-import kotlinx.android.synthetic.main.switch_with_description.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.QuicksettingsTrackingProtectionBinding
 import org.mozilla.fenix.trackingprotection.TrackingProtectionState
 
 /**
@@ -27,9 +24,9 @@ interface TrackingProtectionInteractor {
 
     /**
      * Navigates to the tracking protection preferences. Called when a user clicks on the
-     * "Blocked items" button.
+     * "Details" button.
      */
-    fun onBlockedItemsClicked()
+    fun onDetailsClicked()
 }
 
 /**
@@ -41,29 +38,30 @@ interface TrackingProtectionInteractor {
  * interactions.
  */
 class TrackingProtectionView(
-    override val containerView: ViewGroup,
-    val interactor: TrackingProtectionInteractor
-) : LayoutContainer {
-
+    val containerView: ViewGroup,
+    val interactor: TrackingProtectionInteractor,
+) {
     private val context = containerView.context
-    val view: View = LayoutInflater.from(context)
-        .inflate(R.layout.quicksettings_tracking_protection, containerView, true)
-
+    private val binding = QuicksettingsTrackingProtectionBinding.inflate(
+        LayoutInflater.from(containerView.context),
+        containerView,
+        true
+    )
     fun update(state: TrackingProtectionState) {
         bindTrackingProtectionInfo(state.isTrackingProtectionEnabled)
 
-        trackingProtectionBlockedItems.setOnClickListener {
-            interactor.onBlockedItemsClicked()
+        binding.trackingProtectionDetails.setOnClickListener {
+            interactor.onDetailsClicked()
         }
     }
 
     private fun bindTrackingProtectionInfo(isTrackingProtectionEnabled: Boolean) {
-        trackingProtectionSwitch.trackingProtectionCategoryItemDescription.text =
-            view.context.getString(if (isTrackingProtectionEnabled) R.string.etp_panel_on else R.string.etp_panel_off)
-        trackingProtectionSwitch.switch_widget.isChecked = isTrackingProtectionEnabled
-        trackingProtectionSwitch.switch_widget.jumpDrawablesToCurrentState()
+        binding.trackingProtectionSwitch.trackingProtectionCategoryItemDescription.text =
+            context.getString(if (isTrackingProtectionEnabled) R.string.etp_panel_on else R.string.etp_panel_off)
+        binding.trackingProtectionSwitch.switchWidget.isChecked = isTrackingProtectionEnabled
+        binding.trackingProtectionSwitch.switchWidget.jumpDrawablesToCurrentState()
 
-        trackingProtectionSwitch.switch_widget.setOnCheckedChangeListener { _, isChecked ->
+        binding.trackingProtectionSwitch.switchWidget.setOnCheckedChangeListener { _, isChecked ->
             interactor.onTrackingProtectionToggled(isChecked)
         }
     }

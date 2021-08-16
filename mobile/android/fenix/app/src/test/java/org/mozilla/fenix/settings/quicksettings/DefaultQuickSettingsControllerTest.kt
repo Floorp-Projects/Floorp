@@ -106,8 +106,8 @@ class DefaultQuickSettingsControllerTest {
                 reload = reload,
                 addNewTab = addNewTab,
                 requestRuntimePermissions = requestPermissions,
-                displayPermissions = displayPermissions,
-                dismiss = dismiss
+                displayPermissions = {},
+                dismiss = {}
             )
         )
     }
@@ -184,7 +184,7 @@ class DefaultQuickSettingsControllerTest {
             addNewTab = addNewTab,
             requestRuntimePermissions = requestPermissions,
             displayPermissions = {},
-            dismiss = dismiss
+            dismiss = {}
         )
 
         every { websitePermission.phoneFeature } returns PhoneFeature.CAMERA
@@ -196,7 +196,9 @@ class DefaultQuickSettingsControllerTest {
         verify {
             navController.navigate(
                 directionsEq(
-                    QuickSettingsSheetDialogFragmentDirections.actionGlobalSitePermissionsManagePhoneFeature(PhoneFeature.CAMERA)
+                    QuickSettingsSheetDialogFragmentDirections.actionGlobalSitePermissionsManagePhoneFeature(
+                        PhoneFeature.CAMERA
+                    )
                 )
             )
         }
@@ -235,11 +237,13 @@ class DefaultQuickSettingsControllerTest {
             store.dispatch(any())
         }
     }
+
     @Test
     fun `handleAndroidPermissionGranted should update the View's state`() {
         val featureGranted = PhoneFeature.CAMERA
         val permissionStatus = featureGranted.getActionLabel(context, sitePermissions, appSettings)
-        val permissionEnabled = featureGranted.shouldBeEnabled(context, sitePermissions, appSettings)
+        val permissionEnabled =
+            featureGranted.shouldBeEnabled(context, sitePermissions, appSettings)
         every { store.dispatch(any()) } returns mockk()
 
         controller.handleAndroidPermissionGranted(featureGranted)
@@ -272,53 +276,32 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handlePermissionsChange should store the updated permission and reload webpage`() = coroutinesScope.runBlockingTest {
-        val testPermissions = mockk<SitePermissions>()
+    fun `handlePermissionsChange should store the updated permission and reload webpage`() =
+        coroutinesScope.runBlockingTest {
+            val testPermissions = mockk<SitePermissions>()
 
-        controller.handlePermissionsChange(testPermissions)
-        advanceUntilIdle()
+            controller.handlePermissionsChange(testPermissions)
+            advanceUntilIdle()
 
-        coVerifyOrder {
-            permissionStorage.updateSitePermissions(testPermissions)
-            reload(tab.id)
+            coVerifyOrder {
+                permissionStorage.updateSitePermissions(testPermissions)
+                reload(tab.id)
+            }
         }
-    }
 
     @Test
-    fun `handleAutoplayAdd should store the updated permission and reload webpage`() = coroutinesScope.runBlockingTest {
-        val testPermissions = mockk<SitePermissions>()
+    fun `handleAutoplayAdd should store the updated permission and reload webpage`() =
+        coroutinesScope.runBlockingTest {
+            val testPermissions = mockk<SitePermissions>()
 
-        controller.handleAutoplayAdd(testPermissions)
-        advanceUntilIdle()
+            controller.handleAutoplayAdd(testPermissions)
+            advanceUntilIdle()
 
-        coVerifyOrder {
-            permissionStorage.add(testPermissions)
-            reload(tab.id)
+            coVerifyOrder {
+                permissionStorage.add(testPermissions)
+                reload(tab.id)
+            }
         }
-    }
-
-    private fun createController(
-        requestPermissions: (Array<String>) -> Unit = { _ -> },
-        displayPermissions: () -> Unit = { },
-        dismiss: () -> Unit = { }
-    ): DefaultQuickSettingsController {
-        return DefaultQuickSettingsController(
-            context = context,
-            quickSettingsStore = store,
-            browserStore = browserStore,
-            sessionId = tab.id,
-            ioScope = coroutinesScope,
-            navController = navController,
-            sitePermissions = sitePermissions,
-            settings = appSettings,
-            permissionStorage = permissionStorage,
-            reload = reload,
-            addNewTab = addNewTab,
-            requestRuntimePermissions = requestPermissions,
-            displayPermissions = displayPermissions,
-            dismiss = dismiss
-        )
-    }
 
     @Test
     fun `handleTrackingProtectionToggled should call the right use cases`() {
@@ -370,7 +353,7 @@ class DefaultQuickSettingsControllerTest {
 
         every { store.state.trackingProtectionState } returns state
 
-        controller.handleBlockedItemsClicked()
+        controller.handleDetailsClicked()
 
         verify {
             navController.popBackStack()
@@ -401,5 +384,30 @@ class DefaultQuickSettingsControllerTest {
 
             navController.navigate(any<NavDirections>())
         }
+    }
+
+    private fun createController(
+        requestPermissions: (Array<String>) -> Unit = { _ -> },
+        displayPermissions: () -> Unit = { },
+        dismiss: () -> Unit = { }
+    ): DefaultQuickSettingsController {
+        return spyk(
+            DefaultQuickSettingsController(
+                context = context,
+                quickSettingsStore = store,
+                browserStore = browserStore,
+                sessionId = tab.id,
+                ioScope = coroutinesScope,
+                navController = { navController },
+                sitePermissions = sitePermissions,
+                settings = appSettings,
+                permissionStorage = permissionStorage,
+                reload = reload,
+                addNewTab = addNewTab,
+                requestRuntimePermissions = requestPermissions,
+                displayPermissions = displayPermissions,
+                dismiss = dismiss
+            )
+        )
     }
 }

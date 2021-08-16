@@ -20,9 +20,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.android.FenixDialogFragment
+import org.mozilla.fenix.databinding.FragmentQuickSettingsDialogSheetBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.PhoneFeature
 
@@ -44,8 +44,9 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
     private var tryToRequestPermissions: Boolean = false
     private val args by navArgs<QuickSettingsSheetDialogFragmentArgs>()
 
-    private lateinit var binding: FragmentQuickSettingsDialogSheetBinding
-
+    private var _binding: FragmentQuickSettingsDialogSheetBinding? = null
+    // This property is only valid between onCreateView and onDestroyView.
+    private val binding get() = _binding!!
     override val gravity: Int get() = args.gravity
     override val layoutId: Int = R.layout.fragment_quick_settings_dialog_sheet
 
@@ -60,7 +61,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
         val components = context.components
 
         val rootView = inflateRootView(container)
-        binding = FragmentQuickSettingsDialogSheetBinding.bind(rootView)
+        _binding = FragmentQuickSettingsDialogSheetBinding.bind(rootView)
 
         quickSettingsStore = QuickSettingsFragmentStore.createStore(
             context = context,
@@ -96,12 +97,11 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
         )
 
         interactor = QuickSettingsInteractor(quickSettingsController)
-
         websiteInfoView = WebsiteInfoView(binding.websiteInfoLayout, interactor = interactor)
         websitePermissionsView =
             WebsitePermissionsView(binding.websitePermissionsLayout, interactor)
         trackingProtectionView =
-            TrackingProtectionView(rootView.trackingProtectionLayout, interactor)
+            TrackingProtectionView(binding.trackingProtectionLayout, interactor)
 
         return rootView
     }
@@ -146,14 +146,6 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
 
     private fun showPermissionsView() {
         binding.websitePermissionsGroup.isVisible = true
-    }
-
-    private fun launchIntentReceiver() {
-        context?.let { context ->
-            val intent = Intent(context, IntentReceiverActivity::class.java)
-            intent.action = Intent.ACTION_VIEW
-            context.startActivity(intent)
-        }
     }
 
     private fun openSystemSettings() {
