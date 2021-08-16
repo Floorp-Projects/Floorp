@@ -957,8 +957,16 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
 /* static */
 nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     nsIChannel* aChannel) {
+  // Check and assert that we never allow remote documents/scripts (http:,
+  // https:, ...) to load in system privileged contexts.
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
+  // nothing to do here if we are not loading a resource into a
+  // system prvileged context.
+  if (!loadInfo->GetLoadingPrincipal() ||
+      !loadInfo->GetLoadingPrincipal()->IsSystemPrincipal()) {
+    return NS_OK;
+  }
   // loads with the allow flag are waived through
   // until refactored (e.g., Shavar, OCSP)
   if (loadInfo->GetAllowDeprecatedSystemRequests()) {
@@ -967,20 +975,6 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
 
   ExtContentPolicyType contentPolicyType =
       loadInfo->GetExternalContentPolicyType();
-
-  // We mostly care about the triggeringPrincipal,
-  // unless this is a TYPE_DOCUMENT request, which has none.
-  nsCOMPtr<nsIPrincipal> inspectedPrincipal;
-  if (contentPolicyType != ExtContentPolicy::TYPE_DOCUMENT) {
-    inspectedPrincipal = loadInfo->GetLoadingPrincipal();
-  } else {
-    inspectedPrincipal = loadInfo->TriggeringPrincipal();
-  }
-
-  // Check if we are actually dealing with a SystemPrincipal request
-  if (!inspectedPrincipal || !inspectedPrincipal->IsSystemPrincipal()) {
-    return NS_OK;
-  }
 
   // allowing some fetches due to their lowered risk
   // i.e., data & downloads fetches do limited parsing, no rendering
@@ -1053,7 +1047,9 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
   }
   // Telemetry for unexpected privileged loads.
   // pref check & data sanitization happens in the called function
-  MeasureUnexpectedPrivilegedLoads(loadInfo, finalURI, remoteType);
+  if (finalURI) {
+    MeasureUnexpectedPrivilegedLoads(loadInfo, finalURI, remoteType);
+  }
 
   // Relaxing restrictions for our test suites:
   // (1) AreNonLocalConnectionsDisabled() disables network, so http://mochitest
@@ -1077,32 +1073,8 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
   nsAutoCString requestedURL;
   finalURI->GetAsciiSpec(requestedURL);
   MOZ_LOG(sCSMLog, LogLevel::Warning,
-          ("SystemPrincipal should not load remote resources. URL: %s, type %d",
+          ("SystemPrincipal must not load remote documents. URL: %s, type %d",
            requestedURL.get(), int(contentPolicyType)));
-
-  // The load types that we want to disallow, will extend over time and
-  // prioritized by risk. The most risky/dangerous are load-types are documents,
-  // subdocuments, scripts and styles in that order. The most dangerous URL
-  // schemes to cover are HTTP, HTTPS, data, blob in that order. Meta bug
-  // 1725112 will track upcoming restrictions
-  if (contentPolicyType == ExtContentPolicy::TYPE_DOCUMENT) {
-    if (StaticPrefs::security_disallow_privileged_https_documents_loads() &&
-        (finalURI->SchemeIs("http") || finalURI->SchemeIs("https"))) {
-#ifdef DEBUG
-      MOZ_CRASH("Disallowing SystemPrincipal load of documents on HTTP(S).");
-#endif
-      aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
-      return NS_ERROR_CONTENT_BLOCKED;
-    }
-    if ((StaticPrefs::security_disallow_privileged_data_documents_loads()) &&
-        (finalURI->SchemeIs("data"))) {
-#ifdef DEBUG
-      MOZ_CRASH("Disallowing SystemPrincipal load of documents on data URL.");
-#endif
-      aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
-      return NS_ERROR_CONTENT_BLOCKED;
-    }
-  }
 
   if (cancelNonLocalSystemPrincipal) {
     MOZ_ASSERT(false, "SystemPrincipal must not load remote documents.");
