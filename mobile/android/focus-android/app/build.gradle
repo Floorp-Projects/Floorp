@@ -267,9 +267,10 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
     testImplementation "org.mozilla.components:lib-fetch-okhttp:${AndroidComponents.VERSION}"
 
-    androidTestImplementation "tools.fastlane:screengrab:2.0.0", {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    }
+    androidTestImplementation "tools.fastlane:screengrab:2.0.0"
+    // This Falcon version is added to maven central now required for Screengrab
+    implementation 'com.jraska:falcon:2.2.0'
+
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.1.0-alpha4', {
         exclude group: 'com.android.support', module: 'support-annotations'
         exclude group: 'com.android.support', module: 'support-v4'
