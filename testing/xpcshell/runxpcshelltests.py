@@ -1192,6 +1192,8 @@ class XPCShellTests(object):
         # currently attempt to do things like bind() sockets, which is not
         # compatible with the sandbox.
         self.env["MOZ_DISABLE_CONTENT_SANDBOX"] = "1"
+        if os.getenv("MOZ_FETCHES_DIR", None):
+            self.env["MOZ_FETCHES_DIR"] = os.getenv("MOZ_FETCHES_DIR", None)
 
         if self.mozInfo.get("socketprocess_networking"):
             self.env["MOZ_FORCE_USE_SOCKET_PROCESS"] = "1"

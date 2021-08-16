@@ -29,11 +29,40 @@ class ServerCode {
       res.end();
     });
 
-    return new Promise(resolve => {
+    let serverPort = await new Promise(resolve => {
       global.server.listen(0, "0.0.0.0", 2000, () => {
         resolve(global.server.address().port);
       });
     });
+
+    if (process.env.MOZ_ANDROID_DATA_DIR) {
+      // When creating a server on Android we must make sure that the port
+      // is forwarded from the host machine to the emulator.
+      let adb_path = "adb";
+      if (process.env.MOZ_FETCHES_DIR) {
+        adb_path = `${process.env.MOZ_FETCHES_DIR}/android-sdk-linux/platform-tools/adb`;
+      }
+
+      await new Promise(resolve => {
+        const { exec } = require("child_process");
+        exec(
+          `${adb_path} reverse tcp:${serverPort} tcp:${serverPort}`,
+          (error, stdout, stderr) => {
+            if (error) {
+              console.log(`error: ${error.message}`);
+              return;
+            }
+            if (stderr) {
+              console.log(`stderr: ${stderr}`);
+            }
+            // console.log(`stdout: ${stdout}`);
+            resolve();
+          }
+        );
+      });
+    }
+
+    return serverPort;
   }
 }
 

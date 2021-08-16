@@ -1856,7 +1856,9 @@ function forkProcess() {
       forked.resolve(msg);
       forked.resolve = null;
     } else {
-      console.log(`forked process without handler sent: ${msg}`);
+      console.log(
+        `forked process without handler sent: ${JSON.stringify(msg)}`
+      );
       forked.errors += `forked process without handler sent: ${JSON.stringify(
         msg
       )}\n`;
