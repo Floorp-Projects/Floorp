@@ -19,7 +19,7 @@ namespace mozilla::dom {
 
 namespace {
 
-typedef nsTHashMap<nsCStringHashKey, LSObserver*> LSObserverHashtable;
+using LSObserverHashtable = nsTHashMap<nsCStringHashKey, LSObserver*>;
 
 StaticAutoPtr<LSObserverHashtable> gLSObservers;
 
