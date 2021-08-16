@@ -13,8 +13,9 @@ import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
-class SearchSettingsFragment : BaseSettingsFragment(),
-        SharedPreferences.OnSharedPreferenceChangeListener {
+class SearchSettingsFragment :
+    BaseSettingsFragment(),
+    SharedPreferences.OnSharedPreferenceChangeListener {
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.search_settings)
     }

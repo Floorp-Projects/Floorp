@@ -4,10 +4,10 @@
 
 package org.mozilla.focus.session.ui
 
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import mozilla.components.browser.state.selector.privateTabs

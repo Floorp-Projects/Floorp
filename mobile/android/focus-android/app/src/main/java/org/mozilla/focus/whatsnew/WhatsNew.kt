@@ -87,12 +87,14 @@ class WhatsNew private constructor(private val storage: WhatsNewStorage) {
         }
 
         /**
-        * Convenience function to run from the context.
+         * Convenience function to run from the context.
          */
         @JvmStatic
         fun shouldHighlightWhatsNew(context: Context): Boolean {
-            return shouldHighlightWhatsNew(ContextWhatsNewVersion(context),
-                    SharedPreferenceWhatsNewStorage(context))
+            return shouldHighlightWhatsNew(
+                ContextWhatsNewVersion(context),
+                SharedPreferenceWhatsNewStorage(context)
+            )
         }
 
         /**

@@ -29,8 +29,8 @@ internal class TelemetrySwitchPreference(context: Context?, attrs: AttributeSet?
     override fun onClick() {
         super.onClick()
         TelemetryHolder.get()
-                .configuration
-                .setUploadEnabled(isChecked).isCollectionEnabled = isChecked
+            .configuration
+            .setUploadEnabled(isChecked).isCollectionEnabled = isChecked
     }
 
     override fun getDescription(): String? {

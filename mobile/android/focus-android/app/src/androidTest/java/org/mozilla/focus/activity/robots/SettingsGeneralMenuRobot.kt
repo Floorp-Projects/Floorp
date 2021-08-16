@@ -34,8 +34,8 @@ class SettingsGeneralMenuRobot {
 
     fun clickSetDefaultBrowser() {
         defaultBrowserSwitch
-                .check(matches(isDisplayed()))
-                .perform(click())
+            .check(matches(isDisplayed()))
+            .perform(click())
     }
 
     fun verifyAndroidDefaultAppsMenuAppears() {
@@ -51,19 +51,21 @@ class SettingsGeneralMenuRobot {
     fun selectAlwaysOpenWithFocus() {
         mDevice.findObject(UiSelector().text(appName)).click()
         mDevice.findObject(
-                UiSelector()
-                        .resourceId("android:id/button_always")
-                        .enabled(true)
+            UiSelector()
+                .resourceId("android:id/button_always")
+                .enabled(true)
         ).click()
     }
 
     fun verifySwitchIsToggled(checked: Boolean) {
-        onView(withId(R.id.switch_widget)).check(matches(
+        onView(withId(R.id.switch_widget)).check(
+            matches(
                 if (checked)
                     isChecked()
                 else
                     isNotChecked()
-        ))
+            )
+        )
     }
 
     fun openLanguageSelectionMenu(localizedText: String = "Language"): ViewInteraction =
@@ -88,13 +90,13 @@ private val defaultBrowserSwitch = onView(withText("Make Firefox Focus default b
 private val switchToNewTabToggleButton = onView(withText("Switch to link in new tab immediately"))
 
 private val openWithDialogTitle = mDevice.findObject(
-        UiSelector()
-                .text("Open with")
+    UiSelector()
+        .text("Open with")
 )
 
 private val openWithList = mDevice.findObject(
-        UiSelector()
-                .resourceId("android:id/resolver_list")
+    UiSelector()
+        .resourceId("android:id/resolver_list")
 )
 
 private fun languageMenuButton(localizedText: String) = onView(withText(localizedText))

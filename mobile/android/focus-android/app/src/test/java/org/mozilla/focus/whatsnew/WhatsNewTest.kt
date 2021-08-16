@@ -20,9 +20,9 @@ class WhatsNewTest {
         // Reset all saved and cached values before running a test
 
         PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
-                .edit()
-                .clear()
-                .apply()
+            .edit()
+            .clear()
+            .apply()
 
         WhatsNew.wasUpdatedRecently = null
     }
@@ -78,9 +78,9 @@ class WhatsNewTest {
         assertFalse(WhatsNew.shouldHighlightWhatsNew(ApplicationProvider.getApplicationContext()))
 
         PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
-                .edit()
-                .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "2.0")
-                .apply()
+            .edit()
+            .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "2.0")
+            .apply()
 
         for (i in 1..3) {
             // Reset cached value
@@ -98,9 +98,9 @@ class WhatsNewTest {
         assertFalse(WhatsNew.shouldHighlightWhatsNew(ApplicationProvider.getApplicationContext()))
 
         PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
-                .edit()
-                .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "2.0")
-                .apply()
+            .edit()
+            .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "2.0")
+            .apply()
 
         // Reset cached value
         WhatsNew.wasUpdatedRecently = null

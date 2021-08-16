@@ -116,11 +116,13 @@ private class NavigationButton(
         button.contentDescription = contentDescription
         button.isEnabled = enabled
 
-        button.setImageDrawable(if (enabled) {
-            image
-        } else {
-            disabledImage
-        })
+        button.setImageDrawable(
+            if (enabled) {
+                image
+            } else {
+                disabledImage
+            }
+        )
     }
 }
 

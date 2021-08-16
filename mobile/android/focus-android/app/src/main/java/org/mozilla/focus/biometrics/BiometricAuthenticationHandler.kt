@@ -38,9 +38,11 @@ class BiometricAuthenticationHandler(
         keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
 
         createKey(DEFAULT_KEY_NAME, false)
-        val defaultCipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/" +
+        val defaultCipher = Cipher.getInstance(
+            KeyProperties.KEY_ALGORITHM_AES + "/" +
                 KeyProperties.BLOCK_MODE_CBC + "/" +
-                KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                KeyProperties.ENCRYPTION_PADDING_PKCS7
+        )
 
         if (initCipher(defaultCipher, DEFAULT_KEY_NAME)) {
             cryptoObject = FingerprintManagerCompat.CryptoObject(defaultCipher)
@@ -61,8 +63,10 @@ class BiometricAuthenticationHandler(
     private fun createKey(keyName: String, invalidatedByBiometricEnrollment: Boolean?) {
         keyStore?.load(null)
 
-        val builder = KeyGenParameterSpec.Builder(keyName,
-            KeyProperties.PURPOSE_ENCRYPT).setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+        val builder = KeyGenParameterSpec.Builder(
+            keyName,
+            KeyProperties.PURPOSE_ENCRYPT
+        ).setBlockModes(KeyProperties.BLOCK_MODE_CBC)
             .setUserAuthenticationRequired(true)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
 

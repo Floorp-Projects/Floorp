@@ -6,9 +6,9 @@ package org.mozilla.focus.utils
 
 import android.app.Activity
 import android.content.Context
-import androidx.fragment.app.FragmentActivity
 import android.view.ContextThemeWrapper
+import androidx.fragment.app.FragmentActivity
 
 fun Context.asActivity() = (this as? ContextThemeWrapper)?.baseContext as? Activity ?: this as? Activity
 fun Context.asFragmentActivity() = (this as? ContextThemeWrapper)?.baseContext as? FragmentActivity
-        ?: this as? FragmentActivity
+    ?: this as? FragmentActivity

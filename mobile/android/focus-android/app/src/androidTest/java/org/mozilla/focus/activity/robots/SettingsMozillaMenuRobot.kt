@@ -31,8 +31,8 @@ class SettingsMozillaMenuRobot {
 
     fun switchHomeScreenTips() {
         showTipsSwitch
-                .check(matches(isDisplayed()))
-                .perform(click())
+            .check(matches(isDisplayed()))
+            .perform(click())
     }
 
     fun openAboutPage() {

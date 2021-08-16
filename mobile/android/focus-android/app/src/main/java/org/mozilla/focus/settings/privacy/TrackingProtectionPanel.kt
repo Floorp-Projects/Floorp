@@ -5,18 +5,18 @@ package org.mozilla.focus.settings.privacy
 
 import android.content.Context
 import android.view.View
+import android.widget.FrameLayout
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import org.mozilla.focus.R
-import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
-import org.mozilla.focus.ext.installedDate
-import android.widget.FrameLayout
-import androidx.appcompat.content.res.AppCompatResources
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
+import org.mozilla.focus.R
+import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
 import org.mozilla.focus.ext.beautifyUrl
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.installedDate
 
 @SuppressWarnings("LongParameterList")
 class TrackingProtectionPanel(

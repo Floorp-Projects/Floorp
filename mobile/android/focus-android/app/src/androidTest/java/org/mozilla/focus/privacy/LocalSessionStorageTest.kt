@@ -36,12 +36,18 @@ class LocalSessionStorageTest {
     fun setUp() {
         webServer = MockWebServer()
         try {
-            webServer.enqueue(MockResponse()
-                    .setBody(readTestAsset("storage_start.html")))
-            webServer.enqueue(MockResponse()
-                    .setBody(readTestAsset("storage_check.html")))
-            webServer.enqueue(MockResponse()
-                    .setBody(readTestAsset("storage_check.html")))
+            webServer.enqueue(
+                MockResponse()
+                    .setBody(readTestAsset("storage_start.html"))
+            )
+            webServer.enqueue(
+                MockResponse()
+                    .setBody(readTestAsset("storage_check.html"))
+            )
+            webServer.enqueue(
+                MockResponse()
+                    .setBody(readTestAsset("storage_check.html"))
+            )
             webServer.start()
         } catch (e: IOException) {
             throw AssertionError("Could not start web server", e)

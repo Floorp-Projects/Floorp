@@ -5,10 +5,9 @@
 package org.mozilla.focus.firstrun
 
 import android.content.Context
-import androidx.cardview.widget.CardView
 import android.util.AttributeSet
 import android.view.View
-
+import androidx.cardview.widget.CardView
 import org.mozilla.focus.R
 
 class FirstrunCardView @JvmOverloads constructor(

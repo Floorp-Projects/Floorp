@@ -53,58 +53,58 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
      * ItemTouchHelper for reordering items in the domain list.
      */
     val itemTouchHelper: ItemTouchHelper = ItemTouchHelper(
-            object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
-                override fun onMove(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
-                ): Boolean {
-                    val from = viewHolder.bindingAdapterPosition
-                    val to = target.bindingAdapterPosition
+        object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                val from = viewHolder.bindingAdapterPosition
+                val to = target.bindingAdapterPosition
 
-                    (recyclerView.adapter as DomainListAdapter).move(from, to)
+                (recyclerView.adapter as DomainListAdapter).move(from, to)
 
-                    return true
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+                if (viewHolder is AddActionViewHolder) {
+                    return ItemTouchHelper.Callback.makeMovementFlags(0, 0)
                 }
 
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+                return super.getMovementFlags(recyclerView, viewHolder)
+            }
 
-                override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
-                    if (viewHolder is AddActionViewHolder) {
-                        return ItemTouchHelper.Callback.makeMovementFlags(0, 0)
-                    }
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(viewHolder, actionState)
 
-                    return super.getMovementFlags(recyclerView, viewHolder)
+                if (viewHolder is DomainViewHolder) {
+                    viewHolder.onSelected()
+                }
+            }
+
+            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+                super.clearView(recyclerView, viewHolder)
+
+                if (viewHolder is DomainViewHolder) {
+                    viewHolder.onCleared()
+                }
+            }
+
+            override fun canDropOver(
+                recyclerView: RecyclerView,
+                current: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                if (target is AddActionViewHolder) {
+                    return false
                 }
 
-                override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
-                    super.onSelectedChanged(viewHolder, actionState)
-
-                    if (viewHolder is DomainViewHolder) {
-                        viewHolder.onSelected()
-                    }
-                }
-
-                override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
-                    super.clearView(recyclerView, viewHolder)
-
-                    if (viewHolder is DomainViewHolder) {
-                        viewHolder.onCleared()
-                    }
-                }
-
-                override fun canDropOver(
-                    recyclerView: RecyclerView,
-                    current: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
-                ): Boolean {
-                    if (target is AddActionViewHolder) {
-                        return false
-                    }
-
-                    return super.canDropOver(recyclerView, current, target)
-                }
-    })
+                return super.canDropOver(recyclerView, current, target)
+            }
+        })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,7 +118,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
     open fun isSelectionMode() = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-            inflater.inflate(R.layout.fragment_autocomplete_customdomains, container, false)
+        inflater.inflate(R.layout.fragment_autocomplete_customdomains, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -196,34 +196,37 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
         }
 
         override fun getItemViewType(position: Int) =
-                when (position) {
-                    domains.size -> AddActionViewHolder.LAYOUT_ID
-                    else -> DomainViewHolder.LAYOUT_ID
-                }
+            when (position) {
+                domains.size -> AddActionViewHolder.LAYOUT_ID
+                else -> DomainViewHolder.LAYOUT_ID
+            }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
-                when (viewType) {
-                    AddActionViewHolder.LAYOUT_ID ->
-                            AddActionViewHolder(
-                                    this@AutocompleteListFragment,
-                                    LayoutInflater.from(parent.context).inflate(viewType, parent, false))
-                    DomainViewHolder.LAYOUT_ID ->
-                            DomainViewHolder(
-                                    LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                                    { AutocompleteDomainFormatter.format(it) })
-                    else -> throw IllegalArgumentException("Unknown view type: $viewType")
-                }
+            when (viewType) {
+                AddActionViewHolder.LAYOUT_ID ->
+                    AddActionViewHolder(
+                        this@AutocompleteListFragment,
+                        LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+                    )
+                DomainViewHolder.LAYOUT_ID ->
+                    DomainViewHolder(
+                        LayoutInflater.from(parent.context).inflate(viewType, parent, false),
+                        { AutocompleteDomainFormatter.format(it) }
+                    )
+                else -> throw IllegalArgumentException("Unknown view type: $viewType")
+            }
 
         override fun getItemCount(): Int = domains.size + if (isSelectionMode()) 0 else 1
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             if (holder is DomainViewHolder) {
                 holder.bind(
-                        domains[position],
-                        isSelectionMode(),
-                        selectedDomains,
-                        itemTouchHelper,
-                        this@AutocompleteListFragment)
+                    domains[position],
+                    isSelectionMode(),
+                    selectedDomains,
+                    itemTouchHelper,
+                    this@AutocompleteListFragment
+                )
             }
         }
 

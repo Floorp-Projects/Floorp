@@ -6,11 +6,11 @@ package org.mozilla.focus.widget
 
 import android.R
 import android.content.Context
-import androidx.preference.ListPreference
-import androidx.preference.PreferenceViewHolder
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.view.isVisible
+import androidx.preference.ListPreference
+import androidx.preference.PreferenceViewHolder
 import org.mozilla.focus.utils.Settings
 
 /**

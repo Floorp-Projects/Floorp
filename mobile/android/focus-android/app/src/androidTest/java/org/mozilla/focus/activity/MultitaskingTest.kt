@@ -32,10 +32,10 @@ import org.mozilla.focus.testAnnotations.SmokeTest
 class MultitaskingTest {
     private lateinit var webServer: MockWebServer
     private val store = InstrumentationRegistry.getInstrumentation()
-                            .targetContext
-                            .applicationContext
-                            .components
-                            .store
+        .targetContext
+        .applicationContext
+        .components
+        .store
 
     @get: Rule
     var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
@@ -85,7 +85,7 @@ class MultitaskingTest {
             selectTab(firstPageTitle)
             verifyPageContent("Tab 1")
 
-        // Remove all tabs via the tabs tray
+            // Remove all tabs via the tabs tray
         }.eraseBrowsingHistoryFromTabsTray {
             verifySnackBarText(getStringResource(R.string.feedback_erase2))
             TestCase.assertTrue(store.state.privateTabs.isEmpty())

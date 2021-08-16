@@ -41,7 +41,7 @@ class SettingsPrivacyMenuRobot {
 }
 
 private val privacySettingsList =
-        UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
+    UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
 
 private fun adTrackersBlockSwitch(): ViewInteraction {
     privacySettingsList

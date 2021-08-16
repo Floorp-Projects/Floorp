@@ -29,12 +29,15 @@ internal class RequestDesktopCheckItemViewHolder/* package */(
 
         // Delay closing the menu and reloading the website a bit so that the user can actually see
         // the switch change its state.
-        ThreadUtils.postToMainThreadDelayed(Runnable {
-            menu.dismiss()
+        ThreadUtils.postToMainThreadDelayed(
+            Runnable {
+                menu.dismiss()
 
-            val url = UrlUtils.stripSchemeAndSubDomain(fragment.tab.content.url)
-            fragment.requireComponents.sessionUseCases.loadUrl(url)
-        }, ANIMATION_DURATION)
+                val url = UrlUtils.stripSchemeAndSubDomain(fragment.tab.content.url)
+                fragment.requireComponents.sessionUseCases.loadUrl(url)
+            },
+            ANIMATION_DURATION
+        )
     }
 
     companion object {

@@ -57,10 +57,10 @@ import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.browser.DisplayToolbar
 import org.mozilla.focus.browser.binding.BlockingThemeBinding
 import org.mozilla.focus.browser.binding.TabCountBinding
+import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
-import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.ifCustomTab
@@ -123,8 +123,8 @@ class BrowserFragment :
      */
     val tab: SessionState
         get() = requireComponents.store.state.findTabOrCustomTab(tabId)
-                // Workaround for tab not existing temporarily.
-                ?: createTab("about:blank")
+            // Workaround for tab not existing temporarily.
+            ?: createTab("about:blank")
 
     @Suppress("LongMethod", "ComplexMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -146,64 +146,80 @@ class BrowserFragment :
 
         val toolbarView = view.findViewById<DisplayToolbar>(R.id.appbar)
 
-        findInPageIntegration.set(FindInPageIntegration(
-            components.store,
-            view.findViewById(R.id.find_in_page),
-            engineView!!
-        ), this, view)
+        findInPageIntegration.set(
+            FindInPageIntegration(
+                components.store,
+                view.findViewById(R.id.find_in_page),
+                engineView!!
+            ),
+            this, view
+        )
 
-        fullScreenIntegration.set(FullScreenIntegration(
-            requireActivity(),
-            components.store,
-            tab.id,
-            components.sessionUseCases,
-            toolbarView!!,
-            statusBar!!
-        ), this, view)
+        fullScreenIntegration.set(
+            FullScreenIntegration(
+                requireActivity(),
+                components.store,
+                tab.id,
+                components.sessionUseCases,
+                toolbarView!!,
+                statusBar!!
+            ),
+            this, view
+        )
 
-        contextMenuFeature.set(ContextMenuFeature(
-            parentFragmentManager,
-            components.store,
-            ContextMenuCandidate.defaultCandidates(
+        contextMenuFeature.set(
+            ContextMenuFeature(
+                parentFragmentManager,
+                components.store,
+                ContextMenuCandidate.defaultCandidates(
                     requireContext(),
                     components.tabsUseCases,
                     components.contextMenuUseCases,
                     view
-            ) + ContextMenuCandidate.createOpenInExternalAppCandidate(
-                requireContext(),
-                components.appLinksUseCases
+                ) + ContextMenuCandidate.createOpenInExternalAppCandidate(
+                    requireContext(),
+                    components.appLinksUseCases
+                ),
+                engineView!!,
+                requireComponents.contextMenuUseCases
             ),
-            engineView!!,
-            requireComponents.contextMenuUseCases
-        ), this, view)
+            this, view
+        )
 
-        sessionFeature.set(SessionFeature(
-            components.store,
-            components.sessionUseCases.goBack,
-            engineView!!,
-            tab.id
-        ), this, view)
+        sessionFeature.set(
+            SessionFeature(
+                components.store,
+                components.sessionUseCases.goBack,
+                engineView!!,
+                tab.id
+            ),
+            this, view
+        )
 
-        promptFeature.set(PromptFeature(
-            fragment = this,
-            store = components.store,
-            customTabId = tab.id,
-            fragmentManager = parentFragmentManager,
-            onNeedToRequestPermissions = { permissions ->
-                @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4959
-                requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
-            }
-        ), this, view)
+        promptFeature.set(
+            PromptFeature(
+                fragment = this,
+                store = components.store,
+                customTabId = tab.id,
+                fragmentManager = parentFragmentManager,
+                onNeedToRequestPermissions = { permissions ->
+                    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4959
+                    requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+                }
+            ),
+            this, view
+        )
 
-        downloadsFeature.set(DownloadsFeature(
-            requireContext().applicationContext,
-            components.store,
-            components.downloadsUseCases,
+        downloadsFeature.set(
+            DownloadsFeature(
+                requireContext().applicationContext,
+                components.store,
+                components.downloadsUseCases,
                 fragmentManager = childFragmentManager,
                 downloadManager = FetchDownloadManager(
-                        requireContext().applicationContext,
-                        components.store,
-                        DownloadService::class
+                    requireContext().applicationContext,
+                    components.store,
+                    DownloadService::class
                 ),
                 onNeedToRequestPermissions = { permissions ->
                     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4959
@@ -212,14 +228,19 @@ class BrowserFragment :
                 onDownloadStopped = { state, _, status ->
                     showDownloadSnackbar(state, status)
                 }
-        ), this, view)
+            ),
+            this, view
+        )
 
-        shareDownloadFeature.set(ShareDownloadFeature(
-            context = requireContext().applicationContext,
-            httpClient = components.client,
-            store = components.store,
-            tabId = tab.id
-        ), this, view)
+        shareDownloadFeature.set(
+            ShareDownloadFeature(
+                context = requireContext().applicationContext,
+                httpClient = components.client,
+                store = components.store,
+                tabId = tab.id
+            ),
+            this, view
+        )
 
         blockingThemeBinding.set(
             BlockingThemeBinding(
@@ -373,10 +394,10 @@ class BrowserFragment :
         }
 
         fragmentManager
-                .beginTransaction()
-                .addToBackStack(null)
-                .add(R.id.crash_container, crashReporterFragment, CrashReporterFragment.FRAGMENT_TAG)
-                .commit()
+            .beginTransaction()
+            .addToBackStack(null)
+            .add(R.id.crash_container, crashReporterFragment, CrashReporterFragment.FRAGMENT_TAG)
+            .commit()
 
         crash_container.visibility = View.VISIBLE
         tabs.hide()
@@ -386,12 +407,12 @@ class BrowserFragment :
     private fun hideCrashReporter() {
         val fragmentManager = requireActivity().supportFragmentManager
         val fragment = fragmentManager.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG)
-                ?: return
+            ?: return
 
         fragmentManager
-                .beginTransaction()
-                .remove(fragment)
-                .commit()
+            .beginTransaction()
+            .remove(fragment)
+            .commit()
 
         crash_container.visibility = View.GONE
         tabs.show()
@@ -607,8 +628,8 @@ class BrowserFragment :
 
                 val defaultBrowser = browsers.defaultBrowser
                     ?: throw IllegalStateException("<Open with \$Default> was shown when no default browser is set")
-                    // We only add this menu item when a third party default exists, in
-                    // BrowserMenuAdapter.initializeMenu()
+                // We only add this menu item when a third party default exists, in
+                // BrowserMenuAdapter.initializeMenu()
 
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tab.content.url))
                 intent.setPackage(defaultBrowser.packageName)

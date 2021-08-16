@@ -62,9 +62,11 @@ class InputToolbarIntegration(
             }
 
             if (result != null) {
-                delegate.applyAutocompleteResult(mozilla.components.concept.toolbar.AutocompleteResult(
-                    result.input, result.text, result.url, result.source, result.totalItems
-                ))
+                delegate.applyAutocompleteResult(
+                    mozilla.components.concept.toolbar.AutocompleteResult(
+                        result.input, result.text, result.url, result.source, result.totalItems
+                    )
+                )
             } else {
                 delegate.noAutocompleteResult(text)
             }

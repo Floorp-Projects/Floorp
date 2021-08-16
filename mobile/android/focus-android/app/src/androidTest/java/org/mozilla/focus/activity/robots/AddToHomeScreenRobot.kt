@@ -42,8 +42,8 @@ class AddToHomeScreenRobot {
             deviceHomeScreen().setAsHorizontalList()
 
             fun shortcut() =
-                    deviceHomeScreen()
-                            .getChildByText(UiSelector().text(title), title, true)
+                deviceHomeScreen()
+                    .getChildByText(UiSelector().text(title), title, true)
             shortcut().waitForExists(waitingTime)
             shortcut().clickAndWaitForNewWindow()
 

@@ -5,15 +5,15 @@
 package org.mozilla.focus.search
 
 import android.content.Context
-import androidx.preference.PreferenceViewHolder
 import android.util.AttributeSet
 import android.widget.CompoundButton
+import androidx.preference.PreferenceViewHolder
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.asActivity
 import java.util.HashSet
 
 class MultiselectSearchEngineListPreference(context: Context, attrs: AttributeSet) :
-        SearchEngineListPreference(context, attrs) {
+    SearchEngineListPreference(context, attrs) {
 
     override val itemResId: Int
         get() = R.layout.search_engine_checkbox_button

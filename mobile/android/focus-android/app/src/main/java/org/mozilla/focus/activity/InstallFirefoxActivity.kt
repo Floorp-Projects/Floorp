@@ -12,7 +12,6 @@ import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.WebView
-
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Browsers
@@ -69,8 +68,10 @@ class InstallFirefoxActivity : Activity() {
         }
 
         private fun createStoreIntent(): Intent {
-            return Intent(Intent.ACTION_VIEW,
-                    Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX.packageName))
+            return Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX.packageName)
+            )
         }
 
         fun open(context: Context) {

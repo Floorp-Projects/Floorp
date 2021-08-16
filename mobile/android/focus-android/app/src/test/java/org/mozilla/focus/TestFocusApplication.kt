@@ -40,10 +40,10 @@ class FakeEngine : Engine {
         get() = throw NotImplementedError("Not needed for test")
 
     override fun createView(context: Context, attrs: AttributeSet?): EngineView =
-            throw UnsupportedOperationException()
+        throw UnsupportedOperationException()
 
     override fun createSession(private: Boolean, contextId: String?): EngineSession =
-            throw UnsupportedOperationException()
+        throw UnsupportedOperationException()
 
     override fun createSessionState(json: JSONObject) = FakeEngineSessionState()
 
@@ -54,10 +54,10 @@ class FakeEngine : Engine {
     }
 
     override fun name(): String =
-            throw UnsupportedOperationException()
+        throw UnsupportedOperationException()
 
     override fun speculativeConnect(url: String) =
-            throw UnsupportedOperationException()
+        throw UnsupportedOperationException()
 
     override val profiler: Profiler
         get() = throw NotImplementedError("Not needed for test")

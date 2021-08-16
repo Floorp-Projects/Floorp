@@ -35,8 +35,9 @@ class BrowserRobot {
         )
 
     fun verifyBrowserView() =
-        assertTrue(mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
-            .waitForExists(webPageLoadwaitingTime)
+        assertTrue(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
+                .waitForExists(webPageLoadwaitingTime)
         )
 
     fun verifyPageContent(expectedText: String) {
@@ -110,14 +111,14 @@ class BrowserRobot {
 
     fun clickPlayButton() {
         val playButton =
-                mDevice.findObject(UiSelector().text("Play"))
+            mDevice.findObject(UiSelector().text("Play"))
         playButton.waitForExists(webPageLoadwaitingTime)
         playButton.click()
     }
 
     fun clickPauseButton() {
         val pauseButton =
-                mDevice.findObject(UiSelector().text("Pause"))
+            mDevice.findObject(UiSelector().text("Pause"))
         pauseButton.waitForExists(webPageLoadwaitingTime)
         pauseButton.click()
     }
@@ -161,8 +162,8 @@ class BrowserRobot {
 
         fun clearBrowsingData(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             floatingEraseButton
-                    .check(matches(isCompletelyDisplayed()))
-                    .perform(click())
+                .check(matches(isCompletelyDisplayed()))
+                .perform(click())
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
@@ -224,7 +225,7 @@ private val tabsTrayEraseHistoryButton = onView(withText(R.string.tabs_tray_acti
 private val mainMenu = onView(withId(R.id.mozac_browser_toolbar_menu))
 
 private val shareAppsList =
-        mDevice.findObject(UiSelector().resourceId("android:id/resolver_list"))
+    mDevice.findObject(UiSelector().resourceId("android:id/resolver_list"))
 
 private val securityIcon = onView(withId(R.id.mozac_browser_toolbar_security_indicator))
 
@@ -233,6 +234,6 @@ private val site_identity_state = onView(withId(R.id.site_identity_state))
 private val site_identity_title = onView(withId(R.id.site_identity_title))
 
 private val site_identity_Icon =
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/site_identity_icon"))
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/site_identity_icon"))
 
 private val certificateVerifier = onView(withId(R.id.verifier))

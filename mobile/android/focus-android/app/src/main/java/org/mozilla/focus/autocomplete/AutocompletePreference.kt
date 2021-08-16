@@ -5,10 +5,10 @@
 package org.mozilla.focus.autocomplete
 
 import android.content.Context
-import androidx.preference.Preference
-import androidx.preference.PreferenceViewHolder
 import android.util.AttributeSet
 import android.widget.TextView
+import androidx.preference.Preference
+import androidx.preference.PreferenceViewHolder
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.Settings
 
@@ -26,9 +26,11 @@ class AutocompletePreference(context: Context?, attrs: AttributeSet?) : Preferen
         summaryView = holder!!.findViewById(android.R.id.summary) as TextView
         summaryView?.setText(
             if (settings.shouldAutocompleteFromShippedDomainList() ||
-                settings.shouldAutocompleteFromCustomDomainList())
+                settings.shouldAutocompleteFromCustomDomainList()
+            )
                 R.string.preference_state_on
             else
-                R.string.preference_state_off)
+                R.string.preference_state_off
+        )
     }
 }

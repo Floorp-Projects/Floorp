@@ -9,8 +9,9 @@ import android.os.Bundle
 import org.mozilla.focus.R
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
-class AdvancedSettingsFragment : BaseSettingsFragment(),
-        SharedPreferences.OnSharedPreferenceChangeListener {
+class AdvancedSettingsFragment :
+    BaseSettingsFragment(),
+    SharedPreferences.OnSharedPreferenceChangeListener {
 
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.advanced_settings)

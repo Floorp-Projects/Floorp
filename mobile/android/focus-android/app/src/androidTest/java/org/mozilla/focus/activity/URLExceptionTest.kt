@@ -105,9 +105,13 @@ class URLExceptionTest {
 
         // The blocking badge is not disabled
         Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
-            .check(ViewAssertions.matches(ViewMatchers.withContentDescription(
-                R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
-            )))
+            .check(
+                ViewAssertions.matches(
+                    ViewMatchers.withContentDescription(
+                        R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
+                    )
+                )
+            )
 
         // Open the menu
         Espresso.onView(ViewMatchers.withId(R.id.menuView))

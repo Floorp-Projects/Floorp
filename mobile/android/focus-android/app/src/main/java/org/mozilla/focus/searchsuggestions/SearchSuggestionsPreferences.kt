@@ -20,26 +20,26 @@ class SearchSuggestionsPreferences(private val context: Context) {
 
     fun enableSearchSuggestions() {
         preferences.edit()
-                .putBoolean(TOGGLED_SUGGESTIONS_PREF, true)
-                .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), true)
-                .apply()
+            .putBoolean(TOGGLED_SUGGESTIONS_PREF, true)
+            .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), true)
+            .apply()
 
         TelemetryWrapper.respondToSearchSuggestionPrompt(true)
     }
 
     fun disableSearchSuggestions() {
         preferences.edit()
-                .putBoolean(TOGGLED_SUGGESTIONS_PREF, true)
-                .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), false)
-                .apply()
+            .putBoolean(TOGGLED_SUGGESTIONS_PREF, true)
+            .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), false)
+            .apply()
 
         TelemetryWrapper.respondToSearchSuggestionPrompt(false)
     }
 
     fun dismissNoSuggestionsMessage() {
         preferences.edit()
-                .putBoolean(DISMISSED_NO_SUGGESTIONS_PREF, true)
-                .apply()
+            .putBoolean(DISMISSED_NO_SUGGESTIONS_PREF, true)
+            .apply()
     }
 
     companion object {

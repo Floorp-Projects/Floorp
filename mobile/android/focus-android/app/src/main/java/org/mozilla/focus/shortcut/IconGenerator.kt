@@ -13,10 +13,9 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
-import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
-import androidx.core.content.ContextCompat
 import android.util.TypedValue
-
+import androidx.core.content.ContextCompat
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.UrlUtils
 
@@ -41,10 +40,10 @@ class IconGenerator {
          * on top of a generic launcher icon shape that we provide.
          */
         private fun generateCharacterIcon(context: Context, character: Char) =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                    generateAdaptiveLauncherIcon(context, character)
-                else
-                    generateLauncherIconPreOreo(context, character)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                generateAdaptiveLauncherIcon(context, character)
+            else
+                generateLauncherIconPreOreo(context, character)
 
         /*
          * This method needs to be separate from generateAdaptiveLauncherIcon so that we can generate
@@ -69,10 +68,12 @@ class IconGenerator {
         private fun drawVectorOnBitmap(context: Context, vectorId: Int, bitmap: Bitmap, frame: Double): Bitmap {
             val canvas = Canvas(bitmap)
             // Select the area to draw with a frame
-            val rect = Rect((frame * canvas.width).toInt(),
-                    (frame * canvas.height).toInt(),
-                    ((1 - frame) * canvas.width).toInt(),
-                    ((1 - frame) * canvas.height).toInt())
+            val rect = Rect(
+                (frame * canvas.width).toInt(),
+                (frame * canvas.height).toInt(),
+                ((1 - frame) * canvas.width).toInt(),
+                ((1 - frame) * canvas.height).toInt()
+            )
             val icon = VectorDrawableCompat.create(context.resources, vectorId, null)
             icon!!.bounds = rect
             icon.draw(canvas)
@@ -104,17 +105,20 @@ class IconGenerator {
             val paint = Paint()
 
             val textSize = TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP, context.resources.displayMetrics)
+                TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP, context.resources.displayMetrics
+            )
 
             paint.color = Color.WHITE
             paint.textAlign = Paint.Align.CENTER
             paint.textSize = textSize
             paint.isAntiAlias = true
 
-            canvas.drawText(character.toString(),
-                    canvas.width / 2.0f,
-                    canvas.height / 2.0f - (paint.descent() + paint.ascent()) / 2.0f,
-                    paint)
+            canvas.drawText(
+                character.toString(),
+                canvas.width / 2.0f,
+                canvas.height / 2.0f - (paint.descent() + paint.ascent()) / 2.0f,
+                paint
+            )
 
             return bitmap
         }

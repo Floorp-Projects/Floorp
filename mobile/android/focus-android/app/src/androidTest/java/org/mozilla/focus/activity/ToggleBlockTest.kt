@@ -96,9 +96,13 @@ class ToggleBlockTest {
 
         // Blocking is on
         Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
-            .check(ViewAssertions.matches(ViewMatchers.withContentDescription(
-                R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
-            )))
+            .check(
+                ViewAssertions.matches(
+                    ViewMatchers.withContentDescription(
+                        R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
+                    )
+                )
+            )
 
         // Open the menu
         Espresso.onView(ViewMatchers.withId(R.id.menuView))
@@ -115,9 +119,13 @@ class ToggleBlockTest {
 
         // Now the blocking badge is visible
         Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
-            .check(ViewAssertions.matches(ViewMatchers.withContentDescription(
-                R.string.mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1
-            )))
+            .check(
+                ViewAssertions.matches(
+                    ViewMatchers.withContentDescription(
+                        R.string.mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1
+                    )
+                )
+            )
         Espresso.onView(ViewMatchers.withId(R.id.webview)).perform(ViewActions.click())
 
         // Open the menu again. Now the switch is disabled and the tracker count should be disabled.
@@ -165,9 +173,13 @@ class ToggleBlockTest {
 
         // Blocking is on
         Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
-            .check(ViewAssertions.matches(ViewMatchers.withContentDescription(
-                R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
-            )))
+            .check(
+                ViewAssertions.matches(
+                    ViewMatchers.withContentDescription(
+                        R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
+                    )
+                )
+            )
 
         // Open the menu again. Now the switch is disabled and the tracker count should be disabled.
         Espresso.onView(ViewMatchers.withId(R.id.menuView))

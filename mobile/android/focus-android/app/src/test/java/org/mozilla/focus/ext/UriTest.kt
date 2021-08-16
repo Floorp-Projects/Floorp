@@ -50,26 +50,33 @@ class UriTest {
     fun testTruncatedPathWithMultipleSegments() {
         assertTruncatedPath("/en-US/…/fast", "https://www.mozilla.org/en-US/firefox/features/fast/")
 
-        assertTruncatedPath("/2017/…/nasa-hi-seas-mars-analogue-mission-hawaii-mauna-loa",
-                "https://www.theverge.com/2017/9/24/16356876/nasa-hi-seas-mars-analogue-mission-hawaii-mauna-loa")
+        assertTruncatedPath(
+            "/2017/…/nasa-hi-seas-mars-analogue-mission-hawaii-mauna-loa",
+            "https://www.theverge.com/2017/9/24/16356876/nasa-hi-seas-mars-analogue-mission-hawaii-mauna-loa"
+        )
     }
 
     @Test
     fun testTruncatedPathWithMultipleSegmentsAndFragment() {
         assertTruncatedPath(
-                "/@bfrancis/the-story-of-firefox-os-cb5bf796e8fb",
-                "https://medium.com/@bfrancis/the-story-of-firefox-os-cb5bf796e8fb#931a")
+            "/@bfrancis/the-story-of-firefox-os-cb5bf796e8fb",
+            "https://medium.com/@bfrancis/the-story-of-firefox-os-cb5bf796e8fb#931a"
+        )
     }
 
     private fun assertTruncatedHost(expectedTruncatedPath: String, url: String) {
-        assertEquals("truncatedHost($url)",
-                expectedTruncatedPath,
-                Uri.parse(url).truncatedHost())
+        assertEquals(
+            "truncatedHost($url)",
+            expectedTruncatedPath,
+            Uri.parse(url).truncatedHost()
+        )
     }
 
     private fun assertTruncatedPath(expectedTruncatedPath: String, url: String) {
-        assertEquals("truncatedPath($url)",
-                expectedTruncatedPath,
-                Uri.parse(url).truncatedPath())
+        assertEquals(
+            "truncatedPath($url)",
+            expectedTruncatedPath,
+            Uri.parse(url).truncatedPath()
+        )
     }
 }

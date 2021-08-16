@@ -17,10 +17,10 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.search.suggestions.SearchSuggestionClient
 import mozilla.components.support.ktx.kotlin.sanitizeURL
-import mozilla.components.concept.fetch.Request as FetchRequest
 import org.mozilla.focus.utils.debounce
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
+import mozilla.components.concept.fetch.Request as FetchRequest
 
 class SearchSuggestionsFetcher(
     searchEngine: SearchEngine?,

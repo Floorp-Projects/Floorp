@@ -7,16 +7,14 @@ package org.mozilla.focus.menu.browser
 
 import android.app.PendingIntent
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.state.CustomTabConfig
-
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.HardwareUtils
-
 import java.lang.ref.WeakReference
 
 class BrowserMenuAdapter(
@@ -99,9 +97,11 @@ class BrowserMenuAdapter(
         if (browsers.hasMultipleThirdPartyBrowsers(context)) {
             items.add(
                 MenuItem.Default(
-                    R.id.open_select_browser, resources.getString(
+                    R.id.open_select_browser,
+                    resources.getString(
                         R.string.menu_open_with_a_browser2
-                    ), R.drawable.ic_open_in
+                    ),
+                    R.drawable.ic_open_in
                 )
             )
         }
@@ -118,12 +118,14 @@ class BrowserMenuAdapter(
         if (browsers.hasThirdPartyDefaultBrowser(context)) {
             items.add(
                 MenuItem.Default(
-                    R.id.open_default, resources.getString(
+                    R.id.open_default,
+                    resources.getString(
                         R.string.menu_open_with_default_browser2,
                         browsers.defaultBrowser!!.loadLabel(
                             context.packageManager
                         )
-                    ), 0
+                    ),
+                    0
                 )
             )
         }

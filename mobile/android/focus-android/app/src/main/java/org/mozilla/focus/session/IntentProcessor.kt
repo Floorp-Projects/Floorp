@@ -117,7 +117,8 @@ class IntentProcessor(
                         createSearchSession(
                             SessionState.Source.External.ActionSend(null),
                             SearchUtils.createSearchUrl(context, dataString ?: ""),
-                            dataString ?: "")
+                            dataString ?: ""
+                        )
                     }
                 } else {
                     createSession(SessionState.Source.External.ActionSend(null), dataString ?: "")
@@ -129,38 +130,46 @@ class IntentProcessor(
     }
 
     private fun createSession(source: SessionState.Source, url: String): Result {
-        return Result.Tab(tabsUseCases.addTab(
-            url,
-            source = source,
-            selectTab = true,
-            private = true
-        ))
-    }
-
-    private fun createSearchSession(source: SessionState.Source, url: String, searchTerms: String): Result {
-        return Result.Tab(tabsUseCases.addTab(
-            url,
-            source = source,
-            searchTerms = searchTerms,
-            private = true
-        ))
-    }
-
-    private fun createSession(source: SessionState.Source, intent: SafeIntent, url: String): Result {
-        return if (isCustomTabIntent(intent.unsafe)) {
-            Result.CustomTab(customTabsUseCases.add(
-                url,
-                createCustomTabConfigFromIntent(intent.unsafe, context.resources),
-                private = true,
-                source = source
-            ))
-        } else {
-            Result.Tab(tabsUseCases.addTab(
+        return Result.Tab(
+            tabsUseCases.addTab(
                 url,
                 source = source,
                 selectTab = true,
                 private = true
-            ))
+            )
+        )
+    }
+
+    private fun createSearchSession(source: SessionState.Source, url: String, searchTerms: String): Result {
+        return Result.Tab(
+            tabsUseCases.addTab(
+                url,
+                source = source,
+                searchTerms = searchTerms,
+                private = true
+            )
+        )
+    }
+
+    private fun createSession(source: SessionState.Source, intent: SafeIntent, url: String): Result {
+        return if (isCustomTabIntent(intent.unsafe)) {
+            Result.CustomTab(
+                customTabsUseCases.add(
+                    url,
+                    createCustomTabConfigFromIntent(intent.unsafe, context.resources),
+                    private = true,
+                    source = source
+                )
+            )
+        } else {
+            Result.Tab(
+                tabsUseCases.addTab(
+                    url,
+                    source = source,
+                    selectTab = true,
+                    private = true
+                )
+            )
         }
     }
 

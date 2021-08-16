@@ -24,7 +24,8 @@ import org.mozilla.focus.widget.DefaultBrowserPreference
 import org.mozilla.focus.widget.LocaleListPreference
 import java.util.Locale
 
-class GeneralSettingsFragment : BaseSettingsFragment(),
+class GeneralSettingsFragment :
+    BaseSettingsFragment(),
     SharedPreferences.OnSharedPreferenceChangeListener {
 
     private var localeUpdated: Boolean = false

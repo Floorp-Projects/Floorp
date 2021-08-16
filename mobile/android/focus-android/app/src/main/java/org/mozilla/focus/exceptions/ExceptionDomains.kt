@@ -25,8 +25,10 @@ object ExceptionDomains {
      */
     fun load(context: Context): List<String> {
         if (exceptions == null) {
-            exceptions = (preferences(context)
-                .getString(KEY_DOMAINS, "") ?: "")
+            exceptions = (
+                preferences(context)
+                    .getString(KEY_DOMAINS, "") ?: ""
+                )
                 .split(SEPARATOR)
                 .filter { !it.isEmpty() }
         }

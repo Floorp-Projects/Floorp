@@ -9,9 +9,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-
 import org.mozilla.focus.R
-
 import java.net.URISyntaxException
 
 object IntentUtils {
@@ -49,11 +47,12 @@ object IntentUtils {
                 val externalAppTitle = info?.loadLabel(packageManager) ?: "(null)"
 
                 showConfirmationDialog(
-                        context,
-                        intent,
-                        context.getString(R.string.external_app_prompt_title),
-                        R.string.external_app_prompt,
-                        externalAppTitle)
+                    context,
+                    intent,
+                    context.getString(R.string.external_app_prompt_title),
+                    R.string.external_app_prompt,
+                    externalAppTitle
+                )
             }
             else -> {
                 val chooserTitle = context.getString(R.string.external_multiple_apps_matched_exit)
@@ -82,9 +81,11 @@ object IntentUtils {
             val info = packageManager.resolveActivity(marketIntent, 0)
             val marketTitle = info?.loadLabel(packageManager) ?: "(null)"
 
-            showConfirmationDialog(context, marketIntent,
-                    context.getString(R.string.external_app_prompt_no_app_title),
-                    R.string.external_app_prompt_no_app, marketTitle)
+            showConfirmationDialog(
+                context, marketIntent,
+                context.getString(R.string.external_app_prompt_no_app_title),
+                R.string.external_app_prompt_no_app, marketTitle
+            )
 
             // Stop loading, we essentially have a result.
             return true

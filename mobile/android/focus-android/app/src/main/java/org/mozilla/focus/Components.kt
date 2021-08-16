@@ -71,20 +71,22 @@ class Components(
     private val clientOverride: Client? = null
 ) {
     val appStore: AppStore by lazy {
-        AppStore(AppState(
-            screen = determineInitialScreen(context)
-        ))
+        AppStore(
+            AppState(
+                screen = determineInitialScreen(context)
+            )
+        )
     }
 
     val engineDefaultSettings by lazy {
         val settings = Settings.getInstance(context)
 
         DefaultSettings(
-                requestInterceptor = LocalizedContentInterceptor(context),
-                trackingProtectionPolicy = settings.createTrackingProtectionPolicy(),
-                javascriptEnabled = !settings.shouldBlockJavaScript(),
-                remoteDebuggingEnabled = settings.shouldEnableRemoteDebugging(),
-                webFontsEnabled = !settings.shouldBlockWebFonts()
+            requestInterceptor = LocalizedContentInterceptor(context),
+            trackingProtectionPolicy = settings.createTrackingProtectionPolicy(),
+            javascriptEnabled = !settings.shouldBlockJavaScript(),
+            remoteDebuggingEnabled = settings.shouldEnableRemoteDebugging(),
+            webFontsEnabled = !settings.shouldBlockWebFonts()
         )
     }
 
@@ -214,7 +216,8 @@ private fun createCrashReporter(context: Context): CrashReporter {
         context,
         0,
         intent,
-        0)
+        0
+    )
 
     return CrashReporter(
         context = context,

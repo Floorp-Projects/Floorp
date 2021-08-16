@@ -14,15 +14,15 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.StringsHelper.EN_FRENCH_LOCALE
 import org.mozilla.focus.helpers.StringsHelper.EN_LANGUAGE_MENU_HEADING
 import org.mozilla.focus.helpers.StringsHelper.FR_ENGLISH_LOCALE
 import org.mozilla.focus.helpers.StringsHelper.FR_GENERAL_HEADING
 import org.mozilla.focus.helpers.StringsHelper.FR_HELP
 import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_MENU
-import org.mozilla.focus.helpers.StringsHelper.EN_FRENCH_LOCALE
+import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_SYSTEM_DEFAULT
 import org.mozilla.focus.helpers.StringsHelper.FR_MOTTO
 import org.mozilla.focus.helpers.StringsHelper.FR_SETTINGS
-import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_SYSTEM_DEFAULT
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.verifyTranslatedTextExists
 import java.util.Locale
@@ -69,7 +69,7 @@ class SwitchLocaleTest {
         }.openMainMenu {
             verifyTranslatedTextExists(FR_SETTINGS)
             verifyTranslatedTextExists(FR_HELP)
-        /* change back to system locale, verify the locale is changed */
+            /* change back to system locale, verify the locale is changed */
         }.openSettings(FR_SETTINGS) {
         }.openGeneralSettingsMenu(FR_GENERAL_HEADING) {
             openLanguageSelectionMenu(FR_LANGUAGE_MENU)

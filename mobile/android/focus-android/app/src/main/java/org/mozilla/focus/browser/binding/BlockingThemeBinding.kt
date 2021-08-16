@@ -65,20 +65,24 @@ class BlockingThemeBinding(
         isCustomTab: Boolean,
         enabled: Boolean
     ): TransitionDrawableGroup {
-        statusBar.setBackgroundResource(if (enabled) {
-            R.drawable.animated_background
-        } else {
-            R.drawable.animated_background_disabled
-        })
+        statusBar.setBackgroundResource(
+            if (enabled) {
+                R.drawable.animated_background
+            } else {
+                R.drawable.animated_background_disabled
+            }
+        )
 
         return if (!isCustomTab) {
             // Only update the toolbar background if this is not a custom tab. Custom tabs set their
             // own color and we do not want to override this here.
-            urlBar.setBackgroundResource(if (enabled) {
-                R.drawable.animated_background
-            } else {
-                R.drawable.animated_background_disabled
-            })
+            urlBar.setBackgroundResource(
+                if (enabled) {
+                    R.drawable.animated_background
+                } else {
+                    R.drawable.animated_background_disabled
+                }
+            )
 
             TransitionDrawableGroup(
                 urlBar.background as TransitionDrawable,

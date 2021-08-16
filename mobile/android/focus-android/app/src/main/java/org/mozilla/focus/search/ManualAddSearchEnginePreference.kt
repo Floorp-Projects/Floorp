@@ -7,9 +7,6 @@ package org.mozilla.focus.search
 import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
-import com.google.android.material.textfield.TextInputLayout
-import androidx.preference.Preference
-import androidx.preference.PreferenceViewHolder
 import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
@@ -17,6 +14,9 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
+import androidx.preference.Preference
+import androidx.preference.PreferenceViewHolder
+import com.google.android.material.textfield.TextInputLayout
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -37,9 +37,9 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
         super.onBindViewHolder(holder)
 
         engineNameErrorLayout =
-                holder!!.findViewById(R.id.edit_engine_name_layout) as TextInputLayout
+            holder!!.findViewById(R.id.edit_engine_name_layout) as TextInputLayout
         searchQueryErrorLayout =
-                holder.findViewById(R.id.edit_search_string_layout) as TextInputLayout
+            holder.findViewById(R.id.edit_search_string_layout) as TextInputLayout
 
         engineNameEditText = holder.findViewById(R.id.edit_engine_name) as EditText
         engineNameEditText?.addTextChangedListener(

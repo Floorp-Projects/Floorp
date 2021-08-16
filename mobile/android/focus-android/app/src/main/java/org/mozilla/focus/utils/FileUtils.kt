@@ -21,21 +21,27 @@ private const val SENTRY_CACHE_DIR = "sentry-buffered-events"
 class FileUtils {
     companion object {
         @JvmStatic
-        fun truncateCacheDirectory(context: Context) = deleteContent(context.cacheDir, doNotEraseWhitelist = setOf(
+        fun truncateCacheDirectory(context: Context) = deleteContent(
+            context.cacheDir,
+            doNotEraseWhitelist = setOf(
                 // If the folder or its contents are deleted, WebView will stop using the disk cache entirely.
                 WEBVIEW_CACHE_DIR,
                 SENTRY_CACHE_DIR,
                 MobileMetricsPingStorage.STORAGE_FOLDER
-        ))
+            )
+        )
 
         @JvmStatic
         fun deleteWebViewDirectory(context: Context): Boolean {
             val webviewDirectory = File(context.applicationInfo.dataDir, WEBVIEW_DIRECTORY)
-            return deleteContent(webviewDirectory, doNotEraseWhitelist = setOf(
+            return deleteContent(
+                webviewDirectory,
+                doNotEraseWhitelist = setOf(
                     // If the folder or its contents is deleted, WebStorage.deleteAllData does not clear Local Storage
                     // in memory.
                     LOCAL_STORAGE_DIR
-            ))
+                )
+            )
         }
 
         private fun deleteContent(directory: File, doNotEraseWhitelist: Set<String> = emptySet()): Boolean {

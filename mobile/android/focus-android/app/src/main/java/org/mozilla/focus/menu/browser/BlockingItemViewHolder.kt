@@ -66,19 +66,22 @@ internal class BlockingItemViewHolder(
 
         // Delay closing the menu and reloading the website a bit so that the user can actually see
         // the switch change its state.
-        ThreadUtils.postToMainThreadDelayed(Runnable {
-            menu.dismiss()
+        ThreadUtils.postToMainThreadDelayed(
+            Runnable {
+                menu.dismiss()
 
-            buttonView.context.components.apply {
-                if (isChecked) {
-                    trackingProtectionUseCases.removeException(fragment.tab.id)
-                } else {
-                    trackingProtectionUseCases.addException(fragment.tab.id)
+                buttonView.context.components.apply {
+                    if (isChecked) {
+                        trackingProtectionUseCases.removeException(fragment.tab.id)
+                    } else {
+                        trackingProtectionUseCases.addException(fragment.tab.id)
+                    }
+                    updateExceptionsLocalList(isChecked)
+                    sessionUseCases.reload(fragment.tab.id)
                 }
-                updateExceptionsLocalList(isChecked)
-                sessionUseCases.reload(fragment.tab.id)
-            }
-        }, THUMB_ANIMATION_DURATION)
+            },
+            THUMB_ANIMATION_DURATION
+        )
     }
 
     private fun updateExceptionsLocalList(isChecked: Boolean) {

@@ -78,9 +78,9 @@ private fun withMockWebServer(vararg responses: MockResponse, block: (MockWebSer
 private fun MockWebServer.rootUrl(): String = url("/").toString()
 
 private fun responseWithStatus(status: Int) =
-        MockResponse()
-                .setResponseCode(status)
-                .setBody("")
+    MockResponse()
+        .setResponseCode(status)
+        .setBody("")
 
 private class OkHttpWrapper : Client() {
     private val actual = OkHttpClient()

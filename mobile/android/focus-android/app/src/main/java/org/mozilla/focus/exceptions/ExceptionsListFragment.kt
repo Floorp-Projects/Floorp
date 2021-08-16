@@ -109,7 +109,7 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         super.onViewCreated(view, savedInstanceState)
 
         exceptionList.layoutManager =
-                LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
+            LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         exceptionList.adapter = DomainListAdapter()
         exceptionList.setHasFixedSize(true)
 
@@ -124,9 +124,11 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
             val exceptions = (exceptionList.adapter as DomainListAdapter).selection()
             TelemetryWrapper.removeAllExceptionDomains(exceptions.count())
 
-            requireComponents.appStore.dispatch(AppAction.NavigateUp(
-                requireComponents.store.state.selectedTabId
-            ))
+            requireComponents.appStore.dispatch(
+                AppAction.NavigateUp(
+                    requireComponents.store.state.selectedTabId
+                )
+            )
         }
     }
 
@@ -201,7 +203,8 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
                 DomainViewHolder.LAYOUT_ID ->
                     DomainViewHolder(
                         LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                        { AutocompleteDomainFormatter.format(it) })
+                        { AutocompleteDomainFormatter.format(it) }
+                    )
                 else -> throw IllegalArgumentException("Unknown view type: $viewType")
             }
 

@@ -52,7 +52,7 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-            inflater.inflate(R.layout.fragment_autocomplete_add_domain, container, false)
+        inflater.inflate(R.layout.fragment_autocomplete_add_domain, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -73,8 +73,8 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
         if (item.itemId == R.id.save) {
 
             val domain = domainView.text.toString()
-                    .trim()
-                    .lowercase()
+                .trim()
+                .lowercase()
 
             launch(IO) {
                 val domains = CustomDomains.load(requireActivity())
@@ -108,8 +108,10 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
 
         ViewUtils.showBrandedSnackbar(view, R.string.preference_autocomplete_add_confirmation, 0)
 
-        requireComponents.appStore.dispatch(AppAction.NavigateUp(
-            requireComponents.store.state.selectedTabId
-        ))
+        requireComponents.appStore.dispatch(
+            AppAction.NavigateUp(
+                requireComponents.store.state.selectedTabId
+            )
+        )
     }
 }

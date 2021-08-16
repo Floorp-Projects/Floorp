@@ -44,7 +44,8 @@ class StoreLink(
         flow.map { state -> state.privateTabs.isEmpty() }
             .ifChanged()
             .filter { isEmpty -> isEmpty }
-            .collect { appStore.dispatch(AppAction.NoTabs)
-        }
+            .collect {
+                appStore.dispatch(AppAction.NoTabs)
+            }
     }
 }

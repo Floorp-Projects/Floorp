@@ -69,10 +69,10 @@ class SearchTest {
             allowEnableSearchSuggestions()
 
             searchSuggestionsIdlingResources =
-                    RecyclerViewIdlingResource(
-                            mActivityTestRule.activity.findViewById(R.id.suggestionList),
-                            1
-                    )
+                RecyclerViewIdlingResource(
+                    mActivityTestRule.activity.findViewById(R.id.suggestionList),
+                    1
+                )
             IdlingRegistry.getInstance().register(searchSuggestionsIdlingResources!!)
 
             verifyHintForSearch(searchString)

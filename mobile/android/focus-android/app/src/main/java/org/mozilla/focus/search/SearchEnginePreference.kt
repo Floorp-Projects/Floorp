@@ -7,8 +7,8 @@ package org.mozilla.focus.search
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.preference.Preference
 import android.util.AttributeSet
+import androidx.preference.Preference
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components

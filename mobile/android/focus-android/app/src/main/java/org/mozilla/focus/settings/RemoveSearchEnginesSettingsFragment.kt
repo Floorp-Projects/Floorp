@@ -42,8 +42,8 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
         super.onPrepareOptionsMenu(menu)
         view?.post {
             val pref = preferenceScreen
-                    .findPreference(resources.getString(R.string.pref_key_multiselect_search_engine_list))
-                    as? MultiselectSearchEngineListPreference
+                .findPreference(resources.getString(R.string.pref_key_multiselect_search_engine_list))
+                as? MultiselectSearchEngineListPreference
 
             menu.findItem(R.id.menu_delete_items)?.let {
                 ViewUtils.setMenuItemEnabled(it, pref!!.atLeastOneEngineChecked())

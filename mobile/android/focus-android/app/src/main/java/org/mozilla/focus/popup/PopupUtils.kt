@@ -46,21 +46,27 @@ object PopupUtils {
             if (isSecure)
                 R.string.security_popup_secure_connection
             else
-                R.string.security_popup_insecure_connection)
+                R.string.security_popup_insecure_connection
+        )
 
         if (isSecure) {
-            setSecurityInfoSecure(context, identityState, verifierInfo, verifier,
-                securityInfoIcon)
+            setSecurityInfoSecure(
+                context, identityState, verifierInfo, verifier,
+                securityInfoIcon
+            )
         } else {
             verifier.visibility = View.GONE
             setSecurityInfoInsecure(context, identityState, url, securityInfoIcon)
         }
 
         identityState.compoundDrawablePadding = res.getDimension(
-            R.dimen.doorhanger_drawable_padding).toInt()
+            R.dimen.doorhanger_drawable_padding
+        ).toInt()
 
-        return PopupWindow(popUpView, res.getDimension(R.dimen.doorhanger_width).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT, true)
+        return PopupWindow(
+            popUpView, res.getDimension(R.dimen.doorhanger_width).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT, true
+        )
     }
 
     private fun setOrigin(hostInfo: TextView, origin: String?, url: String) {
@@ -86,11 +92,14 @@ object PopupUtils {
         val checkIcon = DrawableUtils.loadAndTintDrawable(context, R.drawable.ic_check, photonGreen)
         identityState.setCompoundDrawables(
             getScaledDrawable(context, R.dimen.doorhanger_small_icon, checkIcon), null,
-            null, null)
+            null, null
+        )
         identityState.setTextColor(photonGreen)
         if (!TextUtils.isEmpty(verifierInfo)) {
-            verifier.text = context.getString(R.string.security_popup_security_verified,
-                verifierInfo)
+            verifier.text = context.getString(
+                R.string.security_popup_security_verified,
+                verifierInfo
+            )
             verifier.visibility = View.VISIBLE
         } else {
             verifier.visibility = View.GONE
@@ -117,13 +126,18 @@ object PopupUtils {
         } else {
             securityInfoIcon.setImageResource(R.drawable.ic_warning)
             securityInfoIcon.setColorFilter(photonYellow)
-            securityIcon = DrawableUtils.loadAndTintDrawable(context, R.drawable.ic_warning,
-                    photonYellow)
+            securityIcon = DrawableUtils.loadAndTintDrawable(
+                context, R.drawable.ic_warning,
+                photonYellow
+            )
             identityState.setCompoundDrawables(
-                getScaledDrawable(context, R.dimen.doorhanger_small_icon,
-                    securityIcon),
+                getScaledDrawable(
+                    context, R.dimen.doorhanger_small_icon,
+                    securityIcon
+                ),
                 null,
-                null, null)
+                null, null
+            )
         }
     }
 

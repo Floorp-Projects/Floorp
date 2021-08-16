@@ -6,7 +6,6 @@ package org.mozilla.focus.activity
 import android.app.Activity
 import android.os.Bundle
 import org.mozilla.focus.ext.components
-
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class EraseShortcutActivity : Activity() {

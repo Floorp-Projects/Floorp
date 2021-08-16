@@ -47,16 +47,18 @@ class GeckoExceptionsMigrator(
      * @return list of custom domains
      */
     private fun fetchExceptions(context: Context): List<String> {
-        return (preferences(context)
-                .getString(KEY_DOMAINS, "") ?: "")
-                .split(SEPARATOR)
-                .filter { it.isNotEmpty() }
+        return (
+            preferences(context)
+                .getString(KEY_DOMAINS, "") ?: ""
+            )
+            .split(SEPARATOR)
+            .filter { it.isNotEmpty() }
     }
 
     private fun isOver(context: Context) = !preferences(context).contains(KEY_DOMAINS)
 
     private fun preferences(context: Context): SharedPreferences =
-            context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+        context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
 
     private fun migrate(uri: String) {
         val privateMode = true
