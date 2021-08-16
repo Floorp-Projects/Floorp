@@ -279,19 +279,20 @@ add_task(async function test_adaptive_behaviors() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Add an adaptive entry.
-  await bumpScore("http://site.tld/1", "site", { visits: 1, picks: 1 });
+  let historyUrl = "http://site.tld/1";
+  await bumpScore(historyUrl, "site", { visits: 1, picks: 1 });
 
-  let url = "http://bookmarked.site.tld/1";
+  let bookmarkURL = "http://bookmarked.site.tld/1";
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "test_book",
-    url,
+    url: bookmarkURL,
   });
 
   await SpecialPowers.pushPrefEnv({
     set: [
       // Search only bookmarks.
-      ["browser.urlbar.suggest.bookmarks", true],
+      ["browser.urlbar.suggest.bookmark", true],
       ["browser.urlbar.suggest.history", false],
     ],
   });
@@ -299,8 +300,101 @@ add_task(async function test_adaptive_behaviors() {
     window: win,
     value: "site",
   });
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(win, 1);
-  Assert.equal(result.url, url, "Check bookmarked result");
+  let result = (await UrlbarTestUtils.waitForAutocompleteResultAt(win, 1))
+    .result;
+  Assert.equal(result.payload.url, bookmarkURL, "Check bookmarked result");
+  Assert.notEqual(
+    result.providerName,
+    "InputHistory",
+    "The bookmarked result is not from InputHistory."
+  );
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(win),
+    2,
+    "Check there are no unexpected results"
+  );
+  await PlacesUtils.bookmarks.remove(bm);
+
+  // Repeat the previous case but now the bookmark has the same URL as the
+  // history result. We expect the returned result comes from InputHistory.
+  bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "test_book",
+    url: historyUrl,
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    value: "sit",
+  });
+  result = (await UrlbarTestUtils.waitForAutocompleteResultAt(win, 1)).result;
+  Assert.equal(result.payload.url, historyUrl, "Check bookmarked result");
+  Assert.equal(
+    result.providerName,
+    "InputHistory",
+    "The bookmarked result is from InputHistory."
+  );
+  Assert.equal(
+    result.source,
+    UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    "The input history result is a bookmark."
+  );
+
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(win),
+    2,
+    "Check there are no unexpected results"
+  );
+
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Search only open pages. We don't provide an open page, but we want to
+      // enable at least one of these prefs so that UrlbarProviderInputHistory
+      // is active.
+      ["browser.urlbar.suggest.bookmark", false],
+      ["browser.urlbar.suggest.history", false],
+      ["browser.urlbar.suggest.openpage", true],
+    ],
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    value: "site",
+  });
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(win),
+    1,
+    "There is no adaptive history result because it is not an open page."
+  );
+  await SpecialPowers.popPrefEnv();
+
+  // Clearing history but not deleting the bookmark. This simulates the case
+  // where the user has cleared their history or is using permanent private
+  // browsing mode.
+  await PlacesUtils.history.clear();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.bookmark", true],
+      ["browser.urlbar.suggest.history", false],
+      ["browser.urlbar.suggest.openpage", false],
+    ],
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    value: "sit",
+  });
+  result = (await UrlbarTestUtils.waitForAutocompleteResultAt(win, 1)).result;
+  Assert.equal(result.payload.url, historyUrl, "Check bookmarked result");
+  Assert.equal(
+    result.providerName,
+    "InputHistory",
+    "The bookmarked result is from InputHistory."
+  );
+  Assert.equal(
+    result.source,
+    UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    "The input history result is a bookmark."
+  );
 
   Assert.equal(
     UrlbarTestUtils.getResultCount(win),
@@ -314,8 +408,6 @@ add_task(async function test_adaptive_behaviors() {
 
 add_task(async function test_adaptive_mouse() {
   info("Check adaptive results are updated on mouse picks");
-  await PlacesUtils.history.clear();
-
   let url1 = "http://site.tld/1";
   let url2 = "http://site.tld/2";
 

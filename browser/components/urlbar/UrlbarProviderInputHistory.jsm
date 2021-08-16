@@ -6,9 +6,9 @@
 
 /**
  * This module exports a provider that offers input history (aka adaptive
- * history) results. These results map typed search string to history results.
- * That way, a user can find a particular history result again by typing the
- * same string.
+ * history) results. These results map typed search strings to Urlbar results.
+ * That way, a user can find a particular result again by typing the same
+ * string.
  */
 
 var EXPORTED_SYMBOLS = ["UrlbarProviderInputHistory"];
@@ -97,7 +97,12 @@ class ProviderInputHistory extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return UrlbarPrefs.get("suggest.history") && !queryContext.searchMode;
+    return (
+      (UrlbarPrefs.get("suggest.history") ||
+        UrlbarPrefs.get("suggest.bookmark") ||
+        UrlbarPrefs.get("suggest.openpage")) &&
+      !queryContext.searchMode
+    );
   }
 
   /**
@@ -151,10 +156,14 @@ class ProviderInputHistory extends UrlbarProvider {
         continue;
       }
 
-      let resultSource = UrlbarUtils.RESULT_SOURCE.HISTORY;
+      let resultSource;
       if (bookmarked && UrlbarPrefs.get("suggest.bookmark")) {
         resultSource = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
         resultTitle = bookmarkTitle || historyTitle;
+      } else if (UrlbarPrefs.get("suggest.history")) {
+        resultSource = UrlbarUtils.RESULT_SOURCE.HISTORY;
+      } else {
+        continue;
       }
 
       let resultTags = tags
