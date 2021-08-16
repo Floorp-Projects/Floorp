@@ -409,7 +409,7 @@ struct FullIndexMetadata {
   ~FullIndexMetadata() = default;
 };
 
-typedef nsTHashMap<nsUint64HashKey, SafeRefPtr<FullIndexMetadata>> IndexTable;
+using IndexTable = nsTHashMap<nsUint64HashKey, SafeRefPtr<FullIndexMetadata>>;
 
 // Can be instantiated either on the QuotaManager IO thread or on a
 // versionchange transaction thread. These threads can never race so this is
@@ -443,8 +443,8 @@ struct FullObjectStoreMetadata {
   ~FullObjectStoreMetadata() = default;
 };
 
-typedef nsTHashMap<nsUint64HashKey, SafeRefPtr<FullObjectStoreMetadata>>
-    ObjectStoreTable;
+using ObjectStoreTable =
+    nsTHashMap<nsUint64HashKey, SafeRefPtr<FullObjectStoreMetadata>>;
 
 static_assert(
     std::is_same_v<IndexOrObjectStoreId,
@@ -1797,7 +1797,7 @@ class DatabaseOperationBase : public Runnable,
  protected:
   class AutoSetProgressHandler;
 
-  typedef nsTHashMap<nsUint64HashKey, bool> UniqueIndexTable;
+  using UniqueIndexTable = nsTHashMap<nsUint64HashKey, bool>;
 
   const nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   const nsID mBackgroundChildLoggingId;
@@ -2620,7 +2620,7 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   class CommitOp;
 
  protected:
-  typedef IDBTransaction::Mode Mode;
+  using Mode = IDBTransaction::Mode;
 
  private:
   const SafeRefPtr<Database> mDatabase;
@@ -3757,7 +3757,7 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
 class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   friend class TransactionBase;
 
-  typedef mozilla::dom::quota::PersistenceType PersistenceType;
+  using PersistenceType = mozilla::dom::quota::PersistenceType;
 
   class StoredFileInfo final {
     InitializedOnce<const NotNull<SafeRefPtr<DatabaseFileInfo>>> mFileInfo;
@@ -5060,7 +5060,7 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
 class DeleteFilesRunnable final : public Runnable,
                                   public OpenDirectoryListener {
-  typedef mozilla::dom::quota::DirectoryLock DirectoryLock;
+  using DirectoryLock = mozilla::dom::quota::DirectoryLock;
 
   enum State {
     // Just created on the PBackground thread. Next step is
@@ -6026,13 +6026,13 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
 // Counts the number of "live" Factory, FactoryOp and Database instances.
 uint64_t gBusyCount = 0;
 
-typedef nsTArray<CheckedUnsafePtr<FactoryOp>> FactoryOpArray;
+using FactoryOpArray = nsTArray<CheckedUnsafePtr<FactoryOp>>;
 
 StaticAutoPtr<FactoryOpArray> gFactoryOps;
 
 // Maps a database id to information about live database actors.
-typedef nsClassHashtable<nsCStringHashKey, DatabaseActorInfo>
-    DatabaseActorHashtable;
+using DatabaseActorHashtable =
+    nsClassHashtable<nsCStringHashKey, DatabaseActorInfo>;
 
 StaticAutoPtr<DatabaseActorHashtable> gLiveDatabaseHashtable;
 
@@ -6046,12 +6046,12 @@ StaticRefPtr<ConnectionPool> gConnectionPool;
 
 StaticRefPtr<FileHandleThreadPool> gFileHandleThreadPool;
 
-typedef nsTHashMap<nsIDHashKey, DatabaseLoggingInfo*>
-    DatabaseLoggingInfoHashtable;
+using DatabaseLoggingInfoHashtable =
+    nsTHashMap<nsIDHashKey, DatabaseLoggingInfo*>;
 
 StaticAutoPtr<DatabaseLoggingInfoHashtable> gLoggingInfoHashtable;
 
-typedef nsTHashMap<nsUint32HashKey, uint32_t> TelemetryIdHashtable;
+using TelemetryIdHashtable = nsTHashMap<nsUint32HashKey, uint32_t>;
 
 StaticAutoPtr<TelemetryIdHashtable> gTelemetryIdHashtable;
 

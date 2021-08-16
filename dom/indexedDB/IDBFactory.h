@@ -50,9 +50,9 @@ class LoggingInfo;
 }  // namespace indexedDB
 
 class IDBFactory final : public nsISupports, public nsWrapperCache {
-  typedef mozilla::dom::StorageType StorageType;
-  typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
-  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+  using StorageType = mozilla::dom::StorageType;
+  using PBackgroundChild = mozilla::ipc::PBackgroundChild;
+  using PrincipalInfo = mozilla::ipc::PrincipalInfo;
 
   class BackgroundCreateCallback;
   struct PendingRequestInfo;

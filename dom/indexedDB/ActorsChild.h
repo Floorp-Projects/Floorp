@@ -148,7 +148,7 @@ class BackgroundRequestChildBase {
 class BackgroundFactoryRequestChild final
     : public BackgroundRequestChildBase,
       public PBackgroundIDBFactoryRequestChild {
-  typedef mozilla::dom::quota::PersistenceType PersistenceType;
+  using PersistenceType = mozilla::dom::quota::PersistenceType;
 
   friend IDBFactory;
   friend class BackgroundFactoryChild;
