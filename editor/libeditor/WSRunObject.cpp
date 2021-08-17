@@ -114,8 +114,6 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 
   AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
 
-  EditorDOMPoint afterRightBlockChild = aAtRightBlockChild.NextPoint();
-  MOZ_ASSERT(afterRightBlockChild.IsSetAndValid());
   nsresult rv = WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
       aHTMLEditor, EditorDOMPoint::AtEndOf(aLeftBlockElement));
   if (NS_FAILED(rv)) {
@@ -124,14 +122,44 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         "failed at left block");
     return EditActionResult(rv);
   }
-  if (!afterRightBlockChild.IsSetAndValid()) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() caused "
-        "running script and the point to be modified was changed");
-    return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+
+  // Check whether aLeftBlockElement is a descendant of aRightBlockElement.
+  if (aHTMLEditor.MayHaveMutationEventListeners()) {
+    EditorDOMPoint leftBlockContainingPointInRightBlockElement;
+    if (aHTMLEditor.MayHaveMutationEventListeners() &&
+        !EditorUtils::IsDescendantOf(
+            aLeftBlockElement, aRightBlockElement,
+            &leftBlockContainingPointInRightBlockElement)) {
+      NS_WARNING(
+          "Deleting invisible whitespace at end of left block element caused "
+          "moving the left block element outside the right block element");
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+
+    if (leftBlockContainingPointInRightBlockElement != aAtRightBlockChild) {
+      NS_WARNING(
+          "Deleting invisible whitespace at end of left block element caused "
+          "changing the left block element in the right block element");
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+
+    if (!EditorUtils::IsEditableContent(aRightBlockElement, EditorType::HTML)) {
+      NS_WARNING(
+          "Deleting invisible whitespace at end of left block element caused "
+          "making the right block element non-editable");
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+
+    if (!EditorUtils::IsEditableContent(aLeftBlockElement, EditorType::HTML)) {
+      NS_WARNING(
+          "Deleting invisible whitespace at end of left block element caused "
+          "making the left block element non-editable");
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
   }
 
   OwningNonNull<Element> rightBlockElement = aRightBlockElement;
+  EditorDOMPoint afterRightBlockChild = aAtRightBlockChild.NextPoint();
   {
     // We can't just track rightBlockElement because it's an Element.
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(),
@@ -273,11 +301,42 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         "at right block");
     return EditActionResult(rv);
   }
-  if (!aAtLeftBlockChild.IsSetAndValid()) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() caused "
-        "running script and the point to be modified was changed");
-    return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+
+  // Check whether aRightBlockElement is a descendant of aLeftBlockElement.
+  if (aHTMLEditor.MayHaveMutationEventListeners()) {
+    EditorDOMPoint rightBlockContainingPointInLeftBlockElement;
+    if (aHTMLEditor.MayHaveMutationEventListeners() &&
+        !EditorUtils::IsDescendantOf(
+            aRightBlockElement, aLeftBlockElement,
+            &rightBlockContainingPointInLeftBlockElement)) {
+      NS_WARNING(
+          "Deleting invisible whitespace at start of right block element "
+          "caused moving the right block element outside the left block "
+          "element");
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+
+    if (rightBlockContainingPointInLeftBlockElement != aAtLeftBlockChild) {
+      NS_WARNING(
+          "Deleting invisible whitespace at start of right block element "
+          "caused changing the right block element position in the left block "
+          "element");
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+
+    if (!EditorUtils::IsEditableContent(aLeftBlockElement, EditorType::HTML)) {
+      NS_WARNING(
+          "Deleting invisible whitespace at start of right block element "
+          "caused making the left block element non-editable");
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+
+    if (!EditorUtils::IsEditableContent(aRightBlockElement, EditorType::HTML)) {
+      NS_WARNING(
+          "Deleting invisible whitespace at start of right block element "
+          "caused making the right block element non-editable");
+      return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
   }
 
   OwningNonNull<Element> originalLeftBlockElement = aLeftBlockElement;
