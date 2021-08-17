@@ -100,6 +100,7 @@ static bool IsHeaderBlacklistedForRedirectCopy(nsHttpAtom const& aHeader) {
   static nsHttpAtom const* blackList[] = {&nsHttp::Accept,
                                           &nsHttp::Accept_Encoding,
                                           &nsHttp::Accept_Language,
+                                          &nsHttp::Alternate_Service_Used,
                                           &nsHttp::Authentication,
                                           &nsHttp::Authorization,
                                           &nsHttp::Connection,
