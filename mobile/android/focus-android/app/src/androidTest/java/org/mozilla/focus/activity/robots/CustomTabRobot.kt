@@ -46,7 +46,8 @@ class CustomTabRobot {
         onView(withText("Open in…")).check(matches(isDisplayed()))
         openInFocusButton.check(matches(isDisplayed()))
         onView(withSubstring("Desktop site")).check(matches(isDisplayed()))
-        onView(withText("Report site issue")).check(matches(isDisplayed()))
+        // Removed until https://github.com/mozilla-mobile/android-components/issues/10791 is fixed
+        // onView(withText("Report site issue")).check(matches(isDisplayed()))
         onView(withText("Powered by $appName")).check(matches(isDisplayed()))
     }
 
