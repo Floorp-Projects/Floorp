@@ -78,27 +78,6 @@ class BytecodeSite;
 class CompactBufferWriter;
 class Range;
 
-static inline MIRType MIRTypeFromValue(const js::Value& vp) {
-  if (vp.isDouble()) {
-    return MIRType::Double;
-  }
-  if (vp.isMagic()) {
-    switch (vp.whyMagic()) {
-      case JS_OPTIMIZED_OUT:
-        return MIRType::MagicOptimizedOut;
-      case JS_ELEMENTS_HOLE:
-        return MIRType::MagicHole;
-      case JS_IS_CONSTRUCTING:
-        return MIRType::MagicIsConstructing;
-      case JS_UNINITIALIZED_LEXICAL:
-        return MIRType::MagicUninitializedLexical;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected magic constant");
-    }
-  }
-  return MIRTypeFromValueType(vp.extractNonDoubleType());
-}
-
 #define MIR_FLAG_LIST(_)                                                       \
   _(InWorklist)                                                                \
   _(EmittedAtUses)                                                             \
@@ -1707,10 +1686,6 @@ class MGoto : public MAryControlInstruction<0, 1>, public NoTypePolicy::Data {
   MBasicBlock* target() { return getSuccessor(0); }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
-
-static inline BranchDirection NegateBranchDirection(BranchDirection dir) {
-  return (dir == FALSE_BRANCH) ? TRUE_BRANCH : FALSE_BRANCH;
-}
 
 // Tests if the input instruction evaluates to true or false, and jumps to the
 // start of a corresponding basic block.
@@ -10365,33 +10340,6 @@ MConstant* MDefinition::maybeConstantValue() {
     return op->toConstant();
   }
   return nullptr;
-}
-
-// Helper functions used to decide how to build MIR.
-
-inline MIRType MIRTypeForArrayBufferViewRead(Scalar::Type arrayType,
-                                             bool observedDouble) {
-  switch (arrayType) {
-    case Scalar::Int8:
-    case Scalar::Uint8:
-    case Scalar::Uint8Clamped:
-    case Scalar::Int16:
-    case Scalar::Uint16:
-    case Scalar::Int32:
-      return MIRType::Int32;
-    case Scalar::Uint32:
-      return observedDouble ? MIRType::Double : MIRType::Int32;
-    case Scalar::Float32:
-      return MIRType::Float32;
-    case Scalar::Float64:
-      return MIRType::Double;
-    case Scalar::BigInt64:
-    case Scalar::BigUint64:
-      return MIRType::BigInt;
-    default:
-      break;
-  }
-  MOZ_CRASH("Unknown typed array type");
 }
 
 }  // namespace jit

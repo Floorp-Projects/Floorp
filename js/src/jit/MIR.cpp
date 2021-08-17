@@ -922,6 +922,27 @@ MConstant* MConstant::NewShape(TempAllocator& alloc, Shape* s) {
   return new (alloc) MConstant(s);
 }
 
+static MIRType MIRTypeFromValue(const js::Value& vp) {
+  if (vp.isDouble()) {
+    return MIRType::Double;
+  }
+  if (vp.isMagic()) {
+    switch (vp.whyMagic()) {
+      case JS_OPTIMIZED_OUT:
+        return MIRType::MagicOptimizedOut;
+      case JS_ELEMENTS_HOLE:
+        return MIRType::MagicHole;
+      case JS_IS_CONSTRUCTING:
+        return MIRType::MagicIsConstructing;
+      case JS_UNINITIALIZED_LEXICAL:
+        return MIRType::MagicUninitializedLexical;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected magic constant");
+    }
+  }
+  return MIRTypeFromValueType(vp.extractNonDoubleType());
+}
+
 MConstant::MConstant(TempAllocator& alloc, const js::Value& vp)
     : MNullaryInstruction(classOpcode) {
   setResultType(MIRTypeFromValue(vp));
