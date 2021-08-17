@@ -1819,6 +1819,31 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementExistsResult(
   return true;
 }
 
+static MIRType MIRTypeForArrayBufferViewRead(Scalar::Type arrayType,
+                                             bool forceDoubleForUint32) {
+  switch (arrayType) {
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Uint8Clamped:
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Int32:
+      return MIRType::Int32;
+    case Scalar::Uint32:
+      return forceDoubleForUint32 ? MIRType::Double : MIRType::Int32;
+    case Scalar::Float32:
+      return MIRType::Float32;
+    case Scalar::Float64:
+      return MIRType::Double;
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+      return MIRType::BigInt;
+    default:
+      break;
+  }
+  MOZ_CRASH("Unknown typed array type");
+}
+
 bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
     ObjOperandId objId, IntPtrOperandId indexId, Scalar::Type elementType,
     bool handleOOB, bool forceDoubleForUint32) {

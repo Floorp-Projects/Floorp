@@ -1903,6 +1903,10 @@ void MNaNToZero::computeRange(TempAllocator& alloc) {
 // Range Analysis
 ///////////////////////////////////////////////////////////////////////////////
 
+static BranchDirection NegateBranchDirection(BranchDirection dir) {
+  return (dir == FALSE_BRANCH) ? TRUE_BRANCH : FALSE_BRANCH;
+}
+
 bool RangeAnalysis::analyzeLoop(MBasicBlock* header) {
   MOZ_ASSERT(header->hasUniqueBackedge());
 
