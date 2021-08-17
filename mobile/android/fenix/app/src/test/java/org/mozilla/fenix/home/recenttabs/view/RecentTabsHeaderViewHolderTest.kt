@@ -5,37 +5,35 @@
 package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.LayoutInflater
-import android.view.View
 import androidx.navigation.Navigation
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.recent_tabs_header.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.RecentTabsHeaderBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class RecentTabsHeaderViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: RecentTabsHeaderBinding
     private lateinit var interactor: SessionControlInteractor
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext)
-            .inflate(RecentTabsHeaderViewHolder.LAYOUT_ID, null)
-        Navigation.setViewNavController(view, mockk(relaxed = true))
+        binding = RecentTabsHeaderBinding.inflate(LayoutInflater.from(testContext))
+        Navigation.setViewNavController(binding.root, mockk(relaxed = true))
         interactor = mockk(relaxed = true)
     }
 
     @Test
     fun `WHEN show all button is clicked THEN interactor is called`() {
-        RecentTabsHeaderViewHolder(view, interactor)
+        RecentTabsHeaderViewHolder(binding.root, interactor)
 
-        view.show_all_button.performClick()
+        binding.showAllButton.performClick()
 
         verify { interactor.onRecentTabShowAllClicked() }
     }

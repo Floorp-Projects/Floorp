@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.perf
 
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.LinearLayout
@@ -15,16 +16,21 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.top_site_item.view.*
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.TopSiteItemBinding
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSiteItemViewHolder
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupState
 
+@RunWith(FenixRobolectricTestRunner::class)
 class StartupReportFullyDrawnTest {
 
     @MockK private lateinit var activity: HomeActivity
@@ -37,9 +43,10 @@ class StartupReportFullyDrawnTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this)
+        val binding = TopSiteItemBinding.inflate(LayoutInflater.from(testContext), rootContainer, false)
+        holderItemView = spyk(binding.root)
         every { activity.findViewById<LinearLayout>(R.id.rootContainer) } returns rootContainer
         every { holderItemView.context } returns activity
-        every { holderItemView.top_site_item } returns mockk(relaxed = true)
         holder = TopSiteItemViewHolder(holderItemView, mockk())
         every { rootContainer.viewTreeObserver } returns viewTreeObserver
         every { holderItemView.viewTreeObserver } returns viewTreeObserver

@@ -10,7 +10,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.PopupWindow
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
-import kotlinx.android.synthetic.main.top_site_item.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
@@ -19,6 +18,7 @@ import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.feature.top.sites.TopSite.Type.PINNED
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.TopSiteItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
@@ -30,13 +30,14 @@ class TopSiteItemViewHolder(
     private val interactor: TopSiteInteractor
 ) : ViewHolder(view) {
     private lateinit var topSite: TopSite
+    private val binding = TopSiteItemBinding.bind(view)
 
     init {
-        top_site_item.setOnClickListener {
+        binding.topSiteItem.setOnClickListener {
             interactor.onSelectTopSite(topSite.url, topSite.type)
         }
 
-        top_site_item.setOnLongClickListener {
+        binding.topSiteItem.setOnLongClickListener {
             interactor.onTopSiteMenuOpened()
             it.context.components.analytics.metrics.track(Event.TopSiteLongPress(topSite.type))
 
@@ -62,30 +63,30 @@ class TopSiteItemViewHolder(
     }
 
     fun bind(topSite: TopSite) {
-        top_site_title.text = topSite.title
+        binding.topSiteTitle.text = topSite.title
 
         if (topSite.type == PINNED || topSite.type == DEFAULT) {
             val pinIndicator = getDrawable(itemView.context, R.drawable.ic_new_pin)
-            top_site_title.setCompoundDrawablesWithIntrinsicBounds(pinIndicator, null, null, null)
+            binding.topSiteTitle.setCompoundDrawablesWithIntrinsicBounds(pinIndicator, null, null, null)
         } else {
-            top_site_title.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
+            binding.topSiteTitle.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
         }
 
         when (topSite.url) {
             SupportUtils.POCKET_TRENDING_URL -> {
-                favicon_image.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pocket))
+                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pocket))
             }
             SupportUtils.BAIDU_URL -> {
-                favicon_image.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_baidu))
+                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_baidu))
             }
             SupportUtils.JD_URL -> {
-                favicon_image.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_jd))
+                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_jd))
             }
             SupportUtils.PDD_URL -> {
-                favicon_image.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pdd))
+                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pdd))
             }
             else -> {
-                itemView.context.components.core.icons.loadIntoView(favicon_image, topSite.url)
+                itemView.context.components.core.icons.loadIntoView(binding.faviconImage, topSite.url)
             }
         }
 

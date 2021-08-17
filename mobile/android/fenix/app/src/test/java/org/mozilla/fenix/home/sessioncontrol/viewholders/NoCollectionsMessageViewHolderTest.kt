@@ -5,13 +5,10 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.LayoutInflater
-import android.view.View
-import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.no_collections_message.view.*
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -21,14 +18,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.NoCollectionsMessageBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class NoCollectionsMessageViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: NoCollectionsMessageBinding
     private val store: BrowserStore = BrowserStore(
         initialState = BrowserState(
             listOf(
@@ -41,9 +38,7 @@ class NoCollectionsMessageViewHolderTest {
 
     @Before
     fun setup() {
-        val appCompatContext = ContextThemeWrapper(testContext, R.style.NormalTheme)
-        view = LayoutInflater.from(appCompatContext)
-            .inflate(NoCollectionsMessageViewHolder.LAYOUT_ID, null)
+        binding = NoCollectionsMessageBinding.inflate(LayoutInflater.from(testContext))
         lifecycleOwner = mockk(relaxed = true)
         interactor = mockk(relaxed = true)
     }
@@ -51,31 +46,31 @@ class NoCollectionsMessageViewHolderTest {
     @Test
     fun `hide add to collection button when there are no tabs open`() {
         val noTabsStore = BrowserStore()
-        NoCollectionsMessageViewHolder(view, lifecycleOwner, noTabsStore, interactor)
+        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, noTabsStore, interactor)
 
-        assertFalse(view.add_tabs_to_collections_button.isVisible)
+        assertFalse(binding.addTabsToCollectionsButton.isVisible)
     }
 
     @Test
     fun `show add to collection button when there are tabs`() {
-        NoCollectionsMessageViewHolder(view, lifecycleOwner, store, interactor)
+        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, interactor)
 
-        assertTrue(view.add_tabs_to_collections_button.isVisible)
+        assertTrue(binding.addTabsToCollectionsButton.isVisible)
     }
 
     @Test
     fun `call interactor on click`() {
-        NoCollectionsMessageViewHolder(view, lifecycleOwner, store, interactor)
+        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, interactor)
 
-        view.add_tabs_to_collections_button.performClick()
+        binding.addTabsToCollectionsButton.performClick()
         verify { interactor.onAddTabsToCollectionTapped() }
     }
 
     @Test
     fun `hide view and change setting on remove placeholder click`() {
-        NoCollectionsMessageViewHolder(view, lifecycleOwner, store, interactor)
+        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, interactor)
 
-        view.remove_collection_placeholder.performClick()
+        binding.removeCollectionPlaceholder.performClick()
         verify {
             interactor.onRemoveCollectionsPlaceholder()
         }

@@ -5,11 +5,8 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.topsites
 
 import android.view.LayoutInflater
-import android.view.View
-import android.widget.TextView
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.top_site_item.view.*
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertNotNull
@@ -17,14 +14,14 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.TopSiteItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TopSiteItemViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: TopSiteItemBinding
     private lateinit var interactor: TopSiteInteractor
     private val pocket = TopSite(
         id = 1L,
@@ -36,24 +33,23 @@ class TopSiteItemViewHolderTest {
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext)
-            .inflate(TopSiteItemViewHolder.LAYOUT_ID, null)
+        binding = TopSiteItemBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
     }
 
     @Test
     fun `calls interactor on click`() {
-        TopSiteItemViewHolder(view, interactor).bind(pocket)
+        TopSiteItemViewHolder(binding.root, interactor).bind(pocket)
 
-        view.top_site_item.performClick()
+        binding.topSiteItem.performClick()
         verify { interactor.onSelectTopSite("https://getpocket.com", TopSite.Type.DEFAULT) }
     }
 
     @Test
     fun `calls interactor on long click`() {
-        TopSiteItemViewHolder(view, interactor).bind(pocket)
+        TopSiteItemViewHolder(binding.root, interactor).bind(pocket)
 
-        view.top_site_item.performLongClick()
+        binding.topSiteItem.performLongClick()
         verify { interactor.onTopSiteMenuOpened() }
     }
 
@@ -67,8 +63,8 @@ class TopSiteItemViewHolderTest {
             type = TopSite.Type.DEFAULT
         )
 
-        TopSiteItemViewHolder(view, interactor).bind(defaultTopSite)
-        val pinIndicator = view.findViewById<TextView>(R.id.top_site_title).compoundDrawables[0]
+        TopSiteItemViewHolder(binding.root, interactor).bind(defaultTopSite)
+        val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNotNull(pinIndicator)
     }
@@ -83,8 +79,8 @@ class TopSiteItemViewHolderTest {
             type = TopSite.Type.PINNED
         )
 
-        TopSiteItemViewHolder(view, interactor).bind(pinnedTopSite)
-        val pinIndicator = view.findViewById<TextView>(R.id.top_site_title).compoundDrawables[0]
+        TopSiteItemViewHolder(binding.root, interactor).bind(pinnedTopSite)
+        val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNotNull(pinIndicator)
     }
@@ -99,8 +95,8 @@ class TopSiteItemViewHolderTest {
             type = TopSite.Type.FRECENT
         )
 
-        TopSiteItemViewHolder(view, interactor).bind(frecentTopSite)
-        val pinIndicator = view.findViewById<TextView>(R.id.top_site_title).compoundDrawables[0]
+        TopSiteItemViewHolder(binding.root, interactor).bind(frecentTopSite)
+        val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNull(pinIndicator)
     }

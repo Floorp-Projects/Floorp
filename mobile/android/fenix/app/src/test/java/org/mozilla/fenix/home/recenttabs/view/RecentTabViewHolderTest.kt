@@ -5,13 +5,10 @@
 package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.LayoutInflater
-import android.view.View
 import androidx.core.graphics.drawable.toBitmap
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.recent_tabs_list_row.*
-import kotlinx.android.synthetic.main.recent_tabs_list_row.view.*
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.state.state.createTab
@@ -23,13 +20,14 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.RecentTabsListRowBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class RecentTabViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: RecentTabsListRowBinding
     private lateinit var interactor: SessionControlInteractor
     private lateinit var icons: BrowserIcons
 
@@ -40,27 +38,27 @@ class RecentTabViewHolderTest {
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext).inflate(RecentTabViewHolder.LAYOUT_ID, null)
+        binding = RecentTabsListRowBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
         icons = mockk(relaxed = true)
 
-        every { icons.loadIntoView(view.recent_tab_icon, any()) } returns mockk()
+        every { icons.loadIntoView(binding.recentTabIcon, any()) } returns mockk()
     }
 
     @Test
     fun `GIVEN a new recent tab on bind THEN set the title text and load the tab icon`() {
-        RecentTabViewHolder(view, interactor, icons).bindTab(tab)
+        RecentTabViewHolder(binding.root, interactor, icons).bindTab(tab)
 
-        assertEquals(tab.content.title, view.recent_tab_title.text)
+        assertEquals(tab.content.title, binding.recentTabTitle.text)
 
-        verify { icons.loadIntoView(view.recent_tab_icon, IconRequest(tab.content.url)) }
+        verify { icons.loadIntoView(binding.recentTabIcon, IconRequest(tab.content.url)) }
     }
 
     @Test
     fun `WHEN a recent tab item is clicked THEN interactor is called`() {
-        RecentTabViewHolder(view, interactor, icons).bindTab(tab)
+        RecentTabViewHolder(binding.root, interactor, icons).bindTab(tab)
 
-        view.performClick()
+        binding.root.performClick()
 
         verify { interactor.onRecentTabClicked(tab.id) }
     }
@@ -69,21 +67,21 @@ class RecentTabViewHolderTest {
     fun `WHEN a recent tab icon exists THEN load it`() {
         val bitmap = testContext.getDrawable(R.drawable.ic_search)!!.toBitmap()
         val tabWithIcon = tab.copy(content = tab.content.copy(icon = bitmap))
-        val viewHolder = RecentTabViewHolder(view, interactor, icons)
+        val viewHolder = RecentTabViewHolder(binding.root, interactor, icons)
 
-        assertNull(view.recent_tab_icon.drawable)
+        assertNull(binding.recentTabIcon.drawable)
 
         viewHolder.bindTab(tabWithIcon)
 
-        assertNotNull(view.recent_tab_icon.drawable)
+        assertNotNull(binding.recentTabIcon.drawable)
     }
 
     @Test
     fun `WHEN a recent tab does not have a title THEN show the url`() {
         val tabWithoutTitle = createTab(url = "https://mozilla.org")
 
-        RecentTabViewHolder(view, interactor, icons).bindTab(tabWithoutTitle)
+        RecentTabViewHolder(binding.root, interactor, icons).bindTab(tabWithoutTitle)
 
-        assertEquals(tabWithoutTitle.content.url, view.recent_tab_title.text)
+        assertEquals(tabWithoutTitle.content.url, binding.recentTabTitle.text)
     }
 }

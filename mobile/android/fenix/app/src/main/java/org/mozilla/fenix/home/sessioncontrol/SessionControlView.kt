@@ -10,7 +10,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
@@ -207,11 +206,11 @@ private fun collectionTabItems(collection: TabCollection) =
     }
 
 class SessionControlView(
-    override val containerView: View,
+    val containerView: View,
     viewLifecycleOwner: LifecycleOwner,
     interactor: SessionControlInteractor,
     private var homeScreenViewModel: HomeScreenViewModel
-) : LayoutContainer {
+) {
 
     val view: RecyclerView = containerView as RecyclerView
 

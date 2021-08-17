@@ -5,13 +5,10 @@
 package org.mozilla.fenix.home.recentbookmarks.view
 
 import android.view.View
-import kotlinx.android.synthetic.main.recent_bookmark_item.bookmark_title
-import kotlinx.android.synthetic.main.recent_bookmark_item.bookmark_subtitle
-import kotlinx.android.synthetic.main.recent_bookmark_item.bookmark_item
-import kotlinx.android.synthetic.main.recent_bookmark_item.favicon_image
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.RecentBookmarkItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
@@ -23,15 +20,17 @@ class RecentBookmarkItemViewHolder(
 ) : ViewHolder(view) {
 
     fun bind(bookmark: BookmarkNode) {
-        bookmark_title.text = bookmark.title ?: bookmark.url
-        bookmark_subtitle.text = bookmark.url?.tryGetHostFromUrl() ?: bookmark.title ?: ""
+        val binding = RecentBookmarkItemBinding.bind(view)
 
-        bookmark_item.setOnClickListener {
+        binding.bookmarkTitle.text = bookmark.title ?: bookmark.url
+        binding.bookmarkSubtitle.text = bookmark.url?.tryGetHostFromUrl() ?: bookmark.title ?: ""
+
+        binding.bookmarkItem.setOnClickListener {
             interactor.onRecentBookmarkClicked(bookmark)
         }
 
         bookmark.url?.let {
-            view.context.components.core.icons.loadIntoView(favicon_image, it)
+            view.context.components.core.icons.loadIntoView(binding.faviconImage, it)
         }
     }
 

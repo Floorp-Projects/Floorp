@@ -5,24 +5,23 @@
 package org.mozilla.fenix.home.recentbookmarks.view
 
 import android.view.LayoutInflater
-import android.view.View
 import androidx.navigation.Navigation
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.recent_bookmarks_header.view.*
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.ComponentRecentBookmarksBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class RecentBookmarksViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: ComponentRecentBookmarksBinding
     private lateinit var interactor: SessionControlInteractor
 
     private val bookmark = BookmarkNode(
@@ -38,16 +37,15 @@ class RecentBookmarksViewHolderTest {
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext)
-            .inflate(RecentBookmarksViewHolder.LAYOUT_ID, null)
-        Navigation.setViewNavController(view, mockk(relaxed = true))
+        binding = ComponentRecentBookmarksBinding.inflate(LayoutInflater.from(testContext))
+        Navigation.setViewNavController(binding.root, mockk(relaxed = true))
         interactor = mockk(relaxed = true)
     }
 
     @Test
     fun `WHEN show all bookmarks button is clicked THEN interactor is called`() {
-        RecentBookmarksViewHolder(view, interactor).bind(listOf(bookmark))
-        view.showAllBookmarksButton.performClick()
+        RecentBookmarksViewHolder(binding.root, interactor).bind(listOf(bookmark))
+        binding.recentBookmarksHeader.showAllBookmarksButton.performClick()
 
         verify { interactor.onShowAllBookmarksClicked() }
     }

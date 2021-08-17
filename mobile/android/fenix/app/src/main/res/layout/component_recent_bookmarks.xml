@@ -9,7 +9,9 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <include layout="@layout/recent_bookmarks_header" />
+    <include
+        android:id="@+id/recent_bookmarks_header"
+        layout="@layout/recent_bookmarks_header" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recent_bookmarks_list"

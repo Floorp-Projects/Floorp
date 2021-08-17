@@ -5,34 +5,32 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.LayoutInflater
-import android.view.View
 import io.mockk.mockk
-import kotlinx.android.synthetic.main.component_top_sites.view.*
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.ComponentTopSitesBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TopSiteViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: ComponentTopSitesBinding
     private lateinit var interactor: TopSiteInteractor
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext)
-            .inflate(TopSiteViewHolder.LAYOUT_ID, null)
+        binding = ComponentTopSitesBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk()
     }
 
     @Test
     fun `binds list of top sites`() {
-        TopSiteViewHolder(view, interactor).bind(
+        TopSiteViewHolder(binding.root, interactor).bind(
             listOf(
                 TopSite(
                     id = 1L,
@@ -44,6 +42,6 @@ class TopSiteViewHolderTest {
             )
         )
 
-        assertEquals(1, view.top_sites_list.adapter!!.itemCount)
+        assertEquals(1, binding.topSitesList.adapter!!.itemCount)
     }
 }

@@ -16,7 +16,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.button_tip_item.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -29,6 +28,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.TipType
+import org.mozilla.fenix.databinding.ButtonTipItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.utils.Settings
@@ -43,6 +43,7 @@ class ButtonTipViewHolderTest {
     @MockK private lateinit var sharedPrefs: SharedPreferences
     @MockK private lateinit var sharedPrefsEditor: SharedPreferences.Editor
     private lateinit var viewHolder: ButtonTipViewHolder
+    private lateinit var binding: ButtonTipItemBinding
 
     @Before
     fun setup() {
@@ -53,6 +54,7 @@ class ButtonTipViewHolderTest {
         )
 
         viewHolder = ButtonTipViewHolder(view, interactor, metrics, settings)
+        binding = ButtonTipItemBinding.bind(view)
         every { view.context } returns activity
         every { activity.openToBrowserAndLoad(any(), any(), any()) } just Runs
         every { interactor.onCloseTip(any()) } just Runs
@@ -66,9 +68,9 @@ class ButtonTipViewHolderTest {
     fun `text is displayed based on given tip`() {
         viewHolder.bind(defaultTip())
 
-        assertEquals("Tip Title", viewHolder.tip_header_text.text)
-        assertEquals("Tip description", viewHolder.tip_description_text.text)
-        assertEquals("button", viewHolder.tip_button.text)
+        assertEquals("Tip Title", binding.tipHeaderText.text)
+        assertEquals("Tip description", binding.tipDescriptionText.text)
+        assertEquals("button", binding.tipButton.text)
 
         verify { metrics.track(Event.TipDisplayed("tipIdentifier")) }
     }
@@ -77,16 +79,16 @@ class ButtonTipViewHolderTest {
     fun `learn more is hidden if learnMoreURL is null`() {
         viewHolder.bind(defaultTip(learnMoreUrl = null))
 
-        assertTrue(viewHolder.tip_learn_more.isGone)
+        assertTrue(binding.tipLearnMore.isGone)
     }
 
     @Test
     fun `learn more is visible if learnMoreURL is not null`() {
         viewHolder.bind(defaultTip(learnMoreUrl = "https://learnmore.com"))
 
-        assertTrue(viewHolder.tip_learn_more.isVisible)
+        assertTrue(binding.tipLearnMore.isVisible)
 
-        viewHolder.tip_learn_more.performClick()
+        binding.tipLearnMore.performClick()
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = "https://learnmore.com",
@@ -101,7 +103,7 @@ class ButtonTipViewHolderTest {
         val action = mockk<() -> Unit>(relaxed = true)
         viewHolder.bind(defaultTip(action))
 
-        viewHolder.tip_button.performClick()
+        binding.tipButton.performClick()
         verify { action() }
         verify { metrics.track(Event.TipPressed("tipIdentifier")) }
     }
@@ -111,7 +113,7 @@ class ButtonTipViewHolderTest {
         val tip = defaultTip()
         viewHolder.bind(tip)
 
-        viewHolder.tip_close.performClick()
+        binding.tipClose.performClick()
         verify { interactor.onCloseTip(tip) }
         verify { metrics.track(Event.TipClosed("tipIdentifier")) }
         verify { sharedPrefsEditor.putBoolean("tipIdentifier", false) }
