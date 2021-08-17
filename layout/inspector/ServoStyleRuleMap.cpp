@@ -48,7 +48,9 @@ void ServoStyleRuleMap::SheetAdded(StyleSheet& aStyleSheet) {
 void ServoStyleRuleMap::SheetCloned(StyleSheet& aStyleSheet) {
   // Invalidate all data inside. We could probably track down all the individual
   // rules that changed etc, but it doesn't seem worth it.
-  mTable.Clear();
+  //
+  // TODO: We can't do this until GetCssRulesInternal stops cloning.
+  // mTable.Clear();
 }
 
 void ServoStyleRuleMap::SheetRemoved(StyleSheet& aStyleSheet) {
