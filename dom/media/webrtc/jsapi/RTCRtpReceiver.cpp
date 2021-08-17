@@ -571,18 +571,6 @@ void RTCRtpReceiver::UpdateStreams(StreamAssociationChanges* aChanges) {
   }
 }
 
-void RTCRtpReceiver::MozAddRIDExtension(unsigned short aExtensionId) {
-  if (mPipeline) {
-    mPipeline->AddRIDExtension_m(aExtensionId);
-  }
-}
-
-void RTCRtpReceiver::MozAddRIDFilter(const nsAString& aRid) {
-  if (mPipeline) {
-    mPipeline->AddRIDFilter_m(NS_ConvertUTF16toUTF8(aRid).get());
-  }
-}
-
 // test-only: adds fake CSRCs and audio data
 void RTCRtpReceiver::MozInsertAudioLevelForContributingSource(
     const uint32_t aSource, const DOMHighResTimeStamp aTimestamp,

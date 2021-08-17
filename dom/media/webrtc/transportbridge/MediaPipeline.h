@@ -103,15 +103,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   void UpdateTransport_s(const std::string& aTransportId,
                          UniquePtr<MediaPipelineFilter>&& aFilter);
 
-  // Used only for testing; adds RTP header extension for RTP Stream Id with
-  // the given id.
-  void AddRIDExtension_m(size_t aExtensionId);
-  void AddRIDExtension_s(size_t aExtensionId);
-  // Used only for testing; installs a MediaPipelineFilter that filters
-  // everything but the given RID
-  void AddRIDFilter_m(const std::string& aRid);
-  void AddRIDFilter_s(const std::string& aRid);
-
   virtual DirectionType Direction() const { return mDirection; }
   size_t Level() const { return mLevel; }
   virtual bool IsVideo() const = 0;

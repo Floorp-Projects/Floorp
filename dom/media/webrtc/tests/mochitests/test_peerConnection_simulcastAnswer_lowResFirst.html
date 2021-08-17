@@ -3,6 +3,8 @@
 <head>
   <script type="application/javascript" src="pc.js"></script>
   <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <script type="application/javascript" src="helpers_from_wpt/sdp.js"></script>
+  <script type="application/javascript" src="simulcast.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -13,151 +15,90 @@
     visible: true
   });
 
-  function addRIDExtension(pc, extensionId) {
-    const receivers = pc._pc.getReceivers();
-    is(receivers.length, 1, "We have exactly one RTP receiver");
-    const receiver = receivers[0];
+  runNetworkTest(async () => {
+    await pushPrefs(
+        ['media.peerconnection.simulcast', true],
+        // 180Kbps was determined empirically, set well-higher than
+        // the 80Kbps+overhead needed for the two simulcast streams.
+        // 100Kbps was apparently too low.
+        ['media.peerconnection.video.min_bitrate_estimate', 180*1000]);
 
-    SpecialPowers.wrap(receiver).mozAddRIDExtension(extensionId);
-  }
 
-  function selectRecvRID(pc, rid) {
-    const receivers = pc._pc.getReceivers();
-    is(receivers.length, 1, "We have exactly one RTP receiver");
-    const receiver = receivers[0];
+    const offerer = new RTCPeerConnection();
+    const answerer = new RTCPeerConnection();
 
-    SpecialPowers.wrap(receiver).mozAddRIDFilter(rid);
-  }
+    const add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+    offerer.onicecandidate = e => add(answerer, e.candidate, generateErrorCallback());
+    answerer.onicecandidate = e => add(offerer, e.candidate, generateErrorCallback());
 
-  runNetworkTest(() =>
-    pushPrefs(['media.peerconnection.simulcast', true],
-              // 180Kbps was determined empirically, set well-higher than
-              // the 80Kbps+overhead needed for the two simulcast streams.
-              // 100Kbps was apparently too low.
-              ['media.peerconnection.video.min_bitrate_estimate', 180*1000]).then(() => {
-      let emitter, helper;
+    const metadataToBeLoaded = [];
+    offerer.ontrack = (e) => {
+      metadataToBeLoaded.push(getPlaybackWithLoadedMetadata(e.track));
+    };
 
-      test = new PeerConnectionTest({bundle: false});
-      test.setMediaConstraints([{video: true}], [{video: true}]);
+    // Two recv transceivers, one for each simulcast stream
+    offerer.addTransceiver('video', { direction: 'recvonly' });
+    offerer.addTransceiver('video', { direction: 'recvonly' });
 
-      test.chain.replace("PC_REMOTE_GUM", [
-        function PC_REMOTE_CANVAS_CAPTURESTREAM(test) {
-          emitter = new VideoFrameEmitter();
-          helper = new VideoStreamHelper();
-          test.pcRemote.attachLocalStream(emitter.stream());
-          emitter.start();
-        }
-      ]);
+    // One send transceiver, that will be used to send both simulcast streams
+    const emitter = new VideoFrameEmitter();
+    const videoStream = emitter.stream();
+    answerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
+    emitter.start();
 
-      test.chain.insertAfter('PC_REMOTE_GET_OFFER', [
-        function PC_REMOTE_SET_RIDS(test) {
-          const senders = test.pcRemote._pc.getSenders();
-          is(senders.length, 1, "We have exactly one RTP sender");
-          const sender = senders[0];
-          ok(sender.track, "Sender has a track");
+    const offer = await offerer.createOffer();
 
-          return sender.setParameters({
-            encodings: [{ rid: "foo", maxBitrate: 40000, scaleResolutionDownBy: 2 },
-                        { rid: "bar", maxBitrate: 40000 }]
-          });
-        },
-        function PC_LOCAL_ADD_RIDS_TO_OFFER(test) {
-          // Create a dummy offer, and use it to set simulcast stuff on the
-          // offer we will actually be using.
-          return test.createOffer(test.pcRemote).then(offer => {
-            test._local_offer.sdp = sdputils.transferSimulcastProperties(
-                offer.sdp, test._local_offer.sdp);
-            info("Offer with RIDs: " + JSON.stringify(test._local_offer));
-            ok(test._local_offer.sdp.match(/a=simulcast:/), "Modified offer has simulcast");
-            ok(test._local_offer.sdp.match(/a=rid:foo/), "Modified offer has rid foo");
-            ok(test._local_offer.sdp.match(/a=rid:bar/), "Modified offer has rid bar");
-            ok(test._local_offer.sdp.match(/urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id/), "Modified offer has RID");
-          });
-        }
-      ]);
+    const mungedOffer = midToRid(offer.sdp);
+    info(`Transformed recv offer to simulcast: ${offer.sdp} to ${mungedOffer}`);
 
-      test.chain.insertAfter('PC_LOCAL_GET_ANSWER',[
-        function PC_LOCAL_REMOVE_SIMULCAST_ATTRS_FROM_ANSWER(test) {
-          test._remote_answer.sdp =
-            sdputils.removeSimulcastProperties(test._remote_answer.sdp);
-        }
-      ]);
+    await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
+    await offerer.setLocalDescription(offer);
 
-      // do this after set remote description so the MediaPipeline
-      // has been created.
-      test.chain.insertAfter('PC_LOCAL_SET_REMOTE_DESCRIPTION',[
-        function PC_LOCAL_SET_RTP_FIRST_RID(test) {
-          const extmap_id = test._local_offer.sdp.match(
-              "a=extmap:([0-9+])/recvonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
-          ok(extmap_id, "Local offer has extmap id for simulcast: " + extmap_id[1]);
-          // Cause pcLocal to filter out everything but RID "bar", only
-          // allowing one of the simulcast streams through.
-          addRIDExtension(test.pcLocal, extmap_id[1]);
-          selectRecvRID(test.pcLocal, "bar");
-        }
-      ]);
+    const rids = offerer.getTransceivers().map(t => t.mid);
+    is(rids.length, 2, 'Should have 2 mids in offer');
+    ok(rids[0] != '', 'First mid should be non-empty');
+    ok(rids[1] != '', 'Second mid should be non-empty');
+    info(`rids: ${JSON.stringify(rids)}`);
 
-      test.chain.append([
-        async function PC_LOCAL_WAIT_FOR_FRAMES() {
-          const vremote = test.pcLocal.remoteMediaElements[0];
-          ok(vremote, "Should have remote video element for pcLocal");
-          emitter.start();
-          await helper.checkVideoPlaying(vremote);
-          emitter.stop();
-        },
-        function PC_LOCAL_CHECK_SIZE_1() {
-          const vlocal = test.pcRemote.localMediaElements[0];
-          const vremote = test.pcLocal.remoteMediaElements[0];
-          ok(vlocal, "Should have local video element for pcRemote");
-          ok(vremote, "Should have remote video element for pcLocal");
-          is(vlocal.videoWidth, 50, "correct source width");
-          is(vlocal.videoHeight, 50, "correct source height");
-          is(vremote.videoWidth, 48,
-             "sink is same width as source, modulo our cropping algorithm");
-          is(vremote.videoHeight, 48,
-             "sink is same height as source, modulo our cropping algorithm");
-        },
-        function PC_LOCAL_SET_RTP_SECOND_RID(test) {
-          // Now, cause pcLocal to filter out everything but RID "foo", only
-          // allowing the other simulcast stream through.
-          selectRecvRID(test.pcLocal, "foo");
-        },
-        function PC_LOCAL_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
-          return test.pcLocal.waitForMediaFlow();
-        },
-        async function PC_LOCAL_WAIT_FOR_FRAMES_2() {
-          const vremote = test.pcLocal.remoteMediaElements[0];
-          ok(vremote, "Should have remote video element for pcLocal");
-          emitter.start();
-          await helper.checkVideoPlaying(vremote);
-          emitter.stop();
-        },
-        // For some reason, even though we're getting a 24x24 stream, sometimes
-        // the resolution isn't updated on the video element on the first frame.
-        async function PC_LOCAL_WAIT_FOR_FRAMES_3() {
-          const vremote = test.pcLocal.remoteMediaElements[0];
-          ok(vremote, "Should have remote video element for pcLocal");
-          emitter.start();
-          await helper.checkVideoPlaying(vremote);
-          emitter.stop();
-        },
-        function PC_LOCAL_CHECK_SIZE_2() {
-          const vlocal = test.pcRemote.localMediaElements[0];
-          const vremote = test.pcLocal.remoteMediaElements[0];
-          ok(vlocal, "Should have local video element for pcRemote");
-          ok(vremote, "Should have remote video element for pcLocal");
-          is(vlocal.videoWidth, 50, "correct source width");
-          is(vlocal.videoHeight, 50, "correct source height");
-          is(vremote.videoWidth, 24,
-             "sink is 1/2 width of source, modulo our cropping algorithm");
-          is(vremote.videoHeight, 24,
-             "sink is 1/2 height of source, modulo our cropping algorithm");
-        },
-      ]);
+    const sender = answerer.getSenders()[0];
+    sender.setParameters({
+        encodings: [
+            { rid: rids[0], maxBitrate: 40000, scaleResolutionDownBy: 2 },
+            { rid: rids[1], maxBitrate: 40000 }
+          ]
+    });
 
-      return test.run();
-  })
-  .catch(e => ok(false, "unexpected failure: " + e)));
+    const answer = await answerer.createAnswer();
+
+    const mungedAnswer = ridToMid(answer.sdp);
+    info(`Transformed send simulcast answer to multiple m-sections: ${answer.sdp} to ${mungedAnswer}`);
+    await offerer.setRemoteDescription({type: 'answer', sdp: mungedAnswer});
+    await answerer.setLocalDescription(answer);
+
+    is(metadataToBeLoaded.length, 2, 'Offerer should have gotten 2 ontrack events');
+    info('Waiting for 2 loadedmetadata events');
+    const videoElems = await Promise.all(metadataToBeLoaded);
+
+    const helper = new VideoStreamHelper();
+    info('Waiting for first video element to start playing');
+    await helper.checkVideoPlaying(videoElems[0]);
+    info('Waiting for second video element to start playing');
+    await helper.checkVideoPlaying(videoElems[1]);
+
+    is(videoElems[1].videoWidth, 48,
+       "sink is same width as source, modulo our cropping algorithm");
+    is(videoElems[1].videoHeight, 48,
+       "sink is same height as source, modulo our cropping algorithm");
+    is(videoElems[0].videoWidth, 24,
+       "sink is 1/2 width of source, modulo our cropping algorithm");
+    is(videoElems[0].videoHeight, 24,
+       "sink is 1/2 height of source, modulo our cropping algorithm");
+
+    emitter.stop();
+    videoStream.getVideoTracks()[0].stop();
+    offerer.close();
+    answerer.close();
+  });
 </script>
 </pre>
 </body>
