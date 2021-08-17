@@ -53,5 +53,22 @@ var LightweightThemes = {
         await addon.enable();
       },
     },
+
+    monochromaticPurple: {
+      selectors: [],
+      async applyConfig() {
+        let addon = await AddonManager.getAddonByID(
+          "firefox-monochromatic-purple@mozilla.org"
+        );
+        if (
+          Services.prefs.getBoolPref(
+            "browser.theme.temporary.monochromatic.enabled",
+            false
+          )
+        ) {
+          await addon.enable();
+        }
+      },
+    },
   },
 };
