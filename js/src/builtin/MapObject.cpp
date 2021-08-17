@@ -9,6 +9,7 @@
 #include "ds/OrderedHashTable.h"
 #include "gc/FreeOp.h"
 #include "jit/InlinableNatives.h"
+#include "js/MapAndSet.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions
 #include "js/PropertySpec.h"
 #include "js/Utility.h"
