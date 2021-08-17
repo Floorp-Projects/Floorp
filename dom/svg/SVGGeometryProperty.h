@@ -127,7 +127,9 @@ float ResolveImpl(ComputedStyle const& aStyle, SVGElement* aElement,
     // https://svgwg.org/svg2-draft/embedded.html#ImageElement
 
     SVGImageFrame* imgf = do_QueryFrame(aElement->GetPrimaryFrame());
-    MOZ_ASSERT(imgf);
+    if (!imgf) {
+      return 0.f;
+    }
 
     using Other = typename Tag::CounterPart;
     auto const& valueOther = aStyle.StylePosition()->*Other::Getter;
