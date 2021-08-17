@@ -338,6 +338,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
   void comment(char16_t* buf, int32_t start, int32_t length);
   void characters(const char16_t* buf, int32_t start, int32_t length);
   void zeroOriginatingReplacementCharacter();
+  void zeroOrReplacementCharacter();
   void eof();
   void endTokenization();
   void startTag(nsHtml5ElementName* elementName,

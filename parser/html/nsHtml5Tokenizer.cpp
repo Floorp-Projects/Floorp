@@ -490,7 +490,7 @@ stateloop:
               NS_HTML5_BREAK(dataloop);
             }
             case '\0': {
-              emitReplacementCharacter(buf, pos);
+              maybeEmitReplacementCharacter(buf, pos);
               continue;
             }
             case '\r': {
@@ -1820,7 +1820,7 @@ stateloop:
               NS_HTML5_BREAK(cdatasectionloop);
             }
             case '\0': {
-              emitReplacementCharacter(buf, pos);
+              maybeEmitReplacementCharacter(buf, pos);
               continue;
             }
             case '\r': {
@@ -4371,6 +4371,13 @@ void nsHtml5Tokenizer::emitCarriageReturn(char16_t* buf, int32_t pos) {
 void nsHtml5Tokenizer::emitReplacementCharacter(char16_t* buf, int32_t pos) {
   flushChars(buf, pos);
   tokenHandler->zeroOriginatingReplacementCharacter();
+  cstart = pos + 1;
+}
+
+void nsHtml5Tokenizer::maybeEmitReplacementCharacter(char16_t* buf,
+                                                     int32_t pos) {
+  flushChars(buf, pos);
+  tokenHandler->zeroOrReplacementCharacter();
   cstart = pos + 1;
 }
 
