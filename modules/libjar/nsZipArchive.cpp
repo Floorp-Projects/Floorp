@@ -15,7 +15,6 @@
 #include "nsISupportsUtils.h"
 #include "mozilla/MmapFaultHandler.h"
 #include "prio.h"
-#include "plstr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemUtils.h"
@@ -584,13 +583,13 @@ nsresult nsZipArchive::FindInit(const char* aPattern, nsZipFind** aFind) {
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    pattern = PL_strdup(aPattern);
+    pattern = strdup(aPattern);
     if (!pattern) return NS_ERROR_OUT_OF_MEMORY;
   }
 
   *aFind = new nsZipFind(this, pattern, regExp);
   if (!*aFind) {
-    PL_strfree(pattern);
+    free(pattern);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -928,7 +927,7 @@ nsZipFind::nsZipFind(nsZipArchive* aZip, char* aPattern, bool aRegExp)
 }
 
 nsZipFind::~nsZipFind() {
-  PL_strfree(mPattern);
+  free(mPattern);
 
   MOZ_COUNT_DTOR(nsZipFind);
 }
