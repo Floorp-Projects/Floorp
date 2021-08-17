@@ -29,7 +29,6 @@ class Instance;
 namespace dom {
 class StorageManager;
 class MediaCapabilities;
-class LockManager;
 
 namespace network {
 class Connection;
@@ -44,7 +43,6 @@ class WorkerNavigator final : public nsWrapperCache {
   RefPtr<network::Connection> mConnection;
   RefPtr<dom::MediaCapabilities> mMediaCapabilities;
   RefPtr<webgpu::Instance> mWebGpu;
-  RefPtr<dom::LockManager> mLocks;
   bool mOnline;
 
   WorkerNavigator(const NavigatorProperties& aProperties, bool aOnline);
@@ -104,8 +102,6 @@ class WorkerNavigator final : public nsWrapperCache {
   dom::MediaCapabilities* MediaCapabilities();
 
   webgpu::Instance* Gpu();
-
-  dom::LockManager* Locks();
 };
 
 }  // namespace dom
