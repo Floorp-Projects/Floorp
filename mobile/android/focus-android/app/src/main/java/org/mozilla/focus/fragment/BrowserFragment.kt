@@ -48,6 +48,7 @@ import mozilla.components.feature.downloads.share.ShareDownloadFeature
 import mozilla.components.feature.findinpage.view.FindInPageBar
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -105,6 +106,7 @@ class BrowserFragment :
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
     private val shareDownloadFeature = ViewBoundFeatureWrapper<ShareDownloadFeature>()
+    private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
 
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
@@ -260,8 +262,22 @@ class BrowserFragment :
         val customTabConfig = tab.ifCustomTab()?.config
         if (customTabConfig != null) {
             initialiseCustomTabUi(view, customTabConfig)
+
+            // TODO Add custom tabs window feature support
+            // We to add support for Custom Tabs here, however in order to send the window request
+            // back to us through the intent system, we need to register a unique schema that we
+            // can handle. For example, Fenix Nighlyt does this today with `fenix-nightly://`.
         } else {
             initialiseNormalBrowserUi(view)
+
+            windowFeature.set(
+                feature = WindowFeature(
+                    store = components.store,
+                    tabsUseCases = components.tabsUseCases
+                ),
+                owner = this,
+                view = view
+            )
         }
     }
 
