@@ -1319,6 +1319,11 @@ menuitem.subviewbutton@menuStateActive@,
   color: var(--arrowpanel-color);
 }
 
+#PlacesToolbar menuitem[disabled=true],
+#PlacesToolbar menu[disabled=true] {
+  color: var(--panel-disabled-color);
+}
+
 #BMB_bookmarksPopup .subviewbutton:not([disabled="true"]) {
   color: inherit;
 }
