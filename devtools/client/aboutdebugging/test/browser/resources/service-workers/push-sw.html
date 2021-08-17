@@ -44,6 +44,15 @@ window.unsubscribeToPush = async function() {
   subscription.unsubscribe();
 };
 
+// Expose a promise to wait until the service worker is claimed.
+window.onSwClaimed = new Promise(resolve => {
+  navigator.serviceWorker.addEventListener("message", function(event) {
+    if (event.data == "sw-claimed") {
+      resolve();
+    }
+  });
+});
+
 // Register the service worker.
 registerServiceWorker();
 
