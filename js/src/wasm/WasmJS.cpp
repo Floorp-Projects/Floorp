@@ -28,14 +28,9 @@
 #include "ds/IdValuePair.h"  // js::IdValuePair
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
+#include "jit/JitContext.h"
 #include "jit/JitOptions.h"
-#include "jit/JitRuntime.h"
 #include "jit/Simulator.h"
-#if defined(JS_CODEGEN_X64)  // Assembler::HasSSE41
-#  include "jit/x64/Assembler-x64.h"
-#  include "jit/x86-shared/Architecture-x86-shared.h"
-#  include "jit/x86-shared/Assembler-x86-shared.h"
-#endif
 #include "js/ForOfIterator.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"
