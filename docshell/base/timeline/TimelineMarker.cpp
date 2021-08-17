@@ -7,6 +7,7 @@
 #include "TimelineMarker.h"
 
 #include "jsapi.h"
+#include "js/Exception.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "nsContentUtils.h"
 

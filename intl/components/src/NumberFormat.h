@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Result.h"

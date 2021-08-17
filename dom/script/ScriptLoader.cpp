@@ -24,6 +24,7 @@
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetElement
 #include "js/Realm.h"
 #include "js/SourceText.h"
+#include "js/Transcoding.h"
 #include "js/Utility.h"
 #include "xpcpublic.h"
 #include "GeckoProfiler.h"
