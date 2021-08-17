@@ -820,13 +820,12 @@ object TelemetryWrapper {
     }
 
     enum class AutoCompleteEventSource {
-        SETTINGS, QUICK_ADD
+        SETTINGS
     }
 
     fun saveAutocompleteDomainEvent(eventSource: AutoCompleteEventSource) {
         val source = when (eventSource) {
             AutoCompleteEventSource.SETTINGS -> Value.SETTINGS
-            AutoCompleteEventSource.QUICK_ADD -> Value.QUICK_ADD
         }
 
         TelemetryEvent.create(Category.ACTION, Method.SAVE, Object.AUTOCOMPLETE_DOMAIN)

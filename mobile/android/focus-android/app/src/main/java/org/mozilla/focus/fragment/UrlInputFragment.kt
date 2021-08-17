@@ -28,10 +28,7 @@ import kotlinx.android.synthetic.main.fragment_urlinput2.*
 import kotlinx.android.synthetic.main.fragment_urlinput2.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import mozilla.components.browser.domains.CustomDomains
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.state.action.ContentAction
@@ -286,11 +283,6 @@ class UrlInputFragment :
             val marginParams = searchViewContainer.layoutParams as ViewGroup.MarginLayoutParams
             marginParams.topMargin = (inputHeight + statusBarHeight).toInt()
         }
-
-        if (addToAutoComplete.layoutParams is ViewGroup.MarginLayoutParams) {
-            val marginParams = addToAutoComplete.layoutParams as ViewGroup.MarginLayoutParams
-            marginParams.topMargin = (inputHeight + statusBarHeight).toInt()
-        }
     }
 
     override fun onCreateView(
@@ -346,14 +338,9 @@ class UrlInputFragment :
                 }
 
             searchViewContainer?.visibility = View.GONE
-            addToAutoComplete?.visibility = View.VISIBLE
         }
 
         browserToolbar.editMode()
-
-        addToAutoComplete.setOnClickListener {
-            browserToolbar?.url?.let { addUrlToAutocomplete(it.toString()) }
-        }
 
         updateTipsLabel()
     }
@@ -449,31 +436,6 @@ class UrlInputFragment :
 
         displayedPopupMenu?.dismissListener = {
             displayedPopupMenu = null
-        }
-    }
-
-    private fun addUrlToAutocomplete(url: String) {
-        var duplicateURL = false
-        val job = launch(IO) {
-            duplicateURL = CustomDomains.load(requireContext()).contains(url)
-
-            if (duplicateURL) return@launch
-            CustomDomains.add(requireContext(), url)
-
-            TelemetryWrapper.saveAutocompleteDomainEvent(TelemetryWrapper.AutoCompleteEventSource.QUICK_ADD)
-        }
-
-        job.invokeOnCompletion {
-            requireActivity().runOnUiThread {
-                val messageId =
-                    if (!duplicateURL)
-                        R.string.preference_autocomplete_add_confirmation
-                    else
-                        R.string.preference_autocomplete_duplicate_url_error
-
-                ViewUtils.showBrandedSnackbar(requireView(), messageId, 0)
-                animateAndDismiss()
-            }
         }
     }
 
@@ -743,7 +705,6 @@ class UrlInputFragment :
 
         if (text.trim { it <= ' ' }.isEmpty()) {
             searchViewContainer?.visibility = View.GONE
-            addToAutoComplete?.visibility = View.GONE
 
             if (!isOverlay) {
                 playVisibilityAnimation(true)
@@ -757,7 +718,6 @@ class UrlInputFragment :
             }
 
             searchViewContainer?.visibility = View.VISIBLE
-            addToAutoComplete?.visibility = View.GONE
         }
     }
 
