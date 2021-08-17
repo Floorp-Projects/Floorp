@@ -6,3 +6,4 @@ DOM IPC
 
    jsactors
    mainthread
+   process_model
