@@ -7,6 +7,7 @@
 #include "RemoteAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "DocAccessible.h"
+#include "AccAttributes.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -31,8 +32,16 @@ uint64_t RemoteAccessible::NativeState() const {
 }
 
 uint32_t RemoteAccessible::Name(nsString& aName) const {
-  uint32_t flag;
-  Unused << mDoc->SendName(mID, &aName, &flag);
+  uint32_t flag = 0;
+  if (mCachedFields) {
+    if (mCachedFields->GetAttribute(nsGkAtoms::name, aName)) {
+      auto nameFlag =
+          mCachedFields->GetAttribute<int32_t>(nsGkAtoms::explicit_name);
+      flag = nameFlag ? *nameFlag : 0;
+    }
+  } else {
+    Unused << mDoc->SendName(mID, &aName, &flag);
+  }
   return flag;
 }
 
