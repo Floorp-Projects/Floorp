@@ -10,8 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="layout.css.DOMMatrix.enabled",
- Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Serializable]
 interface DOMMatrixReadOnly {
     [Throws]
@@ -89,8 +88,7 @@ interface DOMMatrixReadOnly {
     [Default] object           toJSON();
 };
 
-[Pref="layout.css.DOMMatrix.enabled",
- Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Serializable,
  LegacyWindowAlias=WebKitCSSMatrix]
 interface DOMMatrix : DOMMatrixReadOnly {

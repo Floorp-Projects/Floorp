@@ -10,8 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="layout.css.DOMPoint.enabled",
- Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Serializable]
 interface DOMPointReadOnly {
     constructor(optional unrestricted double x = 0,
@@ -31,8 +30,7 @@ interface DOMPointReadOnly {
     [Default] object toJSON();
 };
 
-[Pref="layout.css.DOMPoint.enabled",
- Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Serializable]
 interface DOMPoint : DOMPointReadOnly {
     constructor(optional unrestricted double x = 0,

@@ -358,9 +358,7 @@ SimpleTest.waitForExplicitFinish();
 window.scrollTo(0,0);
 
 function startTest() {
-  SpecialPowers.pushPrefEnv({"set": [["layout.css.DOMPoint.enabled", true],
-                                     ["layout.css.DOMQuad.enabled", true],
-                                     ["layout.css.getBoxQuads.enabled", true],
+  SpecialPowers.pushPrefEnv({"set": [["layout.css.getBoxQuads.enabled", true],
                                      ["layout.css.convertFromNode.enabled", true]]}, grabFeatures);
 }
 
