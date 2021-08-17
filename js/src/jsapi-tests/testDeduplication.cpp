@@ -7,8 +7,6 @@
 
 #include <string.h>
 
-#include "jsfriendapi.h"
-
 #include "gc/GC.h"
 
 #include "js/RootingAPI.h"

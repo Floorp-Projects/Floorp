@@ -9,8 +9,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "jsfriendapi.h"
-
+#include "js/CallAndConstruct.h"
 #include "js/CompilationAndEvaluation.h"  // JS::CompileFunction
 #include "js/PropertyAndElement.h"        // JS_DefineProperty
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}

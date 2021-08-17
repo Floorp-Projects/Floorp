@@ -1,6 +1,6 @@
 #include "gdb-tests.h"
-#include "jsapi.h"
 
+#include "js/String.h"
 #include "js/Symbol.h"
 
 FRAGMENT(jsid, simple) {

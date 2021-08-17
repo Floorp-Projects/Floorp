@@ -1,5 +1,4 @@
 #include "gdb-tests.h"
-#include "jsapi.h"
 
 #include "jit/ExecutableAllocator.h"
 #include "vm/JSContext.h"
