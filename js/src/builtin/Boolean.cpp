@@ -10,7 +10,6 @@
 
 #include "builtin/Boolean-inl.h"
 
-#include "jsapi.h"
 #include "jstypes.h"
 
 #include "jit/InlinableNatives.h"

@@ -12,7 +12,6 @@
 #include "mozilla/Range.h"       // for Range
 #include "mozilla/Result.h"      // for Result
 
-#include "jsapi.h"             // for JSContext
 #include "jstypes.h"           // for JS_PUBLIC_API
 #include "NamespaceImports.h"  // for Value, MutableHandleValue, HandleId
 
@@ -23,6 +22,7 @@
 #include "vm/NativeObject.h"  // for NativeObject
 
 class JS_PUBLIC_API JSAtom;
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 

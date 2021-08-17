@@ -12,8 +12,6 @@
 
 #include <utility>  // for std::move
 
-#include "jsapi.h"
-
 #include "debugger/DebugAPI.h"    // for DebugAPI
 #include "debugger/Debugger.h"    // for JSBreakpointSite, Breakpoint
 #include "gc/Cell.h"              // for TenuredCell

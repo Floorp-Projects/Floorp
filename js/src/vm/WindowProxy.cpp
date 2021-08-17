@@ -10,8 +10,7 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "jsapi.h"  // js::AssertHeapIsIdle
-
+#include "js/Context.h"       // js::AssertHeapIsIdle
 #include "vm/GlobalObject.h"  // js::GlobalObject
 #include "vm/JSContext.h"     // JSContext, CHECK_THREAD
 #include "vm/JSObject.h"      // JSObject

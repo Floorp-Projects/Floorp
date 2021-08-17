@@ -15,8 +15,6 @@
 #include <type_traits>  // std::is_same
 #include <utility>      // std::move
 
-#include "jsapi.h"
-
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, BorrowingCompilationStencil}

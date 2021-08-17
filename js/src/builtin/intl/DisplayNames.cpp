@@ -17,8 +17,6 @@
 #include <cstring>
 #include <iterator>
 
-#include "jsapi.h"
-#include "jsfriendapi.h"
 #include "jsnum.h"
 #include "jspubtd.h"
 

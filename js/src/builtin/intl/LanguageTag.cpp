@@ -22,9 +22,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "jsapi.h"
-#include "jsfriendapi.h"
-
 #include "builtin/intl/CommonFunctions.h"
 #include "ds/Sort.h"
 #include "gc/Tracer.h"

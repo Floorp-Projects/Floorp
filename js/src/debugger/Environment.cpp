@@ -13,16 +13,16 @@
 #include <string.h>  // for strlen, size_t
 #include <utility>   // for move
 
-#include "jsapi.h"  // for Rooted, CallArgs, MutableHandle
-
 #include "debugger/Debugger.h"          // for Env, Debugger, ValueToIdentifier
 #include "debugger/Object.h"            // for DebuggerObject
 #include "debugger/Script.h"            // for DebuggerScript
 #include "frontend/BytecodeCompiler.h"  // for IsIdentifier
 #include "gc/Rooting.h"                 // for RootedDebuggerEnvironment
-#include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "gc/Tracer.h"    // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "js/CallArgs.h"  // for CallArgs
 #include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
 #include "js/HeapAPI.h"               // for IsInsideNursery
+#include "js/RootingAPI.h"            // for Rooted, MutableHandle
 #include "vm/Compartment.h"           // for Compartment
 #include "vm/JSAtom.h"                // for Atomize, PinAtom
 #include "vm/JSContext.h"             // for JSContext

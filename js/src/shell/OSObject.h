@@ -9,7 +9,10 @@
 #ifndef shell_OSObject_h
 #define shell_OSObject_h
 
-#include "jsapi.h"
+#include "js/TypeDecls.h"
+#include "js/Utility.h"
+
+class JSLinearString;
 
 namespace js {
 namespace shell {

@@ -10,8 +10,6 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "jsapi.h"  // JS_ReportErrorASCII, JS_ReportErrorNumberASCII
-
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
@@ -19,6 +17,7 @@
 #include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{Abort,GetDesiredSize,Release,Write}
 #include "js/CallArgs.h"              // JS::CallArgs{,FromVp}
 #include "js/Class.h"                 // js::ClassSpec, JS_NULL_CLASS_OPS
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JS_{FN,PSG}
 #include "js/RootingAPI.h"   // JS::Handle

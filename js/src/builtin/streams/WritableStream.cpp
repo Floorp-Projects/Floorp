@@ -10,7 +10,6 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "jsapi.h"    // JS_ReportErrorNumberASCII
 #include "jspubtd.h"  // JSProto_WritableStream
 
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
@@ -20,6 +19,7 @@
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{Abort,Close{,QueuedOrInFlight}}
 #include "js/CallArgs.h"                               // JS::CallArgs{,FromVp}
 #include "js/Class.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JSCLASS_SLOT0_IS_NSISUPPORTS, JS_NULL_CLASS_OPS
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RealmOptions.h"          // JS::RealmCreationOptions
 #include "js/RootingAPI.h"            // JS::Handle, JS::Rooted

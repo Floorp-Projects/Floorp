@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <stdint.h>
 
-#include "jsfriendapi.h"
 #include "NamespaceImports.h"
 
 #include "gc/Barrier.h"

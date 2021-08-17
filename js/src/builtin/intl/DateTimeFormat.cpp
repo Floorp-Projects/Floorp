@@ -16,8 +16,6 @@
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
 
-#include "jsfriendapi.h"
-
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"

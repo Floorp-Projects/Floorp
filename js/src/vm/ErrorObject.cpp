@@ -16,7 +16,6 @@
 
 #include "jsapi.h"
 #include "jsexn.h"
-#include "jsfriendapi.h"
 #include "jsnum.h"
 #include "jspubtd.h"
 #include "NamespaceImports.h"

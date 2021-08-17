@@ -15,8 +15,6 @@
 #include <algorithm>
 #include <iterator>
 
-#include "jsapi.h"
-
 #include "builtin/Array.h"
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/CommonFunctions.h"

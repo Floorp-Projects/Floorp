@@ -11,8 +11,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 
-#include "jsapi.h"
-
 #include "builtin/MapObject.h"
 #include "js/GCVector.h"
 #include "shell/ModuleLoader.h"

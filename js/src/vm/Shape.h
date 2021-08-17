@@ -18,8 +18,6 @@
 
 #include <algorithm>
 
-#include "jsapi.h"
-#include "jsfriendapi.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
 

@@ -12,8 +12,6 @@
 #include "mozilla/intl/Collator.h"
 #include "mozilla/Span.h"
 
-#include "jsapi.h"
-
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/LanguageTag.h"

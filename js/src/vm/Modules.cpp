@@ -13,11 +13,11 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jsapi.h"    // js::AssertHeapIsIdle
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "builtin/ModuleObject.h"  // js::FinishDynamicModuleImport, js::{,Requested}ModuleObject
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
+#include "js/Context.h"                 // js::AssertHeapIsIdle
 #include "js/RootingAPI.h"              // JS::MutableHandle
 #include "js/Value.h"                   // JS::Value
 #include "vm/JSContext.h"               // CHECK_THREAD, JSContext

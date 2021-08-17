@@ -11,11 +11,10 @@
 #include "mozilla/Assertions.h"     // MOZ_ASSERT
 #include "mozilla/FloatingPoint.h"  // mozilla::Is{Infinite,NaN}
 
-#include "jsapi.h"  // JS_ReportErrorNumberASCII
-
 #include "builtin/streams/StreamController.h"  // js::StreamController
 #include "js/Class.h"                 // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/Conversions.h"           // JS::ToNumber
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"            // JS::Rooted
 #include "js/Value.h"                 // JS::Value, JS::{Number,Object}Value
