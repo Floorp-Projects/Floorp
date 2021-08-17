@@ -602,13 +602,7 @@ WindowRenderer* PuppetWidget::GetWindowRenderer() {
     if (XRE_IsParentProcess()) {
       // On the parent process there is no CompositorBridgeChild which confuses
       // some layers code, so we use basic layers instead. Note that we create
-      // a non-retaining layer manager since we don't care about performance.
-      if (StaticPrefs::gfx_basic_layer_manager_force_enabled()) {
-        mWindowRenderer =
-            new BasicLayerManager(BasicLayerManager::BLM_OFFSCREEN);
-      } else {
-        mWindowRenderer = new FallbackRenderer;
-      }
+      mWindowRenderer = new FallbackRenderer;
       return mWindowRenderer;
     }
 
