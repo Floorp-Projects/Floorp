@@ -14,8 +14,7 @@
 #  include "js/Vector.h"
 #endif  // __wasi__
 
-#include "jsapi.h"  // JS_ReportErrorNumberLatin1
-
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberLatin1
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_CANT_OPEN
 
 bool js::ReadCompleteFile(JSContext* cx, FILE* fp, FileContents& buffer) {

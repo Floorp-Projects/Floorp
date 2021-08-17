@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "jsapi.h"
-#include "jsfriendapi.h"
 #include "jsmath.h"
 #include "jsnum.h"
 

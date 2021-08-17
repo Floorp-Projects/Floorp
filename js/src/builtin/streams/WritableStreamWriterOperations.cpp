@@ -10,14 +10,13 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "jsapi.h"  // JS_ReportErrorNumberASCII, JS_ReportErrorASCII
-
 #include "builtin/streams/MiscellaneousOperations.h"  // js::PromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStream::controller
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::WritableStreamDefaultController{Close,GetDesiredSize}
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{Abort,CloseQueuedOrInFlight}
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Promise.h"               // JS::PromiseState
 #include "js/Value.h"                 // JS::Value, JS::{Int32,Null}Value

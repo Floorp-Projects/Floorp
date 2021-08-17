@@ -10,7 +10,6 @@
 #include <stdarg.h>
 #include <utility>
 
-#include "jsapi.h"        // for JSErrorNotes, JSErrorReport
 #include "jsfriendapi.h"  // for ScriptEnvironmentPreparer
 
 #include "js/UniquePtr.h"  // for UniquePtr

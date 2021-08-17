@@ -14,7 +14,6 @@
 
 #include <type_traits>  // std::is_same
 
-#include "jsapi.h"
 #include "jstypes.h"  // js::Bit
 
 #include "gc/Allocator.h"

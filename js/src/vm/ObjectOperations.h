@@ -14,16 +14,15 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jsapi.h"  // JSPROP_ENUMERATE, JS::PropertyDescriptor
-
-#include "js/Class.h"       // JS::ObjectOpResult
-#include "js/Id.h"          // INT_TO_JSID, jsid, JSID_INT_MAX, SYMBOL_TO_JSID
-#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, JS::Rooted
-#include "js/Value.h"       // JS::Value
-#include "vm/JSContext.h"   // JSContext
-#include "vm/JSObject.h"    // JSObject
-#include "vm/StringType.h"  // js::NameToId
-#include "vm/SymbolType.h"  // JS::Symbol
+#include "js/Class.h"  // JS::ObjectOpResult
+#include "js/Id.h"     // INT_TO_JSID, jsid, JSID_INT_MAX, SYMBOL_TO_JSID
+#include "js/PropertyDescriptor.h"  // JSPROP_ENUMERATE, JS::PropertyDescriptor
+#include "js/RootingAPI.h"          // JS::Handle, JS::MutableHandle, JS::Rooted
+#include "js/Value.h"               // JS::Value
+#include "vm/JSContext.h"           // JSContext
+#include "vm/JSObject.h"            // JSObject
+#include "vm/StringType.h"          // js::NameToId
+#include "vm/SymbolType.h"          // JS::Symbol
 
 namespace js {
 

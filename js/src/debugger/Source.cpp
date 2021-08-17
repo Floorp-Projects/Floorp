@@ -14,19 +14,19 @@
 #include <string.h>  // for memcpy
 #include <utility>   // for move
 
-#include "jsapi.h"  // for JS_ReportErrorNumberASCII, JS_CopyStringCharsZ
-
 #include "debugger/Debugger.h"  // for DebuggerSourceReferent, Debugger
 #include "debugger/Script.h"    // for DebuggerScript
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CompilationAndEvaluation.h"  // for Compile
-#include "js/experimental/TypedData.h"    // for JS_NewUint8Array
-#include "js/friend/ErrorMessages.h"      // for GetErrorMessage, JSMSG_*
-#include "js/SourceText.h"                // for JS::SourceOwnership
-#include "vm/BytecodeUtil.h"              // for JSDVG_SEARCH_STACK
-#include "vm/JSContext.h"                 // for JSContext (ptr only)
-#include "vm/JSObject.h"                  // for JSObject, RequireObject
-#include "vm/JSScript.h"          // for ScriptSource, ScriptSourceObject
+#include "js/ErrorReport.h"  // for JS_ReportErrorASCII,  JS_ReportErrorNumberASCII
+#include "js/experimental/TypedData.h"  // for JS_NewUint8Array
+#include "js/friend/ErrorMessages.h"    // for GetErrorMessage, JSMSG_*
+#include "js/SourceText.h"              // for JS::SourceOwnership
+#include "js/String.h"                  // for JS_CopyStringCharsZ
+#include "vm/BytecodeUtil.h"            // for JSDVG_SEARCH_STACK
+#include "vm/JSContext.h"               // for JSContext (ptr only)
+#include "vm/JSObject.h"                // for JSObject, RequireObject
+#include "vm/JSScript.h"                // for ScriptSource, ScriptSourceObject
 #include "vm/StringType.h"        // for NewStringCopyZ, JSString (ptr only)
 #include "vm/TypedArrayObject.h"  // for TypedArrayObject, JSObject::is
 #include "wasm/WasmCode.h"        // for Metadata

@@ -7,8 +7,6 @@
 #ifndef builtin_Object_h
 #define builtin_Object_h
 
-#include "jsapi.h"
-
 #include "js/Value.h"
 #include "vm/NativeObject.h"
 

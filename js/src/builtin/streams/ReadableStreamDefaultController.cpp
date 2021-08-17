@@ -8,7 +8,6 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
 
-#include "jsapi.h"        // JS_ReportErrorNumberASCII
 #include "jsfriendapi.h"  // js::AssertSameCompartment
 
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
@@ -25,6 +24,7 @@
 #include "builtin/streams/TeeState.h"          // js::TeeState
 #include "js/ArrayBuffer.h"                    // JS::NewArrayBuffer
 #include "js/Class.h"                          // js::ClassSpec
+#include "js/ErrorReport.h"                    // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"           // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "vm/Interpreter.h"

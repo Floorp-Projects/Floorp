@@ -7,8 +7,6 @@
 #ifndef dbg_Source_h
 #define dbg_Source_h
 
-#include "jsapi.h"
-
 #include "NamespaceImports.h"   // for Value, HandleObject, CallArgs
 #include "debugger/Debugger.h"  // for DebuggerSourceReferent
 #include "gc/Rooting.h"         // for HandleNativeObject

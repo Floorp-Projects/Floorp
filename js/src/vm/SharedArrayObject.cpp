@@ -10,8 +10,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 
-#include "jsfriendapi.h"
-
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*

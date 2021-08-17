@@ -30,8 +30,6 @@
 #  include <valgrind/memcheck.h>
 #endif
 
-#include "jsapi.h"
-#include "jsfriendapi.h"
 #include "jsnum.h"
 #include "jstypes.h"
 

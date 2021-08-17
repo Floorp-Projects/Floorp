@@ -22,6 +22,8 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 
+#include <algorithm>
+
 #include "gc/AllocKind.h"
 #include "js/TypeDecls.h"
 

@@ -20,7 +20,6 @@
 #include "mozilla/ScopeExit.h"
 
 #include "jsapi.h"
-#include "jsfriendapi.h"
 #include "jsnum.h"
 
 #include "jit/AtomicOperations.h"

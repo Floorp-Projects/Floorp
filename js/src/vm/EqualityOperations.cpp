@@ -8,10 +8,10 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
 
-#include "jsapi.h"    // js::AssertHeapIsIdle
 #include "jsnum.h"    // js::StringToNumber
 #include "jstypes.h"  // JS_PUBLIC_API
 
+#include "js/Context.h"   // js::AssertHeapIsIdle
 #include "js/Equality.h"  // JS::LooselyEqual, JS::StrictlyEqual, JS::SameValue
 #include "js/Result.h"    // JS_TRY_VAR_OR_RETURN_FALSE
 #include "js/RootingAPI.h"  // JS::Rooted
