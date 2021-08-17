@@ -750,6 +750,7 @@ and/or set $JAVA_HOME.
                 toolchain_prefix = depends(when=True)(lambda: None)
                 target_multiarch_dir = depends(when=True)(lambda: None)
                 target_sysroot = depends(when=True)(lambda: None)
+                target = depends(when=True)(lambda: None)
                 include('%(topsrcdir)s/build/moz.configure/util.configure')
                 include('%(topsrcdir)s/build/moz.configure/checks.configure')
                 include('%(topsrcdir)s/build/moz.configure/pkg.configure')
