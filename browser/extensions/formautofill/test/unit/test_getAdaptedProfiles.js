@@ -971,6 +971,13 @@ const TESTCASES = [
     expectedOptionElements: [],
   },
   {
+    description: "Fill a cc-exp without placeholder on the cc-exp field",
+    document: `<form><input autocomplete="cc-number">
+               <input autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+  },
+  {
     description: "Use placeholder to adjust cc-exp format [mm/yy].",
     document: `<form><input autocomplete="cc-number">
                <input placeholder="mm/yy" autocomplete="cc-exp"></form>`,
@@ -1033,17 +1040,6 @@ const TESTCASES = [
     expectedResult: [
       Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
         "cc-exp": "2025-01",
-      }),
-    ],
-  },
-  {
-    description: "Use placeholder to adjust cc-exp format [yyy-mm].",
-    document: `<form><input autocomplete="cc-number">
-               <input placeholder="yyy-mm" autocomplete="cc-exp"></form>`,
-    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
-    expectedResult: [
-      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
-        "cc-exp": "025-01",
       }),
     ],
   },
