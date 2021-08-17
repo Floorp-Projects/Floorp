@@ -71,7 +71,8 @@ class BrowserRobot {
         mDevice.findObject(UiSelector().textContains("Get Location")).click()
     }
 
-    fun verifyFloatingEraseButton(): ViewInteraction = floatingEraseButton.check(matches(isDisplayed()))
+    fun verifyFloatingEraseButton(): ViewInteraction =
+        floatingEraseButton.check(matches(isDisplayed()))
 
     fun longPressLink(linkText: String) {
         val link = mDevice.findObject(UiSelector().text(linkText))
@@ -107,7 +108,8 @@ class BrowserRobot {
 
     fun selectTab(tabTitle: String): ViewInteraction = onView(withText(tabTitle)).perform(click())
 
-    fun verifyShareAppsListOpened() = assertTrue(shareAppsList.waitForExists(webPageLoadwaitingTime))
+    fun verifyShareAppsListOpened() =
+        assertTrue(shareAppsList.waitForExists(webPageLoadwaitingTime))
 
     fun clickPlayButton() {
         val playButton =
@@ -141,13 +143,13 @@ class BrowserRobot {
 
     fun verifySiteConnectionInfoIsSecure(isSecure: Boolean) {
         securityIcon.perform(click())
-        assertTrue(site_identity_Icon.waitForExists(waitingTime))
+        assertTrue(site_security_info.waitForExists(waitingTime))
         site_identity_title.check(matches(isDisplayed()))
+        site_identity_Icon.check(matches(isDisplayed()))
         if (isSecure) {
-            site_identity_state.check(matches(withText("Secure Connection")))
-            certificateVerifier.check(matches(isDisplayed()))
+            assertTrue(site_security_info.text.equals("Connection is secure"))
         } else {
-            site_identity_state.check(matches(withText("Insecure Connection")))
+            assertTrue(site_security_info.text.equals("Connection is not secure"))
         }
     }
 
@@ -227,13 +229,10 @@ private val mainMenu = onView(withId(R.id.mozac_browser_toolbar_menu))
 private val shareAppsList =
     mDevice.findObject(UiSelector().resourceId("android:id/resolver_list"))
 
-private val securityIcon = onView(withId(R.id.mozac_browser_toolbar_security_indicator))
+private val securityIcon = onView(withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
 
-private val site_identity_state = onView(withId(R.id.site_identity_state))
+private val site_security_info = mDevice.findObject(UiSelector().resourceId("$packageName:id/security_info"))
 
-private val site_identity_title = onView(withId(R.id.site_identity_title))
+private val site_identity_title = onView(withId(R.id.site_title))
 
-private val site_identity_Icon =
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/site_identity_icon"))
-
-private val certificateVerifier = onView(withId(R.id.verifier))
+private val site_identity_Icon = onView(withId(R.id.site_favicon))

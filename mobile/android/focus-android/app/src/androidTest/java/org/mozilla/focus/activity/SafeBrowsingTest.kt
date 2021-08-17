@@ -111,12 +111,12 @@ class SafeBrowsingTest {
     @SmokeTest
     @Test
     fun verifyPageSecurityIconAndInfo() {
-        val safePageUrl = "https://rpappalax.github.io/testapp"
+        val safePageUrl = "https://mozilla-mobile.github.io/testapp/"
         val insecurePageUrl = "http://itisatrap.org/firefox/its-a-trap.html"
 
         searchScreen {
         }.loadPage(safePageUrl) {
-            verifyPageContent("Privacy & Security")
+            verifyPageContent("Lets test!")
             verifySiteSecurityIconShown()
             verifySiteConnectionInfoIsSecure(true)
             mDevice.pressBack()
