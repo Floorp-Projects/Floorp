@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -488,6 +489,8 @@ class ProviderInterventions extends UrlbarProvider {
   isActive(queryContext) {
     if (
       !queryContext.searchString ||
+      queryContext.searchString.length > UrlbarUtils.MAX_TEXT_LENGTH ||
+      UrlbarTokenizer.REGEXP_LIKE_PROTOCOL.test(queryContext.searchString) ||
       !EN_LOCALE_MATCH.test(Services.locale.appLocaleAsBCP47) ||
       !Services.policies.isAllowed("urlbarinterventions")
     ) {
