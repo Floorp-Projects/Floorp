@@ -863,7 +863,6 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mUseAPZ);
-    WriteParam(aMsg, aParam.mUseWebRender);
     WriteParam(aMsg, aParam.mUseSoftwareWebRender);
     WriteParam(aMsg, aParam.mAllowSoftwareWebRenderD3D11);
     WriteParam(aMsg, aParam.mAllowSoftwareWebRenderOGL);
@@ -874,7 +873,6 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mUseAPZ) &&
-           ReadParam(aMsg, aIter, &aResult->mUseWebRender) &&
            ReadParam(aMsg, aIter, &aResult->mUseSoftwareWebRender) &&
            ReadParam(aMsg, aIter, &aResult->mAllowSoftwareWebRenderD3D11) &&
            ReadParam(aMsg, aIter, &aResult->mAllowSoftwareWebRenderOGL) &&
