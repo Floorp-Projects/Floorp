@@ -1040,25 +1040,51 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       ccExpYear = profile["cc-exp-year"],
       placeholder = element.placeholder;
 
-    result = /(?:[^m]|\b)(m{1,2})\s*([-/\\]*)\s*(y{2,4})(?!y)/i.exec(
-      placeholder
+    // Bug 1687681: This is a short term fix to other locales having
+    // different characters to represent year.
+    // For example, FR locales may use "A" instead of "Y" to represent year
+    // This approach will not scale well and should be investigated in a follow up bug.
+    let monthChars = "m";
+    let yearChars = "ya";
+
+    let monthFirstCheck = new RegExp(
+      "(?:\\b|^)((?:[" +
+        monthChars +
+        "]{2}){1,2})\\s*([\\-/])\\s*((?:[" +
+        yearChars +
+        "]{2}){1,2})(?:\\b|$)",
+      "i"
     );
+
+    // If the month first check finds a result, where placeholder is "mm - yyyy",
+    // the result will be structured as such: ["mm - yyyy", "mm", "-", "yyyy"]
+    result = monthFirstCheck.exec(placeholder);
     if (result) {
       profile["cc-exp"] =
-        String(ccExpMonth).padStart(result[1].length, "0") +
+        ccExpMonth.toString().padStart(result[1].length, "0") +
         result[2] +
-        String(ccExpYear).substr(-1 * result[3].length);
+        ccExpYear.toString().substr(-1 * result[3].length);
       return;
     }
 
-    result = /(?:[^y]|\b)(y{2,4})\s*([-/\\]*)\s*(m{1,2})(?!m)/i.exec(
-      placeholder
+    let yearFirstCheck = new RegExp(
+      "(?:\\b|^)((?:[" +
+      yearChars +
+      "]{2}){1,2})\\s*([\\-/])\\s*((?:[" + // either one or two counts of 'yy' or 'aa' sequence
+        monthChars +
+        "]){1,2})(?:\\b|$)",
+      "i" // either one or two counts of a 'm' sequence
     );
+
+    // If the year first check finds a result, where placeholder is "yyyy mm",
+    // the result will be structured as such: ["yyyy mm", "yyyy", " ", "mm"]
+    result = yearFirstCheck.exec(placeholder);
+
     if (result) {
       profile["cc-exp"] =
-        String(ccExpYear).substr(-1 * result[1].length) +
+        ccExpYear.toString().substr(-1 * result[1].length) +
         result[2] +
-        String(ccExpMonth).padStart(result[3].length, "0");
+        ccExpMonth.toString().padStart(result[3].length, "0");
     }
   }
 
