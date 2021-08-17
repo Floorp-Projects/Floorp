@@ -23,6 +23,7 @@
 #include "jit/JitContext.h"
 #include "jit/JitOptions.h"
 #include "jit/shared/Assembler-shared.h"
+#include "js/Principals.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
 #include "util/TrailingArray.h"

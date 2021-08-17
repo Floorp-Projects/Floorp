@@ -27,6 +27,10 @@
 #include "wasm/WasmJS.h"
 #include "wasm/WasmTable.h"
 
+namespace JS {
+class OptimizedEncodingListener;
+}
+
 namespace js {
 namespace wasm {
 

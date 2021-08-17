@@ -21,6 +21,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
+#include "js/ValueArray.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
