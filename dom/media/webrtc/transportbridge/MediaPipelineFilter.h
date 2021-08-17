@@ -62,9 +62,6 @@ class MediaPipelineFilter {
   bool Filter(const webrtc::RTPHeader& header);
 
   void AddRemoteSSRC(uint32_t ssrc);
-  void AddRemoteRtpStreamId(const std::string& rtp_strm_id);
-  // Used to set Extention Mappings for tests
-  void AddRtpExtensionMapping(const webrtc::RtpExtension& aExt);
 
   void SetRemoteMediaStreamId(const Maybe<std::string>& aMid);
 
@@ -76,13 +73,10 @@ class MediaPipelineFilter {
   std::vector<webrtc::RtpExtension> GetExtmap() const { return mExtMap; }
 
  private:
-  Maybe<webrtc::RtpExtension> GetRtpExtension(const std::string& aUri) const;
   // The number of filters we manage here is quite small, so I am optimizing
   // for readability.
   std::set<uint32_t> remote_ssrc_set_;
   std::set<uint8_t> payload_type_set_;
-  // Set by tests, sticky
-  std::set<std::string> remote_rid_set_;
   Maybe<std::string> mRemoteMid;
   std::set<uint32_t> mRemoteMidBindings;
   // RID extension can be set by tests and is sticky, the rest of

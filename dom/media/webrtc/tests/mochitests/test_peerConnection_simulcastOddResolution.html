@@ -3,6 +3,8 @@
 <head>
   <script type="application/javascript" src="pc.js"></script>
   <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <script type="application/javascript" src="helpers_from_wpt/sdp.js"></script>
+  <script type="application/javascript" src="simulcast.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -13,196 +15,143 @@
     visible: true
   });
 
-  const encodings = [{ rid: "foo", maxBitrate: 40000, scaleResolutionDownBy: 1.9 },
-                     { rid: "bar", maxBitrate: 40000, scaleResolutionDownBy: 3.5 },
-                     { rid: "baz", maxBitrate: 40000, scaleResolutionDownBy: 17.8 }];
-
-  function addRIDExtension(pc, extensionId) {
-    const receivers = pc._pc.getReceivers();
-    is(receivers.length, 1, "We have exactly one RTP receiver");
-    const receiver = receivers[0];
-
-    SpecialPowers.wrap(receiver).mozAddRIDExtension(extensionId);
-  }
-
-  function selectRecvRID(pc, rid) {
-    const receivers = pc._pc.getReceivers();
-    is(receivers.length, 1, "We have exactly one RTP receiver");
-    const receiver = receivers[0];
-
-    SpecialPowers.wrap(receiver).mozAddRIDFilter(rid);
-  }
-
-  async function changeSourceResolution(test, emitter, width, height) {
-    info(`Changing source resolution to ${width}x${height}`);
-    emitter.size(width, height);
-    emitter.start();
-    await Promise.all([
-        haveEvent(test.pcRemote.localMediaElements[0], "resize"),
-        haveEvent(test.pcLocal.remoteMediaElements[0], "resize"),
-    ]);
-    emitter.stop();
-    info("Source resolution changed");
-  }
-
-  async function setParameters(test, emitter, encodings) {
-    info(`Setting parameters to ${JSON.stringify(encodings)}`);
-    emitter.start();
-    await test.pcRemote._pc.getSenders()[0].setParameters({encodings});
-    await haveEvent(test.pcLocal.remoteMediaElements[0], "resize");
-    emitter.stop();
-		info("Parameters set");
-	}
-
-  async function checkResolution(test, emitter, rid) {
-    const vlocal = test.pcRemote.localMediaElements[0];
-    const vremote = test.pcLocal.remoteMediaElements[0];
-
-    info(`Changing to rid ${rid}`);
-    selectRecvRID(test.pcLocal, rid);
-    emitter.start();
-    await haveEvent(vremote, "resize");
-    emitter.stop();
-
-    const srcWidth = vlocal.videoWidth;
-    const srcHeight = vlocal.videoHeight;
-    info(`Source resolution is ${srcWidth}x${srcHeight}`);
-
-    const scaleDownBy = encodings.find(({rid: r}) => r == rid).scaleResolutionDownBy;
-    const expectedWidth = srcWidth / scaleDownBy;
-    const expectedHeight = srcHeight / scaleDownBy;
-    const margin = srcWidth * 0.1;
-    const width = vremote.videoWidth;
-    const height = vremote.videoHeight;
-    ok(width >= expectedWidth - margin && width <= expectedWidth + margin,
-      `Width ${width} should be within 10% of ${expectedWidth} for rid '${rid}'`);
-    ok(height >= expectedHeight - margin && height <= expectedHeight + margin,
-      `Height ${height} should be within 10% of ${expectedHeight} for rid '${rid}'`);
-  }
-
-  async function checkResolutions(test, emitter) {
-    const vremote = test.pcLocal.remoteMediaElements[0];
-
-    // Start by making sure we're not on foo (first default) or
-    // baz (subsequent default), thus getting resize events.
-    selectRecvRID(test.pcLocal, "bar");
-    emitter.start();
-    await haveEvent(vremote, "resize");
-    emitter.stop();
-
-    await checkResolution(test, emitter, "foo");
-    await checkResolution(test, emitter, "bar");
-    await checkResolution(test, emitter, "baz");
-  }
-
   runNetworkTest(async () => {
-    await pushPrefs(['media.peerconnection.simulcast', true],
-                    ['media.peerconnection.video.lock_scaling', true],
-                    // 240Kbps was determined empirically
-                    ['media.peerconnection.video.min_bitrate_estimate', 240*1000]);
+    const helper = new VideoStreamHelper();
+    const emitter = new VideoFrameEmitter(helper.green, helper.red, 705, 528);
 
-    let emitter, helper;
+    async function checkVideoElement(senderElement, receiverElement, encoding) {
+      info(`Waiting for receiver video element ${encoding.rid} to start playing`);
+      await helper.checkVideoPlaying(receiverElement);
+      const srcWidth = senderElement.videoWidth;
+      const srcHeight = senderElement.videoHeight;
+      info(`Source resolution is ${srcWidth}x${srcHeight}`);
 
-    test = new PeerConnectionTest({bundle: false});
-    test.setMediaConstraints([{video: true}], [{video: true}]);
+      const scaleDownBy = encoding.scaleResolutionDownBy;
+      const expectedWidth = srcWidth / scaleDownBy;
+      const expectedHeight = srcHeight / scaleDownBy;
+      const margin = srcWidth * 0.1;
+      const width = receiverElement.videoWidth;
+      const height = receiverElement.videoHeight;
+      const rid = encoding.rid;
+      ok(width >= expectedWidth - margin && width <= expectedWidth + margin,
+        `Width ${width} should be within 10% of ${expectedWidth} for rid '${rid}'`);
+      ok(height >= expectedHeight - margin && height <= expectedHeight + margin,
+        `Height ${height} should be within 10% of ${expectedHeight} for rid '${rid}'`);
+    }
 
-    test.chain.replace("PC_REMOTE_GUM", [
-      function PC_REMOTE_CANVAS_CAPTURESTREAM(test) {
-        helper = new VideoStreamHelper();
-        emitter = new VideoFrameEmitter(helper.green, helper.red, 705, 528);
-        test.pcRemote.attachLocalStream(emitter.stream());
-        // Don't start the emitter yet. Only do that when we're able to set rid filters.
+    async function checkVideoElements(senderElement, receiverElements, encodings) {
+      is(receiverElements.length, encodings.length, 'Number of video elements should match number of encodings');
+      info('Waiting for sender video element to start playing');
+      await helper.checkVideoPlaying(senderElement);
+      for (let i = 0; i < encodings.length; i++) {
+        await checkVideoElement(senderElement, receiverElements[i], encodings[i]);
       }
-    ]);
+    }
 
-    test.chain.insertAfter('PC_REMOTE_GET_OFFER', [
-      function PC_REMOTE_SET_RIDS(test) {
-        const senders = test.pcRemote._pc.getSenders();
-        is(senders.length, 1, "We have exactly one RTP sender");
-        const sender = senders[0];
-        ok(sender.track, "Sender has a track");
+    async function waitForResizeEvents(elements) {
+      return Promise.all(elements.map(elem => haveEvent(elem, 'resize')));
+    }
 
-        return sender.setParameters({encodings});
-      },
-      async function PC_LOCAL_ADD_RIDS_TO_OFFER(test) {
-        // Create a dummy offer, and use it to set simulcast stuff on the
-        // offer we will actually be using.
-        let offer = await test.createOffer(test.pcRemote);
-        test._local_offer.sdp = sdputils.transferSimulcastProperties(
-            offer.sdp, test._local_offer.sdp);
-        info(`Offer with RIDs: ${JSON.stringify(test._local_offer)}`);
-        ok(test._local_offer.sdp.match(/a=simulcast:/), "Modified offer has simulcast");
-        ok(test._local_offer.sdp.match(/a=rid:foo/), "Modified offer has rid foo");
-        ok(test._local_offer.sdp.match(/a=rid:bar/), "Modified offer has rid bar");
-        ok(test._local_offer.sdp.match(/a=rid:baz/), "Modified offer has rid bar");
-        ok(test._local_offer.sdp.match(/urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id/), "Modified offer has RID");
-      }
-    ]);
+    const encodings = [{ rid: "0", maxBitrate: 40000, scaleResolutionDownBy: 1.9 },
+                       { rid: "1", maxBitrate: 40000, scaleResolutionDownBy: 3.5 },
+                       { rid: "2", maxBitrate: 40000, scaleResolutionDownBy: 17.8 }];
 
-    test.chain.insertAfter('PC_LOCAL_GET_ANSWER',[
-      function PC_LOCAL_REMOVE_SIMULCAST_ATTRS_FROM_ANSWER(test) {
-        test._remote_answer.sdp =
-          sdputils.removeSimulcastProperties(test._remote_answer.sdp);
-      }
-    ]);
+    await pushPrefs(
+        ['media.peerconnection.simulcast', true],
+        // 180Kbps was determined empirically, set well-higher than
+        // the 80Kbps+overhead needed for the two simulcast streams.
+        // 100Kbps was apparently too low.
+        ['media.peerconnection.video.min_bitrate_estimate', 180*1000]);
 
-    // do this after set remote description so the MediaPipeline
-    // has been created.
-    test.chain.insertAfter('PC_LOCAL_SET_REMOTE_DESCRIPTION',[
-      function PC_LOCAL_SET_RTP_FIRST_RID(test) {
-        info(`local offer: ${test._local_offer.sdp}`);
-        const extmap_id = test._local_offer.sdp.match(
-            "a=extmap:([0-9+])/recvonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
-        ok(extmap_id, `Original answer has extmap id for simulcast: ${extmap_id[1]}`);
-        // Cause pcLocal to filter out everything but RID "foo", only
-        // allowing one of the simulcast streams through.
-        addRIDExtension(test.pcLocal, extmap_id[1]);
-        selectRecvRID(test.pcLocal, "foo");
-        emitter.start();
-      },
-      function SETUP_RESIZE_LISTENERS(test) {
-        for(const elem of [...test.pcRemote.localMediaElements,
-                           ...test.pcLocal.remoteMediaElements,
-                          ]) {
-          elem.addEventListener("resize",
-            () => info(`element ${elem.id} resized to ${elem.videoWidth}x${elem.videoHeight}`));
-        }
-      },
-    ]);
 
-    test.chain.append([
-      async function PC_LOCAL_CHECK_INITIAL_SIZES() {
-        await checkResolutions(test, emitter);
-      },
-      async function PC_LOCAL_CHANGE_SRC_1() {
-        await changeSourceResolution(test, emitter, 1280, 720);
-        await checkResolutions(test, emitter);
-      },
-      async function PC_LOCAL_CHANGE_PARAMS_2() {
-        encodings.find(({rid}) => rid == "foo").scaleResolutionDownBy = 1;
-        encodings.find(({rid}) => rid == "bar").scaleResolutionDownBy = 2;
-        encodings.find(({rid}) => rid == "baz").scaleResolutionDownBy = 3;
-        await setParameters(test, emitter, encodings);
-        await checkResolutions(test, emitter);
-      },
-      async function PC_LOCAL_CHANGE_PARAMS_3() {
-        encodings.find(({rid}) => rid == "foo").scaleResolutionDownBy = 6;
-        encodings.find(({rid}) => rid == "bar").scaleResolutionDownBy = 5;
-        encodings.find(({rid}) => rid == "baz").scaleResolutionDownBy = 4;
-        await setParameters(test, emitter, encodings);
-        await checkResolutions(test, emitter);
-      },
-      async function PC_LOCAL_CHANGE_PARAMS_4() {
-        encodings.find(({rid}) => rid == "foo").scaleResolutionDownBy = 4;
-        encodings.find(({rid}) => rid == "bar").scaleResolutionDownBy = 1;
-        encodings.find(({rid}) => rid == "baz").scaleResolutionDownBy = 2;
-        await setParameters(test, emitter, encodings);
-        await checkResolutions(test, emitter);
-      },
-    ]);
+    const offerer = new RTCPeerConnection();
+    const answerer = new RTCPeerConnection();
 
-    await test.run();
+    const add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+    offerer.onicecandidate = e => add(answerer, e.candidate, generateErrorCallback());
+    answerer.onicecandidate = e => add(offerer, e.candidate, generateErrorCallback());
+
+    const metadataToBeLoaded = [];
+    answerer.ontrack = (e) => {
+      metadataToBeLoaded.push(getPlaybackWithLoadedMetadata(e.track));
+    };
+
+    // One send transceiver, that will be used to send both simulcast streams
+    const videoStream = emitter.stream();
+    offerer.addTrack(videoStream.getVideoTracks()[0], videoStream);
+    const senderElement = document.createElement('video');
+    senderElement.autoplay = true;
+    senderElement.srcObject = videoStream;
+    senderElement.id = videoStream.id
+
+    const sender = offerer.getSenders()[0];
+    sender.setParameters({encodings});
+
+    const offer = await offerer.createOffer();
+
+    const mungedOffer = ridToMid(offer.sdp);
+    info(`Transformed send simulcast offer to multiple m-sections: ${offer.sdp} to ${mungedOffer}`);
+
+    await answerer.setRemoteDescription({type: 'offer', sdp: mungedOffer});
+    await offerer.setLocalDescription(offer);
+
+    const rids = answerer.getTransceivers().map(t => t.mid);
+    is(rids.length, 3, 'Should have 3 mids in offer');
+    ok(rids[0], 'First mid should be non-empty');
+    ok(rids[1], 'Second mid should be non-empty');
+    ok(rids[2], 'Third mid should be non-empty');
+    info(`rids: ${JSON.stringify(rids)}`);
+
+    const answer = await answerer.createAnswer();
+
+    const mungedAnswer = midToRid(answer.sdp);
+    info(`Transformed recv answer to simulcast: ${answer.sdp} to ${mungedAnswer}`);
+    await offerer.setRemoteDescription({type: 'answer', sdp: mungedAnswer});
+    await answerer.setLocalDescription(answer);
+
+    is(metadataToBeLoaded.length, 3, 'Offerer should have gotten 3 ontrack events');
+    emitter.start();
+    info('Waiting for 3 loadedmetadata events');
+    const videoElems = await Promise.all(metadataToBeLoaded);
+    await checkVideoElements(senderElement, videoElems, encodings);
+    emitter.stop();
+
+    info(`Changing source resolution to 1280x720`);
+    emitter.size(1280, 720);
+    emitter.start();
+    await waitForResizeEvents([senderElement, ...videoElems]);
+    await checkVideoElements(senderElement, videoElems, encodings);
+
+    encodings[0].scaleResolutionDownBy = 1;
+    encodings[1].scaleResolutionDownBy = 2;
+    encodings[2].scaleResolutionDownBy = 3;
+    info(`Changing encodings to ${JSON.stringify(encodings)}`);
+    await sender.setParameters({encodings});
+    await waitForResizeEvents(videoElems);
+    await checkVideoElements(senderElement, videoElems, encodings);
+
+    encodings[0].scaleResolutionDownBy = 6;
+    encodings[1].scaleResolutionDownBy = 5;
+    encodings[2].scaleResolutionDownBy = 4;
+    info(`Changing encodings to ${JSON.stringify(encodings)}`);
+    await sender.setParameters({encodings});
+    await waitForResizeEvents(videoElems);
+    await checkVideoElements(senderElement, videoElems, encodings);
+
+    encodings[0].scaleResolutionDownBy = 4;
+    encodings[1].scaleResolutionDownBy = 1;
+    encodings[2].scaleResolutionDownBy = 2;
+    info(`Changing encodings to ${JSON.stringify(encodings)}`);
+    await sender.setParameters({encodings});
+    await waitForResizeEvents(videoElems);
+    await checkVideoElements(senderElement, videoElems, encodings);
+
+    emitter.stop();
+    videoStream.getVideoTracks()[0].stop();
+    offerer.close();
+    answerer.close();
   });
+
 </script>
 </pre>
 </body>

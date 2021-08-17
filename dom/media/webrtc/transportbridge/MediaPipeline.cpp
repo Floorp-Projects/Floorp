@@ -353,31 +353,6 @@ void MediaPipeline::UpdateTransport_s(
   }
 }
 
-void MediaPipeline::AddRIDExtension_m(size_t aExtensionId) {
-  RUN_ON_THREAD(mStsThread,
-                WrapRunnable(RefPtr<MediaPipeline>(this),
-                             &MediaPipeline::AddRIDExtension_s, aExtensionId),
-                NS_DISPATCH_NORMAL);
-}
-
-void MediaPipeline::AddRIDExtension_s(size_t aExtensionId) {
-  mRtpParser->RegisterRtpHeaderExtension(webrtc::kRtpExtensionRtpStreamId,
-                                         aExtensionId);
-}
-
-void MediaPipeline::AddRIDFilter_m(const std::string& aRid) {
-  RUN_ON_THREAD(mStsThread,
-                WrapRunnable(RefPtr<MediaPipeline>(this),
-                             &MediaPipeline::AddRIDFilter_s, aRid),
-                NS_DISPATCH_NORMAL);
-}
-
-void MediaPipeline::AddRIDFilter_s(const std::string& aRid) {
-  // Running a simulcast test, ignore other filtering
-  mFilter = MakeUnique<MediaPipelineFilter>();
-  mFilter->AddRemoteRtpStreamId(aRid);
-}
-
 void MediaPipeline::GetContributingSourceStats(
     const nsString& aInboundRtpStreamId,
     FallibleTArray<dom::RTCRTPContributingSourceStats>& aArr) const {
