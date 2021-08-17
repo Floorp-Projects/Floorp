@@ -1,7 +1,5 @@
 if test `uname -s` = Linux; then
   . $topsrcdir/build/macosx/cross-mozconfig.common
-else
-  . $topsrcdir/build/macosx/local-mozconfig.common
 fi
 
 if [ -z "$USE_ARTIFACT" ]; then
