@@ -338,6 +338,7 @@ class UrlInputFragment :
                 }
 
             searchViewContainer?.visibility = View.GONE
+            menuView?.visibility = View.GONE
         }
 
         browserToolbar.editMode()
