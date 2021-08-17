@@ -8,8 +8,6 @@
 
 #include <cstring>
 
-#include "jsfriendapi.h"
-
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/Exception.h"

@@ -8,6 +8,7 @@
 #include "gc/Zone.h"
 #include "js/Array.h"               // JS::GetArrayLength
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
+#include "js/WeakMap.h"
 #include "jsapi-tests/tests.h"
 #include "vm/Realm.h"
 

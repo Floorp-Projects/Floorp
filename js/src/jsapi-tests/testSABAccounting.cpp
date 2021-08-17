@@ -1,6 +1,3 @@
-#include "jsapi.h"
-#include "jsfriendapi.h"
-
 #include "builtin/TestingFunctions.h"
 #include "js/SharedArrayBuffer.h"
 #include "jsapi-tests/tests.h"

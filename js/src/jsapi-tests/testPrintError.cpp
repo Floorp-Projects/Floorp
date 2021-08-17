@@ -7,8 +7,6 @@
 
 #include <cstdio>  // fclose, fflush, open_memstream
 
-#include "jsapi.h"           // JS_{Clear,Get}PendingException
-#include "jsfriendapi.h"     // js::ErrorReport
 #include "js/ErrorReport.h"  // JS::PrintError
 #include "js/Warnings.h"     // JS::SetWarningReporter, JS::WarnUTF8
 
