@@ -96,7 +96,7 @@ load 1402526.html
 pref(dom.document.exec_command.nested_calls_allowed,true) asserts(1) load 1402904.html # assertion is that mutation event listener caused by execCommand calls another execCommand
 pref(dom.document.exec_command.nested_calls_allowed,true) asserts(1) load 1405747.html # assertion is that mutation event listener caused by execCommand calls another execCommand
 load 1405897.html
-asserts(1) load 1408170.html # assertion in WSRunScanner::GetEditableBlockParentOrTopmostEditableInlineContent()
+load 1408170.html
 asserts(0-1) load 1414581.html
 load 1415231.html
 load 1423767.html
