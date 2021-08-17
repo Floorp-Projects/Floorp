@@ -9,7 +9,6 @@
 
 #include "js/Promise.h"
 
-#include "jsapi.h"    // js::CompletionKind
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CallArgs.h"    // JS::CallArgs
@@ -25,6 +24,8 @@ namespace js {
 class AsyncFunctionGeneratorObject;
 class AsyncGeneratorObject;
 class PromiseObject;
+
+enum class CompletionKind;
 
 // Promise.prototype.then.
 extern bool Promise_then(JSContext* cx, unsigned argc, JS::Value* vp);
