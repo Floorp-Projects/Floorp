@@ -98,6 +98,18 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    id: "AddThis",
+    platform: "all",
+    name: "AddThis",
+    bug: "1713694",
+    file: "empty-script.js",
+    matches: [
+      "*://s7.addthis.com/js/300/addthis_widget.js",
+      "*://s7.addthis.com/icons/official-addthis-angularjs/current/dist/official-addthis-angularjs.min.js",
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Adform",
     platform: "all",
     name: "Adform",
