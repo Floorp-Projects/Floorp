@@ -9,7 +9,6 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -47,11 +46,11 @@ class TrackingProtectionPanelViewTest {
     @Test
     fun testNormalModeUi() {
         view.update(baseState.copy(mode = TrackingProtectionState.Mode.Normal))
-        assertFalse(view.details_mode.isVisible)
-        assertTrue(view.normal_mode.isVisible)
-        assertTrue(view.protection_settings.isVisible)
-        assertFalse(view.not_blocking_header.isVisible)
-        assertFalse(view.blocking_header.isVisible)
+        assertFalse(view.binding.detailsMode.isVisible)
+        assertTrue(view.binding.normalMode.isVisible)
+        assertTrue(view.binding.protectionSettings.isVisible)
+        assertFalse(view.binding.notBlockingHeader.isVisible)
+        assertFalse(view.binding.blockingHeader.isVisible)
     }
 
     @Test
@@ -64,55 +63,55 @@ class TrackingProtectionPanelViewTest {
                 )
             )
         )
-        assertTrue(view.details_mode.isVisible)
-        assertFalse(view.normal_mode.isVisible)
+        assertTrue(view.binding.detailsMode.isVisible)
+        assertFalse(view.binding.normalMode.isVisible)
         assertEquals(
             testContext.getString(R.string.etp_tracking_content_title),
-            view.category_title.text
+            view.binding.categoryTitle.text
         )
         assertEquals(
             testContext.getString(R.string.etp_tracking_content_description),
-            view.category_description.text
+            view.binding.categoryDescription.text
         )
         assertEquals(
             testContext.getString(R.string.enhanced_tracking_protection_allowed),
-            view.details_blocking_header.text
+            view.binding.detailsBlockingHeader.text
         )
     }
 
     @Test
     fun testProtectionSettings() {
-        view.protection_settings.performClick()
+        view.binding.protectionSettings.performClick()
         verify { interactor.selectTrackingProtectionSettings() }
     }
 
     @Test
     fun testExistDetailModed() {
-        view.details_back.performClick()
+        view.binding.detailsBack.performClick()
         verify { interactor.onExitDetailMode() }
     }
 
     @Test
     fun testDetailsBack() {
-        view.navigate_back.performClick()
+        view.binding.navigateBack.performClick()
         verify { interactor.onBackPressed() }
     }
 
     @Test
     fun testSocialMediaTrackerClick() {
-        view.social_media_trackers.performClick()
+        view.binding.socialMediaTrackers.performClick()
         verify { interactor.openDetails(SOCIAL_MEDIA_TRACKERS, categoryBlocked = true) }
 
-        view.social_media_trackers_loaded.performClick()
+        view.binding.socialMediaTrackersLoaded.performClick()
         verify { interactor.openDetails(SOCIAL_MEDIA_TRACKERS, categoryBlocked = false) }
     }
 
     @Test
     fun testCrossSiteTrackerClick() {
-        view.cross_site_tracking.performClick()
+        view.binding.crossSiteTracking.performClick()
         verify { interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = true) }
 
-        view.cross_site_tracking_loaded.performClick()
+        view.binding.crossSiteTrackingLoaded.performClick()
         verify { interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = false) }
     }
 }

@@ -9,7 +9,6 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.mockk.mockk
-import kotlinx.android.synthetic.main.component_exceptions.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -40,25 +39,25 @@ class LoginExceptionsViewTest {
     fun `sets empty message text`() {
         assertEquals(
             "Logins and passwords that are not saved will be shown here.",
-            view.exceptions_empty_message.text
+            view.binding.exceptionsEmptyMessage.text
         )
-        assertTrue(view.exceptions_list.adapter is LoginExceptionsAdapter)
-        assertTrue(view.exceptions_list.layoutManager is LinearLayoutManager)
+        assertTrue(view.binding.exceptionsList.adapter is LoginExceptionsAdapter)
+        assertTrue(view.binding.exceptionsList.layoutManager is LinearLayoutManager)
     }
 
     @Test
     fun `hide list when there are no items`() {
         view.update(emptyList())
 
-        assertTrue(view.exceptions_empty_view.isVisible)
-        assertFalse(view.exceptions_list.isVisible)
+        assertTrue(view.binding.exceptionsEmptyView.isVisible)
+        assertFalse(view.binding.exceptionsList.isVisible)
     }
 
     @Test
     fun `shows list when there are items`() {
         view.update(listOf(mockk()))
 
-        assertFalse(view.exceptions_empty_view.isVisible)
-        assertTrue(view.exceptions_list.isVisible)
+        assertFalse(view.binding.exceptionsEmptyView.isVisible)
+        assertTrue(view.binding.exceptionsList.isVisible)
     }
 }

@@ -8,17 +8,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
+import androidx.annotation.VisibleForTesting
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
 import mozilla.components.browser.state.state.CustomTabSessionState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.ComponentTrackingProtectionPanelBinding
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
@@ -60,13 +60,18 @@ interface TrackingProtectionPanelViewInteractor {
  */
 @SuppressWarnings("TooManyFunctions")
 class TrackingProtectionPanelView(
-    override val containerView: ViewGroup,
+    val containerView: ViewGroup,
     val interactor: TrackingProtectionPanelInteractor
-) : LayoutContainer, View.OnClickListener {
+) : View.OnClickListener {
 
-    val view: ConstraintLayout = LayoutInflater.from(containerView.context)
-        .inflate(R.layout.component_tracking_protection_panel, containerView, true)
-        .findViewById(R.id.panel_wrapper)
+    @VisibleForTesting
+    internal val binding = ComponentTrackingProtectionPanelBinding.inflate(
+        LayoutInflater.from(containerView.context),
+        containerView,
+        true
+    )
+
+    val view: ConstraintLayout = binding.panelWrapper
 
     private var mode: TrackingProtectionState.Mode = TrackingProtectionState.Mode.Normal
 
@@ -75,15 +80,15 @@ class TrackingProtectionPanelView(
     private var shouldFocusAccessibilityView: Boolean = true
 
     init {
-        protection_settings.setOnClickListener {
+        binding.protectionSettings.setOnClickListener {
             interactor.selectTrackingProtectionSettings()
         }
 
-        details_back.setOnClickListener {
+        binding.detailsBack.setOnClickListener {
             interactor.onExitDetailMode()
         }
 
-        navigate_back.setOnClickListener {
+        binding.navigateBack.setOnClickListener {
             interactor.onBackPressed()
         }
 
@@ -102,16 +107,16 @@ class TrackingProtectionPanelView(
             )
         }
 
-        setAccessibilityViewHierarchy(details_back, category_title)
+        setAccessibilityViewHierarchy(binding.detailsBack, binding.categoryTitle)
     }
 
     private fun setUIForNormalMode(state: TrackingProtectionState) {
-        details_mode.visibility = View.GONE
-        normal_mode.visibility = View.VISIBLE
+        binding.detailsMode.visibility = View.GONE
+        binding.normalMode.visibility = View.VISIBLE
 
-        protection_settings.isGone = state.tab is CustomTabSessionState
-        not_blocking_header.isGone = bucketedTrackers.loadedIsEmpty()
-        blocking_header.isGone = bucketedTrackers.blockedIsEmpty()
+        binding.protectionSettings.isGone = state.tab is CustomTabSessionState
+        binding.notBlockingHeader.isGone = bucketedTrackers.loadedIsEmpty()
+        binding.blockingHeader.isGone = bucketedTrackers.blockedIsEmpty()
 
         updateCategoryVisibility()
         focusAccessibilityLastUsedCategory(state.lastAccessedCategory)
@@ -121,12 +126,12 @@ class TrackingProtectionPanelView(
         category: TrackingProtectionCategory,
         categoryBlocked: Boolean
     ) {
-        normal_mode.visibility = View.GONE
-        details_mode.visibility = View.VISIBLE
-        category_title.setText(category.title)
-        blocking_text_list.text = bucketedTrackers.get(category, categoryBlocked).joinToString("\n")
-        category_description.setText(category.description)
-        details_blocking_header.setText(
+        binding.normalMode.visibility = View.GONE
+        binding.detailsMode.visibility = View.VISIBLE
+        binding.categoryTitle.setText(category.title)
+        binding.blockingTextList.text = bucketedTrackers.get(category, categoryBlocked).joinToString("\n")
+        binding.categoryDescription.setText(category.description)
+        binding.detailsBlockingHeader.setText(
             if (categoryBlocked) {
                 R.string.enhanced_tracking_protection_blocked
             } else {
@@ -134,8 +139,8 @@ class TrackingProtectionPanelView(
             }
         )
 
-        details_back.requestFocus()
-        details_back.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
+        binding.detailsBack.requestFocus()
+        binding.detailsBack.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
     }
 
     /**
@@ -159,58 +164,59 @@ class TrackingProtectionPanelView(
      */
     private fun getLastUsedCategoryView(categoryTitle: String) = when (categoryTitle) {
         CROSS_SITE_TRACKING_COOKIES.name -> {
-            if (cross_site_tracking.isGone) cross_site_tracking_loaded else cross_site_tracking
+            if (binding.crossSiteTracking.isGone) binding.crossSiteTrackingLoaded else binding.crossSiteTracking
         }
         SOCIAL_MEDIA_TRACKERS.name -> {
-            if (social_media_trackers.isGone) social_media_trackers_loaded else social_media_trackers
+            if (binding.socialMediaTrackers.isGone) binding.socialMediaTrackersLoaded else binding.socialMediaTrackers
         }
         FINGERPRINTERS.name -> {
-            if (fingerprinters.isGone) fingerprinters_loaded else fingerprinters
+            if (binding.fingerprinters.isGone) binding.fingerprintersLoaded else binding.fingerprinters
         }
         TRACKING_CONTENT.name -> {
-            if (tracking_content.isGone) tracking_content_loaded else tracking_content
+            if (binding.trackingContent.isGone) binding.trackingContentLoaded else binding.trackingContent
         }
         CRYPTOMINERS.name -> {
-            if (cryptominers.isGone) cryptominers_loaded else cryptominers
+            if (binding.cryptominers.isGone) binding.cryptominersLoaded else binding.cryptominers
         }
         REDIRECT_TRACKERS.name -> {
-            if (redirect_trackers.isGone) redirect_trackers_loaded else redirect_trackers
+            if (binding.redirectTrackers.isGone) binding.redirectTrackersLoaded else binding.redirectTrackers
         }
         else -> null
     }
 
     private fun updateCategoryVisibility() {
-        cross_site_tracking.isGone =
+        binding.crossSiteTracking.isGone =
             bucketedTrackers.get(CROSS_SITE_TRACKING_COOKIES, true).isEmpty()
-        social_media_trackers.isGone =
+        binding.socialMediaTrackers.isGone =
             bucketedTrackers.get(SOCIAL_MEDIA_TRACKERS, true).isEmpty()
-        fingerprinters.isGone = bucketedTrackers.get(FINGERPRINTERS, true).isEmpty()
-        tracking_content.isGone = bucketedTrackers.get(TRACKING_CONTENT, true).isEmpty()
-        cryptominers.isGone = bucketedTrackers.get(CRYPTOMINERS, true).isEmpty()
-        redirect_trackers.isGone = bucketedTrackers.get(REDIRECT_TRACKERS, true).isEmpty()
+        binding.fingerprinters.isGone = bucketedTrackers.get(FINGERPRINTERS, true).isEmpty()
+        binding.trackingContent.isGone = bucketedTrackers.get(TRACKING_CONTENT, true).isEmpty()
+        binding.cryptominers.isGone = bucketedTrackers.get(CRYPTOMINERS, true).isEmpty()
+        binding.redirectTrackers.isGone = bucketedTrackers.get(REDIRECT_TRACKERS, true).isEmpty()
 
-        cross_site_tracking_loaded.isGone =
+        binding.crossSiteTrackingLoaded.isGone =
             bucketedTrackers.get(CROSS_SITE_TRACKING_COOKIES, false).isEmpty()
-        social_media_trackers_loaded.isGone =
+        binding.socialMediaTrackersLoaded.isGone =
             bucketedTrackers.get(SOCIAL_MEDIA_TRACKERS, false).isEmpty()
-        fingerprinters_loaded.isGone = bucketedTrackers.get(FINGERPRINTERS, false).isEmpty()
-        tracking_content_loaded.isGone = bucketedTrackers.get(TRACKING_CONTENT, false).isEmpty()
-        cryptominers_loaded.isGone = bucketedTrackers.get(CRYPTOMINERS, false).isEmpty()
-        redirect_trackers_loaded.isGone = bucketedTrackers.get(REDIRECT_TRACKERS, false).isEmpty()
+        binding.fingerprintersLoaded.isGone = bucketedTrackers.get(FINGERPRINTERS, false).isEmpty()
+        binding.trackingContentLoaded.isGone = bucketedTrackers.get(TRACKING_CONTENT, false).isEmpty()
+        binding.cryptominersLoaded.isGone = bucketedTrackers.get(CRYPTOMINERS, false).isEmpty()
+        binding.redirectTrackersLoaded.isGone = bucketedTrackers.get(REDIRECT_TRACKERS, false).isEmpty()
     }
 
     private fun setCategoryClickListeners() {
-        social_media_trackers.setOnClickListener(this)
-        fingerprinters.setOnClickListener(this)
-        cross_site_tracking.setOnClickListener(this)
-        tracking_content.setOnClickListener(this)
-        cryptominers.setOnClickListener(this)
-        cross_site_tracking_loaded.setOnClickListener(this)
-        social_media_trackers_loaded.setOnClickListener(this)
-        fingerprinters_loaded.setOnClickListener(this)
-        tracking_content_loaded.setOnClickListener(this)
-        cryptominers_loaded.setOnClickListener(this)
-        redirect_trackers_loaded.setOnClickListener(this)
+        binding.socialMediaTrackers.setOnClickListener(this)
+        binding.fingerprinters.setOnClickListener(this)
+        binding.crossSiteTracking.setOnClickListener(this)
+        binding.trackingContent.setOnClickListener(this)
+        binding.cryptominers.setOnClickListener(this)
+
+        binding.crossSiteTrackingLoaded.setOnClickListener(this)
+        binding.socialMediaTrackersLoaded.setOnClickListener(this)
+        binding.fingerprintersLoaded.setOnClickListener(this)
+        binding.trackingContentLoaded.setOnClickListener(this)
+        binding.cryptominersLoaded.setOnClickListener(this)
+        binding.redirectTrackersLoaded.setOnClickListener(this)
     }
 
     override fun onClick(v: View) {

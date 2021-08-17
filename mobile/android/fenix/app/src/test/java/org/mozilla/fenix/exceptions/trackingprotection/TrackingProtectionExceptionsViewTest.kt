@@ -16,7 +16,6 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
 import io.mockk.verify
-import kotlinx.android.synthetic.main.component_exceptions.*
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
@@ -26,6 +25,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.ComponentExceptionsBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -34,6 +34,7 @@ class TrackingProtectionExceptionsViewTest {
     private lateinit var container: ViewGroup
     private lateinit var interactor: TrackingProtectionExceptionsInteractor
     private lateinit var exceptionsView: TrackingProtectionExceptionsView
+    private lateinit var binding: ComponentExceptionsBinding
 
     @Before
     fun setup() {
@@ -47,6 +48,7 @@ class TrackingProtectionExceptionsViewTest {
             container,
             interactor
         )
+        binding = ComponentExceptionsBinding.bind(container)
     }
 
     @After
@@ -56,12 +58,12 @@ class TrackingProtectionExceptionsViewTest {
 
     @Test
     fun `binds exception text`() {
-        assertTrue(exceptionsView.exceptions_learn_more.movementMethod is LinkMovementMethod)
-        assertTrue(exceptionsView.exceptions_learn_more.text is Spannable)
-        assertEquals("Learn more", exceptionsView.exceptions_learn_more.text.toString())
+        assertTrue(binding.exceptionsLearnMore.movementMethod is LinkMovementMethod)
+        assertTrue(binding.exceptionsLearnMore.text is Spannable)
+        assertEquals("Learn more", binding.exceptionsLearnMore.text.toString())
 
         every { interactor.onLearnMore() } just Runs
-        exceptionsView.exceptions_learn_more.performClick()
+        binding.exceptionsLearnMore.performClick()
         verify { interactor.onLearnMore() }
     }
 
@@ -69,8 +71,8 @@ class TrackingProtectionExceptionsViewTest {
     fun `binds empty list to adapter`() {
         exceptionsView.update(emptyList())
 
-        assertTrue(exceptionsView.exceptions_empty_view.isVisible)
-        assertFalse(exceptionsView.exceptions_list.isVisible)
+        assertTrue(binding.exceptionsEmptyView.isVisible)
+        assertFalse(binding.exceptionsList.isVisible)
 
         verify { anyConstructed<TrackingProtectionExceptionsAdapter>().updateData(emptyList()) }
     }
@@ -80,8 +82,8 @@ class TrackingProtectionExceptionsViewTest {
         val items = listOf<TrackingProtectionException>(mockk(), mockk())
         exceptionsView.update(items)
 
-        assertFalse(exceptionsView.exceptions_empty_view.isVisible)
-        assertTrue(exceptionsView.exceptions_list.isVisible)
+        assertFalse(binding.exceptionsEmptyView.isVisible)
+        assertTrue(binding.exceptionsList.isVisible)
         verify { anyConstructed<TrackingProtectionExceptionsAdapter>().updateData(items) }
     }
 }

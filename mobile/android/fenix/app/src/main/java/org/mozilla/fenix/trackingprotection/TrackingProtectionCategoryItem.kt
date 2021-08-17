@@ -9,8 +9,8 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
-import kotlinx.android.synthetic.main.tracking_protection_category.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.TrackingProtectionCategoryBinding
 
 class TrackingProtectionCategoryItem @JvmOverloads constructor(
     context: Context,
@@ -18,7 +18,10 @@ class TrackingProtectionCategoryItem @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     init {
-        LayoutInflater.from(context).inflate(R.layout.tracking_protection_category, this, true)
+        val binding = TrackingProtectionCategoryBinding.inflate(
+            LayoutInflater.from(context),
+            this
+        )
 
         context.withStyledAttributes(
             attrs,
@@ -26,13 +29,13 @@ class TrackingProtectionCategoryItem @JvmOverloads constructor(
             defStyleAttr,
             0
         ) {
-            trackingProtectionCategoryTitle?.text = resources.getString(
+            binding.trackingProtectionCategoryTitle.text = resources.getString(
                 getResourceId(
                     R.styleable.TrackingProtectionCategory_categoryItemTitle,
                     R.string.etp_cookies_title
                 )
             )
-            trackingProtectionCategoryItemDescription?.text = resources.getString(
+            binding.trackingProtectionCategoryItemDescription.text = resources.getString(
                 getResourceId(
                     R.styleable.TrackingProtectionCategory_categoryItemDescription,
                     R.string.etp_cookies_description

@@ -9,12 +9,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.fragment_exceptions.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.databinding.FragmentExceptionsBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 
@@ -37,8 +37,12 @@ class TrackingProtectionExceptionsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_exceptions, container, false)
+    ): View {
+        val binding = FragmentExceptionsBinding.inflate(
+            inflater,
+            container,
+            false
+        )
         exceptionsStore = StoreProvider.get(this) {
             ExceptionsFragmentStore(
                 ExceptionsFragmentState(items = emptyList())
@@ -50,11 +54,11 @@ class TrackingProtectionExceptionsFragment : Fragment() {
             trackingProtectionUseCases = requireComponents.useCases.trackingProtectionUseCases
         )
         exceptionsView = TrackingProtectionExceptionsView(
-            view.exceptionsLayout,
+            binding.exceptionsLayout,
             exceptionsInteractor
         )
         exceptionsInteractor.reloadExceptions()
-        return view
+        return binding.root
     }
 
     @ExperimentalCoroutinesApi

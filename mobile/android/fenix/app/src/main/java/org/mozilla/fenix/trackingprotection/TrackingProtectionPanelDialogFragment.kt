@@ -23,7 +23,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import kotlinx.android.synthetic.main.fragment_tracking_protection.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
@@ -42,6 +41,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.FragmentTrackingProtectionBinding
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -79,7 +79,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val store = requireComponents.core.store
         val view = inflateRootView(container)
         val tab = store.state.findTabOrCustomTab(provideTabId())
@@ -106,8 +106,9 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             gravity = args.gravity,
             getCurrentTab = ::getCurrentTab
         )
+        val binding = FragmentTrackingProtectionBinding.bind(view)
         trackingProtectionView =
-            TrackingProtectionPanelView(view.fragment_tp, trackingProtectionInteractor)
+            TrackingProtectionPanelView(binding.fragmentTp, trackingProtectionInteractor)
         tab?.let { updateTrackers(it) }
         return view
     }
