@@ -6,6 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -172,7 +173,7 @@ class OpenInAppOnboardingObserverTest {
 
         openInAppOnboardingObserver = spyk(
             OpenInAppOnboardingObserver(
-                testContext, mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), shouldScrollWithTopToolbar = true
+                testContext, mockk(), mockk(), mockk(), mockk(), mockk(), FrameLayout(testContext), shouldScrollWithTopToolbar = true
             )
         )
         val banner1 = openInAppOnboardingObserver.createInfoBanner()
@@ -180,7 +181,7 @@ class OpenInAppOnboardingObserverTest {
 
         openInAppOnboardingObserver = spyk(
             OpenInAppOnboardingObserver(
-                testContext, mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), shouldScrollWithTopToolbar = false
+                testContext, mockk(), mockk(), mockk(), mockk(), mockk(), FrameLayout(testContext), shouldScrollWithTopToolbar = false
             )
         )
         val banner2 = openInAppOnboardingObserver.createInfoBanner()

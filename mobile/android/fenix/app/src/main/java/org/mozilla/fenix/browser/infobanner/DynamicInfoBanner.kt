@@ -34,7 +34,7 @@ class DynamicInfoBanner(
         super.showBanner()
 
         if (shouldScrollWithTopToolbar) {
-            (bannerLayout.layoutParams as CoordinatorLayout.LayoutParams).behavior = DynamicInfoBannerBehavior(
+            (binding.root.layoutParams as CoordinatorLayout.LayoutParams).behavior = DynamicInfoBannerBehavior(
                 context, null
             )
         }

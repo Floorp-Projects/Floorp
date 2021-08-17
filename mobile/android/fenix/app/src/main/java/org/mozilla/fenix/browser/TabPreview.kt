@@ -13,11 +13,10 @@ import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.updateLayoutParams
-import kotlinx.android.synthetic.main.tab_preview.view.*
-import kotlinx.android.synthetic.main.tabs_tray_tab_counter.view.*
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.concept.base.images.ImageLoadRequest
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.TabPreviewBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
@@ -29,32 +28,30 @@ class TabPreview @JvmOverloads constructor(
     defStyle: Int = 0
 ) : FrameLayout(context, attrs, defStyle) {
 
+    private val binding = TabPreviewBinding.inflate(LayoutInflater.from(context), this)
     private val thumbnailLoader = ThumbnailLoader(context.components.core.thumbnailStorage)
 
     init {
-        val inflater = LayoutInflater.from(context)
-        inflater.inflate(R.layout.tab_preview, this, true)
-
         if (!context.settings().shouldUseBottomToolbar) {
-            fakeToolbar.updateLayoutParams<LayoutParams> {
+            binding.fakeToolbar.updateLayoutParams<LayoutParams> {
                 gravity = Gravity.TOP
             }
 
-            fakeToolbar.background = AppCompatResources.getDrawable(
+            binding.fakeToolbar.background = AppCompatResources.getDrawable(
                 context,
                 ThemeManager.resolveAttribute(R.attr.bottomBarBackgroundTop, context)
             )
         }
 
         // Change view properties to avoid confusing the UI tests
-        tab_button.counter_box.id = View.NO_ID
-        tab_button.counter_text.id = View.NO_ID
+        binding.tabButton.findViewById<View>(R.id.counter_box).id = View.NO_ID
+        binding.tabButton.findViewById<View>(R.id.counter_text).id = View.NO_ID
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        previewThumbnail.translationY = if (!context.settings().shouldUseBottomToolbar) {
-            fakeToolbar.height.toFloat()
+        binding.previewThumbnail.translationY = if (!context.settings().shouldUseBottomToolbar) {
+            binding.fakeToolbar.height.toFloat()
         } else {
             0f
         }
@@ -62,6 +59,7 @@ class TabPreview @JvmOverloads constructor(
 
     fun loadPreviewThumbnail(thumbnailId: String) {
         doOnNextLayout {
+            val previewThumbnail = binding.previewThumbnail
             val thumbnailSize = max(previewThumbnail.height, previewThumbnail.width)
             thumbnailLoader.loadIntoView(
                 previewThumbnail,

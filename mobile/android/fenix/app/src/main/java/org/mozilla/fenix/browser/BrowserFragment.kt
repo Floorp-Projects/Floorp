@@ -13,8 +13,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_browser.*
-import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.SessionState
@@ -64,11 +62,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val components = context.components
 
         if (context.settings().isSwipeToolbarToSwitchTabsEnabled) {
-            gestureLayout.addGestureListener(
+            binding.gestureLayout.addGestureListener(
                 ToolbarGestureHandler(
                     activity = requireActivity(),
-                    contentLayout = browserLayout,
-                    tabPreview = tabPreview,
+                    contentLayout = binding.browserLayout,
+                    tabPreview = binding.tabPreview,
                     toolbarLayout = browserToolbarView.view,
                     store = components.core.store,
                     selectTabUseCase = components.useCases.tabsUseCases.selectTab
@@ -196,7 +194,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         browserToolbarView.view.addPageAction(readerModeAction)
 
         thumbnailsFeature.set(
-            feature = BrowserThumbnails(context, view.engineView, components.core.store),
+            feature = BrowserThumbnails(context, binding.engineView, components.core.store),
             owner = this,
             view = view
         )
@@ -207,7 +205,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     context,
                     components.core.engine,
                     components.core.store,
-                    view.readerViewControlsBar
+                    binding.readerViewControlsBar
                 ) { available, active ->
                     if (available) {
                         components.analytics.metrics.track(Event.ReaderModeAvailable)
@@ -240,7 +238,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     navController = findNavController(),
                     settings = context.settings(),
                     appLinksUseCases = context.components.useCases.appLinksUseCases,
-                    container = browserLayout as ViewGroup,
+                    container = binding.browserLayout as ViewGroup,
                     shouldScrollWithTopToolbar = !context.settings().shouldUseBottomToolbar
                 ),
                 owner = this,
@@ -353,7 +351,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     }
                 }
                 FenixSnackbar.make(
-                    view = view.browserLayout,
+                    view = binding.browserLayout,
                     duration = Snackbar.LENGTH_SHORT,
                     isDisplayedWithBrowserToolbar = true
                 )

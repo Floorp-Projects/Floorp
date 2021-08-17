@@ -25,7 +25,7 @@ class DynamicInfoBannerTest {
 
         banner.showBanner()
 
-        assertTrue((banner.bannerLayout.layoutParams as CoordinatorLayout.LayoutParams).behavior is DynamicInfoBannerBehavior)
+        assertTrue((banner.binding.root.layoutParams as CoordinatorLayout.LayoutParams).behavior is DynamicInfoBannerBehavior)
     }
 
     @Test
@@ -38,6 +38,6 @@ class DynamicInfoBannerTest {
 
         banner.showBanner()
 
-        assertNull((banner.bannerLayout.layoutParams as CoordinatorLayout.LayoutParams).behavior)
+        assertNull((banner.binding.root.layoutParams as CoordinatorLayout.LayoutParams).behavior)
     }
 }

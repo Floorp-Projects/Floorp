@@ -10,8 +10,7 @@ import android.view.LayoutInflater
 import android.view.View.GONE
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import kotlinx.android.synthetic.main.info_banner.view.*
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.InfoBannerBinding
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -40,27 +39,26 @@ open class InfoBanner(
 ) {
     @SuppressLint("InflateParams")
     @VisibleForTesting
-    internal val bannerLayout = LayoutInflater.from(context)
-        .inflate(R.layout.info_banner, null)
+    internal val binding = InfoBannerBinding.inflate(LayoutInflater.from(context), container, false)
 
     internal open fun showBanner() {
-        bannerLayout.banner_info_message.text = message
-        bannerLayout.dismiss.text = dismissText
+        binding.bannerInfoMessage.text = message
+        binding.dismiss.text = dismissText
 
         if (actionText.isNullOrEmpty()) {
-            bannerLayout.action.visibility = GONE
+            binding.action.visibility = GONE
         } else {
-            bannerLayout.action.text = actionText
+            binding.action.text = actionText
         }
 
-        container.addView(bannerLayout)
+        container.addView(binding.root)
 
-        bannerLayout.dismiss.setOnClickListener {
+        binding.dismiss.setOnClickListener {
             dismissAction?.invoke()
-            if (dismissByHiding) { bannerLayout.visibility = GONE } else { dismiss() }
+            if (dismissByHiding) { binding.root.visibility = GONE } else { dismiss() }
         }
 
-        bannerLayout.action.setOnClickListener {
+        binding.action.setOnClickListener {
             actionToPerform?.invoke()
         }
 
@@ -68,6 +66,6 @@ open class InfoBanner(
     }
 
     internal fun dismiss() {
-        container.removeView(bannerLayout)
+        container.removeView(binding.root)
     }
 }
