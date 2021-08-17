@@ -6992,24 +6992,6 @@
   mirror: always
   rust: true
 
-# Is support for DOMMatrix enabled?
-- name: layout.css.DOMMatrix.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Is support for DOMQuad enabled?
-- name: layout.css.DOMQuad.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Is support for DOMPoint enabled?
-- name: layout.css.DOMPoint.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Is support for d property for SVG path element?
 - name: layout.css.d-property.enabled
   type: bool

@@ -10,8 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="layout.css.DOMQuad.enabled",
- Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Serializable]
 interface DOMQuad {
     constructor(optional DOMPointInit p1 = {}, optional DOMPointInit p2 = {},
