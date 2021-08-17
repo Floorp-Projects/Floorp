@@ -684,7 +684,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Want to see the full version of a site? Switch on Desktop Site from the %1$s menu</string>
+    <string name="tip_request_desktop2">Want to see the full version of a site?\n
+        Switch on Desktop Site from the %1$s menu</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Turn off tips on the start screen</string>
