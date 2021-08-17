@@ -18,6 +18,7 @@
 
 #include "wasm/WasmValType.h"
 
+#include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Printf.h"
 #include "js/Value.h"
