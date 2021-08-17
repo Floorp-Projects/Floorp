@@ -3,10 +3,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-        android:width="16dp"
-        android:height="16dp"
-        android:viewportHeight="16.0"
-        android:viewportWidth="16.0">
-    <path android:fillColor="@color/mozac_ui_icons_fill"
-          android:pathData="M8,0a8,8 0,1 0,8 8A8,8 0,0 0,8 0ZM12.243,10.828a1,1 0,0 1,-1.414 1.414L8,9.414 5.172,12.243a1,1 0,0 1,-1.414 -1.414L6.586,8 3.757,5.172A1,1 0,0 1,5.172 3.757L8,6.586l2.828,-2.828a1,1 0,0 1,1.414 1.414L9.414,8Z" />
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+    <path
+        android:fillColor="@color/mozac_ui_icons_fill"
+        android:pathData="M10,2.5C5.858,2.5 2.5,5.858 2.5,10C2.5,14.142 5.858,17.5 10,17.5C14.142,17.5 17.5,14.142 17.5,10C17.5,5.858 14.142,2.5 10,2.5ZM12.817,11.933C13.06,12.177 13.06,12.574 12.817,12.818C12.695,12.939 12.535,13 12.375,13C12.215,13 12.055,12.939 11.933,12.817L10.204,11.088L9.797,11.087L8.068,12.816C7.945,12.939 7.785,13 7.625,13C7.465,13 7.305,12.939 7.183,12.817C6.94,12.573 6.94,12.176 7.183,11.932L8.897,10.218V9.781L7.183,8.067C6.94,7.823 6.94,7.426 7.183,7.182C7.427,6.938 7.824,6.938 8.068,7.182L9.787,8.901H10.215L11.934,7.182C12.178,6.938 12.575,6.938 12.819,7.182C13.062,7.426 13.062,7.823 12.819,8.067L11.1,9.786V10.214L12.817,11.933Z" />
 </vector>
