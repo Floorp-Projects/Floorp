@@ -11,6 +11,7 @@
 #include "builtin/Promise.h"  // js::AsyncFromSyncIteratorMethod, js::AsyncGeneratorEnqueue
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
+#include "vm/CompletionKind.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
