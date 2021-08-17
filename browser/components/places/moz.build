@@ -17,6 +17,7 @@ BROWSER_CHROME_MANIFESTS += [
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
+    "CommonNames.jsm",
     "Interactions.jsm",
     "InteractionsBlocklist.jsm",
     "PlacesUIUtils.jsm",

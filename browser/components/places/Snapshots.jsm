@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const VERSION_PREF = "browser.places.snapshots.version";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  CommonNames: "resource:///modules/CommonNames.jsm",
   Interactions: "resource:///modules/Interactions.jsm",
   PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
@@ -423,7 +424,7 @@ const Snapshots = new (class Snapshots {
       }
     }
 
-    return {
+    let snapshot = {
       url: row.getResultByName("url"),
       title: row.getResultByName("title"),
       createdAt: this.#toDate(row.getResultByName("created_at")),
@@ -438,6 +439,9 @@ const Snapshots = new (class Snapshots {
       userPersisted: !!row.getResultByName("user_persisted"),
       pageData,
     };
+
+    snapshot.commonName = CommonNames.getName(snapshot);
+    return snapshot;
   }
 
   /**
