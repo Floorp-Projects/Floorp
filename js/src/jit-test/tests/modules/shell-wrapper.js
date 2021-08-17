@@ -1,4 +1,5 @@
-// Test shell ModuleObject wrapper's accessors and methods.
+// |jit-test| module
+// Test shell ModuleObject wrapper's accessors and methods
 
 load(libdir + "asserts.js");
 
@@ -64,7 +65,7 @@ f();
 `));
 d.declarationInstantiation();
 try {
-  d.evaluation();
+  await d.evaluation();
 } catch (e) {
 }
 assertEq(d.evaluationError instanceof ReferenceError, true);

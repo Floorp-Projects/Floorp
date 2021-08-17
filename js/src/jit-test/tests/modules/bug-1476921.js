@@ -1,4 +1,4 @@
-// |jit-test| --enable-top-level-await;
+// |jit-test|
 "use strict";
 
 load(libdir + "asserts.js");

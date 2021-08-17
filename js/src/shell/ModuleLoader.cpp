@@ -95,15 +95,12 @@ bool ModuleLoader::loadRootModule(JSContext* cx, HandleString path) {
     return false;
   }
 
-  if (cx->options().topLevelAwait()) {
-    RootedObject evaluationPromise(cx, &rval.toObject());
-    if (evaluationPromise == nullptr) {
-      return false;
-    }
-
-    return JS::ThrowOnModuleEvaluationFailure(cx, evaluationPromise);
+  RootedObject evaluationPromise(cx, &rval.toObject());
+  if (evaluationPromise == nullptr) {
+    return false;
   }
-  return true;
+
+  return JS::ThrowOnModuleEvaluationFailure(cx, evaluationPromise);
 }
 
 bool ModuleLoader::registerTestModule(JSContext* cx, HandleObject moduleRequest,
@@ -248,16 +245,10 @@ bool ModuleLoader::doDynamicImport(JSContext* cx,
   RootedValue rval(cx);
   bool ok =
       tryDynamicImport(cx, referencingPrivate, moduleRequest, promise, &rval);
-  if (cx->options().topLevelAwait()) {
-    JSObject* evaluationObject = ok ? &rval.toObject() : nullptr;
-    RootedObject evaluationPromise(cx, evaluationObject);
-    return JS::FinishDynamicModuleImport(
-        cx, evaluationPromise, referencingPrivate, moduleRequest, promise);
-  }
-  JS::DynamicImportStatus status =
-      ok ? JS::DynamicImportStatus::Ok : JS::DynamicImportStatus::Failed;
-  return JS::FinishDynamicModuleImport_NoTLA(cx, status, referencingPrivate,
-                                             moduleRequest, promise);
+  JSObject* evaluationObject = ok ? &rval.toObject() : nullptr;
+  RootedObject evaluationPromise(cx, evaluationObject);
+  return JS::FinishDynamicModuleImport(
+      cx, evaluationPromise, referencingPrivate, moduleRequest, promise);
 }
 
 bool ModuleLoader::tryDynamicImport(JSContext* cx,

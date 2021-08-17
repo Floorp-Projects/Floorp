@@ -981,9 +981,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sWeakRefsExposeCleanupSome = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
 
-  bool topLevelAwaitEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.top_level_await");
-
   bool privateFieldsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_fields");
   bool privateMethodsEnabled =
@@ -1045,8 +1042,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setPrivateClassFields(privateFieldsEnabled)
       .setPrivateClassMethods(privateMethodsEnabled)
       .setClassStaticBlocks(classStaticBlocksEnabled)
-      .setErgnomicBrandChecks(ergnomicBrandChecksEnabled)
-      .setTopLevelAwait(topLevelAwaitEnabled);
+      .setErgnomicBrandChecks(ergnomicBrandChecksEnabled);
 
   JS::SetUseFdlibmForSinCosTan(
       Preferences::GetBool(JS_OPTIONS_DOT_STR "use_fdlibm_for_sin_cos_tan") ||

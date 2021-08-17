@@ -1,4 +1,4 @@
-// |jit-test| --enable-top-level-await;
+// |jit-test|
 dbgGlobal = newGlobal({newCompartment: true});
 dbg = new dbgGlobal.Debugger;
 dbg.addDebuggee(this);

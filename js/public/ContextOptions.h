@@ -51,8 +51,7 @@ class JS_PUBLIC_API ContextOptions {
         fuzzing_(false),
         privateClassFields_(false),
         privateClassMethods_(false),
-        ergonomicBrandChecks_(false),
-        topLevelAwait_(true) {
+        ergonomicBrandChecks_(false) {
   }
   // clang-format on
 
@@ -168,12 +167,6 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-  bool topLevelAwait() const { return topLevelAwait_; }
-  ContextOptions& setTopLevelAwait(bool enabled) {
-    topLevelAwait_ = enabled;
-    return *this;
-  }
-
   // Override to allow disabling the eval restriction security checks for
   // this context.
   bool disableEvalSecurityChecks() const { return disableEvalSecurityChecks_; }
@@ -284,7 +277,6 @@ class JS_PUBLIC_API ContextOptions {
   bool privateClassFields_ : 1;
   bool privateClassMethods_ : 1;
   bool ergonomicBrandChecks_ : 1;
-  bool topLevelAwait_ : 1;
   bool classStaticBlocks_ : 1;
 };
 

@@ -577,8 +577,6 @@ function ModuleEvaluate()
     if (!IsObject(this) || !IsModule(this))
         return callFunction(CallModuleMethodIfWrapped, this, "ModuleEvaluate");
 
-    const isTopLevelAwaitEnabled = IsTopLevelAwaitEnabled();
-
     // Step 2
     let module = this;
 
@@ -590,20 +588,17 @@ function ModuleEvaluate()
         ThrowInternalError(JSMSG_BAD_MODULE_STATUS);
     }
 
-    let capability = undefined;
-    if (isTopLevelAwaitEnabled) {
-      // Top-level Await Step 4
-      if (module.status === MODULE_STATUS_EVALUATED) {
-        module = GetCycleRoot(module);
-      }
-
-      // Top-level Await Step 5
-      if (module.topLevelCapability) {
-        return module.topLevelCapability;
-      }
-
-      capability = CreateTopLevelCapability(module);
+    // Top-level Await Step 4
+    if (module.status === MODULE_STATUS_EVALUATED) {
+      module = GetCycleRoot(module);
     }
+
+    // Top-level Await Step 5
+    if (module.topLevelCapability) {
+      return module.topLevelCapability;
+    }
+
+    const capability = CreateTopLevelCapability(module);
 
     // Step 4
     let stack = [];
@@ -611,16 +606,14 @@ function ModuleEvaluate()
     // Steps 5-6
     try {
         InnerModuleEvaluation(module, stack, 0);
-        if (isTopLevelAwaitEnabled) {
-          if (!IsAsyncEvaluating(module)) {
-            ModuleTopLevelCapabilityResolve(module);
-          }
-          // Steps 7-8
-          assert(module.status === MODULE_STATUS_EVALUATED,
-                 "Bad module status after successful evaluation");
-          assert(stack.length === 0,
-                 "Stack should be empty after successful evaluation");
+        if (!IsAsyncEvaluating(module)) {
+          ModuleTopLevelCapabilityResolve(module);
         }
+        // Steps 7-8
+        assert(module.status === MODULE_STATUS_EVALUATED,
+               "Bad module status after successful evaluation");
+        assert(stack.length === 0,
+               "Stack should be empty after successful evaluation");
     } catch (error) {
         for (let i = 0; i < stack.length; i++) {
             let m = stack[i];
@@ -636,11 +629,7 @@ function ModuleEvaluate()
         assert(module.status === MODULE_STATUS_EVALUATED_ERROR,
                "Bad module status after failed evaluation");
 
-        if (isTopLevelAwaitEnabled) {
-          ModuleTopLevelCapabilityReject(module, error);
-        } else {
-          throw error;
-        }
+        ModuleTopLevelCapabilityReject(module, error);
     }
 
     // Step 9
@@ -651,7 +640,6 @@ function ModuleEvaluate()
 // ES2020 15.2.1.16.2.1 InnerModuleEvaluation
 function InnerModuleEvaluation(module, stack, index)
 {
-    const isTopLevelAwaitEnabled = IsTopLevelAwaitEnabled();
 
     // Step 1
     // TODO: Support module records other than Cyclic Module Records.
@@ -678,9 +666,7 @@ function InnerModuleEvaluation(module, stack, index)
     UnsafeSetReservedSlot(module, MODULE_OBJECT_DFS_INDEX_SLOT, index);
     UnsafeSetReservedSlot(module, MODULE_OBJECT_DFS_ANCESTOR_INDEX_SLOT, index);
 
-    if (isTopLevelAwaitEnabled) {
-      UnsafeSetReservedSlot(module, MODULE_OBJECT_PENDING_ASYNC_DEPENDENCIES_SLOT, 0);
-    }
+    UnsafeSetReservedSlot(module, MODULE_OBJECT_PENDING_ASYNC_DEPENDENCIES_SLOT, 0);
 
     index++;
 
@@ -712,36 +698,27 @@ function InnerModuleEvaluation(module, stack, index)
                                   std_Math_min(module.dfsAncestorIndex,
                                                requiredModule.dfsAncestorIndex));
         } else {
-          if (isTopLevelAwaitEnabled) {
-            requiredModule = GetCycleRoot(requiredModule);
-            assert(requiredModule.status >= MODULE_STATUS_EVALUATED,
-                  `Bad module status in InnerModuleEvaluation: ${requiredModule.status}`);
-            if (requiredModule.status == MODULE_STATUS_EVALUATED_ERROR) {
-              throw GetModuleEvaluationError(requiredModule);
-            }
+          requiredModule = GetCycleRoot(requiredModule);
+          assert(requiredModule.status >= MODULE_STATUS_EVALUATED,
+                `Bad module status in InnerModuleEvaluation: ${requiredModule.status}`);
+          if (requiredModule.status == MODULE_STATUS_EVALUATED_ERROR) {
+            throw GetModuleEvaluationError(requiredModule);
           }
         }
-        if (isTopLevelAwaitEnabled) {
-          if (IsAsyncEvaluating(requiredModule)) {
-              UnsafeSetReservedSlot(module,
-                                    MODULE_OBJECT_PENDING_ASYNC_DEPENDENCIES_SLOT,
-                                    module.pendingAsyncDependencies + 1);
-              AppendAsyncParentModule(requiredModule, module);
-          }
+        if (IsAsyncEvaluating(requiredModule)) {
+            UnsafeSetReservedSlot(module,
+                                  MODULE_OBJECT_PENDING_ASYNC_DEPENDENCIES_SLOT,
+                                  module.pendingAsyncDependencies + 1);
+            AppendAsyncParentModule(requiredModule, module);
         }
     }
 
-    if (isTopLevelAwaitEnabled) {
-      if (module.pendingAsyncDependencies > 0 || module.async) {
-        InitAsyncEvaluating(module);
-        if (module.pendingAsyncDependencies === 0) {
-          ExecuteAsyncModule(module);
-        }
-      } else {
-        ExecuteModule(module);
+    if (module.pendingAsyncDependencies > 0 || module.async) {
+      InitAsyncEvaluating(module);
+      if (module.pendingAsyncDependencies === 0) {
+        ExecuteAsyncModule(module);
       }
     } else {
-      // Step 11
       ExecuteModule(module);
     }
 
