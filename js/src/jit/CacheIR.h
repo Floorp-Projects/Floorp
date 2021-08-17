@@ -20,6 +20,7 @@
 #include "js/experimental/JitInfo.h"
 #include "js/friend/XrayJitInfo.h"  // JS::XrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
+#include "js/ValueArray.h"
 #include "vm/JSFunction.h"
 #include "vm/Shape.h"
 #include "wasm/WasmConstants.h"
