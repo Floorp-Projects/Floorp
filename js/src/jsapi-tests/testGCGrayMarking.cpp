@@ -11,6 +11,7 @@
 #include "gc/Zone.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/Proxy.h"
+#include "js/WeakMap.h"
 #include "jsapi-tests/tests.h"
 
 using namespace js;

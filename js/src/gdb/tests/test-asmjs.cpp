@@ -1,5 +1,4 @@
 #include "gdb-tests.h"
-#include "jsapi.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/RootingAPI.h"

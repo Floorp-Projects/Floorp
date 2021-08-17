@@ -8,6 +8,7 @@
 #include "jspubtd.h"
 
 #include "fuzz-tests/tests.h"
+#include "js/CallAndConstruct.h"
 #include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_HasProperty, JS_SetProperty
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

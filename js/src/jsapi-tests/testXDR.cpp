@@ -6,8 +6,6 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "jsfriendapi.h"
-
 #include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/CompileOptions.h"            // JS::CompileOptions
