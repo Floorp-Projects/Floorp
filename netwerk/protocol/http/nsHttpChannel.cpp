@@ -5998,7 +5998,13 @@ nsresult nsHttpChannel::BeginConnect() {
         altUsedLine.AppendLiteral(":");
         altUsedLine.AppendInt(mapping->AlternatePort());
       }
-      rv = mRequestHead.SetHeader(nsHttp::Alternate_Service_Used, altUsedLine);
+      // Like what we did for 'Authorization' header, we need to do the same for
+      // 'Alt-Used' for avoiding this header being shown in the ServiceWorker
+      // FetchEvent.
+      Unused << mRequestHead.ClearHeader(nsHttp::Alternate_Service_Used);
+      rv = mRequestHead.SetHeader(nsHttp::Alternate_Service_Used, altUsedLine,
+                                  false,
+                                  nsHttpHeaderArray::eVarietyRequestDefault);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
