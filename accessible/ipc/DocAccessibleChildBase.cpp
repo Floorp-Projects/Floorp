@@ -76,6 +76,15 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
                      aSuppressShowEvent);
   SerializeTree(shownTree, data.NewTree());
   MaybeSendShowEvent(data, false);
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    nsTArray<CacheData> cache(shownTree.Length());
+    for (LocalAccessible* acc : shownTree) {
+      uint64_t id = reinterpret_cast<uint64_t>(acc->UniqueID());
+      RefPtr<AccAttributes> fields = acc->BundleFieldsForCache();
+      cache.AppendElement(CacheData(id, fields));
+    }
+    Unused << SendCache(0, cache, true);
+  }
 }
 
 void DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent) {

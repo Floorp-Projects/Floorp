@@ -36,6 +36,7 @@ class AccAttributes;
 class AccEvent;
 class AccGroupInfo;
 class ApplicationAccessible;
+class CacheData;
 class DocAccessible;
 class EmbeddedObjCollector;
 class EventTree;
@@ -909,6 +910,8 @@ class LocalAccessible : public nsISupports, public Accessible {
   void MaybeFireFocusableStateChange(bool aPreviouslyFocusable);
 
   virtual bool IsRemote() const override { return false; }
+
+  already_AddRefed<AccAttributes> BundleFieldsForCache();
 
  protected:
   virtual ~LocalAccessible();
