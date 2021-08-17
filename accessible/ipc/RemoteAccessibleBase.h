@@ -9,9 +9,9 @@
 
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/Role.h"
+#include "AccAttributes.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
-#include "LocalAccessible.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsRect.h"
@@ -20,7 +20,6 @@
 namespace mozilla {
 namespace a11y {
 
-class LocalAccessible;
 class Attribute;
 class DocAccessibleParent;
 class RemoteAccessible;
@@ -185,6 +184,14 @@ class RemoteAccessibleBase : public Accessible {
 
   DocAccessibleParent* AsDoc() const { return IsDoc() ? mDoc : nullptr; }
 
+  void ApplyCache(uint8_t aUpdateType, AccAttributes* aFields) {
+    if (aUpdateType == 0 || !mCachedFields) {
+      mCachedFields = aFields;
+    } else {
+      mCachedFields->Update(aFields);
+    }
+  }
+
  protected:
   RemoteAccessibleBase(uint64_t aID, Derived* aParent,
                        DocAccessibleParent* aDoc, role aRole, AccType aType,
@@ -194,6 +201,7 @@ class RemoteAccessibleBase : public Accessible {
         mDoc(aDoc),
         mWrapper(0),
         mID(aID),
+        mCachedFields(nullptr),
         mRole(aRole) {}
 
   explicit RemoteAccessibleBase(DocAccessibleParent* aThisAsDoc)
@@ -202,6 +210,7 @@ class RemoteAccessibleBase : public Accessible {
         mDoc(aThisAsDoc),
         mWrapper(0),
         mID(0),
+        mCachedFields(nullptr),
         mRole(roles::DOCUMENT) {
     mGenericTypes = eDocument | eHyperText;
   }
@@ -221,6 +230,8 @@ class RemoteAccessibleBase : public Accessible {
   uint64_t mID;
 
  protected:
+  RefPtr<AccAttributes> mCachedFields;
+
   // XXX DocAccessibleParent gets to change this to change the role of
   // documents.
   role mRole : 27;

@@ -136,6 +136,10 @@ class DocAccessibleParent : public RemoteAccessible,
       const uint32_t& aScrollY, const uint32_t& aMaxScrollX,
       const uint32_t& aMaxScrollY) override;
 
+  virtual mozilla::ipc::IPCResult RecvCache(const uint8_t& aUpdateType,
+                                            nsTArray<CacheData>&& aData,
+                                            const bool& aFinal) override;
+
 #if !defined(XP_WIN)
   virtual mozilla::ipc::IPCResult RecvAnnouncementEvent(
       const uint64_t& aID, const nsString& aAnnouncement,
