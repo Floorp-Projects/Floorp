@@ -17,7 +17,6 @@ function runTest(obj) {
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
-        ["privacy.storagePrincipal.enabledForTrackers", false],
         [
           "privacy.trackingprotection.socialtracking.enabled",
           obj.protectionEnabled,

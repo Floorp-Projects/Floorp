@@ -398,34 +398,17 @@ bool ShouldPartitionStorage(uint32_t aRejectedReason) {
 
 bool StoragePartitioningEnabled(StorageAccess aAccess,
                                 nsICookieJarSettings* aCookieJarSettings) {
-  if (aAccess == StorageAccess::ePartitionTrackersOrDeny) {
-    return aCookieJarSettings->GetCookieBehavior() ==
-               nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-           StaticPrefs::privacy_storagePrincipal_enabledForTrackers();
-  }
-  if (aAccess == StorageAccess::ePartitionForeignOrDeny) {
-    return aCookieJarSettings->GetCookieBehavior() ==
-           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
-  }
-  return false;
+  return aAccess == StorageAccess::ePartitionForeignOrDeny &&
+         aCookieJarSettings->GetCookieBehavior() ==
+             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 }
 
 bool StoragePartitioningEnabled(uint32_t aRejectedReason,
                                 nsICookieJarSettings* aCookieJarSettings) {
-  if (aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER) {
-    return aCookieJarSettings->GetCookieBehavior() ==
-               nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-           StaticPrefs::privacy_storagePrincipal_enabledForTrackers();
-  }
-  if (aRejectedReason ==
-      nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) {
-    return aCookieJarSettings->GetCookieBehavior() ==
-           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
-  }
-  return false;
+  return aRejectedReason ==
+             nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN &&
+         aCookieJarSettings->GetCookieBehavior() ==
+             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 }
 
 }  // namespace mozilla
