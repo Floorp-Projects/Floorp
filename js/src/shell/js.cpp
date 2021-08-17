@@ -622,7 +622,6 @@ bool shell::enablePropertyErrorMessageFix = false;
 bool shell::enableIteratorHelpers = false;
 bool shell::enablePrivateClassFields = false;
 bool shell::enablePrivateClassMethods = false;
-bool shell::enableTopLevelAwait = true;
 bool shell::enableErgonomicBrandChecks = true;
 bool shell::useOffThreadParseGlobal = true;
 bool shell::enableClassStaticBlocks = true;
@@ -11273,7 +11272,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enablePrivateClassMethods = !op.getBoolOption("disable-private-methods");
   enableErgonomicBrandChecks =
       !op.getBoolOption("disable-ergonomic-brand-checks");
-  enableTopLevelAwait = op.getBoolOption("enable-top-level-await");
   enableClassStaticBlocks = !op.getBoolOption("disable-class-static-blocks");
   useOffThreadParseGlobal = op.getBoolOption("off-thread-parse-global");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
@@ -11306,7 +11304,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setPrivateClassFields(enablePrivateClassFields)
       .setPrivateClassMethods(enablePrivateClassMethods)
       .setErgnomicBrandChecks(enableErgonomicBrandChecks)
-      .setTopLevelAwait(enableTopLevelAwait)
       .setClassStaticBlocks(enableClassStaticBlocks);
 
   JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);

@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) shell-option(--enable-top-level-await) module async  -- needs drainJobQueue
+// |reftest| skip-if(!xulRuntime.shell) module async  -- needs drainJobQueue
 
 async function test() {
   try {

@@ -2327,7 +2327,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   nonSyntacticScope = rhs.nonSyntacticScope;
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;
-  topLevelAwait = rhs.topLevelAwait;
   classStaticBlocks = rhs.classStaticBlocks;
   useStencilXDR = rhs.useStencilXDR;
   useOffThreadParseGlobal = rhs.useOffThreadParseGlobal;
@@ -2413,7 +2412,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
       cx->options().throwOnAsmJSValidationFailure();
   privateClassFields = cx->options().privateClassFields();
   privateClassMethods = cx->options().privateClassMethods();
-  topLevelAwait = cx->options().topLevelAwait();
 
   classStaticBlocks = cx->options().classStaticBlocks();
 

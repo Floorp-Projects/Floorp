@@ -1847,15 +1847,6 @@ static bool intrinsic_ExecuteModule(JSContext* cx, unsigned argc, Value* vp) {
   return ModuleObject::execute(cx, module, args.rval());
 }
 
-static bool intrinsic_IsTopLevelAwaitEnabled(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 0);
-  bool topLevelAwait = cx->options().topLevelAwait();
-  args.rval().setBoolean(topLevelAwait);
-  return true;
-}
-
 static bool intrinsic_SetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -2251,7 +2242,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IsRegExpObject),
     JS_INLINABLE_FN("IsSuspendedGenerator", intrinsic_IsSuspendedGenerator, 1,
                     0, IntrinsicIsSuspendedGenerator),
-    JS_FN("IsTopLevelAwaitEnabled", intrinsic_IsTopLevelAwaitEnabled, 0, 0),
     JS_INLINABLE_FN("IsTypedArray",
                     intrinsic_IsInstanceOfBuiltin<TypedArrayObject>, 1, 0,
                     IntrinsicIsTypedArray),

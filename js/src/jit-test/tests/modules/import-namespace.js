@@ -1,4 +1,4 @@
-// |jit-test| --enable-top-level-await;
+// |jit-test|
 // Test importing module namespaces
 
 "use strict";

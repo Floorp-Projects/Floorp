@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) shell-option(--enable-top-level-await) module async  -- needs drainJobQueue
+// |reftest| skip-if(!xulRuntime.shell) module async  -- needs drainJobQueue
 
 import "./bug1693261-c1.mjs";
 import "./bug1693261-c2.mjs";

@@ -1,4 +1,4 @@
-// |jit-test| --enable-top-level-await;--more-compartments;
+// |jit-test| --more-compartments;
 let lfCode = `
     var g = newGlobal();
     g.debuggeeGlobal = this;

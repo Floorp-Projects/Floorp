@@ -1,2 +1,2 @@
-// |jit-test| module; --enable-top-level-await
+// |jit-test| module;
 eval("1");

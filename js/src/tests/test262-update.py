@@ -42,9 +42,7 @@ FEATURE_CHECK_NEEDED = {
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
 }
 RELEASE_OR_BETA = set([])
-SHELL_OPTIONS = {
-    "top-level-await": "--enable-top-level-await",
-}
+SHELL_OPTIONS = {}
 
 
 @contextlib.contextmanager

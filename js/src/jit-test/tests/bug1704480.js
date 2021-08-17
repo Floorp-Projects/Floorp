@@ -1,4 +1,4 @@
-// |jit-test|  --enable-top-level-await; --more-compartments
+// |jit-test|  --more-compartments
 m = parseModule(`
     await 0 ? b : c
 `);

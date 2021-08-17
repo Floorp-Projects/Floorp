@@ -431,23 +431,6 @@ class ScriptLoader final : public nsISupports {
    * Wrapper for JSAPI FinishDynamicImport function. Takes an optional argument
    * `aEvaluationPromise` which, if null, exits early.
    *
-   * This is the non-tla version, which works with modules which return
-   * completion records.
-   *
-   * @param aCX
-   *        The JSContext for the module.
-   * @param aRequest
-   *        The module load request for the dynamic module.
-   * @param aResult
-   *        The result of running ModuleEvaluate
-   */
-  void FinishDynamicImport_NoTLA(JSContext* aCx, ModuleLoadRequest* aRequest,
-                                 nsresult aResult);
-
-  /**
-   * Wrapper for JSAPI FinishDynamicImport function. Takes an optional argument
-   * `aEvaluationPromise` which, if null, exits early.
-   *
    * This is the Top Level Await version, which works with modules which return
    * promises.
    *
