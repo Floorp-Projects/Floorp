@@ -876,7 +876,7 @@ AnimatedGeometryRoot* nsDisplayListBuilder::WrapAGRForFrame(
     RefPtr<AnimatedGeometryRoot> parent = aParent;
     if (!parent) {
       nsIFrame* parentFrame =
-          nsLayoutUtils::GetCrossDocParentFrame(aAnimatedGeometryRoot);
+          nsLayoutUtils::GetCrossDocParentFrameInProcess(aAnimatedGeometryRoot);
       if (parentFrame) {
         bool isAsync;
         nsIFrame* parentAGRFrame =
@@ -1610,7 +1610,7 @@ const nsIFrame* nsDisplayListBuilder::FindReferenceFrameFor(
   }
 
   for (const nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+       f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f)) {
     if (f == mReferenceFrame || f->IsTransformed()) {
       if (aOffset) {
         *aOffset = aFrame->GetOffsetToCrossDoc(f);
@@ -1657,12 +1657,12 @@ nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
 
   if (!IsPaintingToWindow()) {
     if (aParent) {
-      *aParent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+      *aParent = nsLayoutUtils::GetCrossDocParentFrameInProcess(aFrame);
     }
     return AGR_NO;
   }
 
-  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(aFrame);
   if (!parent) {
     aIsAsync = true;
     return AGR_YES;
@@ -2982,7 +2982,8 @@ static nsIContent* FindContentInDocument(nsDisplayItem* aItem, Document* aDoc) {
     if (pc->Document() == aDoc) {
       return f->GetContent();
     }
-    f = nsLayoutUtils::GetCrossDocParentFrame(pc->PresShell()->GetRootFrame());
+    f = nsLayoutUtils::GetCrossDocParentFrameInProcess(
+        pc->PresShell()->GetRootFrame());
   }
   return nullptr;
 }
@@ -7550,7 +7551,7 @@ void nsDisplayTransform::SetReferenceFrameToAncestor(
   // we do for all other offsets (and how reference frames are supposed to
   // work)?
 #ifdef DEBUG
-  nsIFrame* outerFrame = nsLayoutUtils::GetCrossDocParentFrame(mFrame);
+  nsIFrame* outerFrame = nsLayoutUtils::GetCrossDocParentFrameInProcess(mFrame);
   MOZ_ASSERT(mReferenceFrame == aBuilder->FindReferenceFrameFor(outerFrame));
 #endif
   mToReferenceFrame = mFrame->GetOffsetToCrossDoc(mReferenceFrame);
@@ -7863,7 +7864,7 @@ bool nsDisplayBackgroundColor::CanUseAsyncAnimations(
 
 static bool IsInStickyPositionedSubtree(const nsIFrame* aFrame) {
   for (const nsIFrame* frame = aFrame; frame;
-       frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
+       frame = nsLayoutUtils::GetCrossDocParentFrameInProcess(frame)) {
     if (frame->IsStickyPositioned()) {
       return true;
     }
@@ -7931,9 +7932,10 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   // size of the mask layer. That union bounds is actually affected by the
   // geometry of the animated element. To keep the content of mask up to date,
   // forbidding of prerender is required.
-  for (nsIFrame* container = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+  for (nsIFrame* container =
+           nsLayoutUtils::GetCrossDocParentFrameInProcess(aFrame);
        container;
-       container = nsLayoutUtils::GetCrossDocParentFrame(container)) {
+       container = nsLayoutUtils::GetCrossDocParentFrameInProcess(container)) {
     const nsStyleSVGReset* svgReset = container->StyleSVGReset();
     if (svgReset->HasMask() || svgReset->HasClipPath()) {
       return result;
@@ -8131,7 +8133,7 @@ const Matrix4x4& nsDisplayTransform::GetAccumulatedPreserved3DTransform(
              establisher->GetClosestFlattenedTreeAncestorPrimaryFrame()) {
     }
     const nsIFrame* establisherReference = aBuilder->FindReferenceFrameFor(
-        nsLayoutUtils::GetCrossDocParentFrame(establisher));
+        nsLayoutUtils::GetCrossDocParentFrameInProcess(establisher));
 
     nsPoint offset = establisher->GetOffsetToCrossDoc(establisherReference);
     float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -10534,7 +10536,7 @@ static nsIFrame* GetSelfOrPlaceholderFor(nsIFrame* aFrame) {
 static nsIFrame* GetAncestorFor(nsIFrame* aFrame) {
   nsIFrame* f = GetSelfOrPlaceholderFor(aFrame);
   MOZ_ASSERT(f);
-  return nsLayoutUtils::GetCrossDocParentFrame(f);
+  return nsLayoutUtils::GetCrossDocParentFrameInProcess(f);
 }
 
 nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
