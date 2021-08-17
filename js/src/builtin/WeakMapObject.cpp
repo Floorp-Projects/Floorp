@@ -10,6 +10,7 @@
 #include "gc/FreeOp.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/PropertySpec.h"
+#include "js/WeakMap.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 

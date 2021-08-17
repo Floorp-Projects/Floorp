@@ -23,40 +23,28 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "jsdate.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsmath.h"
-#include "jsnum.h"
 #include "jstypes.h"
 
-#include "builtin/Array.h"
 #include "builtin/AtomicsObject.h"
-#include "builtin/Boolean.h"
 #include "builtin/Eval.h"
-#include "builtin/FinalizationRegistryObject.h"
 #include "builtin/JSON.h"
-#include "builtin/MapObject.h"
 #include "builtin/Promise.h"
-#include "builtin/Stream.h"
 #include "builtin/Symbol.h"
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToStencil, frontend::InstantiateStencils
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil, frontend::CompilationGCOutput
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
-#include "gc/Policy.h"
 #include "gc/PublicIterators.h"
-#include "gc/WeakMap.h"
-#include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable
 #include "js/CharacterEncoding.h"
-#include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Conversions.h"
-#include "js/Date.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/Initialization.h"
@@ -66,29 +54,19 @@
 #include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
-#include "js/SliceBudget.h"
-#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/String.h"  // JS::MaxStringLength
-#include "js/StructuredClone.h"
 #include "js/Symbol.h"
 #include "js/Utility.h"
 #include "js/WasmModule.h"
 #include "js/Wrapper.h"
 #include "proxy/DOMProxy.h"
-#include "util/CompleteFile.h"
-#include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
-#include "vm/AsyncFunction.h"
-#include "vm/AsyncIteration.h"
-#include "vm/DateObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
-#include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
-#include "vm/Iteration.h"
 #include "vm/JSAtom.h"
 #include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
@@ -99,10 +77,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Runtime.h"
 #include "vm/SavedStacks.h"
-#include "vm/SelfHosting.h"
-#include "vm/Shape.h"
 #include "vm/StringType.h"
-#include "vm/SymbolType.h"
 #include "vm/ToSource.h"
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
@@ -115,7 +90,6 @@
 #include "vm/Interpreter-inl.h"
 #include "vm/IsGivenTypeObject-inl.h"  // js::IsGivenTypeObject
 #include "vm/JSAtom-inl.h"
-#include "vm/JSFunction-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SavedStacks-inl.h"

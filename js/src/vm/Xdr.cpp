@@ -20,6 +20,7 @@
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, BorrowingCompilationStencil}
 #include "frontend/StencilXdr.h"          // frontend::StencilXDR
 #include "js/BuildId.h"                   // JS::BuildIdCharVector
+#include "js/OffThreadScriptCompilation.h"
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 #include "vm/SharedStencil.h"  // js::SourceExtent

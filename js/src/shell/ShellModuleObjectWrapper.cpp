@@ -9,10 +9,12 @@
 #include "jsapi.h"  // JS_GetProperty, JS::Call, JS_NewPlainObject, JS_DefineProperty
 
 #include "builtin/ModuleObject.h"     // js::ModuleObject
+#include "js/CallAndConstruct.h"      // JS::Call
 #include "js/CallArgs.h"              // JS::CallArgs
 #include "js/CallNonGenericMethod.h"  // CallNonGenericMethod
 #include "js/Class.h"                 // JSClass, JSCLASS_*
 #include "js/ErrorReport.h"           // JS_ReportErrorASCII
+#include "js/PropertyAndElement.h"    // JS_GetProperty
 #include "js/PropertySpec.h"  // JSPropertySpec, JS_PSG, JS_PS_END, JSFunctionSpec, JS_FN, JS_FN_END
 #include "js/RootingAPI.h"    // JS::Rooted, JS::Handle, JS::MutableHandle
 #include "js/Value.h"         // JS::Value

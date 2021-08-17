@@ -11,6 +11,7 @@
 
 #include "NamespaceImports.h"
 
+#include "js/MapAndSet.h"
 #include "js/Modules.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/SourceText.h"
