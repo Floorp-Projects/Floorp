@@ -265,6 +265,9 @@ public class SessionAccessibility {
                     // FAKE_GRANULARITY_READ_TITLE = -2
                     // FAKE_GRANULARITY_STOP_SPEECH = -3
                     // FAKE_GRANULARITY_CHANGE_SHIFTER = -4
+                    if (arguments == null) {
+                        return false;
+                    }
                     final int granularity = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
                     if (granularity <= BRAILLE_CLICK_BASE_INDEX) {
                         // XXX: Use click offset to update caret position in editables (BRAILLE_CLICK_BASE_INDEX - granularity).
@@ -304,6 +307,9 @@ public class SessionAccessibility {
                     nativeProvider.paste(virtualViewId);
                     return true;
                 case AccessibilityNodeInfo.ACTION_SET_TEXT:
+                    if (arguments == null) {
+                        return false;
+                    }
                     final String value = arguments.getString(Build.VERSION.SDK_INT >= 21
                             ? AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE
                             : ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE);
