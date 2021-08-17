@@ -1590,7 +1590,7 @@ void TextServicesDocument::ClearDidSkip(
 bool TextServicesDocument::HasSameBlockNodeParent(Text& aTextNode1,
                                                   Text& aTextNode2) {
   nsIContent* container1 = aTextNode1.GetParent();
-  nsIContent* container2 = aTextNode1.GetParent();
+  nsIContent* container2 = aTextNode2.GetParent();
 
   if (container1 == container2) {
     return true;
