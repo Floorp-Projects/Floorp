@@ -1241,6 +1241,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         }
     }
 
+    /**
+     * @see nu.validator.htmlparser.common.TokenHandler#zeroOrReplacementCharacter()
+     */
+    public void zeroOrReplacementCharacter() throws SAXException {
+        zeroOriginatingReplacementCharacter();
+    }
+
     public final void eof() throws SAXException {
         flushCharacters();
         // Note: Can't attach error messages to EOF in C++ yet
