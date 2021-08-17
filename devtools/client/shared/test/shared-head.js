@@ -411,6 +411,8 @@ var addTab = async function(url, options = {}) {
 
   if (waitForLoad) {
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    // Waiting for presShell helps with test timeouts in webrender platforms.
+    await waitForPresShell(tab.linkedBrowser);
     info("Tab added and finished loading");
   } else {
     info("Tab added");

@@ -19,7 +19,6 @@ const TEST_URL =
 // logic. We expect devtools.selfxss.count to force shortcut_disabled to false.
 add_task(async function() {
   const tab = await addTab(TEST_URL);
-  await waitForPresShell(tab.linkedBrowser);
   await new Promise(done => waitForFocus(done));
 
   // With the shortcut initially disabled and the selfxss pref at 0, we expect
