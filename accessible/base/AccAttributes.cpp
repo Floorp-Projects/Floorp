@@ -46,3 +46,9 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
         StyleInfo::FormatColor(val.mValue, aValueString);
       });
 }
+
+void AccAttributes::Update(AccAttributes* aOther) {
+  for (auto entry : *aOther) {
+    mData.InsertOrUpdate(entry.mName, *entry.mValue);
+  }
+}

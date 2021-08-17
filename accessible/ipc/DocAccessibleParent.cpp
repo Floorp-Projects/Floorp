@@ -472,6 +472,22 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
+    const uint8_t& aUpdateType, nsTArray<CacheData>&& aData,
+    const bool& aFinal) {
+  for (auto& entry : aData) {
+    RemoteAccessible* remote = GetAccessible(entry.ID());
+    if (!remote) {
+      MOZ_ASSERT_UNREACHABLE("No remote found!");
+      continue;
+    }
+
+    remote->ApplyCache(aUpdateType, entry.Fields());
+  }
+
+  return IPC_OK();
+}
+
 #if !defined(XP_WIN)
 mozilla::ipc::IPCResult DocAccessibleParent::RecvAnnouncementEvent(
     const uint64_t& aID, const nsString& aAnnouncement,
