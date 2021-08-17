@@ -8,6 +8,7 @@
 
 #include "Common.h"
 #include "jsapi.h"
+#include "js/String.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"

@@ -8,6 +8,7 @@
 #define mozilla_dom_AtomList_h
 
 #include "jsapi.h"
+#include "js/Context.h"
 #include "mozilla/dom/GeneratedAtomList.h"
 
 namespace mozilla {

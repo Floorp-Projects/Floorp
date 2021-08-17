@@ -7,6 +7,7 @@
 #include "TelemetryCommon.h"
 
 #include <cstring>
+#include "js/String.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "nsComponentManagerUtils.h"

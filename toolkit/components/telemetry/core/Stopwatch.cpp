@@ -9,6 +9,8 @@
 #include "TelemetryHistogram.h"
 #include "TelemetryUserInteraction.h"
 
+#include "js/MapAndSet.h"
+#include "js/WeakMap.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ClearOnShutdown.h"

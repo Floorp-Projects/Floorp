@@ -8,6 +8,7 @@
 #define DOM_BASE_JSEXECUTIONCONTEXT_H_
 
 #include "js/GCVector.h"
+#include "js/OffThreadScriptCompilation.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "jsapi.h"

@@ -27,6 +27,7 @@
 #include "nsError.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsNetCID.h"
+#include "js/RealmIterators.h"
 #include "js/Wrapper.h"
 
 #include "mozilla/dom/BlobURLProtocolHandler.h"

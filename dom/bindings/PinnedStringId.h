@@ -10,6 +10,7 @@
 #include "js/GCAnnotations.h"
 #include "js/Id.h"
 #include "js/RootingAPI.h"
+#include "js/String.h"
 #include "jsapi.h"
 
 class JSString;
