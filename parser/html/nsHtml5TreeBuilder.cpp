@@ -544,6 +544,10 @@ void nsHtml5TreeBuilder::zeroOriginatingReplacementCharacter() {
   }
 }
 
+void nsHtml5TreeBuilder::zeroOrReplacementCharacter() {
+  zeroOriginatingReplacementCharacter();
+}
+
 void nsHtml5TreeBuilder::eof() {
   flushCharacters();
   for (;;) {

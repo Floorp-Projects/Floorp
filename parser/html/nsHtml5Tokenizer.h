@@ -440,6 +440,7 @@ class nsHtml5Tokenizer {
  private:
   void emitCarriageReturn(char16_t* buf, int32_t pos);
   void emitReplacementCharacter(char16_t* buf, int32_t pos);
+  void maybeEmitReplacementCharacter(char16_t* buf, int32_t pos);
   void emitPlaintextReplacementCharacter(char16_t* buf, int32_t pos);
   void setAdditionalAndRememberAmpersandLocation(char16_t add);
   void bogusDoctype();
