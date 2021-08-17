@@ -620,13 +620,8 @@ WindowRenderer* PuppetWidget::GetWindowRenderer() {
 
 bool PuppetWidget::CreateRemoteLayerManager(
     const std::function<bool(LayerManager*)>& aInitializeFunc) {
-  RefPtr<LayerManager> lm;
+  RefPtr<LayerManager> lm = new WebRenderLayerManager(this);
   MOZ_ASSERT(mBrowserChild);
-  if (mBrowserChild->GetCompositorOptions().UseWebRender()) {
-    lm = new WebRenderLayerManager(this);
-  } else {
-    lm = new ClientLayerManager(this);
-  }
 
   if (!aInitializeFunc(lm)) {
     return false;
