@@ -1,4 +1,4 @@
-// |jit-test| --wasm-relaxed-simd; skip-if: !wasmSimdEnabled()
+// |jit-test| --wasm-relaxed-simd; skip-if: !wasmRelaxedSimdEnabled()
 
 // Experimental opcodes.  We have no text parsing support for these yet.  The
 // tests will be cleaned up and moved into ad-hack.js if the opcodes are
