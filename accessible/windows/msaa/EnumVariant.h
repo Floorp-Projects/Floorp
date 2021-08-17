@@ -20,7 +20,7 @@ class ChildrenEnumVariant final : public IEnumVARIANT {
  public:
   explicit ChildrenEnumVariant(MsaaAccessible* aAnchor)
       : mAnchorMsaa(aAnchor),
-        mCurAcc(mAnchorMsaa->LocalAcc()->LocalChildAt(0)),
+        mCurAcc(mAnchorMsaa->Acc()->ChildAt(0)),
         mCurIndex(0) {}
 
   // IUnknown
@@ -52,7 +52,7 @@ class ChildrenEnumVariant final : public IEnumVARIANT {
 
  protected:
   RefPtr<MsaaAccessible> mAnchorMsaa;
-  LocalAccessible* mCurAcc;
+  Accessible* mCurAcc;
   uint32_t mCurIndex;
 };
 

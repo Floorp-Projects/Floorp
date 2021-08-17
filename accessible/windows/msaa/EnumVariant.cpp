@@ -24,9 +24,10 @@ ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
 
   *aCountFetched = 0;
 
-  AccessibleWrap* anchor = mAnchorMsaa->LocalAcc();
-  if (!anchor || anchor->LocalChildAt(mCurIndex) != mCurAcc)
+  Accessible* anchor = mAnchorMsaa->Acc();
+  if (!anchor || anchor->ChildAt(mCurIndex) != mCurAcc) {
     return CO_E_OBJNOTCONNECTED;
+  }
 
   ULONG countFetched = 0;
   while (mCurAcc && countFetched < aCount) {
@@ -35,7 +36,7 @@ ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
     IDispatch* accNative = MsaaAccessible::NativeAccessible(mCurAcc);
 
     ++mCurIndex;
-    mCurAcc = anchor->LocalChildAt(mCurIndex);
+    mCurAcc = anchor->ChildAt(mCurIndex);
 
     // Don't output the accessible and count it as having been fetched unless
     // it is non-null
@@ -56,23 +57,24 @@ ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
 
 STDMETHODIMP
 ChildrenEnumVariant::Skip(ULONG aCount) {
-  AccessibleWrap* anchor = mAnchorMsaa->LocalAcc();
-  if (!anchor || anchor->LocalChildAt(mCurIndex) != mCurAcc)
+  Accessible* anchor = mAnchorMsaa->Acc();
+  if (!anchor || anchor->ChildAt(mCurIndex) != mCurAcc) {
     return CO_E_OBJNOTCONNECTED;
+  }
 
   mCurIndex += aCount;
-  mCurAcc = anchor->LocalChildAt(mCurIndex);
+  mCurAcc = anchor->ChildAt(mCurIndex);
 
   return mCurAcc ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP
 ChildrenEnumVariant::Reset() {
-  AccessibleWrap* anchor = mAnchorMsaa->LocalAcc();
+  Accessible* anchor = mAnchorMsaa->Acc();
   if (!anchor) return CO_E_OBJNOTCONNECTED;
 
   mCurIndex = 0;
-  mCurAcc = anchor->LocalChildAt(0);
+  mCurAcc = anchor->ChildAt(0);
 
   return S_OK;
 }
