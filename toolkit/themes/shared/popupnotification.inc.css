@@ -216,5 +216,5 @@ popupnotification {
 
 .popup-notification-learnmore-link {
   text-decoration: underline;
-  margin-block: 0 8px;
+  margin-block: 4px 0;
 }
