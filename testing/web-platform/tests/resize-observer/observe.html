@@ -130,24 +130,6 @@ function test5() {
   img.style.height = "15px";
   img.src = "resources/image.png";
 
-  let helper = new ResizeTestHelper("test5: observe img",[
-    {
-      setup: observer => {
-        observer.observe(img);
-      },
-      notify: entries => {
-      }
-    },
-    {
-      setup: observer => {
-        img.style.width = "15.5px";
-      },
-      notify: entries => {
-        assert_equals(entries.length, 1);
-        assert_equals(entries[0].contentRect.width, 15.5);
-      }
-    }
-  ]);
   return img.decode().then(() => {
     return new Promise(resolve => {
       requestAnimationFrame(() => {
@@ -155,10 +137,31 @@ function test5() {
         resolve();
       });
     });
-  }).catch(error => {
-    assert_unreached("decode image failed");
   }).then(() => {
+    let helper = new ResizeTestHelper("test5: observe img",[
+      {
+        setup: observer => {
+          observer.observe(img);
+        },
+        notify: entries => {
+        }
+      },
+      {
+        setup: observer => {
+          img.style.width = "15.5px";
+        },
+        notify: entries => {
+          assert_equals(entries.length, 1);
+          assert_equals(entries[0].contentRect.width, 15.5);
+        }
+      }
+    ]);
     return helper.start(() => img.remove());
+  }, () => {
+    // dummy test for dumping the error message.
+    test(_ => {
+      assert_unreached("decode image failed");
+    }, "test5: observe img");
   });
 }
 
