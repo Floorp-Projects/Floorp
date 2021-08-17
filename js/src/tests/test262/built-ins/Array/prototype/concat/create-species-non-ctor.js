@@ -28,6 +28,6 @@ a.constructor[Symbol.species] = parseInt;
 
 assert.throws(TypeError, function() {
   a.concat();
-});
+}, 'a.concat() throws a TypeError exception');
 
 reportCompare(0, 0);

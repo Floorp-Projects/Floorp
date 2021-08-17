@@ -29,6 +29,6 @@ var obj = {
 };
 assert.throws(Test262Error, function() {
   Array.from(obj);
-});
+}, 'Array.from(obj) throws a Test262Error exception');
 
 reportCompare(0, 0);

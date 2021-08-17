@@ -19,6 +19,6 @@ Object.defineProperty(items, Symbol.iterator, {
 
 assert.throws(Test262Error, function() {
   Array.from(items);
-});
+}, 'Array.from(items) throws a Test262Error exception');
 
 reportCompare(0, 0);

@@ -14,9 +14,11 @@ try {
   x.length = 4294967296;
   throw new Test262Error('#1.1: x = []; x.length = 4294967296 throw RangeError. Actual: x.length === ' + (x.length));
 } catch (e) {
-  if ((e instanceof RangeError) !== true) {
-    throw new Test262Error('#1.2: x = []; x.length = 4294967296 throw RangeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof RangeError,
+    true,
+    'The result of evaluating (e instanceof RangeError) is expected to be true'
+  );
 }
 
 //CHECK#2
@@ -25,9 +27,11 @@ try {
   x.length = -1;
   throw new Test262Error('#2.1: x = []; x.length = -1 throw RangeError. Actual: x.length === ' + (x.length));
 } catch (e) {
-  if ((e instanceof RangeError) !== true) {
-    throw new Test262Error('#2.2: x = []; x.length = -1 throw RangeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof RangeError,
+    true,
+    'The result of evaluating (e instanceof RangeError) is expected to be true'
+  );
 }
 
 //CHECK#3
@@ -36,9 +40,11 @@ try {
   x.length = 1.5;
   throw new Test262Error('#3.1: x = []; x.length = 1.5 throw RangeError. Actual: x.length === ' + (x.length));
 } catch (e) {
-  if ((e instanceof RangeError) !== true) {
-    throw new Test262Error('#3.2: x = []; x.length = 1.5 throw RangeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof RangeError,
+    true,
+    'The result of evaluating (e instanceof RangeError) is expected to be true'
+  );
 }
 
 reportCompare(0, 0);

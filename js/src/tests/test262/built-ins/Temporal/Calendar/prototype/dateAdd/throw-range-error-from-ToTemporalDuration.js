@@ -14,6 +14,6 @@ let cal = new Temporal.Calendar("iso8601");
 
 assert.throws(RangeError,
     () => cal.dateAdd("2020-02-03", "invalid duration string"),
-    "Throw by ToTemporalDuration");
+    'cal.dateAdd("2020-02-03", "invalid duration string") throws a RangeError exception');
 
 reportCompare(0, 0);

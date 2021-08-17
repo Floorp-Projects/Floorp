@@ -1,5 +1,9 @@
-commit 86e23998e37e2f1d8107afa51d7be355f3f65cca
-Author: Frank Tang <ftang@chromium.org>
-Date:   Thu Aug 5 15:57:57 2021 -0700
+commit 45a913c057892bdd26f7bc06a59a0c7420f2d3ec
+Author: Philip Chimento <pchimento@igalia.com>
+Date:   Wed Aug 11 12:31:23 2021 -0700
 
-    Add more tests
+    Add branding tests from Temporal (#3138)
+    
+    Closes: #3137
+    
+    Co-authored-by: Ms2ger <Ms2ger@igalia.com>

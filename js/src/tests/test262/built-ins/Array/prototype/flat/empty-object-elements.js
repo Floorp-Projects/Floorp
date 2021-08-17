@@ -11,14 +11,14 @@ features: [Array.prototype.flat]
 var a = {},
   b = {};
 
-assert.compareArray([a].flat(), [a]);
-assert.compareArray([a, [b]].flat(), [a, b]);
+assert.compareArray([a].flat(), [a], '[a].flat() must return [a]');
+assert.compareArray([a, [b]].flat(), [a, b], '[a, [b]].flat() must return [a, b]');
 assert.compareArray([
   [a], b
-].flat(), [a, b]);
+].flat(), [a, b], '[ [a], b ].flat() must return [a, b]');
 assert.compareArray([
   [a],
   [b]
-].flat(), [a, b]);
+].flat(), [a, b], '[ [a], [b] ].flat() must return [a, b]');
 
 reportCompare(0, 0);

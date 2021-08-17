@@ -33,8 +33,8 @@ o.revoke();
 
 assert.throws(TypeError, function() {
   Array.prototype.concat.call(o.proxy);
-});
+}, 'Array.prototype.concat.call(o.proxy) throws a TypeError exception');
 
-assert.sameValue(callCount, 0, '`constructor` property not accessed');
+assert.sameValue(callCount, 0, 'The value of callCount is expected to be 0');
 
 reportCompare(0, 0);

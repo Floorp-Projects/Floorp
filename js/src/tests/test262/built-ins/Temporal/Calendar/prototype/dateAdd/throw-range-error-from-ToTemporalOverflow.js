@@ -13,6 +13,6 @@ let cal = new Temporal.Calendar("iso8601");
 
 assert.throws(RangeError,
     () => cal.dateAdd("2020-02-29", "PT1M", {overflow: "bad value"}),
-    "Bad value in overflow option should throw RangeError");
+    'cal.dateAdd("2020-02-29", "PT1M", {overflow: "bad value"}) throws a RangeError exception');
 
 reportCompare(0, 0);

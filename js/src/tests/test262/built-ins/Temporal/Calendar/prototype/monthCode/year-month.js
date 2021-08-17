@@ -13,6 +13,10 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let yearMonth = new Temporal.PlainYearMonth(1999, 6);
-assert.sameValue("M06", cal.monthCode(yearMonth));
+assert.sameValue(
+  cal.monthCode(yearMonth),
+  "M06",
+  'cal.monthCode(new Temporal.PlainYearMonth(1999, 6)) must return "M06"'
+);
 
 reportCompare(0, 0);

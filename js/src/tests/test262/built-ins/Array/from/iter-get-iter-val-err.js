@@ -14,14 +14,14 @@ info: |
 features: [Symbol.iterator]
 ---*/
 
-var items = {};
+var itemsPoisonedIteratorValue = {};
 var poisonedValue = {};
 Object.defineProperty(poisonedValue, 'value', {
   get: function() {
     throw new Test262Error();
   }
 });
-items[Symbol.iterator] = function() {
+itemsPoisonedIteratorValue[Symbol.iterator] = function() {
   return {
     next: function() {
       return poisonedValue;
@@ -30,7 +30,7 @@ items[Symbol.iterator] = function() {
 };
 
 assert.throws(Test262Error, function() {
-  Array.from(items);
-});
+  Array.from(itemsPoisonedIteratorValue);
+}, 'Array.from(itemsPoisonedIteratorValue) throws a Test262Error exception');
 
 reportCompare(0, 0);

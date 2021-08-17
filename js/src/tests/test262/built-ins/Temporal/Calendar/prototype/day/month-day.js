@@ -17,6 +17,6 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let monthDay = new Temporal.PlainMonthDay(7, 15);
-assert.sameValue(15, cal.day(monthDay));
+assert.sameValue(cal.day(monthDay), 15, 'cal.day(new Temporal.PlainMonthDay(7, 15)) must return 15');
 
 reportCompare(0, 0);

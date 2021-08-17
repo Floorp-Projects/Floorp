@@ -12,30 +12,47 @@ info: |
   5. Set options to ? GetOptionsObject(options).
   6. Let result be ? ISODateFromFields(fields, options).
   7. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-features: [Symbol, Temporal, arrow-function]
+features: [BigInt, Symbol, Temporal, arrow-function]
 ---*/
-let cal = new Temporal.Calendar("iso8601")
-
 // Check throw for first arg
-assert.throws(TypeError, () => cal.dateFromFields(),
-    "Temporal.Calendar.prototype.dateFromFields called on non-object");
-[undefined, true, false, 123, 456n, Symbol(), "string"].forEach(
-    function(fields) {
-      assert.throws(TypeError, () => cal.dateFromFields(fields),
-          "Temporal.Calendar.prototype.dateFromFields called on non-object");
-      assert.throws(TypeError, () => cal.dateFromFields(fields, undefined),
-          "Temporal.Calendar.prototype.dateFromFields called on non-object");
-      assert.throws(TypeError, () => cal.dateFromFields(fields, {overflow: "constrain"}),
-          "Temporal.Calendar.prototype.dateFromFields called on non-object");
-      assert.throws(TypeError, () => cal.dateFromFields(fields, {overflow: "reject"}),
-          "Temporal.Calendar.prototype.dateFromFields called on non-object");
-    });
+let cal = new Temporal.Calendar('iso8601');
+assert.throws(TypeError, () => cal.dateFromFields(), 'cal.dateFromFields() throws a TypeError exception');
 
-assert.throws(TypeError, () => cal.dateFromFields({month: 1, day: 17}),
-    "invalid_argument");
-assert.throws(TypeError, () => cal.dateFromFields({year: 2021, day: 17}),
-    "invalid_argument");
-assert.throws(TypeError, () => cal.dateFromFields({year: 2021, month: 12}),
-    "invalid_argument");
+[undefined, true, false, 123, 456n, Symbol(), 'string'].forEach(function(fields) {
+  assert.throws(
+    TypeError,
+    () => cal.dateFromFields(fields),
+    'cal.dateFromFields(fields) throws a TypeError exception'
+  );
+
+  assert.throws(
+    TypeError,
+    () => cal.dateFromFields(fields, undefined),
+    'cal.dateFromFields(fields, undefined) throws a TypeError exception'
+  );
+
+  assert.throws(TypeError, () => cal.dateFromFields(fields, {
+    overflow: 'constrain'
+  }), 'cal.dateFromFields(fields, {overflow: "constrain"}) throws a TypeError exception');
+
+  assert.throws(TypeError, () => cal.dateFromFields(fields, {
+    overflow: 'reject'
+  }), 'cal.dateFromFields(fields, {overflow: "reject"}) throws a TypeError exception');
+});
+
+assert.throws(TypeError, () => cal.dateFromFields({
+  month: 1,
+  day: 17
+}), 'cal.dateFromFields({month: 1, day: 17}) throws a TypeError exception');
+
+assert.throws(TypeError, () => cal.dateFromFields({
+  year: 2021,
+  day: 17
+}), 'cal.dateFromFields({year: 2021, day: 17}) throws a TypeError exception');
+
+assert.throws(TypeError, () => cal.dateFromFields({
+  year: 2021,
+  month: 12
+}), 'cal.dateFromFields({year: 2021, month: 12}) throws a TypeError exception');
 
 reportCompare(0, 0);

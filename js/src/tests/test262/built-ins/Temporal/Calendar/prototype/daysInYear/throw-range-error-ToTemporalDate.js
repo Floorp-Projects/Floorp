@@ -10,11 +10,11 @@ info: |
     not have an [[InitializedTemporalDate]] or [[InitializedTemporalYearMonth]]
     internal slot, then
     a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-features: [Temporal]
+features: [Temporal, arrow-function]
 ---*/
 let cal = new Temporal.Calendar("iso8601");
 
 assert.throws(RangeError, () => cal.daysInYear("invalid string"),
-    "Throw RangeError if temporalDateLike is invalid");
+    'cal.daysInYear("invalid string") throws a RangeError exception');
 
 reportCompare(0, 0);

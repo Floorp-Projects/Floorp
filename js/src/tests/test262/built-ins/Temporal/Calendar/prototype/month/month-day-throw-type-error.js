@@ -17,6 +17,6 @@ let cal = new Temporal.Calendar("iso8601");
 
 let monthDay = new Temporal.PlainMonthDay(12, 25);
 assert.throws(TypeError, () => cal.month(monthDay),
-    "Throw TypeError if temporalDateLike is a PlainMonthDay");
+    'cal.month(monthDay) throws a TypeError exception');
 
 reportCompare(0, 0);

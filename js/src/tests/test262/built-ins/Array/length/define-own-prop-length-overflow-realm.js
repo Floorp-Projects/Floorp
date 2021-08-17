@@ -18,6 +18,6 @@ var array = new OArray();
 
 assert.throws(RangeError, function() {
   array.length = 4294967296;
-});
+}, 'array.length = 4294967296 throws a RangeError exception');
 
 reportCompare(0, 0);

@@ -15,6 +15,6 @@ let cal = new Temporal.Calendar("iso8601");
 let badCal = { dateAdd: cal.dateAdd };
 assert.throws(TypeError,
     () => badCal.dateAdd("2020-02-29", new Temporal.Duration(1)),
-    "No [[InitializedTemporalCalendar]]");
+    'badCal.dateAdd("2020-02-29", new Temporal.Duration(1)) throws a TypeError exception');
 
 reportCompare(0, 0);
