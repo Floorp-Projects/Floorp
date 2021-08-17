@@ -191,6 +191,13 @@ function assertSnapshot(actual, expected) {
       "Should have a last interaction time greater than or equal to the expected last updated time"
     );
   }
+  if (expected.commonName) {
+    Assert.equal(
+      actual.commonName,
+      expected.commonName,
+      "Should have the Snapshot URL's common name."
+    );
+  }
   if (expected.removedAt) {
     Assert.greaterOrEqual(
       actual.removedAt.getTime(),
