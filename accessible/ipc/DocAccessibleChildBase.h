@@ -45,7 +45,7 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
    * Serializes a shown tree and sends it to the chrome process.
    */
   void InsertIntoIpcTree(LocalAccessible* aParent, LocalAccessible* aChild,
-                         uint32_t aIdxInParent);
+                         uint32_t aIdxInParent, bool aSuppressShowEvent);
   void ShowEvent(AccShowEvent* aShowEvent);
 
   virtual void ActorDestroy(ActorDestroyReason) override {
@@ -58,8 +58,11 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
   }
 
  protected:
-  static void SerializeTree(LocalAccessible* aRoot,
-                            nsTArray<AccessibleData>& aTree);
+  static void FlattenTree(LocalAccessible* aRoot,
+                          nsTArray<LocalAccessible*>& aTree);
+
+  static void SerializeTree(nsTArray<LocalAccessible*>& aTree,
+                            nsTArray<AccessibleData>& aData);
 
   virtual void MaybeSendShowEvent(ShowEventData& aData, bool aFromUser) {
     Unused << SendShowEvent(aData, aFromUser);

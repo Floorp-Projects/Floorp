@@ -14,69 +14,74 @@ namespace mozilla {
 namespace a11y {
 
 /* static */
-void DocAccessibleChildBase::SerializeTree(LocalAccessible* aRoot,
-                                           nsTArray<AccessibleData>& aTree) {
-  uint64_t id = reinterpret_cast<uint64_t>(aRoot->UniqueID());
-#if defined(XP_WIN)
-  int32_t msaaId = StaticPrefs::accessibility_cache_enabled_AtStartup()
-                       ? 0
-                       : MsaaAccessible::GetChildIDFor(aRoot);
-#endif
-  a11y::role role = aRoot->Role();
-  uint32_t childCount = aRoot->ChildCount();
+void DocAccessibleChildBase::FlattenTree(LocalAccessible* aRoot,
+                                         nsTArray<LocalAccessible*>& aTree) {
+  MOZ_ASSERT(!aRoot->IsDoc(), "documents shouldn't be serialized");
 
+  aTree.AppendElement(aRoot);
   // OuterDocAccessibles are special because we don't want to serialize the
   // child doc here, we'll call PDocAccessibleConstructor in
   // NotificationController.
-  MOZ_ASSERT(!aRoot->IsDoc(), "documents shouldn't be serialized");
-  if (aRoot->IsOuterDoc()) {
-    childCount = 0;
-  }
-
-  uint32_t genericTypes = aRoot->mGenericTypes;
-  if (aRoot->ARIAHasNumericValue()) {
-    // XXX: We need to do this because this requires a state check.
-    genericTypes |= eNumericValue;
-  }
-  if (aRoot->ActionCount()) {
-    genericTypes |= eActionable;
-  }
-
-#if defined(XP_WIN)
-  aTree.AppendElement(AccessibleData(
-      id, msaaId, role, childCount, static_cast<AccType>(aRoot->mType),
-      static_cast<AccGenericType>(genericTypes), aRoot->mRoleMapEntryIndex));
-#else
-  aTree.AppendElement(AccessibleData(
-      id, role, childCount, static_cast<AccType>(aRoot->mType),
-      static_cast<AccGenericType>(genericTypes), aRoot->mRoleMapEntryIndex));
-#endif
+  uint32_t childCount = aRoot->IsOuterDoc() ? 0 : aRoot->ChildCount();
 
   for (uint32_t i = 0; i < childCount; i++) {
-    SerializeTree(aRoot->LocalChildAt(i), aTree);
+    FlattenTree(aRoot->LocalChildAt(i), aTree);
+  }
+}
+
+/* static */
+void DocAccessibleChildBase::SerializeTree(nsTArray<LocalAccessible*>& aTree,
+                                           nsTArray<AccessibleData>& aData) {
+  for (LocalAccessible* acc : aTree) {
+    uint64_t id = reinterpret_cast<uint64_t>(acc->UniqueID());
+#if defined(XP_WIN)
+    int32_t msaaId = StaticPrefs::accessibility_cache_enabled_AtStartup()
+                         ? 0
+                         : MsaaAccessible::GetChildIDFor(acc);
+#endif
+    a11y::role role = acc->Role();
+    uint32_t childCount = acc->IsOuterDoc() ? 0 : acc->ChildCount();
+
+    uint32_t genericTypes = acc->mGenericTypes;
+    if (acc->ARIAHasNumericValue()) {
+      // XXX: We need to do this because this requires a state check.
+      genericTypes |= eNumericValue;
+    }
+    if (acc->ActionCount()) {
+      genericTypes |= eActionable;
+    }
+
+#if defined(XP_WIN)
+    aData.AppendElement(AccessibleData(
+        id, msaaId, role, childCount, static_cast<AccType>(acc->mType),
+        static_cast<AccGenericType>(genericTypes), acc->mRoleMapEntryIndex));
+#else
+    aData.AppendElement(AccessibleData(
+        id, role, childCount, static_cast<AccType>(acc->mType),
+        static_cast<AccGenericType>(genericTypes), acc->mRoleMapEntryIndex));
+#endif
   }
 }
 
 void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
                                                LocalAccessible* aChild,
-                                               uint32_t aIdxInParent) {
+                                               uint32_t aIdxInParent,
+                                               bool aSuppressShowEvent) {
   uint64_t parentID =
       aParent->IsDoc() ? 0 : reinterpret_cast<uint64_t>(aParent->UniqueID());
-  nsTArray<AccessibleData> shownTree;
-  ShowEventData data(parentID, aIdxInParent, shownTree, true);
-  SerializeTree(aChild, data.NewTree());
+  nsTArray<LocalAccessible*> shownTree;
+  FlattenTree(aChild, shownTree);
+  ShowEventData data(parentID, aIdxInParent,
+                     nsTArray<AccessibleData>(shownTree.Length()),
+                     aSuppressShowEvent);
+  SerializeTree(shownTree, data.NewTree());
   MaybeSendShowEvent(data, false);
 }
 
 void DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent) {
-  LocalAccessible* parent = aShowEvent->LocalParent();
-  uint64_t parentID =
-      parent->IsDoc() ? 0 : reinterpret_cast<uint64_t>(parent->UniqueID());
-  uint32_t idxInParent = aShowEvent->GetAccessible()->IndexInParent();
-  nsTArray<AccessibleData> shownTree;
-  ShowEventData data(parentID, idxInParent, shownTree, false);
-  SerializeTree(aShowEvent->GetAccessible(), data.NewTree());
-  MaybeSendShowEvent(data, aShowEvent->IsFromUserInput());
+  LocalAccessible* child = aShowEvent->GetAccessible();
+  InsertIntoIpcTree(aShowEvent->LocalParent(), child, child->IndexInParent(),
+                    false);
 }
 
 }  // namespace a11y
