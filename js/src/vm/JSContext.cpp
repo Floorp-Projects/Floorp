@@ -37,7 +37,6 @@
 #include "gc/Marking.h"
 #include "gc/PublicIterators.h"
 #include "irregexp/RegExpAPI.h"
-#include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
 #include "jit/Simulator.h"
 #include "js/CallAndConstruct.h"  // JS::Call
