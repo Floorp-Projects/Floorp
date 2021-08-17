@@ -30,7 +30,7 @@ importScripts(
 // itself.
 
 /* eslint camelcase: 0*/
-const { getCompactSymbolTable } = wasm_bindgen;
+const { getCompactSymbolTable, queryAPI } = wasm_bindgen;
 
 // Read parts of an open OS.File instance into the Uint8Array dataBuf.
 // This reads destBuf.byteLength bytes at offset offset.
@@ -181,7 +181,7 @@ class FileAndPathHelper {
 /** @param {MessageEvent<SymbolicationWorkerInitialMessage>} e */
 onmessage = async e => {
   try {
-    const { debugName, breakpadId, libInfoMap, objdirs, module } = e.data;
+    const { request, libInfoMap, objdirs, module } = e.data;
 
     if (!(module instanceof WebAssembly.Module)) {
       throw new Error("invalid WebAssembly module");
@@ -191,11 +191,30 @@ onmessage = async e => {
     await wasm_bindgen(module);
 
     const helper = new FileAndPathHelper(libInfoMap, objdirs);
-    const result = await getCompactSymbolTable(debugName, breakpadId, helper);
-    postMessage(
-      { result },
-      result.map(r => r.buffer)
-    );
+
+    switch (request.type) {
+      case "GET_SYMBOL_TABLE": {
+        const { debugName, breakpadId } = request;
+        const result = await getCompactSymbolTable(
+          debugName,
+          breakpadId,
+          helper
+        );
+        postMessage(
+          { result },
+          result.map(r => r.buffer)
+        );
+        break;
+      }
+      case "QUERY_SYMBOLICATION_API": {
+        const { path, requestJson } = request;
+        const result = await queryAPI(path, requestJson, helper);
+        postMessage({ result });
+        break;
+      }
+      default:
+        throw new Error(`Unexpected request type ${request.type}`);
+    }
   } catch (error) {
     postMessage({ error: createPlainErrorObject(error) });
   }

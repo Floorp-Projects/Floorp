@@ -167,6 +167,7 @@ export type GetSymbolTableCallback = (
 
 export interface SymbolicationService {
   getSymbolTable: GetSymbolTableCallback;
+  querySymbolicationApi: (path: string, requestJson: string) => Promise<string>;
 }
 
 export type ReceiveProfile = (
@@ -511,13 +512,10 @@ export type LibInfoMapValue = {
   debugPath: string;
   breakpadId: string;
   arch: string;
-}
+};
 
 export type SymbolicationWorkerInitialMessage = {
-  // The debugName of the binary whose symbols should be obtained.
-  debugName: string;
-  // The breakpadId for the binary whose symbols should be obtained.
-  breakpadId: string;
+  request: SymbolicationWorkerRequest;
   // A map that allows looking up library info based on debugName + breakpadId.
   // This is rather redundant at the moment, but it will make more sense once
   // we can request symbols for multiple different libraries with one worker
@@ -529,6 +527,22 @@ export type SymbolicationWorkerInitialMessage = {
   // The profiler-get-symbols wasm module.
   module: WebAssembly.Module;
 };
+
+export type SymbolicationWorkerRequest =
+  | {
+      type: "GET_SYMBOL_TABLE";
+      // The debugName of the binary whose symbols should be obtained.
+      debugName: string;
+      // The breakpadId for the binary whose symbols should be obtained.
+      breakpadId: string;
+    }
+  | {
+      type: "QUERY_SYMBOLICATION_API";
+      // The API entry path, such as "/symbolicate/v5".
+      path: string;
+      // The payload JSON, as a string.
+      requestJson: string;
+    };
 
 export type SymbolicationWorkerError = {
   name: string;
