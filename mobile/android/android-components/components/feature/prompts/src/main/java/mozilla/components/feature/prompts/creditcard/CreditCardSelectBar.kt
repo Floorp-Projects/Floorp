@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.concept.SelectablePromptView
-import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFact
 import mozilla.components.support.ktx.android.view.hideKeyboard
 
 /**
@@ -40,10 +39,7 @@ class CreditCardSelectBar @JvmOverloads constructor(
     private var headerTextStyle: Int? = null
 
     private val listAdapter = CreditCardsAdapter { creditCard ->
-        listener?.apply {
-            onOptionSelect(creditCard)
-            emitSuccessfulCreditCardAutofillFact()
-        }
+        listener?.onOptionSelect(creditCard)
     }
 
     override var listener: SelectablePromptView.Listener<CreditCard>? = null

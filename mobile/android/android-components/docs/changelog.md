@@ -113,7 +113,6 @@ permalink: /changelog/
 
 * **feature-prompts** **browser-storage-sync**
   * ⚠️ A new `isCreditCardAutofillEnabled` callback is available in `PromptFeature` and `GeckoCreditCardsAddressesStorageDelegate` to allow clients controlling whether credit cards should be autofilled or not. Default is false*
-  * ⚠️ Emit fact when a credit card is selected from the autofill prompt.
 
 * **service-pocket**
   * ⚠️ **This is a breaking change**: Rebuilt from the ground up to better support offering to clients Pocket recommended articles.
