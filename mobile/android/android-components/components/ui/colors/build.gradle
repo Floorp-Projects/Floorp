@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -18,10 +19,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_version
+    }
 }
 
 dependencies {
-    implementation Dependencies.androidx_compose_ui_graphics
+    implementation Dependencies.androidx_compose_ui
 }
 
 apply from: '../../../publish.gradle'
