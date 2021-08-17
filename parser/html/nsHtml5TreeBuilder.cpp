@@ -3202,8 +3202,9 @@ void nsHtml5TreeBuilder::endTagTemplateInHead() {
 int32_t
 nsHtml5TreeBuilder::findLastInTableScopeOrRootTemplateTbodyTheadTfoot() {
   for (int32_t i = currentPtr; i > 0; i--) {
-    if (stack[i]->getGroup() == nsHtml5TreeBuilder::TBODY_OR_THEAD_OR_TFOOT ||
-        stack[i]->getGroup() == nsHtml5TreeBuilder::TEMPLATE) {
+    if (stack[i]->ns == kNameSpaceID_XHTML &&
+        (stack[i]->getGroup() == nsHtml5TreeBuilder::TBODY_OR_THEAD_OR_TFOOT ||
+         stack[i]->getGroup() == nsHtml5TreeBuilder::TEMPLATE)) {
       return i;
     }
   }
@@ -3924,7 +3925,7 @@ int32_t nsHtml5TreeBuilder::findLastOrRoot(nsAtom* name) {
 
 int32_t nsHtml5TreeBuilder::findLastOrRoot(int32_t group) {
   for (int32_t i = currentPtr; i > 0; i--) {
-    if (stack[i]->getGroup() == group) {
+    if (stack[i]->ns == kNameSpaceID_XHTML && stack[i]->getGroup() == group) {
       return i;
     }
   }
