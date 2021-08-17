@@ -6,9 +6,6 @@ print(BUGNUMBER + ": " + summary);
 if (typeof parseModule === "function") {
     parseModule("async function f() { await 3; }");
     parseModule("async function f() { await 3; }");
-    assertThrowsInstanceOf(() => parseModule("var await = 5;"), SyntaxError);
-    assertThrowsInstanceOf(() => parseModule("await;"), SyntaxError);
-    assertThrowsInstanceOf(() => parseModule("await 5;"), SyntaxError);
     assertThrowsInstanceOf(() => parseModule("function f() { await 5; }"), SyntaxError);
     assertThrowsInstanceOf(() => parseModule("() => { await 5; }"), SyntaxError);
     assertThrowsInstanceOf(() => parseModule("export var await;"), SyntaxError);

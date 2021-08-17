@@ -1212,57 +1212,7 @@ void ScriptLoader::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
   AutoJSAPI jsapi;
   MOZ_ASSERT(NS_FAILED(aResult));
   MOZ_ALWAYS_TRUE(jsapi.Init(aRequest->mDynamicPromise));
-  if (!JS::ContextOptionsRef(jsapi.cx()).topLevelAwait()) {
-    // This is used so that Top Level Await functionality can be turned off
-    // entirely. It will be removed in bug#1676612.
-    FinishDynamicImport_NoTLA(jsapi.cx(), aRequest, aResult);
-  } else {
-    // Path for when Top Level Await is enabled.
-    FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
-  }
-}
-
-// This is used so that Top Level Await functionality can be turned off
-// entirely. It will be removed in bug#1676612.
-void ScriptLoader::FinishDynamicImport_NoTLA(JSContext* aCx,
-                                             ModuleLoadRequest* aRequest,
-                                             nsresult aResult) {
-  LOG(("ScriptLoadRequest (%p): Finish dynamic import %x %d", aRequest,
-       unsigned(aResult), JS_IsExceptionPending(aCx)));
-
-  // Complete the dynamic import, report failures indicated by aResult or as a
-  // pending exception on the context.
-
-  JS::DynamicImportStatus status =
-      (NS_FAILED(aResult) || JS_IsExceptionPending(aCx))
-          ? JS::DynamicImportStatus::Failed
-          : JS::DynamicImportStatus::Ok;
-
-  if (NS_FAILED(aResult) &&
-      aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
-    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-    JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
-                           JSMSG_DYNAMIC_IMPORT_FAILED);
-  }
-
-  JS::Rooted<JS::Value> referencingScript(aCx,
-                                          aRequest->mDynamicReferencingPrivate);
-  JS::Rooted<JSString*> specifier(aCx, aRequest->mDynamicSpecifier);
-  JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
-
-  JS::Rooted<JSObject*> moduleRequest(aCx,
-                                      JS::CreateModuleRequest(aCx, specifier));
-  if (!moduleRequest) {
-    JS_ReportOutOfMemory(aCx);
-  }
-
-  JS::FinishDynamicModuleImport_NoTLA(aCx, status, referencingScript,
-                                      moduleRequest, promise);
-
-  // FinishDynamicModuleImport clears any pending exception.
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-
-  aRequest->ClearDynamicImport();
+  FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
 }
 
 void ScriptLoader::FinishDynamicImport(
@@ -3204,14 +3154,8 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
         JS_SetPendingException(cx, error);
         // For a dynamic import, the promise is rejected.  Otherwise an error
         // is either reported by AutoEntryScript.
-        if (!JS::ContextOptionsRef(cx).topLevelAwait()) {
-          if (request->IsDynamicImport()) {
-            FinishDynamicImport_NoTLA(cx, request, NS_OK);
-          }
-        } else {
-          if (request->IsDynamicImport()) {
-            FinishDynamicImport(cx, request, NS_OK, nullptr);
-          }
+        if (request->IsDynamicImport()) {
+          FinishDynamicImport(cx, request, NS_OK, nullptr);
         }
         return NS_OK;
       }
@@ -3243,32 +3187,25 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
         rv = NS_OK;
       }
 
-      if (!JS::ContextOptionsRef(cx).topLevelAwait()) {
-        if (request->IsDynamicImport()) {
-          FinishDynamicImport_NoTLA(cx, request, rv);
-        }
+      JS::Rooted<JSObject*> aEvaluationPromise(cx);
+      if (rval.isObject()) {
+        // If the user cancels the evaluation on an infinite loop, we need
+        // to skip this step. In that case, ModuleEvaluate will not return a
+        // promise, rval will be undefined. We should treat it as a failed
+        // evaluation, and reject appropriately.
+        aEvaluationPromise.set(&rval.toObject());
+      }
+      if (request->IsDynamicImport()) {
+        FinishDynamicImport(cx, request, rv, aEvaluationPromise);
       } else {
-        // Path for when Top Level Await is enabled
-        JS::Rooted<JSObject*> aEvaluationPromise(cx);
-        if (rval.isObject()) {
-          // If the user cancels the evaluation on an infinite loop, we need
-          // to skip this step. In that case, ModuleEvaluate will not return a
-          // promise, rval will be undefined. We should treat it as a failed
-          // evaluation, and reject appropriately.
-          aEvaluationPromise.set(&rval.toObject());
-        }
-        if (request->IsDynamicImport()) {
-          FinishDynamicImport(cx, request, rv, aEvaluationPromise);
-        } else {
-          // If this is not a dynamic import, and if the promise is rejected,
-          // the value is unwrapped from the promise value.
-          if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
-            LOG(("ScriptLoadRequest (%p):   evaluation failed on throw",
-                 aRequest));
-            // For a dynamic import, the promise is rejected.  Otherwise an
-            // error is either reported by AutoEntryScript.
-            rv = NS_OK;
-          }
+        // If this is not a dynamic import, and if the promise is rejected,
+        // the value is unwrapped from the promise value.
+        if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
+          LOG(("ScriptLoadRequest (%p):   evaluation failed on throw",
+               aRequest));
+          // For a dynamic import, the promise is rejected.  Otherwise an
+          // error is either reported by AutoEntryScript.
+          rv = NS_OK;
         }
       }
 

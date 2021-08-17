@@ -1,4 +1,4 @@
-// |jit-test| --enable-top-level-await;
+// |jit-test|
 // Exercise ModuleEvaluation() concrete method.
 
 load(libdir + "asserts.js");

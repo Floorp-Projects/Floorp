@@ -1,4 +1,4 @@
-// |jit-test| --enable-top-level-await; error: TypeError
+// |jit-test| error: TypeError
 
 r = parseModule(`
   for await (var x of this) {}

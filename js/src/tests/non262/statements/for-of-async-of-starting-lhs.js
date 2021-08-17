@@ -2,7 +2,6 @@ if (typeof getRealmConfiguration === "undefined") {
   var getRealmConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getRealmConfiguration;
 }
 
-const IsTopLevelAwaitEnabled = getRealmConfiguration().topLevelAwait;
 
 const AsyncFunction = async function(){}.constructor;
 
@@ -35,7 +34,7 @@ function assertNoSyntaxError(code) {
 function assertNoSyntaxErrorAsyncContext(code) {
   assertNoError(function () { AsyncFunction(code); }, "AsyncFunction:" + code);
 
-  if (typeof parseModule === "function" && IsTopLevelAwaitEnabled) {
+  if (typeof parseModule === "function") {
     assertNoError(function () { parseModule(code); }, "Module:" + code);
   }
 }

@@ -1,4 +1,4 @@
-// |jit-test| --enable-top-level-await;
+// |jit-test|
 // Test 'this' is undefined in modules.
 
 function parseAndEvaluate(source) {

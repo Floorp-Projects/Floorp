@@ -84,18 +84,6 @@ JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
       cx, evaluationPromise, referencingPrivate, moduleRequest, promise);
 }
 
-JS_PUBLIC_API bool JS::FinishDynamicModuleImport_NoTLA(
-    JSContext* cx, JS::DynamicImportStatus status,
-    Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
-    Handle<JSObject*> promise) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(referencingPrivate, promise);
-
-  return js::FinishDynamicModuleImport_NoTLA(cx, status, referencingPrivate,
-                                             moduleRequest, promise);
-}
-
 template <typename Unit>
 static JSObject* CompileModuleHelper(JSContext* cx,
                                      const JS::ReadOnlyCompileOptions& options,
