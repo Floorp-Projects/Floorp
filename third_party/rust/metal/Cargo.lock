@@ -438,12 +438,12 @@ dependencies = [
 
 [[package]]
 name = "metal"
-version = "0.22.0"
+version = "0.23.0"
 dependencies = [
  "bitflags",
  "block",
  "cocoa 0.24.0",
- "cocoa-foundation",
+ "core-graphics-types",
  "cty",
  "dispatch",
  "foreign-types",
