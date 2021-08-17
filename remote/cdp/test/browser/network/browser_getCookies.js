@@ -3,11 +3,12 @@
 
 "use strict";
 
-const SJS_PATH = "/browser/remote/cdp/test/browser/network/sjs-cookies.sjs";
-
 const DEFAULT_HOST = "http://example.org";
 const ALT_HOST = "http://example.net";
 const SECURE_HOST = "https://example.com";
+
+const BASE_PATH = "/browser/remote/cdp/test/browser/network";
+const SJS_PATH = `${BASE_PATH}/sjs-cookies.sjs`;
 
 const DEFAULT_URL = `${DEFAULT_HOST}${SJS_PATH}`;
 
@@ -63,6 +64,26 @@ add_task(async function allCookiesFromCurrentURL({ client }) {
     is(cookies.length, 2, "All cookies have been found");
     assertCookie(cookies[0], cookie1);
     assertCookie(cookies[1], cookie2);
+  } finally {
+    Services.cookies.removeAll();
+  }
+});
+
+add_task(async function allCookiesIncludingSubFrames({ client }) {
+  const GET_COOKIES_PAGE_URL = `${DEFAULT_HOST}${BASE_PATH}/doc_get_cookies_page.html`;
+
+  const { Network } = client;
+  await loadURL(GET_COOKIES_PAGE_URL);
+
+  const cookie_page = { name: "page", value: "mainpage", path: BASE_PATH };
+  const cookie_frame = { name: "frame", value: "subframe", path: BASE_PATH };
+
+  try {
+    const { cookies } = await Network.getCookies();
+    cookies.sort((a, b) => a.name.localeCompare(b.name));
+    is(cookies.length, 2, "All cookies have been found including subframe");
+    assertCookie(cookies[0], cookie_frame);
+    assertCookie(cookies[1], cookie_page);
   } finally {
     Services.cookies.removeAll();
   }
