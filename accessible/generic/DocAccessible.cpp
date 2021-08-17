@@ -1447,7 +1447,7 @@ void DocAccessible::DoInitialUpdate() {
     MOZ_ASSERT(ipcDoc);
     if (ipcDoc) {
       for (auto idx = 0U; idx < mChildren.Length(); idx++) {
-        ipcDoc->InsertIntoIpcTree(this, mChildren.ElementAt(idx), idx);
+        ipcDoc->InsertIntoIpcTree(this, mChildren.ElementAt(idx), idx, true);
       }
     }
   }
