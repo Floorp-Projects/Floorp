@@ -234,8 +234,35 @@ class LocalSymbolicationService {
     const module = await getWASMProfilerGetSymbolsModule();
     /** @type {SymbolicationWorkerInitialMessage} */
     const initialMessage = {
-      debugName,
-      breakpadId,
+      request: {
+        type: "GET_SYMBOL_TABLE",
+        debugName,
+        breakpadId,
+      },
+      libInfoMap: this._libInfoMap,
+      objdirs: this._objdirs,
+      module,
+    };
+    return getResultFromWorker(
+      "resource://devtools/client/performance-new/symbolication-worker.js",
+      initialMessage
+    );
+  }
+
+  /**
+   * @param {string} path
+   * @param {string} requestJson
+   * @returns {Promise<string>}
+   */
+  async querySymbolicationApi(path, requestJson) {
+    const module = await getWASMProfilerGetSymbolsModule();
+    /** @type {SymbolicationWorkerInitialMessage} */
+    const initialMessage = {
+      request: {
+        type: "QUERY_SYMBOLICATION_API",
+        path,
+        requestJson,
+      },
       libInfoMap: this._libInfoMap,
       objdirs: this._objdirs,
       module,
@@ -300,6 +327,15 @@ class LocalSymbolicationServiceWithRemoteSymbolTableFallback {
       }
       return getSymbolTableFromDebuggee(this._perfFront, lib.path, breakpadId);
     }
+  }
+
+  /**
+   * @param {string} path
+   * @param {string} requestJson
+   * @returns {Promise<string>}
+   */
+  async querySymbolicationApi(path, requestJson) {
+    return this._symbolicationService.querySymbolicationApi(path, requestJson);
   }
 }
 
