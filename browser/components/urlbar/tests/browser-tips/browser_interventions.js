@@ -117,6 +117,72 @@ add_task(async function multipleInterventionsInOneEngagement() {
   );
 });
 
+// Test the result of UrlbarProviderInterventions.isActive()
+// and whether or not the function calucates the score.
+add_task(async function testIsActive() {
+  const testData = [
+    {
+      description: "Test for search string that activates the intervention",
+      searchString: "firefox slow",
+      expectedActive: true,
+      expectedScoreCalculated: true,
+    },
+    {
+      description:
+        "Test for search string that does not activate the intervention",
+      searchString: "example slow",
+      expectedActive: false,
+      expectedScoreCalculated: true,
+    },
+    {
+      description: "Test for empty search string",
+      searchString: "",
+      expectedActive: false,
+      expectedScoreCalculated: false,
+    },
+    {
+      description: "Test for an URL",
+      searchString: "https://firefox/slow",
+      expectedActive: false,
+      expectedScoreCalculated: false,
+    },
+    {
+      description: "Test for a data URL",
+      searchString: "data:text/html,<div>firefox slow</div>",
+      expectedActive: false,
+      expectedScoreCalculated: false,
+    },
+    {
+      description: "Test for string like URL",
+      searchString: "firefox://slow",
+      expectedActive: false,
+      expectedScoreCalculated: false,
+    },
+  ];
+
+  for (const {
+    description,
+    searchString,
+    expectedActive,
+    expectedScoreCalculated,
+  } of testData) {
+    info(description);
+
+    // Set null to currentTip to know whether or not UrlbarProviderInterventions
+    // calculated the score.
+    UrlbarProviderInterventions.currentTip = null;
+
+    const isActive = UrlbarProviderInterventions.isActive({ searchString });
+    Assert.equal(isActive, expectedActive, "Result of isAcitive is correct");
+    const isScoreCalculated = UrlbarProviderInterventions.currentTip !== null;
+    Assert.equal(
+      isScoreCalculated,
+      expectedScoreCalculated,
+      "The score is calculated correctly"
+    );
+  }
+});
+
 add_task(async function tipsAreEnglishOnly() {
   // Test that Interventions are working in en-US.
   let result = (await awaitTip(SEARCH_STRINGS.REFRESH, window))[0];
