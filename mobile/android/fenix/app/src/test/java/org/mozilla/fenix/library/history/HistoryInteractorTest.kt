@@ -14,7 +14,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 class HistoryInteractorTest {
     private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
     val controller: HistoryController = mockk(relaxed = true)
-    val interactor = HistoryInteractor(controller)
+    val interactor = DefaultHistoryInteractor(controller)
 
     @Test
     fun onOpen() {

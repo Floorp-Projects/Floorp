@@ -101,7 +101,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             syncHistory = ::syncHistory,
             metrics = requireComponents.analytics.metrics
         )
-        historyInteractor = HistoryInteractor(
+        historyInteractor = DefaultHistoryInteractor(
             historyController
         )
         _historyView = HistoryView(
