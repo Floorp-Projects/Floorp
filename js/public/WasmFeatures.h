@@ -132,8 +132,7 @@
                /* lower case name    */ v128Relaxed,                          \
                /* compile predicate  */ WASM_RELAXED_SIMD_ENABLED,            \
                /* compiler predicate */ AnyCompilerAvailable(cx),             \
-               /* flag predicate     */ !IsFuzzingCranelift(cx) &&            \
-               js::jit::JitSupportsWasmSimd(),                                \
+               /* flag predicate     */ WasmSimdFlag(cx),                     \
                /* shell flag         */ "relaxed-simd",                       \
                /* preference name    */ "relaxed_simd")                       \
   EXPERIMENTAL(/* capitalized name   */ Memory64,                             \
