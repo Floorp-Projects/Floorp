@@ -185,7 +185,9 @@ class Network extends Domain {
    */
   async getCookies(options = {}) {
     // Bug 1605354 - Add support for options.urls
-    const urls = [this.session.target.url];
+    const urls = this.session.target.browsingContext
+      .getAllBrowsingContextsInSubtree()
+      .map(context => context.currentURI.spec);
 
     const cookies = [];
     for (let url of urls) {
@@ -209,7 +211,20 @@ class Network extends Domain {
           continue;
         }
 
-        cookies.push(_buildCookie(cookie));
+        const builtCookie = _buildCookie(cookie);
+        const duplicateCookie = cookies.some(value => {
+          return (
+            value.name === builtCookie.name &&
+            value.path === builtCookie.path &&
+            value.domain === builtCookie.domain
+          );
+        });
+
+        if (duplicateCookie) {
+          continue;
+        }
+
+        cookies.push(builtCookie);
       }
     }
 
