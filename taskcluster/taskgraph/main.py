@@ -40,21 +40,20 @@ def argument(*args, **kwargs):
     return decorator
 
 
-def show_taskgraph_labels(taskgraph):
-    for index in taskgraph.graph.visit_postorder():
-        print(taskgraph.tasks[index].label)
-
-
-def show_taskgraph_json(taskgraph):
-    print(
-        json.dumps(
-            taskgraph.to_json(), sort_keys=True, indent=2, separators=(",", ": ")
-        )
+def format_taskgraph_labels(taskgraph):
+    return "\n".join(
+        taskgraph.tasks[index].label for index in taskgraph.graph.visit_postorder()
     )
 
 
-def show_taskgraph_yaml(taskgraph):
-    print(yaml.safe_dump(taskgraph.to_json(), default_flow_style=False))
+def format_taskgraph_json(taskgraph):
+    return json.dumps(
+        taskgraph.to_json(), sort_keys=True, indent=2, separators=(",", ": ")
+    )
+
+
+def format_taskgraph_yaml(taskgraph):
+    return yaml.safe_dump(taskgraph.to_json(), default_flow_style=False)
 
 
 def get_filtered_taskgraph(taskgraph, tasksregex):
@@ -86,11 +85,40 @@ def get_filtered_taskgraph(taskgraph, tasksregex):
     return filtered_taskgraph
 
 
-SHOW_METHODS = {
-    "labels": show_taskgraph_labels,
-    "json": show_taskgraph_json,
-    "yaml": show_taskgraph_yaml,
+FORMAT_METHODS = {
+    "labels": format_taskgraph_labels,
+    "json": format_taskgraph_json,
+    "yaml": format_taskgraph_yaml,
 }
+
+
+def format_taskgraph(options):
+    import taskgraph
+    import taskgraph.parameters
+    import taskgraph.generator
+
+    if options["fast"]:
+        taskgraph.fast = True
+
+    try:
+        parameters = taskgraph.parameters.parameters_loader(
+            options["parameters"],
+            overrides={"target-kind": options.get("target_kind")},
+            strict=False,
+        )
+
+        tgg = taskgraph.generator.TaskGraphGenerator(
+            root_dir=options.get("root"), parameters=parameters
+        )
+
+        tg = getattr(tgg, options["graph_attr"])
+        tg = get_filtered_taskgraph(tg, options["tasks_regex"])
+
+        format_method = FORMAT_METHODS[options["format"] or "labels"]
+        return format_method(tg)
+    except Exception:
+        traceback.print_exc()
+        sys.exit(1)
 
 
 @command(
@@ -162,13 +190,24 @@ SHOW_METHODS = {
     action="store_false",
     default="true",
     help="do not remove tasks from the graph that are found in the "
-    "index (a.k.a. ptimize the graph)",
+    "index (a.k.a. optimize the graph)",
+)
+@argument(
+    "-o",
+    "--output-file",
+    default=None,
+    help="file path to store generated output.",
 )
 @argument(
     "--tasks-regex",
     "--tasks",
     default=None,
     help="only return tasks with labels matching this regular " "expression.",
+)
+@argument(
+    "--target-kind",
+    default=None,
+    help="only return tasks that are of the given kind, or their dependencies.",
 )
 @argument(
     "-F",
@@ -179,31 +218,12 @@ SHOW_METHODS = {
     help="enable fast task generation for local debugging.",
 )
 def show_taskgraph(options):
-    import taskgraph.parameters
-    import taskgraph.target_tasks
-    import taskgraph.generator
-    import taskgraph
+    out = format_taskgraph(options)
 
-    if options["fast"]:
-        taskgraph.fast = True
-
-    try:
-        parameters = taskgraph.parameters.parameters_loader(
-            options["parameters"], strict=False
-        )
-
-        tgg = taskgraph.generator.TaskGraphGenerator(
-            root_dir=options.get("root"), parameters=parameters
-        )
-
-        tg = getattr(tgg, options["graph_attr"])
-
-        show_method = SHOW_METHODS.get(options["format"] or "labels")
-        tg = get_filtered_taskgraph(tg, options["tasks_regex"])
-        show_method(tg)
-    except Exception:
-        traceback.print_exc()
-        sys.exit(1)
+    fh = options["output_file"]
+    if fh:
+        fh = open(fh, "w")
+    print(out, file=fh)
 
 
 @command("build-image", help="Build a Docker image")
