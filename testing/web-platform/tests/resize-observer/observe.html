@@ -164,43 +164,49 @@ function test5() {
 
 function test6() {
   let iframe = createAndAppendElement("iframe");
-  iframe.src = "./resources/iframe.html";
   iframe.width = "300px";
   iframe.height = "100px";
   iframe.style.display = "block";
 
+  let resolvePromise;
+  let promise = new Promise((resolve) => {
+    resolvePromise = resolve;
+  });
+  let test = async_test('test6: iframe notifications');
+  let testRequested = false;
+  test.add_cleanup(() => iframe.remove());
+
+  window.addEventListener('message', event => {
+    switch(event.data) {
+    case 'readyToTest':
+      if (!testRequested) {
+        iframe.contentWindow.postMessage('startTest', '*');
+        testRequested = true;
+      }
+    break;
+    case 'success':
+    case 'fail':
+      window.requestAnimationFrame(() => {
+        resolvePromise();
+        test.step(() => {
+          assert_equals(event.data, 'success');
+          test.done();
+        });
+      });
+    break;
+    }
+  }, false);
+
+  iframe.src = "./resources/iframe.html";
   return new Promise(function(resolve, reject) {
     iframe.onload = () => resolve();
+    iframe.onerror = () => reject();
   }).then(() => {
-    let resolvePromise;
-    let promise = new Promise((resolve) => {
-      resolvePromise = resolve;
-    });
-    let test = async_test('test6: iframe notifications');
-    let testRequested = false;
-    test.add_cleanup(() => iframe.remove());
-
-    window.addEventListener('message', event => {
-      switch(event.data) {
-      case 'readyToTest':
-        if (!testRequested) {
-          iframe.contentWindow.postMessage('startTest', '*');
-          testRequested = true;
-        }
-      break;
-      case 'success':
-      case 'fail':
-        window.requestAnimationFrame(() => {
-          test.step( () => {
-            assert_equals(event.data, 'success');
-            test.done();
-            resolvePromise();
-          });
-        });
-      break;
-      }
-    }, false);
     return promise;
+  }).catch(error => {
+    test.step(() => {
+      assert_unreached("loading iframe is error");
+    });
   });
 }
 
