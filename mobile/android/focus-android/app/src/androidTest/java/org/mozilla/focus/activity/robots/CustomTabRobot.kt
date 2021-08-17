@@ -14,10 +14,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
+import junit.framework.TestCase.assertTrue
 import org.mozilla.focus.R
+import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
+import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class CustomTabRobot {
     val progressBar: UiObject =
@@ -59,6 +62,18 @@ class CustomTabRobot {
             .perform(click())
     }
 
+    fun verifyPageURL(expectedText: String) {
+        val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
+
+        customTabUrl.waitForExists(TestHelper.webPageLoadwaitingTime)
+
+        runWithIdleRes(sessionLoadedIdlingResource) {
+            assertTrue(
+                customTabUrl.text.contains(expectedText)
+            )
+        }
+    }
+
     class Transition
 }
 
@@ -78,3 +93,6 @@ private fun customMenuItem(description: String) = onView(withText(description))
 private val closeCustomTabButton = onView(withContentDescription(R.string.mozac_feature_customtabs_exit_button))
 
 private val openInFocusButton = onView(withText("Open in $appName"))
+
+private val customTabUrl =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view"))

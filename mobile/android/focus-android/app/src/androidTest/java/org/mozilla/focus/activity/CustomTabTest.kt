@@ -85,8 +85,8 @@ class CustomTabTest {
 
     @Test
     fun openCustomTabInFocusTest() {
-        val customTabPage = webServer.url("plain_test.html").toString()
-        val browserPage = webServer.url("tab1.html").toString()
+        val browserPage = webServer.url("plain_test.html").toString()
+        val customTabPage = webServer.url("tab1.html").toString()
 
         activityTestRule.launchActivity(null)
         homeScreen {
@@ -94,11 +94,14 @@ class CustomTabTest {
         }
 
         searchScreen {
-        }.loadPage(browserPage) {}
+        }.loadPage(browserPage) {
+            verifyPageURL(browserPage)
+        }
 
         activityTestRule.launchActivity(createCustomTabIntent(customTabPage))
         customTab {
             progressBar.waitUntilGone(webPageLoadwaitingTime)
+            verifyPageURL(customTabPage)
             openCustomTabMenu()
             clickOpenInFocusButton()
         }
