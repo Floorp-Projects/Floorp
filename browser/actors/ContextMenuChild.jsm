@@ -891,7 +891,8 @@ class ContextMenuChild extends JSWindowActorChild {
 
     // Check if we are in the PDF Viewer.
     context.inPDFViewer =
-      context.target.ownerDocument.nodePrincipal.origin == "resource://pdf.js";
+      context.target.ownerDocument.nodePrincipal.originNoSuffix ==
+      "resource://pdf.js";
 
     // Check if we are in a synthetic document (stand alone image, video, etc.).
     context.inSyntheticDoc = context.target.ownerDocument.mozSyntheticDocument;
