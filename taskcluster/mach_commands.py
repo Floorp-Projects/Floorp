@@ -29,7 +29,7 @@ from mozbuild.base import MachCommandBase
 
 from taskgraph.main import (
     commands as taskgraph_commands,
-    get_filtered_taskgraph,
+    format_taskgraph,
 )
 
 logger = logging.getLogger("taskcluster")
@@ -72,21 +72,6 @@ class ShowTaskGraphSubCommand(SubCommand):
         args = taskgraph_commands[name].func.args
 
         extra_args = [
-            (
-                ["--target-kind"],
-                {
-                    "default": None,
-                    "help": "only return tasks that are of the given kind, "
-                    "or their dependencies.",
-                },
-            ),
-            (
-                ["-o", "--output-file"],
-                {
-                    "default": None,
-                    "help": "file path to store generated output.",
-                },
-            ),
             (
                 ["--diff"],
                 {
@@ -211,35 +196,41 @@ class MachCommands(MachCommandBase):
         "taskgraph", "tasks", description="Show all tasks in the taskgraph"
     )
     def taskgraph_tasks(self, command_context, **options):
-        return self.show_taskgraph(command_context, "full_task_set", options)
+        options["graph_attr"] = "full_task_set"
+        return self.show_taskgraph(command_context, options)
 
     @ShowTaskGraphSubCommand("taskgraph", "full", description="Show the full taskgraph")
     def taskgraph_full(self, command_context, **options):
-        return self.show_taskgraph(command_context, "full_task_graph", options)
+        options["graph_attr"] = "full_task_graph"
+        return self.show_taskgraph(command_context, options)
 
     @ShowTaskGraphSubCommand(
         "taskgraph", "target", description="Show the target task set"
     )
     def taskgraph_target(self, command_context, **options):
-        return self.show_taskgraph(command_context, "target_task_set", options)
+        options["graph_attr"] = "target_task_set"
+        return self.show_taskgraph(command_context, options)
 
     @ShowTaskGraphSubCommand(
         "taskgraph", "target-graph", description="Show the target taskgraph"
     )
     def taskgraph_target_graph(self, command_context, **options):
-        return self.show_taskgraph(command_context, "target_task_graph", options)
+        options["graph_attr"] = "target_task_graph"
+        return self.show_taskgraph(command_context, options)
 
     @ShowTaskGraphSubCommand(
         "taskgraph", "optimized", description="Show the optimized taskgraph"
     )
     def taskgraph_optimized(self, command_context, **options):
-        return self.show_taskgraph(command_context, "optimized_task_graph", options)
+        options["graph_attr"] = "optimized_task_graph"
+        return self.show_taskgraph(command_context, options)
 
     @ShowTaskGraphSubCommand(
         "taskgraph", "morphed", description="Show the morphed taskgraph"
     )
     def taskgraph_morphed(self, command_context, **options):
-        return self.show_taskgraph(command_context, "morphed_task_graph", options)
+        options["graph_attr"] = "morphed_task_graph"
+        return self.show_taskgraph(command_context, options)
 
     @SubCommand("taskgraph", "actions", description="Write actions.json to stdout")
     @CommandArgument(
@@ -361,7 +352,7 @@ class MachCommands(MachCommandBase):
         # all of the taskgraph logging is unstructured logging
         command_context.log_manager.enable_unstructured()
 
-    def show_taskgraph(self, command_context, graph_attr, options):
+    def show_taskgraph(self, command_context, options):
         self.setup_logging(
             command_context, quiet=options["quiet"], verbose=options["verbose"]
         )
@@ -369,6 +360,9 @@ class MachCommands(MachCommandBase):
         base_out = ""
         base_ref = None
         cur_ref = None
+
+        if not options["parameters"]:
+            options["parameters"] = "project=mozilla-central"
 
         if options["diff"]:
             from mozversioncontrol import get_repository_object
@@ -384,9 +378,9 @@ class MachCommands(MachCommandBase):
                 # branch or bookmark (which are both available on the VCS object)
                 # as `branch` is preferable to a specific revision.
                 cur_ref = vcs.branch or vcs.head_ref[:12]
-            logger.info("Generating {} @ {}".format(graph_attr, cur_ref))
+            logger.info("Generating {} @ {}".format(options["graph_attr"], cur_ref))
 
-        out = self.format_taskgraph(graph_attr, options)
+        out = format_taskgraph(options)
 
         if options["diff"]:
             with vcs:
@@ -405,13 +399,17 @@ class MachCommands(MachCommandBase):
                 try:
                     vcs.update(base_ref)
                     base_ref = vcs.head_ref[:12]
-                    logger.info("Generating {} @ {}".format(graph_attr, base_ref))
-                    base_out = self.format_taskgraph(graph_attr, options)
+                    logger.info(
+                        "Generating {} @ {}".format(options["graph_attr"], base_ref)
+                    )
+                    base_out = format_taskgraph(options)
                 finally:
                     vcs.update(cur_ref)
 
             diffcmd = command_context._mach_context.settings["taskgraph"]["diffcmd"]
-            diffcmd = diffcmd.format(attr=graph_attr, base=base_ref, cur=cur_ref)
+            diffcmd = diffcmd.format(
+                attr=options["graph_attr"], base=base_ref, cur=cur_ref
+            )
 
             with tempfile.NamedTemporaryFile(mode="w") as base:
                 base.write(base_out)
@@ -446,50 +444,6 @@ class MachCommands(MachCommandBase):
                 "If you were expecting differences in task bodies "
                 'you should pass "-J"\n'
             )
-
-    def format_taskgraph(self, graph_attr, options):
-        import taskgraph
-        import taskgraph.generator
-        import taskgraph.parameters
-
-        if not options["parameters"]:
-            options["parameters"] = "project=mozilla-central"
-
-        if options["fast"]:
-            taskgraph.fast = True
-
-        try:
-            parameters = taskgraph.parameters.parameters_loader(
-                options["parameters"],
-                overrides={"target-kind": options.get("target_kind")},
-                strict=False,
-            )
-
-            tgg = taskgraph.generator.TaskGraphGenerator(
-                root_dir=options.get("root"),
-                parameters=parameters,
-            )
-
-            tg = getattr(tgg, graph_attr)
-            tg = get_filtered_taskgraph(tg, options["tasks_regex"])
-
-            format_method = getattr(
-                self, "format_taskgraph_" + (options["format"] or "labels")
-            )
-            return format_method(tg)
-        except Exception:
-            traceback.print_exc()
-            sys.exit(1)
-
-    def format_taskgraph_labels(self, taskgraph):
-        return "\n".join(
-            taskgraph.tasks[index].label for index in taskgraph.graph.visit_postorder()
-        )
-
-    def format_taskgraph_json(self, taskgraph):
-        return json.dumps(
-            taskgraph.to_json(), sort_keys=True, indent=2, separators=(",", ": ")
-        )
 
     def show_actions(self, command_context, options):
         import taskgraph
