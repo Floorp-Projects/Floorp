@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Privat %s</string>
@@ -120,6 +120,11 @@
     <string name="recent_tabs_header">Gå tillbaka till</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Visa alla</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Tidigare utforskningar</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -632,6 +637,16 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Stäng efter en månad</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Ta bort</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktiv</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox kan installera och köra undersökningar då och då.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Läs mer</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Öppna flikar</string>
@@ -659,6 +674,8 @@
     <string name="tab_tray_menu_item_share">Dela alla flikar</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nyligen stängda flikar</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Nyligen stängda</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Kontoinställningar</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -954,6 +971,11 @@
     <string name="delete_browsing_data_quit_on">På</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Av</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">På</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Av</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1290,7 +1312,7 @@
     <string name="onboarding_privacy_notice_read_button">Läs vår sekretesspolicy</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Stäng</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">Stäng</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Börja surfa</string>
@@ -1393,6 +1415,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptogrävare</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingeravtrycksspårare</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Detaljer</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blockerad</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Tillåten</string>
@@ -1417,7 +1442,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Stoppar externa annonser, videor och annat innehåll från laddning eftersom de kan innehålla spårningskod. Kan påverka vissa webbplatsfunktioner.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Varje gång skölden är lila har %s blockerat spårare på en webbplats. Klicka för mer information.</string>
+    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Varje gång skölden är lila har %s blockerat spårare på en webbplats. Klicka för mer information.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Skydd är PÅ för den här webbplatsen</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1499,7 +1524,16 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Spara aldrig</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Autofyll</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autofyll</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Autofyll i %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Fyll i och spara användarnamn och lösenord på webbplatser medan du använder %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Autofyll i andra appar</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Fyll i användarnamn och lösenord i andra appar på din enhet.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synkronisera inloggningar</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1681,7 +1715,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Söksträng som ska användas</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Byt ut frågan med “%s”. Exempel:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Byt ut frågan med “%s”. Exempel:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Läs mer</string>
 
@@ -1819,6 +1853,17 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Avbryt</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Inaktiva flikar</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Flikar finns här i %s. Efter den tiden stängs flikarna automatiskt.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 dagar</string>
+
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 vecka</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Ställ in länkar från webbplatser, e-post och meddelanden så att de öppnas automatiskt i Firefox.</string>

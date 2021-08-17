@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -125,6 +125,11 @@
     <string name="recent_tabs_header">최근 탭으로 이동</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">모두 표시</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">이전 탐색</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -637,6 +642,16 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">한 달 후 닫기</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">삭제</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">활성화</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox는 때때로 연구를 설치하고 실행할 수 있습니다.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">더 알아보기</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">열린 탭</string>
@@ -664,6 +679,8 @@
     <string name="tab_tray_menu_item_share">모든 탭 공유</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">최근에 닫은 탭</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">최근에 닫음</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">계정 설정</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -968,6 +985,11 @@
     <string name="delete_browsing_data_quit_on">켜짐</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">꺼짐</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">켜짐</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">꺼짐</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1318,7 +1340,7 @@
     <string name="onboarding_privacy_notice_read_button">개인정보처리방침 읽기</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">닫기</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">닫기</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">탐색 시작</string>
@@ -1421,6 +1443,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">암호화폐 채굴기</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">디지털 지문</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">상세 정보</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">차단됨</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">허용됨</string>
@@ -1445,7 +1470,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">추적 코드가 포함된 외부 광고, 동영상 및 기타 콘텐츠가 로드되지 않도록 합니다. 일부 웹 사이트의 기능에 영향을 줄 수 있습니다.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">방패가 자주색일 때마다 %s가 사이트에서 추적기를 차단합니다. 자세한 내용을 보시려면 누르세요.</string>
+    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">방패가 자주색일 때마다 %s가 사이트에서 추적기를 차단합니다. 자세한 내용을 보시려면 누르세요.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">이 사이트에서 보호 켜짐</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1529,7 +1554,17 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">저장 안 함</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">자동 채우기</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">자동 채우기</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s에서 자동 채우기</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s 앱을 사용하는 동안 웹사이트에서 사용자 이름과 비밀번호를 채우고 저장합니다.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">다른 앱에서 자동 채우기</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">기기의 다른 앱에서 사용자 이름과 비밀번호를 채웁니다.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync 로그인</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1713,7 +1748,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">사용할 검색 문자열</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">쿼리를 “%s”로 바꾸세요. 예:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">쿼리를 “%s”로 바꾸세요. 예:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">더 알아보기</string>
 
@@ -1854,6 +1889,16 @@
 	<string name="top_sites_rename_dialog_ok">확인</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">취소</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">비활성 탭</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">탭은 여기에 %s 동안 유지됩니다. 그 이후에는 자동으로 닫힙니다.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30일</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1주</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Firefox에서 자동으로 열리도록 웹 사이트, 이메일 및 메시지의 링크를 설정합니다.</string>

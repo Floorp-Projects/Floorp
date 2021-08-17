@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -118,6 +118,11 @@
     <string name="recent_tabs_header">Revenir in</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Monstrar toto</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Pasatew explorationes</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -644,6 +649,16 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Clauder depost un mense</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Remover</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Active</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox pote installar e conducer studios de tempore in tempore.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Saper plus</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Schedas aperte</string>
@@ -673,6 +688,8 @@
     <string name="tab_tray_menu_item_share">Compartir tote le schedas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Schedas claudite recentemente</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Recentemente claudite</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Parametros de conto</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -973,6 +990,11 @@
     <string name="delete_browsing_data_quit_on">Active</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Inactive</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Active</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Inactive</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1313,7 +1335,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lege nostre aviso de confidentialitate</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Clauder</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">Clauder</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Comenciar a navigar</string>
@@ -1421,6 +1443,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominatores</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Dactylogrammatores</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Detalios</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blocate</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permittite</string>
@@ -1446,7 +1471,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Impedi cargar avisos publicitari, videos e altere contento externe que contine codification de traciamento. Pote interessar le functionalitate de alcun sito web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Cata vice le escudo es purpuree, %s ha blocate traciatores sur un sito. Tocca pro altere informationes.</string>
+    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Cata vice le escudo es purpuree, %s ha blocate traciatores sur un sito. Tocca pro altere informationes.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Le protectiones es ACTIVE pro iste sito</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1530,7 +1555,18 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Jammais salvar</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Autoplenar</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autoplenar</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Plenar %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Plenar e salvar nomines de usator e contrasignos in sitos web usante %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Plenar in altere apps</string>
+
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Plenar nomines de usator e contrasignos in altere apps sur tu apparato.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synchronisar credentiales</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1714,7 +1750,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Catena de recerca a usar</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Replaciar le recerca con “%s”. Exemplo:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Replaciar le recerca con “%s”. Exemplo:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Saper plus</string>
 
@@ -1850,6 +1886,16 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Cancellar</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Schedas inactive</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Le schedas es disponibile hic pro %s. Post ille tempore, le schedas se claudera automaticamente.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 dies</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 septimana</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Stabilir qual ligamines de sitos web, e-mails e messages se aperi automaticamente in Firefox.</string>

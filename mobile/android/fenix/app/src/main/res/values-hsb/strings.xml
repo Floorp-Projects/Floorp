@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Priwatny %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -119,6 +119,11 @@
     <string name="recent_tabs_header">Wróćo skočić</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Wšě pokazać</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Zańdźene wuslědźenja</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -625,6 +630,16 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Po jednym měsacu začinić</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Wotstronić</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktiwny</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox móže hdys a hdys studije instalować a přewjesć.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Dalše informacije</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Wočinjene rajtarki</string>
@@ -652,6 +667,8 @@
     <string name="tab_tray_menu_item_share">Wšě rajtarki dźělić</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Runje začinjene rajtarki</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed"></string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Kontowe nastajenja</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -946,6 +963,11 @@
     <string name="delete_browsing_data_quit_on">Zapinjeny</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Wupinjeny</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Zmóžnjeny</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Znjemóžnjeny</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1275,7 +1297,7 @@
     <string name="onboarding_privacy_notice_read_button">Čitajće naš zdźělenku priwatnosće</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Začinić</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">Začinić</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Přehladowanje započeć</string>
@@ -1378,6 +1400,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptokopaki</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Porstowe wotćišće</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Podrobnosće</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Zablokowany</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Dowoleny</string>
@@ -1402,7 +1427,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Zadźěwa začitanju wabjenja, widejow a druheho wobsaha, kotrež slědowanski kod wobsahuja. Móže někotrym funkcijam websydłow wadźić.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Kóždy raz, hdyž tarč je wioletna, je %s přesćěhowaki na sydle zablokował. Podótkńće za dalše informacije.</string>
+    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Kóždy raz, hdyž tarč je wioletna, je %s přesćěhowaki na sydle zablokował. Podótkńće za dalše informacije.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Škit je zmóžnjeny za tute sydło</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1484,7 +1509,17 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ženje njeskładować</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Awtomatisce wupjelnić</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Awtomatisce wupjelnić</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">W %1$s awtomatisce wupjelnić</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Wužiwarske mjena a hesła na websydłach zasadźić a składować, mjeztym zo %1$s wužiwaće.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">W druhich nałoženjach awtomatisce wupjelnić</string>
+
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Wužiwarske mjena a hesła w druhich nałoženjach na wašim graće zasadźić.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Přizjewjenja synchronizować</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1806,6 +1841,16 @@
 	<string name="top_sites_rename_dialog_ok">W porjadku</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Přetorhnyć</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Inaktiwne rajtarki</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Rajtarki su tu za %s k dispoziciji. Po tutym času so rajtarki awtomatisce začinja.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 dnjow</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 tydźeń</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Nastajće wotkazy z websydłow, mejlkow a powěsćow, zo bychu so awtomatisce we Firefox wočinili.</string>

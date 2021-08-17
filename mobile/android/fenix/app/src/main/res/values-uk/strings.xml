@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Приватний перегляд %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -118,6 +118,11 @@
     <string name="recent_tabs_header">Повернутися до</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Показати всі</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Минулі перегляди</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -630,6 +635,16 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Закрити через місяць</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Вилучити</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Активні</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox може час від часу встановлювати та виконувати дослідження.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Докладніше</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Відкриті вкладки</string>
@@ -657,6 +672,8 @@
     <string name="tab_tray_menu_item_share">Поділитися всіма вкладками</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Недавно закриті вкладки</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Недавно закриті</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Обліковий запис</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -951,6 +968,11 @@
     <string name="delete_browsing_data_quit_on">Увімкнено</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Вимкнено</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Увімкнено</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Вимкнено</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1285,7 +1307,7 @@
     <string name="onboarding_privacy_notice_read_button">Повідомлення про приватність</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Закрити</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">Закрити</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Почати перегляд</string>
@@ -1388,6 +1410,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Криптомайнери</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Зчитування цифрового відбитка</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Подробиці</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Заблоковано</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Дозволено</string>
@@ -1413,7 +1438,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Блокує завантаження зовнішньої реклами, відео та іншого вмісту з вбудованим кодом стеження. Може вплинути на функціональність вебсайтів.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Коли %s блокує стеження на сайті, щит стає фіолетовим. Торкніться, щоб дізнатися більше.</string>
+    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Коли %s блокує стеження на сайті, щит стає фіолетовим. Торкніться, щоб дізнатися більше.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Захист на цьому сайті увімкнено</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1494,7 +1519,16 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ніколи не зберігати</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Автозаповнення</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Автозаповнення</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Автозаповнення у %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Заповнення та збереження імен користувачів та паролів вебсайтів під час використання %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Автозаповнення в інших програмах</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Заповнення імен користувачів та паролів у інших програмах на цьому пристрої.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Синхронізація паролів</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1679,7 +1713,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Запит для пошуку</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Змініть запит на “%s”. Зразок:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Змініть запит на “%s”. Зразок:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Докладніше</string>
 
@@ -1817,6 +1851,16 @@
 	<string name="top_sites_rename_dialog_ok">Гаразд</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Скасувати</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Неактивні вкладки</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Вкладки доступні тут впродовж %s. Після цього вони будуть автоматично закриті.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 днів</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 тижня</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Автоматично відкривати посилання з вебсайтів, електронних листів та повідомлень у Firefox.</string>
