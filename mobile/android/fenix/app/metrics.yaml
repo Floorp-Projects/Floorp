@@ -5420,7 +5420,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - technical
     notification_emails:
@@ -5435,7 +5435,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5450,7 +5450,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5465,7 +5465,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5480,7 +5480,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5494,7 +5494,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5509,7 +5509,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5523,7 +5523,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5538,7 +5538,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5552,7 +5552,7 @@ android_autofill:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/10301
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/20547#issuecomment-889051503
     data_sensitivity:
       - interaction
     notification_emails:
