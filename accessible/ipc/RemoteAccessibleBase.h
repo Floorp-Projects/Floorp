@@ -38,7 +38,9 @@ class RemoteAccessibleBase : public Accessible {
   }
 
   virtual uint32_t ChildCount() const override { return mChildren.Length(); }
-  Derived* RemoteChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
+  Derived* RemoteChildAt(uint32_t aIdx) const {
+    return mChildren.SafeElementAt(aIdx);
+  }
   Derived* RemoteFirstChild() const {
     return mChildren.Length() ? mChildren[0] : nullptr;
   }
