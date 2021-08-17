@@ -102,6 +102,10 @@ nsresult StoragePrincipalHelper::Create(nsIChannel* aChannel,
   nsCOMPtr<nsIPrincipal> storagePrincipal =
       BasePrincipal::Cast(aPrincipal)->CloneForcingOriginAttributes(attrs);
 
+  // If aPrincipal is not a ContentPrincipal, e.g. a NullPrincipal, the clone
+  // call will return a nullptr.
+  NS_ENSURE_TRUE(storagePrincipal, NS_ERROR_FAILURE);
+
   storagePrincipal.forget(aStoragePrincipal);
   return NS_OK;
 }
@@ -124,6 +128,10 @@ nsresult StoragePrincipalHelper::CreatePartitionedPrincipalForServiceWorker(
 
   nsCOMPtr<nsIPrincipal> partitionedPrincipal =
       BasePrincipal::Cast(aPrincipal)->CloneForcingOriginAttributes(attrs);
+
+  // If aPrincipal is not a ContentPrincipal, e.g. a NullPrincipal, the clone
+  // call will return a nullptr.
+  NS_ENSURE_TRUE(partitionedPrincipal, NS_ERROR_FAILURE);
 
   partitionedPrincipal.forget(aPartitionedPrincipal);
   return NS_OK;
