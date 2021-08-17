@@ -489,21 +489,27 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
         //       causes running mutation event listeners which are really
         //       expensive.
         // Adjust end of composition string if there is composition string.
-        EditorRawDOMPoint pointToAdjust(GetCompositionEndPoint());
-        if (!pointToAdjust.IsSet()) {
+        EditorDOMPoint pointToAdjust(GetCompositionEndPoint());
+        if (!pointToAdjust.IsInContentNode()) {
           // Otherwise, adjust current selection start point.
           pointToAdjust = EditorBase::GetStartPoint(SelectionRef());
-          if (NS_WARN_IF(!pointToAdjust.IsSet())) {
+          if (NS_WARN_IF(!pointToAdjust.IsInContentNode())) {
             return NS_ERROR_FAILURE;
           }
         }
-        rv = WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
-            *this, pointToAdjust);
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt() "
-              "failed");
-          return rv;
+        if (EditorUtils::IsEditableContent(*pointToAdjust.ContainerAsContent(),
+                                           EditorType::HTML)) {
+          AutoTrackDOMPoint trackPointToAdjust(RangeUpdaterRef(),
+                                               &pointToAdjust);
+          nsresult rv =
+              WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
+                  *this, pointToAdjust);
+          if (NS_FAILED(rv)) {
+            NS_WARNING(
+                "WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt() "
+                "failed");
+            return rv;
+          }
         }
 
         // also do this for original selection endpoints.
@@ -514,23 +520,38 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
                 !TopLevelEditSubActionDataRef().mSelectedRange->IsSet())) {
           return NS_ERROR_FAILURE;
         }
-        rv = WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
-            *this,
-            TopLevelEditSubActionDataRef().mSelectedRange->StartRawPoint());
-        if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt() "
-            "failed, but ignored");
-        // we only need to handle old selection endpoint if it was different
-        // from start
-        if (TopLevelEditSubActionDataRef().mSelectedRange->IsCollapsed()) {
+
+        EditorDOMPoint atStart =
+            TopLevelEditSubActionDataRef().mSelectedRange->StartPoint();
+        if (atStart != pointToAdjust && atStart.IsInContentNode() &&
+            EditorUtils::IsEditableContent(*atStart.ContainerAsContent(),
+                                           EditorType::HTML)) {
+          AutoTrackDOMPoint trackPointToAdjust(RangeUpdaterRef(),
+                                               &pointToAdjust);
+          AutoTrackDOMPoint trackStartPoint(RangeUpdaterRef(), &atStart);
           nsresult rv =
               WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
-                  *this,
-                  TopLevelEditSubActionDataRef().mSelectedRange->EndRawPoint());
+                  *this, atStart);
+          if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
+          NS_WARNING_ASSERTION(
+              NS_SUCCEEDED(rv),
+              "WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt() "
+              "failed, but ignored");
+        }
+        // we only need to handle old selection endpoint if it was different
+        // from start
+        EditorDOMPoint atEnd =
+            TopLevelEditSubActionDataRef().mSelectedRange->EndPoint();
+        if (!TopLevelEditSubActionDataRef().mSelectedRange->IsCollapsed() &&
+            atEnd != pointToAdjust && atEnd != atStart &&
+            atEnd.IsInContentNode() &&
+            EditorUtils::IsEditableContent(*atEnd.ContainerAsContent(),
+                                           EditorType::HTML)) {
+          nsresult rv =
+              WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(*this,
+                                                                        atEnd);
           if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
             return NS_ERROR_EDITOR_DESTROYED;
           }

@@ -2682,6 +2682,9 @@ char16_t WSRunScanner::GetCharAt(Text* aTextNode, uint32_t aOffset) const {
 template <typename EditorDOMPointType>
 nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorDOMPointType& aPoint) {
+  MOZ_ASSERT(aPoint.IsInContentNode());
+  MOZ_ASSERT(EditorUtils::IsEditableContent(*aPoint.ContainerAsContent(),
+                                            EditorType::HTML));
   Element* editingHost = aHTMLEditor.GetActiveEditingHost();
   TextFragmentData textFragmentData(aPoint, editingHost);
   if (NS_WARN_IF(!textFragmentData.IsInitialized())) {
