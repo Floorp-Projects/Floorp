@@ -12,41 +12,27 @@
 namespace mozilla {
 namespace ipc {
 
-static nsAutoCString GetSandboxedPath(const nsACString& libName) {
-  nsCOMPtr<nsIFile> binaryPath;
-  nsresult rv = mozilla::BinaryPath::GetFile(getter_AddRefs(binaryPath));
+nsCString GetSandboxedRLBoxPath() {
+  nsCOMPtr<nsIFile> libFile;
+  nsresult rv = mozilla::BinaryPath::GetFile(getter_AddRefs(libFile));
   if (NS_FAILED(rv)) {
     MOZ_CRASH("Library preload failure: Failed to get binary file\n");
   }
 
-  nsCOMPtr<nsIFile> libFile;
-  rv = binaryPath->GetParent(getter_AddRefs(libFile));
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Library preload failure: Failed to get binary folder\n");
-  }
-
-  rv = libFile->AppendNative(libName);
-
+  rv = libFile->SetNativeLeafName(MOZ_DLL_PREFIX "rlbox" MOZ_DLL_SUFFIX ""_ns);
   if (NS_FAILED(rv)) {
     MOZ_CRASH("Library preload failure: Failed to get library file\n");
   }
 
-  nsAutoString fullPath;
-  rv = libFile->GetPath(fullPath);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Library preload failure: Failed to get library path\n");
-  }
-
-  nsAutoCString converted_path = NS_ConvertUTF16toUTF8(fullPath);
-  return converted_path;
+  PathString fullPath = libFile->NativePath();
+#ifdef XP_WIN
+  return NS_ConvertUTF16toUTF8(fullPath);
+#else
+  return fullPath;
+#endif
 }
 
-nsAutoCString GetSandboxedRLBoxPath() {
-  return GetSandboxedPath(
-      nsLiteralCString(MOZ_DLL_PREFIX "rlbox" MOZ_DLL_SUFFIX));
-}
-
-PRLibrary* PreloadLibrary(const nsAutoCString& path) {
+PRLibrary* PreloadLibrary(const nsCString& path) {
   PRLibSpec libSpec;
   libSpec.type = PR_LibSpec_Pathname;
   libSpec.value.pathname = path.get();
