@@ -8,6 +8,8 @@ include protocol PFileDescriptorSet;
 include protocol PBrowser;
 include protocol PDocAccessiblePlatformExt;
 
+include DocAccessibleTypes;
+
 include "mozilla/GfxMessageUtils.h";
 
 using nsIntRect from "nsRect.h";
@@ -121,6 +123,15 @@ parent:
 
   // Android
   async Batch(uint64_t aBatchType, BatchData[] aData);
+
+  /*
+   * Cache The World
+   * XXX: aUpdateType should be an enum, for now it is
+   * 0 for initial push, and 1 for partial update.
+   * aFinal is false when paginating cache into several pushes,
+   * and then true on the final push.
+   */
+  async Cache(uint8_t aUpdateType, CacheData[] aData, bool aFinal);
 
 child:
   /*
