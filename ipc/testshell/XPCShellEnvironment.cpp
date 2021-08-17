@@ -20,6 +20,7 @@
 #include "js/CompilationAndEvaluation.h"  // JS::Compile{,Utf8File}
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperty, JS_GetProperty
 #include "js/PropertySpec.h"
+#include "js/RealmOptions.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 
 #include "xpcpublic.h"

@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
+#include "js/Exception.h"
 #include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetElement, JS_GetProperty, JS_GetPropertyById
 #include "jsapi.h"
 #include "mozilla/Maybe.h"

@@ -10,6 +10,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
+#include "js/Exception.h"
 #include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_SetProperty, JS_SetPropertyById
 #include "prenv.h"
 #include "MessageManagerFuzzer.h"

@@ -84,6 +84,7 @@
 #include "js/friend/WindowProxy.h"  // js::IsWindowProxy, js::SetWindowProxy
 #include "js/PropertyAndElement.h"  // JS_DefineObject, JS_GetProperty
 #include "js/PropertySpec.h"
+#include "js/RealmIterators.h"
 #include "js/Wrapper.h"
 #include "nsLayoutUtils.h"
 #include "nsReadableUtils.h"

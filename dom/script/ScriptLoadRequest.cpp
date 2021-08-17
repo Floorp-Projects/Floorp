@@ -12,6 +12,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
+#include "js/OffThreadScriptCompilation.h"
+
 #include "ModuleLoadRequest.h"
 #include "nsContentUtils.h"
 #include "nsICacheInfoChannel.h"

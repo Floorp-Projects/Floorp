@@ -17,7 +17,9 @@
 #include "mozilla/Assertions.h"
 
 #include "jsapi.h"
+#include "js/CompileOptions.h"
 #include "js/Conversions.h"
+#include "js/SourceText.h"
 #include "js/String.h"  // JS::{,Lossy}CopyLinearStringChars, JS::CopyStringChars, JS::Get{,Linear}StringLength, JS::MaxStringLength, JS::StringHasLatin1Chars
 #include "nsString.h"
 #include "xpcpublic.h"
