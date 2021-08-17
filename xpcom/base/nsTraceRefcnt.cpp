@@ -226,12 +226,12 @@ class BloatEntry {
   BloatEntry(const char* aClassName, uint32_t aClassSize)
       : mClassSize(aClassSize), mStats() {
     MOZ_ASSERT(strlen(aClassName) > 0, "BloatEntry name must be non-empty");
-    mClassName = PL_strdup(aClassName);
+    mClassName = aClassName;
     mStats.Clear();
     mTotalLeaked = 0;
   }
 
-  ~BloatEntry() { PL_strfree(mClassName); }
+  ~BloatEntry() = default;
 
   uint32_t GetClassSize() { return (uint32_t)mClassSize; }
   const char* GetClassName() { return mClassName; }
@@ -289,7 +289,7 @@ class BloatEntry {
   }
 
  protected:
-  char* mClassName;
+  const char* mClassName;
   // mClassSize is stored as a double because of the way we compute the avg
   // class size for total bloat.
   double mClassSize;
