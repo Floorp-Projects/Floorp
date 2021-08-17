@@ -1,12 +1,13 @@
 use metal::*;
 
-use winit::platform::macos::WindowExtMacOS;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
+    platform::macos::WindowExtMacOS,
 };
 
 use cocoa::{appkit::NSView, base::id as cocoa_id};
+use core_graphics_types::geometry::CGSize;
 
 use objc::{rc::autoreleasepool, runtime::YES};
 

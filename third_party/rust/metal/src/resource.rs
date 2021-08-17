@@ -5,8 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use super::{DeviceRef, HeapRef};
-use cocoa_foundation::foundation::NSUInteger;
+use super::{DeviceRef, HeapRef, NSUInteger};
 use objc::runtime::{NO, YES};
 
 #[repr(u64)]

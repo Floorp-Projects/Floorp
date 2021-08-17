@@ -7,9 +7,9 @@
 #include "Adapter.h"
 
 #include "AdapterFeatures.h"
-#include "AdapterLimits.h"
 #include "Device.h"
 #include "Instance.h"
+#include "SupportedLimits.h"
 #include "ipc/WebGPUChild.h"
 #include "mozilla/dom/Promise.h"
 
@@ -25,7 +25,8 @@ Adapter::Adapter(Instance* const aParent,
       mBridge(aParent->mBridge),
       mId(aInfo.id),
       mFeatures(new AdapterFeatures(this)),
-      mLimits(new AdapterLimits(this, aInfo.limits)) {}
+      mLimits(new SupportedLimits(this, aInfo.limits)),
+      mIsSoftware(aInfo.ty == ffi::WGPUDeviceType_Cpu) {}
 
 Adapter::~Adapter() { Cleanup(); }
 
@@ -37,7 +38,8 @@ void Adapter::Cleanup() {
 }
 
 const RefPtr<AdapterFeatures>& Adapter::Features() const { return mFeatures; }
-const RefPtr<AdapterLimits>& Adapter::Limits() const { return mLimits; }
+const RefPtr<SupportedLimits>& Adapter::Limits() const { return mLimits; }
+bool Adapter::IsSoftware() const { return mIsSoftware; }
 
 already_AddRefed<dom::Promise> Adapter::RequestDevice(
     const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv) {
