@@ -33,21 +33,6 @@ void MediaPipelineFilter::SetRemoteMediaStreamId(
   }
 }
 
-void MediaPipelineFilter::AddRtpExtensionMapping(
-    const webrtc::RtpExtension& aExt) {
-  mExtMap.push_back(aExt);
-}
-
-Maybe<webrtc::RtpExtension> MediaPipelineFilter::GetRtpExtension(
-    const std::string& aUri) const {
-  for (const auto& ext : mExtMap) {
-    if (ext.uri == aUri) {
-      return Some(ext);
-    }
-  }
-  return Nothing();
-}
-
 bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header) {
   DEBUG_LOG(("MediaPipelineFilter inspecting seq# %u SSRC: %u",
              header.sequenceNumber, header.ssrc));
@@ -97,17 +82,6 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header) {
   // RTP-STREAM-ID based filtering (for tests only)
   //
 
-  const auto streamId = fromStreamId(header.extension.stream_id);
-  if (streamId && !remote_rid_set_.empty()) {
-    if (remote_rid_set_.count(streamId.value())) {
-      DEBUG_LOG(("MediaPipelineFilter RID: %s matched. passing packet",
-                 streamId.value().c_str()));
-      return true;
-    }
-    DEBUG_LOG(("MediaPipelineFilter RID: %s did not match any of %zu RIDs",
-               streamId.value().c_str(), remote_rid_set_.size()));
-  }
-
   //
   // Remote SSRC based filtering
   //
@@ -150,10 +124,6 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header) {
 
 void MediaPipelineFilter::AddRemoteSSRC(uint32_t ssrc) {
   remote_ssrc_set_.insert(ssrc);
-}
-
-void MediaPipelineFilter::AddRemoteRtpStreamId(const std::string& rtp_strm_id) {
-  remote_rid_set_.insert(rtp_strm_id);
 }
 
 void MediaPipelineFilter::AddUniquePT(uint8_t payload_type) {
