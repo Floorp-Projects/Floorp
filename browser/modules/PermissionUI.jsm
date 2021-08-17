@@ -1256,13 +1256,12 @@ StorageAccessPermissionPrompt.prototype = {
       "third-party-cookies";
     let hostPort = this.prettifyHostPort(this.principal.hostPort);
     let hintText = gBrowserBundle.formatStringFromName(
-      "storageAccess.hintText",
+      "storageAccess1.hintText",
       [hostPort]
     );
     return {
       learnMoreURL,
       displayURI: false,
-      name: hostPort,
       hintText,
       escAction: "secondarybuttoncommand",
     };
@@ -1277,10 +1276,9 @@ StorageAccessPermissionPrompt.prototype = {
   },
 
   get message() {
-    return gBrowserBundle.formatStringFromName("storageAccess3.message", [
-      "<>",
-      this.prettifyHostPort(this.topLevelPrincipal.hostPort),
+    return gBrowserBundle.formatStringFromName("storageAccess4.message", [
       this.prettifyHostPort(this.principal.hostPort),
+      this.prettifyHostPort(this.topLevelPrincipal.hostPort),
     ]);
   },
 
@@ -1289,9 +1287,9 @@ StorageAccessPermissionPrompt.prototype = {
 
     return [
       {
-        label: gBrowserBundle.GetStringFromName("storageAccess.Allow.label"),
+        label: gBrowserBundle.GetStringFromName("storageAccess1.Allow.label"),
         accessKey: gBrowserBundle.GetStringFromName(
-          "storageAccess.Allow.accesskey"
+          "storageAccess1.Allow.accesskey"
         ),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
         callback(state) {
@@ -1300,10 +1298,10 @@ StorageAccessPermissionPrompt.prototype = {
       },
       {
         label: gBrowserBundle.GetStringFromName(
-          "storageAccess.DontAllow.label"
+          "storageAccess1.DontAllow.label"
         ),
         accessKey: gBrowserBundle.GetStringFromName(
-          "storageAccess.DontAllow.accesskey"
+          "storageAccess1.DontAllow.accesskey"
         ),
         action: Ci.nsIPermissionManager.DENY_ACTION,
         callback(state) {
