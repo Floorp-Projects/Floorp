@@ -39,7 +39,6 @@
 #include <memory>
 #include <utility>
 
-#include "jsapi.h"
 #include "jsdate.h"
 
 #include "builtin/DataViewObject.h"

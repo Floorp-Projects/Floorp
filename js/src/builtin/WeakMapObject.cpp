@@ -6,8 +6,6 @@
 
 #include "builtin/WeakMapObject-inl.h"
 
-#include "jsapi.h"
-
 #include "builtin/WeakSetObject.h"
 #include "gc/FreeOp.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*

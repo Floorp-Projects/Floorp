@@ -15,7 +15,6 @@
 #include <string.h>
 #include <type_traits>
 
-#include "jsapi.h"
 #include "jsnum.h"
 
 #include "builtin/Array.h"

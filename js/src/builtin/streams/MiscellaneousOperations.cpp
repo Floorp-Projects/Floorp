@@ -11,10 +11,9 @@
 #include "mozilla/Assertions.h"     // MOZ_ASSERT
 #include "mozilla/FloatingPoint.h"  // mozilla::IsNaN
 
-#include "jsapi.h"  // JS_ReportErrorNumberASCII
-
 #include "js/CallAndConstruct.h"      // JS::IsCallable
 #include "js/Conversions.h"           // JS::ToNumber
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"            // JS::{,Mutable}Handle, JS::Rooted
 #include "vm/Interpreter.h"           // js::{Call,GetAndClearException}

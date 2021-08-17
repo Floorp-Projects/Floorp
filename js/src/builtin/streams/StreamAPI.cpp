@@ -10,7 +10,6 @@
 
 #include <stdint.h>  // uint32_t, uintptr_t
 
-#include "jsapi.h"        // js::AssertHeapIsIdle, JS_ReportErrorNumberASCII
 #include "jsfriendapi.h"  // js::IsObjectInContextCompartment
 #include "jstypes.h"      // JS_{FRIEND,PUBLIC}_API
 
@@ -23,6 +22,8 @@
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::ForAuthorCodeBool
 #include "builtin/streams/StreamController.h"  // js::StreamController
 #include "gc/Zone.h"                           // JS::Zone
+#include "js/Context.h"                        // js::AssertHeapIsIdle
+#include "js/ErrorReport.h"                    // JS_ReportErrorNumberASCII
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewData, JS_NewUint8Array
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCAPI.h"       // JS::AutoCheckCannotGC, JS::AutoSuppressGCAnalysis

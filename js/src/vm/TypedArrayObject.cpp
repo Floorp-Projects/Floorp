@@ -18,7 +18,6 @@
 #  include <sys/mman.h>
 #endif
 
-#include "jsapi.h"
 #include "jsnum.h"
 #include "jstypes.h"
 

@@ -9,8 +9,6 @@
 
 #include <stdio.h>
 
-#include "jsapi.h"
-
 #include "gc/Barrier.h"
 #include "gc/Tracer.h"
 #include "js/AllocPolicy.h"

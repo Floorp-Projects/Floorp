@@ -9,7 +9,6 @@
 
 #include "mozilla/Atomics.h"
 
-#include "jsapi.h"
 #include "jstypes.h"
 
 #include "gc/Barrier.h"

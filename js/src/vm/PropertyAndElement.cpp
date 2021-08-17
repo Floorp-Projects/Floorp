@@ -11,7 +11,6 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
-#include "jsapi.h"        // JS::IdVector
 #include "jsfriendapi.h"  // js::GetPropertyKeys, JSITER_OWNONLY
 #include "jstypes.h"      // JS_PUBLIC_API
 

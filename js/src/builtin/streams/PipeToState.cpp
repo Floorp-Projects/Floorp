@@ -11,8 +11,6 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Maybe.h"  // mozilla::Maybe, mozilla::Nothing, mozilla::Some
 
-#include "jsapi.h"  // JS_ReportErrorNumberASCII
-
 #include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
 #include "builtin/streams/ReadableStream.h"        // js::ReadableStream
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool, js::ReadableStreamDefaultReader, js::ReadableStreamReaderGenericRelease
@@ -22,6 +20,7 @@
 #include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Release,Write}
 #include "js/CallArgs.h"              // JS::CallArgsFromVp, JS::CallArgs
 #include "js/Class.h"                 // JSClass, JSCLASS_HAS_RESERVED_SLOTS
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Promise.h"               // JS::AddPromiseReactions
 #include "js/RootingAPI.h"            // JS::Handle, JS::Rooted

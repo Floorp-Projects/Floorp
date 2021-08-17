@@ -15,6 +15,7 @@
 
 #include <errno.h>
 
+#include "jsfriendapi.h"
 #include "jsmath.h"
 
 #include "gc/Memory.h"

@@ -11,7 +11,6 @@
 #include <stddef.h>  // for size_t
 #include <stdint.h>  // for uint32_t
 
-#include "jsapi.h"
 #include "jstypes.h"
 
 #include "gc/WeakMap.h"

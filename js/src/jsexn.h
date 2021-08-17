@@ -13,12 +13,12 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jsapi.h"
 #include "jspubtd.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
 #include "js/ErrorReport.h"
+#include "js/Exception.h"
 #include "js/friend/ErrorMessages.h"  // JSErr_Limit
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"

@@ -6,8 +6,6 @@
 
 #include "builtin/BigInt.h"
 
-#include "jsapi.h"
-
 #include "gc/Tracer.h"
 #include "jit/InlinableNatives.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*

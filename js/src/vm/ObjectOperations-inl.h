@@ -17,16 +17,15 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jsapi.h"  // JSPROP_ENUMERATE, JS::PropertyDescriptor
-
 #include "js/Class.h"  // js::{Delete,Get,Has}PropertyOp, JSMayResolveOp, JS::ObjectOpResult
-#include "js/GCAPI.h"         // JS::AutoSuppressGCAnalysis
-#include "js/Id.h"            // INT_TO_JSID, jsid, JSID_INT_MAX, SYMBOL_TO_JSID
-#include "js/RootingAPI.h"    // JS::Handle, JS::MutableHandle, JS::Rooted
-#include "js/Value.h"         // JS::ObjectValue, JS::Value
-#include "proxy/Proxy.h"      // js::Proxy
-#include "vm/JSContext.h"     // JSContext
-#include "vm/JSObject.h"      // JSObject
+#include "js/GCAPI.h"  // JS::AutoSuppressGCAnalysis
+#include "js/Id.h"     // INT_TO_JSID, jsid, JSID_INT_MAX, SYMBOL_TO_JSID
+#include "js/PropertyDescriptor.h"  // JSPROP_ENUMERATE, JS::PropertyDescriptor
+#include "js/RootingAPI.h"          // JS::Handle, JS::MutableHandle, JS::Rooted
+#include "js/Value.h"               // JS::ObjectValue, JS::Value
+#include "proxy/Proxy.h"            // js::Proxy
+#include "vm/JSContext.h"           // JSContext
+#include "vm/JSObject.h"            // JSObject
 #include "vm/NativeObject.h"  // js::NativeObject, js::Native{Get,Has,Set}Property, js::NativeGetPropertyNoGC, js::Qualified
 #include "vm/ProxyObject.h"   // js::ProxyObject
 #include "vm/StringType.h"    // js::NameToId

@@ -7,7 +7,6 @@
 #ifndef vm_SelfHosting_h_
 #define vm_SelfHosting_h_
 
-#include "jsapi.h"
 #include "NamespaceImports.h"
 
 #include "vm/Stack.h"

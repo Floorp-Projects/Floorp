@@ -12,8 +12,6 @@
 #include <iterator>  // std::size
 #include <stdint.h>  // uint32_t
 
-#include "jsfriendapi.h"  // CheckRecursionLimit
-
 #include "builtin/Array.h"          // ArrayToSource
 #include "builtin/Boolean.h"        // BooleanToString
 #include "builtin/Object.h"         // ObjectToSource

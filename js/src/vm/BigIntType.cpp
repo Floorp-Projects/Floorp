@@ -95,7 +95,6 @@
 #include <memory>
 #include <type_traits>  // std::is_same_v
 
-#include "jsapi.h"
 #include "jsnum.h"
 
 #include "builtin/BigInt.h"

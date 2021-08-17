@@ -12,8 +12,6 @@
 #include <algorithm>
 #include <utility>
 
-#include "jsapi.h"
-
 #include "js/UbiNode.h"
 #include "js/UbiNodeBreadthFirst.h"
 
