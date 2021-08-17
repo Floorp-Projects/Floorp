@@ -12,8 +12,9 @@
 
 #include "jsfriendapi.h"  // for ScriptEnvironmentPreparer
 
-#include "js/UniquePtr.h"  // for UniquePtr
-#include "js/Utility.h"    // for UniqueTwoByteChars
+#include "js/ErrorReport.h"  // for JSErrorNotes, JSErrorReport
+#include "js/UniquePtr.h"    // for UniquePtr
+#include "js/Utility.h"      // for UniqueTwoByteChars
 
 namespace js {
 

@@ -6,7 +6,6 @@
 
 #include "jsfriendapi.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
@@ -16,10 +15,8 @@
 #include "builtin/BigInt.h"
 #include "builtin/MapObject.h"
 #include "builtin/TestingFunctions.h"
-#include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
-#include "js/CharacterEncoding.h"
 #include "js/experimental/CodeCoverage.h"
 #include "js/experimental/CTypes.h"  // JS::AutoCTypesActivityCallback, JS::SetCTypesActivityCallback
 #include "js/experimental/Intl.h"  // JS::AddMoz{DateTimeFormat,DisplayNames}Constructor
@@ -27,11 +24,9 @@
 #include "js/friend/StackLimits.h"    // JS_STACK_GROWTH_DIRECTION
 #include "js/friend/WindowProxy.h"    // js::ToWindowIfWindowProxy
 #include "js/Object.h"                // JS::GetClass
-#include "js/Printf.h"
-#include "js/PropertyAndElement.h"  // JS_DefineProperty
+#include "js/PropertyAndElement.h"    // JS_DefineProperty
 #include "js/Proxy.h"
-#include "js/shadow/Object.h"  // JS::shadow::Object
-#include "js/String.h"         // JS::detail::StringToLinearStringSlow
+#include "js/String.h"  // JS::detail::StringToLinearStringSlow
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Poison.h"
@@ -39,24 +34,18 @@
 #include "vm/BooleanObject.h"
 #include "vm/DateObject.h"
 #include "vm/ErrorObject.h"
-#include "vm/FrameIter.h"  // js::FrameIter
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/NumberObject.h"
-#include "vm/PlainObject.h"  // js::PlainObject
-#include "vm/Printer.h"
+#include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"
 #include "vm/StringObject.h"
-#include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
-#include "gc/Nursery-inl.h"
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap
-#include "vm/EnvironmentObject-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
-#include "vm/NativeObject-inl.h"
 
 using namespace js;
 
