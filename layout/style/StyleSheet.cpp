@@ -1385,6 +1385,10 @@ already_AddRefed<StyleSheet> StyleSheet::CloneAdoptedSheet(
 
 ServoCSSRuleList* StyleSheet::GetCssRulesInternal() {
   if (!mRuleList) {
+    // TODO(emilio): This should go away, but we need to fix the CC setup for
+    // @import rules first, see bug 1719963.
+    EnsureUniqueInner();
+
     RefPtr<ServoCssRules> rawRules =
         Servo_StyleSheet_GetRules(Inner().mContents).Consume();
     MOZ_ASSERT(rawRules);
