@@ -144,10 +144,7 @@ async function runClearSiteDataTest(
   if (clearDataContext == "firstParty") {
     // Open in new tab so we keep our current test tab intact. The
     // post-clear-callback might need it.
-    await BrowserTestUtils.withNewTab(
-      (browserA, CLEAR_SITE_DATA_URL_ORIGIN_A),
-      () => {}
-    );
+    await BrowserTestUtils.withNewTab(CLEAR_SITE_DATA_URL_ORIGIN_A, () => {});
   } else if (clearDataContext == "thirdPartyPartitioned") {
     // Navigate frame to path with clear-site-data header
     await SpecialPowers.spawn(
