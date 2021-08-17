@@ -95,7 +95,6 @@ class WebrtcVideoConduit
    * Function to select and change the encoding resolution based on incoming
    * frame size and current available bandwidth.
    * @param width, height: dimensions of the frame
-   * @param frame: optional frame to submit for encoding after reconfig
    */
   void SelectSendResolution(unsigned short width, unsigned short height);
 

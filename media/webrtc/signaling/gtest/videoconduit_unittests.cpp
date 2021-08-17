@@ -1669,8 +1669,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsNegotiated) {
   mVideoConduit->RemoveSink(sink.get());
 }
 
-// Disabled: See Bug 1420493
-TEST_F(VideoConduitTest, DISABLED_TestVideoEncodeMaxWidthAndHeight) {
+TEST_F(VideoConduitTest, TestVideoEncodeMaxWidthAndHeight) {
   mControl.Update([&](auto& aControl) {
     aControl.mTransmitting = true;
     VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());
