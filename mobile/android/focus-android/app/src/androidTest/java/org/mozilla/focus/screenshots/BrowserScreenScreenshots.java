@@ -170,19 +170,6 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
         onView(withId(R.id.mozac_browser_toolbar_url_view))
                 .check(matches(isDisplayed()))
                 .check(matches(withText(containsString(webServer.getHostName()))));
-
-        // Check add link to autocomplete text
-        onView(withId(R.id.mozac_browser_toolbar_url_view)).perform(click());
-        onView(withId(R.id.addToAutoComplete))
-                .check(matches(isDisplayed()));
-        Screengrab.screenshot("Addlink_autocomplete");
-        onView(withId(R.id.addToAutoComplete))
-                .perform(click());
-        Screengrab.screenshot("new_customURL_popup");
-        onView(withId(R.id.mozac_browser_toolbar_url_view)).perform(click());
-        onView(withId(R.id.addToAutoComplete))
-                .perform(click());
-        Screengrab.screenshot("customURL_alreadyexists_popup");
     }
 
     private void takeScreenshotsOfOpenWithAndShare() throws Exception {
