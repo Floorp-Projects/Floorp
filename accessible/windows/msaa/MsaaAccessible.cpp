@@ -827,15 +827,15 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     return E_NOINTERFACE;
   }
   AccessibleWrap* localAcc = LocalAcc();
-  if (IID_IEnumVARIANT == iid && localAcc) {
+  if (IID_IEnumVARIANT == iid) {
     if (
         // Don't support this interface for leaf elements.
-        !localAcc->HasChildren() || nsAccUtils::MustPrune(localAcc) ||
+        !mAcc->HasChildren() || nsAccUtils::MustPrune(mAcc) ||
         // We also don't support this for local OuterDocAccessibles with remote
         // document children when the cache is disabled. Handling this is tricky
         // and there's no benefit to IEnumVARIANT when there's only one child
         // anyway.
-        (localAcc->IsOuterDoc() &&
+        (localAcc && localAcc->IsOuterDoc() &&
          !StaticPrefs::accessibility_cache_enabled_AtStartup() &&
          localAcc->FirstChild()->IsRemote())) {
       return E_NOINTERFACE;
