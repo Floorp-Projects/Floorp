@@ -10520,11 +10520,6 @@
   value: 0
   mirror: always
 
-- name: privacy.storagePrincipal.enabledForTrackers
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: privacy.window.maxInnerWidth
   type: int32_t
   value: 1000

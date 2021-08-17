@@ -13,12 +13,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-/* import-globals-from storageprincipal_head.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/toolkit/components/antitracking/test/browser/storageprincipal_head.js",
-  this
-);
-
 this.PartitionedStorageHelper = {
   runTestInNormalAndPrivateMode(name, callback, cleanupFunction, extraPrefs) {
     // Normal mode
@@ -36,13 +30,6 @@ this.PartitionedStorageHelper = {
     runInPrivateWindow = false
   ) {
     DynamicFPIHelper.runTest(
-      name,
-      callback,
-      cleanupFunction,
-      extraPrefs,
-      runInPrivateWindow
-    );
-    StoragePrincipalHelper.runTest(
       name,
       callback,
       cleanupFunction,
@@ -140,7 +127,6 @@ this.PartitionedStorageHelper = {
           ["privacy.trackingprotection.enabled", false],
           ["privacy.trackingprotection.pbmode.enabled", false],
           ["privacy.trackingprotection.annotate_channels", true],
-          ["privacy.storagePrincipal.enabledForTrackers", false],
           ["dom.security.https_first_pbm", false],
           [
             "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
