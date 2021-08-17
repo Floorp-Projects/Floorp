@@ -3367,12 +3367,6 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
     return;
   }
 
-  // Bug 1723525
-  if (spec.EqualsLiteral("chrome://browser/content/preferences/dialogs/"
-                         "siteDataSettings.css")) {
-    return;
-  }
-
   if (xpc::IsInAutomation()) {
 #ifdef DEBUG
     if (NS_IsMainThread()) {
