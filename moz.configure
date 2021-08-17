@@ -1082,7 +1082,7 @@ set_config("STRIP_FLAGS", strip_flags)
 
 @depends(js_standalone, target)
 def system_zlib_default(js_standalone, target):
-    return js_standalone and target.kernel != "WINNT"
+    return js_standalone and target.kernel not in ("WINNT", "Darwin")
 
 
 option(
