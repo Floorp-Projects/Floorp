@@ -597,10 +597,17 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     if (aFeature == FEATURE_WEBRENDER) {
       const bool isMali4xx =
           mGLStrings->Renderer().Find("Mali-4", /*ignoreCase*/ true) >= 0;
+      const bool isIntelBayTrail =
+          mGLStrings->Renderer().Find("Intel(R) HD Graphics for BayTrail",
+                                      /*ignoreCase*/ true) >= 0;
+
       if (isMali4xx) {
         // Mali 4xx does not support GLES 3.
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_NO_GLES_3";
+      } else if (isIntelBayTrail) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_WEBRENDER_BLOCKED_DEVICE";
       } else {
         *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
       }
