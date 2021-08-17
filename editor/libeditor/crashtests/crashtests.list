@@ -116,7 +116,7 @@ pref(dom.document.exec_command.nested_calls_allowed,true) asserts(2) load 147497
 asserts(1) load 1517028.html
 load 1525481.html
 load 1533913.html
-asserts(1) load 1534394.html # assertion in WSRunScanner::GetEditableBlockParentOrTopmostEditableInlineContent()
+load 1534394.html
 load 1547897.html
 load 1547898.html
 load 1556799.html
