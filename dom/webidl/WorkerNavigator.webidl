@@ -26,3 +26,6 @@ partial interface WorkerNavigator {
   [SameObject, Func="mozilla::dom::MediaCapabilities::Enabled"]
   readonly attribute MediaCapabilities mediaCapabilities;
 };
+
+// https://wicg.github.io/web-locks/#navigator-mixins
+WorkerNavigator includes NavigatorLocks;
