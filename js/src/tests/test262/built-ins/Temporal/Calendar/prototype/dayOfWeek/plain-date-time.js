@@ -12,12 +12,28 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let dt = new Temporal.PlainDateTime(1997, 1, 23, 5, 30, 13);
-assert.sameValue(4, cal.dayOfWeek(dt));
+assert.sameValue(
+  cal.dayOfWeek(dt),
+  4,
+  'cal.dayOfWeek(new Temporal.PlainDateTime(1997, 1, 23, 5, 30, 13)) must return 4'
+);
 dt = new Temporal.PlainDateTime(1996, 2, 23, 5, 30, 13);
-assert.sameValue(5, cal.dayOfWeek(dt));
+assert.sameValue(
+  cal.dayOfWeek(dt),
+  5,
+  'cal.dayOfWeek(new Temporal.PlainDateTime(1996, 2, 23, 5, 30, 13)) must return 5'
+);
 dt = new Temporal.PlainDateTime(1997, 2, 23, 5, 30, 13);
-assert.sameValue(7, cal.dayOfWeek(dt));
+assert.sameValue(
+  cal.dayOfWeek(dt),
+  7,
+  'cal.dayOfWeek(new Temporal.PlainDateTime(1997, 2, 23, 5, 30, 13)) must return 7'
+);
 dt = new Temporal.PlainDateTime(1997, 6, 23, 5, 30, 13);
-assert.sameValue(1, cal.dayOfWeek(dt));
+assert.sameValue(
+  cal.dayOfWeek(dt),
+  1,
+  'cal.dayOfWeek(new Temporal.PlainDateTime(1997, 6, 23, 5, 30, 13)) must return 1'
+);
 
 reportCompare(0, 0);

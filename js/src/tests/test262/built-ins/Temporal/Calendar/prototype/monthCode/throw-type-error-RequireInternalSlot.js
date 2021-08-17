@@ -13,6 +13,6 @@ let cal = new Temporal.Calendar("iso8601");
 
 let badCal = { monthCode: cal.monthCode}
 assert.throws(TypeError, () => badCal.monthCode("2021-03-04"),
-    "Throw TypeError if there are no internal slot");
+    'badCal.monthCode("2021-03-04") throws a TypeError exception');
 
 reportCompare(0, 0);

@@ -17,6 +17,6 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let dateTime = new Temporal.PlainDateTime(1997, 8, 23, 5, 30, 13)
-assert.sameValue(8, cal.month(dateTime));
+assert.sameValue(cal.month(dateTime), 8, 'cal.month(new Temporal.PlainDateTime(1997, 8, 23, 5, 30, 13)) must return 8');
 
 reportCompare(0, 0);

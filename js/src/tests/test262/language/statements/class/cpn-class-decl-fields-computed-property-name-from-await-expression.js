@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-top-level-await) skip-if(!xulRuntime.shell) module async -- requires shell-options
+// |reftest| module async
 // This file was procedurally generated from the following sources:
 // - src/computed-property-names/computed-property-name-from-await-expression.case
 // - src/computed-property-names/evaluation/class-declaration-fields.template

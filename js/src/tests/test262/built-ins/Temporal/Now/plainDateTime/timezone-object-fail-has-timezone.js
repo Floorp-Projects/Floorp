@@ -17,6 +17,6 @@ var timeZone = new Proxy({}, {
 
 assert.throws(Test262Error, function() {
   Temporal.Now.plainDateTime("iso8601", timeZone);
-});
+}, 'Temporal.Now.plainDateTime("iso8601", timeZone) throws a Test262Error exception');
 
 reportCompare(0, 0);

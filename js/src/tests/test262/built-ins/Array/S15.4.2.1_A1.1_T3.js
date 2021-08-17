@@ -9,10 +9,10 @@ info: |
 es5id: 15.4.2.1_A1.1_T3
 description: Checking use isPrototypeOf
 ---*/
-
-//CHECK#1
-if (Array.prototype.isPrototypeOf(new Array()) !== true) {
-  throw new Test262Error('#1: Array.prototype.isPrototypeOf(new Array()) === true. Actual: ' + (Array.prototype.isPrototypeOf(new Array())));
-}
+assert.sameValue(
+  Array.prototype.isPrototypeOf(new Array()),
+  true,
+  'Array.prototype.isPrototypeOf(new Array()) must return true'
+);
 
 reportCompare(0, 0);

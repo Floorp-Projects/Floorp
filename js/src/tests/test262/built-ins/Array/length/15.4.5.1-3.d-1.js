@@ -12,6 +12,6 @@ description: >
 
 assert.throws(RangeError, function() {
   [].length = 4294967296;
-});
+}, '[].length = 4294967296 throws a RangeError exception');
 
 reportCompare(0, 0);

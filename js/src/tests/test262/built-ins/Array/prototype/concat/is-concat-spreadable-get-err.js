@@ -35,6 +35,6 @@ Object.defineProperty(o, Symbol.isConcatSpreadable, {
 
 assert.throws(Test262Error, function() {
   Array.prototype.concat.call(o);
-});
+}, 'Array.prototype.concat.call(o) throws a Test262Error exception');
 
 reportCompare(0, 0);

@@ -16,6 +16,6 @@ features: [Temporal]
 ---*/
 let cal = new Temporal.Calendar("iso8601");
 
-assert.sameValue(3, cal.month("2019-03-15"));
+assert.sameValue(cal.month("2019-03-15"), 3, 'cal.month("2019-03-15") must return 3');
 
 reportCompare(0, 0);

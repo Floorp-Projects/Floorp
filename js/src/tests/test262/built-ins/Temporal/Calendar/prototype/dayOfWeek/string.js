@@ -12,9 +12,9 @@ features: [Temporal]
 ---*/
 let cal = new Temporal.Calendar("iso8601");
 
-assert.sameValue(5, cal.dayOfWeek("2019-01-18"));
-assert.sameValue(1, cal.dayOfWeek("2019-03-18"));
-assert.sameValue(6, cal.dayOfWeek("2019-05-18"));
-assert.sameValue(7, cal.dayOfWeek("2019-08-18"));
+assert.sameValue(cal.dayOfWeek("2019-01-18"), 5, 'cal.dayOfWeek("2019-01-18") must return 5');
+assert.sameValue(cal.dayOfWeek("2019-03-18"), 1, 'cal.dayOfWeek("2019-03-18") must return 1');
+assert.sameValue(cal.dayOfWeek("2019-05-18"), 6, 'cal.dayOfWeek("2019-05-18") must return 6');
+assert.sameValue(cal.dayOfWeek("2019-08-18"), 7, 'cal.dayOfWeek("2019-08-18") must return 7');
 
 reportCompare(0, 0);

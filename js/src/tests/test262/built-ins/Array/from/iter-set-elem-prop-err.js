@@ -16,7 +16,7 @@ info: |
 features: [Symbol.iterator]
 ---*/
 
-var C = function() {
+var constructorSetsIndex0ConfigurableFalse = function() {
   Object.defineProperty(this, '0', {
     writable: true,
     configurable: false
@@ -46,9 +46,9 @@ items[Symbol.iterator] = function() {
 };
 
 assert.throws(TypeError, function() {
-  Array.from.call(C, items);
-});
+  Array.from.call(constructorSetsIndex0ConfigurableFalse, items);
+}, 'Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception');
 
-assert.sameValue(closeCount, 1);
+assert.sameValue(closeCount, 1, 'The value of closeCount is expected to be 1');
 
 reportCompare(0, 0);

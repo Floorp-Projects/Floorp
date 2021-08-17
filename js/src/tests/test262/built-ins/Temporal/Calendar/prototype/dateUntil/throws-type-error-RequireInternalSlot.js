@@ -14,6 +14,6 @@ let cal = new Temporal.Calendar("iso8601");
 let badCal = { dateUntil: cal.dateUntil };
 
 assert.throws(TypeError, () => badCal.dateUntil("2021-07-16", "2021-07-17"),
-      "call dateUntil from object without internal slot should throw TypeError");
+      'badCal.dateUntil("2021-07-16", "2021-07-17") throws a TypeError exception');
 
 reportCompare(0, 0);

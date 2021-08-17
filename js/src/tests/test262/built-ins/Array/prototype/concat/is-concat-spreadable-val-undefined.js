@@ -38,6 +38,6 @@ var result;
 item[Symbol.isConcatSpreadable] = undefined;
 result = [].concat(item);
 
-assert.sameValue(result.length, 0);
+assert.sameValue(result.length, 0, 'The value of result.length is expected to be 0');
 
 reportCompare(0, 0);

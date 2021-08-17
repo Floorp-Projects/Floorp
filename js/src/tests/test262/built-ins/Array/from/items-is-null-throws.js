@@ -14,6 +14,6 @@ info: |
 
 assert.throws(TypeError, function() {
   Array.from(null);
-});
+}, 'Array.from(null) throws a TypeError exception');
 
 reportCompare(0, 0);

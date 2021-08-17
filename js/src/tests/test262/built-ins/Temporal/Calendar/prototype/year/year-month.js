@@ -18,6 +18,6 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let yearMonth = new Temporal.PlainYearMonth(1999, 6);
-assert.sameValue(1999, cal.year(yearMonth));
+assert.sameValue(cal.year(yearMonth), 1999, 'cal.year(new Temporal.PlainYearMonth(1999, 6)) must return 1999');
 
 reportCompare(0, 0);

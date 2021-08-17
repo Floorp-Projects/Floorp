@@ -12,6 +12,10 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let dt = new Temporal.PlainDateTime(1997, 8, 23, 5, 30, 13);
-assert.sameValue(cal.daysInWeek(dt), 7);
+assert.sameValue(
+  cal.daysInWeek(dt),
+  7,
+  'cal.daysInWeek(new Temporal.PlainDateTime(1997, 8, 23, 5, 30, 13)) must return 7'
+);
 
 reportCompare(0, 0);

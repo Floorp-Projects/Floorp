@@ -17,9 +17,7 @@ var object = {
   }
 };
 x[object] = 0;
-if (x["[object Object]"] !== 0) {
-  throw new Test262Error('#1: x = []; var object = {valueOf: function() {return 1}}; x[object] = 0; x["[object Object]"] === 0. Actual: ' + (x["[object Object]"]));
-}
+assert.sameValue(x["[object Object]"], 0, 'The value of x["[object Object]"] is expected to be 0');
 
 //CHECK#2
 x = [];
@@ -32,9 +30,7 @@ var object = {
   }
 };
 x[object] = 0;
-if (x[0] !== 0) {
-  throw new Test262Error('#2: x = []; var object = {valueOf: function() {return 1}, toString: function() {return 0}}; x[object] = 0; x[0] === 0. Actual: ' + (x[0]));
-}
+assert.sameValue(x[0], 0, 'The value of x[0] is expected to be 0');
 
 //CHECK#3
 x = [];
@@ -47,9 +43,7 @@ var object = {
   }
 };
 x[object] = 0;
-if (x[1] !== 0) {
-  throw new Test262Error('#3: x = []; var object = {valueOf: function() {return 1}, toString: function() {return {}}}; x[object] = 0; x[1] === 0. Actual: ' + (x[1]));
-}
+assert.sameValue(x[1], 0, 'The value of x[1] is expected to be 0');
 
 //CHECK#4
 try {
@@ -63,16 +57,10 @@ try {
     }
   };
   x[object] = 0;
-  if (x[1] !== 0) {
-    throw new Test262Error('#4.1: x = []; var object = {valueOf: function() {throw "error"}, toString: function() {return 1}}; x[object] = 0; x[1] === 1. Actual: ' + (x[1]));
-  }
+  assert.sameValue(x[1], 0, 'The value of x[1] is expected to be 0');
 }
 catch (e) {
-  if (e === "error") {
-    throw new Test262Error('#4.2: x = []; var object = {valueOf: function() {throw "error"}, toString: function() {return 1}}; x[object] = 0; x[1] === 1. Actual: ' + ("error"));
-  } else {
-    throw new Test262Error('#4.3: x = []; var object = {valueOf: function() {throw "error"}, toString: function() {return 1}}; x[object] = 0; x[1] === 1. Actual: ' + (e));
-  }
+  assert.notSameValue(e, "error", 'The value of e is not "error"');
 }
 
 //CHECK#5
@@ -83,9 +71,7 @@ var object = {
   }
 };
 x[object] = 0;
-if (x[1] !== 0) {
-  throw new Test262Error('#5: x = []; var object = {toString: function() {return 1}}; x[object] = 0; x[1] === 0. Actual: ' + (x[1]));
-}
+assert.sameValue(x[1], 0, 'The value of x[1] is expected to be 0');
 
 //CHECK#6
 x = [];
@@ -98,9 +84,7 @@ var object = {
   }
 }
 x[object] = 0;
-if (x[1] !== 0) {
-  throw new Test262Error('#6: x = []; var object = {valueOf: function() {return {}}, toString: function() {return 1}}; x[object] = 0; x[1] === 0. Actual: ' + (x[1]));
-}
+assert.sameValue(x[1], 0, 'The value of x[1] is expected to be 0');
 
 //CHECK#7
 try {
@@ -117,9 +101,7 @@ try {
   throw new Test262Error('#7.1: x = []; var object = {valueOf: function() {return 1}, toString: function() {throw "error"}}; x[object] throw "error". Actual: ' + (x[object]));
 }
 catch (e) {
-  if (e !== "error") {
-    throw new Test262Error('#7.2: x = []; var object = {valueOf: function() {return 1}, toString: function() {throw "error"}}; x[object] throw "error". Actual: ' + (e));
-  }
+  assert.sameValue(e, "error", 'The value of e is expected to be "error"');
 }
 
 //CHECK#8
@@ -137,9 +119,11 @@ try {
   throw new Test262Error('#8.1: x = []; var object = {valueOf: function() {return {}}, toString: function() {return {}}}; x[object] throw TypeError. Actual: ' + (x[object]));
 }
 catch (e) {
-  if ((e instanceof TypeError) !== true) {
-    throw new Test262Error('#8.2: x = []; var object = {valueOf: function() {return {}}, toString: function() {return {}}}; x[object] throw TypeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof TypeError,
+    true,
+    'The result of evaluating (e instanceof TypeError) is expected to be true'
+  );
 }
 
 reportCompare(0, 0);

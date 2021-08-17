@@ -13,6 +13,6 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let dateTime = new Temporal.PlainDateTime(1997, 8, 23, 5, 30, 13)
-assert.sameValue(23, cal.day(dateTime));
+assert.sameValue(cal.day(dateTime), 23, 'cal.day(new Temporal.PlainDateTime(1997, 8, 23, 5, 30, 13)) must return 23');
 
 reportCompare(0, 0);

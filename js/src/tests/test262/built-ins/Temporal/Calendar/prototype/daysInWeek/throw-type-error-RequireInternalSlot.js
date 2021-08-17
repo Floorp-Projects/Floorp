@@ -7,12 +7,12 @@ description: Temporal.Calendar.prototype.daysInWeek throws TypeError
   when the internal lot is not presented.
 info: |
   2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-features: [Temporal]
+features: [Temporal, arrow-function]
 ---*/
 let cal = new Temporal.Calendar("iso8601");
 
 let badCal = { daysInWeek: cal.daysInWeek }
 assert.throws(TypeError, () => badCal.daysInWeek("2021-03-04"),
-    "Throw TypeError if no internal slot");
+    'badCal.daysInWeek("2021-03-04") throws a TypeError exception');
 
 reportCompare(0, 0);

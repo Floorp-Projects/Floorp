@@ -13,6 +13,6 @@ var timeZone = {
 
 assert.throws(TypeError, function() {
   Temporal.Now.plainDateTime('iso8601', timeZone);
-});
+}, 'Temporal.Now.plainDateTime("iso8601", timeZone) throws a TypeError exception');
 
 reportCompare(0, 0);

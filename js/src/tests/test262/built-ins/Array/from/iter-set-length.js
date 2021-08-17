@@ -33,7 +33,7 @@ nextIterResult = lastIterResult = {
 };
 result = Array.from(items);
 
-assert.sameValue(result.length, 0);
+assert.sameValue(result.length, 0, 'The value of result.length is expected to be 0');
 
 nextIterResult = {
   done: false
@@ -43,6 +43,6 @@ lastIterResult = {
 };
 result = Array.from(items);
 
-assert.sameValue(result.length, 1);
+assert.sameValue(result.length, 1, 'The value of result.length is expected to be 1');
 
 reportCompare(0, 0);

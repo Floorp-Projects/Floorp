@@ -15,8 +15,12 @@ description: >
 //CHECK#1
 Array.prototype.myproperty = 42;
 var x = Array();
-assert.sameValue(x.myproperty, 42);
+assert.sameValue(x.myproperty, 42, 'The value of x.myproperty is expected to be 42');
 
-assert.sameValue(Object.prototype.hasOwnProperty.call(x, 'myproperty'), false);
+assert.sameValue(
+  Object.prototype.hasOwnProperty.call(x, 'myproperty'),
+  false,
+  'Object.prototype.hasOwnProperty.call(Array(), "myproperty") must return false'
+);
 
 reportCompare(0, 0);

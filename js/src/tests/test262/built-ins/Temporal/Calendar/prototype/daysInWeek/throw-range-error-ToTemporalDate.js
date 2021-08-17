@@ -7,11 +7,11 @@ description: Temporal.Calendar.prototype.daysInWeek throws RangeError on
   ToTemporalDate when temporalDateLike is invalid string.
 info: |
   4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
-features: [Temporal]
+features: [Temporal, arrow-function]
 ---*/
 let cal = new Temporal.Calendar("iso8601");
 
 assert.throws(RangeError, () => cal.daysInWeek("invalid string"),
-    "Throw RangeError if temporalDateLike is invalid");
+    'cal.daysInWeek("invalid string") throws a RangeError exception');
 
 reportCompare(0, 0);

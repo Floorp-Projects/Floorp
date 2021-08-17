@@ -13,21 +13,45 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let dt = new Temporal.PlainDateTime(1997, 1, 23, 5, 30, 13);
-assert.sameValue(23, cal.dayOfYear(dt));
+assert.sameValue(
+  cal.dayOfYear(dt),
+  23,
+  'cal.dayOfYear(new Temporal.PlainDateTime(1997, 1, 23, 5, 30, 13)) must return 23'
+);
 
 dt = new Temporal.PlainDateTime(1997, 2, 23, 5, 30, 13);
-assert.sameValue(54, cal.dayOfYear(dt));
+assert.sameValue(
+  cal.dayOfYear(dt),
+  54,
+  'cal.dayOfYear(new Temporal.PlainDateTime(1997, 2, 23, 5, 30, 13)) must return 54'
+);
 
 dt = new Temporal.PlainDateTime(1996, 3, 23, 5, 30, 13);
-assert.sameValue(83, cal.dayOfYear(dt));
+assert.sameValue(
+  cal.dayOfYear(dt),
+  83,
+  'cal.dayOfYear(new Temporal.PlainDateTime(1996, 3, 23, 5, 30, 13)) must return 83'
+);
 
 dt = new Temporal.PlainDateTime(1997, 3, 23, 5, 30, 13);
-assert.sameValue(82, cal.dayOfYear(dt));
+assert.sameValue(
+  cal.dayOfYear(dt),
+  82,
+  'cal.dayOfYear(new Temporal.PlainDateTime(1997, 3, 23, 5, 30, 13)) must return 82'
+);
 
 dt = new Temporal.PlainDateTime(1997, 12, 31, 5, 30, 13);
-assert.sameValue(365, cal.dayOfYear(dt));
+assert.sameValue(
+  cal.dayOfYear(dt),
+  365,
+  'cal.dayOfYear(new Temporal.PlainDateTime(1997, 12, 31, 5, 30, 13)) must return 365'
+);
 
 dt = new Temporal.PlainDateTime(1996, 12, 31, 5, 30, 13);
-assert.sameValue(366, cal.dayOfYear(dt));
+assert.sameValue(
+  cal.dayOfYear(dt),
+  366,
+  'cal.dayOfYear(new Temporal.PlainDateTime(1996, 12, 31, 5, 30, 13)) must return 366'
+);
 
 reportCompare(0, 0);

@@ -15,6 +15,6 @@ var obj = {
 }
 
 var a = Array.from(obj);
-assert.sameValue(a.length, 0, "Expected an array of length 0.");
+assert.sameValue(a.length, 0, 'The value of a.length is expected to be 0');
 
 reportCompare(0, 0);

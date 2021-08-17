@@ -59,6 +59,6 @@ Object.defineProperty(Temporal.Calendar, 'from', {
 
 Temporal.Now.plainDateTime(calendar);
 
-assert.compareArray(actual, expected);
+assert.compareArray(actual, expected, 'The value of actual is expected to equal the value of expected');
 
 reportCompare(0, 0);

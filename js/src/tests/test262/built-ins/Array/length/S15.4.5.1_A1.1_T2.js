@@ -14,9 +14,11 @@ try {
   x.length = NaN;
   throw new Test262Error('#1.1: x = []; x.length = NaN throw RangeError. Actual: x.length === ' + (x.length));
 } catch (e) {
-  if ((e instanceof RangeError) !== true) {
-    throw new Test262Error('#1.2: x = []; x.length = NaN throw RangeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof RangeError,
+    true,
+    'The result of evaluating (e instanceof RangeError) is expected to be true'
+  );
 }
 
 //CHECK#2
@@ -25,9 +27,11 @@ try {
   x.length = Number.POSITIVE_INFINITY;
   throw new Test262Error('#2.1: x = []; x.length = Number.POSITIVE_INFINITY throw RangeError. Actual: x.length === ' + (x.length));
 } catch (e) {
-  if ((e instanceof RangeError) !== true) {
-    throw new Test262Error('#2.2: x = []; x.length = Number.POSITIVE_INFINITY throw RangeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof RangeError,
+    true,
+    'The result of evaluating (e instanceof RangeError) is expected to be true'
+  );
 }
 
 //CHECK#3
@@ -36,9 +40,11 @@ try {
   x.length = Number.NEGATIVE_INFINITY;
   throw new Test262Error('#3.1: x = []; x.length = Number.NEGATIVE_INFINITY throw RangeError. Actual: x.length === ' + (x.length));
 } catch (e) {
-  if ((e instanceof RangeError) !== true) {
-    throw new Test262Error('#3.2: x = []; x.length = Number.NEGATIVE_INFINITY throw RangeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof RangeError,
+    true,
+    'The result of evaluating (e instanceof RangeError) is expected to be true'
+  );
 }
 
 //CHECK#4
@@ -47,9 +53,11 @@ try {
   x.length = undefined;
   throw new Test262Error('#4.1: x = []; x.length = undefined throw RangeError. Actual: x.length === ' + (x.length));
 } catch (e) {
-  if ((e instanceof RangeError) !== true) {
-    throw new Test262Error('#4.2: x = []; x.length = undefined throw RangeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof RangeError,
+    true,
+    'The result of evaluating (e instanceof RangeError) is expected to be true'
+  );
 }
 
 reportCompare(0, 0);

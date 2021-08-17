@@ -40,6 +40,6 @@ handle.revoke();
 
 assert.throws(TypeError, function() {
   [].concat(handle.proxy);
-});
+}, '[].concat(handle.proxy) throws a TypeError exception');
 
 reportCompare(0, 0);

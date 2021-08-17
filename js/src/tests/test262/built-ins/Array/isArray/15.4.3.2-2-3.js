@@ -13,6 +13,6 @@ assert.sameValue(Array.isArray({
   0: 12,
   1: 9,
   length: 2
-}), false, 'Array.isArray({ 0: 12, 1: 9, length: 2 })');
+}), false, 'Array.isArray({0: 12, 1: 9, length: 2}) must return false');
 
 reportCompare(0, 0);
