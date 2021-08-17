@@ -19,8 +19,6 @@
 #include <stddef.h>    // ptrdiff_t
 #include <stdint.h>    // uint16_t, uint32_t
 
-#include "jsapi.h"  // CompletionKind
-
 #include "frontend/AbstractScopePtr.h"           // ScopeIndex
 #include "frontend/BCEParserHandle.h"            // BCEParserHandle
 #include "frontend/BytecodeControlStructures.h"  // NestableControl
@@ -48,6 +46,7 @@
 #include "vm/BuiltinObjectKind.h"          // BuiltinObjectKind
 #include "vm/BytecodeUtil.h"               // JSOp
 #include "vm/CheckIsObjectKind.h"          // CheckIsObjectKind
+#include "vm/CompletionKind.h"             // CompletionKind
 #include "vm/FunctionPrefixKind.h"         // FunctionPrefixKind
 #include "vm/GeneratorResumeKind.h"        // GeneratorResumeKind
 #include "vm/JSFunction.h"                 // JSFunction
