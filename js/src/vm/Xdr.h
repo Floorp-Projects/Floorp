@@ -12,8 +12,6 @@
 
 #include <type_traits>
 
-#include "jsapi.h"
-#include "jsfriendapi.h"
 #include "NamespaceImports.h"
 
 #include "js/CompileOptions.h"
@@ -23,6 +21,7 @@
 
 namespace js {
 
+class ScriptSource;
 struct SourceExtent;
 
 namespace frontend {

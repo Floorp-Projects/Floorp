@@ -10,6 +10,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "jsfriendapi.h"
+
 #include "gc/Barrier.h"
 #include "js/Conversions.h"
 #include "js/friend/ErrorMessages.h"  // JSErrNum
