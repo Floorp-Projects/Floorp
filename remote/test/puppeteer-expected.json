@@ -234,7 +234,7 @@
     "FAIL"
   ],
   "Cookie specs Page.setCookie should set secure same-site cookies from a frame (cookies.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Cookie specs Page.deleteCookie should work (cookies.spec.ts)": [
     "FAIL"
