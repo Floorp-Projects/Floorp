@@ -320,11 +320,3 @@ partial interface Navigator {
   [Pref="dom.media.mediasession.enabled", SameObject]
   readonly attribute MediaSession mediaSession;
 };
-
-// https://wicg.github.io/web-locks/#navigator-mixins
-[SecureContext]
-interface mixin NavigatorLocks {
-  [Pref="dom.weblocks.enabled"]
-  readonly attribute LockManager locks;
-};
-Navigator includes NavigatorLocks;

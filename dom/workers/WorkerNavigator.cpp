@@ -14,7 +14,6 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
-#include "mozilla/dom/LockManager.h"
 #include "mozilla/dom/MediaCapabilities.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/StorageManager.h"
@@ -36,13 +35,13 @@
 class JSObject;
 struct JSContext;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using namespace workerinternals;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WorkerNavigator, mStorageManager,
-                                      mConnection, mMediaCapabilities, mWebGpu,
-                                      mLocks);
+                                      mConnection, mMediaCapabilities, mWebGpu);
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerNavigator, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerNavigator, Release)
@@ -231,17 +230,5 @@ webgpu::Instance* WorkerNavigator::Gpu() {
   return mWebGpu;
 }
 
-dom::LockManager* WorkerNavigator::Locks() {
-  if (!mLocks) {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-
-    nsIGlobalObject* global = workerPrivate->GlobalScope();
-    MOZ_ASSERT(global);
-
-    mLocks = new dom::LockManager(global);
-  }
-  return mLocks;
-}
-
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
