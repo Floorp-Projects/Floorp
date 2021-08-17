@@ -1533,11 +1533,7 @@ WindowRenderer* nsBaseWidget::GetWindowRenderer() {
 }
 
 WindowRenderer* nsBaseWidget::CreateBasicLayerManager() {
-  if (StaticPrefs::gfx_basic_layer_manager_force_enabled()) {
-    return new BasicLayerManager(this);
-  } else {
-    return new FallbackRenderer;
-  }
+  return new FallbackRenderer;
 }
 
 CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer() {

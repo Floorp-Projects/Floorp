@@ -4836,11 +4836,6 @@
   value: true
   mirror: always
 
-- name: gfx.basic_layer_manager.force_enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 #  Whether to enable LayerScope tool and default listening port.
 - name: gfx.layerscope.enabled
   type: RelaxedAtomicBool
