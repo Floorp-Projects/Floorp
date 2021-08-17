@@ -19,10 +19,10 @@ def pkg_config_version(pkg_config):
     return Version(check_cmd_output(pkg_config, "--version").rstrip())
 
 
-@depends(target_sysroot.path, target_multiarch_dir, when=pkg_config)
+@depends(target, target_sysroot.path, target_multiarch_dir, when=pkg_config)
 @imports(_from="os", _import="environ")
-def pkg_config_vars(sysroot_path, multiarch_dir):
-    if sysroot_path:
+def pkg_config_vars(target, sysroot_path, multiarch_dir):
+    if sysroot_path and target.kernel != "Darwin":
         return namespace(
             PKG_CONFIG_PATH="",
             PKG_CONFIG_SYSROOT_DIR=sysroot_path,
