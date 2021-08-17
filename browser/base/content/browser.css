@@ -761,7 +761,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 #identity-icon-box {
-  max-width: calc(30px + 10em);
+  max-width: calc(30px + 13em);
 }
 
 @media (max-width: 770px) {
