@@ -382,7 +382,7 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
 #endif
 #if defined(XP_WIN)
     if (*curarg == '/') {
-      char* dup = PL_strdup(curarg);
+      char* dup = strdup(curarg);
       if (!dup) return NS_ERROR_OUT_OF_MEMORY;
 
       *dup = '-';
@@ -394,14 +394,14 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
       } else {
         appendArg(dup);
       }
-      PL_strfree(dup);
+      free(dup);
       continue;
     }
 #endif
     if (*curarg == '-') {
       if (*(curarg + 1) == '-') ++curarg;
 
-      char* dup = PL_strdup(curarg);
+      char* dup = strdup(curarg);
       if (!dup) return NS_ERROR_OUT_OF_MEMORY;
 
       char* eq = PL_strchr(dup, '=');
@@ -412,7 +412,7 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
       } else {
         appendArg(dup);
       }
-      PL_strfree(dup);
+      free(dup);
       continue;
     }
 
