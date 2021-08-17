@@ -34,6 +34,7 @@
 #include "gc/Tracer.h"
 #include "js/AllocationRecording.h"
 #include "js/BuildId.h"  // JS::BuildIdOp
+#include "js/Context.h"
 #include "js/Debug.h"
 #include "js/experimental/CTypes.h"      // JS::CTypesActivityCallback
 #include "js/experimental/SourceHook.h"  // js::SourceHook
@@ -52,6 +53,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "js/Warnings.h"  // JS::WarningReporter
+#include "js/Zone.h"
 #include "threading/Thread.h"
 #include "vm/Caches.h"
 #include "vm/CodeCoverage.h"
