@@ -51,7 +51,7 @@ function commonDialogOnLoad() {
         title.raw = promptPrincipal.URI.displayHostPort;
       } catch (ex) {
         // hostPort getter can throw, e.g. for about URIs.
-        title.raw = promptPrincipal.origin;
+        title.raw = promptPrincipal.originNoSuffix;
       }
       // hostPort can be empty for file URIs.
       if (!title.raw) {
