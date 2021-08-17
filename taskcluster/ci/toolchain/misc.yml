@@ -216,7 +216,8 @@ wgpu-deps:
         fetch:
             - android-rs-glue
         toolchain:
-            - linux64-rust-1.47  # whatever m-c is built with
+            # this requires resolver=2 in Naga
+            - linux64-rust-1.51  # whatever m-c is built with
 
 linux64-liblowercase:
     description: "liblowercase"

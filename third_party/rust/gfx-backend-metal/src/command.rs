@@ -775,7 +775,9 @@ impl State {
         result_sizes.clear();
         for br in stage_info.sized_bindings.iter() {
             // If it's None, this isn't the right time to update the sizes
-            let size = self.storage_buffer_length_map.get(&(br.group as pso::DescriptorSetIndex, br.binding))?;
+            let size = self
+                .storage_buffer_length_map
+                .get(&(br.group as pso::DescriptorSetIndex, br.binding))?;
             result_sizes.push(*size);
         }
         Some(slot as _)

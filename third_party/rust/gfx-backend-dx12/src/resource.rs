@@ -542,6 +542,7 @@ impl DescriptorRange {
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct DynamicDescriptor {
+    //TODO: just store `DynamicBuffer` here?
     pub content: DescriptorContent,
     pub gpu_buffer_location: u64,
 }
