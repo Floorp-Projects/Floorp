@@ -8,12 +8,10 @@ description: >
   (as corroborated by `Date.now`)
 features: [BigInt, Temporal]
 ---*/
-
 var nowBefore = Date.now();
 var seconds = Number(Temporal.Now.instant().epochNanoseconds / 1000000n);
 var nowAfter = Date.now();
-
-assert(seconds >= nowBefore, 'before');
-assert(seconds <= nowAfter, 'after');
+assert(seconds >= nowBefore, 'The result of evaluating (seconds >= nowBefore) is expected to be true');
+assert(seconds <= nowAfter, 'The result of evaluating (seconds <= nowAfter) is expected to be true');
 
 reportCompare(0, 0);

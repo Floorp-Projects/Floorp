@@ -12,6 +12,6 @@ assert.sameValue(isConstructor(Temporal.Now.instant), false, 'isConstructor(Temp
 
 assert.throws(TypeError, () => {
   new Temporal.Now.instant();
-}, '`new Temporal.Now.instant()` throws TypeError');
+}, 'new Temporal.Now.instant() throws a TypeError exception');
 
 reportCompare(0, 0);

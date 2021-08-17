@@ -6,11 +6,6 @@ info: If no arguments are given, Math.min() is +Infinity
 es5id: 15.8.2.12_A1
 description: Checking if Math.min() equals to +Infinity
 ---*/
-
-// CHECK#1
-if (Math.min() != +Infinity)
-{
-  throw new Test262Error("#1: 'Math.min() != +Infinity'");
-}
+assert.sameValue(Math.min(), +Infinity, 'Math.min() must return +Infinity');
 
 reportCompare(0, 0);

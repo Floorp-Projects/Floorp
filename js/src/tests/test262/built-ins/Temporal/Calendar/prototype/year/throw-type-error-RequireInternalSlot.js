@@ -14,6 +14,6 @@ let cal = new Temporal.Calendar("iso8601");
 
 let badCal = { year: cal.year }
 assert.throws(TypeError, () => badCal.year("2021-03-04"),
-    "Throw TypeError if there are no internal slot");
+    'badCal.year("2021-03-04") throws a TypeError exception');
 
 reportCompare(0, 0);

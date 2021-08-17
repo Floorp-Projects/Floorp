@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-top-level-await) skip-if(!xulRuntime.shell) module -- requires shell-options
+// |reftest| module
 // This file was procedurally generated from the following sources:
 // - src/top-level-await/await-expr-array-literal.case
 // - src/top-level-await/syntax/if-expr.template

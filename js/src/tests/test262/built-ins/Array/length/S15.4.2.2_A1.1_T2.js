@@ -14,8 +14,6 @@ description: Array.prototype.toString = Object.prototype.toString
 //CHECK#1
 Array.prototype.toString = Object.prototype.toString;
 var x = new Array(0);
-if (x.toString() !== "[object " + "Array" + "]") {
-  throw new Test262Error('#1: Array.prototype.toString = Object.prototype.toString; var x = new Array(0); x.toString() === "[object " + "Array" + "]". Actual: ' + (x.toString()));
-}
+assert.sameValue(x.toString(), "[object Array]", 'x.toString() must return "[object Array]"');
 
 reportCompare(0, 0);

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Array.of), false, 'isConstructor(Array.of) must r
 
 assert.throws(TypeError, () => {
   new Array.of(1);
-}, '`new Array.of(1)` throws TypeError');
+}, '`new Array.of(1)` throws a TypeError exception');
 
 
 reportCompare(0, 0);

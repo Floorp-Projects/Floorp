@@ -12,10 +12,10 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let d = new Temporal.PlainDate(1970, 1, 1);
-assert.sameValue(4, cal.dayOfWeek(d));
+assert.sameValue(4, cal.dayOfWeek(d), '4 must return the same value returned by cal.dayOfWeek(d)');
 d = new Temporal.PlainDate(2021, 2, 15);
-assert.sameValue(1, cal.dayOfWeek(d));
+assert.sameValue(1, cal.dayOfWeek(d), '1 must return the same value returned by cal.dayOfWeek(d)');
 d = new Temporal.PlainDate(2021, 8, 15);
-assert.sameValue(7, cal.dayOfWeek(d));
+assert.sameValue(7, cal.dayOfWeek(d), '7 must return the same value returned by cal.dayOfWeek(d)');
 
 reportCompare(0, 0);

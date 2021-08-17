@@ -13,6 +13,10 @@ features: [Temporal]
 let cal = new Temporal.Calendar("iso8601");
 
 let monthDay = new Temporal.PlainMonthDay(12, 25);
-assert.sameValue("M12", cal.monthCode(monthDay));
+assert.sameValue(
+  cal.monthCode(monthDay),
+  "M12",
+  'cal.monthCode(new Temporal.PlainMonthDay(12, 25)) must return "M12"'
+);
 
 reportCompare(0, 0);

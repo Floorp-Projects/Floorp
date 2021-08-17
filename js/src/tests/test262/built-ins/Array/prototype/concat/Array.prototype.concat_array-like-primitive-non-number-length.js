@@ -20,13 +20,13 @@ obj.length = {
   },
   valueOf: null
 };
-assert(compareArray([].concat(obj), []));
+assert.compareArray([].concat(obj), [], '[].concat({"1": "A", "3": "B", "5": "C"}) must return []');
 obj.length = {
   toString: null,
   valueOf: function() {
     return "SIX";
   }
 };
-assert(compareArray([].concat(obj), []));
+assert.compareArray([].concat(obj), [], '[].concat({"1": "A", "3": "B", "5": "C"}) must return []');
 
 reportCompare(0, 0);

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Array.isArray), false, 'isConstructor(Array.isArr
 
 assert.throws(TypeError, () => {
   new Array.isArray([]);
-}, '`new Array.isArray([])` throws TypeError');
+}, 'new Array.isArray([]) throws a TypeError exception');
 
 
 reportCompare(0, 0);

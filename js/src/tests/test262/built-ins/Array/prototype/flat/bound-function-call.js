@@ -14,6 +14,6 @@ var a = [
 ];
 var actual = [].flat.bind(a)();
 
-assert.compareArray(actual, [0, 1], 'bound flat');
+assert.compareArray(actual, [0, 1], 'The value of actual is expected to be [0, 1]');
 
 reportCompare(0, 0);

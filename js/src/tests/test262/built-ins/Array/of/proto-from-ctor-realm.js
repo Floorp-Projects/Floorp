@@ -26,6 +26,10 @@ C.prototype = null;
 
 var a = Array.of.call(C, 1, 2, 3);
 
-assert.sameValue(Object.getPrototypeOf(a), other.Object.prototype);
+assert.sameValue(
+  Object.getPrototypeOf(a),
+  other.Object.prototype,
+  'Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype'
+);
 
 reportCompare(0, 0);

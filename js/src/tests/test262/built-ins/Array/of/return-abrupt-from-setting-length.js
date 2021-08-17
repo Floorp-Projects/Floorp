@@ -23,6 +23,6 @@ function T() {
 
 assert.throws(Test262Error, function() {
   Array.of.call(T);
-});
+}, 'Array.of.call(T) throws a Test262Error exception');
 
 reportCompare(0, 0);

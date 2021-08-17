@@ -9,7 +9,8 @@ features: [Temporal]
 
 assert.sameValue(
   Object.getPrototypeOf(Temporal.Now.instant()),
-  Temporal.Instant.prototype
+  Temporal.Instant.prototype,
+  'Object.getPrototypeOf(Temporal.Now.instant()) returns Temporal.Instant.prototype'
 );
 
 reportCompare(0, 0);

@@ -7,6 +7,6 @@ es5id: 15.4.3.2-0-2
 description: Array.isArray must exist as a function taking 1 parameter
 ---*/
 
-assert.sameValue(Array.isArray.length, 1, 'Array.isArray.length');
+assert.sameValue(Array.isArray.length, 1, 'The value of Array.isArray.length is expected to be 1');
 
 reportCompare(0, 0);

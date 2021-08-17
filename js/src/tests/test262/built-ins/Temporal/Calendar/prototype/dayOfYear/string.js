@@ -12,9 +12,25 @@ features: [Temporal]
 ---*/
 let cal = new Temporal.Calendar("iso8601");
 
-assert.sameValue(18, cal.dayOfYear("2019-01-18"));
-assert.sameValue(49, cal.dayOfYear("2020-02-18"));
-assert.sameValue(365, cal.dayOfYear("2019-12-31"));
-assert.sameValue(366, cal.dayOfYear("2000-12-31"));
+assert.sameValue(
+  cal.dayOfYear("2019-01-18"),
+  18,
+  'cal.dayOfYear("2019-01-18") must return 18'
+);
+assert.sameValue(
+  cal.dayOfYear("2020-02-18"),
+  49,
+  'cal.dayOfYear("2020-02-18") must return 49'
+);
+assert.sameValue(
+  cal.dayOfYear("2019-12-31"),
+  365,
+  'cal.dayOfYear("2019-12-31") must return 365'
+);
+assert.sameValue(
+  cal.dayOfYear("2000-12-31"),
+  366,
+  'cal.dayOfYear("2000-12-31") must return 366'
+);
 
 reportCompare(0, 0);

@@ -12,6 +12,6 @@ assert.sameValue(isConstructor(Temporal.Now.plainDateTime), false, 'isConstructo
 
 assert.throws(TypeError, () => {
   new Temporal.Now.plainDateTime();
-}, '`new Temporal.Now.plainDateTime()` throws TypeError');
+}, 'new Temporal.Now.plainDateTime() throws a TypeError exception');
 
 reportCompare(0, 0);

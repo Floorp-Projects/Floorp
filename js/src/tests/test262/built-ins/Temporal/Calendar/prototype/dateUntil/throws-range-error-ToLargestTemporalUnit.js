@@ -14,7 +14,7 @@ let cal = new Temporal.Calendar("iso8601");
 ["invalid", "hour", "minute", "second", "millisecond", "microsecond",
     "nanosecond"].forEach(function(largestUnit) {
   assert.throws(RangeError, () => cal.dateUntil("2021-07-16", "2022-03-04", {largestUnit}),
-      "Invalid or disallowed largestUnit cause ToLargestTemporalUnit to throw RangeError");
+      'cal.dateUntil("2021-07-16", "2022-03-04", {largestUnit}) throws a RangeError exception');
 })
 
 reportCompare(0, 0);
