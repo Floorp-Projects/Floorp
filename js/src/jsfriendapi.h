@@ -7,33 +7,18 @@
 #ifndef jsfriendapi_h
 #define jsfriendapi_h
 
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/PodOperations.h"
-
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
-#include "js/CharacterEncoding.h"
 #include "js/Class.h"
-#include "js/ErrorReport.h"
-#include "js/Exception.h"
-#include "js/friend/PerformanceHint.h"
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
 #include "js/Object.h"           // JS::GetClass
 #include "js/shadow/Function.h"  // JS::shadow::Function
 #include "js/shadow/Object.h"    // JS::shadow::Object
 #include "js/TypeDecls.h"
-#include "js/Utility.h"
 
 class JSJitInfo;
-
-namespace JS {
-template <class T>
-class Heap;
-
-class ExceptionStack;
-} /* namespace JS */
 
 extern JS_PUBLIC_API void JS_SetGrayGCRootsTracer(JSContext* cx,
                                                   JSTraceDataOp traceOp,
