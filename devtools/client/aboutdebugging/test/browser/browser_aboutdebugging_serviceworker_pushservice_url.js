@@ -33,7 +33,11 @@ add_task(async function() {
   info(
     "Wait for the service worker to claim the test window before proceeding."
   );
-  await onServiceWorkerMessage(swTab, "sw-claimed");
+  await SpecialPowers.spawn(
+    swTab.linkedBrowser,
+    [],
+    () => content.wrappedJSObject.onSwClaimed
+  );
 
   info("Wait until the service worker appears and is running");
   const targetElement = await waitForServiceWorkerRunning(
