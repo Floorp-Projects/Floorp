@@ -438,8 +438,10 @@ class MachCommands(MachCommandBase):
         fh = options["output_file"]
         if fh:
             fh = open(fh, "w")
+
         print(out, file=fh)
-        if options["format"] != "json":
+
+        if options["diff"] and options["format"] != "json":
             logger.info(
                 "If you were expecting differences in task bodies "
                 'you should pass "-J"\n'
