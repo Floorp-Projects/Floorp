@@ -5,14 +5,13 @@
 package org.mozilla.gecko.media;
 
 import android.media.MediaCodec;
+import android.util.SparseArray;
 
 import org.mozilla.gecko.mozglue.SharedMemory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 final class SamplePool {
     private static final class Impl {
@@ -22,7 +21,7 @@ final class SamplePool {
         private final boolean mBufferless;
 
         private int mNextBufferId = Sample.NO_BUFFER + 1;
-        private Map<Integer, SampleBuffer> mBuffers = new HashMap<>();
+        private SparseArray<SampleBuffer> mBuffers = new SparseArray<>();
 
         private Impl(final String name, final boolean bufferless) {
             mName = name;
@@ -57,7 +56,7 @@ final class SamplePool {
                 s.bufferId = id;
                 return s;
             } catch (final NoSuchMethodException | IOException e) {
-                mBuffers.remove(id);
+                mBuffers.delete(id);
                 throw new UnsupportedOperationException(e);
             }
         }
@@ -84,15 +83,16 @@ final class SamplePool {
             }
             mRecycledSamples.clear();
 
-            for (final SampleBuffer b: mBuffers.values()) {
-                b.dispose();
+            for (int i = 0; i < mBuffers.size(); ++i) {
+                mBuffers.valueAt(i).dispose();
             }
             mBuffers.clear();
         }
 
         private void disposeSample(final Sample sample) {
             if (sample.bufferId != Sample.NO_BUFFER) {
-                mBuffers.remove(sample.bufferId).dispose();
+                mBuffers.get(sample.bufferId).dispose();
+                mBuffers.delete(sample.bufferId);
             }
             sample.dispose();
         }

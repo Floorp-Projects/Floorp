@@ -9,9 +9,10 @@ import android.graphics.SurfaceTexture;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
 import android.util.Log;
+import android.util.LongSparseArray;
+import android.util.SparseArray;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -21,11 +22,11 @@ import org.mozilla.gecko.mozglue.JNIObject;
     private static final String LOGTAG = "GeckoSurfaceTexture";
     private static final int MAX_SURFACE_TEXTURES = 200;
     private static volatile int sNextHandle = 1;
-    private static final HashMap<Integer, GeckoSurfaceTexture> sSurfaceTextures = new HashMap<Integer, GeckoSurfaceTexture>();
+    private static final SparseArray<GeckoSurfaceTexture> sSurfaceTextures = new SparseArray<GeckoSurfaceTexture>();
 
 
-    private static HashMap<Long, LinkedList<GeckoSurfaceTexture>> sUnusedTextures =
-        new HashMap<Long, LinkedList<GeckoSurfaceTexture>>();
+    private static LongSparseArray<LinkedList<GeckoSurfaceTexture>> sUnusedTextures =
+        new LongSparseArray<LinkedList<GeckoSurfaceTexture>>();
 
     private int mHandle;
     private boolean mIsSingleBuffer;
@@ -204,7 +205,8 @@ import org.mozilla.gecko.mozglue.JNIObject;
     public static void destroyUnused(final long context) {
         final LinkedList<GeckoSurfaceTexture> list;
         synchronized (sUnusedTextures) {
-            list = sUnusedTextures.remove(context);
+            list = sUnusedTextures.get(context);
+            sUnusedTextures.delete(context);
         }
 
         if (list == null) {
@@ -259,7 +261,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
                 gst = new GeckoSurfaceTexture(resolvedHandle);
             }
 
-            if (sSurfaceTextures.containsKey(resolvedHandle)) {
+            if (sSurfaceTextures.indexOfKey(resolvedHandle) >= 0) {
                 gst.release();
                 throw new IllegalArgumentException("Already have a GeckoSurfaceTexture with that handle");
             }
