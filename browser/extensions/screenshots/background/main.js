@@ -161,6 +161,10 @@ this.main = (function() {
     return null;
   });
 
+  communication.register("captureTelemetry", (sender, ...args) => {
+    catcher.watchPromise(incrementCount(...args));
+  });
+
   communication.register("openShot", async (sender, { url, copied }) => {
     if (copied) {
       const id = makeUuid();
