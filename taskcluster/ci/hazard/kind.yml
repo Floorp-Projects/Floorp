@@ -22,7 +22,7 @@ job-defaults:
     worker-type: b-linux
     worker:
         max-run-time: 36000
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
 
 jobs:
     linux64-shell-haz/debug:
