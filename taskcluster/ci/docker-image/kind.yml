@@ -122,9 +122,9 @@ jobs:
         symbol: I(deb10-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: debian:buster-20210208
+            BASE_IMAGE: debian:buster-20210816
             DIST: buster
-            SNAPSHOT: '20210208T213147Z'
+            SNAPSHOT: '20210816T214117Z'
     debian10-packages:
         symbol: I(deb10-pkg)
         definition: debian-packages
