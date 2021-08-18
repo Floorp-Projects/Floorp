@@ -360,8 +360,8 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
 #  if defined(HAVE_POSIX_FALLOCATE)
   // Using posix_fallocate will ensure that there's actually space for this
   // file. Otherwise we end up with a sparse file that can give SIGBUS if we
-  // run out of space while writing to it.
-  {
+  // run out of space while writing to it.  (This doesn't apply to memfd.)
+  if (!is_memfd) {
     int rv;
     // Avoid repeated interruptions of posix_fallocate by the profiler's
     // SIGPROF sampling signal. Indicating "thread sleep" here means we'll
