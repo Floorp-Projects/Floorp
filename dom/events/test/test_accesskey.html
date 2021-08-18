@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test for Accesskey</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<!-- Tests for lable -->
+<label id="label1" accesskey="a">Label 1</label><br>
+<label id="label2" accesskey="a" for="checkbox2">Label 2</label><input type="checkbox" id="checkbox2" disabled>Checkbox 2</input><br>
+<label id="label3" accesskey="a" for="checkbox3">Label 3</label><input type="checkbox" id="checkbox3">Checkbox 3</input><br>
+<!-- Tests for button -->
+<button id="button1" accesskey="b" style="display: none;">Button 1</button><br>
+<button id="button2" accesskey="b">Button 2</button><br>
+<button id="button3" accesskey="b" disabled>Button 3</button><br>
+<button id="button4" accesskey="b">Button 4</button><br>
+<!-- Tests for legend -->
+<fieldset>
+<legend accesskey="c">Legend 1</legend>
+<input type="radio" id="radio1" style="display: none;"><label for="radio1">Radio 1</label><br>
+<input type="radio" id="radio2" disabled><label for="radio2">Radio 2</label><br>
+<input type="radio" id="radio3"><label for="radio3">Radio 3</label><br>
+</fieldset>
+<!-- Tests for legend2 -->
+<fieldset>
+<legend accesskey="d">Legend 2</legend>
+<input type="radio" id="radio4" disabled><label for="radio4">Radio 4</label><br>
+</fieldset>
+<input type="text" id="text1" accesskey="d"><br>
+<script>
+
+function performAccessKey(aKey) {
+  synthesizeKey(aKey, (navigator.platform.includes("Mac")) ?
+                        { altKey : true, ctrlKey : true } :
+                     	  { altKey : true, shiftKey: true });
+}
+
+add_task(function label() {
+  let checkbox3 = document.getElementById("checkbox3");
+
+  performAccessKey("a");
+  is(document.activeElement.id, checkbox3.id, `focus should move to ${checkbox3.id}`);
+  ok(!checkbox3.checked, `${checkbox3.id} should be still unchecked`);
+});
+
+add_task(function button() {
+  let button2 = document.getElementById("button2");
+  let button4 = document.getElementById("button4");
+
+  [button2, button4].forEach(function(element) {
+    element.addEventListener("click", function() {
+      ok(false, `${element.id} should not be clicked`);
+    });
+  });
+
+  performAccessKey("b");
+  is(document.activeElement.id, button2.id, `focus should move to ${button2.id}`);
+
+  performAccessKey("b");
+  is(document.activeElement.id, button4.id, `focus should move to ${button4.id}`);
+});
+
+add_task(function legend() {
+  let radio3 = document.getElementById("radio3");
+
+  performAccessKey("c");
+  is(document.activeElement.id, radio3.id, `focus should move to ${radio3.id}`);
+  ok(!radio3.checked, `${radio3.id} should be still unchecked`);
+});
+
+add_task(function legend2() {
+  let text1 = document.getElementById("text1");
+
+  performAccessKey("d");
+  is(document.activeElement.id, text1.id, `focus should move to ${text1.id}`);
+});
+
+</script>
+</body>
+</html>
