@@ -133,6 +133,7 @@ void ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
   }
 
   mSessions[sessionId] = session;
+  mLastSessionId = sessionId;
 
   const vector<KeyId>& sessionKeys = session->GetKeyIds();
   vector<KeyId> neededKeys;
@@ -238,6 +239,7 @@ void ClearKeySessionManager::PersistentSessionDataLoaded(
       new ClearKeySession(aSessionId, SessionType::kPersistentLicense);
 
   mSessions[aSessionId] = session;
+  mLastSessionId = aSessionId;
 
   uint32_t numKeys = aKeyDataSize / (2 * CENC_KEY_LEN);
 
@@ -571,6 +573,7 @@ void ClearKeySessionManager::DecryptingComplete() {
     delete it->second;
   }
   mSessions.clear();
+  mLastSessionId = std::nullopt;
 
   mDecryptionManager = nullptr;
   mHost = nullptr;
@@ -586,4 +589,125 @@ bool ClearKeySessionManager::MaybeDeferTillInitialized(
 
   mDeferredInitialize.emplace(move(aMaybeDefer));
   return true;
+}
+
+void ClearKeySessionManager::OnQueryOutputProtectionStatus(
+    QueryResult aResult, uint32_t aLinkMask, uint32_t aOutputProtectionMask) {
+  MOZ_ASSERT(mHasOutstandingOutputProtectionQuery,
+             "Should only be called if a query is outstanding");
+  CK_LOGD("ClearKeySessionManager::OnQueryOutputProtectionStatus");
+  mHasOutstandingOutputProtectionQuery = false;
+
+  if (aResult == QueryResult::kQueryFailed) {
+    // Indicate the query failed. This can happen if we're in shutdown.
+    NotifyOutputProtectionStatus(KeyStatus::kInternalError);
+    return;
+  }
+
+  if (aLinkMask & OutputLinkTypes::kLinkTypeNetwork) {
+    NotifyOutputProtectionStatus(KeyStatus::kOutputRestricted);
+    return;
+  }
+
+  NotifyOutputProtectionStatus(KeyStatus::kUsable);
+}
+
+void ClearKeySessionManager::QueryOutputProtectionStatusIfNeeded() {
+  MOZ_ASSERT(
+      mHost,
+      "Should not query protection status if we're shutdown (mHost == null)!");
+  CK_LOGD(
+      "ClearKeySessionManager::UpdateOutputProtectionStatusAndQueryIfNeeded");
+  if (mLastOutputProtectionQueryTime.IsNull()) {
+    // We haven't perfomed a check yet, get a query going.
+    MOZ_ASSERT(
+        !mHasOutstandingOutputProtectionQuery,
+        "Shouldn't have an outstanding query if we haven't recorded a time");
+    QueryOutputProtectionStatusFromHost();
+    return;
+  }
+
+  MOZ_ASSERT(!mLastOutputProtectionQueryTime.IsNull(),
+             "Should have already handled the case where we don't yet have a "
+             "previous check time");
+  const mozilla::TimeStamp now = mozilla::TimeStamp::NowLoRes();
+  const mozilla::TimeDuration timeSinceQuery =
+      now - mLastOutputProtectionQueryTime;
+
+  // The time between output protection checks to the host. I.e. if this amount
+  // of time has passed since the last check with the host, another should be
+  // performed (provided the first check has been handled).
+  static const mozilla::TimeDuration kOutputProtectionQueryInterval =
+      mozilla::TimeDuration::FromSeconds(0.2);
+  // The number of kOutputProtectionQueryInterval intervals we can miss before
+  // we decide a check has failed. I.e. if this value is 2, if we have not
+  // received a reply to a check after kOutputProtectionQueryInterval * 2
+  // time, we consider the check failed.
+  constexpr uint32_t kMissedIntervalsBeforeFailure = 2;
+  // The length of time after which we will restrict output until we get a
+  // query response.
+  static const mozilla::TimeDuration kTimeToWaitBeforeFailure =
+      kOutputProtectionQueryInterval * kMissedIntervalsBeforeFailure;
+
+  if ((timeSinceQuery > kOutputProtectionQueryInterval) &&
+      !mHasOutstandingOutputProtectionQuery) {
+    // We don't have an outstanding query and enough time has passed we should
+    // query again.
+    QueryOutputProtectionStatusFromHost();
+    return;
+  }
+
+  if ((timeSinceQuery > kTimeToWaitBeforeFailure) &&
+      mHasOutstandingOutputProtectionQuery) {
+    // A reponse was not received fast enough, notify.
+    NotifyOutputProtectionStatus(KeyStatus::kInternalError);
+  }
+}
+
+void ClearKeySessionManager::QueryOutputProtectionStatusFromHost() {
+  MOZ_ASSERT(
+      mHost,
+      "Should not query protection status if we're shutdown (mHost == null)!");
+  CK_LOGD("ClearKeySessionManager::QueryOutputProtectionStatusFromHost");
+  if (mHost) {
+    mLastOutputProtectionQueryTime = mozilla::TimeStamp::NowLoRes();
+    mHost->QueryOutputProtectionStatus();
+    mHasOutstandingOutputProtectionQuery = true;
+  }
+}
+
+void ClearKeySessionManager::NotifyOutputProtectionStatus(KeyStatus aStatus) {
+  MOZ_ASSERT(aStatus == KeyStatus::kUsable ||
+                 aStatus == KeyStatus::kOutputRestricted ||
+                 aStatus == KeyStatus::kInternalError,
+             "aStatus should have an expected value");
+  CK_LOGD("ClearKeySessionManager::NotifyOutputProtectionStatus");
+  if (!mLastSessionId.has_value()) {
+    // If we don't have a session id, either because we're too early, or are
+    // shutting down, don't notify.
+    return;
+  }
+
+  string& lastSessionId = mLastSessionId.value();
+
+  // Use 'output-protection' as the key ID. This helps tests disambiguate key
+  // status updates related to this.
+  const uint8_t kKeyId[] = {'o', 'u', 't', 'p', 'u', 't', '-', 'p', 'r',
+                            'o', 't', 'e', 'c', 't', 'i', 'o', 'n'};
+  KeyInformation keyInfo = {};
+  keyInfo.key_id = kKeyId;
+  keyInfo.key_id_size = std::size(kKeyId);
+  keyInfo.status = aStatus;
+
+  vector<KeyInformation> keyInfos;
+  keyInfos.push_back(keyInfo);
+
+  // At time of writing, Gecko's higher level handling doesn't use this arg.
+  // However, we set it to false to mimic Chromium's similar case. Since
+  // Clearkey is used to test the Chromium CDM path, it doesn't hurt to try
+  // and mimic their behaviour.
+  bool hasAdditionalUseableKey = false;
+  mHost->OnSessionKeysChange(lastSessionId.c_str(), lastSessionId.size(),
+                             hasAdditionalUseableKey, keyInfos.data(),
+                             keyInfos.size());
 }
