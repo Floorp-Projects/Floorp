@@ -751,6 +751,23 @@ class ProfileChunkedBuffer {
     return chunks;
   }
 
+  // True if the given index points inside the current chunk (up to the last
+  // written byte).
+  // This could be used to check if an index written now would have a good
+  // chance of referring to a previous block that has not been destroyed yet.
+  // But use with extreme care: This information may become incorrect right
+  // after this function returns, because new writes could start a new chunk.
+  [[nodiscard]] bool IsIndexInCurrentChunk(ProfileBufferIndex aIndex) const {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    if (MOZ_UNLIKELY(!mChunkManager || !mCurrentChunk)) {
+      // Out-of-session, or no current chunk.
+      return false;
+    }
+    return (mCurrentChunk->RangeStart() <= aIndex) &&
+           (aIndex < (mCurrentChunk->RangeStart() +
+                      mCurrentChunk->OffsetPastLastBlock()));
+  }
+
   class Reader;
 
   // Class that can iterate through blocks and provide

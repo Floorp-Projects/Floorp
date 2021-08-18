@@ -1776,6 +1776,12 @@ static void TestChunkedBuffer() {
   MOZ_RELEASE_ASSERT(result == 6);
   MOZ_RELEASE_ASSERT(read == 1);
 
+  MOZ_RELEASE_ASSERT(!cb.IsIndexInCurrentChunk(ProfileBufferIndex{}));
+  MOZ_RELEASE_ASSERT(
+      cb.IsIndexInCurrentChunk(blockIndex.ConvertToProfileBufferIndex()));
+  MOZ_RELEASE_ASSERT(cb.IsIndexInCurrentChunk(cb.GetState().mRangeEnd - 1));
+  MOZ_RELEASE_ASSERT(!cb.IsIndexInCurrentChunk(cb.GetState().mRangeEnd));
+
   // No changes after reads.
   VERIFY_PCB_START_END_PUSHED_CLEARED_FAILED(
       cb, 1, 1 + ULEB128Size(sizeof(test)) + sizeof(test), 1, 0, 0);
@@ -1852,6 +1858,11 @@ static void TestChunkedBuffer() {
   uint64_t clearedAfterPuts = stateAfterPuts.mClearedBlockCount;
   MOZ_RELEASE_ASSERT(clearedAfterPuts > 0);
   MOZ_RELEASE_ASSERT(stateAfterPuts.mFailedPutBytes == 0);
+  MOZ_RELEASE_ASSERT(!cb.IsIndexInCurrentChunk(ProfileBufferIndex{}));
+  MOZ_RELEASE_ASSERT(
+      !cb.IsIndexInCurrentChunk(blockIndex.ConvertToProfileBufferIndex()));
+  MOZ_RELEASE_ASSERT(
+      !cb.IsIndexInCurrentChunk(firstBlockIndex.ConvertToProfileBufferIndex()));
 
   // Read extant numbers, which should at least follow each other.
   read = 0;
@@ -1947,6 +1958,11 @@ static void TestChunkedBuffer() {
   MOZ_RELEASE_ASSERT(stateAfterClear.mPushedBlockCount == 0);
   MOZ_RELEASE_ASSERT(stateAfterClear.mClearedBlockCount == 0);
   MOZ_RELEASE_ASSERT(stateAfterClear.mFailedPutBytes == 0);
+  MOZ_RELEASE_ASSERT(!cb.IsIndexInCurrentChunk(ProfileBufferIndex{}));
+  MOZ_RELEASE_ASSERT(
+      !cb.IsIndexInCurrentChunk(blockIndex.ConvertToProfileBufferIndex()));
+  MOZ_RELEASE_ASSERT(!cb.IsIndexInCurrentChunk(stateAfterClear.mRangeEnd - 1));
+  MOZ_RELEASE_ASSERT(!cb.IsIndexInCurrentChunk(stateAfterClear.mRangeEnd));
 
   // Start writer threads.
   constexpr int ThreadCount = 32;
