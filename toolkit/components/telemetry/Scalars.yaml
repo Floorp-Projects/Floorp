@@ -3927,6 +3927,74 @@ screenshots:
     record_in_processes:
       - 'main'
 
+  visible:
+    bug_numbers:
+      - 1722774
+    description: >
+      The count of new screenshots created using just the viewport,
+      no scrolling.
+    expires: never
+    kind: uint
+    notification_emails:
+      - screenshots-dev@mozilla.org
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+
+  full_page:
+    bug_numbers:
+      - 1722774
+    description: >
+      The count of new screenshots created by capturing the full,
+      scrolled page.
+    expires: never
+    kind: uint
+    notification_emails:
+      - screenshots-dev@mozilla.org
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+
+  custom:
+    bug_numbers:
+      - 1722774
+    description: >
+      The count of new screenshots created using the drag handles
+      to draw the box size and position.
+    expires: never
+    kind: uint
+    notification_emails:
+      - screenshots-dev@mozilla.org
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+
+  element:
+    bug_numbers:
+      - 1722774
+    description: >
+      The count of new screenshots created using the highlighter
+      to select element bounds.
+    expires: never
+    kind: uint
+    notification_emails:
+      - screenshots-dev@mozilla.org
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+
 # The following section is for tracking the number of failure for indexedDB.
 idb.failure:
   fileinfo_error:
