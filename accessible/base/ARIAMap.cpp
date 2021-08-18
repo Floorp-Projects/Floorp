@@ -1343,6 +1343,12 @@ static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {nsGkAtoms::aria_controls,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {nsGkAtoms::aria_current,  ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_describedby,       ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  // XXX Ideally, aria-description shouldn't expose a description object
+  // attribute (i.e. it should have ATTR_BYPASSOBJ). However, until the
+  // description-from attribute is implemented (bug 1726087), clients such as
+  // NVDA depend on the description object attribute to work out whether the
+  // accDescription originated from aria-description.
+  {nsGkAtoms::aria_description,                                        ATTR_GLOBAL },
   {nsGkAtoms::aria_details,           ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {nsGkAtoms::aria_disabled,          ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_dropeffect,                         ATTR_VALTOKEN | ATTR_GLOBAL },
