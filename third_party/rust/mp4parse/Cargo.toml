@@ -40,6 +40,7 @@ walkdir = "2.3.1"
 criterion = "0.3"
 
 [features]
+missing-pixi-permitted = []
 3gpp = []
 meta-xml = []
 unstable-api = []

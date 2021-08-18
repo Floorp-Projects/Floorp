@@ -54,11 +54,11 @@ use mp4parse::unstable::{
 use mp4parse::AudioCodecSpecific;
 use mp4parse::AvifContext;
 use mp4parse::CodecType;
-use mp4parse::Error;
 use mp4parse::MediaContext;
 // Re-exported so consumers don't have to depend on mp4parse as well
 pub use mp4parse::ParseStrictness;
 use mp4parse::SampleEntry;
+pub use mp4parse::Status as Mp4parseStatus;
 use mp4parse::TrackType;
 use mp4parse::TryBox;
 use mp4parse::TryHashMap;
@@ -74,18 +74,6 @@ struct Box;
 struct HashMap;
 #[allow(dead_code)]
 struct String;
-
-#[repr(C)]
-#[derive(PartialEq, Debug)]
-pub enum Mp4parseStatus {
-    Ok = 0,
-    BadArg = 1,
-    Invalid = 2,
-    Unsupported = 3,
-    Eof = 4,
-    Io = 5,
-    Oom = 6,
-}
 
 #[repr(C)]
 #[derive(PartialEq, Debug)]
@@ -516,39 +504,6 @@ fn mp4parse_new_common_safe<T: Read, P: ContextParser>(
         .and_then(|x| TryBox::try_new(x).map_err(mp4parse::Error::from))
         .map(TryBox::into_raw)
         .map_err(Mp4parseStatus::from)
-}
-
-impl From<mp4parse::Error> for Mp4parseStatus {
-    fn from(error: mp4parse::Error) -> Self {
-        match error {
-            Error::NoMoov | Error::InvalidData(_) => Mp4parseStatus::Invalid,
-            Error::Unsupported(_) => Mp4parseStatus::Unsupported,
-            Error::UnexpectedEOF => Mp4parseStatus::Eof,
-            Error::Io(_) => {
-                // Getting std::io::ErrorKind::UnexpectedEof is normal
-                // but our From trait implementation should have converted
-                // those to our Error::UnexpectedEOF variant.
-                Mp4parseStatus::Io
-            }
-            Error::OutOfMemory => Mp4parseStatus::Oom,
-        }
-    }
-}
-
-impl From<Result<(), Mp4parseStatus>> for Mp4parseStatus {
-    fn from(result: Result<(), Mp4parseStatus>) -> Self {
-        match result {
-            Ok(()) => Mp4parseStatus::Ok,
-            Err(Mp4parseStatus::Ok) => unreachable!(),
-            Err(e) => e,
-        }
-    }
-}
-
-impl From<fallible_collections::TryReserveError> for Mp4parseStatus {
-    fn from(_: fallible_collections::TryReserveError) -> Self {
-        Mp4parseStatus::Oom
-    }
 }
 
 /// Free an `Mp4parseParser*` allocated by `mp4parse_new()`.

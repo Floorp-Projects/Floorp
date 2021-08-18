@@ -34,6 +34,7 @@ num-traits = "0.2.14"
 env_logger = "0.8"
 
 [features]
+missing-pixi-permitted = ["mp4parse/missing-pixi-permitted"]
 3gpp = ["mp4parse/3gpp"]
 meta-xml = ["mp4parse/meta-xml"]
 mp4v = ["mp4parse/mp4v"]

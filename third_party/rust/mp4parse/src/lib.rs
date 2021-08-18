@@ -148,6 +148,87 @@ struct HashMap;
 #[allow(dead_code)]
 struct String;
 
+/// The return value to the C API
+/// Any detail that needs to be communicated to the caller must be encoded here
+/// since the [`Error`] type's associated data is part of the FFI.
+#[repr(C)]
+#[derive(PartialEq, Debug)]
+pub enum Status {
+    Ok = 0,
+    BadArg = 1,
+    Invalid = 2,
+    Unsupported = 3,
+    Eof = 4,
+    Io = 5,
+    Oom = 6,
+    UnsupportedA1lx,
+    UnsupportedA1op,
+    UnsupportedClap,
+    UnsupportedGrid,
+    UnsupportedIpro,
+    UnsupportedLsel,
+}
+
+/// For convenience of creating an error for an unsupported feature which we
+/// want to communicate the specific feature back to the C API caller
+impl From<Status> for Error {
+    fn from(parse_status: Status) -> Self {
+        let msg = match parse_status {
+            Status::Ok
+            | Status::BadArg
+            | Status::Invalid
+            | Status::Unsupported
+            | Status::Eof
+            | Status::Io
+            | Status::Oom => {
+                panic!("Status -> Error is only for Status:UnsupportedXXX errors")
+            }
+
+            Status::UnsupportedA1lx => "AV1 layered image indexing (a1lx) is unsupported",
+            Status::UnsupportedA1op => "Operating point selection (a1op) is unsupported",
+            Status::UnsupportedClap => "Clean aperture (clap) transform is unsupported",
+            Status::UnsupportedGrid => "Grid-based images are unsupported",
+            Status::UnsupportedIpro => "Item protection (ipro) is unsupported",
+            Status::UnsupportedLsel => "Layer selection (lsel) is unsupported",
+        };
+        Self::UnsupportedDetail(parse_status, msg)
+    }
+}
+
+impl From<Error> for Status {
+    fn from(error: Error) -> Self {
+        match error {
+            Error::NoMoov | Error::InvalidData(_) => Self::Invalid,
+            Error::Unsupported(_) => Self::Unsupported,
+            Error::UnsupportedDetail(parse_status, _msg) => parse_status,
+            Error::UnexpectedEOF => Self::Eof,
+            Error::Io(_) => {
+                // Getting std::io::ErrorKind::UnexpectedEof is normal
+                // but our From trait implementation should have converted
+                // those to our Error::UnexpectedEOF variant.
+                Self::Io
+            }
+            Error::OutOfMemory => Self::Oom,
+        }
+    }
+}
+
+impl From<Result<(), Status>> for Status {
+    fn from(result: Result<(), Status>) -> Self {
+        match result {
+            Ok(()) => Status::Ok,
+            Err(Status::Ok) => unreachable!(),
+            Err(e) => e,
+        }
+    }
+}
+
+impl From<fallible_collections::TryReserveError> for Status {
+    fn from(_: fallible_collections::TryReserveError) -> Self {
+        Status::Oom
+    }
+}
+
 /// Describes parser failures.
 ///
 /// This enum wraps the standard `io::Error` type, unified with
@@ -158,6 +239,10 @@ pub enum Error {
     InvalidData(&'static str),
     /// Parse error caused by limited parser support rather than invalid data.
     Unsupported(&'static str),
+    /// Similar to [`Self::Unsupported`], but for errors that have a specific
+    /// [`Status`] variant for communicating the detail across FFI.
+    /// See the helper [`From<Status> for Error`](enum.Error.html#impl-From<Status>)
+    UnsupportedDetail(Status, &'static str),
     /// Reflect `std::io::ErrorKind::UnexpectedEof` for short data.
     UnexpectedEOF,
     /// Propagate underlying errors from `std::io`.
@@ -483,7 +568,7 @@ pub struct VPxConfigBox {
     pub codec_init: TryVec<u8>,
 }
 
-/// See AV1-ISOBMFF § 2.3.3 https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-syntax
+/// See [AV1-ISOBMFF § 2.3.3](https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-syntax)
 #[derive(Debug)]
 pub struct AV1ConfigBox {
     pub profile: u8,
@@ -502,7 +587,6 @@ pub struct AV1ConfigBox {
 }
 
 impl AV1ConfigBox {
-    /// See https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-syntax
     const CONFIG_OBUS_OFFSET: usize = 4;
 
     pub fn config_obus(&self) -> &[u8] {
@@ -1711,8 +1795,16 @@ pub fn read_avif<T: Read>(f: &mut T, strictness: ParseStrictness) -> Result<Avif
             .map_or(false, |opt| opt.is_some())
     };
     if !has_pixi(primary_item_id) || !alpha_item_id.map_or(true, has_pixi) {
+        // The requirement to include pixi is in the process of being changed
+        // to allowing its omission to imply a default value. In anticipation
+        // of that, only give an error in strict mode
+        // See https://github.com/MPEGGroup/MIAF/issues/9
         fail_if(
-            strictness != ParseStrictness::Permissive,
+            if cfg!(feature = "missing-pixi-permitted") {
+                strictness == ParseStrictness::Strict
+            } else {
+                strictness != ParseStrictness::Permissive
+            },
             "The pixel information property shall be associated with every image \
              that is displayable (not hidden) \
              per MIAF (ISO/IEC 23000-22:2019) specification § 7.3.6.6",
@@ -1850,9 +1942,15 @@ fn read_avif_meta<T: Read + Offset>(
     let item_infos = item_infos.ok_or(Error::InvalidData("iinf missing"))?;
 
     if let Some(item_info) = item_infos.iter().find(|x| x.item_id == primary_item_id) {
-        if &item_info.item_type.to_be_bytes() != b"av01" {
-            warn!("primary_item_id type: {}", U32BE(item_info.item_type));
-            return Err(Error::InvalidData("primary_item_id type is not av01"));
+        debug!("primary_item_id type: {}", U32BE(item_info.item_type));
+        match &item_info.item_type.to_be_bytes() {
+            b"av01" => {}
+            b"grid" => return Err(Error::from(Status::UnsupportedGrid)),
+            _ => {
+                return Err(Error::InvalidData(
+                    "primary_item_id type is neither 'av01' nor 'grid'",
+                ))
+            }
         }
     } else {
         return Err(Error::InvalidData(
@@ -1957,9 +2055,7 @@ fn read_infe<T: Read>(src: &mut BMFFBox<T>, strictness: ParseStrictness) -> Resu
     let item_protection_index = be_u16(src)?;
 
     if item_protection_index != 0 {
-        return Err(Error::Unsupported(
-            "protected items (infe.item_protection_index != 0) are not supported",
-        ));
+        return Err(Error::from(Status::UnsupportedIpro));
     }
 
     let item_type = be_u32(src)?;
@@ -2102,6 +2198,9 @@ fn read_iprp<T: Read>(
                         | ItemProperty::Rotation(_) => {
                             if !a.essential {
                                 warn!("{:?} is invalid", property);
+                                // This is a "shall", but it is likely to change, so only
+                                // fail if using strict parsing.
+                                // See https://github.com/mozilla/mp4parse-rust/issues/284
                                 fail_if(
                                     strictness == ParseStrictness::Strict,
                                     "All transformative properties associated with coded and \
@@ -2525,6 +2624,11 @@ fn read_ipma<T: Read>(
 
 /// Parse an ItemPropertyContainerBox
 ///
+/// For unsupported properties that we know about, return specific
+/// [`Status`] UnsupportedXXXX variants. Unless running in
+/// [`ParseStrictness::Permissive`] mode, in which case, unsupported properties
+/// will be ignored.
+///
 /// See ISOBMFF (ISO 14496-12:2020 § 8.11.14.1
 fn read_ipco<T: Read>(
     src: &mut BMFFBox<T>,
@@ -2538,6 +2642,14 @@ fn read_ipco<T: Read>(
         if let Some(property) = match b.head.name {
             BoxType::AuxiliaryTypeProperty => Some(ItemProperty::AuxiliaryType(read_auxc(&mut b)?)),
             BoxType::AV1CodecConfigurationBox => Some(ItemProperty::AV1Config(read_av1c(&mut b)?)),
+            BoxType::AV1LayeredImageIndexingProperty
+                if strictness != ParseStrictness::Permissive =>
+            {
+                return Err(Error::from(Status::UnsupportedA1lx))
+            }
+            BoxType::CleanApertureBox if strictness != ParseStrictness::Permissive => {
+                return Err(Error::from(Status::UnsupportedClap))
+            }
             BoxType::ColourInformationBox => {
                 Some(ItemProperty::Colour(read_colr(&mut b, strictness)?))
             }
@@ -2545,6 +2657,14 @@ fn read_ipco<T: Read>(
             BoxType::ImageRotation => Some(ItemProperty::Rotation(read_irot(&mut b)?)),
             BoxType::ImageSpatialExtentsProperty => {
                 Some(ItemProperty::ImageSpatialExtents(read_ispe(&mut b)?))
+            }
+            BoxType::LayerSelectorProperty if strictness != ParseStrictness::Permissive => {
+                return Err(Error::from(Status::UnsupportedLsel))
+            }
+            BoxType::OperatingPointSelectorProperty
+                if strictness != ParseStrictness::Permissive =>
+            {
+                return Err(Error::from(Status::UnsupportedA1op))
             }
             BoxType::PixelInformationBox => Some(ItemProperty::Channels(read_pixi(&mut b)?)),
             other_box_type => {
@@ -3733,7 +3853,7 @@ fn read_vpcc<T: Read>(src: &mut BMFFBox<T>) -> Result<VPxConfigBox> {
     })
 }
 
-/// See AV1-ISOBMFF § 2.3.3 https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-syntax
+/// See [AV1-ISOBMFF § 2.3.3](https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-syntax)
 fn read_av1c<T: Read>(src: &mut BMFFBox<T>) -> Result<AV1ConfigBox> {
     // We want to store the raw config as well as a structured (parsed) config, so create a copy of
     // the raw config so we have it later, and then parse the structured data from that.
@@ -4124,7 +4244,7 @@ fn read_esds<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
 }
 
 /// Parse `FLACSpecificBox`.
-/// See https://github.com/xiph/flac/blob/master/doc/isoflac.txt §  3.3.2
+/// See [Encapsulation of FLAC in ISO Base Media File Format](https://github.com/xiph/flac/blob/master/doc/isoflac.txt) §  3.3.2
 fn read_dfla<T: Read>(src: &mut BMFFBox<T>) -> Result<FLACSpecificBox> {
     let (version, flags) = read_fullbox_extra(src)?;
     if version != 0 {
