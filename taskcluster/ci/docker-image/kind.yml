@@ -103,9 +103,9 @@ jobs:
         parent: debian10-base
     valgrind-build:
         symbol: I(vb)
-        parent: debian10-amd64-build
+        parent: debian11-amd64-build
         packages:
-            - deb10-valgrind
+            - deb11-valgrind
     lint:
         symbol: I(lnt)
         parent: ubuntu1804-base

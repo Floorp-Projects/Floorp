@@ -214,6 +214,7 @@
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
+   ...
    fun:dl_open_worker
    fun:_dl_catch_exception
    fun:_dl_open
@@ -239,7 +240,6 @@
     Memcheck:Leak
     match-leak-kinds: definite
     ...
-    fun:__glXInitialize
     fun:__glXInitialize
     fun:GetGLXPrivScreenConfig
     fun:glXQueryServerString

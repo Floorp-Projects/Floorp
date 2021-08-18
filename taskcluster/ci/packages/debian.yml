@@ -38,16 +38,16 @@ deb11-mercurial:
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/bullseye/" debian/changelog
 
-deb10-valgrind:
-    description: "Valgrind for Debian buster"
+deb11-valgrind:
+    description: "Valgrind for Debian bullseye"
     treeherder:
-        symbol: Deb10(valgrind)
+        symbol: Deb11(valgrind)
     run:
-        dist: buster
+        dist: bullseye
         dsc:
             url: http://snapshot.debian.org/archive/debian/20200628T204444Z/pool/main/v/valgrind/valgrind_3.16.1-1.dsc
             sha256: bd9b1bf5454da3d93d2dfab8de44df0c3aebe0371022c4f00aef6850aa0b4e07
-        patch: valgrind-buster.diff
+        patch: valgrind-bullseye.diff
 
 deb10-python-zstandard:
     description: "python-zstandard for Debian buster"
