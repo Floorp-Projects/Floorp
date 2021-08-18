@@ -7,7 +7,7 @@ job-defaults:
         product: firefox
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
     run:
         using: mozharness
         actions: [get-secrets, build]

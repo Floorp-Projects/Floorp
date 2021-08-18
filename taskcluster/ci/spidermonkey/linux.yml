@@ -5,7 +5,7 @@
 job-defaults:
     worker:
         max-run-time: 36000
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         env:
             MOZ_JS_UPLOAD_BINARIES_DEFAULT: "0"
     run:

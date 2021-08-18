@@ -25,7 +25,7 @@ win32/debug:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -79,7 +79,7 @@ win32/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -133,7 +133,7 @@ win64/debug:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -186,7 +186,7 @@ win64-fuzzing/debug:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing
@@ -283,7 +283,7 @@ win64/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -397,7 +397,7 @@ win32-shippable/opt:
     run-on-projects: ['release']
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -454,7 +454,7 @@ win64-shippable/opt:
     run-on-projects: ['release']
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -503,7 +503,7 @@ win32-add-on-devel/opt:
         tier: 2
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -554,7 +554,7 @@ win64-add-on-devel/opt:
         tier: 2
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -605,7 +605,7 @@ win64-noopt/debug:
         tier: 2
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -656,7 +656,7 @@ win32-noopt/debug:
         tier: 2
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -924,7 +924,7 @@ win64-asan/debug:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -978,7 +978,7 @@ win64-asan/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -1037,7 +1037,7 @@ win64-asan-reporter-shippable/opt:
         symbol: BoR
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -1094,7 +1094,7 @@ win64-asan-fuzzing/opt:
         symbol: Bof
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -1165,7 +1165,7 @@ win32-devedition/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -1223,7 +1223,7 @@ win64-devedition/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
@@ -1276,7 +1276,7 @@ win64-aarch64/debug:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
@@ -1336,7 +1336,7 @@ win64-aarch64/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
@@ -1390,7 +1390,7 @@ win64-aarch64-eme/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
@@ -1442,7 +1442,7 @@ win64-aarch64-shippable/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
@@ -1542,7 +1542,7 @@ win64-aarch64-shippable-no-eme/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
@@ -1604,7 +1604,7 @@ win64-aarch64-devedition/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
@@ -1703,7 +1703,7 @@ win64-aarch64-devedition-no-eme/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"

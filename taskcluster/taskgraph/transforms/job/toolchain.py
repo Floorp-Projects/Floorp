@@ -125,7 +125,7 @@ def docker_worker_toolchain(config, job, taskdesc):
     worker["chain-of-trust"] = True
 
     # If the task doesn't have a docker-image, set a default
-    worker.setdefault("docker-image", {"in-tree": "deb11-toolchain-build"})
+    worker.setdefault("docker-image", {"in-tree": "deb10-toolchain-build"})
 
     # Allow the job to specify where artifacts come from, but add
     # public/build if it's not there already.
