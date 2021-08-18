@@ -8,15 +8,27 @@
   <script>
     SimpleTest.waitForExplicitFinish();
 
-    function finish_ipc() {
-      window.open("file_coalesce_touchmove_browserchild.html");
+    let tests = [
+      "file_coalesce_touchmove_ipc.html",
+      "file_coalesce_touchmove_browserchild.html",
+      "file_coalesce_touchmove_browserchild2.html",
+    ];
+
+    function finish() {
+      info("finish");
+      if (tests.length) {
+        SimpleTest.executeSoon(run);
+        return;
+      }
+      SimpleTest.finish();
     }
 
-    function start() {
-      window.open("file_coalesce_touchmove_ipc.html");
+    function run() {
+      info(`run ${tests[0]}`);
+      window.open(tests.shift());
     }
   </script>
 </head>
-<body onload="start();">
+<body onload="run();">
 </body>
 </html>
