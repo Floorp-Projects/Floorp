@@ -160,3 +160,9 @@ void ClearKeyCDM::Destroy() {
 #endif
   delete this;
 }
+
+void ClearKeyCDM::EnableProtectionQuery() {
+  MOZ_ASSERT(!mIsProtectionQueryEnabled,
+             "Should not be called more than once per CDM");
+  mIsProtectionQueryEnabled = true;
+}
