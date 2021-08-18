@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions - Special key system</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Tests that org.mozilla.clearkey_with_protection_query cannot be accessed from JS if not preffed on.
+add_task(async function protectionQueryKeySystemShouldBeHidden() {
+  const kKeySystemOptions = [
+    {
+      initDataTypes: ["cenc"],
+      videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.4d4015"' }],
+    },
+  ];
+  const kClearKeyWithProtectionQuery =
+    "org.mozilla.clearkey_with_protection_query";
+
+  try {
+    // Should throw since special key systems are not enabled.
+    await navigator.requestMediaKeySystemAccess(
+      kClearKeyWithProtectionQuery,
+      kKeySystemOptions
+    );
+    ok(
+      false,
+      "Test should have thrown by default because media.clearkey.test-key-systems.enabled should not be set"
+    );
+  } catch (e) {
+    is(e.name, "NotSupportedError", "Should get not supported error");
+    is(
+      e.message,
+      "Key system is unsupported",
+      "Should get message that key system is unsupported"
+    );
+  }
+});
+</script>
+</pre>
+</body>
+</html>
