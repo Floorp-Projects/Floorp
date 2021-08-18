@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include ../../shared/non-mac.jar.inc.mn
+#include ../../shared/desktop-non-mac.jar.inc.mn
 
 toolkit.jar:
 * skin/classic/global/alert.css
@@ -17,7 +17,6 @@ toolkit.jar:
   skin/classic/global/search-textbox.css
 * skin/classic/global/commonDialog.css
 * skin/classic/global/global.css
-  skin/classic/global/netError.css
   skin/classic/global/popup.css
 * skin/classic/global/popupnotification.css
   skin/classic/global/printPageSetup.css
@@ -33,7 +32,6 @@ toolkit.jar:
   skin/classic/global/icons/menu-check.svg                 (icons/menu-check.svg)
   skin/classic/global/icons/Portrait.png                   (icons/Portrait.png)
   skin/classic/global/icons/Print-preview.png              (icons/Print-preview.png)
-  skin/classic/global/icons/sslWarning.png                 (icons/sslWarning.png)
   skin/classic/global/icons/warning-large.png              (icons/warning-large.png)
   skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
 * skin/classic/global/in-content/common.css                (in-content/common.css)
