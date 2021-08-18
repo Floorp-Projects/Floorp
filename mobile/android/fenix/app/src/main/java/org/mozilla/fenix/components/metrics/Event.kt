@@ -229,6 +229,18 @@ sealed class Event {
     object AndroidAutofillRequestWithLogins : Event()
     object AndroidAutofillRequestWithoutLogins : Event()
 
+    // Credit cards
+    object CreditCardSaved : Event()
+    object CreditCardDeleted : Event()
+    object CreditCardModified : Event()
+    object CreditCardFormDetected : Event()
+    object CreditCardAutofilled : Event()
+    object CreditCardAutofillPromptShown : Event()
+    object CreditCardAutofillPromptExpanded : Event()
+    object CreditCardAutofillPromptDismissed : Event()
+    object CreditCardManagementAddTapped : Event()
+    object CreditCardManagementCardTapped : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {

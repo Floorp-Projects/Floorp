@@ -58,7 +58,8 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
             controller = DefaultCreditCardEditorController(
                 storage = storage,
                 lifecycleScope = lifecycleScope,
-                navController = findNavController()
+                navController = findNavController(),
+                requireContext().components.analytics.metrics
             )
         )
 

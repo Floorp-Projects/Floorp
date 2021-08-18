@@ -20,6 +20,7 @@ import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
+import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
@@ -762,6 +763,36 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.AndroidAutofillConfirmationSuccessful -> EventWrapper<NoExtraKeys>(
             { AndroidAutofill.confirmSuccessful.record(it) }
+        )
+        is Event.CreditCardSaved -> EventWrapper<NoExtraKeys>(
+            { CreditCards.saved.add() }
+        )
+        is Event.CreditCardDeleted -> EventWrapper<NoExtraKeys>(
+            { CreditCards.deleted.add() }
+        )
+        is Event.CreditCardModified -> EventWrapper<NoExtraKeys>(
+            { CreditCards.modified.record(it) }
+        )
+        is Event.CreditCardFormDetected -> EventWrapper<NoExtraKeys>(
+            { CreditCards.formDetected.record(it) }
+        )
+        is Event.CreditCardAutofillPromptShown -> EventWrapper<NoExtraKeys>(
+            { CreditCards.autofillPromptShown.record(it) }
+        )
+        is Event.CreditCardAutofillPromptExpanded -> EventWrapper<NoExtraKeys>(
+            { CreditCards.autofillPromptExpanded.record(it) }
+        )
+        is Event.CreditCardAutofillPromptDismissed -> EventWrapper<NoExtraKeys>(
+            { CreditCards.autofillPromptDismissed.record(it) }
+        )
+        is Event.CreditCardAutofilled -> EventWrapper<NoExtraKeys>(
+            { CreditCards.autofilled.record(it) }
+        )
+        is Event.CreditCardManagementAddTapped -> EventWrapper<NoExtraKeys>(
+            { CreditCards.managementAddTapped.record(it) }
+        )
+        is Event.CreditCardManagementCardTapped -> EventWrapper<NoExtraKeys>(
+            { CreditCards.managementCardTapped.record(it) }
         )
 
         // Don't record other events in Glean:

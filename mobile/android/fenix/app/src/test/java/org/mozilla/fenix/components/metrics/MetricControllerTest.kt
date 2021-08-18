@@ -10,6 +10,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyAll
+import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
@@ -369,5 +370,106 @@ class MetricControllerTest {
         assertEquals(settings.installedAddonsList, "test1,test2,test3,test4")
         assertEquals(settings.enabledAddonsCount, 2)
         assertEquals(settings.enabledAddonsList, "test2,test4")
+    }
+
+    @Test
+    fun `credit card fact should trigger event`() {
+        val enabled = true
+        val settings: Settings = mockk(relaxed = true)
+        val controller = ReleaseMetricController(
+            services = listOf(dataService1),
+            isDataTelemetryEnabled = { enabled },
+            isMarketingDataTelemetryEnabled = { enabled },
+            settings
+        )
+
+        var fact = Fact(
+            Component.FEATURE_PROMPTS,
+            Action.INTERACTION,
+            CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_FORM_DETECTED
+        )
+
+        var event = controller.factToEvent(fact)
+        assertEquals(event, Event.CreditCardFormDetected)
+
+        fact = Fact(
+            Component.FEATURE_PROMPTS,
+            Action.INTERACTION,
+            CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SUCCESS
+        )
+
+        event = controller.factToEvent(fact)
+        assertEquals(event, Event.CreditCardAutofilled)
+
+        fact = Fact(
+            Component.FEATURE_PROMPTS,
+            Action.INTERACTION,
+            CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_SHOWN
+        )
+
+        event = controller.factToEvent(fact)
+        assertEquals(event, Event.CreditCardAutofillPromptShown)
+
+        fact = Fact(
+            Component.FEATURE_PROMPTS,
+            Action.INTERACTION,
+            CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_EXPANDED
+        )
+
+        event = controller.factToEvent(fact)
+        assertEquals(event, Event.CreditCardAutofillPromptExpanded)
+
+        fact = Fact(
+            Component.FEATURE_PROMPTS,
+            Action.INTERACTION,
+            CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_DISMISSED
+        )
+
+        event = controller.factToEvent(fact)
+        assertEquals(event, Event.CreditCardAutofillPromptDismissed)
+    }
+
+    @Test
+    fun `credit card events should be sent to enabled service`() {
+        val controller = ReleaseMetricController(
+            listOf(dataService1),
+            isDataTelemetryEnabled = { true },
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
+        )
+        every { dataService1.shouldTrack(Event.CreditCardSaved) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardDeleted) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardModified) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardFormDetected) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardAutofilled) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardAutofillPromptShown) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardAutofillPromptExpanded) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardAutofillPromptDismissed) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardManagementAddTapped) } returns true
+        every { dataService1.shouldTrack(Event.CreditCardManagementCardTapped) } returns true
+
+        controller.start(MetricServiceType.Data)
+
+        controller.track(Event.CreditCardSaved)
+        controller.track(Event.CreditCardDeleted)
+        controller.track(Event.CreditCardModified)
+        controller.track(Event.CreditCardFormDetected)
+        controller.track(Event.CreditCardAutofilled)
+        controller.track(Event.CreditCardAutofillPromptShown)
+        controller.track(Event.CreditCardAutofillPromptExpanded)
+        controller.track(Event.CreditCardAutofillPromptDismissed)
+        controller.track(Event.CreditCardManagementAddTapped)
+        controller.track(Event.CreditCardManagementCardTapped)
+
+        verify { dataService1.track(Event.CreditCardSaved) }
+        verify { dataService1.track(Event.CreditCardDeleted) }
+        verify { dataService1.track(Event.CreditCardModified) }
+        verify { dataService1.track(Event.CreditCardFormDetected) }
+        verify { dataService1.track(Event.CreditCardAutofilled) }
+        verify { dataService1.track(Event.CreditCardAutofillPromptShown) }
+        verify { dataService1.track(Event.CreditCardAutofillPromptExpanded) }
+        verify { dataService1.track(Event.CreditCardAutofillPromptDismissed) }
+        verify { dataService1.track(Event.CreditCardManagementAddTapped) }
+        verify { dataService1.track(Event.CreditCardManagementCardTapped) }
     }
 }

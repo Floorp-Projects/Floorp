@@ -9,18 +9,21 @@ import io.mockk.verify
 import mozilla.components.concept.storage.CreditCard
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.settings.creditcards.controller.CreditCardsManagementController
 import org.mozilla.fenix.settings.creditcards.interactor.DefaultCreditCardsManagementInteractor
 
 class DefaultCreditCardsManagementInteractorTest {
 
     private val controller: CreditCardsManagementController = mockk(relaxed = true)
+    private val metrics: MetricController = mockk(relaxed = true)
 
     private lateinit var interactor: DefaultCreditCardsManagementInteractor
 
     @Before
     fun setup() {
-        interactor = DefaultCreditCardsManagementInteractor(controller)
+        interactor = DefaultCreditCardsManagementInteractor(controller, metrics)
     }
 
     @Test
@@ -28,11 +31,13 @@ class DefaultCreditCardsManagementInteractorTest {
         val creditCard: CreditCard = mockk(relaxed = true)
         interactor.onSelectCreditCard(creditCard)
         verify { controller.handleCreditCardClicked(creditCard) }
+        verify { metrics.track(Event.CreditCardManagementCardTapped) }
     }
 
     @Test
     fun onClickAddCreditCard() {
         interactor.onAddCreditCardClick()
         verify { controller.handleAddCreditCardClicked() }
+        verify { metrics.track(Event.CreditCardManagementAddTapped) }
     }
 }

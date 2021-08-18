@@ -5,6 +5,8 @@
 package org.mozilla.fenix.settings.creditcards.interactor
 
 import mozilla.components.concept.storage.CreditCard
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.settings.creditcards.controller.CreditCardsManagementController
 
 /**
@@ -34,14 +36,17 @@ interface CreditCardsManagementInteractor {
  * all user interactions.
  */
 class DefaultCreditCardsManagementInteractor(
-    private val controller: CreditCardsManagementController
+    private val controller: CreditCardsManagementController,
+    private val metrics: MetricController
 ) : CreditCardsManagementInteractor {
 
     override fun onSelectCreditCard(creditCard: CreditCard) {
         controller.handleCreditCardClicked(creditCard)
+        metrics.track(Event.CreditCardManagementCardTapped)
     }
 
     override fun onAddCreditCardClick() {
         controller.handleAddCreditCardClicked()
+        metrics.track(Event.CreditCardManagementAddTapped)
     }
 }
