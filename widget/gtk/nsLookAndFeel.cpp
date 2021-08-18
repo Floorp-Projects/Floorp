@@ -1334,8 +1334,17 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
     return false;
   }
 
-  const bool matchesSystem =
-      ColorSchemeForChrome() == ColorScheme::Dark == mSystemTheme.mIsDark;
+  const bool matchesSystem = [&] {
+    switch (StaticPrefs::browser_theme_toolbar_theme()) {
+      case 0:
+        return mSystemTheme.mIsDark;
+      case 1:
+        return !mSystemTheme.mIsDark;
+      default:
+        return true;
+    }
+  }();
+
   const bool usingSystem = !mSystemThemeOverridden;
 
   LOGLNF("MatchFirefoxThemeIfNeeded(matchesSystem=%d, usingSystem=%d)\n",
