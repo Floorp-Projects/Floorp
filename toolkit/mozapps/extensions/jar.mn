@@ -18,7 +18,6 @@ toolkit.jar:
   content/mozapps/extensions/drag-drop-addon-installer.js       (content/drag-drop-addon-installer.js)
   content/mozapps/extensions/firefox-compact-dark.svg           (content/firefox-compact-dark.svg)
   content/mozapps/extensions/firefox-compact-light.svg          (content/firefox-compact-light.svg)
-  content/mozapps/extensions/firefox-monochromatic-purple.svg   (content/firefox-monochromatic-purple.svg)
   content/mozapps/extensions/firefox-alpenglow.svg              (content/firefox-alpenglow.svg)
   content/mozapps/extensions/panel-list.css                     (content/panel-list.css)
   content/mozapps/extensions/panel-item.css                     (content/panel-item.css)
