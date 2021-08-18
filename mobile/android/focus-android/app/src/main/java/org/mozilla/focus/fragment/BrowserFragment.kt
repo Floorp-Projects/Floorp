@@ -39,6 +39,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -182,12 +183,14 @@ class BrowserFragment :
                     components.tabsUseCases,
                     components.contextMenuUseCases,
                     view
-                ) + ContextMenuCandidate.createOpenInExternalAppCandidate(
-                    requireContext(),
-                    components.appLinksUseCases
-                ),
+                ) +
+                    ContextMenuCandidate.createOpenInExternalAppCandidate(
+                        requireContext(),
+                        components.appLinksUseCases
+                    ),
                 engineView!!,
-                requireComponents.contextMenuUseCases
+                requireComponents.contextMenuUseCases,
+                additionalNote = { hitResult -> getAdditionalNote(hitResult) }
             ),
             this, view
         )
@@ -295,6 +298,16 @@ class BrowserFragment :
                 owner = this,
                 view = view
             )
+        }
+    }
+
+    private fun getAdditionalNote(hitResult: HitResult): String? {
+        return if ((hitResult is HitResult.IMAGE_SRC || hitResult is HitResult.IMAGE) &&
+            hitResult.src.isNotEmpty()
+        ) {
+            getString(R.string.contextmenu_erased_images_note2, getString(R.string.app_name))
+        } else {
+            null
         }
     }
 
