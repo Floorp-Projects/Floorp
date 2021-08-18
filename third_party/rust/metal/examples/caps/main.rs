@@ -25,7 +25,7 @@ fn main() {
         println!("Headless: {:?}", device.is_headless());
         println!("D24S8: {:?}", device.d24_s8_supported());
     }
-    println!("maxBufferLength: {} Mb", device.max_buffer_length()>>20);
+    println!("maxBufferLength: {} Mb", device.max_buffer_length() >> 20);
     println!(
         "Indirect argument buffer: {:?}",
         device.argument_buffers_support()
