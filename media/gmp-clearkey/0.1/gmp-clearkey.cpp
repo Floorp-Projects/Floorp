@@ -22,7 +22,6 @@
 
 #include "ClearKeyCDM.h"
 #include "ClearKeySessionManager.h"
-#include "mozilla/dom/KeySystemNames.h"
 // This include is required in order for content_decryption_module to work
 // on Unix systems.
 #include "stddef.h"
@@ -84,12 +83,6 @@ void* CreateCdmInstance(int cdm_interface_version, const char* key_system,
   ClearKeyCDM* clearKey = new ClearKeyCDM(host);
 
   CK_LOGE("Created ClearKeyCDM instance!");
-
-  if (strncmp(key_system, mozilla::kClearKeyWithProtectionQueryKeySystemName,
-              key_system_size) == 0) {
-    CK_LOGE("Enabling protection query on ClearKeyCDM instance!");
-    clearKey->EnableProtectionQuery();
-  }
 
   return clearKey;
 }
