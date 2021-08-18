@@ -31,6 +31,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
 #include "mozilla/RustCell.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
@@ -1657,11 +1658,15 @@ class Element : public FragmentOrElement {
    * @param aKeyCausesActivation - if true then element should be activated
    * @param aIsTrustedEvent - if true then event that is cause of accesskey
    *                          execution is trusted.
-   * @return true if the focus was changed.
+   * @return an error if the element isn't able to handle the accesskey (caller
+   *         would look for the next element to handle it).
+   *         a boolean indicates whether the focus moves to the element after
+   *         the element handles the accesskey.
    */
-  MOZ_CAN_RUN_SCRIPT virtual bool PerformAccesskey(bool aKeyCausesActivation,
-                                                   bool aIsTrustedEvent) {
-    return false;
+  MOZ_CAN_RUN_SCRIPT
+  virtual Result<bool, nsresult> PerformAccesskey(bool aKeyCausesActivation,
+                                                  bool aIsTrustedEvent) {
+    return Err(NS_ERROR_NOT_IMPLEMENTED);
   }
 
  protected:

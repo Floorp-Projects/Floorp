@@ -1161,8 +1161,10 @@ bool EventStateManager::LookForAccessKeyAndExecute(
           }
         }
 
-        if (element->PerformAccesskey(shouldActivate, aIsTrustedEvent)) {
-          if (aIsTrustedEvent) {
+        auto result =
+            element->PerformAccesskey(shouldActivate, aIsTrustedEvent);
+        if (result.isOk()) {
+          if (result.unwrap() && aIsTrustedEvent) {
             // If this is a child process, inform the parent that we want the
             // focus, but pass false since we don't want to change the window
             // order.
