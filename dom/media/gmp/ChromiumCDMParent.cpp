@@ -14,7 +14,6 @@
 #include "GMPLog.h"
 #include "GMPService.h"
 #include "GMPUtils.h"
-#include "VideoUtils.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "mozilla/gmp/GMPTypes.h"
 #include "mozilla/ScopeExit.h"
