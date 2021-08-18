@@ -17,21 +17,22 @@
 #ifndef __ClearKeyDecryptor_h__
 #define __ClearKeyDecryptor_h__
 
-#include "ClearKeyDecryptionManager.h"
-#include "ClearKeyPersistence.h"
-#include "ClearKeySession.h"
-#include "ClearKeyUtils.h"
 // This include is required in order for content_decryption_module to work
 // on Unix systems.
-#include "stddef.h"
-#include "content_decryption_module.h"
-#include "RefCounted.h"
+#include <stddef.h>
 
 #include <functional>
 #include <map>
 #include <queue>
 #include <set>
 #include <string>
+
+#include "ClearKeyDecryptionManager.h"
+#include "ClearKeyPersistence.h"
+#include "ClearKeySession.h"
+#include "ClearKeyUtils.h"
+#include "RefCounted.h"
+#include "content_decryption_module.h"
 
 class ClearKeySessionManager final : public RefCounted {
  public:
