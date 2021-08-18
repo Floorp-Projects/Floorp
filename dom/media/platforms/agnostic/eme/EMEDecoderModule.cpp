@@ -89,9 +89,7 @@ class EMEDecryptor : public MediaDataDecoder,
   RefPtr<InitPromise> Init() override {
     MOZ_ASSERT(!mIsShutdown);
     mThread = GetCurrentSerialEventTarget();
-    uint32_t maxThroughputMs = StaticPrefs::media_eme_max_throughput_ms();
-    EME_LOG("EME max-throughput-ms=" PRIu32, maxThroughputMs);
-    mThroughputLimiter.emplace(mThread, maxThroughputMs);
+    mThroughputLimiter.emplace(mThread);
 
     return mDecoder->Init();
   }

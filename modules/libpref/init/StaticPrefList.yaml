@@ -8044,11 +8044,6 @@
   value: false
   mirror: always
 
-- name: media.eme.max-throughput-ms
-  type: RelaxedAtomicUint32
-  value: 200
-  mirror: always
-
 - name: media.clearkey.persistent-license.enabled
   type: bool
   value: false
