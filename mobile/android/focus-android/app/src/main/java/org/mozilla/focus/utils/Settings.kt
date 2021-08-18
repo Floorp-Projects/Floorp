@@ -243,6 +243,26 @@ class Settings private constructor(
         0
     )
 
+    fun hasSocialBlocked() = preferences.getBoolean(
+        getPreferenceKey(R.string.pref_key_privacy_block_social),
+        true
+    )
+
+    fun hasAdvertisingBlocked() = preferences.getBoolean(
+        getPreferenceKey(R.string.pref_key_privacy_block_ads),
+        true
+    )
+
+    fun hasAnalyticsBlocked() = preferences.getBoolean(
+        getPreferenceKey(R.string.pref_key_privacy_block_analytics),
+        true
+    )
+
+    fun hasContentBlocked() = preferences.getBoolean(
+        getPreferenceKey(R.string.pref_key_privacy_block_other2),
+        true
+    )
+
     private fun getPreferenceKey(resourceId: Int): String =
         resources.getString(resourceId)
 }

@@ -14,6 +14,7 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
@@ -82,6 +83,7 @@ class BrowserToolbarIntegration(
         }
 
         toolbar.display.setOnTrackingProtectionClickedListener {
+            TrackingProtection.toolbarShieldClicked.add()
             fragment.showTrackingProtectionPanel()
         }
 

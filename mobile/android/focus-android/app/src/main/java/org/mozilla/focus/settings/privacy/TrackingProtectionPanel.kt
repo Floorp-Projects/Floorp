@@ -15,6 +15,7 @@ import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeW
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
+import org.mozilla.focus.engine.EngineSharedPreferencesListener.TrackerChanged
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.installedDate
 
@@ -26,7 +27,7 @@ class TrackingProtectionPanel(
     private val isTrackingProtectionOn: Boolean,
     private val isConnectionSecure: Boolean,
     private val toggleTrackingProtection: (Boolean) -> Unit,
-    private val updateTrackingProtectionPolicy: () -> Unit,
+    private val updateTrackingProtectionPolicy: (String?) -> Unit,
     private val showConnectionInfo: () -> Unit
 ) : BottomSheetDialog(context) {
 
@@ -125,19 +126,19 @@ class TrackingProtectionPanel(
                 dismiss()
             }
             advertising.onClickListener {
-                updateTrackingProtectionPolicy()
+                updateTrackingProtectionPolicy(TrackerChanged.ADVERTISING.tracker)
             }
 
             analytics.onClickListener {
-                updateTrackingProtectionPolicy()
+                updateTrackingProtectionPolicy(TrackerChanged.ANALYTICS.tracker)
             }
 
             social.onClickListener {
-                updateTrackingProtectionPolicy()
+                updateTrackingProtectionPolicy(TrackerChanged.SOCIAL.tracker)
             }
 
             content.onClickListener {
-                updateTrackingProtectionPolicy()
+                updateTrackingProtectionPolicy(TrackerChanged.CONTENT.tracker)
             }
 
             securityInfo.setOnClickListener {

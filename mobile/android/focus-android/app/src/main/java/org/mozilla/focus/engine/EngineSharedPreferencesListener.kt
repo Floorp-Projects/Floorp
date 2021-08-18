@@ -6,6 +6,7 @@ package org.mozilla.focus.engine
 
 import android.content.Context
 import android.content.SharedPreferences
+import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.utils.Settings
@@ -16,12 +17,39 @@ import org.mozilla.focus.utils.Settings
 class EngineSharedPreferencesListener(
     private val context: Context
 ) : SharedPreferences.OnSharedPreferenceChangeListener {
+
     override fun onSharedPreferenceChanged(preferences: SharedPreferences, key: String) {
+        val settings = Settings.getInstance(context)
+
         when (key) {
-            context.getString(R.string.pref_key_privacy_block_social),
-            context.getString(R.string.pref_key_privacy_block_ads),
-            context.getString(R.string.pref_key_privacy_block_analytics),
-            context.getString(R.string.pref_key_privacy_block_other2),
+            context.getString(R.string.pref_key_privacy_block_social) ->
+                updateTrackingProtectionPolicy(
+                    ChangeSource.SETTINGS.source,
+                    TrackerChanged.SOCIAL.tracker,
+                    settings.shouldBlockSocialTrackers()
+                )
+
+            context.getString(R.string.pref_key_privacy_block_ads) ->
+                updateTrackingProtectionPolicy(
+                    ChangeSource.SETTINGS.source,
+                    TrackerChanged.ADVERTISING.tracker,
+                    settings.shouldBlockAdTrackers()
+                )
+
+            context.getString(R.string.pref_key_privacy_block_analytics) ->
+                updateTrackingProtectionPolicy(
+                    ChangeSource.SETTINGS.source,
+                    TrackerChanged.ANALYTICS.tracker,
+                    settings.shouldBlockAnalyticTrackers()
+                )
+
+            context.getString(R.string.pref_key_privacy_block_other2) ->
+                updateTrackingProtectionPolicy(
+                    ChangeSource.SETTINGS.source,
+                    TrackerChanged.CONTENT.tracker,
+                    settings.shouldBlockOtherTrackers()
+                )
+
             context.getString(R.string.pref_key_performance_enable_cookies) ->
                 updateTrackingProtectionPolicy()
 
@@ -39,12 +67,26 @@ class EngineSharedPreferencesListener(
         }
     }
 
-    internal fun updateTrackingProtectionPolicy() {
+    internal fun updateTrackingProtectionPolicy(
+        source: String? = null,
+        tracker: String? = null,
+        isEnabled: Boolean = false
+    ) {
         val policy = Settings.getInstance(context).createTrackingProtectionPolicy()
         val components = context.components
 
         components.engineDefaultSettings.trackingProtectionPolicy = policy
         components.settingsUseCases.updateTrackingProtection(policy)
+
+        if (source != null && tracker != null) {
+            TrackingProtection.trackerSettingChanged.record(
+                TrackingProtection.TrackerSettingChangedExtra(
+                    sourceOfChange = source,
+                    trackerChanged = tracker,
+                    isEnabled = isEnabled
+                )
+            )
+        }
     }
 
     private fun updateSafeBrowsingPolicy() {
@@ -70,5 +112,17 @@ class EngineSharedPreferencesListener(
 
         components.engineDefaultSettings.webFontsEnabled = !settings.shouldBlockWebFonts()
         components.engine.settings.webFontsEnabled = !settings.shouldBlockWebFonts()
+    }
+
+    enum class ChangeSource(val source: String) {
+        SETTINGS("Settings"),
+        PANEL("Panel")
+    }
+
+    enum class TrackerChanged(val tracker: String) {
+        ADVERTISING("Advertising"),
+        ANALYTICS("Analytics"),
+        SOCIAL("Social"),
+        CONTENT("Content")
     }
 }

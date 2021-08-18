@@ -54,6 +54,7 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
@@ -825,7 +826,11 @@ class BrowserFragment :
                 .getTotalBlockedTrackersCount(),
             toggleTrackingProtection = ::toggleTrackingProtection,
             updateTrackingProtectionPolicy = {
-                EngineSharedPreferencesListener(requireContext()).updateTrackingProtectionPolicy()
+                EngineSharedPreferencesListener(requireContext())
+                    .updateTrackingProtectionPolicy(
+                        source = EngineSharedPreferencesListener.ChangeSource.PANEL.source,
+                        tracker = it
+                    )
             },
             showConnectionInfo = ::showConnectionInfo
         )
@@ -854,6 +859,13 @@ class BrowserFragment :
             }
             sessionUseCases.reload(tab.id)
         }
+
+        TrackingProtection.hasEverChangedEtp.set(true)
+        TrackingProtection.trackingProtectionChanged.record(
+            TrackingProtection.TrackingProtectionChangedExtra(
+                isEnabled = enable
+            )
+        )
     }
 
     private fun onUrlLongClicked(): Boolean {
