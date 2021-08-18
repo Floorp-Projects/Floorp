@@ -129,6 +129,8 @@ add_task(async function() {
   EventUtils.synthesizeKey("x");
   await waitForTime(5);
   EventUtils.synthesizeKey("KEY_Enter");
+  // TODO: Bug 1726037.
+  // eslint-disable-next-line no-sequences
   await Promise.all[(onPopupClosed, onMessage)];
   is(
     getInputValue(hud),

@@ -407,6 +407,7 @@ linux64-clang-12-android-cross:
             - linux64-gcc-7
             - linux64-android-ndk-linux-repack
             - linux64-toolchain-sysroot
+            - wasm32-wasi-compiler-rt-12
 
 linux64-clang-12-aarch64-cross:
     description: "Clang 12 toolchain build with aarch64 runtime"

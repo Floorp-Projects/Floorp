@@ -3757,6 +3757,12 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# Whether the Web Locks API is enabled
+- name: dom.weblocks.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether the WebMIDI API is enabled
 - name: dom.webmidi.enabled
   type: bool
@@ -4834,11 +4840,6 @@
 - name: gfx.font_rendering.fallback.async
   type: RelaxedAtomicBool
   value: true
-  mirror: always
-
-- name: gfx.basic_layer_manager.force_enabled
-  type: RelaxedAtomicBool
-  value: false
   mirror: always
 
 #  Whether to enable LayerScope tool and default listening port.

@@ -16,7 +16,7 @@ const badExnType = { args: [], ret: I32Code };
 wasmEvalText(`
   (module
     (type (func (param i32)))
-    (event $exn (type 0)))
+    (tag $exn (type 0)))
 `);
 
 wasmError(

@@ -8,6 +8,8 @@ pub struct Memory<'a> {
     pub span: ast::Span,
     /// An optional name to refer to this memory by.
     pub id: Option<ast::Id<'a>>,
+    /// An optional name for this function stored in the custom `name` section.
+    pub name: Option<ast::NameAnnotation<'a>>,
     /// If present, inline export annotations which indicate names this
     /// definition should be exported under.
     pub exports: ast::InlineExport<'a>,
@@ -41,6 +43,7 @@ impl<'a> Parse<'a> for Memory<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::memory>()?.0;
         let id = parser.parse()?;
+        let name = parser.parse()?;
         let exports = parser.parse()?;
 
         // Afterwards figure out which style this is, either:
@@ -79,6 +82,7 @@ impl<'a> Parse<'a> for Memory<'a> {
         Ok(Memory {
             span,
             id,
+            name,
             exports,
             kind,
         })
@@ -93,6 +97,9 @@ pub struct Data<'a> {
 
     /// The optional name of this data segment
     pub id: Option<ast::Id<'a>>,
+
+    /// An optional name for this data stored in the custom `name` section.
+    pub name: Option<ast::NameAnnotation<'a>>,
 
     /// Whether this data segment is passive or active
     pub kind: DataKind<'a>,
@@ -124,6 +131,7 @@ impl<'a> Parse<'a> for Data<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::data>()?.0;
         let id = parser.parse()?;
+        let name = parser.parse()?;
 
         // The `passive` keyword is mentioned in the current spec but isn't
         // mentioned in `wabt` tests, so consider it optional for now
@@ -165,6 +173,7 @@ impl<'a> Parse<'a> for Data<'a> {
         Ok(Data {
             span,
             id,
+            name,
             kind,
             data,
         })

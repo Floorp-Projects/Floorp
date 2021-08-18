@@ -56,7 +56,6 @@ const {
 } = require("devtools/shared/commands/commands-factory");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-const defer = require("devtools/shared/defer");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));

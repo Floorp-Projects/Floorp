@@ -23,15 +23,15 @@ RUN apt-get update && apt-get install \
     libcairo2-dbgsym \
     libdbus-glib-1-2-dbgsym \
     libdrm2-dbgsym \
-    libffi6-dbg \
+    libffi7-dbgsym \
     libfontconfig1-dbgsym \
     libglx-mesa0-dbgsym \
     libglapi-mesa-dbgsym \
     libglib2.0-0-dbgsym \
-    libgdk-pixbuf2.0-0-dbgsym \
+    libgdk-pixbuf-2.0-0-dbgsym \
     libgtk-3-0-dbgsym \
-    libice6-dbg \
-    libicu63-dbgsym \
+    libice6-dbgsym \
+    libicu67-dbgsym \
     libpango-1.0-0-dbgsym \
     libpcre3-dbg \
     libpixman-1-0-dbgsym \
@@ -41,12 +41,12 @@ RUN apt-get update && apt-get install \
     libwayland-cursor0-dbgsym \
     libx11-6-dbgsym \
     libx11-xcb1-dbgsym \
-    libxau6-dbg \
+    libxau6-dbgsym \
     libxcb-glx0-dbgsym \
     libxcb-render0-dbgsym \
     libxcb-shm0-dbgsym \
     libxcb1-dbgsym \
-    libxcomposite1-dbg \
+    libxcomposite1-dbgsym \
     libxcursor1-dbgsym \
     libxdamage1-dbgsym \
     libxdmcp6-dbg \
@@ -56,7 +56,7 @@ RUN apt-get update && apt-get install \
     libxinerama1-dbgsym \
     libxrandr2-dbgsym \
     libxrender1-dbgsym \
-    libxt6-dbg \
+    libxt6-dbgsym \
     libxxf86vm1-dbg \
     valgrind-dbg \
-    zlib1g-dbg
+    zlib1g-dbgsym

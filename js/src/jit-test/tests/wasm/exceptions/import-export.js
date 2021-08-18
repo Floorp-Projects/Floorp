@@ -4,7 +4,7 @@ function testImports() {
   var mod = `
     (module
       (type (func (param i32 i32)))
-      (import "m" "exn" (event (type 0))))
+      (import "m" "exn" (tag (type 0))))
  `;
 
   assertErrorMessage(
@@ -16,7 +16,7 @@ function testImports() {
 
 function testExports() {
   var exports1 = wasmEvalText(`
-    (module (type (func)) (event (export "exn") (type 0)))
+    (module (type (func)) (tag (export "exn") (type 0)))
   `).exports;
 
   assertEq(typeof exports1.exn, "object");
@@ -25,7 +25,7 @@ function testExports() {
   var exports2 = wasmEvalText(`
     (module
       (type (func (param i32 i32)))
-      (event (export "exn") (type 0)))
+      (tag (export "exn") (type 0)))
   `).exports;
 
   assertEq(typeof exports2.exn, "object");
@@ -36,14 +36,14 @@ function testImportExport() {
   var exports = wasmEvalText(`
     (module
       (type (func (param i32)))
-      (event (export "exn") (type 0)))
+      (tag (export "exn") (type 0)))
   `).exports;
 
   wasmEvalText(
     `
     (module
       (type (func (param i32)))
-      (import "m" "exn" (event (type 0))))
+      (import "m" "exn" (tag (type 0))))
   `,
     { m: exports }
   );
@@ -54,7 +54,7 @@ function testImportExport() {
         `
       (module
         (type (func (param)))
-        (import "m" "exn" (event (type 0))))
+        (import "m" "exn" (tag (type 0))))
     `,
         { m: exports }
       );
@@ -71,7 +71,7 @@ function testDescriptions() {
       wasmTextToBinary(`
         (module $m
           (type (func))
-          (import "m" "e" (event (type 0))))
+          (import "m" "e" (tag (type 0))))
       `)
     )
   );
@@ -81,7 +81,7 @@ function testDescriptions() {
       wasmTextToBinary(`
         (module
           (type (func))
-          (event (export "e") (type 0)))
+          (tag (export "e") (type 0)))
       `)
     )
   );

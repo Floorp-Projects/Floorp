@@ -130,13 +130,13 @@ function testValidateThrow() {
              (func $exn-zero
                i32.const 0
                throw $exn1)
-             (event $exn1 (type 0)))`;
+             (tag $exn1 (type 0)))`;
 
   invalid0 = `(module
                 (type (func (param i32)))
                 (func $exn-zero
                   throw $exn1)
-                (event $exn1 (type 0)))`;
+                (tag $exn1 (type 0)))`;
   error0 = /popping value from empty stack/;
 
   invalid1 = `(module
@@ -144,7 +144,7 @@ function testValidateThrow() {
                 (func $exn-zero
                   i64.const 0
                   throw $exn1)
-                (event $exn1 (type 0)))`;
+                (tag $exn1 (type 0)))`;
   error1 = /expression has type i64 but expected i32/;
 
   invalid2 = `(module
@@ -152,7 +152,7 @@ function testValidateThrow() {
                 (func $exn-zero
                   i32.const 0
                   throw 1)
-                (event $exn1 (type 0)))`;
+                (tag $exn1 (type 0)))`;
   error2 = /tag index out of range/;
 
   wasmValidateText(valid);
@@ -261,7 +261,7 @@ function testValidateCatch() {
 function testValidateCatchAll() {
   wasmValidateText(
     `(module
-       (event $exn)
+       (tag $exn)
        (func try catch $exn catch_all end))`
   );
 
@@ -277,21 +277,21 @@ function testValidateCatchAll() {
 
   wasmFailValidateText(
     `(module
-       (event $exn)
+       (tag $exn)
        (func try catch_all catch 0 end))`,
     /catch cannot follow a catch_all/
   );
 
   wasmFailValidateText(
     `(module
-       (event $exn)
+       (tag $exn)
        (func try (result i32) (i32.const 1) catch_all end drop))`,
     /popping value from empty stack/
   );
 
   wasmFailValidateText(
     `(module
-       (event $exn (param i32))
+       (tag $exn (param i32))
        (func try catch $exn drop catch_all drop end))`,
     /popping value from empty stack/
   );
@@ -300,14 +300,14 @@ function testValidateCatchAll() {
   // share the binary opcode.
   wasmFailValidateText(
     `(module
-       (event $exn)
+       (tag $exn)
        (func try catch_all catch_all end))`,
     /catch_all can only be used within a try/
   );
 
   wasmFailValidateText(
     `(module
-       (event $exn)
+       (tag $exn)
        (func catch_all))`,
     /catch_all can only be used within a try/
   );
@@ -317,7 +317,7 @@ function testValidateExnPayload() {
   valid0 = moduleWithSections([
     sigSection([i32Type, i32Toi32Type]),
     declSection([1]),
-    // (event $exn (param i32))
+    // (tag $exn (param i32))
     tagSection([{ type: 0 }]),
     bodySection([
       // (func (param i32) (result i32) ...
@@ -351,7 +351,7 @@ function testValidateExnPayload() {
   valid1 = moduleWithSections([
     sigSection([i32Type, toi32Type]),
     declSection([1]),
-    // (event $exn (param i32))
+    // (tag $exn (param i32))
     tagSection([{ type: 0 }]),
     bodySection([
       // (func (result i32) ...
@@ -383,7 +383,7 @@ function testValidateExnPayload() {
   invalid0 = moduleWithSections([
     sigSection([i32Type, i32Toi64Type]),
     declSection([1]),
-    // (event $exn (param i32))
+    // (tag $exn (param i32))
     tagSection([{ type: 0 }]),
     bodySection([
       // (func (param i32) (result i64) ...
@@ -412,7 +412,7 @@ function testValidateExnPayload() {
     // (type (func))
     sigSection([emptyType]),
     declSection([0]),
-    // (event $exn (type 0))
+    // (tag $exn (type 0))
     tagSection([{ type: 0 }]),
     bodySection([
       // (func ...
@@ -439,7 +439,7 @@ function testValidateExnPayload() {
 function testValidateRethrow() {
   wasmValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            nop
@@ -450,7 +450,7 @@ function testValidateRethrow() {
 
   wasmValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            nop
@@ -471,7 +471,7 @@ function testValidateRethrow() {
 
   wasmValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            nop
@@ -487,7 +487,7 @@ function testValidateRethrow() {
 
   wasmValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            nop
@@ -503,7 +503,7 @@ function testValidateRethrow() {
 
   wasmFailValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            nop
@@ -535,7 +535,7 @@ function testValidateRethrow() {
 
   wasmFailValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            nop
@@ -554,7 +554,7 @@ function testValidateRethrow() {
 function testValidateDelegate() {
   wasmValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            try
@@ -566,7 +566,7 @@ function testValidateDelegate() {
 
   wasmValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            try
@@ -578,7 +578,7 @@ function testValidateDelegate() {
 
   wasmFailValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func (result i32)
          try
            throw $exn
@@ -590,7 +590,7 @@ function testValidateDelegate() {
 
   wasmFailValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try (result i32)
            (i64.const 0)
@@ -600,7 +600,7 @@ function testValidateDelegate() {
 
   wasmFailValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
            try
@@ -613,7 +613,7 @@ function testValidateDelegate() {
 
   wasmFailValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          block
            try
@@ -625,7 +625,7 @@ function testValidateDelegate() {
 
   wasmFailValidateText(
     `(module
-       (event $exn (param))
+       (tag $exn (param))
        (func
          try
          catch $exn

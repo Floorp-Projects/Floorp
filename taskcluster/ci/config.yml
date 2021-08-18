@@ -118,6 +118,7 @@ treeherder:
         'Deb8-32': 'Packages for Debian 8 32-bits'
         'Deb9': 'Packages for Debian 9'
         'Deb10': 'Packages for Debian 10'
+        'Deb11': 'Packages for Debian 11'
         'Ub18': 'Packages for Ubuntu 18.04'
         'Ub20': 'Packages for Ubuntu 20.04'
         'I': 'Docker Image Builds'

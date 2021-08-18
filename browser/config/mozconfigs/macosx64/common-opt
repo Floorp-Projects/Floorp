@@ -1,7 +1,6 @@
 # This file is sourced by the nightly, beta, and release mozconfigs.
 
 . $topsrcdir/build/macosx/mozconfig.common
-. $topsrcdir/build/mozconfig.wasm-sandboxing
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --with-google-location-service-api-keyfile=/builds/gls-gapi.data

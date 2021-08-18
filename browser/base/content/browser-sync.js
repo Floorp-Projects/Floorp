@@ -735,7 +735,8 @@ var gSync = {
           }
         });
         return item;
-      }
+      },
+      true
     );
 
     bodyNode.removeAttribute("state");
@@ -1268,7 +1269,8 @@ var gSync = {
     url,
     title,
     multiselected,
-    createDeviceNodeFn
+    createDeviceNodeFn,
+    isFxaMenu = false
   ) {
     if (!createDeviceNodeFn) {
       createDeviceNodeFn = (targetId, name, targetType, lastModified) => {
@@ -1302,7 +1304,8 @@ var gSync = {
           createDeviceNodeFn,
           url,
           title,
-          multiselected
+          multiselected,
+          isFxaMenu
         );
       } else {
         this._appendSendTabSingleDevice(fragment, createDeviceNodeFn);
@@ -1332,7 +1335,8 @@ var gSync = {
     createDeviceNodeFn,
     url,
     title,
-    multiselected
+    multiselected,
+    isFxaMenu = false
   ) {
     let tabsToSend = multiselected
       ? gBrowser.selectedTabs.map(t => {
@@ -1417,15 +1421,15 @@ var gSync = {
       const separator = createDeviceNodeFn();
       separator.classList.add("sync-menuitem");
       fragment.appendChild(separator);
-      const allDevicesLabel = this.fxaStrings.GetStringFromName(
-        "sendToAllDevices.menuitem"
-      );
+      const allDevicesLabel = isFxaMenu
+        ? this.fluentStrings.formatValueSync("account-send-to-all-devices")
+        : this.fxaStrings.GetStringFromName("sendToAllDevices.menuitem");
       addTargetDevice("", allDevicesLabel, "");
 
       // "Manage devices" menu item
-      const manageDevicesLabel = this.fxaStrings.GetStringFromName(
-        "manageDevices.menuitem"
-      );
+      const manageDevicesLabel = isFxaMenu
+        ? this.fluentStrings.formatValueSync("account-manage-devices")
+        : this.fxaStrings.GetStringFromName("manageDevices.menuitem");
       // We piggyback on the createDeviceNodeFn implementation,
       // it's a big disgusting.
       const targetDevice = createDeviceNodeFn(

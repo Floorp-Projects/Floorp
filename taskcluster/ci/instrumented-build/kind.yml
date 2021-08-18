@@ -220,6 +220,7 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
 
     win32-shippable/opt:
         description: "Win32 Shippable PGO Instrumented"
