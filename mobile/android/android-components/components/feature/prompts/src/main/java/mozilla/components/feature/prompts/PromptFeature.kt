@@ -60,6 +60,7 @@ import mozilla.components.feature.prompts.dialog.Prompter
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
 import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
+import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
 import mozilla.components.feature.prompts.file.FilePicker
 import mozilla.components.feature.prompts.login.LoginExceptions
 import mozilla.components.feature.prompts.login.LoginPicker
@@ -424,6 +425,7 @@ class PromptFeature private constructor(
                 is File -> filePicker.handleFileRequest(promptRequest)
                 is Share -> handleShareRequest(promptRequest, session)
                 is SelectCreditCard -> {
+                    emitSuccessfulCreditCardAutofillFormDetectedFact()
                     if (isCreditCardAutofillEnabled() && promptRequest.creditCards.isNotEmpty()) {
                         creditCardPicker?.handleSelectCreditCardRequest(promptRequest)
                     }

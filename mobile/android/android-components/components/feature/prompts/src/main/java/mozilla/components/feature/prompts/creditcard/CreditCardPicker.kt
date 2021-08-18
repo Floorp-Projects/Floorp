@@ -10,6 +10,8 @@ import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.consumePromptFrom
+import mozilla.components.feature.prompts.facts.emitCreditCardAutofillDismissedFact
+import mozilla.components.feature.prompts.facts.emitCreditCardAutofillShownFact
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -84,6 +86,7 @@ class CreditCardPicker(
      */
     @Suppress("TooGenericExceptionCaught")
     fun dismissSelectCreditCardRequest(promptRequest: PromptRequest.SelectCreditCard? = null) {
+        emitCreditCardAutofillDismissedFact()
         creditCardSelectBar.hidePrompt()
 
         try {
@@ -106,6 +109,7 @@ class CreditCardPicker(
      * @param request The [PromptRequest] containing the the credit card request data to be shown.
      */
     internal fun handleSelectCreditCardRequest(request: PromptRequest.SelectCreditCard) {
+        emitCreditCardAutofillShownFact()
         creditCardSelectBar.showPrompt(request.creditCards)
     }
 }

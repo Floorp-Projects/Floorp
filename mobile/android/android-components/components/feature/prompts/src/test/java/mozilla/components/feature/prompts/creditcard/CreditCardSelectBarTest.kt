@@ -9,12 +9,20 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.concept.SelectablePromptView
+import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -73,9 +81,16 @@ class CreditCardSelectBarTest {
     }
 
     @Test
-    fun `GIVEN a listener WHEN a credit card is selected THEN onOptionSelect is called`() {
+    fun `GIVEN a listener WHEN a credit card is selected THEN onOptionSelect is called`() = runBlocking {
         val listener: SelectablePromptView.Listener<CreditCard> = mock()
         creditCardSelectBar.listener = listener
+
+        val facts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                facts.add(fact)
+            }
+        })
 
         creditCardSelectBar.showPrompt(listOf(creditCard))
 
@@ -85,17 +100,39 @@ class CreditCardSelectBarTest {
 
         holder.itemView.performClick()
 
+        assertEquals(1, facts.size)
+
+        facts[0].apply {
+            assertEquals(Component.FEATURE_PROMPTS, component)
+            assertEquals(Action.INTERACTION, action)
+            assertEquals(CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SUCCESS, item)
+        }
         verify(listener).onOptionSelect(creditCard)
     }
 
     @Test
     fun `WHEN the header is clicked THEN view is expanded or collapsed`() {
+        val facts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                facts.add(fact)
+            }
+        })
+
         creditCardSelectBar.showPrompt(listOf(creditCard))
 
         creditCardSelectBar.findViewById<AppCompatTextView>(R.id.select_credit_card_header).performClick()
 
         assertTrue(creditCardSelectBar.findViewById<RecyclerView>(R.id.credit_cards_list).isVisible)
         assertTrue(creditCardSelectBar.findViewById<AppCompatTextView>(R.id.manage_credit_cards).isVisible)
+
+        assertEquals(1, facts.size)
+
+        facts[0].apply {
+            assertEquals(Component.FEATURE_PROMPTS, component)
+            assertEquals(Action.INTERACTION, action)
+            assertEquals(CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_PROMPT_EXPANDED, item)
+        }
 
         creditCardSelectBar.findViewById<AppCompatTextView>(R.id.select_credit_card_header).performClick()
 
