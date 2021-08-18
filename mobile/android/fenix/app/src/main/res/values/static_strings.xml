@@ -49,6 +49,8 @@
     <string name="preferences_nimbus_experiments">Nimbus Experiments</string>
     <!-- Label for using the nimbus collections preview -->
     <string name="preferences_nimbus_use_preview_collection">Use Nimbus Preview Collection (requires restart)</string>
+    <!-- Label for the Pocket articles recommendations on homescreen -->
+    <string name="preferences_pocket_homescreen_recommendations">Debug only. Enable Pocket recommended articles on homescreen.</string>
 
     <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
     <string name="inactive_tabs_menu_item">Make inactive</string>

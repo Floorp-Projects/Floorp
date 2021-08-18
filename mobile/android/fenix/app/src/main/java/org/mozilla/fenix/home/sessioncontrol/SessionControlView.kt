@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import android.content.Context
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
@@ -17,6 +18,7 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeFragmentStore
@@ -29,6 +31,7 @@ import org.mozilla.fenix.home.recenttabs.view.RecentTabsItemPosition
 // When we remove the tabs from the home screen this will get much simpler again.
 @Suppress("ComplexMethod", "LongParameterList")
 private fun normalModeAdapterItems(
+    context: Context,
     topSites: List<TopSite>,
     collections: List<TabCollection>,
     expandedCollections: Set<Long>,
@@ -72,7 +75,7 @@ private fun normalModeAdapterItems(
         showCollections(collections, expandedCollections, items)
     }
 
-    if (pocketArticles.isNotEmpty()) {
+    if (context.settings().pocketRecommendations && pocketArticles.isNotEmpty()) {
         items.add(AdapterItem.PocketStoriesItem)
     }
 
@@ -191,8 +194,9 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
     return items
 }
 
-private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
+private fun HomeFragmentState.toAdapterList(context: Context): List<AdapterItem> = when (mode) {
     is Mode.Normal -> normalModeAdapterItems(
+        context,
         topSites,
         collections,
         expandedCollections,
@@ -245,7 +249,7 @@ class SessionControlView(
     }
 
     fun update(state: HomeFragmentState) {
-        val stateAdapterList = state.toAdapterList()
+        val stateAdapterList = state.toAdapterList(view.context)
         if (homeScreenViewModel.shouldScrollToTopSites) {
             sessionControlAdapter.submitList(stateAdapterList) {
 

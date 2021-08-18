@@ -1131,4 +1131,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_credit_cards_save_and_autofill_cards),
         default = true
     )
+
+    var pocketRecommendations by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
+        default = false
+    )
 }
