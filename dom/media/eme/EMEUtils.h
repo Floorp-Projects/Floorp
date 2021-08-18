@@ -7,7 +7,6 @@
 #ifndef EME_LOG_H_
 #define EME_LOG_H_
 
-#include "VideoUtils.h"
 #include "mozilla/Logging.h"
 #include "nsString.h"
 #include "nsTArray.h"
