@@ -1584,6 +1584,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 
   {
     wr::StackingContextParams params;
+    params.mRootReferenceFrame = aDisplayListBuilder->RootReferenceFrame();
     params.mFilters = std::move(aFilters.filters);
     params.mFilterDatas = std::move(aFilters.filter_datas);
     params.clip =

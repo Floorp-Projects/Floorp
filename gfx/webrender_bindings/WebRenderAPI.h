@@ -409,6 +409,8 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
         aPreserve ? wr::TransformStyle::Preserve3D : wr::TransformStyle::Flat;
   }
 
+  // Fill this in only if this is for the root StackingContextHelper.
+  nsIFrame* mRootReferenceFrame = nullptr;
   nsTArray<wr::FilterOp> mFilters;
   nsTArray<wr::WrFilterData> mFilterDatas;
   wr::LayoutRect mBounds = wr::ToLayoutRect(LayoutDeviceRect());
