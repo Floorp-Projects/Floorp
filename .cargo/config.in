@@ -87,16 +87,6 @@ git = "https://github.com/hsivonen/chardetng"
 replace-with = "vendored-sources"
 rev = "302c995f91f44cf26e77dc4758ad56c3ff0153ad"
 
-[source."https://github.com/gfx-rs/naga"]
-git = "https://github.com/gfx-rs/naga"
-replace-with = "vendored-sources"
-tag = "gfx-25"
-
-[source."https://github.com/gfx-rs/gfx"]
-git = "https://github.com/gfx-rs/gfx"
-replace-with = "vendored-sources"
-rev = "27a1dae3796d33d23812f2bb8c7e3b5aea18b521"
-
 [source."https://github.com/bytecodealliance/wasmtime"]
 git = "https://github.com/bytecodealliance/wasmtime"
 replace-with = "vendored-sources"

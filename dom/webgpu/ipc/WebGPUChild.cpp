@@ -208,8 +208,8 @@ Maybe<RawId> WebGPUChild::AdapterRequestDevice(
   ffi::WGPUDeviceDescriptor desc = {};
   ffi::wgpu_client_fill_default_limits(&desc.limits);
 
-  if (aDesc.mNonGuaranteedLimits.WasPassed()) {
-    for (const auto& entry : aDesc.mNonGuaranteedLimits.Value().Entries()) {
+  if (aDesc.mRequiredLimits.WasPassed()) {
+    for (const auto& entry : aDesc.mRequiredLimits.Value().Entries()) {
       Unused << entry;  // TODO
     }
     /*desc.limits.max_bind_groups = lim.mMaxBindGroups;

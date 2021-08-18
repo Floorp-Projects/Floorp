@@ -41,14 +41,18 @@ pub enum VaryingError {
     InvalidInterpolation,
     #[error("Interpolation must be specified on vertex shader outputs and fragment shader inputs")]
     MissingInterpolation,
-    #[error("BuiltIn {0:?} is not available at this stage")]
+    #[error("Built-in {0:?} is not available at this stage")]
     InvalidBuiltInStage(crate::BuiltIn),
-    #[error("BuiltIn type for {0:?} is invalid")]
+    #[error("Built-in type for {0:?} is invalid")]
     InvalidBuiltInType(crate::BuiltIn),
+    #[error("Entry point arguments and return values must all have bindings")]
+    MissingBinding,
     #[error("Struct member {0} is missing a binding")]
     MemberMissingBinding(u32),
     #[error("Multiple bindings at location {location} are present")]
     BindingCollision { location: u32 },
+    #[error("Built-in {0:?} is present more than once")]
+    DuplicateBuiltIn(crate::BuiltIn),
 }
 
 #[derive(Clone, Debug, thiserror::Error)]
@@ -94,6 +98,7 @@ struct VaryingContext<'a> {
     output: bool,
     types: &'a Arena<crate::Type>,
     location_mask: &'a mut BitSet,
+    built_in_mask: u32,
 }
 
 impl VaryingContext<'_> {
@@ -105,6 +110,12 @@ impl VaryingContext<'_> {
         let ty_inner = &self.types[self.ty].inner;
         match *binding {
             crate::Binding::BuiltIn(built_in) => {
+                let bit = 1 << built_in as u32;
+                if self.built_in_mask & bit != 0 {
+                    return Err(VaryingError::DuplicateBuiltIn(built_in));
+                }
+                self.built_in_mask |= bit;
+
                 let width = 4;
                 let (visible, type_good) = match built_in {
                     Bi::BaseInstance | Bi::BaseVertex | Bi::InstanceIndex | Bi::VertexIndex => (
@@ -255,14 +266,14 @@ impl VaryingContext<'_> {
         Ok(())
     }
 
-    fn validate(mut self, binding: Option<&crate::Binding>) -> Result<(), VaryingError> {
+    fn validate(&mut self, binding: Option<&crate::Binding>) -> Result<(), VaryingError> {
         match binding {
             Some(binding) => self.validate_impl(binding),
             None => {
                 match self.types[self.ty].inner {
                     //TODO: check the member types
                     crate::TypeInner::Struct {
-                        level: crate::StructLevel::Normal { .. },
+                        top_level: false,
                         ref members,
                         ..
                     } => {
@@ -276,7 +287,7 @@ impl VaryingContext<'_> {
                             }
                         }
                     }
-                    _ => return Err(VaryingError::InvalidType(self.ty)),
+                    _ => return Err(VaryingError::MissingBinding),
                 }
                 Ok(())
             }
@@ -303,7 +314,7 @@ impl super::Validator {
                 }
                 (
                     crate::StorageAccess::all(),
-                    TypeFlags::DATA | TypeFlags::HOST_SHARED | TypeFlags::BLOCK,
+                    TypeFlags::DATA | TypeFlags::HOST_SHARED | TypeFlags::TOP_LEVEL,
                     true,
                 )
             }
@@ -315,7 +326,10 @@ impl super::Validator {
                 }
                 (
                     crate::StorageAccess::empty(),
-                    TypeFlags::DATA | TypeFlags::SIZED | TypeFlags::HOST_SHARED | TypeFlags::BLOCK,
+                    TypeFlags::DATA
+                        | TypeFlags::SIZED
+                        | TypeFlags::HOST_SHARED
+                        | TypeFlags::TOP_LEVEL,
                     true,
                 )
             }
@@ -332,9 +346,11 @@ impl super::Validator {
                 };
                 (access, TypeFlags::empty(), true)
             }
-            crate::StorageClass::Private | crate::StorageClass::WorkGroup => {
-                (crate::StorageAccess::empty(), TypeFlags::DATA, false)
-            }
+            crate::StorageClass::Private | crate::StorageClass::WorkGroup => (
+                crate::StorageAccess::empty(),
+                TypeFlags::DATA | TypeFlags::SIZED,
+                false,
+            ),
             crate::StorageClass::PushConstant => {
                 if !self.capabilities.contains(Capabilities::PUSH_CONSTANT) {
                     return Err(GlobalVariableError::UnsupportedCapability(
@@ -343,7 +359,7 @@ impl super::Validator {
                 }
                 (
                     crate::StorageAccess::LOAD,
-                    TypeFlags::DATA | TypeFlags::HOST_SHARED,
+                    TypeFlags::DATA | TypeFlags::HOST_SHARED | TypeFlags::SIZED,
                     false,
                 )
             }
@@ -397,33 +413,37 @@ impl super::Validator {
             crate::ShaderStage::Compute => ShaderStages::COMPUTE,
         };
 
-        let info = self.validate_function(&ep.function, module, &mod_info)?;
+        let info = self.validate_function(&ep.function, module, mod_info)?;
 
         if !info.available_stages.contains(stage_bit) {
             return Err(EntryPointError::ForbiddenStageOperations);
         }
 
         self.location_mask.clear();
+        let mut argument_built_ins = 0;
         for (index, fa) in ep.function.arguments.iter().enumerate() {
-            let ctx = VaryingContext {
+            let mut ctx = VaryingContext {
                 ty: fa.ty,
                 stage: ep.stage,
                 output: false,
                 types: &module.types,
                 location_mask: &mut self.location_mask,
+                built_in_mask: argument_built_ins,
             };
             ctx.validate(fa.binding.as_ref())
                 .map_err(|e| EntryPointError::Argument(index as u32, e))?;
+            argument_built_ins = ctx.built_in_mask;
         }
 
         self.location_mask.clear();
         if let Some(ref fr) = ep.function.result {
-            let ctx = VaryingContext {
+            let mut ctx = VaryingContext {
                 ty: fr.ty,
                 stage: ep.stage,
                 output: true,
                 types: &module.types,
                 location_mask: &mut self.location_mask,
+                built_in_mask: 0,
             };
             ctx.validate(fr.binding.as_ref())
                 .map_err(EntryPointError::Result)?;
