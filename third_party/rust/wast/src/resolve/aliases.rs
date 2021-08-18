@@ -100,8 +100,10 @@ impl<'a> Expander<'a> {
                         }
                     }
                     ElemPayload::Exprs { exprs, .. } => {
-                        for expr in exprs {
-                            self.expand_expr(expr);
+                        for func in exprs {
+                            if let Some(func) = func {
+                                self.expand(func);
+                            }
                         }
                     }
                 }
@@ -133,8 +135,8 @@ impl<'a> Expander<'a> {
 
             ModuleField::Start(s) => self.expand(s),
 
-            ModuleField::Tag(t) => match &mut t.ty {
-                TagType::Exception(t) => self.expand_type_use(t),
+            ModuleField::Event(e) => match &mut e.ty {
+                EventType::Exception(t) => self.expand_type_use(t),
             },
 
             ModuleField::NestedModule(m) => match &mut m.kind {
@@ -162,8 +164,8 @@ impl<'a> Expander<'a> {
             ItemKind::Table(_) => {}
             ItemKind::Memory(_) => {}
             ItemKind::Global(_) => {}
-            ItemKind::Tag(t) => match t {
-                TagType::Exception(t) => self.expand_type_use(t),
+            ItemKind::Event(t) => match t {
+                EventType::Exception(t) => self.expand_type_use(t),
             },
         }
     }

@@ -9,8 +9,6 @@ pub struct Instance<'a> {
     /// An identifier that this instance is resolved with (optionally) for name
     /// resolution.
     pub id: Option<ast::Id<'a>>,
-    /// An optional name for this function stored in the custom `name` section.
-    pub name: Option<ast::NameAnnotation<'a>>,
     /// If present, inline export annotations which indicate names this
     /// definition should be exported under.
     pub exports: ast::InlineExport<'a>,
@@ -50,7 +48,6 @@ impl<'a> Parse<'a> for Instance<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::instance>()?.0;
         let id = parser.parse()?;
-        let name = parser.parse()?;
         let exports = parser.parse()?;
 
         let kind = if let Some(import) = parser.parse()? {
@@ -73,7 +70,6 @@ impl<'a> Parse<'a> for Instance<'a> {
         Ok(Instance {
             span,
             id,
-            name,
             exports,
             kind,
         })

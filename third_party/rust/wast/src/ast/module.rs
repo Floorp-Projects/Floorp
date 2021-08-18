@@ -172,7 +172,7 @@ pub enum ModuleField<'a> {
     Start(ast::ItemRef<'a, kw::func>),
     Elem(ast::Elem<'a>),
     Data(ast::Data<'a>),
-    Tag(ast::Tag<'a>),
+    Event(ast::Event<'a>),
     Custom(ast::Custom<'a>),
     Instance(ast::Instance<'a>),
     NestedModule(ast::NestedModule<'a>),
@@ -222,8 +222,8 @@ impl<'a> Parse<'a> for ModuleField<'a> {
         if parser.peek::<kw::data>() {
             return Ok(ModuleField::Data(parser.parse()?));
         }
-        if parser.peek::<kw::tag>() {
-            return Ok(ModuleField::Tag(parser.parse()?));
+        if parser.peek::<kw::event>() {
+            return Ok(ModuleField::Event(parser.parse()?));
         }
         if parser.peek::<annotation::custom>() {
             return Ok(ModuleField::Custom(parser.parse()?));

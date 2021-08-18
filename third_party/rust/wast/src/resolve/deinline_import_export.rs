@@ -78,7 +78,6 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                         to_append.push(ModuleField::Data(Data {
                             span: m.span,
                             id: None,
-                            name: None,
                             kind: DataKind::Active {
                                 memory: item_ref(kw::memory(m.span), id),
                                 offset: Expression {
@@ -137,7 +136,6 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                         to_append.push(ModuleField::Elem(Elem {
                             span: t.span,
                             id: None,
-                            name: None,
                             kind: ElemKind::Active {
                                 table: item_ref(kw::table(t.span), id),
                                 offset: Expression {
@@ -174,12 +172,12 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                 }
             }
 
-            ModuleField::Tag(e) => {
+            ModuleField::Event(e) => {
                 for name in e.exports.names.drain(..) {
-                    to_append.push(export(e.span, name, ExportKind::Tag, &mut e.id));
+                    to_append.push(export(e.span, name, ExportKind::Event, &mut e.id));
                 }
                 match e.kind {
-                    TagKind::Import(import) => {
+                    EventKind::Import(import) => {
                         *item = ModuleField::Import(Import {
                             span: e.span,
                             module: import.module,
@@ -188,11 +186,11 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                                 span: e.span,
                                 id: e.id,
                                 name: None,
-                                kind: ItemKind::Tag(e.ty.clone()),
+                                kind: ItemKind::Event(e.ty.clone()),
                             },
                         });
                     }
-                    TagKind::Inline { .. } => {}
+                    EventKind::Inline { .. } => {}
                 }
             }
 
