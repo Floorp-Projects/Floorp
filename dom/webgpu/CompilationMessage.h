@@ -22,8 +22,6 @@ class CompilationMessage final : public nsWrapperCache,
   dom::GPUCompilationMessageType mType = dom::GPUCompilationMessageType::Error;
   uint64_t mLineNum = 0;
   uint64_t mLinePos = 0;
-  uint64_t mOffset = 0;
-  uint64_t mLength = 0;
 
  public:
   GPU_DECL_CYCLE_COLLECTION(CompilationMessage)
@@ -33,8 +31,6 @@ class CompilationMessage final : public nsWrapperCache,
   dom::GPUCompilationMessageType Type() const { return mType; }
   uint64_t LineNum() const { return mLineNum; }
   uint64_t LinePos() const { return mLinePos; }
-  uint64_t Offset() const { return mOffset; }
-  uint64_t Length() const { return mLength; }
 
  private:
   explicit CompilationMessage(CompilationInfo* const aParent);

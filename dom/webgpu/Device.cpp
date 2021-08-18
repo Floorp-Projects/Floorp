@@ -228,28 +228,13 @@ already_AddRefed<RenderPipeline> Device::CreateRenderPipeline(
 }
 
 already_AddRefed<Texture> Device::InitSwapChain(
-    const dom::GPUCanvasConfiguration& aDesc,
-    wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat,
-    gfx::IntSize* aCanvasSize) {
-  gfx::IntSize size = *aCanvasSize;
-  if (aDesc.mSize.WasPassed()) {
-    const auto& descSize = aDesc.mSize.Value();
-    if (descSize.IsRangeEnforcedUnsignedLongSequence()) {
-      const auto& seq = descSize.GetAsRangeEnforcedUnsignedLongSequence();
-      // TODO: add a check for `seq.Length()`
-      size.width = AssertedCast<int>(seq[0]);
-      size.height = AssertedCast<int>(seq[1]);
-    } else if (descSize.IsGPUExtent3DDict()) {
-      const auto& dict = descSize.GetAsGPUExtent3DDict();
-      size.width = AssertedCast<int>(dict.mWidth);
-      size.height = AssertedCast<int>(dict.mHeight);
-    } else {
-      MOZ_CRASH("Unexpected union");
-    }
-  }
-  *aCanvasSize = size;
-
-  const layers::RGBDescriptor rgbDesc(size, aFormat, false);
+    const dom::GPUSwapChainDescriptor& aDesc,
+    const dom::GPUExtent3DDict& aExtent3D, wr::ExternalImageId aExternalImageId,
+    gfx::SurfaceFormat aFormat) {
+  const layers::RGBDescriptor rgbDesc(
+      gfx::IntSize(AssertedCast<int>(aExtent3D.mWidth),
+                   AssertedCast<int>(aExtent3D.mHeight)),
+      aFormat, false);
   // buffer count doesn't matter much, will be created on demand
   const size_t maxBufferCount = 10;
   mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount,
@@ -257,10 +242,7 @@ already_AddRefed<Texture> Device::InitSwapChain(
 
   dom::GPUTextureDescriptor desc;
   desc.mDimension = dom::GPUTextureDimension::_2d;
-  auto& sizeDict = desc.mSize.SetAsGPUExtent3DDict();
-  sizeDict.mWidth = size.width;
-  sizeDict.mHeight = size.height;
-  sizeDict.mDepthOrArrayLayers = 1;
+  desc.mSize.SetAsGPUExtent3DDict() = aExtent3D;
   desc.mFormat = aDesc.mFormat;
   desc.mMipLevelCount = 1;
   desc.mSampleCount = 1;
