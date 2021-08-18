@@ -14,6 +14,9 @@ import mozilla.components.browser.menu.view.MenuButton
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.ext.application
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 
@@ -26,13 +29,16 @@ class HomeFragmentTest {
 
     @Before
     fun setup() {
-        context = mockk(relaxed = true)
         settings = mockk(relaxed = true)
+        context = mockk(relaxed = true)
+
+        val fenixApplication: FenixApplication = mockk(relaxed = true)
 
         homeFragment = spyk(HomeFragment())
 
+        every { context.application } returns fenixApplication
         every { homeFragment.context } answers { context }
-        every { context.settings() } answers { settings }
+        every { context.components.settings } answers { settings }
     }
 
     @Test
@@ -47,7 +53,7 @@ class HomeFragmentTest {
 
     @Test
     fun `GIVEN showTopFrecentSites is true WHEN getTopSitesConfig is called THEN it returns TopSitesConfig with non-null frecencyConfig`() {
-        every { context.settings().showTopFrecentSites } returns true
+        every { settings.showTopFrecentSites } returns true
         every { settings.topSitesMaxLimit } returns 10
 
         val topSitesConfig = homeFragment.getTopSitesConfig()
