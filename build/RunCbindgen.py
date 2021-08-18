@@ -45,6 +45,7 @@ def generate_metadata(output, cargo_config):
         [
             buildconfig.substs["CARGO"],
             "metadata",
+            "--frozen",
             "--all-features",
             "--format-version",
             "1",
