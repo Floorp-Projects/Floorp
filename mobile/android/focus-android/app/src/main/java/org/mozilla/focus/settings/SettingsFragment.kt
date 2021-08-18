@@ -11,6 +11,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.browser.state.state.SessionState
+import org.mozilla.focus.GleanMetrics.SettingsScreen
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
@@ -79,7 +80,7 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
     private fun whatsNewClicked() {
         val context = requireContext()
 
-        TelemetryWrapper.openWhatsNewEvent(WhatsNew.shouldHighlightWhatsNew(context))
+        SettingsScreen.whatsNewTapped.add()
         WhatsNew.userViewedWhatsNew(context)
 
         val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.WHATS_NEW)
