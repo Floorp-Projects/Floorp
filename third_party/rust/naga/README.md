@@ -4,7 +4,6 @@
 [![Crates.io](https://img.shields.io/crates/v/naga.svg?label=naga)](https://crates.io/crates/naga)
 [![Docs.rs](https://docs.rs/naga/badge.svg)](https://docs.rs/naga)
 [![Build Status](https://github.com/gfx-rs/naga/workflows/pipeline/badge.svg)](https://github.com/gfx-rs/naga/actions)
-![MSRV](https://img.shields.io/badge/rustc-1.43+-blue.svg)
 [![codecov.io](https://codecov.io/gh/gfx-rs/naga/branch/master/graph/badge.svg?token=9VOKYO8BM2)](https://codecov.io/gh/gfx-rs/naga)
 
 The shader translation library for the needs of [wgpu](https://github.com/gfx-rs/wgpu) and [gfx-rs](https://github.com/gfx-rs/gfx) projects.
@@ -17,14 +16,14 @@ Front-end       |       Status       | Feature | Notes |
 --------------- | ------------------ | ------- | ----- |
 SPIR-V (binary) | :white_check_mark: | spv-in  |       |
 WGSL            | :white_check_mark: | wgsl-in | Fully validated |
-GLSL            | :ok:               | glsl-in | |
+GLSL            | :construction:     | glsl-in | Temporarily broken |
 
 Back-end        |       Status       | Feature  | Notes |
 --------------- | ------------------ | -------- | ----- |
 SPIR-V          | :white_check_mark: | spv-out  |       |
-WGSL            | :ok:               | wgsl-out |       |
+WGSL            | :construction:     | wgsl-out |       |
 Metal           | :white_check_mark: | msl-out  |       |
-HLSL            | :construction:     | hlsl-out | Shader Model 5.0+ (DirectX 11+) |
+HLSL            | :construction:     | hlsl-out |       |
 GLSL            | :ok:               | glsl-out |       |
 AIR             |                    |          |       |
 DXIL/DXIR       |                    |          |       |
@@ -37,15 +36,15 @@ DOT (GraphViz)  | :ok:               | dot-out  | Not a shading language |
 
 Naga includes a default binary target, which allows to test the conversion of different code paths.
 ```bash
-cargo run my_shader.wgsl # validate only
-cargo run my_shader.spv my_shader.txt # dump the IR module into a file
-cargo run my_shader.spv my_shader.metal --flow-dir flow-dir # convert the SPV to Metal, also dump the SPIR-V flow graph to `flow-dir`
-cargo run my_shader.wgsl my_shader.vert --profile es310 # convert the WGSL to GLSL vertex stage under ES 3.20 profile
+cargo run --features wgsl-in -- my_shader.wgsl # validate only
+cargo run --features spv-in -- my_shader.spv my_shader.txt # dump the IR module into a file
+cargo run --features spv-in,msl-out -- my_shader.spv my_shader.metal --flow-dir flow-dir # convert the SPV to Metal, also dump the SPIR-V flow graph to `flow-dir`
+cargo run --features wgsl-in,glsl-out -- my_shader.wgsl my_shader.vert --profile es310 # convert the WGSL to GLSL vertex stage under ES 3.20 profile
 ```
 
 ## Development workflow
 
-The main instrument aiding the development is the good old `cargo test --all-features --workspace`,
+The main instrument aiding the development is the good old `cargo test --all-features`,
 which will run the unit tests, and also update all the snapshots. You'll see these
 changes in git before committing the code.
 

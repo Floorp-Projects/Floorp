@@ -7,6 +7,8 @@
 
 use super::*;
 
+use cocoa_foundation::foundation::{NSInteger, NSUInteger};
+
 use std::ops::Range;
 
 #[repr(u64)]
@@ -65,16 +67,10 @@ pub enum MTLTriangleFillMode {
 }
 
 bitflags! {
-    /// https://developer.apple.com/documentation/metal/mtlblitoption
     #[allow(non_upper_case_globals)]
     pub struct MTLBlitOption: NSUInteger {
-        /// https://developer.apple.com/documentation/metal/mtlblitoption/mtlblitoptionnone
-        const None = 0;
-        /// https://developer.apple.com/documentation/metal/mtlblitoption/mtlblitoptiondepthfromdepthstencil
         const DepthFromDepthStencil   = 1 << 0;
-        /// https://developer.apple.com/documentation/metal/mtlblitoption/mtlblitoptionstencilfromdepthstencil
         const StencilFromDepthStencil = 1 << 1;
-        /// https://developer.apple.com/documentation/metal/mtlblitoption/mtlblitoptionrowlinearpvrtc
         const RowLinearPVRTC          = 1 << 2;
     }
 }
@@ -807,7 +803,6 @@ impl BlitCommandEncoderRef {
         }
     }
 
-    /// https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400756-copy
     pub fn copy_from_texture_to_buffer(
         &self,
         source_texture: &TextureRef,

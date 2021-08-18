@@ -108,4 +108,6 @@ pub enum Error {
     #[error("invalid barrier memory semantics %{0}")]
     InvalidBarrierMemorySemantics(spirv::Word),
     // incomplete implementation errors
+    #[error("unsupported matrix stride {0}")]
+    UnsupportedMatrixStride(spirv::Word),
 }
