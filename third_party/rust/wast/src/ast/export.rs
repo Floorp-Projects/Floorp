@@ -21,7 +21,7 @@ pub enum ExportKind {
     Table,
     Memory,
     Global,
-    Event,
+    Tag,
     Module,
     Instance,
     Type,
@@ -52,9 +52,9 @@ impl<'a> Parse<'a> for ExportKind {
         } else if l.peek::<kw::global>() {
             parser.parse::<kw::global>()?;
             Ok(ExportKind::Global)
-        } else if l.peek::<kw::event>() {
-            parser.parse::<kw::event>()?;
-            Ok(ExportKind::Event)
+        } else if l.peek::<kw::tag>() {
+            parser.parse::<kw::tag>()?;
+            Ok(ExportKind::Tag)
         } else if l.peek::<kw::module>() {
             parser.parse::<kw::module>()?;
             Ok(ExportKind::Module)
@@ -92,7 +92,7 @@ kw_conversions! {
     func => Func
     table => Table
     global => Global
-    event => Event
+    tag => Tag
     memory => Memory
     r#type => Type
 }
