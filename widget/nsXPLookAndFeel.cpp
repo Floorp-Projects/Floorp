@@ -966,29 +966,25 @@ static bool ShouldRespectGlobalToolbarThemeAppearanceForChromeDoc() {
 #endif
 }
 
-LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForChrome() {
-  if (ShouldRespectGlobalToolbarThemeAppearanceForChromeDoc()) {
-    switch (StaticPrefs::browser_theme_toolbar_theme()) {
-      case 0:  // Dark
-        return ColorScheme::Dark;
-      case 1:  // Light
-        return ColorScheme::Light;
-      case 2:  // System
-        return SystemColorScheme();
-      default:
-        break;
-    }
-  }
-  if (ShouldRespectSystemColorSchemeForChromeDoc()) {
-    return SystemColorScheme();
-  }
-  return ColorScheme::Light;
-}
-
 static LookAndFeel::ColorScheme ColorSchemeForDocument(
     const dom::Document& aDoc, bool aContentSupportsDark) {
+  using ColorScheme = LookAndFeel::ColorScheme;
   if (nsContentUtils::IsChromeDoc(&aDoc)) {
-    return LookAndFeel::ColorSchemeForChrome();
+    if (ShouldRespectGlobalToolbarThemeAppearanceForChromeDoc()) {
+      switch (StaticPrefs::browser_theme_toolbar_theme()) {
+        case 0:  // Dark
+          return ColorScheme::Dark;
+        case 1:  // Light
+          return ColorScheme::Light;
+        case 2:  // System
+          return LookAndFeel::SystemColorScheme();
+        default:
+          break;
+      }
+    }
+    if (ShouldRespectSystemColorSchemeForChromeDoc()) {
+      return LookAndFeel::SystemColorScheme();
+    }
   }
 #ifdef MOZ_WIDGET_GTK
   if (StaticPrefs::widget_content_allow_gtk_dark_theme()) {
@@ -998,7 +994,7 @@ static LookAndFeel::ColorScheme ColorSchemeForDocument(
   }
 #endif
   return aContentSupportsDark ? LookAndFeel::SystemColorScheme()
-                              : LookAndFeel::ColorScheme::Light;
+                              : ColorScheme::Light;
 }
 
 LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForStyle(
