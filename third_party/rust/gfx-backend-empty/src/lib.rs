@@ -10,7 +10,7 @@ use crate::{
     memory::Memory,
 };
 
-use hal::{adapter, command, device, format, pass, pool, pso, query, queue, window};
+use hal::{adapter, command, device, display, format, pass, pool, pso, query, queue, window};
 use log::debug;
 
 use std::{borrow::Borrow, ops::Range};
@@ -60,6 +60,9 @@ impl hal::Backend for Backend {
     type Semaphore = ();
     type Event = ();
     type QueryPool = ();
+
+    type Display = ();
+    type DisplayMode = ();
 }
 
 /// Dummy physical device.
@@ -141,6 +144,30 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
         }
     }
 
+    fn external_buffer_properties(
+        &self,
+        _usage: hal::buffer::Usage,
+        _sparse: hal::memory::SparseFlags,
+        _memory_type: hal::external_memory::ExternalMemoryType,
+    ) -> hal::external_memory::ExternalMemoryProperties {
+        unimplemented!()
+    }
+
+    fn external_image_properties(
+        &self,
+        _format: hal::format::Format,
+        _dimensions: u8,
+        _tiling: hal::image::Tiling,
+        _usage: hal::image::Usage,
+        _view_caps: hal::image::ViewCapabilities,
+        _memory_type: hal::external_memory::ExternalMemoryType,
+    ) -> Result<
+        hal::external_memory::ExternalMemoryProperties,
+        hal::external_memory::ExternalImagePropertiesError,
+    > {
+        unimplemented!()
+    }
+
     fn features(&self) -> hal::Features {
         hal::Features::empty()
     }
@@ -154,6 +181,34 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             },
             ..Default::default()
         }
+    }
+
+    unsafe fn enumerate_displays(&self) -> Vec<display::Display<Backend>> {
+        unimplemented!();
+    }
+
+    unsafe fn enumerate_compatible_planes(
+        &self,
+        _display: &display::Display<Backend>,
+    ) -> Vec<display::Plane> {
+        unimplemented!();
+    }
+
+    unsafe fn create_display_mode(
+        &self,
+        _display: &display::Display<Backend>,
+        _resolution: (u32, u32),
+        _refresh_rate: u32,
+    ) -> Result<display::DisplayMode<Backend>, display::DisplayModeError> {
+        unimplemented!();
+    }
+
+    unsafe fn create_display_plane<'a>(
+        &self,
+        _display: &'a display::DisplayMode<Backend>,
+        _plane: &'a display::Plane,
+    ) -> Result<display::DisplayPlane<'a, Backend>, device::OutOfMemory> {
+        unimplemented!();
     }
 }
 
@@ -563,12 +618,129 @@ impl device::Device<Backend> for Device {
         unimplemented!("{}", NOT_SUPPORTED_MESSAGE)
     }
 
+    unsafe fn create_allocate_external_buffer(
+        &self,
+        _external_memory_type: hal::external_memory::ExternalBufferMemoryType,
+        _usage: hal::buffer::Usage,
+        _sparse: hal::memory::SparseFlags,
+        _type_mask: u32,
+        _size: u64,
+    ) -> Result<
+        (
+            <Backend as gfx_hal::Backend>::Buffer,
+            <Backend as gfx_hal::Backend>::Memory,
+        ),
+        hal::external_memory::ExternalResourceError,
+    > {
+        unimplemented!()
+    }
+
+    unsafe fn import_external_buffer(
+        &self,
+        _external_memory: hal::external_memory::ExternalBufferMemory,
+        _usage: hal::buffer::Usage,
+        _sparse: hal::memory::SparseFlags,
+        _type_mask: u32,
+        _size: u64,
+    ) -> Result<
+        (
+            <Backend as gfx_hal::Backend>::Buffer,
+            <Backend as gfx_hal::Backend>::Memory,
+        ),
+        hal::external_memory::ExternalResourceError,
+    > {
+        unimplemented!()
+    }
+
+    unsafe fn create_allocate_external_image(
+        &self,
+        _external_memory_type: hal::external_memory::ExternalImageMemoryType,
+        _kind: hal::image::Kind,
+        _num_levels: hal::image::Level,
+        _format: hal::format::Format,
+        _tiling: hal::image::Tiling,
+        _usage: hal::image::Usage,
+        _sparse: hal::memory::SparseFlags,
+        _view_caps: hal::image::ViewCapabilities,
+        _type_mask: u32,
+    ) -> Result<
+        (
+            <Backend as gfx_hal::Backend>::Image,
+            <Backend as gfx_hal::Backend>::Memory,
+        ),
+        hal::external_memory::ExternalResourceError,
+    > {
+        unimplemented!()
+    }
+
+    unsafe fn import_external_image(
+        &self,
+        _external_memory: hal::external_memory::ExternalImageMemory,
+        _kind: hal::image::Kind,
+        _num_levels: hal::image::Level,
+        _format: hal::format::Format,
+        _tiling: hal::image::Tiling,
+        _usage: hal::image::Usage,
+        _sparse: hal::memory::SparseFlags,
+        _view_caps: hal::image::ViewCapabilities,
+        _type_mask: u32,
+    ) -> Result<
+        (
+            <Backend as gfx_hal::Backend>::Image,
+            <Backend as gfx_hal::Backend>::Memory,
+        ),
+        hal::external_memory::ExternalResourceError,
+    > {
+        unimplemented!()
+    }
+
+    unsafe fn export_memory(
+        &self,
+        _external_memory_type: hal::external_memory::ExternalMemoryType,
+        _memory: &<Backend as gfx_hal::Backend>::Memory,
+    ) -> Result<hal::external_memory::PlatformMemory, hal::external_memory::ExternalMemoryExportError>
+    {
+        unimplemented!()
+    }
+
+    unsafe fn drm_format_modifier(
+        &self,
+        _image: &<Backend as gfx_hal::Backend>::Image,
+    ) -> Option<hal::format::DrmModifier> {
+        None
+    }
+
     unsafe fn reset_fence(&self, _: &mut ()) -> Result<(), device::OutOfMemory> {
         Ok(())
     }
 
     unsafe fn wait_for_fence(&self, _: &(), _: u64) -> Result<bool, device::WaitError> {
         Ok(true)
+    }
+
+    unsafe fn set_display_power_state(
+        &self,
+        _display: &display::Display<Backend>,
+        _power_state: &display::control::PowerState,
+    ) -> Result<(), display::control::DisplayControlError> {
+        unimplemented!("{}", NOT_SUPPORTED_MESSAGE)
+    }
+
+    unsafe fn register_device_event(
+        &self,
+        _device_event: &display::control::DeviceEvent,
+        _fence: &mut <Backend as hal::Backend>::Fence,
+    ) -> Result<(), display::control::DisplayControlError> {
+        unimplemented!("{}", NOT_SUPPORTED_MESSAGE)
+    }
+
+    unsafe fn register_display_event(
+        &self,
+        _display: &display::Display<Backend>,
+        _display_event: &display::control::DisplayEvent,
+        _fence: &mut <Backend as hal::Backend>::Fence,
+    ) -> Result<(), display::control::DisplayControlError> {
+        unimplemented!("{}", NOT_SUPPORTED_MESSAGE)
     }
 
     fn start_capture(&self) {
@@ -1081,4 +1253,15 @@ impl hal::Instance<Backend> for Instance {
     }
 
     unsafe fn destroy_surface(&self, _surface: Surface) {}
+
+    unsafe fn create_display_plane_surface(
+        &self,
+        _display_plane: &display::DisplayPlane<Backend>,
+        _plane_stack_index: u32,
+        _transformation: display::SurfaceTransform,
+        _alpha: display::DisplayPlaneAlpha,
+        _image_extent: window::Extent2D,
+    ) -> Result<Surface, display::DisplayPlaneSurfaceError> {
+        unimplemented!();
+    }
 }
