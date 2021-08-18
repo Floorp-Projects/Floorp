@@ -79,6 +79,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
+    "shims/addthis-angular.js",
     "shims/adform.js",
     "shims/adnexus-prebid.js",
     "shims/adsafeprotected-ima.js",
