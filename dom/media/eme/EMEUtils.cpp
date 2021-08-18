@@ -8,7 +8,6 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
@@ -55,14 +54,15 @@ void CopyArrayBufferViewOrArrayBufferData(
 
 bool IsClearkeyKeySystem(const nsAString& aKeySystem) {
   if (StaticPrefs::media_clearkey_test_key_systems_enabled()) {
-    return aKeySystem.EqualsLiteral(kClearKeyKeySystemName) ||
-           aKeySystem.EqualsLiteral(kClearKeyWithProtectionQueryKeySystemName);
+    return aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_CLEARKEY) ||
+           aKeySystem.EqualsLiteral(
+               EME_KEY_SYSTEM_CLEARKEY_WITH_PROTECTION_QUERY);
   }
-  return aKeySystem.EqualsLiteral(kClearKeyKeySystemName);
+  return aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_CLEARKEY);
 }
 
 bool IsWidevineKeySystem(const nsAString& aKeySystem) {
-  return aKeySystem.EqualsLiteral(kWidevineKeySystemName);
+  return aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_WIDEVINE);
 }
 
 nsString KeySystemToGMPName(const nsAString& aKeySystem) {
