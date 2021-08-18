@@ -48,7 +48,7 @@ pub enum CustomPlaceAnchor {
     Elem,
     Code,
     Data,
-    Event,
+    Tag,
 }
 
 impl<'a> Parse<'a> for Custom<'a> {
@@ -143,9 +143,9 @@ impl<'a> Parse<'a> for CustomPlaceAnchor {
             parser.parse::<kw::data>()?;
             return Ok(CustomPlaceAnchor::Data);
         }
-        if parser.peek::<kw::event>() {
-            parser.parse::<kw::event>()?;
-            return Ok(CustomPlaceAnchor::Event);
+        if parser.peek::<kw::tag>() {
+            parser.parse::<kw::tag>()?;
+            return Ok(CustomPlaceAnchor::Tag);
         }
         if parser.peek::<kw::instance>() {
             parser.parse::<kw::instance>()?;
