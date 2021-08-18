@@ -1,7 +1,6 @@
 MOZ_AUTOMATION_BUILD_SYMBOLS=0
 
 . $topsrcdir/build/macosx/mozconfig.common
-. $topsrcdir/build/mozconfig.wasm-sandboxing
 
 ac_add_options --disable-debug
 ac_add_options --enable-optimize

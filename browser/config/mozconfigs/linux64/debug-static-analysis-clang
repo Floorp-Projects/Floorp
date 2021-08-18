@@ -4,8 +4,6 @@ MOZ_AUTOMATION_BUILD_SYMBOLS=0
 
 ac_add_options --enable-debug
 
-. $topsrcdir/build/mozconfig.wasm-sandboxing
-
 # Add the static checker
 ac_add_options --enable-clang-plugin
 
