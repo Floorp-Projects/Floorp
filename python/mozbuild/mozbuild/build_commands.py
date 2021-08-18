@@ -97,6 +97,8 @@ class Build(MachCommandBase):
         mozconfig = loader.read_mozconfig(loader.AUTODETECT)
         configure_args = mozconfig["configure_args"]
         doing_pgo = configure_args and "MOZ_PGO=1" in configure_args
+        # Force verbosity on automation.
+        verbose = verbose or bool(os.environ.get("MOZ_AUTOMATION", False))
         append_env = None
 
         if doing_pgo:
