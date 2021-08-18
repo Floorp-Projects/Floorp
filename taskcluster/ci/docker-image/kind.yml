@@ -129,10 +129,6 @@ jobs:
         packages:
             - deb10-mercurial
             - deb10-python-zstandard
-    debian10-amd64-build:
-        symbol: I(deb10)
-        parent: debian10-base
-        definition: debian-build
     debian10-test:
         symbol: I(deb10-test)
         parent: debian10-base
@@ -182,7 +178,7 @@ jobs:
         parent: debian10-base
     gdb-test:
         symbol: I(gdb)
-        parent: debian10-amd64-build
+        parent: debian11-amd64-build
         definition: gdb-test
     mingw32-build:
         symbol: I(mingw)
