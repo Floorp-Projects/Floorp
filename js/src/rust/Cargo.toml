@@ -21,5 +21,5 @@ smoosh = ['jsrust_shared/smoosh']
 jsrust_shared = { path = "./shared" }
 # Workaround for https://github.com/rust-lang/rust/issues/58393
 mozglue-static = { path = "../../../mozglue/static/rust" }
-wat = { version = "1.0.39" }
+wat = { version = "1.0.38" }
 wasmparser = { version = "0.78.2" }

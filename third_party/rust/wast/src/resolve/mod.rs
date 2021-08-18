@@ -15,7 +15,7 @@ pub enum Ns {
     Memory,
     Module,
     Instance,
-    Tag,
+    Event,
     Type,
 }
 
@@ -28,7 +28,7 @@ impl Ns {
             ExportKind::Memory => Ns::Memory,
             ExportKind::Instance => Ns::Instance,
             ExportKind::Module => Ns::Module,
-            ExportKind::Tag => Ns::Tag,
+            ExportKind::Event => Ns::Event,
             ExportKind::Type => Ns::Type,
         }
     }

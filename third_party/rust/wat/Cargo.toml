@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "wat"
-version = "1.0.39"
+version = "1.0.38"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "Rust parser for the WebAssembly Text format, WAT\n"
 homepage = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wat"
@@ -22,4 +22,4 @@ readme = "README.md"
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wat"
 [dependencies.wast]
-version = "37.0.0"
+version = "36.0.0"
