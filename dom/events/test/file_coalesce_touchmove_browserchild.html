@@ -101,8 +101,7 @@
     ok(receivedSingleTouch, "Should've got single touch");
     ok(receivedMultiTouch, "Should've got multi touch");
 
-    opener.setTimeout("SimpleTest.finish()");
-
+    opener.finish();
     window.close();
   }
 

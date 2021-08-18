@@ -18,7 +18,7 @@
   function touchmove(e) {
     // Make touchmove handling slow
     var start = performance.now();
-    while (performance.now() < (start + 10));
+    while (performance.now() < (start + 5));
     touchmoveEvents.push(e);
   }
 
@@ -121,26 +121,26 @@
     return ret
   }
 
-  function disableIPCCompression() {
+  function disableCoalescing() {
     return SpecialPowers.pushPrefEnv({"set": [["dom.events.compress.touchmove",
                                                false],
                                               ["dom.events.coalesce.touchmove",
                                                false]]});
   }
 
-  function enableIPCCompression() {
+  function enableCoalescing() {
     return SpecialPowers.pushPrefEnv({"set": [["dom.events.compress.touchmove",
-                                               true],
+                                               false],
                                               ["dom.events.coalesce.touchmove",
-                                               false]]});
+                                               true]]});
   }
 
   async function runTests() {
     document.body.clientTop; // Flush layout
 
-    await disableIPCCompression();
+    await disableCoalescing();
     var touchMovesWithoutCoalescing = await fireLotsOfSingleTouchMoves();
-    await enableIPCCompression();
+    await enableCoalescing();
     var touchMovesWithCoalescing = await fireLotsOfSingleTouchMoves();
     opener.ok(touchMovesWithoutCoalescing.length > touchMovesWithCoalescing.length,
               "Coalescing should reduce the number of touchmove events");
@@ -151,9 +151,9 @@
                     touchMovesWithCoalescing.pop().touches,
                     "The last touchmove event should be up-to-date");
 
-    await disableIPCCompression();
+    await disableCoalescing();
     var twoTouchMovesWithoutCoalescing = await fireTwoSingleTouches();
-    await enableIPCCompression();
+    await enableCoalescing();
     var twoTouchMovesWithCoalescing = await fireTwoSingleTouches();
     opener.is(twoTouchMovesWithoutCoalescing.length, 2,
               "Should have got two touchmoves");
@@ -161,9 +161,9 @@
               twoTouchMovesWithCoalescing.length,
               "Shouldn't have coalesced the touchmove.");
 
-    await disableIPCCompression();
+    await disableCoalescing();
     var multiTouchMovesWithoutCoalescing = await fireLotsOfMultiTouchMoves();
-    await enableIPCCompression();
+    await enableCoalescing();
     var multiTouchMovesWithCoalescing = await fireLotsOfMultiTouchMoves();
     opener.ok(multiTouchMovesWithoutCoalescing.length > multiTouchMovesWithCoalescing.length,
        "Coalescing should reduce the number of multitouch touchmove events");
