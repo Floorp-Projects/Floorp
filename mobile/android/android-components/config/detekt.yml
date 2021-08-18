@@ -69,7 +69,7 @@ complexity:
     active: true
     constructorThreshold: 6
     functionThreshold: 6
-    ignoreDefaultParameters: false
+    ignoreDefaultParameters: true
   MethodOverloading:
     active: false
     threshold: 6
