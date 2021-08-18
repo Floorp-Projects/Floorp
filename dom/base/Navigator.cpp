@@ -43,6 +43,7 @@
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/LockManager.h"
 #include "mozilla/dom/MIDIAccessManager.h"
 #include "mozilla/dom/MIDIOptionsBinding.h"
 #include "mozilla/dom/Permissions.h"
@@ -157,6 +158,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaSession)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAddonManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebGpu)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocks)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
@@ -237,6 +239,8 @@ void Navigator::Invalidate() {
   mAddonManager = nullptr;
 
   mWebGpu = nullptr;
+
+  mLocks = nullptr;
 
   mSharePromise = nullptr;
 }
@@ -2109,6 +2113,13 @@ webgpu::Instance* Navigator::Gpu() {
     mWebGpu = webgpu::Instance::Create(GetWindow()->AsGlobal());
   }
   return mWebGpu;
+}
+
+dom::LockManager* Navigator::Locks() {
+  if (!mLocks) {
+    mLocks = new dom::LockManager(GetWindow()->AsGlobal());
+  }
+  return mLocks;
 }
 
 /* static */

@@ -31,21 +31,21 @@ new WebAssembly.Tag({ parameters: [] });
 new WebAssembly.Tag({ parameters: ["i32"] });
 new WebAssembly.Tag({ parameters: ["i32", "externref"] });
 
-wasmEvalText(`(module (import "m" "e" (event)))`, {
+wasmEvalText(`(module (import "m" "e" (tag)))`, {
   m: { e: new WebAssembly.Tag({ parameters: [] }) },
 });
 
-wasmEvalText(`(module (import "m" "e" (event (param i32))))`, {
+wasmEvalText(`(module (import "m" "e" (tag (param i32))))`, {
   m: { e: new WebAssembly.Tag({ parameters: ["i32"] }) },
 });
 
-wasmEvalText(`(module (import "m" "e" (event (param i32 i64))))`, {
+wasmEvalText(`(module (import "m" "e" (tag (param i32 i64))))`, {
   m: { e: new WebAssembly.Tag({ parameters: ["i32", "i64"] }) },
 });
 
 assertErrorMessage(
   () =>
-    wasmEvalText(`(module (import "m" "e" (event (param i32))))`, {
+    wasmEvalText(`(module (import "m" "e" (tag (param i32))))`, {
       m: { e: new WebAssembly.Tag({ parameters: [] }) },
     }),
   WebAssembly.LinkError,
@@ -54,7 +54,7 @@ assertErrorMessage(
 
 assertErrorMessage(
   () =>
-    wasmEvalText(`(module (import "m" "e" (event (param))))`, {
+    wasmEvalText(`(module (import "m" "e" (tag (param))))`, {
       m: { e: new WebAssembly.Tag({ parameters: ["i32"] }) },
     }),
   WebAssembly.LinkError,
@@ -98,13 +98,13 @@ assertErrorMessage(
 
 const { tag1, tag2, tag3, tag4, tag5, tag6, tag7 } = wasmEvalText(
   `(module
-     (event (export "tag1") (param))
-     (event (export "tag2") (param i32))
-     (event (export "tag3") (param i32 f32))
-     (event (export "tag4") (param i32 externref i32))
-     (event (export "tag5") (param i32 externref i32 externref))
-     (event (export "tag6") (param funcref))
-     (event (export "tag7") (param i64)))`
+     (tag (export "tag1") (param))
+     (tag (export "tag2") (param i32))
+     (tag (export "tag3") (param i32 f32))
+     (tag (export "tag4") (param i32 externref i32))
+     (tag (export "tag5") (param i32 externref i32 externref))
+     (tag (export "tag6") (param funcref))
+     (tag (export "tag7") (param i64)))`
 ).exports;
 
 new WebAssembly.Exception(tag1, []);
@@ -213,7 +213,7 @@ assertErrorMessage(
 assertEq(
   wasmEvalText(
     `(module
-       (import "m" "exn" (event $exn (param i32)))
+       (import "m" "exn" (tag $exn (param i32)))
        (import "m" "f" (func $f))
        (func (export "f") (result i32)
          try (result i32)
@@ -236,7 +236,7 @@ assertEq(
 assertEqArray(
   wasmEvalText(
     `(module
-       (import "m" "exn" (event $exn (param i32 f32)))
+       (import "m" "exn" (tag $exn (param i32 f32)))
        (import "m" "f" (func $f))
        (func (export "f") (result i32 f32)
          try (result i32 f32)
@@ -260,7 +260,7 @@ assertEqArray(
 assertEqArray(
   wasmEvalText(
     `(module
-       (import "m" "exn" (event $exn (param i32 externref i32)))
+       (import "m" "exn" (tag $exn (param i32 externref i32)))
        (import "m" "f" (func $f))
        (func (export "f") (result i32 externref i32)
          try (result i32 externref i32)
@@ -285,7 +285,7 @@ assertEqArray(
 assertEq(
   wasmEvalText(
     `(module
-       (import "m" "exn" (event $exn))
+       (import "m" "exn" (tag $exn))
        (import "m" "f" (func $f))
        (func (export "f") (result i32)
          try (result i32)
@@ -313,7 +313,7 @@ assertEq(
   assertEq(
     wasmEvalText(
       `(module
-         (import "m" "exn" (event $exn (param i32)))
+         (import "m" "exn" (tag $exn (param i32)))
          (import "m" "f" (func $f))
          (func (export "f") (result i32)
            try (result i32)
@@ -340,7 +340,7 @@ assertEq(
   assertEq(
     wasmEvalText(
       `(module
-         (import "m" "exn" (event $exn (param i32)))
+         (import "m" "exn" (tag $exn (param i32)))
          (import "m" "f" (func $f))
          (func (export "f") (result i32)
            try (result i32)

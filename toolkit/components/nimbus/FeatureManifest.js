@@ -210,7 +210,7 @@ const FeatureManifest = {
       promoSectionStyle: {
         type: "string",
         description:
-          "Sets the position of the promo section. Possible values are: top, below-search, bottom. Default bottom.",
+          "Sets the position of the promo section. Possible values are: top, bottom. Default bottom.",
       },
       promoTitle: {
         type: "string",

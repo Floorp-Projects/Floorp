@@ -1,6 +1,5 @@
 ac_add_options --enable-debug
 
-. $topsrcdir/build/mozconfig.wasm-sandboxing
 . $topsrcdir/build/unix/mozconfig.linux
 
 # Needed to enable breakpad in application.ini

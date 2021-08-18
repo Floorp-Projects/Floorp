@@ -532,8 +532,8 @@ void JITFrameInfo::AddInfoForRange(
 }
 
 struct ProfileSample {
-  uint32_t mStack;
-  double mTime;
+  uint32_t mStack = 0;
+  double mTime = 0.0;
   Maybe<double> mResponsiveness;
   RunningTimes mRunningTimes;
 };
@@ -662,6 +662,7 @@ class EntryGetter {
 //   ( /* Samples */
 //     ThreadId
 //     TimeBeforeCompactStack
+//     RunningTimes?
 //     UnresponsivenessDurationMs?
 //     CompactStack
 //         /* internally including:
@@ -672,6 +673,12 @@ class EntryGetter {
 //           )+
 //         */
 //   )
+//   | ( /* Reference to a previous identical sample */
+//       ThreadId
+//       TimeBeforeSameSample
+//       RunningTimes?
+//       SameSample
+//     )
 //   | Marker
 //   | ( /* Counters */
 //       CounterId
@@ -801,6 +808,11 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
 
     ProfilerThreadId processedThreadId;
 
+    // This ProfileSample object gets filled with relevant data related to each
+    // sample. Parts of it may be reused from one sample to the next, in
+    // particular when stacks are identical in `SameSample` entries.
+    ProfileSample sample;
+
     EntryGetter e(*aReader);
 
     for (;;) {
@@ -841,8 +853,6 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
       MOZ_ASSERT(
           aThreadId.IsSpecified() || !processedThreadId.IsSpecified(),
           "Unspecified aThreadId should only be used with 1-sample buffer");
-
-      ProfileSample sample;
 
       auto ReadStack = [&](EntryGetter& e, uint64_t entryPosition,
                            const Maybe<double>& unresponsiveDuration,
@@ -1083,6 +1093,57 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
         }
 
         e.Next();
+      } else if (e.Has() && e.Get().IsTimeBeforeSameSample()) {
+        if (sample.mTime == 0.0) {
+          // We don't have any full sample yet, we cannot duplicate a "previous"
+          // one. This should only happen at most once per thread, for the very
+          // first sample.
+          break;
+        }
+
+        // Keep the same `mStack` as previously output.
+        (void)sample.mStack;
+
+        sample.mTime = e.Get().GetDouble();
+
+        // Ignore samples that are too old.
+        if (sample.mTime < aSinceTime) {
+          e.Next();
+          continue;
+        }
+
+        sample.mResponsiveness = Nothing{};
+
+        sample.mRunningTimes.Clear();
+
+        ProfileChunkedBuffer::BlockIterator it = e.Iterator();
+        for (;;) {
+          ++it;
+          if (it.IsAtEnd()) {
+            break;
+          }
+          ProfileBufferEntryReader er = *it;
+          ProfileBufferEntry::Kind kind =
+              er.ReadObject<ProfileBufferEntry::Kind>();
+
+          // There may be running times before the SameSample.
+          if (kind == ProfileBufferEntry::Kind::RunningTimes) {
+            er.ReadIntoObject(sample.mRunningTimes);
+            continue;
+          }
+
+          if (kind == ProfileBufferEntry::Kind::SameSample) {
+            WriteSample(aWriter, sample);
+            break;
+          }
+
+          MOZ_ASSERT(kind >= ProfileBufferEntry::Kind::LEGACY_LIMIT,
+                     "There should be no legacy entries between "
+                     "TimeBeforeSameSample and SameSample");
+          er.SetRemainingBytes(0);
+        }
+
+        e.Next();
       } else {
         ERROR_AND_CONTINUE("expected a Time entry");
       }
@@ -1179,6 +1240,9 @@ void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart,
               }
 
               e.Next();
+            } else if (e.Has() && e.Get().IsTimeBeforeSameSample()) {
+              // Sample index, nothing to do.
+
             } else {
               ERROR_AND_CONTINUE("expected a Time entry");
             }
@@ -1605,6 +1669,54 @@ bool ProfileBuffer::DuplicateLastSample(ProfilerThreadId aThreadId,
     return false;
   }
 
+  if (mEntries.IsIndexInCurrentChunk(ProfileBufferIndex{*aLastSample})) {
+    // The last (fully-written) sample is in this chunk, we can refer to it.
+
+    // Note that between now and when we write the SameSample below, another
+    // chunk could have been started, so the SameSample will in fact refer to a
+    // block in a previous chunk. This is okay, because:
+    // - When serializing to JSON, if that chunk is still there, we'll still be
+    //   able to find that old stack, so nothing will be lost.
+    // - If unfortunately that chunk has been destroyed, we will lose this
+    //   sample. But this will only happen to the first sample (per thread) in
+    //   in the whole JSON output, because the next time we're here to duplicate
+    //   the same sample again, IsIndexInCurrentChunk will say `false` and we
+    //   will fall back to the normal copy or even re-sample. Losing the first
+    //   sample out of many in a whole recording is acceptable.
+    //
+    // |---| = chunk, S = Sample, D = Duplicate, s = same sample
+    // |---S-s-s--| |s-D--s--s-| |s-D--s---s|
+    // Later, the first chunk is destroyed/recycled:
+    //              |s-D--s--s-| |s-D--s---s| |-...
+    // Output:       ^ ^  ^       ^
+    //               `-|--|-------|--- Same but no previous -> lost.
+    //                 `--|-------|--- Full duplicate sample.
+    //                    `-------|--- Same with previous -> okay.
+    //                            `--- Same but now we have a previous -> okay!
+
+    AUTO_PROFILER_STATS(DuplicateLastSample_SameSample);
+
+    // Add the thread id first. We don't update `aLastSample` because we are not
+    // writing a full sample.
+    (void)AddThreadIdEntry(aThreadId);
+
+    // Copy the new time, to be followed by a SameSample.
+    AddEntry(ProfileBufferEntry::TimeBeforeSameSample(aSampleTimeMs));
+
+    // Add running times if they have data.
+    if (!aRunningTimes.IsEmpty()) {
+      mEntries.PutObjects(ProfileBufferEntry::Kind::RunningTimes,
+                          aRunningTimes);
+    }
+
+    // Finish with a SameSample entry.
+    mEntries.PutObjects(ProfileBufferEntry::Kind::SameSample);
+
+    return true;
+  }
+
+  AUTO_PROFILER_STATS(DuplicateLastSample_copy);
+
   ProfileChunkedBuffer tempBuffer(
       ProfileChunkedBuffer::ThreadSafety::WithoutMutex, mWorkerChunkManager);
 
@@ -1641,6 +1753,7 @@ bool ProfileBuffer::DuplicateLastSample(ProfilerThreadId aThreadId,
         case ProfileBufferEntry::Kind::CollectionStart:
         case ProfileBufferEntry::Kind::CollectionEnd:
         case ProfileBufferEntry::Kind::ThreadId:
+        case ProfileBufferEntry::Kind::TimeBeforeSameSample:
           // We're done.
           return true;
         case ProfileBufferEntry::Kind::Time:

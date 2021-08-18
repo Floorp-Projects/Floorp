@@ -5,7 +5,7 @@ load(libdir + "eqArrayHelper.js");
 assertEq(
   wasmEvalText(
     `(module
-       (event $exn (param externref))
+       (tag $exn (param externref))
        (func (export "f") (result externref)
          try (result externref)
            ref.null extern
@@ -19,7 +19,7 @@ assertEq(
 {
   let f = wasmEvalText(
     `(module
-       (event $exn (param funcref))
+       (tag $exn (param funcref))
        (func $f (export "f") (result funcref)
          try (result funcref)
            ref.func $f
@@ -33,7 +33,7 @@ assertEq(
 {
   let f = wasmEvalText(
     `(module
-       (event $exn (param externref))
+       (tag $exn (param externref))
        (func (export "f") (param externref) (result externref)
          try (result externref)
            local.get 0
@@ -50,7 +50,7 @@ assertEq(
 assertEqArray(
   wasmEvalText(
     `(module
-       (event $exn (param externref externref))
+       (tag $exn (param externref externref))
        (func (export "f") (param externref externref)
              (result externref externref)
          try (result externref externref)
@@ -66,7 +66,7 @@ assertEqArray(
 assertEqArray(
   wasmEvalText(
     `(module
-       (event $exn (param i32 i32 externref f32))
+       (tag $exn (param i32 i32 externref f32))
        (func (export "f") (param externref)
              (result i32 i32 externref f32)
          try (result i32 i32 externref f32)
@@ -84,7 +84,7 @@ assertEqArray(
 assertEqArray(
   wasmEvalText(
     `(module
-       (event $exn (param i32 i32 externref f32 externref f64))
+       (tag $exn (param i32 i32 externref f32 externref f64))
        (func (export "f") (param externref externref)
              (result i32 i32 externref f32 externref f64)
          try (result i32 i32 externref f32 externref f64)
@@ -109,7 +109,7 @@ assertEqArray(
   var thrower;
   let exports = wasmEvalText(
     `(module
-       (event $exn (param externref))
+       (tag $exn (param externref))
        (import "m" "f" (func $f (result externref)))
        (func (export "thrower") (param externref)
          (local.get 0)

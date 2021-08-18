@@ -1101,8 +1101,7 @@ void WebRenderBridgeParent::SetAPZSampleTime() {
 
 bool WebRenderBridgeParent::SetDisplayList(
     const LayoutDeviceRect& aRect, ipc::ByteBuf&& aDLItems,
-    ipc::ByteBuf&& aDLCache, ipc::ByteBuf&& aSpatialTreeDL,
-    const wr::BuiltDisplayListDescriptor& aDLDesc,
+    ipc::ByteBuf&& aDLCache, const wr::BuiltDisplayListDescriptor& aDLDesc,
     const nsTArray<OpUpdateResource>& aResourceUpdates,
     const nsTArray<RefCountedShmem>& aSmallShmems,
     const nsTArray<ipc::Shmem>& aLargeShmems, const TimeStamp& aTxnStartTime,
@@ -1115,7 +1114,6 @@ bool WebRenderBridgeParent::SetDisplayList(
 
   wr::Vec<uint8_t> dlItems(std::move(aDLItems));
   wr::Vec<uint8_t> dlCache(std::move(aDLCache));
-  wr::Vec<uint8_t> dlSpatialTreeData(std::move(aSpatialTreeDL));
 
   if (IsRootWebRenderBridgeParent()) {
 #ifdef MOZ_WIDGET_GTK
@@ -1131,7 +1129,7 @@ bool WebRenderBridgeParent::SetDisplayList(
   gfx::DeviceColor clearColor(0.f, 0.f, 0.f, 0.f);
   aTxn.SetDisplayList(clearColor, aWrEpoch,
                       wr::ToLayoutSize(RoundedToInt(aRect).Size()), mPipelineId,
-                      aDLDesc, dlItems, dlCache, dlSpatialTreeData);
+                      aDLDesc, dlItems, dlCache);
 
   if (aObserveLayersUpdate) {
     aTxn.Notify(
@@ -1177,12 +1175,10 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
     return false;
   }
 
-  if (aDisplayList.mDLItems && aDisplayList.mDLCache &&
-      aDisplayList.mDLSpatialTree && aValidTransaction &&
+  if (aDisplayList.mDLItems && aDisplayList.mDLCache && aValidTransaction &&
       !SetDisplayList(aDisplayList.mRect,
                       std::move(aDisplayList.mDLItems.ref()),
                       std::move(aDisplayList.mDLCache.ref()),
-                      std::move(aDisplayList.mDLSpatialTree.ref()),
                       aDisplayList.mDLDesc, aDisplayList.mResourceUpdates,
                       aDisplayList.mSmallShmems, aDisplayList.mLargeShmems,
                       aTxnStartTime, txn, aWrEpoch, aObserveLayersUpdate)) {

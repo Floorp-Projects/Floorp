@@ -110,9 +110,9 @@ jobs:
         parent: debian10-base
     valgrind-build:
         symbol: I(vb)
-        parent: debian10-amd64-build
+        parent: debian11-amd64-build
         packages:
-            - deb10-valgrind
+            - deb11-valgrind
     lint:
         symbol: I(lnt)
         parent: ubuntu1804-base
@@ -122,9 +122,9 @@ jobs:
         symbol: I(deb10-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: debian:buster-20210208
+            BASE_IMAGE: debian:buster-20210816
             DIST: buster
-            SNAPSHOT: '20210208T213147Z'
+            SNAPSHOT: '20210816T214117Z'
     debian10-packages:
         symbol: I(deb10-pkg)
         definition: debian-packages
@@ -148,14 +148,42 @@ jobs:
         parent: debian10-test
         packages:
             - deb10-python-zstandard
+    # Neither the debian11-raw nor the debian11-packages images can have
+    # packages dependencies.
+    debian11-raw:
+        symbol: I(deb11-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: debian:bullseye-20210816
+            DIST: bullseye
+            SNAPSHOT: '20210816T214117Z'
+    debian11-packages:
+        symbol: I(deb11-pkg)
+        definition: debian-packages
+        parent: debian11-raw
+    debian11-base:
+        symbol: I(deb11-base)
+        definition: debian-base
+        parent: debian11-raw
+        packages:
+            - deb11-mercurial
+            - deb11-python-zstandard
+    debian11-amd64-build:
+        symbol: I(deb11)
+        parent: debian11-base
+        definition: debian-build
+    deb11-toolchain-build:
+        symbol: I(deb11-toolchain)
+        parent: debian11-base
+        definition: toolchain-build
     android-build:
         symbol: I(agb)
         parent: debian10-base
     fetch:
         symbol: I(fetch)
-        parent: debian10-raw
+        parent: debian11-raw
         packages:
-            - deb10-python-zstandard
+            - deb11-python-zstandard
     static-analysis-build:
         symbol: I(static-analysis-build)
         parent: debian10-base
@@ -175,7 +203,7 @@ jobs:
         parent: ubuntu2004-base
     diffoscope:
         symbol: I(diff)
-        parent: debian10-base
+        parent: debian11-base
     partner-repack:
         symbol: I(PR)
         parent: debian10-base

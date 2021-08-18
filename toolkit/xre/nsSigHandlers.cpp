@@ -16,7 +16,6 @@
 #  include <stdio.h>
 #  include <string.h>
 #  include "prthread.h"
-#  include "plstr.h"
 #  include "prenv.h"
 #  include "nsDebug.h"
 #  include "nsXULAppAPI.h"
@@ -231,9 +230,11 @@ static void fpehandler(int signum, siginfo_t* si, void* context) {
 
 void InstallSignalHandlers(const char* aProgname) {
 #  if defined(CRAWL_STACK_ON_SIGSEGV)
-  const char* tmp = PL_strdup(aProgname);
-  if (tmp) {
-    gProgname = tmp;
+  if (aProgname) {
+    const char* tmp = strdup(aProgname);
+    if (tmp) {
+      gProgname = tmp;
+    }
   }
 #  endif  // CRAWL_STACK_ON_SIGSEGV
 
