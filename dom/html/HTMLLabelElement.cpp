@@ -177,28 +177,26 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return NS_OK;
 }
 
-Result<bool, nsresult> HTMLLabelElement::PerformAccesskey(
-    bool aKeyCausesActivation, bool aIsTrustedEvent) {
+bool HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
+                                        bool aIsTrustedEvent) {
   if (!aKeyCausesActivation) {
     RefPtr<Element> element = GetLabeledElement();
     if (element) {
       return element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
     }
-    return Err(NS_ERROR_ABORT);
+  } else {
+    nsPresContext* presContext = GetPresContext(eForUncomposedDoc);
+    if (!presContext) {
+      return false;
+    }
+
+    // Click on it if the users prefs indicate to do so.
+    AutoPopupStatePusher popupStatePusher(
+        aIsTrustedEvent ? PopupBlocker::openAllowed : PopupBlocker::openAbused);
+    DispatchSimulatedClick(this, aIsTrustedEvent, presContext);
   }
 
-  nsPresContext* presContext = GetPresContext(eForUncomposedDoc);
-  if (!presContext) {
-    return Err(NS_ERROR_UNEXPECTED);
-  }
-
-  // Click on it if the users prefs indicate to do so.
-  AutoPopupStatePusher popupStatePusher(
-      aIsTrustedEvent ? PopupBlocker::openAllowed : PopupBlocker::openAbused);
-  DispatchSimulatedClick(this, aIsTrustedEvent, presContext);
-
-  // XXXedgar, do we need to check whether the focus is really changed?
-  return true;
+  return aKeyCausesActivation;
 }
 
 nsGenericHTMLElement* HTMLLabelElement::GetLabeledElement() const {

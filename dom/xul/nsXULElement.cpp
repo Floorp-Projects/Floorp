@@ -461,25 +461,25 @@ void nsXULElement::OpenMenu(bool aOpenFlag) {
   }
 }
 
-Result<bool, nsresult> nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
-                                                      bool aIsTrustedEvent) {
+bool nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
+                                    bool aIsTrustedEvent) {
   if (IsXULElement(nsGkAtoms::label)) {
     nsAutoString control;
     GetAttr(kNameSpaceID_None, nsGkAtoms::control, control);
     if (control.IsEmpty()) {
-      return Err(NS_ERROR_UNEXPECTED);
+      return false;
     }
 
     // XXXsmaug Should we use ShadowRoot::GetElementById in case
     //          element is in Shadow DOM?
     RefPtr<Document> document = GetUncomposedDoc();
     if (!document) {
-      return Err(NS_ERROR_UNEXPECTED);
+      return false;
     }
 
     RefPtr<Element> element = document->GetElementById(control);
     if (!element) {
-      return Err(NS_ERROR_UNEXPECTED);
+      return false;
     }
 
     // XXXedgar, This is mainly for HTMLElement which doesn't do visible
@@ -488,7 +488,7 @@ Result<bool, nsresult> nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
     // label XULelement per spec.
     nsIFrame* frame = element->GetPrimaryFrame();
     if (!frame || !frame->IsVisibleConsideringAncestors()) {
-      return Err(NS_ERROR_UNEXPECTED);
+      return false;
     }
 
     return element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
@@ -496,7 +496,7 @@ Result<bool, nsresult> nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
 
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame || !frame->IsVisibleConsideringAncestors()) {
-    return Err(NS_ERROR_UNEXPECTED);
+    return false;
   }
 
   bool focused = false;
@@ -529,13 +529,9 @@ Result<bool, nsresult> nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
   if (aKeyCausesActivation && !IsXULElement(nsGkAtoms::menulist)) {
     ClickWithInputSource(MouseEvent_Binding::MOZ_SOURCE_KEYBOARD,
                          aIsTrustedEvent);
-    return focused;
   }
 
-  // If the accesskey won't cause the activation and the focus isn't changed,
-  // either. Return error so EventStateManager would try to find next element
-  // to handle the accesskey.
-  return focused ? Result<bool, nsresult>{focused} : Err(NS_ERROR_ABORT);
+  return focused;
 }
 
 //----------------------------------------------------------------------
