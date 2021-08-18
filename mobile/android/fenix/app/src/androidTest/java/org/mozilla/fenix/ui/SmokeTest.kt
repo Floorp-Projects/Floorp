@@ -1130,7 +1130,7 @@ class SmokeTest {
 
     @Test
     fun mainMenuInstallPWATest() {
-        val pwaPage = "https://rpappalax.github.io/testapp/"
+        val pwaPage = "https://mozilla-mobile.github.io/testapp/"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pwaPage.toUri()) {
