@@ -48,7 +48,6 @@ mod font;
 mod gradient_builder;
 mod image;
 pub mod units;
-mod util;
 
 pub use crate::color::*;
 pub use crate::display_item::*;
@@ -57,7 +56,6 @@ pub use crate::display_list::*;
 pub use crate::font::*;
 pub use crate::gradient_builder::*;
 pub use crate::image::*;
-pub use crate::util::ScaleOffset;
 
 use crate::units::*;
 use crate::channel::Receiver;
