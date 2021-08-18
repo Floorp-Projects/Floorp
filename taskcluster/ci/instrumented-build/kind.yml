@@ -104,7 +104,7 @@ jobs:
             platform: osx-shippable/opt
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian10-amd64-build}
+            docker-image: {in-tree: debian11-amd64-build}
             max-run-time: 7200
             env:
                 PERFHERDER_EXTRA_OPTIONS: instrumented
@@ -231,7 +231,7 @@ jobs:
             platform: windows2012-32-shippable/opt
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian10-amd64-build}
+            docker-image: {in-tree: debian11-amd64-build}
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
         run:
@@ -275,7 +275,7 @@ jobs:
             platform: windows2012-64-shippable/opt
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian10-amd64-build}
+            docker-image: {in-tree: debian11-amd64-build}
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
         run:
