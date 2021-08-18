@@ -21,7 +21,7 @@ class EngineSharedPreferencesListener(
             context.getString(R.string.pref_key_privacy_block_social),
             context.getString(R.string.pref_key_privacy_block_ads),
             context.getString(R.string.pref_key_privacy_block_analytics),
-            context.getString(R.string.pref_key_privacy_block_other),
+            context.getString(R.string.pref_key_privacy_block_other2),
             context.getString(R.string.pref_key_performance_enable_cookies) ->
                 updateTrackingProtectionPolicy()
 

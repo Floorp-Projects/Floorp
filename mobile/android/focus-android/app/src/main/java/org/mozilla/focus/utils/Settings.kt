@@ -208,7 +208,7 @@ class Settings private constructor(
 
     fun shouldBlockOtherTrackers() =
         preferences.getBoolean(
-            getPreferenceKey(R.string.pref_key_privacy_block_other),
+            getPreferenceKey(R.string.pref_key_privacy_block_other2),
             true
         )
 

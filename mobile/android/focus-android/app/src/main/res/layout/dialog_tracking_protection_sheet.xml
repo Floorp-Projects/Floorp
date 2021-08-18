@@ -115,7 +115,7 @@
         android:theme="@style/SwitchTheme"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/social"
-        app:preferenceKey="@string/pref_key_privacy_block_other"
+        app:preferenceKey="@string/pref_key_privacy_block_other2"
         app:preferenceKeyTitle="@string/content" />
 
     <com.google.android.material.textview.MaterialTextView

@@ -34,7 +34,7 @@
 
         <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="true"
-            android:key="@string/pref_key_privacy_block_other"
+            android:key="@string/pref_key_privacy_block_other2"
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_privacy_block_content_summary2"
             android:title="@string/preference_privacy_block_content" />

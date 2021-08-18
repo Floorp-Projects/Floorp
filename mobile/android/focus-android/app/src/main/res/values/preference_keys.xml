@@ -12,7 +12,7 @@
     <string name="pref_key_privacy_block_social" translatable="false"><xliff:g id="preference_key">pref_privacy_block_social</xliff:g></string>
     <string name="pref_key_privacy_block_cryptomining" translatable="false"><xliff:g id="preference_key">pref_privacy_block_cryptomining</xliff:g></string>
     <string name="pref_key_privacy_block_fingerprinting" translatable="false"><xliff:g id="preference_key">pref_privacy_block_fingerprinting</xliff:g></string>
-    <string name="pref_key_privacy_block_other" translatable="false"><xliff:g id="preference_key">pref_privacy_block_other</xliff:g></string>
+    <string name="pref_key_privacy_block_other2" translatable="false"><xliff:g id="preference_key">pref_privacy_block_other2</xliff:g></string>
     <string name="pref_key_privacy_total_trackers_blocked_count" translatable="false"><xliff:g id="preference_key">pref_key_privacy_total_trackers_blocked_count</xliff:g></string>
 
     <string name="pref_key_performance_block_webfonts" translatable="false"><xliff:g id="preference_key">pref_performance_block_webfonts</xliff:g></string>
