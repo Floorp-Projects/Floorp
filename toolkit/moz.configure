@@ -2067,12 +2067,22 @@ def wasm_sandboxing_libraries():
     )
 
 
+@depends(dependable(wasm_sandboxing_libraries), target, "MOZ_AUTOMATION")
+def default_wasm_sandboxing_libraries(libraries, target, automation):
+    if automation and (
+        (target.kernel == "Linux" and target.os == "GNU" and target.cpu == "x86_64")
+        or (target.kernel == "Darwin" and target.bitness == 64)
+    ):
+        return libraries
+
+
 option(
     "--with-wasm-sandboxed-libraries",
     env="WASM_SANDBOXED_LIBRARIES",
-    help="Enable wasm sandboxing for the selected libraries",
+    help="{Enable wasm sandboxing for the selected libraries|Disable wasm sandboxing}",
     nargs="+",
     choices=dependable(wasm_sandboxing_libraries),
+    default=default_wasm_sandboxing_libraries,
 )
 
 
