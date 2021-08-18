@@ -441,6 +441,7 @@ impl InternablePrimitive for Image {
         _key: ImageKey,
         data_handle: ImageDataHandle,
         prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         // TODO(gw): Refactor this to not need a separate image
         //           instance (see ImageInstance struct).
@@ -646,6 +647,7 @@ impl InternablePrimitive for YuvImage {
         _key: YuvImageKey,
         data_handle: YuvImageDataHandle,
         _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::YuvImage {
             data_handle,
