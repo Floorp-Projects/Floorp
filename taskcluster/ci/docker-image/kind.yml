@@ -148,6 +148,34 @@ jobs:
         parent: debian10-test
         packages:
             - deb10-python-zstandard
+    # Neither the debian11-raw nor the debian11-packages images can have
+    # packages dependencies.
+    debian11-raw:
+        symbol: I(deb11-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: debian:bullseye-20210816
+            DIST: bullseye
+            SNAPSHOT: '20210816T214117Z'
+    debian11-packages:
+        symbol: I(deb11-pkg)
+        definition: debian-packages
+        parent: debian11-raw
+    debian11-base:
+        symbol: I(deb11-base)
+        definition: debian-base
+        parent: debian11-raw
+        packages:
+            - deb11-mercurial
+            - deb11-python-zstandard
+    debian11-amd64-build:
+        symbol: I(deb11)
+        parent: debian11-base
+        definition: debian-build
+    deb11-toolchain-build:
+        symbol: I(deb11-toolchain)
+        parent: debian11-base
+        definition: toolchain-build
     android-build:
         symbol: I(agb)
         parent: debian10-base

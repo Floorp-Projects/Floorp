@@ -16,13 +16,17 @@ ARG DIST
 ARG SNAPSHOT
 ARG TASKCLUSTER_ROOT_URL
 # Set apt sources list to a snapshot.
-RUN if [ -n "$SNAPSHOT" -a -n "$DIST" ]; then for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-security_$DIST/updates debian-debug_$DIST-debug debian-debug_$DIST-proposed-updates-debug debian-debug_$DIST-backports-debug; do \
+RUN if [ -n "$SNAPSHOT" -a -n "$DIST" ]; then for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-security_$DIST-security debian-debug_$DIST-debug debian-debug_$DIST-proposed-updates-debug debian-debug_$DIST-backports-debug; do \
       case "$s" in \
       debian_jessie-backports) \
           echo "deb http://snapshot.debian.org/archive/debian-archive/20190328T105444Z/debian/ ${s#*_} main"; \
           ;; \
       debian-debug_jessie*) \
           : No debian-debug archive for Jessie; \
+          ;; \
+      debian-security_jessie-security|debian-security_buster-security) \
+          d=${s#*_}; \
+          echo "deb http://snapshot.debian.org/archive/${s%_*}/$SNAPSHOT/ ${d%-security}/updates main"; \
           ;; \
       *) \
           echo "deb http://snapshot.debian.org/archive/${s%_*}/$SNAPSHOT/ ${s#*_} main"; \
