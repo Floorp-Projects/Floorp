@@ -78,7 +78,7 @@ fn assert_local_name(name: &str, wat: &str) -> anyhow::Result<()> {
     for s in get_name_section(&wasm)? {
         match s? {
             Name::Local(n) => {
-                let mut reader = n.get_function_local_reader()?;
+                let mut reader = n.get_indirect_map()?;
                 let section = reader.read()?;
                 let mut map = section.get_map()?;
                 let naming = map.read()?;
@@ -114,12 +114,12 @@ fn custom_section_order() -> anyhow::Result<()> {
         r#"
             (module
               (@custom "A" "aaa")
-              (type $t (func))
+              (type (func))
               (@custom "B" (after func) "bbb")
               (@custom "C" (before func) "ccc")
               (@custom "D" (after last) "ddd")
               (table 10 funcref)
-              (func (type $t))
+              (func (type 0))
               (@custom "E" (after import) "eee")
               (@custom "F" (before type) "fff")
               (@custom "G" (after data) "ggg")

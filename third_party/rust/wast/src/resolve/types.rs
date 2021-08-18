@@ -124,9 +124,14 @@ impl<'a> Expander<'a> {
                 if let ElemKind::Active { offset, .. } = &mut e.kind {
                     self.expand_expression(offset);
                 }
+                if let ElemPayload::Exprs { exprs, .. } = &mut e.payload {
+                    for expr in exprs {
+                        self.expand_expression(expr);
+                    }
+                }
             }
-            ModuleField::Event(e) => match &mut e.ty {
-                EventType::Exception(ty) => {
+            ModuleField::Tag(t) => match &mut t.ty {
+                TagType::Exception(ty) => {
                     self.expand_type_use(ty);
                 }
             },
@@ -148,7 +153,7 @@ impl<'a> Expander<'a> {
 
     fn expand_item_sig(&mut self, item: &mut ItemSig<'a>) {
         match &mut item.kind {
-            ItemKind::Func(t) | ItemKind::Event(EventType::Exception(t)) => {
+            ItemKind::Func(t) | ItemKind::Tag(TagType::Exception(t)) => {
                 self.expand_type_use(t);
             }
             ItemKind::Instance(t) => {
@@ -262,6 +267,7 @@ impl<'a> Expander<'a> {
         self.to_prepend.push(ModuleField::Type(Type {
             span,
             id: Some(id),
+            name: None,
             def: key.to_def(span),
         }));
         let idx = Index::Id(id);
@@ -431,7 +437,7 @@ enum Item<'a> {
     Table(TableType<'a>),
     Memory(MemoryType),
     Global(GlobalType<'a>),
-    Event(Index<'a>),
+    Tag(Index<'a>),
     Module(Index<'a>),
     Instance(Index<'a>),
 }
@@ -442,8 +448,8 @@ impl<'a> Item<'a> {
             ItemKind::Func(f) => Item::Func(*f.index.as_ref().unwrap().unwrap_index()),
             ItemKind::Instance(f) => Item::Instance(*f.index.as_ref().unwrap().unwrap_index()),
             ItemKind::Module(f) => Item::Module(*f.index.as_ref().unwrap().unwrap_index()),
-            ItemKind::Event(EventType::Exception(f)) => {
-                Item::Event(*f.index.as_ref().unwrap().unwrap_index())
+            ItemKind::Tag(TagType::Exception(f)) => {
+                Item::Tag(*f.index.as_ref().unwrap().unwrap_index())
             }
             ItemKind::Table(t) => Item::Table(t.clone()),
             ItemKind::Memory(t) => Item::Memory(t.clone()),
@@ -454,9 +460,7 @@ impl<'a> Item<'a> {
     fn to_sig(&self, span: Span) -> ItemSig<'a> {
         let kind = match self {
             Item::Func(index) => ItemKind::Func(TypeUse::new_with_index(*index)),
-            Item::Event(index) => {
-                ItemKind::Event(EventType::Exception(TypeUse::new_with_index(*index)))
-            }
+            Item::Tag(index) => ItemKind::Tag(TagType::Exception(TypeUse::new_with_index(*index))),
             Item::Instance(index) => ItemKind::Instance(TypeUse::new_with_index(*index)),
             Item::Module(index) => ItemKind::Module(TypeUse::new_with_index(*index)),
             Item::Table(t) => ItemKind::Table(t.clone()),
