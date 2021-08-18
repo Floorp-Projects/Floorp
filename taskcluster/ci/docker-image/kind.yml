@@ -170,9 +170,9 @@ jobs:
         parent: debian10-base
     fetch:
         symbol: I(fetch)
-        parent: debian10-raw
+        parent: debian11-raw
         packages:
-            - deb10-python-zstandard
+            - deb11-python-zstandard
     static-analysis-build:
         symbol: I(static-analysis-build)
         parent: debian10-base
