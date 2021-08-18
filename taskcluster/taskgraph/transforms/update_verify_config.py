@@ -36,12 +36,29 @@ INCLUDE_VERSION_REGEXES = {
     # Previous esr versions, for update testing before we update users to esr91
     "esr91-next": r"'^(52|60|68|78)+\.\d+(\.\d+)?esr$'",
     # Previous Thunderbird major versions. Same idea as esrXX-next, no esr suffix
-    "thunderbird91-next": r"'^78\.\d+(\.\d+)?$",
+    "thunderbird91-next": r"'^78\.\d+(\.\d+)?$'",
 }
 
 MAR_CHANNEL_ID_OVERRIDE_REGEXES = {
     "beta": r"'^\d+\.\d+(\.\d+)?$$,firefox-mozilla-beta,firefox-mozilla-release'",
 }
+
+
+def ensure_wrapped_singlequote(regexes):
+    """Ensure that a regex (from INCLUDE_VERSION_REGEXES or MAR_CHANNEL_ID_OVERRIDE_REGEXES)
+    is wrapper in single quotes.
+    """
+    for name, regex in regexes.items():
+        if regex[0] != "'" or regex[-1] != "'":
+            raise Exception(
+                "Regex {} is invalid: not wrapped with single quotes.\n{}".format(
+                    name, regex
+                )
+            )
+
+
+ensure_wrapped_singlequote(INCLUDE_VERSION_REGEXES)
+ensure_wrapped_singlequote(MAR_CHANNEL_ID_OVERRIDE_REGEXES)
 
 
 @transforms.add
