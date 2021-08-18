@@ -1,5 +1,5 @@
 use crate::ast::{self, kw, HeapType};
-use crate::parser::{Parse, Parser, Result};
+use crate::parser::{Cursor, Parse, Parser, Result};
 use std::mem;
 
 /// An expression, or a list of instructions, in the WebAssembly text format.
@@ -307,7 +307,7 @@ impl<'a> ExpressionParser<'a> {
     /// than an `if` as the syntactic form is:
     ///
     /// ```wat
-    /// (try (do $do) (catch $event $catch))
+    /// (try (do $do) (catch $tag $catch))
     /// ```
     ///
     /// where the `do` and `catch` keywords are mandatory, even for an empty
@@ -1133,6 +1133,7 @@ instructions! {
 #[allow(missing_docs)]
 pub struct BlockType<'a> {
     pub label: Option<ast::Id<'a>>,
+    pub label_name: Option<ast::NameAnnotation<'a>>,
     pub ty: ast::TypeUse<'a, ast::FunctionType<'a>>,
 }
 
@@ -1140,6 +1141,7 @@ impl<'a> Parse<'a> for BlockType<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         Ok(BlockType {
             label: parser.parse()?,
+            label_name: parser.parse()?,
             ty: parser
                 .parse::<ast::TypeUse<'a, ast::FunctionTypeNoNames<'a>>>()?
                 .into(),
@@ -1238,14 +1240,18 @@ pub struct MemArg<'a> {
     /// 8, etc).
     pub align: u32,
     /// The offset, in bytes of this access.
-    pub offset: u32,
+    pub offset: u64,
     /// The memory index we're accessing
     pub memory: ast::ItemRef<'a, kw::memory>,
 }
 
 impl<'a> MemArg<'a> {
     fn parse(parser: Parser<'a>, default_align: u32) -> Result<Self> {
-        fn parse_field(name: &str, parser: Parser<'_>) -> Result<Option<u32>> {
+        fn parse_field<T>(
+            name: &str,
+            parser: Parser<'_>,
+            f: impl FnOnce(Cursor<'_>, &str, u32) -> Result<T>,
+        ) -> Result<Option<T>> {
             parser.step(|c| {
                 let (kw, rest) = match c.keyword() {
                     Some(p) => p,
@@ -1260,25 +1266,32 @@ impl<'a> MemArg<'a> {
                 }
                 let num = &kw[1..];
                 let num = if num.starts_with("0x") {
-                    match u32::from_str_radix(&num[2..], 16) {
-                        Ok(n) => n,
-                        Err(_) => return Err(c.error("i32 constant out of range")),
-                    }
+                    f(c, &num[2..], 16)?
                 } else {
-                    match num.parse() {
-                        Ok(n) => n,
-                        Err(_) => return Err(c.error("i32 constant out of range")),
-                    }
+                    f(c, num, 10)?
                 };
 
                 Ok((Some(num), rest))
             })
         }
+
+        fn parse_u32(name: &str, parser: Parser<'_>) -> Result<Option<u32>> {
+            parse_field(name, parser, |c, num, radix| {
+                u32::from_str_radix(num, radix).map_err(|_| c.error("i32 constant out of range"))
+            })
+        }
+
+        fn parse_u64(name: &str, parser: Parser<'_>) -> Result<Option<u64>> {
+            parse_field(name, parser, |c, num, radix| {
+                u64::from_str_radix(num, radix).map_err(|_| c.error("i64 constant out of range"))
+            })
+        }
+
         let memory = parser
             .parse::<Option<ast::ItemRef<'a, kw::memory>>>()?
             .unwrap_or(idx_zero(parser.prev_span(), kw::memory));
-        let offset = parse_field("offset", parser)?.unwrap_or(0);
-        let align = match parse_field("align", parser)? {
+        let offset = parse_u64("offset", parser)?.unwrap_or(0);
+        let align = match parse_u32("align", parser)? {
             Some(n) if !n.is_power_of_two() => {
                 return Err(parser.error("alignment must be a power of two"))
             }
