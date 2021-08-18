@@ -77,13 +77,6 @@ enum OcclusionQuery {
     Precise(minwindef::UINT),
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-enum DynamicBuffer {
-    Cbv,
-    Srv,
-    Uav,
-}
-
 /// Strongly-typed root signature element
 ///
 /// Could be removed for an unsafer variant to occupy less memory
@@ -96,9 +89,8 @@ enum RootElement {
     /// Descriptor table, storing table offset for the current descriptor heap
     TableSampler(u32),
     /// Root descriptors take 2 DWORDs in the root signature.
-    DescriptorDynamic {
+    DescriptorCbv {
         buffer: u64,
-        kind: DynamicBuffer,
     },
     DescriptorPlaceholder,
     /// Undefined value, implementation specific
@@ -159,12 +151,12 @@ impl UserData {
         self.dirty_mask |= 1u64 << offset;
     }
 
-    /// Write a dynamic buffer root descriptor into the user data, overwriting virtual
+    /// Write a CBV root descriptor into the user data, overwriting virtual
     /// memory range [offset..offset + 2]. Changes are marked as dirty.
-    fn set_descriptor_dynamic(&mut self, offset: usize, buffer: u64, kind: DynamicBuffer) {
+    fn set_descriptor_cbv(&mut self, offset: usize, buffer: u64) {
         assert!(offset + 1 < ROOT_SIGNATURE_SIZE);
         // A root descriptor occupies two DWORDs
-        self.data[offset] = RootElement::DescriptorDynamic { buffer, kind };
+        self.data[offset] = RootElement::DescriptorCbv { buffer };
         self.data[offset + 1] = RootElement::DescriptorPlaceholder;
         self.dirty_mask |= 1u64 << offset;
         self.dirty_mask |= 1u64 << offset + 1;
@@ -268,17 +260,7 @@ impl PipelineCache {
                 // It's not valid to modify the descriptor sets during recording -> access if safe.
                 for descriptor in binding.dynamic_descriptors.iter() {
                     let gpu_offset = descriptor.gpu_buffer_location + offsets.next().unwrap();
-                    let kind = if descriptor.content.contains(r::DescriptorContent::CBV) {
-                        DynamicBuffer::Cbv
-                    } else if descriptor.content.contains(r::DescriptorContent::SRV) {
-                        DynamicBuffer::Srv
-                    } else if descriptor.content.contains(r::DescriptorContent::UAV) {
-                        DynamicBuffer::Uav
-                    } else {
-                        unreachable!()
-                    };
-                    self.user_data
-                        .set_descriptor_dynamic(root_offset, gpu_offset, kind);
+                    self.user_data.set_descriptor_cbv(root_offset, gpu_offset);
                     root_offset += 2;
                 }
             }
@@ -291,11 +273,11 @@ impl PipelineCache {
         &mut self,
         mut constants_update: F,
         mut table_update: G,
-        mut descriptor_dynamic_update: H,
+        mut descriptor_cbv_update: H,
     ) where
         F: FnMut(u32, &[u32]),
         G: FnMut(u32, d3d12::D3D12_GPU_DESCRIPTOR_HANDLE),
-        H: FnMut(u32, d3d12::D3D12_GPU_VIRTUAL_ADDRESS, DynamicBuffer),
+        H: FnMut(u32, d3d12::D3D12_GPU_VIRTUAL_ADDRESS),
     {
         let user_data = &mut self.user_data;
         if !user_data.is_dirty() {
@@ -344,14 +326,14 @@ impl PipelineCache {
                     };
                     table_update(root_index as u32, gpu);
                 }
-                RootElement::DescriptorDynamic { buffer, kind } => {
+                RootElement::DescriptorCbv { buffer } => {
                     debug_assert!(user_data.is_index_dirty(root_offset + 1));
                     debug_assert_eq!(
                         user_data.data[root_offset as usize + 1],
                         RootElement::DescriptorPlaceholder
                     );
 
-                    descriptor_dynamic_update(root_index as u32, buffer, kind);
+                    descriptor_cbv_update(root_index as u32, buffer);
                 }
                 RootElement::DescriptorPlaceholder | RootElement::Undefined => {
                     error!(
@@ -790,17 +772,7 @@ impl CommandBuffer {
                 )
             },
             |slot, gpu| cmd_buffer.set_graphics_root_descriptor_table(slot, gpu),
-            |slot, buffer, kind| match kind {
-                DynamicBuffer::Cbv => {
-                    cmd_buffer.set_graphics_root_constant_buffer_view(slot, buffer)
-                }
-                DynamicBuffer::Srv => {
-                    cmd_buffer.set_graphics_root_shader_resource_view(slot, buffer)
-                }
-                DynamicBuffer::Uav => {
-                    cmd_buffer.set_graphics_root_unordered_access_view(slot, buffer)
-                }
-            },
+            |slot, buffer| cmd_buffer.set_graphics_root_constant_buffer_view(slot, buffer),
         );
     }
 
@@ -842,17 +814,7 @@ impl CommandBuffer {
                 )
             },
             |slot, gpu| cmd_buffer.set_compute_root_descriptor_table(slot, gpu),
-            |slot, buffer, kind| match kind {
-                DynamicBuffer::Cbv => {
-                    cmd_buffer.set_compute_root_constant_buffer_view(slot, buffer)
-                }
-                DynamicBuffer::Srv => {
-                    cmd_buffer.set_compute_root_shader_resource_view(slot, buffer)
-                }
-                DynamicBuffer::Uav => {
-                    cmd_buffer.set_compute_root_unordered_access_view(slot, buffer)
-                }
-            },
+            |slot, buffer| cmd_buffer.set_compute_root_constant_buffer_view(slot, buffer),
         );
     }
 
