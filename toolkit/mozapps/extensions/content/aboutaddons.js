@@ -95,10 +95,6 @@ const BUILTIN_THEME_PREVIEWS = new Map([
     "firefox-alpenglow@mozilla.org",
     "chrome://mozapps/content/extensions/firefox-alpenglow.svg",
   ],
-  [
-    "firefox-monochromatic-purple@mozilla.org",
-    "chrome://mozapps/content/extensions/firefox-monochromatic-purple.svg",
-  ],
 ]);
 
 const PERMISSION_MASKS = {

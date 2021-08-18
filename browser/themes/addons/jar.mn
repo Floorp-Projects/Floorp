@@ -15,6 +15,3 @@ browser.jar:
   content/builtin-themes/light                     (light/*.svg)
   content/builtin-themes/light                     (light/*.css)
   content/builtin-themes/light/manifest.json       (light/manifest.json)
-
-  content/builtin-themes/monochromatic-purple                    (monochromatic-purple/*.svg)
-  content/builtin-themes/monochromatic-purple/manifest.json      (monochromatic-purple/manifest.json)

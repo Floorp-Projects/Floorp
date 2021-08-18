@@ -1374,37 +1374,6 @@ BrowserGlue.prototype = {
       "resource://builtin-themes/alpenglow/"
     );
 
-    if (
-      AppConstants.NIGHTLY_BUILD &&
-      Services.prefs.getBoolPref(
-        "browser.theme.temporary.monochromatic.enabled",
-        false
-      )
-    ) {
-      // Temporarily install a prototype monochromatic theme for UX iteration.
-      // We uninstall it during shutdown so it does not persist if the pref is
-      // disabled.
-      const kMonochromaticThemeID = "firefox-monochromatic-purple@mozilla.org";
-      AddonManager.maybeInstallBuiltinAddon(
-        kMonochromaticThemeID,
-        "1.0",
-        "resource://builtin-themes/monochromatic-purple/"
-      );
-      AsyncShutdown.profileChangeTeardown.addBlocker(
-        "Uninstall Prototype Monochromatic Theme",
-        async () => {
-          try {
-            let addon = await AddonManager.getAddonByID(kMonochromaticThemeID);
-            await addon.uninstall();
-          } catch (e) {
-            Cu.reportError(
-              "Failed to uninstall firefox-monochromatic-purple on shutdown"
-            );
-          }
-        }
-      );
-    }
-
     if (AppConstants.MOZ_NORMANDY) {
       Normandy.init();
     }
