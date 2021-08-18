@@ -69,7 +69,6 @@ import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
-import org.mozilla.focus.whatsnew.WhatsNew
 import kotlin.coroutines.CoroutineContext
 
 class FocusCrashException : Exception()
@@ -459,15 +458,6 @@ class UrlInputFragment :
             }
 
             R.id.menuView -> showHomeMenu(view)
-
-            R.id.whats_new -> context?.let {
-                TelemetryWrapper.openWhatsNewEvent(WhatsNew.shouldHighlightWhatsNew(it))
-
-                WhatsNew.userViewedWhatsNew(it)
-
-                val url = SupportUtils.getSumoURLForTopic(it, SupportUtils.SumoTopic.WHATS_NEW)
-                requireComponents.tabsUseCases.addTab(url, source = SessionState.Source.Internal.Menu, private = true)
-            }
 
             R.id.settings -> {
                 requireComponents.appStore.dispatch(

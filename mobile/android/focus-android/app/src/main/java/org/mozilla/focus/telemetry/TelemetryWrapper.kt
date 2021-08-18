@@ -764,13 +764,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun openWhatsNewEvent(highlighted: Boolean) {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.WHATS_NEW)
-            .extra(Extra.HIGHLIGHTED, highlighted.toString())
-            .queue()
-    }
-
-    @JvmStatic
     fun findInPageMenuEvent() {
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FIND_IN_PAGE).queue()
     }
