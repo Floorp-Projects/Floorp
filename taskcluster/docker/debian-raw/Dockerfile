@@ -10,6 +10,8 @@ CMD ["/bin/bash", "--login"]
 # %include taskcluster/docker/recipes/setup_packages.sh
 COPY topsrcdir/taskcluster/docker/recipes/setup_packages.sh /usr/local/sbin/
 
+COPY taskcluster-hack.sh /usr/local/sbin
+
 ARG DIST
 ARG SNAPSHOT
 ARG TASKCLUSTER_ROOT_URL
@@ -32,6 +34,9 @@ RUN if [ -n "$SNAPSHOT" -a -n "$DIST" ]; then for s in debian_$DIST debian_$DIST
       echo 'APT::Install-Recommends "false";'; \
       echo 'Acquire::Check-Valid-Until "false";'; \
       echo 'Acquire::Retries "5";'; \
+      if dpkg --compare-versions $(apt --version | awk '{print $2}') ge 2.1.15; then \
+        echo 'dir::bin::methods::https "/usr/local/sbin/taskcluster-hack.sh";'; \
+      fi; \
     ) > /etc/apt/apt.conf.d/99taskcluster && \
     ( echo 'Package: *'; \
       echo 'Pin: origin "'$TASKCLUSTER_ROOT_URL'"' | sed 's,https://,,'; \
