@@ -27,6 +27,24 @@ const waitUntil = function(predicate, interval = 100) {
 };
 
 /**
+ * Copied from devtools shared-head.js
+ *
+ * @param {BrowsingContext} context
+ **/
+const waitForPresShell = function(context) {
+  return SpecialPowers.spawn(context, [], async () => {
+    const winUtils = SpecialPowers.getDOMWindowUtils(content);
+    await ContentTaskUtils.waitForCondition(() => {
+      try {
+        return !!winUtils.getPresShellId();
+      } catch (e) {
+        return false;
+      }
+    }, "Waiting for a valid presShell");
+  });
+};
+
+/**
  * Open the provided url in a new tab.
  */
 const addTab = async function(url) {
@@ -38,6 +56,10 @@ const addTab = async function(url) {
   gBrowser.selectedTab = tab;
 
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  // Wait for a valid presShell to avoid test timeouts on linux webrender
+  // platforms.
+  await waitForPresShell(tab.linkedBrowser);
 
   info("Tab added and finished loading");
 
