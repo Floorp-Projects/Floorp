@@ -9,6 +9,7 @@
 #include "mozilla/PresShell.h"
 #include "UnitTransforms.h"
 #include "nsDisplayList.h"
+#include "mozilla/dom/BrowserChild.h"
 
 namespace mozilla {
 namespace layers {
@@ -75,6 +76,29 @@ StackingContextHelper::StackingContextHelper(
 
     mInheritedTransform = transform * aParentSC.mInheritedTransform;
     mScale = resolution * aParentSC.mScale;
+
+    MOZ_ASSERT(!aParams.mAnimated);
+    mSnappingSurfaceTransform = transform * aParentSC.mSnappingSurfaceTransform;
+
+  } else if (!aAsr && !aContainerFrame && !aContainerItem &&
+             aParams.mRootReferenceFrame) {
+    // this is the root stacking context helper
+    float resolutionX = 1.f;
+    float resolutionY = 1.f;
+
+    // If we are in a remote browser, then apply scaling from ancestor browsers
+    if (mozilla::dom::BrowserChild* browserChild =
+            mozilla::dom::BrowserChild::GetFrom(
+                aParams.mRootReferenceFrame->PresShell())) {
+      resolutionX *= browserChild->GetEffectsInfo().mScaleX;
+      resolutionY *= browserChild->GetEffectsInfo().mScaleY;
+    }
+
+    gfx::Matrix transform = gfx::Matrix::Scaling(resolutionX, resolutionY);
+
+    mInheritedTransform = transform * aParentSC.mInheritedTransform;
+    mScale = gfx::Size(aParentSC.mScale.width * resolutionX,
+                       aParentSC.mScale.height * resolutionY);
 
     MOZ_ASSERT(!aParams.mAnimated);
     mSnappingSurfaceTransform = transform * aParentSC.mSnappingSurfaceTransform;

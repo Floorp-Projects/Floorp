@@ -288,6 +288,7 @@ impl InternablePrimitive for ConicGradient {
         _key: ConicGradientKey,
         data_handle: ConicGradientDataHandle,
         _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::ConicGradient {
             data_handle,

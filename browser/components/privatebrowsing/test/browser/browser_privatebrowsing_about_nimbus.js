@@ -312,49 +312,6 @@ add_task(async function test_experiment_bottom_promo() {
   await doExperimentCleanup();
 });
 
-add_task(async function test_experiment_below_search_promo() {
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    value: {
-      enabled: true,
-      promoLinkType: "button",
-      promoSectionStyle: "below-search",
-      promoHeader: "Need more privacy?",
-      promoTitle:
-        "Mozilla VPN. Security, reliability and speed — on every device,  anywhere you go.",
-      infoTitleEnabled: false,
-    },
-  });
-
-  let { win, tab } = await openTabAndWaitForRender();
-
-  await SpecialPowers.spawn(tab, [], async function() {
-    is(
-      content.document
-        .querySelector(".promo-cta .button")
-        .classList.contains("button"),
-      true,
-      "Should have a button CTA"
-    );
-    ok(
-      content.document.querySelector(".promo.below-search"),
-      "Should have .below-search for the promo section"
-    );
-    ok(
-      !content.document.querySelector("#info-title"),
-      "Should not render info title if infoTitleEnabled is false"
-    );
-    ok(
-      content.document.querySelector("#private-browsing-vpn-text"),
-      "Should render promo title if promoTitleEnabled is true"
-    );
-  });
-
-  await BrowserTestUtils.closeWindow(win);
-
-  await doExperimentCleanup();
-});
-
 add_task(async function test_experiment_top_promo() {
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",

@@ -1,11 +1,13 @@
 {
     "stages": "2",
     "build_libcxx": true,
+    "build_wasm": true,
     "build_type": "Release",
     "assertions": false,
     "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
     "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
     "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
     "android_targets": {
       "armv7-linux-android": {
         "ndk_toolchain": "{MOZ_FETCHES_DIR}/android-ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64",

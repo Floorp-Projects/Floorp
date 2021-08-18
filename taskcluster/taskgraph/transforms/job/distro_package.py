@@ -62,10 +62,6 @@ debian_schema = common_schema.extend(
         Required("using"): "debian-package",
         # Debian distribution
         Required("dist"): text_type,
-        # Date of the snapshot (from snapshot.debian.org) to use, in the format
-        # YYYYMMDDTHHMMSSZ. The same date is used for the base docker-image name
-        # (only the YYYYMMDD part).
-        Required("snapshot"): text_type,
     }
 )
 

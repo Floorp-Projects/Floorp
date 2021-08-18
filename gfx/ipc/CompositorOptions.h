@@ -31,27 +31,21 @@ class CompositorOptions {
   // This constructor needed for IPDL purposes, don't use it anywhere else.
   CompositorOptions()
       : mUseAPZ(false),
-        mUseWebRender(false),
         mUseSoftwareWebRender(false),
         mAllowSoftwareWebRenderD3D11(false),
         mAllowSoftwareWebRenderOGL(false),
         mUseAdvancedLayers(false),
         mInitiallyPaused(false) {}
 
-  CompositorOptions(bool aUseAPZ, bool aUseWebRender,
-                    bool aUseSoftwareWebRender)
+  CompositorOptions(bool aUseAPZ, bool aUseSoftwareWebRender)
       : mUseAPZ(aUseAPZ),
-        mUseWebRender(aUseWebRender),
         mUseSoftwareWebRender(aUseSoftwareWebRender),
         mAllowSoftwareWebRenderD3D11(false),
         mAllowSoftwareWebRenderOGL(false),
         mUseAdvancedLayers(false),
-        mInitiallyPaused(false) {
-    MOZ_ASSERT_IF(aUseSoftwareWebRender, aUseWebRender);
-  }
+        mInitiallyPaused(false) {}
 
   bool UseAPZ() const { return mUseAPZ; }
-  bool UseWebRender() const { return mUseWebRender; }
   bool UseSoftwareWebRender() const { return mUseSoftwareWebRender; }
   bool AllowSoftwareWebRenderD3D11() const {
     return mAllowSoftwareWebRenderD3D11;
@@ -79,7 +73,7 @@ class CompositorOptions {
   }
 
   bool operator==(const CompositorOptions& aOther) const {
-    return mUseAPZ == aOther.mUseAPZ && mUseWebRender == aOther.mUseWebRender &&
+    return mUseAPZ == aOther.mUseAPZ &&
            mUseSoftwareWebRender == aOther.mUseSoftwareWebRender &&
            mAllowSoftwareWebRenderD3D11 ==
                aOther.mAllowSoftwareWebRenderD3D11 &&
@@ -91,7 +85,6 @@ class CompositorOptions {
 
  private:
   bool mUseAPZ;
-  bool mUseWebRender;
   bool mUseSoftwareWebRender;
   bool mAllowSoftwareWebRenderD3D11;
   bool mAllowSoftwareWebRenderOGL;

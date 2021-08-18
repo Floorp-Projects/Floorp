@@ -383,16 +383,13 @@ void CompositorBridgeParent::Initialize() {
     MOZ_ASSERT(!mApzcTreeManager);
     MOZ_ASSERT(!mApzSampler);
     MOZ_ASSERT(!mApzUpdater);
-    mApzcTreeManager =
-        new APZCTreeManager(mRootLayerTreeID, mOptions.UseWebRender());
-    mApzSampler = new APZSampler(mApzcTreeManager, mOptions.UseWebRender());
-    mApzUpdater = new APZUpdater(mApzcTreeManager, mOptions.UseWebRender());
+    mApzcTreeManager = new APZCTreeManager(mRootLayerTreeID, true);
+    mApzSampler = new APZSampler(mApzcTreeManager, true);
+    mApzUpdater = new APZUpdater(mApzcTreeManager, true);
   }
 
-  if (mOptions.UseWebRender()) {
-    CompositorAnimationStorage* animationStorage = GetAnimationStorage();
-    mOMTASampler = new OMTASampler(animationStorage, mRootLayerTreeID);
-  }
+  CompositorAnimationStorage* animationStorage = GetAnimationStorage();
+  mOMTASampler = new OMTASampler(animationStorage, mRootLayerTreeID);
 
   mPaused = mOptions.InitiallyPaused();
 
@@ -410,10 +407,6 @@ void CompositorBridgeParent::Initialize() {
   }
 
   LayerScope::SetPixelScale(mScale.scale);
-
-  if (!mOptions.UseWebRender()) {
-    mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
-  }
 }
 
 LayersId CompositorBridgeParent::RootLayerTreeId() {
@@ -733,8 +726,7 @@ void CompositorBridgeParent::ResumeComposition() {
 
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
-  bool resumed =
-      mOptions.UseWebRender() ? mWrBridge->Resume() : mCompositor->Resume();
+  bool resumed = mWrBridge->Resume();
   if (!resumed) {
 #ifdef MOZ_WIDGET_ANDROID
     // We can't get a surface. This could be because the activity changed
@@ -1637,7 +1629,6 @@ static CompositorOptionsChangeKind ClassifyCompositorOptionsChange(
     return CompositorOptionsChangeKind::eSupported;
   }
   if (aOld.UseAdvancedLayers() == aNew.UseAdvancedLayers() &&
-      aOld.UseWebRender() == aNew.UseWebRender() &&
       aOld.InitiallyPaused() == aNew.InitiallyPaused()) {
     // Only APZ enablement changed.
     return CompositorOptionsChangeKind::eBestEffort;

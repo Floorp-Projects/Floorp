@@ -2878,51 +2878,14 @@ bool BrowserChild::CreateRemoteLayerManager(
     mozilla::layers::PCompositorBridgeChild* aCompositorChild) {
   MOZ_ASSERT(aCompositorChild);
 
-  bool success = false;
-  if (mCompositorOptions->UseWebRender()) {
-    success = mPuppetWidget->CreateRemoteLayerManager(
-        [&](LayerManager* aLayerManager) -> bool {
-          MOZ_ASSERT(aLayerManager->AsWebRenderLayerManager());
-          nsCString error;
-          return aLayerManager->AsWebRenderLayerManager()->Initialize(
-              aCompositorChild, wr::AsPipelineId(mLayersId),
-              &mTextureFactoryIdentifier, error);
-        });
-  } else {
-    nsTArray<LayersBackend> ignored;
-    PLayerTransactionChild* shadowManager =
-        aCompositorChild->SendPLayerTransactionConstructor(ignored,
-                                                           GetLayersId());
-    if (shadowManager &&
-        shadowManager->SendGetTextureFactoryIdentifier(
-            &mTextureFactoryIdentifier) &&
-        mTextureFactoryIdentifier.mParentBackend !=
-            LayersBackend::LAYERS_NONE) {
-      success = true;
-    }
-    if (!success) {
-      // Since no LayerManager is associated with the tab's widget, we will
-      // never have an opportunity to destroy the PLayerTransaction on the next
-      // device or compositor reset. Therefore, we make sure to forcefully close
-      // it here. Failure to do so will cause the next layer tree to fail to
-      // attach due since the compositor requires the old layer tree to be
-      // disassociated.
-      if (shadowManager) {
-        static_cast<LayerTransactionChild*>(shadowManager)->Destroy();
-        shadowManager = nullptr;
-      }
-      NS_WARNING("failed to allocate layer transaction");
-    } else {
-      success = mPuppetWidget->CreateRemoteLayerManager(
-          [&](LayerManager* aLayerManager) -> bool {
-            ShadowLayerForwarder* lf = aLayerManager->AsShadowForwarder();
-            lf->SetShadowManager(shadowManager);
-            lf->IdentifyTextureHost(mTextureFactoryIdentifier);
-            return true;
-          });
-    }
-  }
-  return success;
+  return mPuppetWidget->CreateRemoteLayerManager(
+      [&](LayerManager* aLayerManager) -> bool {
+        MOZ_ASSERT(aLayerManager->AsWebRenderLayerManager());
+        nsCString error;
+        return aLayerManager->AsWebRenderLayerManager()->Initialize(
+            aCompositorChild, wr::AsPipelineId(mLayersId),
+            &mTextureFactoryIdentifier, error);
+      });
 }
 
 void BrowserChild::InitAPZState() {
