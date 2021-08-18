@@ -386,7 +386,7 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
       if (!dup) return NS_ERROR_OUT_OF_MEMORY;
 
       *dup = '-';
-      char* colon = PL_strchr(dup, ':');
+      char* colon = strchr(dup, ':');
       if (colon) {
         *colon = '\0';
         appendArg(dup);
@@ -404,7 +404,7 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
       char* dup = strdup(curarg);
       if (!dup) return NS_ERROR_OUT_OF_MEMORY;
 
-      char* eq = PL_strchr(dup, '=');
+      char* eq = strchr(dup, '=');
       if (eq) {
         *eq = '\0';
         appendArg(dup);
