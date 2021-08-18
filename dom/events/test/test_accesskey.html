@@ -31,6 +31,10 @@
 <input type="radio" id="radio4" disabled><label for="radio4">Radio 4</label><br>
 </fieldset>
 <input type="text" id="text1" accesskey="d"><br>
+<!-- Tests for bug 1723010 -->
+<button id="button5" style="display:none" accesskey="1">Button 5</button>
+<button id="button6" style="display:none" accesskey="2">Button 6</button>
+<textarea id="textarea1" accesskey="2"></textarea>
 <script>
 
 function performAccessKey(aKey) {
@@ -77,6 +81,48 @@ add_task(function legend2() {
 
   performAccessKey("d");
   is(document.activeElement.id, text1.id, `focus should move to ${text1.id}`);
+});
+
+/** Test for Bug 1723010 **/
+
+add_task(async function removeElement() {
+  let button5 = document.getElementById("button5");
+  let textarea1 = document.getElementById("textarea1");
+  let promise = new Promise((resolve) => {
+    button5.addEventListener("click", function() {
+      textarea1.remove();
+      SimpleTest.executeSoon(() => {
+        ok(true, "should not crash");
+        resolve();
+      });
+    }, { once: true });
+  });
+
+  performAccessKey("1");
+  await promise;
+});
+
+add_task(async function modifyAccessKey() {
+  let button5 = document.getElementById("button5");
+  let button6 = document.getElementById("button6");
+  let textarea1 = document.querySelector("textarea1");
+  let promise = new Promise((resolve) => {
+    button5.addEventListener("click", function() {
+      button5.setAttribute("accesskey", "2");
+      button6.setAttribute("accesskey", "1");
+      SimpleTest.executeSoon(() => {
+        ok(true, "Button 5 should be clicked");
+        resolve();
+      });
+    }, { once: true });
+
+    button6.addEventListener("click", function() {
+      ok(false, "Button 6 should not be clicked");
+    }, { once: true });
+  });
+
+  performAccessKey("1");
+  await promise;
 });
 
 </script>

@@ -93,13 +93,18 @@ void HTMLLegendElement::Focus(const FocusOptions& aOptions,
                          getter_AddRefs(result));
 }
 
-bool HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
-                                         bool aIsTrustedEvent) {
+Result<bool, nsresult> HTMLLegendElement::PerformAccesskey(
+    bool aKeyCausesActivation, bool aIsTrustedEvent) {
   FocusOptions options;
   ErrorResult rv;
 
   Focus(options, CallerType::System, rv);
-  return NS_SUCCEEDED(rv.StealNSResult());
+  if (rv.Failed()) {
+    return Err(rv.StealNSResult());
+  }
+
+  // XXXedgar, do we need to check whether the focus is really changed?
+  return true;
 }
 
 HTMLLegendElement::LegendAlignValue HTMLLegendElement::LogicalAlign(
