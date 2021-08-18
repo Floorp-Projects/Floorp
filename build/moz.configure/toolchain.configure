@@ -1248,6 +1248,17 @@ def compiler(
                 % info.version
             )
 
+        if host_or_target.kernel == "WASI":
+            if info.type != "clang":
+                raise FatalCheckError(
+                    "Only clang is supported for %s" % host_or_target.alias
+                )
+            if info.version < "8.0":
+                raise FatalCheckError(
+                    "Only clang/llvm 8.0 or newer is supported for %s (found version %s)."
+                    % (host_or_target.alias, info.version)
+                )
+
         if info.flags:
             raise FatalCheckError("Unknown compiler or compiler not supported.")
 
