@@ -621,8 +621,7 @@ AudioInputProcessing::AudioInputProcessing(
       mRequestedInputChannelCount(aMaxChannelCount),
       mSkipProcessing(false),
       mInputDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100),
-      mLiveFramesAppended(false),
-      mLiveBufferingAppended(0),
+      mLiveBufferingAppended(Nothing()),
       mPrincipal(aPrincipalHandle),
       mEnabled(false),
       mEnded(false) {}
@@ -763,7 +762,7 @@ void AudioInputProcessing::UpdateAPMExtraOptions(bool aExtendedFilter,
 
 void AudioInputProcessing::Start() {
   mEnabled = true;
-  mLiveFramesAppended = false;
+  mLiveBufferingAppended = Nothing();
 }
 
 void AudioInputProcessing::Stop() { mEnabled = false; }
@@ -805,34 +804,34 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
     return;
   }
 
-  if (MOZ_LIKELY(mLiveFramesAppended)) {
-    if (MOZ_UNLIKELY(buffering > mLiveBufferingAppended)) {
+  if (MOZ_LIKELY(mLiveBufferingAppended)) {
+    if (MOZ_UNLIKELY(buffering > *mLiveBufferingAppended)) {
       // We need to buffer more data. This could happen the first time we pull
       // input data, or the first iteration after starting to use the
       // packetizer.
+      TrackTime silence = buffering - *mLiveBufferingAppended;
       LOG_FRAME("AudioInputProcessing %p Inserting %" PRId64
                 " frames of silence due to buffer increase",
-                this, buffering - mLiveBufferingAppended);
-      mSegment.InsertNullDataAtStart(buffering - mLiveBufferingAppended);
-      mLiveBufferingAppended = buffering;
-    } else if (MOZ_UNLIKELY(buffering < mLiveBufferingAppended)) {
+                this, silence);
+      mSegment.InsertNullDataAtStart(silence);
+      mLiveBufferingAppended = Some(buffering);
+    } else if (MOZ_UNLIKELY(buffering < *mLiveBufferingAppended)) {
       // We need to clear some buffered data to reduce latency now that the
       // packetizer is no longer used.
       MOZ_ASSERT(PassThrough(aGraph), "Must have turned on passthrough");
-      MOZ_ASSERT(mSegment.GetDuration() >=
-                 (mLiveBufferingAppended - buffering));
-      TrackTime frames =
-          std::min(mSegment.GetDuration(), mLiveBufferingAppended - buffering);
+      TrackTime removal = *mLiveBufferingAppended - buffering;
+      MOZ_ASSERT(mSegment.GetDuration() >= removal);
+      TrackTime frames = std::min(mSegment.GetDuration(), removal);
       LOG_FRAME("AudioInputProcessing %p Removing %" PRId64
                 " frames of silence due to buffer decrease",
                 this, frames);
-      mLiveBufferingAppended -= frames;
+      *mLiveBufferingAppended -= frames;
       mSegment.RemoveLeading(frames);
     }
   }
 
   if (mSegment.GetDuration() > 0) {
-    MOZ_ASSERT(buffering == mLiveBufferingAppended);
+    MOZ_ASSERT(buffering == *mLiveBufferingAppended);
     TrackTime frames = std::min(mSegment.GetDuration(), delta);
     LOG_FRAME("AudioInputProcessing %p Appending %" PRId64
               " frames of real data for %u channels.",
@@ -847,7 +846,7 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
 
   if (delta <= 0) {
     if (mSegment.GetDuration() == 0) {
-      mLiveBufferingAppended = -delta;
+      mLiveBufferingAppended = Some(-delta);
     }
     return;
   }
@@ -860,8 +859,8 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
   // frames. Before appending live frames we should add sufficient buffering to
   // not have to glitch (aka append silence). Failing this meant the buffering
   // was not sufficient.
-  MOZ_ASSERT_IF(mEnabled, !mLiveFramesAppended);
-  mLiveBufferingAppended = 0;
+  MOZ_ASSERT_IF(mEnabled, !mLiveBufferingAppended);
+  mLiveBufferingAppended = Nothing();
 
   aSegment->AppendNullData(delta);
 }
@@ -1083,7 +1082,7 @@ void AudioInputProcessing::ProcessInput(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(aGraph);
   MOZ_ASSERT(aGraph->OnGraphThread());
 
-  if (mEnded || !mEnabled || !mLiveFramesAppended || !mInputData) {
+  if (mEnded || !mEnabled || !mLiveBufferingAppended || !mInputData) {
     return;
   }
 
@@ -1114,7 +1113,7 @@ void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   // reason, including other reasons than starting this audio input stream. We
   // reset state when this happens, as a fallback driver may have fiddled with
   // the amount of buffered silence during the switch.
-  mLiveFramesAppended = false;
+  mLiveBufferingAppended = Nothing();
   mSegment.Clear();
   if (mPacketizerInput) {
     mPacketizerInput->Clear();
@@ -1132,11 +1131,10 @@ void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
 
   MOZ_ASSERT(mEnabled);
 
-  if (!mLiveFramesAppended) {
+  if (!mLiveBufferingAppended) {
     // First time we see live frames getting added. Use what's already buffered
     // in the driver's scratch buffer as a starting point.
-    mLiveFramesAppended = true;
-    mLiveBufferingAppended = aAlreadyBuffered;
+    mLiveBufferingAppended = Some(aAlreadyBuffered);
   }
 
   mInputData = Some(aInfo);
