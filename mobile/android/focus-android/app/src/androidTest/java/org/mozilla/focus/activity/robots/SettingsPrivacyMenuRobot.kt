@@ -69,8 +69,8 @@ private fun otherContentTrackersBlockSwitch(): ViewInteraction {
 
 private fun blockWebFontsSwitch(): ViewInteraction {
     privacySettingsList
-        .scrollTextIntoView("Block Web fonts")
-    return onView(withText("Block Web fonts"))
+        .scrollTextIntoView("Block web fonts")
+    return onView(withText("Block web fonts"))
 }
 
 private fun blockJavaScriptSwitch(): ViewInteraction {
