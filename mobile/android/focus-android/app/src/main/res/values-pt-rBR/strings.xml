@@ -540,6 +540,22 @@
     %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
     <string name="your_rights_content2"><![CDATA[O %1$s é disponibilizado conforme os termos da <a href="%2$s">Mozilla Public License</a> e outras licenças de código aberto.]]></string>
 
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Não lhe são concedidos quaisquer direitos ou licenças sobre marcas registradas da Fundação Mozilla ou de terceiros, incluindo os nomes ou logotipos da Mozilla, Firefox ou %1$s. Informações adicionais podem ser encontradas <a href="%2$s">aqui</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Códigos fonte adicionais do %1$s estão disponíveis sob várias outras <a href="%2$s">licenças</a> livres e de código aberto.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[O %1$s também usa listas de bloqueio fornecidas pela Disconnect, Inc. como trabalhos separados e independentes, disponibilizados <a href="%3$s">aqui</a> sob a <a href="%2$s">GNU General Public License v3</a>.]]></string>
+
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Usuário</string>
     <string name="gv_prompt_password_hint">Senha</string>

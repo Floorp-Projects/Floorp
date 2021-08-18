@@ -1,152 +1,432 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Sefsex</string>
-  <string name="action_ok">IH</string>
-  <string name="action_save">Sekles</string>
-  <string name="urlbar_hint">Nadi neγ sekcem tansa</string>
-  <string name="teaser">Tunigin tusligt tawurmant.\nSnirem. Kkes. Sniles.</string>
-  <string name="feedback_erase">Amazray-inek n unadi yettwasfeḍ.</string>
-  <string name="feedback_erase_custom_tab">Amazray n tunigin n yiccer yettwasfed.</string>
-  <string name="search_hint">Nadi %1$s</string>
-  <string name="menu_share">Bḍu…</string>
-  <string name="menu_report_site_issue">Azen-d ugur-agi</string>
-  <string name="menu_open_with_default_browser2">Ldi di %1$s</string>
-  <string name="menu_open_with_a_browser2">Ldi deg…</string>
-  <string name="menu_add_to_home_screen">Rnu γer ugdil agejdan</string>
-  <string name="menu_whats_new">D acu yellan d amaynut</string>
-  <string name="menu_settings">Iγewwaṛen</string>
-  <string name="menu_about">Γef</string>
-  <string name="menu_help">Tallalt</string>
-  <string name="menu_rights">Izerfan-inek</string>
-  <string name="menu_trackers_blocked_title">Ineḍfaṛen ttwaḥebsen</string>
-  <string name="menu_trackers_blocked_subtitle">Ma tsenseḍ aya, izmer ad ttwasegmen kra n uguren</string>
-  <string name="menu_content_blocking">Asewḥel n ugbur</string>
-  <string name="menu_content_blocking_subtitle">Sens akken ad tqaεḍeḍ kra n ismal</string>
-  <string name="menu_custom_tab_branding">Ddaw leɛnaya n %1$s</string>
-  <string name="share_dialog_title">Bdu s</string>
-  <string name="notification_erase_text">Sfeḍ amazray n tunigin</string>
-  <string name="notification_action_open">Ldi</string>
-  <string name="notification_action_erase_and_open">Sfeḍ sakin Ldi</string>
-  <string name="shortcut_erase_short_label">Sfeḍ</string>
-  <string name="shortcut_erase_long_label">Sfeḍ amazray n tunigin</string>
-  <string name="shortcut_erase_and_open_short_label">Sfeḍ &amp; Ldi</string>
-  <string name="shortcut_erase_and_open_long_label">Sfeḍ sakin ldi %1$s</string>
-  <string name="text_selection_search_action">Anadi uslig</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">"Tabaḍnit  &amp; Taɣellist"</string>
-  <string name="preference_privacy_and_security_summary">Aḍfaṛ, inagan n tuqqna, isefka yettwaleqḍen</string>
-  <string name="preference_search_summary">Amsedday amezwer, tira tawurmant</string>
-  <string name="preference_mozilla_summary">Ɣef %1$s, tallelt</string>
-  <string name="preference_category_tracking_protection">Ammesten mgal adfaṛ</string>
-  <string name="preference_category_web_content">Agbur Web</string>
-  <string name="preference_category_switching_apps">Tunigin gar yisnasen</string>
-  <string name="preference_category_general">Amatu</string>
-  <string name="preference_general_summary">Iminig amezwar, iccaren, tutlayt</string>
-  <string name="preference_category_data_collection_use">Alqaḍ &amp; Aseqdec n yisefka</string>
-  <string name="preference_category_search">Nadi</string>
-  <string name="preference_show_search_suggestions">Sken isumar n unadi</string>
-  <string name="preference_show_search_suggestions_summary">%1$s ad ak-n-yazen tawsit-inek deg ufeggag n tansiwin ɣer umsedday-inek n unadi</string>
-  <string name="preference_search_engine_default">Amezwer</string>
-  <string name="preference_search_engine_label">Amsedday n unadi</string>
-  <string name="preference_state_on">Yermed</string>
-  <string name="preference_state_off">Yensa</string>
-  <string name="preference_subitem_autocomplete">Taččart tawurmant URL</string>
-  <string name="preference_switch_autocomplete_topsites">I yismal ifazen</string>
-  <string name="preference_autocomplete_topsite_summary">Rmed t teččart tawurmant ugar n 450 URLs ittwasnen deg ufeggag n tansiwin.</string>
-  <string name="preference_switch_autocomplete_user_list">I yismal ad ternuḍ</string>
-  <string name="preference_autocomplete_user_list_summary">Ur yizmir ara ad yesεu taččart tawurmant i ugar n 450 n URLs deg ufeggag n tansiwin.</string>
-  <string name="preference_category_autocomplete_manage_sites">Sefrerk ismal</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Sefrerk ismal</string>
-  <string name="preference_autocomplete_action_add">+ Rnu URL aganan</string>
-  <string name="preference_autocomplete_title_add">Rnu URL aganan</string>
-  <string name="custom_autocomplete_quick_add">Rnu URL aganan</string>
-  <string name="add_custom_autocomplete_label">Rnu aseɣwen i taččart tawurmant</string>
-  <string name="preference_category_cookies">Inagan n tuqqna d yisefka n yismal</string>
-  <string name="preference_category_data_choices">Alqaḍ n yisefka</string>
-  <string name="preference_autocomplete_title_remove">Kkes URLs iganen</string>
-  <string name="preference_autocomplete_learn_more">Issin ugar</string>
-  <string name="preference_autocomplete_custom_summary">Rnu u sefrek taččart tawurmant n URLs.</string>
-  <string name="preference_autocomplete_add_title">URL ad ternuḍ</string>
-  <string name="preference_autocomplete_add_hint">Senṭeḍ neγ sekcem URL</string>
-  <string name="preference_autocomplete_add_example2">Amedya: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Amedya: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">URL aganan amaynut ittwarna.</string>
-  <string name="preference_autocomplete_menu_remove">Kkes</string>
-  <string name="preference_autocomplete_action_remove_content_description">Kkes</string>
-  <string name="preference_autocomplete_add_error">Senned snat γef URL i tesriḍ.</string>
-  <string name="preference_language">Tutlayt</string>
-  <string name="preference_language_systemdefault">Amezwer n unagraw</string>
-  <string name="preference_category_privacy">Tabaḍnit</string>
-  <string name="preference_privacy_block_ads">Sewḥel ineḍfaṛen</string>
-  <string name="preference_privacy_block_ads_summary">Kra n udellel iṭṭafaṛ tirza inek γer izmal web, Γas ur tsit ara γef udellel</string>
-  <string name="preference_privacy_block_analytics">Sewḥel ineḍfaṛen usliḍen</string>
-  <string name="preference_privacy_block_analytics_summary">Ittwaseqdec i welqqaḍ , Aslaḍ d uktili n wamud am usekcem n isekillen akked usenned</string>
-  <string name="preference_privacy_block_social">Sewḥel ineḍfaṛen n tmetti</string>
-  <string name="preference_privacy_block_social_summary">Ittwarna deg kra n ismal akken ad isfuγel tirziwin inek , akken daγen ad d-yesken timahaltin am tqefalt n beṭṭu</string>
-  <string name="preference_privacy_block_content">Sewḥel ineḍfaṛen-nniḍen n ugbur</string>
-  <string name="preference_privacy_block_content_summary2">Armad n uγwwaṛèagi izmer ad yeglu s kra n wuguren di kra n isebtar</string>
-  <string name="preference_privacy_category_cookies">Sewḥel inagan n tuqna</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Ala</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Ih</string>
-  <string name="preference_security_biometric">Seqdec adsil umḍin akken ad tserḥeḍ i usnas</string>
-  <string name="preference_security_biometric_summary">Aḍaḍ-ik izmer ad ikkes asewḥel i %1$s ma URL yeldin yakan deg usnas. Askar uffir ad ittwarmed.</string>
-  <string name="preference_privacy_secure_mode">Tusligt</string>
-  <string name="preference_privacy_stealth_summary">Ffer isebtar web ticki tettbeddileḍ gar isnasen sakin sewḥel tuṭṭfa n ugdil.</string>
-  <string name="preference_category_security">Taɣellist</string>
-  <string name="preference_category_performance">Tamellit</string>
-  <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
-  <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neγ tugniwin yettwattun</string>
-  <string name="preference_performance_block_javascript">Sewḥel JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Izmer ad d-yali usebter s wudem arurad, maca izmer daγen ad yili wugur</string>
-  <string name="preference_default_browser2">Err %1$s d iminig amezwer</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Azen isefka n useqdec</string>
-  <string name="preference_mozilla_telemetry_summary">Issin ugar</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla tettennaɣ akken ad telqeḍ kan ayen tesra i usnulfu d usnernu n %1$s i yal uiwen.</string>
-  <string name="preference_privacy_notice">Tasertit n tbaḍnit</string>
-  <string name="preference_about">Γef %1$s</string>
-  <string name="preference_search_installed_search_engines">Imseddayen n unadi ibedden</string>
-  <string name="preference_search_restore">Err-d imseddayen n unadi imezwar</string>
-  <string name="preference_search_add2">+ Rnu amsedday nniḍen n unadi</string>
-  <string name="preference_search_remove_title">Kkes imseddayen n unadi</string>
-  <string name="preference_search_remove">Kkes</string>
-  <string name="preference_homescreen_tips">Sken-d timahaltin n ugdil agejdan</string>
-  <string name="action_option_add_search_engine">Rnu amsedday n unadi</string>
-  <string name="search_add_manually_name_hint">Isem n umsedday n unadi</string>
-  <string name="search_add_manually_string">Nadi aḍris ad tesqedceḍ</string>
-  <string name="search_add_manually_save">Sekles</string>
-  <string name="search_add_manually_example">Amedya: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Amesday n unadi amaynut ittwarna.</string>
-  <string name="search_add_error_empty_name">Sekcem isem n umsedday n unadi</string>
-  <string name="search_add_error_duplicate_name">Amsedday n unadi s yisem-a ittwasebded yakan.</string>
-  <string name="search_add_error_empty_search">Sekcem aḍris n unadi</string>
-  <string name="search_add_error_format">Senqed akken aḍris n unadi yemsaḍa akked tawsit n umedya</string>
-  <string name="content_description_clear_input">Sfeḍ anekcam</string>
-  <string name="content_description_dismiss_input">Kkes</string>
-  <string name="content_description_erase">Kkes amazray n tunigin</string>
-  <string name="content_description_tab_counter">Iccaren ldin: %1$s</string>
-  <string name="content_description_lock">Tuqqna taγelsant</string>
-  <string name="accessibility_announcement_loading">Asali</string>
-  <string name="accessibility_announcement_loading_finished">Asmel web yuli-d</string>
-  <string name="content_description_menu">Ugar n iγewwaṛen</string>
-  <string name="indicator_content_description_menu">Tageffalt n vewwaṛen-nniḍen</string>
-  <string name="content_description_forward">Inig ar zdat</string>
-  <string name="content_description_reload">Ales asali n usmel web</string>
-  <string name="content_description_back">Inig ar deffir</string>
-  <string name="content_description_stop">Seḥbes asali n usmel</string>
-  <string name="content_description_customtab_exit">Uγal ar usnas izrin</string>
-  <string name="content_description_trackers_blocked">Amḍan n ineḍfaṛen ittwaḥebsen</string>
-  <string name="content_description_blocking_switch">Sewḥel ineḍfaṛen</string>
-  <string name="your_rights">Izerfan-ik</string>
-  <string name="external_app_prompt_title">Ldi aseγwen deg usnas-nniḍen</string>
-  <string name="external_app_prompt">Tzemred ad tefγeḍ seg %1$s akken ad d-ldiḍ aseγwen di %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Aff-d asnas izemren ad d-yeldi aseγwen</string>
-  <string name="external_app_prompt_no_app">Ulac asnas deg ibenk-ik izemren ad d-yeldi aseγwen-agi. Tebγiḍ ad teffγeḍ si %1$s sakin ad d-nadiḍ %2$s akken ad d-tafeḍ asnas ilaqen.</string>
-  <string name="external_multiple_apps_matched_exit">Ffeγ si tunigin tusligt?</string>
-  <string name="download_snackbar_finished">%1$s yefuk</string>
-  <string name="download_snackbar_open">Ldi</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Sefsex</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">IH</string>
+
+    <string name="action_save">Sekles</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Nadi neγ sekcem tansa</string>
+
+    <string name="teaser">Tunigin tusligt tawurmant.\nSnirem. Kkes. Sniles.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Amazray-inek n unadi yettwasfeḍ.</string>
+
+    <string name="feedback_erase2">Azray n tunigin yettwasfeḍ</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Amazray n tunigin n yiccer yettwasfed.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Nadi %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Bḍu…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Azen-d ugur-agi</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Ldi di %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Ldi deg…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Rnu γer ugdil agejdan</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">D acu yellan d amaynut</string>
+    <string name="menu_settings">Iγewwaṛen</string>
+    <string name="menu_about">Γef</string>
+    <string name="menu_help">Tallalt</string>
+    <string name="menu_rights">Izerfan-inek</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Ineḍfaṛen ttwaḥebsen</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Ma tsenseḍ aya, izmer ad ttwasegmen kra n uguren</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Asewḥel n ugbur</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Sens akken ad tqaεḍeḍ kra n ismal</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Ddaw leɛnaya n %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Bdu s</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Sfeḍ amazray n tunigin</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Ldi</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Sfeḍ sakin Ldi</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Sfeḍ</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Sfeḍ amazray n tunigin</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Sfeḍ &amp; Ldi</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Sfeḍ sakin ldi %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Anadi uslig</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">&quot;Tabaḍnit  &amp; Taɣellist&quot;</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Aḍfaṛ, inagan n tuqqna, isefka yettwaleqḍen</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Amsedday amezwer, tira tawurmant</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Ɣef %1$s, tallelt</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Ammesten mgal adfaṛ</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Agbur Web</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Tunigin gar yisnasen</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Amatu</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Iminig amezwar, iccaren, tutlayt</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Alqaḍ &amp; Aseqdec n yisefka</string>
+
+    <string name="preference_category_search">Nadi</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Sken isumar n unadi</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s ad ak-n-yazen tawsit-inek deg ufeggag n tansiwin ɣer umsedday-inek n unadi</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Amezwer</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Amsedday n unadi</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Yermed</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Yensa</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Taččart tawurmant URL</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">I yismal ifazen</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Rmed t teččart tawurmant ugar n 450 URLs ittwasnen deg ufeggag n tansiwin.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">I yismal ad ternuḍ</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Ur yizmir ara ad yesεu taččart tawurmant i ugar n 450 n URLs deg ufeggag n tansiwin.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Sefrerk ismal</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Sefrerk ismal</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Rnu URL aganan</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Rnu URL aganan</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Rnu URL aganan</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Rnu aseɣwen i taččart tawurmant</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Inagan n tuqqna d yisefka n yismal</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Alqaḍ n yisefka</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Kkes URLs iganen</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Issin ugar</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Rnu u sefrek taččart tawurmant n URLs.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL ad ternuḍ</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Senṭeḍ neγ sekcem URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Amedya: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Amedya: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">URL aganan amaynut ittwarna.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Kkes</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Kkes</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Senned snat γef URL i tesriḍ.</string>
+
+    <string name="preference_language">Tutlayt</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Amezwer n unagraw</string>
+
+    <string name="preference_category_privacy">Tabaḍnit</string>
+    <string name="preference_privacy_block_ads">Sewḥel ineḍfaṛen</string>
+    <string name="preference_privacy_block_ads_summary">Kra n udellel iṭṭafaṛ tirza inek γer izmal web, Γas ur tsit ara γef udellel</string>
+    <string name="preference_privacy_block_analytics">Sewḥel ineḍfaṛen usliḍen</string>
+    <string name="preference_privacy_block_analytics_summary">Ittwaseqdec i welqqaḍ , Aslaḍ d uktili n wamud am usekcem n isekillen akked usenned</string>
+    <string name="preference_privacy_block_social">Sewḥel ineḍfaṛen n tmetti</string>
+    <string name="preference_privacy_block_social_summary">Ittwarna deg kra n ismal akken ad isfuγel tirziwin inek , akken daγen ad d-yesken timahaltin am tqefalt n beṭṭu</string>
+    <string name="preference_privacy_block_content">Sewḥel ineḍfaṛen-nniḍen n ugbur</string>
+    <string name="preference_privacy_block_content_summary2">Armad n uγwwaṛèagi izmer ad yeglu s kra n wuguren di kra n isebtar</string>
+    <string name="preference_privacy_category_cookies">Sewḥel inagan n tuqna</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">Ala</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">Ih</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Seqdec adsil umḍin akken ad tserḥeḍ i usnas</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Aḍaḍ-ik izmer ad ikkes asewḥel i %1$s ma URL yeldin yakan deg usnas. Askar uffir ad ittwarmed.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Tusligt</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Ffer isebtar web ticki tettbeddileḍ gar isnasen sakin sewḥel tuṭṭfa n ugdil.</string>
+
+    <string name="preference_category_security">Taɣellist</string>
+
+    <string name="preference_category_performance">Tamellit</string>
+    <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neγ tugniwin yettwattun</string>
+
+    <string name="preference_performance_block_javascript">Sewḥel JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Izmer ad d-yali usebter s wudem arurad, maca izmer daγen ad yili wugur</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Err %1$s d iminig amezwer</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Azen isefka n useqdec</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Issin ugar</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla tettennaɣ akken ad telqeḍ kan ayen tesra i usnulfu d usnernu n %1$s i yal uiwen.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Tasertit n tbaḍnit</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Γef %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Imseddayen n unadi ibedden</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Err-d imseddayen n unadi imezwar</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Rnu amsedday nniḍen n unadi</string>
+    <string name="preference_search_remove_title">Kkes imseddayen n unadi</string>
+    <string name="preference_search_remove">Kkes</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Sken-d timahaltin n ugdil agejdan</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Rnu amsedday n unadi</string>
+
+    <string name="search_add_manually_name_hint">Isem n umsedday n unadi</string>
+    <string name="search_add_manually_string">Nadi aḍris ad tesqedceḍ</string>
+    <string name="search_add_manually_save">Sekles</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Amedya: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Amesday n unadi amaynut ittwarna.</string>
+
+    <string name="search_add_error_empty_name">Sekcem isem n umsedday n unadi</string>
+    <string name="search_add_error_duplicate_name">Amsedday n unadi s yisem-a ittwasebded yakan.</string>
+
+    <string name="search_add_error_empty_search">Sekcem aḍris n unadi</string>
+
+    <string name="search_add_error_format">Senqed akken aḍris n unadi yemsaḍa akked tawsit n umedya</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Sfeḍ anekcam</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Kkes</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Kkes amazray n tunigin</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Iccaren ldin: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Tuqqna taγelsant</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Asali</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Asmel web yuli-d</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Ugar n iγewwaṛen</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Tageffalt n vewwaṛen-nniḍen</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Inig ar zdat</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Ales asali n usmel web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Inig ar deffir</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Seḥbes asali n usmel</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Uγal ar usnas izrin</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Amḍan n ineḍfaṛen ittwaḥebsen</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Sewḥel ineḍfaṛen</string>
+
+    <string name="your_rights">Izerfan-ik</string>
+
+    <string name="external_app_prompt_title">Ldi aseγwen deg usnas-nniḍen</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Tzemred ad tefγeḍ seg %1$s akken ad d-ldiḍ aseγwen di %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Aff-d asnas izemren ad d-yeldi aseγwen</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Ulac asnas deg ibenk-ik izemren ad d-yeldi aseγwen-agi. Tebγiḍ ad teffγeḍ si %1$s sakin ad d-nadiḍ %2$s akken ad d-tafeḍ asnas ilaqen.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Ffeγ si tunigin tusligt?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s yefuk</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Ldi</string>
 
 
 
@@ -176,91 +456,251 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Rmed tabaḍnit inek</string>
-  <string name="firstrun_defaultbrowser_text2">Iminig uslig ad yali deg uswir.Dayen ur tuγaleḍ ad twaliḍ adellel neγ imsfuγal i k-ṭṭafaren u saẓayen tulya n isemal web.</string>
-  <string name="firstrun_search_title">Anadi-ik, abrid-ik</string>
-  <string name="firstrun_search_text">Tettnadiḍ ayen-nniḍen? Fren amsadday-nniḍen n unadi amezwer deg iɣewwaṛen.</string>
-  <string name="firstrun_shortcut_title">Rnu anegzum ar ugdil-ik agejdan</string>
-  <string name="firstrun_shortcut_text">Uɣal ar yesmal-ik inurifen deg %1$s s zreb. Fren kan \"Rnu ar ugdil agejdan\" seg umuɣ %1$s.</string>
-  <string name="firstrun_privacy_title">Err tabaḍnit d tanumi</string>
-  <string name="firstrun_privacy_text">Sbadu %1$s d iminig-ik amezwar sakin faṛeṣ tagnit n tunigin tusligt ticki teldiḍ-d isebtar web seg isnasen-nniḍen.</string>
-  <string name="firstrun_close_button">IH, Awi-t-id!</string>
-  <string name="firstrun_skip_button">Suref</string>
-  <string name="firstrun_next_button">Γer zdat</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Rnu</string>
-  <string name="dialog_addtohomescreen_action_cancel">Sefsex</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Anegzum ad d-yeldi s usensi n ummesten mgal aḍfaṛ</string>
-  <string name="notification_browsing_session_channel_name">Tiɣimit n tunigin tusligt</string>
-  <string name="notification_browsing_session_channel_description">Ilɣa ad k-ǧǧen ad tsefḍeḍ tiɣimit n %1$s-ik s unali. Ur tesrid ara ad teldiḍ asnas neɣ ad twaliḍ ayen yettwaselkamen deg iminig-ik.</string>
-  <string name="tabs_tray_action_erase">Sfeḍ amazray n tunigin</string>
-  <string name="download_firefox">Sider Firefox</string>
-  <string name="your_rights_content1">"%1$s baṭṭel s waɣbalu yeldin ixeddem-it Mozilla d imettekiyen nniḍen. "</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Rmed tabaḍnit inek</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Iminig uslig ad yali deg uswir.Dayen ur tuγaleḍ ad twaliḍ adellel neγ imsfuγal i k-ṭṭafaren u saẓayen tulya n isemal web.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Anadi-ik, abrid-ik</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Tettnadiḍ ayen-nniḍen? Fren amsadday-nniḍen n unadi amezwer deg iɣewwaṛen.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Rnu anegzum ar ugdil-ik agejdan</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Uɣal ar yesmal-ik inurifen deg %1$s s zreb. Fren kan \&quot;Rnu ar ugdil agejdan\&quot; seg umuɣ %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Err tabaḍnit d tanumi</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Sbadu %1$s d iminig-ik amezwar sakin faṛeṣ tagnit n tunigin tusligt ticki teldiḍ-d isebtar web seg isnasen-nniḍen.</string>
+
+    <string name="firstrun_close_button">IH, Awi-t-id!</string>
+    <string name="firstrun_skip_button">Suref</string>
+    <string name="firstrun_next_button">Γer zdat</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Rnu</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Sefsex</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Anegzum ad d-yeldi s usensi n ummesten mgal aḍfaṛ</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Tiɣimit n tunigin tusligt</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Ilɣa ad k-ǧǧen ad tsefḍeḍ tiɣimit n %1$s-ik s unali. Ur tesrid ara ad teldiḍ asnas neɣ ad twaliḍ ayen yettwaselkamen deg iminig-ik.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Sfeḍ amazray n tunigin</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Sider Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA["%1$s baṭṭel s waɣbalu yeldin ixeddem-it Mozilla d imettekiyen nniḍen. "]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Isem n useqdac</string>
-  <string name="gv_prompt_password_hint">Awal uffir</string>
-  <string name="gv_prompt_clear">Sfeḍ</string>
-  <string name="security_popup_secure_connection">Tuqqna taɣelsant</string>
-  <string name="security_popup_insecure_connection">Tuqqna taraɣelsant</string>
-  <string name="security_popup_security_verified">Isenqed-it: %1$s</string>
-  <string name="site_security_icon_content_description">Taɣellist n usmel web</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL Yella yakan</string>
-  <string name="find_in_page">Af deg usebter</string>
-  <string name="find_in_page_input">Nadi deg usebter</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d ɣef %2$d</string>
-  <string name="accessibility_next_result">Af-d agmuḍ d-iteddun</string>
-  <string name="accessibility_previous_result">af-d agmuḍ yezrin</string>
-  <string name="accessibility_dismiss_find_in_page">Mdel anadi deg usebter</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Isem n useqdac</string>
+    <string name="gv_prompt_password_hint">Awal uffir</string>
+    <string name="gv_prompt_clear">Sfeḍ</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Tuqqna taɣelsant</string>
+    <string name="security_popup_insecure_connection">Tuqqna taraɣelsant</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Isenqed-it: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Taɣellist n usmel web</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL Yella yakan</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Af deg usebter</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Nadi deg usebter</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d ɣef %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Af-d agmuḍ d-iteddun</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">af-d agmuḍ yezrin</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Mdel anadi deg usebter</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Suter asmel n tnarit</string>
-  <string name="custom_tab_copy_url_action">Tansa URL tettwanγel</string>
-  <string name="preference_advanced_summary">Ifecka n tneflit</string>
-  <string name="preference_category_advanced">Talqayt</string>
-  <string name="preference_remote_debugging">Taseɣtit tanmeggagt s USB/Wi-Fii</string>
-  <string name="biometric_auth_title">Serreḥ %1$s</string>
-  <string name="biometric_auth_description">Nnal amaṭṭaf n uḍaḍ akken ad tkemleḍ.</string>
-  <string name="biometric_auth_new_session">Tiɣimit tamaynut</string>
-  <string name="biometric_auth_image_description">Tagnit n udsil umḍin</string>
-  <string name="biometric_auth_not_recognized_error">Ur yaêqil ara aḍaḍ. Ԑreḍ tikkelt-nniḍen.</string>
-  <string name="biometric_auth_moved_too_quickly">TƐherkeḍ aḍaḍ s lweǧlan. Ԑreḍ tikelt-nniḍen.</string>
-  <string name="enable_search_suggestion_title">Tebɣiḍ ad tekkseḍ armad n isumren n unadi?</string>
-  <string name="enable_search_suggestion_subtitle">"Akken ad tawiḍ isumar n unadi, %1$s isra ad ak-yazen  acu n tewsit deg ufeggag n tansa ɣer umsedday n unadi i tferneḍ. %2$s."</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Issin ugar</string>
-  <string name="enable_search_suggestions_no">Ala</string>
-  <string name="enable_search_suggestions_yes">Ih</string>
-  <string name="no_suggestions_message">Kra n imseddayen n unadi ur zmiren ara ad d-sken isumar.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Zgel</string>
-  <string name="tip_disable_tracking_protection">Tigawin ur nettwerǧu sɣur usmel?\n Ɛṛeḍ ad tsenseḍ ammesten n usfuɣel</string>
-  <string name="tip_add_to_homescreen">"Awi anekcum fessusen ɣer ismal  i tseqdaceḍ aṭas %1$s Umuɣ &gt; Rnu ɣer ugdil agejdan"</string>
-  <string name="tip_set_default_browser">Ldi yal aseɣwen deg %1$s\n Sbadu %1$s d iming amezwar</string>
-  <string name="tip_autocomplete_url">Taččarant tawurmant URLs i yismal i tseqdaceḍ aṭas \n Asenned ɣezzifen ɣef URL ibɣu yilli deg ufeggag n tansiwin</string>
-  <string name="tip_open_in_new_tab">Ldi aseɣwen deg iccer amaynut\n Asenned ɣezzifen ɣef useɣwen deg usebter</string>
-  <string name="tip_request_desktop">Iff-itt ma twalaḍ asmel aččuran?%1$s Umuɣ &gt; Suter asmel n tnarit</string>
-  <string name="tip_disable_tips2">Sens timahaltin deg ugdil n tnekra</string>
-  <string name="tip_explain_allowlist">Asmel ittwamnen?\n Tabdert usireg ad tsens asewḥel mgal aneḍfar i uismal i tettamneḍ akked wid i tesneḍ.</string>
-  <string name="new_tab_opened_snackbar">Iccer amaynut yeldi</string>
-  <string name="open_new_tab_snackbar">Nṭew</string>
-  <string name="preference_open_new_tab">Nṭew ɣer useɣwen deg iccer amaynut</string>
-  <string name="preference_category_safe_browsing">Tunigin taɣelsant</string>
-  <string name="preference_safe_browsing_title">Sewḥel yir agbur neɣ ismal iweɛṛen</string>
-  <string name="preference_safe_browsing_summary">Inni-aɣ-d ɣef tigawin n usaxser n ismal, ismal n uḍfar, akked isaɣzan n ddiri deg ismal.</string>
-  <string name="preference_exceptions">Tisuraf</string>
-  <string name="preference_exceptions_description">Tsenseḍ asewḥel n ugbur i yismal-agi.</string>
-  <string name="preference_exceptions_menu_remove">Kkes</string>
-  <string name="preference_exceptions_remove_all_button_label">Kkes akk ismal web</string>
-  <string name="tab_crash_report_title">Yaɣli iccer</string>
-  <string name="tab_crash_report_headline">Nesḥasef. nesεa ugur akked iccer-agi.</string>
-  <string name="tab_crash_report_description">Immi d iminig uslig, werǧin ad nsekles neɣ ad d-nner iccaren.</string>
-  <string name="tab_crash_report_close_tab_button_label">Mdel Iccer</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Suter asmel n tnarit</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Asmel n tnarit</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">Tansa URL tettwanγel</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Ifecka n tneflit</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Talqayt</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Taseɣtit tanmeggagt s USB/Wi-Fii</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Serreḥ %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Nnal amaṭṭaf n uḍaḍ akken ad tkemleḍ.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Tiɣimit tamaynut</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Ldi aseɣwen deg tɣimit tamaynut</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Tagnit n udsil umḍin</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Ur yaêqil ara aḍaḍ. Ԑreḍ tikkelt-nniḍen.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">TƐherkeḍ aḍaḍ s lweǧlan. Ԑreḍ tikelt-nniḍen.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">Tebɣiḍ ad tekkseḍ armad n isumren n unadi?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">&quot;Akken ad tawiḍ isumar n unadi, %1$s isra ad ak-yazen  acu n tewsit deg ufeggag n tansa ɣer umsedday n unadi i tferneḍ. %2$s.&quot;</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">Issin ugar</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Ala</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Ih</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Kra n imseddayen n unadi ur zmiren ara ad d-sken isumar.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Zgel</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Tigawin ur nettwerǧu sɣur usmel?\n Ɛṛeḍ ad tsenseḍ ammesten n usfuɣel</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA["Awi anekcum fessusen ɣer ismal  i tseqdaceḍ aṭas %1$s Umuɣ > Rnu ɣer ugdil agejdan"]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Ldi yal aseɣwen deg %1$s\n Sbadu %1$s d iming amezwar</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Taččarant tawurmant URLs i yismal i tseqdaceḍ aṭas \n Asenned ɣezzifen ɣef URL ibɣu yilli deg ufeggag n tansiwin</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Ldi aseɣwen deg iccer amaynut\n Asenned ɣezzifen ɣef useɣwen deg usebter</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[Iff-itt ma twalaḍ asmel aččuran?%1$s Umuɣ > Suter asmel n tnarit]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Sens timahaltin deg ugdil n tnekra</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">Asmel ittwamnen?\n Tabdert usireg ad tsens asewḥel mgal aneḍfar i uismal i tettamneḍ akked wid i tesneḍ.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Iccer amaynut yeldi</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Nṭew</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Nṭew ɣer useɣwen deg iccer amaynut</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Tunigin taɣelsant</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Sewḥel yir agbur neɣ ismal iweɛṛen</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Inni-aɣ-d ɣef tigawin n usaxser n ismal, ismal n uḍfar, akked isaɣzan n ddiri deg ismal.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Tisuraf</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Tsenseḍ asewḥel n ugbur i yismal-agi.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Kkes</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Kkes akk ismal web</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Yaɣli iccer</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Nesḥasef. nesεa ugur akked iccer-agi.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Immi d iminig uslig, werǧin ad nsekles neɣ ad d-nner iccaren.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Mdel Iccer</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Azen aneqqis n uɣelluy i Mozilla</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Azen aneqqis n uɣelluy i Mozilla</string>
 </resources>

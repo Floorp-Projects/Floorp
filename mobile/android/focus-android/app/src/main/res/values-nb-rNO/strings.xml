@@ -1,152 +1,444 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Avbryt</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">Lagre</string>
-  <string name="urlbar_hint">Søk eller oppgi adresse</string>
-  <string name="teaser">Automatisk privat nettlesing.\nSurf. Slett. Gjenta.</string>
-  <string name="feedback_erase">Din nettleserhistorikk har blitt slettet.</string>
-  <string name="feedback_erase_custom_tab">Fanens nettleserhistorikk har blitt slettet.</string>
-  <string name="search_hint">Søk etter %1$s</string>
-  <string name="menu_share">Del …</string>
-  <string name="menu_report_site_issue">Rapporter problem med nettsted</string>
-  <string name="menu_open_with_default_browser2">Åpne i %1$s</string>
-  <string name="menu_open_with_a_browser2">Åpne i…</string>
-  <string name="menu_add_to_home_screen">Legg til på startskjermen</string>
-  <string name="menu_whats_new">Hva er nytt</string>
-  <string name="menu_settings">Innstillinger</string>
-  <string name="menu_about">Om</string>
-  <string name="menu_help">Hjelp</string>
-  <string name="menu_rights">Dine rettigheter</string>
-  <string name="menu_trackers_blocked_title">Sporere blokkert</string>
-  <string name="menu_trackers_blocked_subtitle">Hvis du slår av dette, kan det løse noen problemer med nettsiden</string>
-  <string name="menu_content_blocking">Innholdsblokkering</string>
-  <string name="menu_content_blocking_subtitle">Slå av for å fikse noen nettsteder</string>
-  <string name="menu_custom_tab_branding">Drevet av %1$s</string>
-  <string name="share_dialog_title">Del via</string>
-  <string name="notification_erase_text">Slett nettleserhistorikk</string>
-  <string name="notification_action_open">Åpne</string>
-  <string name="notification_action_erase_and_open">Slett og åpne</string>
-  <string name="shortcut_erase_short_label">Slett</string>
-  <string name="shortcut_erase_long_label">Slett nettleserhistorikk</string>
-  <string name="shortcut_erase_and_open_short_label">Slett og åpne</string>
-  <string name="shortcut_erase_and_open_long_label">Slett og åpne %1$s</string>
-  <string name="text_selection_search_action">Søk privat</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Personvern og sikkerhet</string>
-  <string name="preference_privacy_and_security_summary">Sporing, infokapsler, datavalg</string>
-  <string name="preference_search_summary">Sett standard, autofullfør</string>
-  <string name="preference_mozilla_summary">Om %1$s, hjelp</string>
-  <string name="preference_category_tracking_protection">Sporingsbeskyttelse</string>
-  <string name="preference_category_web_content">Nettinnhold</string>
-  <string name="preference_category_switching_apps">Bytte mellom apper</string>
-  <string name="preference_category_general">Generelt</string>
-  <string name="preference_general_summary">Standard nettleser, faner, språk</string>
-  <string name="preference_category_data_collection_use">Datainnsamling og bruk</string>
-  <string name="preference_category_search">Søk</string>
-  <string name="preference_show_search_suggestions">Få søkeforslag</string>
-  <string name="preference_show_search_suggestions_summary">%1$s sender det du skriver i adressefeltet til din søkemotor</string>
-  <string name="preference_search_engine_default">Standard</string>
-  <string name="preference_search_engine_label">Søkemotor</string>
-  <string name="preference_state_on">På</string>
-  <string name="preference_state_off">Av</string>
-  <string name="preference_subitem_autocomplete">Autofullfør nettadresse</string>
-  <string name="preference_switch_autocomplete_topsites">For toppnettsteder</string>
-  <string name="preference_autocomplete_topsite_summary">Aktiver for å autofullføre mer enn 450 populære nettadresser i adressefeltet.</string>
-  <string name="preference_switch_autocomplete_user_list">For nettsteder du legger til</string>
-  <string name="preference_autocomplete_user_list_summary">Aktiver for å autofullføre mer enn 450 populære nettadresser i adressefeltet.</string>
-  <string name="preference_category_autocomplete_manage_sites">Behandle nettsteder</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Behandle nettsteder</string>
-  <string name="preference_autocomplete_action_add">+ Legg til tilpasset nettadresse</string>
-  <string name="preference_autocomplete_title_add">Legg til tilpasset nettadresse</string>
-  <string name="custom_autocomplete_quick_add">Legg til tilpasset nettadresse</string>
-  <string name="add_custom_autocomplete_label">Legg til lenke til autofullfør</string>
-  <string name="preference_category_cookies">Infokapsler og nettstedsdata</string>
-  <string name="preference_category_data_choices">Datavalg</string>
-  <string name="preference_autocomplete_title_remove">Fjern tilpassede nettadresser</string>
-  <string name="preference_autocomplete_learn_more">Les mer</string>
-  <string name="preference_autocomplete_custom_summary">Legg til og administrer tilpassede nettadresser for autofullføring.</string>
-  <string name="preference_autocomplete_add_title">Nettadresse å legge til</string>
-  <string name="preference_autocomplete_add_hint">Lim inn eller skriv inn nettadresse</string>
-  <string name="preference_autocomplete_add_example2">Eksempel: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Eksempel: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Ny tilpasset nettadresse lagt til.</string>
-  <string name="preference_autocomplete_menu_remove">Fjern</string>
-  <string name="preference_autocomplete_action_remove_content_description">Fjern</string>
-  <string name="preference_autocomplete_add_error">Dobbeltsjekk nettadressen du skrev inn.</string>
-  <string name="preference_language">Språk</string>
-  <string name="preference_language_systemdefault">Systemstandard</string>
-  <string name="preference_category_privacy">Personvern</string>
-  <string name="preference_privacy_block_ads">Blokker reklamesporere</string>
-  <string name="preference_privacy_block_ads_summary">Noen annonser sporer nettstedbesøk, selv om du ikke klikker på annonsene</string>
-  <string name="preference_privacy_block_analytics">Blokker analysesporere</string>
-  <string name="preference_privacy_block_analytics_summary">Brukt for å samle inn, analysere og måle aktiviteter som tastetrykk og rulling</string>
-  <string name="preference_privacy_block_social">Blokker sosiale media-sporere</string>
-  <string name="preference_privacy_block_social_summary">Innebygd på nettsteder for å spore besøkene dine og å vise funksjonalitet som dele-knapper</string>
-  <string name="preference_privacy_block_content">Blokker andre innholdssporere</string>
-  <string name="preference_privacy_block_content_summary2">Aktivering kan føre til at noen sider oppfører seg uventet</string>
-  <string name="preference_privacy_category_cookies">Blokker infokapsler</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Nei</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokker bare tredjepartssporingsinfokapsler</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokker bare tredjepartsinfokapsler</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
-  <string name="preference_security_biometric">Bruk fingeravtrykk til å låse opp appen</string>
-  <string name="preference_security_biometric_summary">Ditt fingeravtrykk kan låse opp %1$s, hvis en URL allerede er åpen i appen. Skjult tilstand vil bli slått på.</string>
-  <string name="preference_privacy_secure_mode">Usynlig</string>
-  <string name="preference_privacy_stealth_summary">Skjul nettsider når du bytter apper og unngå at det tas skjermbilder.</string>
-  <string name="preference_category_security">Sikkerhet</string>
-  <string name="preference_category_performance">Ytelse</string>
-  <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
-  <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilder mangler</string>
-  <string name="preference_performance_block_javascript">Blokker JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Sider kan lastes raskere, men kan også oppføre seg uventet</string>
-  <string name="preference_default_browser2">Bruk %1$s som standard nettleser</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Send bruksdata</string>
-  <string name="preference_mozilla_telemetry_summary">Les mer</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla strever etter å bare samle inn det vi trenger for å tilby og forbedre %1$s for alle.</string>
-  <string name="preference_privacy_notice">Personvernbestemmelser</string>
-  <string name="preference_about">Om %1$s</string>
-  <string name="preference_search_installed_search_engines">Installerte søkemotorer</string>
-  <string name="preference_search_restore">Gjenopprett standard søkemotorer</string>
-  <string name="preference_search_add2">+ Legg til en annen søkemotor</string>
-  <string name="preference_search_remove_title">Fjern søkemotorer</string>
-  <string name="preference_search_remove">Fjern</string>
-  <string name="preference_homescreen_tips">Vis tips på starskjermen</string>
-  <string name="action_option_add_search_engine">Legg til søkemotor</string>
-  <string name="search_add_manually_name_hint">Søkemotornavn</string>
-  <string name="search_add_manually_string">Søkestreng å bruke</string>
-  <string name="search_add_manually_save">Lagre</string>
-  <string name="search_add_manually_example">Eksempel: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Ny søkemotor lagt til.</string>
-  <string name="search_add_error_empty_name">Skriv inn søkemotornavn</string>
-  <string name="search_add_error_duplicate_name">En installert søkemotor bruker allerede det navnet.</string>
-  <string name="search_add_error_empty_search">Skriv inn søkestreng</string>
-  <string name="search_add_error_format">Kontroller at søkestrengen passer med eksempelformatet</string>
-  <string name="content_description_clear_input">Tøm skrivefeltet</string>
-  <string name="content_description_dismiss_input">Lukk</string>
-  <string name="content_description_erase">Slett nettleserhistorikk</string>
-  <string name="content_description_tab_counter">Åpn faner: %1$s</string>
-  <string name="content_description_lock">Sikker tilkobling</string>
-  <string name="accessibility_announcement_loading">Laster</string>
-  <string name="accessibility_announcement_loading_finished">Nettside lastet</string>
-  <string name="content_description_menu">Flere innstillinger</string>
-  <string name="indicator_content_description_menu">Knappen flere alternativer</string>
-  <string name="content_description_forward">Naviger fremover</string>
-  <string name="content_description_reload">Last siden på nytt</string>
-  <string name="content_description_back">Naviger tilbake</string>
-  <string name="content_description_stop">Stopp lasting av nettside</string>
-  <string name="content_description_customtab_exit">Gå tilbake til forrige app</string>
-  <string name="content_description_trackers_blocked">Antall blokkerte sporings-tjenester</string>
-  <string name="content_description_blocking_switch">Blokker sporere</string>
-  <string name="your_rights">Dine rettigheter</string>
-  <string name="external_app_prompt_title">Åpne lenke i en annen app</string>
-  <string name="external_app_prompt">Du kan gå ut av %1$s for å åpne denne lenken i %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Finn en app som kan åpne lenken</string>
-  <string name="external_app_prompt_no_app">Ingen av appene på din enhet kan åpne denne lenken. Du kan gå ut av %1$s for å søke på %2$s etter en app som kan gjøre dette.</string>
-  <string name="external_multiple_apps_matched_exit">Avslutt privat nettlesing?</string>
-  <string name="download_snackbar_finished">%1$s ferdig</string>
-  <string name="download_snackbar_open">Åpne</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Avbryt</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">Lagre</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Søk eller oppgi adresse</string>
+
+    <string name="teaser">Automatisk privat nettlesing.\nSurf. Slett. Gjenta.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Din nettleserhistorikk har blitt slettet.</string>
+    <string name="feedback_erase2">Nettleserhistorikk er slettet</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Fanens nettleserhistorikk har blitt slettet.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Søk etter %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Del …</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Rapporter problem med nettsted</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Åpne i %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Åpne i…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Legg til på startskjermen</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Hva er nytt</string>
+    <string name="menu_settings">Innstillinger</string>
+    <string name="menu_about">Om</string>
+    <string name="menu_help">Hjelp</string>
+    <string name="menu_rights">Dine rettigheter</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Sporere blokkert</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Hvis du slår av dette, kan det løse noen problemer med nettsiden</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Innholdsblokkering</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Slå av for å fikse noen nettsteder</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Drevet av %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Del via</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Slett nettleserhistorikk</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Åpne</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Slett og åpne</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Slett</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Slett nettleserhistorikk</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Slett og åpne</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Slett og åpne %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Søk privat</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s gir deg kontroll.</p>
+<p>Bruk den som en privat nettleser:
+  <ul>
+    <li>Søk og surf rett i appen</li>
+    <li>Blokker sporere (eller oppdater innstillingene for å tillate sporere)</li>
+    <li>Slett for å fjerne infokapsler samt søk- og nettleserhistorikk</li>
+  </ul>
+</p>
+<p>%1$s er produsert av Mozilla. Vårt oppdrag er å fremme et sunt, åpent Internett.<br/>
+<a href="%2$s">Les mer</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Personvern og sikkerhet</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Sporing, infokapsler, datavalg</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Sett standard, autofullfør</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Om %1$s, hjelp</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Sporingsbeskyttelse</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Nettinnhold</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Bytte mellom apper</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Generelt</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Standard nettleser, faner, språk</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Datainnsamling og bruk</string>
+
+    <string name="preference_category_search">Søk</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Få søkeforslag</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s sender det du skriver i adressefeltet til din søkemotor</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Standard</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Søkemotor</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">På</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Av</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Autofullfør nettadresse</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">For toppnettsteder</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Aktiver for å autofullføre mer enn 450 populære nettadresser i adressefeltet.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">For nettsteder du legger til</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Aktiver for å autofullføre mer enn 450 populære nettadresser i adressefeltet.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Behandle nettsteder</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Behandle nettsteder</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Legg til tilpasset nettadresse</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Legg til tilpasset nettadresse</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Legg til tilpasset nettadresse</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Legg til lenke til autofullfør</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Infokapsler og nettstedsdata</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Datavalg</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Fjern tilpassede nettadresser</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Les mer</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Legg til og administrer tilpassede nettadresser for autofullføring.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">Nettadresse å legge til</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Lim inn eller skriv inn nettadresse</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Eksempel: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Eksempel: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Ny tilpasset nettadresse lagt til.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Fjern</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Fjern</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Dobbeltsjekk nettadressen du skrev inn.</string>
+
+    <string name="preference_language">Språk</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Systemstandard</string>
+
+    <string name="preference_category_privacy">Personvern</string>
+    <string name="preference_privacy_block_ads">Blokker reklamesporere</string>
+    <string name="preference_privacy_block_ads_summary">Noen annonser sporer nettstedbesøk, selv om du ikke klikker på annonsene</string>
+    <string name="preference_privacy_block_analytics">Blokker analysesporere</string>
+    <string name="preference_privacy_block_analytics_summary">Brukt for å samle inn, analysere og måle aktiviteter som tastetrykk og rulling</string>
+    <string name="preference_privacy_block_social">Blokker sosiale media-sporere</string>
+    <string name="preference_privacy_block_social_summary">Innebygd på nettsteder for å spore besøkene dine og å vise funksjonalitet som dele-knapper</string>
+    <string name="preference_privacy_block_content">Blokker andre innholdssporere</string>
+    <string name="preference_privacy_block_content_summary2">Aktivering kan føre til at noen sider oppfører seg uventet</string>
+    <string name="preference_privacy_category_cookies">Blokker infokapsler</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">Nei</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokker bare tredjepartssporingsinfokapsler</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokker bare tredjepartsinfokapsler</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Bruk fingeravtrykk til å låse opp appen</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Ditt fingeravtrykk kan låse opp %1$s, hvis en URL allerede er åpen i appen. Skjult tilstand vil bli slått på.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Usynlig</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Skjul nettsider når du bytter apper og unngå at det tas skjermbilder.</string>
+
+    <string name="preference_category_security">Sikkerhet</string>
+
+    <string name="preference_category_performance">Ytelse</string>
+    <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilder mangler</string>
+
+    <string name="preference_performance_block_javascript">Blokker JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Sider kan lastes raskere, men kan også oppføre seg uventet</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Bruk %1$s som standard nettleser</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Send bruksdata</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Les mer</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla strever etter å bare samle inn det vi trenger for å tilby og forbedre %1$s for alle.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Personvernbestemmelser</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Om %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Installerte søkemotorer</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Gjenopprett standard søkemotorer</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Legg til en annen søkemotor</string>
+    <string name="preference_search_remove_title">Fjern søkemotorer</string>
+    <string name="preference_search_remove">Fjern</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Vis tips på starskjermen</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Legg til søkemotor</string>
+
+    <string name="search_add_manually_name_hint">Søkemotornavn</string>
+    <string name="search_add_manually_string">Søkestreng å bruke</string>
+    <string name="search_add_manually_save">Lagre</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Eksempel: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Ny søkemotor lagt til.</string>
+
+    <string name="search_add_error_empty_name">Skriv inn søkemotornavn</string>
+    <string name="search_add_error_duplicate_name">En installert søkemotor bruker allerede det navnet.</string>
+
+    <string name="search_add_error_empty_search">Skriv inn søkestreng</string>
+
+    <string name="search_add_error_format">Kontroller at søkestrengen passer med eksempelformatet</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Tøm skrivefeltet</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Lukk</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Slett nettleserhistorikk</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Åpn faner: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Sikker tilkobling</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Laster</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Nettside lastet</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Flere innstillinger</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Knappen flere alternativer</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Naviger fremover</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Last siden på nytt</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Naviger tilbake</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Stopp lasting av nettside</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Gå tilbake til forrige app</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Antall blokkerte sporings-tjenester</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Blokker sporere</string>
+
+    <string name="your_rights">Dine rettigheter</string>
+
+    <string name="external_app_prompt_title">Åpne lenke i en annen app</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Du kan gå ut av %1$s for å åpne denne lenken i %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Finn en app som kan åpne lenken</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Ingen av appene på din enhet kan åpne denne lenken. Du kan gå ut av %1$s for å søke på %2$s etter en app som kan gjøre dette.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Avslutt privat nettlesing?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s ferdig</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Åpne</string>
 
 
 
@@ -176,91 +468,272 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Styrk personvernet ditt</string>
-  <string name="firstrun_defaultbrowser_text2">Ta privat nettlesing til neste nivå. Blokker annonser og annet innhold som kan spore deg på tvers av nettsteder og som kan gjøre nedlasting av nettsider tregere.</string>
-  <string name="firstrun_search_title">Ditt søk på din måte</string>
-  <string name="firstrun_search_text">Søker du etter noe annet? Velg en annen standard søkemotor i innstillinger.</string>
-  <string name="firstrun_shortcut_title">Legg til snarveier på startskjermen</string>
-  <string name="firstrun_shortcut_text">Gå raskt tilbake til favorittnettstedene dine i %1$s. Velg «Legg til på startskjermen» fra %1$s-menyen.</string>
-  <string name="firstrun_privacy_title">Gjør personvern til en vane</string>
-  <string name="firstrun_privacy_text">Velg %1$s som standardnettleser, og få fordelene med privat nettlesing når du åpner nettsider fra andre apper.</string>
-  <string name="firstrun_close_button">OK, jeg forstår det!</string>
-  <string name="firstrun_skip_button">Hopp over</string>
-  <string name="firstrun_next_button">Neste</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Legg til</string>
-  <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Snarveien vil bli åpnet med sporingsbeskyttelsen avslått</string>
-  <string name="notification_browsing_session_channel_name">Privat nettlesingsøkt</string>
-  <string name="notification_browsing_session_channel_description">Med varsel kan du slette økten din i %1$s med ett klikk. Du trenger ikke å åpne appen, eller å se hva som kjører i nettleseren din.</string>
-  <string name="tabs_tray_action_erase">Slett nettleserhistorikk</string>
-  <string name="download_firefox">Last ned Firefox</string>
-  <string name="your_rights_content1">%1$s er fri og åpen kildekode-programvare laget av Mozilla og andre bidragsytere.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Styrk personvernet ditt</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Ta privat nettlesing til neste nivå. Blokker annonser og annet innhold som kan spore deg på tvers av nettsteder og som kan gjøre nedlasting av nettsider tregere.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Ditt søk på din måte</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Søker du etter noe annet? Velg en annen standard søkemotor i innstillinger.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Legg til snarveier på startskjermen</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Gå raskt tilbake til favorittnettstedene dine i %1$s. Velg «Legg til på startskjermen» fra %1$s-menyen.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Gjør personvern til en vane</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Velg %1$s som standardnettleser, og få fordelene med privat nettlesing når du åpner nettsider fra andre apper.</string>
+
+    <string name="firstrun_close_button">OK, jeg forstår det!</string>
+    <string name="firstrun_skip_button">Hopp over</string>
+    <string name="firstrun_next_button">Neste</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Legg til</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Snarveien vil bli åpnet med sporingsbeskyttelsen avslått</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Privat nettlesingsøkt</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Med varsel kan du slette økten din i %1$s med ett klikk. Du trenger ikke å åpne appen, eller å se hva som kjører i nettleseren din.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Slett nettleserhistorikk</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Last ned Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s er fri og åpen kildekode-programvare laget av Mozilla og andre bidragsytere.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Brukernavn</string>
-  <string name="gv_prompt_password_hint">Passord</string>
-  <string name="gv_prompt_clear">Tøm</string>
-  <string name="security_popup_secure_connection">Sikker tilkobling</string>
-  <string name="security_popup_insecure_connection">Usikker tilkobling</string>
-  <string name="security_popup_security_verified">Bekreftet av: %1$s</string>
-  <string name="site_security_icon_content_description">Nettstedssikkerhet</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL-en finnes allerede</string>
-  <string name="find_in_page">Søk på siden</string>
-  <string name="find_in_page_input">Søk på siden</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d av %2$d</string>
-  <string name="accessibility_next_result">Søk etter neste</string>
-  <string name="accessibility_previous_result">Søk etter forrige</string>
-  <string name="accessibility_dismiss_find_in_page">Lukk søk på siden</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s er gjort tilgjengelig for deg under vilkårene i <a href="%2$s">Mozilla Public License</a> og andre lisenser for åpen kildekode.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Du får ikke noen rettigheter eller lisenser til varemerkene til Mozilla Foundation eller noen part, inkludert Mozilla, Firefox eller %1$s navn eller logoer. Ytterligere informasjon kan bli funnet <a href="%2$s">her</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Ytterligere kildekode for %1$s er tilgjengelig under ulike andre frie og åpne kildekode-<a href="%2$s">lisenser</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s bruker også blokklister fra Disconnect, Inc. som separate og uavhengige verk under <a href="%2$s">GNU General Public License v3</a>, og er tilgjengelig <a href="%3$s">her</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Brukernavn</string>
+    <string name="gv_prompt_password_hint">Passord</string>
+    <string name="gv_prompt_clear">Tøm</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Sikker tilkobling</string>
+    <string name="security_popup_insecure_connection">Usikker tilkobling</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Bekreftet av: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Nettstedssikkerhet</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL-en finnes allerede</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Søk på siden</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Søk på siden</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d av %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Søk etter neste</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Søk etter forrige</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Lukk søk på siden</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Vis skrivebordsversjon</string>
-  <string name="custom_tab_copy_url_action">URL kopiert</string>
-  <string name="preference_advanced_summary">Utviklerverktøy</string>
-  <string name="preference_category_advanced">Avansert</string>
-  <string name="preference_remote_debugging">Ekstern debugging via USB/Wi-Fi</string>
-  <string name="biometric_auth_title">Lås opp %1$s</string>
-  <string name="biometric_auth_description">Trykk på fingeravtrykks-sensoren for å fortsette.</string>
-  <string name="biometric_auth_new_session">Ny programøkt</string>
-  <string name="biometric_auth_image_description">Fingeravtrykkikon</string>
-  <string name="biometric_auth_not_recognized_error">Fingeravtrykk ikke gjenkjent. Prøv igjen.</string>
-  <string name="biometric_auth_moved_too_quickly">Fingeren rørte seg for fort. Prøv igjen.</string>
-  <string name="enable_search_suggestion_title">Vil du skru på søkeforslag?</string>
-  <string name="enable_search_suggestion_subtitle">For å få søkeforslag trenger %1$s å sende det du skriver i adressefeltet til søkemotoren du har valgt. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Les mer</string>
-  <string name="enable_search_suggestions_no">Nei</string>
-  <string name="enable_search_suggestions_yes">Ja</string>
-  <string name="no_suggestions_message">Noen søkemotorer kan ikke vise forslag.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
-  <string name="tip_disable_tracking_protection">Oppfører siden seg uventet?\n Prøv å deaktivere sporingsbeskyttelse</string>
-  <string name="tip_add_to_homescreen">Få tilgang de meste besøkte nettstedene med et knapptrykk%1$s Meny &gt; Legg til på startskjermen</string>
-  <string name="tip_set_default_browser">Åpne hver link i %1$s\n Angi %1$s som standardnettleser</string>
-  <string name="tip_autocomplete_url">Autofullfør nettadresser for nettsteder du bruker mest\n Trykk og hold på en nettadresse i adressefeltet</string>
-  <string name="tip_open_in_new_tab">Åpne en lenke i en ny fane\n Trykk og hold på en lenke på en side</string>
-  <string name="tip_request_desktop">Vil du heller se den fulle skrivebordsversjonen?%1$s Meny &gt; Vis skrivebordsversjon</string>
-  <string name="tip_disable_tips2">Slå av tips på startskjermen</string>
-  <string name="tip_explain_allowlist">Troverdig nettsted?\n Tillatelseslisten deaktiverer sporingsbeskyttelse for nettsteder du kjenner og stoler på.</string>
-  <string name="new_tab_opened_snackbar">Ny fane åpnet</string>
-  <string name="open_new_tab_snackbar">Bytt</string>
-  <string name="preference_open_new_tab">Bytt til lenke i ny fane med en gang</string>
-  <string name="preference_category_safe_browsing">Trygg nettlesing</string>
-  <string name="preference_safe_browsing_title">Blokker potensielt farlige og villedende nettsteder</string>
-  <string name="preference_safe_browsing_summary">Blokker rapporterte villedende- og angrepsnettsteder, skadeprogram-nettsteder og uønskede programvarenettsteder.</string>
-  <string name="preference_exceptions">Unntak</string>
-  <string name="preference_exceptions_description">Du har slått av innholdsblokkering for disse nettstedene.</string>
-  <string name="preference_exceptions_menu_remove">Fjern</string>
-  <string name="preference_exceptions_remove_all_button_label">Fjern alle nettsted</string>
-  <string name="tab_crash_report_title">Fane krasjet</string>
-  <string name="tab_crash_report_headline">Beklager. Vi har et problem med denne fanen.</string>
-  <string name="tab_crash_report_description">Som en privat nettleser lagrer vi aldri og kan ikke gjenopprette denne fanen.</string>
-  <string name="tab_crash_report_close_tab_button_label">Lukk fane</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Vis skrivebordsversjon</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Datamaskinversjon</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL kopiert</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Utviklerverktøy</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Avansert</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Ekstern debugging via USB/Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Lås opp %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Trykk på fingeravtrykks-sensoren for å fortsette.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Ny programøkt</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Åpne lenke i ny økt</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Fingeravtrykkikon</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Fingeravtrykk ikke gjenkjent. Prøv igjen.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Fingeren rørte seg for fort. Prøv igjen.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">Vil du skru på søkeforslag?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">For å få søkeforslag trenger %1$s å sende det du skriver i adressefeltet til søkemotoren du har valgt. %2$s.</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">Les mer</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Nei</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Ja</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Noen søkemotorer kan ikke vise forslag.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Oppfører siden seg uventet?\n Prøv å deaktivere sporingsbeskyttelse</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Få tilgang de meste besøkte nettstedene med et knapptrykk%1$s Meny > Legg til på startskjermen]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Åpne hver link i %1$s\n Angi %1$s som standardnettleser</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Autofullfør nettadresser for nettsteder du bruker mest\n Trykk og hold på en nettadresse i adressefeltet</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Åpne en lenke i en ny fane\n Trykk og hold på en lenke på en side</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[Vil du heller se den fulle skrivebordsversjonen?%1$s Meny > Vis skrivebordsversjon]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Slå av tips på startskjermen</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">Troverdig nettsted?\n Tillatelseslisten deaktiverer sporingsbeskyttelse for nettsteder du kjenner og stoler på.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Ny fane åpnet</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Bytt</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Bytt til lenke i ny fane med en gang</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Trygg nettlesing</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Blokker potensielt farlige og villedende nettsteder</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Blokker rapporterte villedende- og angrepsnettsteder, skadeprogram-nettsteder og uønskede programvarenettsteder.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Unntak</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Du har slått av innholdsblokkering for disse nettstedene.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Fjern</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Fjern alle nettsted</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Fane krasjet</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Beklager. Vi har et problem med denne fanen.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Som en privat nettleser lagrer vi aldri og kan ikke gjenopprette denne fanen.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Lukk fane</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Send krasjrapport til Mozilla</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Send krasjrapport til Mozilla</string>
 </resources>

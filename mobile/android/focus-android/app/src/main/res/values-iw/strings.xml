@@ -1,150 +1,424 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">ביטול</string>
-  <string name="action_ok">אישור</string>
-  <string name="action_save">שמירה</string>
-  <string name="urlbar_hint">חיפוש או הכנסת כתובת</string>
-  <string name="teaser">גלישה פרטית אוטומטית.\nגלישה. מחיקה. חזרה להתחלה.</string>
-  <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
-  <string name="search_hint">חיפוש עבור %1$s</string>
-  <string name="menu_share">שיתוף…</string>
-  <string name="menu_report_site_issue">דיווח על בעיה באתר</string>
-  <string name="menu_open_with_default_browser2">פתיחה ב־%1$s</string>
-  <string name="menu_open_with_a_browser2">פתיחה ב…</string>
-  <string name="menu_add_to_home_screen">הוספה למסך הבית</string>
-  <string name="menu_whats_new">מה חדש</string>
-  <string name="menu_settings">הגדרות</string>
-  <string name="menu_about">על אודות</string>
-  <string name="menu_help">עזרה</string>
-  <string name="menu_rights">הזכויות שלך</string>
-  <string name="menu_trackers_blocked_title">רכיבי מעקב חסומים</string>
-  <string name="menu_content_blocking">חסימת תוכן</string>
-  <string name="menu_content_blocking_subtitle">כיבוי תיקוני אתרים</string>
-  <string name="menu_custom_tab_branding">מופעל ע״י %1$s</string>
-  <string name="share_dialog_title">שיתוף באמצעות</string>
-  <string name="notification_erase_text">מחיקת היסטורית גלישה</string>
-  <string name="notification_action_open">פתיחה</string>
-  <string name="notification_action_erase_and_open">מחיקה ופתיחה</string>
-  <string name="shortcut_erase_short_label">מחיקה</string>
-  <string name="shortcut_erase_long_label">מחיקת היסטורית גלישה</string>
-  <string name="shortcut_erase_and_open_short_label">מחיקה ופתיחה</string>
-  <string name="shortcut_erase_and_open_long_label">מחיקה ופתיחה של %1$s</string>
-  <string name="text_selection_search_action">חיפוש פרטי</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">אבטחה ופרטיות</string>
-  <string name="preference_privacy_and_security_summary">מעקב, עוגיות, בחירות נתונים</string>
-  <string name="preference_search_summary">הגדרת בררת מחדל, השלמה אוטומטית</string>
-  <string name="preference_mozilla_summary">על אודות %1$s, עזרה</string>
-  <string name="preference_category_tracking_protection">הגנת מעקב</string>
-  <string name="preference_category_web_content">תוכן מקוון</string>
-  <string name="preference_category_switching_apps">מעבר בין יישומים</string>
-  <string name="preference_category_general">כללי</string>
-  <string name="preference_general_summary">דפדפן ברירת מחדל, לשוניות, שפה</string>
-  <string name="preference_category_data_collection_use">איסוף ושימוש במידע</string>
-  <string name="preference_category_search">חיפוש</string>
-  <string name="preference_show_search_suggestions">קבלת הצעות חיפוש</string>
-  <string name="preference_show_search_suggestions_summary">‏%1$s ישלח מה שיוקלד בסרגל הכתובת אל מנוע החיפוש שלך</string>
-  <string name="preference_search_engine_default">ברירת מחדל</string>
-  <string name="preference_search_engine_label">מנוע חיפוש</string>
-  <string name="preference_state_on">פעיל</string>
-  <string name="preference_state_off">כבוי</string>
-  <string name="preference_subitem_autocomplete">השלמת כתובת אוטומטית</string>
-  <string name="preference_switch_autocomplete_topsites">לאתרים המובילים</string>
-  <string name="preference_autocomplete_topsite_summary">יש להפעיל כדי לקבל השלמה אוטומטית ליותר מ־450 כתובות נפוצות בסרגל הכתובות.</string>
-  <string name="preference_switch_autocomplete_user_list">לאתרים שהוספת</string>
-  <string name="preference_autocomplete_user_list_summary">יש להפעיל כדי לקבל השלמה אוטומטית ליותר מ־450 כתובות נפוצות בסרגל הכתובות.</string>
-  <string name="preference_category_autocomplete_manage_sites">ניהול אתרים</string>
-  <string name="preference_autocomplete_subitem_manage_sites">ניהול אתרים</string>
-  <string name="preference_autocomplete_action_add">+ הוספת כתובת מותאמת אישית</string>
-  <string name="preference_autocomplete_title_add">הוספת כתובת מותאמת אישית</string>
-  <string name="custom_autocomplete_quick_add">הוספת כתובת בהתאמה אישית</string>
-  <string name="add_custom_autocomplete_label">הוספת קישור להשלמה אוטומטית</string>
-  <string name="preference_category_cookies">עוגיות ונתוני אתרים</string>
-  <string name="preference_category_data_choices">בחירות נתונים</string>
-  <string name="preference_autocomplete_title_remove">הסרת כתובות מותאמות אישית</string>
-  <string name="preference_autocomplete_learn_more">מידע נוסף</string>
-  <string name="preference_autocomplete_custom_summary">הוספה וניהול של כתובת השלמה אוטומטית בהתאמה אישית.</string>
-  <string name="preference_autocomplete_add_title">כתובת להוספה</string>
-  <string name="preference_autocomplete_add_hint">נא להדביק או להקליד כתובת</string>
-  <string name="preference_autocomplete_add_example2">לדוגמה: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">דוגמה: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">נוספה כתובת מותאמת אישית חדשה.</string>
-  <string name="preference_autocomplete_menu_remove">הסרה</string>
-  <string name="preference_autocomplete_action_remove_content_description">הסרה</string>
-  <string name="preference_autocomplete_add_error">נא לבדוק שוב את הכתובת שהקלדת.</string>
-  <string name="preference_language">שפה</string>
-  <string name="preference_language_systemdefault">ברירת מחדל של המערכת</string>
-  <string name="preference_category_privacy">פרטיות</string>
-  <string name="preference_privacy_block_ads">חסימת רכיבי מעקב</string>
-  <string name="preference_privacy_block_ads_summary">חלק מהפרסומות עוקבות אחר הביקורים באתרים, אפילו אם לא לחצת על הפרסומות</string>
-  <string name="preference_privacy_block_analytics">חסימת מעקב של כלי ניתוח</string>
-  <string name="preference_privacy_block_analytics_summary">משמשות לאיסוף ניתוח ומדידת פעילויות כגון לחיצה וגלילה</string>
-  <string name="preference_privacy_block_social">חסימת רכיבי מעקב חברתיים</string>
-  <string name="preference_privacy_block_social_summary">מוטמעות באתרים לצורך מעקב אחר הביקורים שלך והצגת רכיבים כגון כפתורי שיתוף</string>
-  <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
-  <string name="preference_privacy_block_content_summary2">הפעלת התכונה עשויה לגרום לחלק מהאתרים להתנהג שלא כצפוי</string>
-  <string name="preference_privacy_category_cookies">חסימת עוגיות</string>
-  <string name="preference_privacy_should_block_cookies_no_option">לא</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">חסימת עוגיות מעקב צד־שלישי בלבד</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">חסימת עוגיות צד־שלישי בלבד</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">כן</string>
-  <string name="preference_security_biometric">שימוש בטביעת אצבע כדי לשחרר את נעילת היישומון</string>
-  <string name="preference_security_biometric_summary">טביעת האצבע שלך יכולה לשחרר את הנעילה של %1$s אם כבר נפתחה כתובת ביישומון. יופעל מצב חשאיות.</string>
-  <string name="preference_privacy_secure_mode">חשאיות</string>
-  <string name="preference_privacy_stealth_summary">הסתרת דפי אינטרנט בעת מעבר בין יישומונים וחסימת האפשרות לצילום המסך.</string>
-  <string name="preference_category_security">אבטחה</string>
-  <string name="preference_category_performance">ביצועים</string>
-  <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
-  <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>
-  <string name="preference_performance_block_javascript">חסימת JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">הדפים עשויים להיטען מהר יותר, אך עשויים גם להתנהג באופן בלתי צפוי</string>
-  <string name="preference_default_browser2">הגדרת %1$s כדפדפן ברירת המחדל</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">שליחת נתוני שימוש</string>
-  <string name="preference_mozilla_telemetry_summary">מידע נוסף</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla חותרת לאיסוף המידע שנדרש לצורך שיפור %1$s לטובת הכלל.</string>
-  <string name="preference_privacy_notice">הצהרת פרטיות</string>
-  <string name="preference_about">על אודות %1$s</string>
-  <string name="preference_search_installed_search_engines">מנועי חיפוש מותקנים</string>
-  <string name="preference_search_restore">שחזור מנועי חיפוש ברירת מחדל</string>
-  <string name="preference_search_add2">+ הוספת מנוע חיפוש אחר</string>
-  <string name="preference_search_remove_title">הסרת מנועי חיפוש</string>
-  <string name="preference_search_remove">הסרה</string>
-  <string name="preference_homescreen_tips">הצגת עצות במסך הבית</string>
-  <string name="action_option_add_search_engine">הוספת מנוע חיפוש</string>
-  <string name="search_add_manually_name_hint">שם מנוע החיפוש</string>
-  <string name="search_add_manually_string">מחרוזת חיפוש לשימוש</string>
-  <string name="search_add_manually_save">שמירה</string>
-  <string name="search_add_manually_example">דוגמה: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">נוסף מנוע חיפוש חדש.</string>
-  <string name="search_add_error_empty_name">נא להקליד שם למנוע החיפוש</string>
-  <string name="search_add_error_duplicate_name">קיים מנוע חיפוש מותקן בעל שם זהה.</string>
-  <string name="search_add_error_empty_search">נא להקליד מחרוזת חיפוש</string>
-  <string name="search_add_error_format">יש לבדוק שמחרוזת החיפוש תואמת לתבנית שבדוגמה</string>
-  <string name="content_description_clear_input">מחיקת קלט</string>
-  <string name="content_description_dismiss_input">התעלמות</string>
-  <string name="content_description_erase">מחיקת היסטורית גלישה</string>
-  <string name="content_description_tab_counter">לשוניות פתוחות: %1$s</string>
-  <string name="content_description_lock">חיבור מאובטח</string>
-  <string name="accessibility_announcement_loading">בטעינה</string>
-  <string name="accessibility_announcement_loading_finished">האתר נטען</string>
-  <string name="content_description_menu">אפשרויות נוספות</string>
-  <string name="indicator_content_description_menu">כפתור אפשרויות נוספות</string>
-  <string name="content_description_forward">ניווט קדימה</string>
-  <string name="content_description_reload">טעינה מחדש של האתר</string>
-  <string name="content_description_back">ניווט אחורה</string>
-  <string name="content_description_stop">עצירת טעינת האתר</string>
-  <string name="content_description_customtab_exit">חזרה ליישום קודם</string>
-  <string name="content_description_trackers_blocked">מספר רכיבי המעקב החסומים</string>
-  <string name="content_description_blocking_switch">חסימת רכיבי מעקב</string>
-  <string name="your_rights">הזכויות שלך</string>
-  <string name="external_app_prompt_title">פתיחת קישור ביישומון אחר</string>
-  <string name="external_app_prompt">ניתן לעזוב את %1$s כדי לפתוח את הקישור הזה ב־%2$s.</string>
-  <string name="external_app_prompt_no_app_title">חיפוש יישומון שיוכל לפתוח את הקישור</string>
-  <string name="external_app_prompt_no_app">אף אחד מהיישומים שבהתקן שלך יכולים לפתוח את הקישור הזה. ניתן לעזוב את %1$s כדי לחפש תחת %2$s יישומון שיכול לבצע זאת.</string>
-  <string name="external_multiple_apps_matched_exit">לצאת ממצב גלישה פרטית?</string>
-  <string name="download_snackbar_finished">%1$s הסתיים</string>
-  <string name="download_snackbar_open">פתיחה</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">ביטול</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">אישור</string>
+
+    <string name="action_save">שמירה</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">חיפוש או הכנסת כתובת</string>
+
+    <string name="teaser">גלישה פרטית אוטומטית.\nגלישה. מחיקה. חזרה להתחלה.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
+    <string name="feedback_erase2">היסטוריית הגלישה נמחקה</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">חיפוש עבור %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">שיתוף…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">דיווח על בעיה באתר</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">פתיחה ב־%1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">פתיחה ב…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">הוספה למסך הבית</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">מה חדש</string>
+    <string name="menu_settings">הגדרות</string>
+    <string name="menu_about">על אודות</string>
+    <string name="menu_help">עזרה</string>
+    <string name="menu_rights">הזכויות שלך</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">רכיבי מעקב חסומים</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">חסימת תוכן</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">כיבוי תיקוני אתרים</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">מופעל ע״י %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">שיתוף באמצעות</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">מחיקת היסטורית גלישה</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">פתיחה</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">מחיקה ופתיחה</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">מחיקה</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">מחיקת היסטורית גלישה</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">מחיקה ופתיחה</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">מחיקה ופתיחה של %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">חיפוש פרטי</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">אבטחה ופרטיות</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">מעקב, עוגיות, בחירות נתונים</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">הגדרת בררת מחדל, השלמה אוטומטית</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">על אודות %1$s, עזרה</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">הגנת מעקב</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">תוכן מקוון</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">מעבר בין יישומים</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">כללי</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">דפדפן ברירת מחדל, לשוניות, שפה</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">איסוף ושימוש במידע</string>
+
+    <string name="preference_category_search">חיפוש</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">קבלת הצעות חיפוש</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">‏%1$s ישלח מה שיוקלד בסרגל הכתובת אל מנוע החיפוש שלך</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">ברירת מחדל</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">מנוע חיפוש</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">פעיל</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">כבוי</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">השלמת כתובת אוטומטית</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">לאתרים המובילים</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">יש להפעיל כדי לקבל השלמה אוטומטית ליותר מ־450 כתובות נפוצות בסרגל הכתובות.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">לאתרים שהוספת</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">יש להפעיל כדי לקבל השלמה אוטומטית ליותר מ־450 כתובות נפוצות בסרגל הכתובות.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">ניהול אתרים</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">ניהול אתרים</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ הוספת כתובת מותאמת אישית</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">הוספת כתובת מותאמת אישית</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">הוספת כתובת בהתאמה אישית</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">הוספת קישור להשלמה אוטומטית</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">עוגיות ונתוני אתרים</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">בחירות נתונים</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">הסרת כתובות מותאמות אישית</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">מידע נוסף</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">הוספה וניהול של כתובת השלמה אוטומטית בהתאמה אישית.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">כתובת להוספה</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">נא להדביק או להקליד כתובת</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">לדוגמה: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">דוגמה: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">נוספה כתובת מותאמת אישית חדשה.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">הסרה</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">הסרה</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">נא לבדוק שוב את הכתובת שהקלדת.</string>
+
+    <string name="preference_language">שפה</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">ברירת מחדל של המערכת</string>
+
+    <string name="preference_category_privacy">פרטיות</string>
+    <string name="preference_privacy_block_ads">חסימת רכיבי מעקב</string>
+    <string name="preference_privacy_block_ads_summary">חלק מהפרסומות עוקבות אחר הביקורים באתרים, אפילו אם לא לחצת על הפרסומות</string>
+    <string name="preference_privacy_block_analytics">חסימת מעקב של כלי ניתוח</string>
+    <string name="preference_privacy_block_analytics_summary">משמשות לאיסוף ניתוח ומדידת פעילויות כגון לחיצה וגלילה</string>
+    <string name="preference_privacy_block_social">חסימת רכיבי מעקב חברתיים</string>
+    <string name="preference_privacy_block_social_summary">מוטמעות באתרים לצורך מעקב אחר הביקורים שלך והצגת רכיבים כגון כפתורי שיתוף</string>
+    <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
+    <string name="preference_privacy_block_content_summary2">הפעלת התכונה עשויה לגרום לחלק מהאתרים להתנהג שלא כצפוי</string>
+    <string name="preference_privacy_category_cookies">חסימת עוגיות</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">לא</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">חסימת עוגיות מעקב צד־שלישי בלבד</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">חסימת עוגיות צד־שלישי בלבד</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">כן</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">שימוש בטביעת אצבע כדי לשחרר את נעילת היישומון</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">טביעת האצבע שלך יכולה לשחרר את הנעילה של %1$s אם כבר נפתחה כתובת ביישומון. יופעל מצב חשאיות.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">חשאיות</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">הסתרת דפי אינטרנט בעת מעבר בין יישומונים וחסימת האפשרות לצילום המסך.</string>
+
+    <string name="preference_category_security">אבטחה</string>
+
+    <string name="preference_category_performance">ביצועים</string>
+    <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>
+
+    <string name="preference_performance_block_javascript">חסימת JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">הדפים עשויים להיטען מהר יותר, אך עשויים גם להתנהג באופן בלתי צפוי</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">הגדרת %1$s כדפדפן ברירת המחדל</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">שליחת נתוני שימוש</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">מידע נוסף</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla חותרת לאיסוף המידע שנדרש לצורך שיפור %1$s לטובת הכלל.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">הצהרת פרטיות</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">על אודות %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">מנועי חיפוש מותקנים</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">שחזור מנועי חיפוש ברירת מחדל</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ הוספת מנוע חיפוש אחר</string>
+    <string name="preference_search_remove_title">הסרת מנועי חיפוש</string>
+    <string name="preference_search_remove">הסרה</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">הצגת עצות במסך הבית</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">הוספת מנוע חיפוש</string>
+
+    <string name="search_add_manually_name_hint">שם מנוע החיפוש</string>
+    <string name="search_add_manually_string">מחרוזת חיפוש לשימוש</string>
+    <string name="search_add_manually_save">שמירה</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">דוגמה: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">נוסף מנוע חיפוש חדש.</string>
+
+    <string name="search_add_error_empty_name">נא להקליד שם למנוע החיפוש</string>
+    <string name="search_add_error_duplicate_name">קיים מנוע חיפוש מותקן בעל שם זהה.</string>
+
+    <string name="search_add_error_empty_search">נא להקליד מחרוזת חיפוש</string>
+
+    <string name="search_add_error_format">יש לבדוק שמחרוזת החיפוש תואמת לתבנית שבדוגמה</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">מחיקת קלט</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">התעלמות</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">מחיקת היסטורית גלישה</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">לשוניות פתוחות: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">חיבור מאובטח</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">בטעינה</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">האתר נטען</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">אפשרויות נוספות</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">כפתור אפשרויות נוספות</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">ניווט קדימה</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">טעינה מחדש של האתר</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">ניווט אחורה</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">עצירת טעינת האתר</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">חזרה ליישום קודם</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">מספר רכיבי המעקב החסומים</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">חסימת רכיבי מעקב</string>
+
+    <string name="your_rights">הזכויות שלך</string>
+
+    <string name="external_app_prompt_title">פתיחת קישור ביישומון אחר</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">ניתן לעזוב את %1$s כדי לפתוח את הקישור הזה ב־%2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">חיפוש יישומון שיוכל לפתוח את הקישור</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">אף אחד מהיישומים שבהתקן שלך יכולים לפתוח את הקישור הזה. ניתן לעזוב את %1$s כדי לחפש תחת %2$s יישומון שיכול לבצע זאת.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">לצאת ממצב גלישה פרטית?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s הסתיים</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">פתיחה</string>
 
 
 
@@ -174,91 +448,264 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">חיזוק הפרטיות שלך</string>
-  <string name="firstrun_defaultbrowser_text2">לקחת את הגלישה המאובטחת לרמה הבאה. ניתן לחסום פרסומות ותוכן אחר שעשוי לסייע במעקב אחריך בין אתרים שונים ולהפריע לזמני טעינת עמודים.</string>
-  <string name="firstrun_search_title">החיפוש שלך, בדרך שלך</string>
-  <string name="firstrun_search_text">לא מה שחיפשת? ניתן לבחור במנוע חיפוש אחר כברירת מחדל בהגדרות.</string>
-  <string name="firstrun_shortcut_title">הוספת קיצורי דרך למסך הבית שלך</string>
-  <string name="firstrun_shortcut_text">ניתן לחזור לאתרים המועדפים עליך ב־%1$s בקלות. עליך פשוט לבחור באפשרות „הוספה למסך הבית” מהתפריט %1$s.</string>
-  <string name="firstrun_privacy_title">להפוך את הפרטיות להרגל</string>
-  <string name="firstrun_privacy_text">ניתן להגדיר את %1$s בתור דפדפן ברירת המחדל שלך ולקבל את היתרונות של גלישה פרטים בעת פתיחת עמודי אינטרנט מיישומונים אחרים.</string>
-  <string name="firstrun_close_button">בסדר, הבנתי!</string>
-  <string name="firstrun_skip_button">דילוג</string>
-  <string name="firstrun_next_button">הבא</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">הוספה</string>
-  <string name="dialog_addtohomescreen_action_cancel">ביטול</string>
-  <string name="dialog_addtohomescreen_tracking_protection">קיצור הדרך ייפתח ללא הגנת מעקב</string>
-  <string name="notification_browsing_session_channel_name">הפעלה בגלישה פרטית</string>
-  <string name="notification_browsing_session_channel_description">התרעות מאפשרות לך למחוק את ההפעלה של %1$s בנגיעה קלה. אין צורך לפתוח את היישומון או לראות מה פועל בדפדפן שלך.</string>
-  <string name="tabs_tray_action_erase">מחיקת היסטורית גלישה</string>
-  <string name="download_firefox">הורדת Firefox</string>
-  <string name="your_rights_content1">%1$s היא תכנית חופשית ובקוד פתוח שפותחה על ידי Mozilla ותורמים נוספים.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">חיזוק הפרטיות שלך</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">לקחת את הגלישה המאובטחת לרמה הבאה. ניתן לחסום פרסומות ותוכן אחר שעשוי לסייע במעקב אחריך בין אתרים שונים ולהפריע לזמני טעינת עמודים.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">החיפוש שלך, בדרך שלך</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">לא מה שחיפשת? ניתן לבחור במנוע חיפוש אחר כברירת מחדל בהגדרות.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">הוספת קיצורי דרך למסך הבית שלך</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">ניתן לחזור לאתרים המועדפים עליך ב־%1$s בקלות. עליך פשוט לבחור באפשרות „הוספה למסך הבית” מהתפריט %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">להפוך את הפרטיות להרגל</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">ניתן להגדיר את %1$s בתור דפדפן ברירת המחדל שלך ולקבל את היתרונות של גלישה פרטים בעת פתיחת עמודי אינטרנט מיישומונים אחרים.</string>
+
+    <string name="firstrun_close_button">בסדר, הבנתי!</string>
+    <string name="firstrun_skip_button">דילוג</string>
+    <string name="firstrun_next_button">הבא</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">הוספה</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">ביטול</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">קיצור הדרך ייפתח ללא הגנת מעקב</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">הפעלה בגלישה פרטית</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">התרעות מאפשרות לך למחוק את ההפעלה של %1$s בנגיעה קלה. אין צורך לפתוח את היישומון או לראות מה פועל בדפדפן שלך.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">מחיקת היסטורית גלישה</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">הורדת Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s היא תכנית חופשית ובקוד פתוח שפותחה על ידי Mozilla ותורמים נוספים.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">שם משתמש</string>
-  <string name="gv_prompt_password_hint">ססמה</string>
-  <string name="gv_prompt_clear">ניקוי</string>
-  <string name="security_popup_secure_connection">חיבור מאובטח</string>
-  <string name="security_popup_insecure_connection">חיבור לא מאובטח</string>
-  <string name="security_popup_security_verified">מאומת ע״י: %1$s</string>
-  <string name="site_security_icon_content_description">אבטחת האתר</string>
-  <string name="preference_autocomplete_duplicate_url_error">הכתובת כבר קיימת</string>
-  <string name="find_in_page">חיפוש בדף</string>
-  <string name="find_in_page_input">חיפוש בדף</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d מתוך %2$d</string>
-  <string name="accessibility_next_result">חיפוש התוצאה הבאה</string>
-  <string name="accessibility_previous_result">חיפוש התוצאה הקודמת</string>
-  <string name="accessibility_dismiss_find_in_page">סגירת החיפוש בדף</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s זמין לשימוש תחת <a href="%2$s">תנאי הרשיון הציבורי של Mozilla</a> ורשיונות קוד פתוח אחרים.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[קוד מקור נוסף עבור %1$s זמין תחת מגוון <a href="%2$s">רישיונות</a> קוד פתוח נוספים.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[ב־%1$s נעשה גם שימוש ברשימות חסימה מאת Disconnect בע״מ כעבודות נפרדות ועצמאיות תחת <a href="%2$s">גרסה 3 של הרשיון הציבורי הכללי של GNU</a>, והוא זמין <a href="%3$s">כאן</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">שם משתמש</string>
+    <string name="gv_prompt_password_hint">ססמה</string>
+    <string name="gv_prompt_clear">ניקוי</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">חיבור מאובטח</string>
+    <string name="security_popup_insecure_connection">חיבור לא מאובטח</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">מאומת ע״י: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">אבטחת האתר</string>
+    <string name="preference_autocomplete_duplicate_url_error">הכתובת כבר קיימת</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">חיפוש בדף</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">חיפוש בדף</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d מתוך %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">חיפוש התוצאה הבאה</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">חיפוש התוצאה הקודמת</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">סגירת החיפוש בדף</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">בקשת אתר שולחני</string>
-  <string name="custom_tab_copy_url_action">הכתובת הועתקה</string>
-  <string name="preference_advanced_summary">כלי פיתוח</string>
-  <string name="preference_category_advanced">מתקדם</string>
-  <string name="preference_remote_debugging">ניפוי שגיאות מרחוק דרך USB/Wi-Fi</string>
-  <string name="biometric_auth_title">שחרור נעילת %1$s</string>
-  <string name="biometric_auth_description">יש לגעת בחיישן טביעת האצבע כדי להמשיך.</string>
-  <string name="biometric_auth_new_session">הפעלה חדשה</string>
-  <string name="biometric_auth_image_description">סמל טביעת אצבע</string>
-  <string name="biometric_auth_not_recognized_error">טביעת האצבע לא זוהתה. נא לנסות שוב.</string>
-  <string name="biometric_auth_moved_too_quickly">האצבע זזה מהר מדי. נא לנסות שוב.</string>
-  <string name="enable_search_suggestion_title">האם ברצונך להפעיל הצעות חיפוש?</string>
-  <string name="enable_search_suggestion_subtitle">כדי לקבל הצעות חיפוש, על %1$s לשלוח מה שמוקלד בסרגל הכתובת אל מנוע החיפוש שבחרת. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">מידע נוסף</string>
-  <string name="enable_search_suggestions_no">לא</string>
-  <string name="enable_search_suggestions_yes">כן</string>
-  <string name="no_suggestions_message">חלק ממנועי החיפוש לא יכולים להציע הצעות.</string>
-  <string name="dismiss_no_suggestions_prompt_button">התעלמות</string>
-  <string name="tip_disable_tracking_protection">האתר מתנהג באופן בלתי צפוי?\n ניתן לנסות לבטל את הגנת המעקב</string>
-  <string name="tip_add_to_homescreen">קבלת גישה בלחיצה קלילה לאתרים הנפוצים שלך%1$s תפריט &gt; הוספה למסך הבית</string>
-  <string name="tip_set_default_browser">פתיחת כל קישור עם %1$s\n הגדרת %1$s כדפדפן ברירת המחדל</string>
-  <string name="tip_autocomplete_url">השלמת כתובות עבור האתרים הנפוצים שלך\n יש ללחוץ לחיצה ארוכה על כתובת כלשהי בסרגל הכתובת</string>
-  <string name="tip_open_in_new_tab">פתיחת קישור בלשונית חדשה\n יש ללחוץ לחיצה ארוכה על כל קישור שהוא בעמוד</string>
-  <string name="tip_request_desktop">אפשר להציע לך לצפות באתר לשולחן העבודה?%1$s תפריט &gt; בקשת אתר שולחני</string>
-  <string name="tip_disable_tips2">כיבוי עצות במסך ההתחלה</string>
-  <string name="tip_explain_allowlist">אתר מהימן?\n רשימת היתר משביתה את הגנת המעקב עבור אתרים מוכרים ומהימנים בעיניך.</string>
-  <string name="new_tab_opened_snackbar">לשונית חדשה נפתחה</string>
-  <string name="open_new_tab_snackbar">מעבר</string>
-  <string name="preference_open_new_tab">מעבר לקישור בלשונית החדשה מיידית</string>
-  <string name="preference_category_safe_browsing">גלישה בטוחה</string>
-  <string name="preference_safe_browsing_title">חסימת אתרים המעוררים חשד לסכנה או הונאה</string>
-  <string name="preference_safe_browsing_summary">חסימת אתרי הונאה ומתקפה, אתרי נוזקה ואתרי תכניות בלתי רצויות.</string>
-  <string name="preference_exceptions">חריגות</string>
-  <string name="preference_exceptions_description">ביטלת את חסימת התוכן באתרים אלו.</string>
-  <string name="preference_exceptions_menu_remove">הסרה</string>
-  <string name="preference_exceptions_remove_all_button_label">הסרת כל האתרים</string>
-  <string name="tab_crash_report_title">הלשונית קרסה</string>
-  <string name="tab_crash_report_headline">חווינו תקלה עם הלשונית הזאת. עמך הסליחה.</string>
-  <string name="tab_crash_report_description">בתור דפדפן פרטי, אנו לא יכולים לשמור ולשחזר את הלשונית הזאת.</string>
-  <string name="tab_crash_report_close_tab_button_label">סגירת לשונית</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">בקשת אתר שולחני</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">הכתובת הועתקה</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">כלי פיתוח</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">מתקדם</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">ניפוי שגיאות מרחוק דרך USB/Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">שחרור נעילת %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">יש לגעת בחיישן טביעת האצבע כדי להמשיך.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">הפעלה חדשה</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">פתיחת קישור בהפעלה חדשה</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">סמל טביעת אצבע</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">טביעת האצבע לא זוהתה. נא לנסות שוב.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">האצבע זזה מהר מדי. נא לנסות שוב.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">האם ברצונך להפעיל הצעות חיפוש?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">כדי לקבל הצעות חיפוש, על %1$s לשלוח מה שמוקלד בסרגל הכתובת אל מנוע החיפוש שבחרת. %2$s.</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">מידע נוסף</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">לא</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">כן</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">חלק ממנועי החיפוש לא יכולים להציע הצעות.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">התעלמות</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">האתר מתנהג באופן בלתי צפוי?\n ניתן לנסות לבטל את הגנת המעקב</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[קבלת גישה בלחיצה קלילה לאתרים הנפוצים שלך%1$s תפריט > הוספה למסך הבית]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">פתיחת כל קישור עם %1$s\n הגדרת %1$s כדפדפן ברירת המחדל</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">השלמת כתובות עבור האתרים הנפוצים שלך\n יש ללחוץ לחיצה ארוכה על כתובת כלשהי בסרגל הכתובת</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">פתיחת קישור בלשונית חדשה\n יש ללחוץ לחיצה ארוכה על כל קישור שהוא בעמוד</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[אפשר להציע לך לצפות באתר לשולחן העבודה?%1$s תפריט > בקשת אתר שולחני]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">כיבוי עצות במסך ההתחלה</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">אתר מהימן?\n רשימת היתר משביתה את הגנת המעקב עבור אתרים מוכרים ומהימנים בעיניך.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">לשונית חדשה נפתחה</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">מעבר</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">מעבר לקישור בלשונית החדשה מיידית</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">גלישה בטוחה</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">חסימת אתרים המעוררים חשד לסכנה או הונאה</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">חסימת אתרי הונאה ומתקפה, אתרי נוזקה ואתרי תכניות בלתי רצויות.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">חריגות</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">ביטלת את חסימת התוכן באתרים אלו.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">הסרה</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">הסרת כל האתרים</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">הלשונית קרסה</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">חווינו תקלה עם הלשונית הזאת. עמך הסליחה.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">בתור דפדפן פרטי, אנו לא יכולים לשמור ולשחזר את הלשונית הזאת.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">סגירת לשונית</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">שליחת דוח קריסה אל Mozilla</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">שליחת דוח קריסה אל Mozilla</string>
 </resources>

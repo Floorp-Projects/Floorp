@@ -1,152 +1,444 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">キャンセル</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">保存</string>
-  <string name="urlbar_hint">検索語またはアドレスを入力</string>
-  <string name="teaser">プライベートブラウジングを自動的に。\nブラウズ、消去の繰り返し。</string>
-  <string name="feedback_erase">閲覧履歴が消去されました。</string>
-  <string name="feedback_erase_custom_tab">タブのブラウジング履歴が消去されました。</string>
-  <string name="search_hint">%1$s を検索</string>
-  <string name="menu_share">共有...</string>
-  <string name="menu_report_site_issue">サイトの問題を報告</string>
-  <string name="menu_open_with_default_browser2">%1$s で開く</string>
-  <string name="menu_open_with_a_browser2">他のアプリで開く…</string>
-  <string name="menu_add_to_home_screen">ホーム画面に追加</string>
-  <string name="menu_whats_new">新着情報</string>
-  <string name="menu_settings">設定</string>
-  <string name="menu_about">製品情報</string>
-  <string name="menu_help">ヘルプ</string>
-  <string name="menu_rights">あなたの権利</string>
-  <string name="menu_trackers_blocked_title">ブロックされた追跡</string>
-  <string name="menu_trackers_blocked_subtitle">これをオフにすることにより、一部のサイトの問題が解決する可能性があります</string>
-  <string name="menu_content_blocking">コンテンツブロッキング</string>
-  <string name="menu_content_blocking_subtitle">サイトの問題を解決するにはオフにしてください</string>
-  <string name="menu_custom_tab_branding">Powered by %1$s</string>
-  <string name="share_dialog_title">共有方法を選択</string>
-  <string name="notification_erase_text">閲覧履歴を消去</string>
-  <string name="notification_action_open">開く</string>
-  <string name="notification_action_erase_and_open">消去して開く</string>
-  <string name="shortcut_erase_short_label">消去</string>
-  <string name="shortcut_erase_long_label">閲覧履歴を消去</string>
-  <string name="shortcut_erase_and_open_short_label">消去して開く</string>
-  <string name="shortcut_erase_and_open_long_label">消去して %1$s を開く</string>
-  <string name="text_selection_search_action">プライベートに検索</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">プライバシーとセキュリティ</string>
-  <string name="preference_privacy_and_security_summary">トラッキング、Cookie、データの選択</string>
-  <string name="preference_search_summary">既定、自動補完を設定</string>
-  <string name="preference_mozilla_summary">%1$s について、ヘルプ</string>
-  <string name="preference_category_tracking_protection">トラッキング防止</string>
-  <string name="preference_category_web_content">ウェブコンテンツ</string>
-  <string name="preference_category_switching_apps">アプリを切り替え</string>
-  <string name="preference_category_general">一般</string>
-  <string name="preference_general_summary">既定のブラウザー、タブ、言語</string>
-  <string name="preference_category_data_collection_use">データの収集と使用</string>
-  <string name="preference_category_search">検索</string>
-  <string name="preference_show_search_suggestions">検索候補を取得</string>
-  <string name="preference_show_search_suggestions_summary">%1$s はあなたがアドレスバーに入力した語句を検索エンジンへ送信します</string>
-  <string name="preference_search_engine_default">既定</string>
-  <string name="preference_search_engine_label">検索エンジン</string>
-  <string name="preference_state_on">オン</string>
-  <string name="preference_state_off">オフ</string>
-  <string name="preference_subitem_autocomplete">URL 自動補完</string>
-  <string name="preference_switch_autocomplete_topsites">よく見るサイト</string>
-  <string name="preference_autocomplete_topsite_summary">アドレスバーで 450 以上の人気サイトの URL の自動補完を有効にします。</string>
-  <string name="preference_switch_autocomplete_user_list">追加したサイト</string>
-  <string name="preference_autocomplete_user_list_summary">アドレスバーで 450 以上の人気サイトの URL の自動補完を有効にします。</string>
-  <string name="preference_category_autocomplete_manage_sites">サイトの管理</string>
-  <string name="preference_autocomplete_subitem_manage_sites">サイトの管理</string>
-  <string name="preference_autocomplete_action_add">+ カスタム URL を追加</string>
-  <string name="preference_autocomplete_title_add">カスタム URL を追加</string>
-  <string name="custom_autocomplete_quick_add">カスタム URL を追加</string>
-  <string name="add_custom_autocomplete_label">リンクを自動補完に追加</string>
-  <string name="preference_category_cookies">Cookie とサイトデータ</string>
-  <string name="preference_category_data_choices">データの選択</string>
-  <string name="preference_autocomplete_title_remove">カスタム URL を削除</string>
-  <string name="preference_autocomplete_learn_more">詳細情報</string>
-  <string name="preference_autocomplete_custom_summary">カスタム自動補完 URL の追加と管理。</string>
-  <string name="preference_autocomplete_add_title">追加する URL</string>
-  <string name="preference_autocomplete_add_hint">URL を入力するか貼り付けてください</string>
-  <string name="preference_autocomplete_add_example2">例: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">入力例: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">新しいカスタム URL を追加しました。</string>
-  <string name="preference_autocomplete_menu_remove">削除</string>
-  <string name="preference_autocomplete_action_remove_content_description">削除</string>
-  <string name="preference_autocomplete_add_error">入力した URL をよく確認してください。</string>
-  <string name="preference_language">言語</string>
-  <string name="preference_language_systemdefault">システム標準</string>
-  <string name="preference_category_privacy">プライバシー</string>
-  <string name="preference_privacy_block_ads">追跡広告をブロック</string>
-  <string name="preference_privacy_block_ads_summary">一部の広告は、あなたがその広告をクリックしなくても訪れたサイトを追跡します</string>
-  <string name="preference_privacy_block_analytics">アクセス解析をブロック</string>
-  <string name="preference_privacy_block_analytics_summary">タップやスクロールなどの操作統計を収集、解析、計測するために利用されます</string>
-  <string name="preference_privacy_block_social">ソーシャル追跡をブロック</string>
-  <string name="preference_privacy_block_social_summary">ユーザーの訪問を追跡するためサイトに埋め込まれ、共有ボタンのように表示されます</string>
-  <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
-  <string name="preference_privacy_block_content_summary2">有効にすると、ページによっては予期せぬ動作をする原因になります</string>
-  <string name="preference_privacy_category_cookies">Cookie をブロック</string>
-  <string name="preference_privacy_should_block_cookies_no_option">いいえ</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">サードバーティの追跡 Cookie のみブロック</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">サードパーティ Cookie のみブロック</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">はい</string>
-  <string name="preference_security_biometric">アプリのロック解除に指紋を使用</string>
-  <string name="preference_security_biometric_summary">アプリ内で URL を開いている場合、指紋を使って %1$s のロックを解除できます。ステルスモードが有効となります。</string>
-  <string name="preference_privacy_secure_mode">ステルス</string>
-  <string name="preference_privacy_stealth_summary">アプリ切り替え時にウェブページを隠し、スクリーンショット撮影を禁止します。</string>
-  <string name="preference_category_security">セキュリティ</string>
-  <string name="preference_category_performance">パフォーマンス</string>
-  <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
-  <string name="preference_performance_block_webfonts_summary">アイコンや画像が正常に表示されない場合があります</string>
-  <string name="preference_performance_block_javascript">JavaScript をブロック</string>
-  <string name="preference_performance_block_javascript_summary">ページの読み込みが速くなる可能性がありますが、予期せぬ動作をする可能性もあります</string>
-  <string name="preference_default_browser2">%1$s を既定のブラウザーに設定</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">使用状況データを送信</string>
-  <string name="preference_mozilla_telemetry_summary">詳細情報</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla は %1$s を皆さんに提供し改善するために必要な情報だけを収集するよう努めています。</string>
-  <string name="preference_privacy_notice">プライバシー通知</string>
-  <string name="preference_about">%1$s について</string>
-  <string name="preference_search_installed_search_engines">選択可能な検索エンジン</string>
-  <string name="preference_search_restore">既定の検索エンジンを復元</string>
-  <string name="preference_search_add2">+ 別の検索エンジンを追加</string>
-  <string name="preference_search_remove_title">検索エンジンを削除</string>
-  <string name="preference_search_remove">削除</string>
-  <string name="preference_homescreen_tips">ホーム画面にヒントを表示</string>
-  <string name="action_option_add_search_engine">検索エンジンを追加</string>
-  <string name="search_add_manually_name_hint">検索エンジン名</string>
-  <string name="search_add_manually_string">使用する検索語</string>
-  <string name="search_add_manually_save">保存</string>
-  <string name="search_add_manually_example">入力例: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">新しい検索エンジンが追加されました。</string>
-  <string name="search_add_error_empty_name">検索エンジン名を入力</string>
-  <string name="search_add_error_duplicate_name">同名の検索エンジンがすでにインストールされています。</string>
-  <string name="search_add_error_empty_search">検索語を入力</string>
-  <string name="search_add_error_format">検索語が入力例の書式とマッチしているか確認してください</string>
-  <string name="content_description_clear_input">入力内容を消去</string>
-  <string name="content_description_dismiss_input">閉じる</string>
-  <string name="content_description_erase">閲覧履歴を消去</string>
-  <string name="content_description_tab_counter">開かれているタブの数: %1$s</string>
-  <string name="content_description_lock">安全な接続</string>
-  <string name="accessibility_announcement_loading">読み込み中</string>
-  <string name="accessibility_announcement_loading_finished">ウェブサイト読み込み完了</string>
-  <string name="content_description_menu">その他のオプション</string>
-  <string name="indicator_content_description_menu">その他のオプションボタン</string>
-  <string name="content_description_forward">次のページへ進む</string>
-  <string name="content_description_reload">ウェブサイトを再読み込み</string>
-  <string name="content_description_back">前のページへ戻る</string>
-  <string name="content_description_stop">サイトの読み込みを中止</string>
-  <string name="content_description_customtab_exit">前のアプリへ戻る</string>
-  <string name="content_description_trackers_blocked">ブロックされた追跡数</string>
-  <string name="content_description_blocking_switch">オンライン追跡をブロック</string>
-  <string name="your_rights">あなたの権利</string>
-  <string name="external_app_prompt_title">リンクを他のアプリで開く</string>
-  <string name="external_app_prompt">%1$s を離れてこのリンクを %2$s で開くことができます。</string>
-  <string name="external_app_prompt_no_app_title">リンクを開けるアプリを探す</string>
-  <string name="external_app_prompt_no_app">お使いの端末にはこのリンクを開けるアプリがありません。%1$s を離れて、開けるアプリを %2$s で探すことができます。</string>
-  <string name="external_multiple_apps_matched_exit">プライベートブラウジングを終了しますか？</string>
-  <string name="download_snackbar_finished">%1$s 完了</string>
-  <string name="download_snackbar_open">開く</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">キャンセル</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">保存</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">検索語またはアドレスを入力</string>
+
+    <string name="teaser">プライベートブラウジングを自動的に。\nブラウズ、消去の繰り返し。</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">閲覧履歴が消去されました。</string>
+    <string name="feedback_erase2">ブラウジング履歴を消去しました</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">タブのブラウジング履歴が消去されました。</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">%1$s を検索</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">共有...</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">サイトの問題を報告</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">%1$s で開く</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">他のアプリで開く…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">ホーム画面に追加</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">新着情報</string>
+    <string name="menu_settings">設定</string>
+    <string name="menu_about">製品情報</string>
+    <string name="menu_help">ヘルプ</string>
+    <string name="menu_rights">あなたの権利</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">ブロックされた追跡</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">これをオフにすることにより、一部のサイトの問題が解決する可能性があります</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">コンテンツブロッキング</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">サイトの問題を解決するにはオフにしてください</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Powered by %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">共有方法を選択</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">閲覧履歴を消去</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">開く</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">消去して開く</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">消去</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">閲覧履歴を消去</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">消去して開く</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">消去して %1$s を開く</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">プライベートに検索</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s ではあなたがすべてをコントロールできます。</p>
+<p>次のようにプライベートブラウザーとして使えます。
+  <ul>
+    <li>アプリ内で直接サイトを検索、閲覧。</li>
+    <li>追跡者をブロック (あるいは設定を更新して許可)</li>
+    <li>Cookie、検索履歴、閲覧履歴を消去</li>
+  </ul>
+</p>
+<p>%1$s は Mozilla が開発しています。私たちのミッションは健全で開かれたインターネットを発展させることです。<br/>
+<a href="%2$s">詳しくはこちら</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">プライバシーとセキュリティ</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">トラッキング、Cookie、データの選択</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">既定、自動補完を設定</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">%1$s について、ヘルプ</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">トラッキング防止</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">ウェブコンテンツ</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">アプリを切り替え</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">一般</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">既定のブラウザー、タブ、言語</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">データの収集と使用</string>
+
+    <string name="preference_category_search">検索</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">検索候補を取得</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s はあなたがアドレスバーに入力した語句を検索エンジンへ送信します</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">既定</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">検索エンジン</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">オン</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">オフ</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL 自動補完</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">よく見るサイト</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">アドレスバーで 450 以上の人気サイトの URL の自動補完を有効にします。</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">追加したサイト</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">アドレスバーで 450 以上の人気サイトの URL の自動補完を有効にします。</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">サイトの管理</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">サイトの管理</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ カスタム URL を追加</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">カスタム URL を追加</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">カスタム URL を追加</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">リンクを自動補完に追加</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookie とサイトデータ</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">データの選択</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">カスタム URL を削除</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">詳細情報</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">カスタム自動補完 URL の追加と管理。</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">追加する URL</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">URL を入力するか貼り付けてください</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">例: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">入力例: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">新しいカスタム URL を追加しました。</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">削除</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">削除</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">入力した URL をよく確認してください。</string>
+
+    <string name="preference_language">言語</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">システム標準</string>
+
+    <string name="preference_category_privacy">プライバシー</string>
+    <string name="preference_privacy_block_ads">追跡広告をブロック</string>
+    <string name="preference_privacy_block_ads_summary">一部の広告は、あなたがその広告をクリックしなくても訪れたサイトを追跡します</string>
+    <string name="preference_privacy_block_analytics">アクセス解析をブロック</string>
+    <string name="preference_privacy_block_analytics_summary">タップやスクロールなどの操作統計を収集、解析、計測するために利用されます</string>
+    <string name="preference_privacy_block_social">ソーシャル追跡をブロック</string>
+    <string name="preference_privacy_block_social_summary">ユーザーの訪問を追跡するためサイトに埋め込まれ、共有ボタンのように表示されます</string>
+    <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
+    <string name="preference_privacy_block_content_summary2">有効にすると、ページによっては予期せぬ動作をする原因になります</string>
+    <string name="preference_privacy_category_cookies">Cookie をブロック</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">いいえ</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">サードバーティの追跡 Cookie のみブロック</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">サードパーティ Cookie のみブロック</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">はい</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">アプリのロック解除に指紋を使用</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">アプリ内で URL を開いている場合、指紋を使って %1$s のロックを解除できます。ステルスモードが有効となります。</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">ステルス</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">アプリ切り替え時にウェブページを隠し、スクリーンショット撮影を禁止します。</string>
+
+    <string name="preference_category_security">セキュリティ</string>
+
+    <string name="preference_category_performance">パフォーマンス</string>
+    <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">アイコンや画像が正常に表示されない場合があります</string>
+
+    <string name="preference_performance_block_javascript">JavaScript をブロック</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">ページの読み込みが速くなる可能性がありますが、予期せぬ動作をする可能性もあります</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s を既定のブラウザーに設定</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">使用状況データを送信</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">詳細情報</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla は %1$s を皆さんに提供し改善するために必要な情報だけを収集するよう努めています。</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">プライバシー通知</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">%1$s について</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">選択可能な検索エンジン</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">既定の検索エンジンを復元</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ 別の検索エンジンを追加</string>
+    <string name="preference_search_remove_title">検索エンジンを削除</string>
+    <string name="preference_search_remove">削除</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">ホーム画面にヒントを表示</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">検索エンジンを追加</string>
+
+    <string name="search_add_manually_name_hint">検索エンジン名</string>
+    <string name="search_add_manually_string">使用する検索語</string>
+    <string name="search_add_manually_save">保存</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">入力例: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">新しい検索エンジンが追加されました。</string>
+
+    <string name="search_add_error_empty_name">検索エンジン名を入力</string>
+    <string name="search_add_error_duplicate_name">同名の検索エンジンがすでにインストールされています。</string>
+
+    <string name="search_add_error_empty_search">検索語を入力</string>
+
+    <string name="search_add_error_format">検索語が入力例の書式とマッチしているか確認してください</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">入力内容を消去</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">閉じる</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">閲覧履歴を消去</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">開かれているタブの数: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">安全な接続</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">読み込み中</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">ウェブサイト読み込み完了</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">その他のオプション</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">その他のオプションボタン</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">次のページへ進む</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">ウェブサイトを再読み込み</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">前のページへ戻る</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">サイトの読み込みを中止</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">前のアプリへ戻る</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">ブロックされた追跡数</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">オンライン追跡をブロック</string>
+
+    <string name="your_rights">あなたの権利</string>
+
+    <string name="external_app_prompt_title">リンクを他のアプリで開く</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">%1$s を離れてこのリンクを %2$s で開くことができます。</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">リンクを開けるアプリを探す</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">お使いの端末にはこのリンクを開けるアプリがありません。%1$s を離れて、開けるアプリを %2$s で探すことができます。</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">プライベートブラウジングを終了しますか？</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s 完了</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">開く</string>
 
 
 
@@ -176,91 +468,272 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">プライバシーを強化</string>
-  <string name="firstrun_defaultbrowser_text2">プライベートブラウジングを次のレベルへと進めましょう。サイトを越えてあなたを追跡したり、ページの読み込みを遅くしたりする可能性のある広告その他のコンテンツを自動的にブロック。</string>
-  <string name="firstrun_search_title">好きな方法で検索</string>
-  <string name="firstrun_search_text">何か違ったものを探していますか？ 設定で別の検索エンジンを既定として選んでみましょう。</string>
-  <string name="firstrun_shortcut_title">ホーム画面にショートカットを追加</string>
-  <string name="firstrun_shortcut_text">%1$s でもお気に入りのサイトへ素早く戻れます。%1$s のメニューから「ホーム画面に追加」を選択するだけ。</string>
-  <string name="firstrun_privacy_title">プライバシーを習慣に</string>
-  <string name="firstrun_privacy_text">%1$s を既定のブラウザーに設定して、他のアプリからウェブページを開いたときに、プライベートブラウジングの恩恵を受けましょう。</string>
-  <string name="firstrun_close_button">了解</string>
-  <string name="firstrun_skip_button">スキップ</string>
-  <string name="firstrun_next_button">次へ</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">追加</string>
-  <string name="dialog_addtohomescreen_action_cancel">キャンセル</string>
-  <string name="dialog_addtohomescreen_tracking_protection">ショートカットはトラッキング防止が無効の状態で開かれます</string>
-  <string name="notification_browsing_session_channel_name">プライベートブラウジングセッション</string>
-  <string name="notification_browsing_session_channel_description">%1$s のセッションは通知をワンタップするだけで消去できます。アプリを開いたり、ブラウザー内でどのページが表示されているか確認したりする必要はありません。</string>
-  <string name="tabs_tray_action_erase">閲覧履歴を消去</string>
-  <string name="download_firefox">Firefox をダウンロード</string>
-  <string name="your_rights_content1">%1$s は Mozilla や他の貢献者によって開発されているフリーでオープンソースのソフトウェアです。</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">プライバシーを強化</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">プライベートブラウジングを次のレベルへと進めましょう。サイトを越えてあなたを追跡したり、ページの読み込みを遅くしたりする可能性のある広告その他のコンテンツを自動的にブロック。</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">好きな方法で検索</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">何か違ったものを探していますか？ 設定で別の検索エンジンを既定として選んでみましょう。</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">ホーム画面にショートカットを追加</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">%1$s でもお気に入りのサイトへ素早く戻れます。%1$s のメニューから「ホーム画面に追加」を選択するだけ。</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">プライバシーを習慣に</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">%1$s を既定のブラウザーに設定して、他のアプリからウェブページを開いたときに、プライベートブラウジングの恩恵を受けましょう。</string>
+
+    <string name="firstrun_close_button">了解</string>
+    <string name="firstrun_skip_button">スキップ</string>
+    <string name="firstrun_next_button">次へ</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">追加</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">キャンセル</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">ショートカットはトラッキング防止が無効の状態で開かれます</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">プライベートブラウジングセッション</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">%1$s のセッションは通知をワンタップするだけで消去できます。アプリを開いたり、ブラウザー内でどのページが表示されているか確認したりする必要はありません。</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">閲覧履歴を消去</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Firefox をダウンロード</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s は Mozilla や他の貢献者によって開発されているフリーでオープンソースのソフトウェアです。]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">ユーザー名</string>
-  <string name="gv_prompt_password_hint">パスワード</string>
-  <string name="gv_prompt_clear">消去</string>
-  <string name="security_popup_secure_connection">安全な接続</string>
-  <string name="security_popup_insecure_connection">安全でない接続</string>
-  <string name="security_popup_security_verified">認証局: %1$s</string>
-  <string name="site_security_icon_content_description">サイトセキュリティ</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL は既に存在します</string>
-  <string name="find_in_page">ページ内検索</string>
-  <string name="find_in_page_input">ページ内検索</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%2$d 件中 %1$d 件目</string>
-  <string name="accessibility_next_result">次の結果を検索</string>
-  <string name="accessibility_previous_result">前の結果を検索</string>
-  <string name="accessibility_dismiss_find_in_page">ページ内検索を閉じる</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s は <a href="%2$s">Mozilla Public License</a> およびその他オープンソースライセンスの条件に基づいて使用することができます。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[ユーザーには、Mozilla、Firefox、%1$s の名称やロゴを含む Mozilla Foundation または第三者の商標に関するいかなる権利やライセンスも付与されていません。詳しい情報は <a href="%2$s">Mozilla 商標ポリシー</a> をご覧ください。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$s の追加のソースコードは様々な他のフリーでオープンソースの <a href="%2$s">ライセンス</a> に基づいて公開されています。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s は Disconnect, Inc. によって提供されているブロックリストも <a href="%2$s">GNU General Public License v3</a> の下で単独のリソースとして使用しており、それらは <a href="%3$s">こちら</a> から入手可能です。]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">ユーザー名</string>
+    <string name="gv_prompt_password_hint">パスワード</string>
+    <string name="gv_prompt_clear">消去</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">安全な接続</string>
+    <string name="security_popup_insecure_connection">安全でない接続</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">認証局: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">サイトセキュリティ</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL は既に存在します</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">ページ内検索</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">ページ内検索</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%2$d 件中 %1$d 件目</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">次の結果を検索</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">前の結果を検索</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">ページ内検索を閉じる</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">デスクトップ版を見る</string>
-  <string name="custom_tab_copy_url_action">URL をコピーしました</string>
-  <string name="preference_advanced_summary">開発者ツール</string>
-  <string name="preference_category_advanced">詳細</string>
-  <string name="preference_remote_debugging">USB/Wi-Fi を通じたリモートデバッグ</string>
-  <string name="biometric_auth_title">%1$s のロックを解除</string>
-  <string name="biometric_auth_description">続けるには指紋センサーにタッチしてください。</string>
-  <string name="biometric_auth_new_session">新規セッション</string>
-  <string name="biometric_auth_image_description">指紋アイコン</string>
-  <string name="biometric_auth_not_recognized_error">指紋を認識できませんでした。もう一度試してください。</string>
-  <string name="biometric_auth_moved_too_quickly">指の動きが素早すぎます。もう一度試してください。</string>
-  <string name="enable_search_suggestion_title">検索語句の候補を表示しますか？</string>
-  <string name="enable_search_suggestion_subtitle">検索候補を取得する場合、%1$s はあなたがアドレスバーに入力した語句を選択された検索エンジンへ送信する必要があります。%2$s。</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">詳しくはこちら</string>
-  <string name="enable_search_suggestions_no">いいえ</string>
-  <string name="enable_search_suggestions_yes">はい</string>
-  <string name="no_suggestions_message">一部の検索エンジンは候補表示に対応していません。</string>
-  <string name="dismiss_no_suggestions_prompt_button">閉じる</string>
-  <string name="tip_disable_tracking_protection">サイトが予期せぬ挙動をしますか？\n トラッキング防止機能を無効化してみてください</string>
-  <string name="tip_add_to_homescreen">よく使うサイトへワンタップでアクセスするには%1$s メニュー &gt; ホーム画面に追加</string>
-  <string name="tip_set_default_browser">すべてのリンクを %1$s で開くには\n %1$s を既定のブラウザーに設定してください</string>
-  <string name="tip_autocomplete_url">よく使うサイトで URL を自動補完するには\n アドレスバー内で URL を長押しします</string>
-  <string name="tip_open_in_new_tab">リンクを新しいタブで開くには\n ページ上でリンクを長押しします</string>
-  <string name="tip_request_desktop">完全なデスクトップ向けサイトを見たいですか？%1$s メニュー &gt; デスクトップ版を見る</string>
-  <string name="tip_disable_tips2">スタート画面上のヒント表示をオフにする</string>
-  <string name="tip_explain_allowlist">信頼できるサイト？\n許可リストは、よく知っている信頼できるサイトのトラッキング防止を無効にします。</string>
-  <string name="new_tab_opened_snackbar">新しいタブを開きました</string>
-  <string name="open_new_tab_snackbar">切り替え</string>
-  <string name="preference_open_new_tab">新しいタブ内のリンクへすぐに切り替えます</string>
-  <string name="preference_category_safe_browsing">セーフブラウジング</string>
-  <string name="preference_safe_browsing_title">潜在的に危険な詐欺サイトをブロック</string>
-  <string name="preference_safe_browsing_summary">報告された詐欺サイトや攻撃サイト、マルウェアサイト、不要なソフトウェアをインストールさせようとするサイトをブロックします。</string>
-  <string name="preference_exceptions">例外</string>
-  <string name="preference_exceptions_description">これらのサイトではコンテンツブロッキングを無効にします。</string>
-  <string name="preference_exceptions_menu_remove">削除</string>
-  <string name="preference_exceptions_remove_all_button_label">すべてのウェブサイトを削除</string>
-  <string name="tab_crash_report_title">タブがクラッシュしました</string>
-  <string name="tab_crash_report_headline">申し訳ありません。このタブに問題があります。</string>
-  <string name="tab_crash_report_description">プライベートブラウザーとして、このタブは一切保存されず、復元もできません。</string>
-  <string name="tab_crash_report_close_tab_button_label">タブを閉じる</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">デスクトップ版を見る</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">デスクトップサイト</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL をコピーしました</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">開発者ツール</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">詳細</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">USB/Wi-Fi を通じたリモートデバッグ</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">%1$s のロックを解除</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">続けるには指紋センサーにタッチしてください。</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">新規セッション</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">リンクを新しいセッションで開く</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">指紋アイコン</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">指紋を認識できませんでした。もう一度試してください。</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">指の動きが素早すぎます。もう一度試してください。</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">検索語句の候補を表示しますか？</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">検索候補を取得する場合、%1$s はあなたがアドレスバーに入力した語句を選択された検索エンジンへ送信する必要があります。%2$s。</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">詳しくはこちら</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">いいえ</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">はい</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">一部の検索エンジンは候補表示に対応していません。</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">閉じる</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">サイトが予期せぬ挙動をしますか？\n トラッキング防止機能を無効化してみてください</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[よく使うサイトへワンタップでアクセスするには%1$s メニュー > ホーム画面に追加]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">すべてのリンクを %1$s で開くには\n %1$s を既定のブラウザーに設定してください</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">よく使うサイトで URL を自動補完するには\n アドレスバー内で URL を長押しします</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">リンクを新しいタブで開くには\n ページ上でリンクを長押しします</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[完全なデスクトップ向けサイトを見たいですか？%1$s メニュー > デスクトップ版を見る]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">スタート画面上のヒント表示をオフにする</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">信頼できるサイト？\n許可リストは、よく知っている信頼できるサイトのトラッキング防止を無効にします。</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">新しいタブを開きました</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">切り替え</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">新しいタブ内のリンクへすぐに切り替えます</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">セーフブラウジング</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">潜在的に危険な詐欺サイトをブロック</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">報告された詐欺サイトや攻撃サイト、マルウェアサイト、不要なソフトウェアをインストールさせようとするサイトをブロックします。</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">例外</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">これらのサイトではコンテンツブロッキングを無効にします。</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">削除</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">すべてのウェブサイトを削除</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">タブがクラッシュしました</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">申し訳ありません。このタブに問題があります。</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">プライベートブラウザーとして、このタブは一切保存されず、復元もできません。</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">タブを閉じる</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">クラッシュレポートを Mozilla へ送信する</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">クラッシュレポートを Mozilla へ送信する</string>
 </resources>

@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Votre historique de navigation a été effacé.</string>
 
+    <string name="feedback_erase2">Historique de navigation effacé</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">L’historique de navigation de l’onglet a été effacé.</string>
 
@@ -595,6 +597,9 @@
 
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Voir version ordinateur</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Version ordinateur</string>
 
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">Adresse web copiée</string>

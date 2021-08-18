@@ -1,127 +1,368 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">రద్దుచేయి</string>
-  <string name="action_ok">సరే</string>
-  <string name="action_save">భద్రపరుచు</string>
-  <string name="urlbar_hint">వెతకండి లేదా చిరునామాను ఇవ్వండి</string>
-  <string name="teaser">నిరంతర అంతరంగిక విహారణ. విహరించండి. తుడిచివేయండి. మళ్ళీ మళ్ళీ.</string>
-  <string name="feedback_erase">మీ విహారణ చరిత్ర తుడిచివెయ్యబడింది.</string>
-  <string name="search_hint">%1$s కొరకు వెతకండి</string>
-  <string name="menu_share">పంచుకోండి…</string>
-  <string name="menu_report_site_issue">సైటు సమస్యను నివేదించండి</string>
-  <string name="menu_open_with_default_browser2">%1$s లో తెరువు</string>
-  <string name="menu_open_with_a_browser2">తెరచు చోటు…</string>
-  <string name="menu_add_to_home_screen">ముంగిలి తెరకు చేర్చు</string>
-  <string name="menu_whats_new">కొత్తది ఏమిటి</string>
-  <string name="menu_settings">అమరికలు</string>
-  <string name="menu_about">గురించి</string>
-  <string name="menu_help">సహాయం</string>
-  <string name="menu_rights">మీ హక్కులు</string>
-  <string name="menu_trackers_blocked_title">నిరోధించిన ట్రాకర్లు</string>
-  <string name="menu_content_blocking">విషయ నిరోధం</string>
-  <string name="menu_custom_tab_branding">వీరిచే %1$s</string>
-  <string name="share_dialog_title">దీనిద్వారా పంచుకోండి</string>
-  <string name="notification_erase_text">విహరణ చరిత్రను తుడిచివేయి</string>
-  <string name="notification_action_open">తెరువు</string>
-  <string name="notification_action_erase_and_open">తుడిచివేసి తెరువు</string>
-  <string name="shortcut_erase_short_label">తుడిచివేయి</string>
-  <string name="shortcut_erase_long_label">విహరణ చరిత్రను తుడిచివేయి</string>
-  <string name="text_selection_search_action">అంతరంగికంగా వెతుకు</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">అంతరంగికత &amp; భద్రత</string>
-  <string name="preference_privacy_and_security_summary">ట్రాకింగ్, కుక్కీలు, డేటా ఎంపికలు</string>
-  <string name="preference_mozilla_summary">%1$s గురించి, సహాయం</string>
-  <string name="preference_category_tracking_protection">ట్రాకింగ్ సంరక్షణ</string>
-  <string name="preference_category_web_content">వెబ్ కంటెంట్</string>
-  <string name="preference_category_switching_apps">అనువర్తనాలు మార్చడం</string>
-  <string name="preference_category_general">సాధారణం</string>
-  <string name="preference_category_data_collection_use">డేటా సేకరణ మరియు ఉపయోగం</string>
-  <string name="preference_category_search">వెతుకు</string>
-  <string name="preference_search_engine_default">అప్రమేయం</string>
-  <string name="preference_state_on">చేతనం</string>
-  <string name="preference_state_off">అచేతనం</string>
-  <string name="preference_subitem_autocomplete">URL స్వయంపూర్తి</string>
-  <string name="preference_switch_autocomplete_topsites">మేటి సైట్లకు</string>
-  <string name="preference_switch_autocomplete_user_list">మీరు జోడించిన సైట్లకు</string>
-  <string name="preference_category_autocomplete_manage_sites">సైట్ల నిర్వహణ</string>
-  <string name="preference_autocomplete_subitem_manage_sites">సైట్లను నిర్వహించండి</string>
-  <string name="preference_autocomplete_action_add">+ఇష్టానుసారమైన URLను జోడించండి</string>
-  <string name="preference_autocomplete_title_add">ఇష్టానుసారమైన URLను జోడించండి</string>
-  <string name="custom_autocomplete_quick_add">ఇష్టానుసారమైన URLను జోడించండి</string>
-  <string name="preference_category_cookies">కుకీలు మరియు సైటు డేటా</string>
-  <string name="preference_category_data_choices">దత్తాంశం ఎంపికలు</string>
-  <string name="preference_autocomplete_title_remove">ఇష్టానుసారమైన URLs ను నిర్మూలించండి</string>
-  <string name="preference_autocomplete_learn_more">ఇంకా తెలుసుకోండి</string>
-  <string name="preference_autocomplete_add_title">జోడించుటకు URL</string>
-  <string name="preference_autocomplete_add_hint">URL అతికించండి లేదా ఇవ్వండి</string>
-  <string name="preference_autocomplete_add_example2">ఉదాహరణ: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">ఉదాహరణ: example.com</string>
-  <string name="preference_autocomplete_menu_remove">తీసివేయి</string>
-  <string name="preference_autocomplete_action_remove_content_description">తీసివేయి</string>
-  <string name="preference_autocomplete_add_error">మీరు ఇచ్చిన చిరునామాను మరోసారి సరిచూడండి.</string>
-  <string name="preference_language">భాష</string>
-  <string name="preference_language_systemdefault">వ్యవస్థ అప్రమేయం</string>
-  <string name="preference_category_privacy">అంతరంగికత</string>
-  <string name="preference_privacy_block_ads">యాడ్ ట్రాకర్లను నిరోధించు</string>
-  <string name="preference_privacy_block_analytics">వైశ్లేషిక ట్రాకర్లను నిరోధించు</string>
-  <string name="preference_privacy_block_social">సామాజిక ట్రాకర్లను నిరోధించు</string>
-  <string name="preference_privacy_block_content">ఇతర ట్రాకర్లను నిరోధించు</string>
-  <string name="preference_privacy_category_cookies">కుకీలను నిరోధించాలా</string>
-  <string name="preference_privacy_should_block_cookies_no_option">వద్దు</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">3-వ పక్షం కుకీలను మాత్రమే నిరోధించు</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">అవును</string>
-  <string name="preference_privacy_secure_mode">గోప్యత</string>
-  <string name="preference_privacy_stealth_summary">యాప్స్ మధ్య మారేప్పుడు జాలపేజీలు కనబడకుండా దాచిపెట్టు, తెరపట్టు తీసుకోవడం నిరోధించు.</string>
-  <string name="preference_category_security">భద్రత</string>
-  <string name="preference_category_performance">పనితనం</string>
-  <string name="preference_performance_block_webfonts">జాల ఖతులను (వెబ్ ఫాంట్లను) నిరోధించు</string>
-  <string name="preference_performance_block_webfonts_summary">దీనివల్ల ప్రతీకాలు లేదా బొమ్మలు కనబడకపోవచ్చు</string>
-  <string name="preference_performance_block_javascript">జావాస్క్రిప్టును నిరోధించు</string>
-  <string name="preference_default_browser2">%1$s‌ను అప్రమేయ విహారిణి చేయి</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">వాడుక దత్తాంశాన్ని పంపించు</string>
-  <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
-  <string name="preference_privacy_notice">గోప్యతా విధానం</string>
-  <string name="preference_about">%1$s గురించి</string>
-  <string name="preference_search_installed_search_engines">స్థాపిత శోధన యంత్రాలు</string>
-  <string name="preference_search_restore">అప్రమేయ శోధన యంత్రాలను పునరుద్ధరించు</string>
-  <string name="preference_search_add2">+ మరొక సెర్చింజనును చేర్చు</string>
-  <string name="preference_search_remove_title">శోధన యంత్రమును తొలగించు</string>
-  <string name="preference_search_remove">తీసివేయి</string>
-  <string name="action_option_add_search_engine">శోధన యంత్రాన్ని చేర్చు</string>
-  <string name="search_add_manually_name_hint">సెర్చింజను పేరు</string>
-  <string name="search_add_manually_string">ఉపయోగించడానికి శోధన వాక్యము</string>
-  <string name="search_add_manually_save">భద్రపరచు</string>
-  <string name="search_add_manually_example">ఉదాహరణ: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">క్రొత్త శోధనాయంత్రం చేర్చబడినది.</string>
-  <string name="search_add_error_empty_name">శోధన యంత్రం పేరును నమోదు చెయ్యండి</string>
-  <string name="search_add_error_duplicate_name">ఒక్త నిక్షిప్తం చేయబడిన శోధన యంత్రం అదే పేరుతో ఉంది.</string>
-  <string name="search_add_error_empty_search">శోధన వాక్యమును నమోదు చేయండి</string>
-  <string name="search_add_error_format">శోధన వాక్యము ఉదాహరణ ఆకృతిలో ఉందో లేదో చూడండి</string>
-  <string name="content_description_clear_input">ఇన్‌పుట్‌ను తుడిచివేయి</string>
-  <string name="content_description_dismiss_input">విస్మరించు</string>
-  <string name="content_description_erase">విహరణ చరిత్రను తుడిచేయి</string>
-  <string name="content_description_tab_counter">తెరిచివున్న ట్యాబులు: %1$s</string>
-  <string name="content_description_lock">సురక్షిత అనుసంధానం</string>
-  <string name="accessibility_announcement_loading">వస్తోంది</string>
-  <string name="accessibility_announcement_loading_finished">వెబ్‌సైటు లోడయింది</string>
-  <string name="content_description_menu">మరిన్ని ఎంపికలు</string>
-  <string name="indicator_content_description_menu">మరిన్ని ఎంపికల బొత్తం</string>
-  <string name="content_description_forward">ముందుకు వెళ్ళు</string>
-  <string name="content_description_reload">వెబ్‌సైటుని మళ్ళీ లోడుచేయి</string>
-  <string name="content_description_back">వెనక్కి వెళ్ళు</string>
-  <string name="content_description_stop">వెబ్‌సైటు లోడుచేయడం ఆపివేయి</string>
-  <string name="content_description_customtab_exit">మునుపటి అనువర్తనానికి తిరిగి వెళ్ళు</string>
-  <string name="content_description_trackers_blocked">నిరోధించిన ట్రాకర్ల సంఖ్య</string>
-  <string name="content_description_blocking_switch">ట్రాకర్లను నిరోధించండి</string>
-  <string name="your_rights">మీ హక్కులు</string>
-  <string name="external_app_prompt_title">ఈ లంకెని మరొక అనువర్తనంలో తెరువు</string>
-  <string name="external_app_prompt">%2$sని తెరువుటకు %1$sని వదలవచ్చును.</string>
-  <string name="external_app_prompt_no_app_title">లింక్ను తెరవగల అనువర్తనాన్ని కనుగొనండి</string>
-  <string name="external_app_prompt_no_app">మీ పరికరంలోని అనువర్తనాల్లో ఏదీ ఈ లింక్ను తెరవలేకపోతుంది. మీరు చేయగల అనువర్తనం కోసం %2$sను శోధించడానికి %1$sను వదిలివేయవచ్చు.</string>
-  <string name="external_multiple_apps_matched_exit">అంతరంగిక విహరణను చాలించాలా?</string>
-  <string name="download_snackbar_finished">%1$s పూర్తయింది</string>
-  <string name="download_snackbar_open">తెరువు</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">రద్దుచేయి</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">సరే</string>
+
+    <string name="action_save">భద్రపరుచు</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">వెతకండి లేదా చిరునామాను ఇవ్వండి</string>
+
+    <string name="teaser">నిరంతర అంతరంగిక విహారణ. విహరించండి. తుడిచివేయండి. మళ్ళీ మళ్ళీ.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">మీ విహారణ చరిత్ర తుడిచివెయ్యబడింది.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">%1$s కొరకు వెతకండి</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">పంచుకోండి…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">సైటు సమస్యను నివేదించండి</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">%1$s లో తెరువు</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">తెరచు చోటు…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">ముంగిలి తెరకు చేర్చు</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">కొత్తది ఏమిటి</string>
+    <string name="menu_settings">అమరికలు</string>
+    <string name="menu_about">గురించి</string>
+    <string name="menu_help">సహాయం</string>
+    <string name="menu_rights">మీ హక్కులు</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">నిరోధించిన ట్రాకర్లు</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">విషయ నిరోధం</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">వీరిచే %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">దీనిద్వారా పంచుకోండి</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">విహరణ చరిత్రను తుడిచివేయి</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">తెరువు</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">తుడిచివేసి తెరువు</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">తుడిచివేయి</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">విహరణ చరిత్రను తుడిచివేయి</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">అంతరంగికంగా వెతుకు</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">అంతరంగికత &amp; భద్రత</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">ట్రాకింగ్, కుక్కీలు, డేటా ఎంపికలు</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">%1$s గురించి, సహాయం</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">ట్రాకింగ్ సంరక్షణ</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">వెబ్ కంటెంట్</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">అనువర్తనాలు మార్చడం</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">సాధారణం</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">అప్రమేయ విహారిణి, ట్యాబులు, భాష</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">డేటా సేకరణ మరియు ఉపయోగం</string>
+
+    <string name="preference_category_search">వెతుకు</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">వెతుకుడు సలహాలను చూపించు</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">అప్రమేయం</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">చేతనం</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">అచేతనం</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL స్వయంపూర్తి</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">మేటి సైట్లకు</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">మీరు జోడించిన సైట్లకు</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">సైట్ల నిర్వహణ</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">సైట్లను నిర్వహించండి</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ఇష్టానుసారమైన URLను జోడించండి</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">ఇష్టానుసారమైన URLను జోడించండి</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">ఇష్టానుసారమైన URLను జోడించండి</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">కుకీలు మరియు సైటు డేటా</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">దత్తాంశం ఎంపికలు</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">ఇష్టానుసారమైన URLs ను నిర్మూలించండి</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">ఇంకా తెలుసుకోండి</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">జోడించుటకు URL</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">URL అతికించండి లేదా ఇవ్వండి</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">ఉదాహరణ: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">ఉదాహరణ: example.com</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">తీసివేయి</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">తీసివేయి</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">మీరు ఇచ్చిన చిరునామాను మరోసారి సరిచూడండి.</string>
+
+    <string name="preference_language">భాష</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">వ్యవస్థ అప్రమేయం</string>
+
+    <string name="preference_category_privacy">అంతరంగికత</string>
+    <string name="preference_privacy_block_ads">యాడ్ ట్రాకర్లను నిరోధించు</string>
+    <string name="preference_privacy_block_analytics">వైశ్లేషిక ట్రాకర్లను నిరోధించు</string>
+    <string name="preference_privacy_block_social">సామాజిక ట్రాకర్లను నిరోధించు</string>
+    <string name="preference_privacy_block_content">ఇతర ట్రాకర్లను నిరోధించు</string>
+    <string name="preference_privacy_category_cookies">కుకీలను నిరోధించాలా</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">వద్దు</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">3-వ పక్షం కుకీలను మాత్రమే నిరోధించు</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">అవును</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">గోప్యత</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">యాప్స్ మధ్య మారేప్పుడు జాలపేజీలు కనబడకుండా దాచిపెట్టు, తెరపట్టు తీసుకోవడం నిరోధించు.</string>
+
+    <string name="preference_category_security">భద్రత</string>
+
+    <string name="preference_category_performance">పనితనం</string>
+    <string name="preference_performance_block_webfonts">జాల ఖతులను (వెబ్ ఫాంట్లను) నిరోధించు</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">దీనివల్ల ప్రతీకాలు లేదా బొమ్మలు కనబడకపోవచ్చు</string>
+
+    <string name="preference_performance_block_javascript">జావాస్క్రిప్టును నిరోధించు</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s‌ను అప్రమేయ విహారిణి చేయి</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">వాడుక దత్తాంశాన్ని పంపించు</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">గోప్యతా విధానం</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">%1$s గురించి</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">స్థాపిత శోధన యంత్రాలు</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">అప్రమేయ శోధన యంత్రాలను పునరుద్ధరించు</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ మరొక సెర్చింజనును చేర్చు</string>
+    <string name="preference_search_remove_title">శోధన యంత్రమును తొలగించు</string>
+    <string name="preference_search_remove">తీసివేయి</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">ముంగిలి తెర చిట్కాలను చూపించు</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">శోధన యంత్రాన్ని చేర్చు</string>
+
+    <string name="search_add_manually_name_hint">సెర్చింజను పేరు</string>
+    <string name="search_add_manually_string">ఉపయోగించడానికి శోధన వాక్యము</string>
+    <string name="search_add_manually_save">భద్రపరచు</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">ఉదాహరణ: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">క్రొత్త శోధనాయంత్రం చేర్చబడినది.</string>
+
+    <string name="search_add_error_empty_name">శోధన యంత్రం పేరును నమోదు చెయ్యండి</string>
+    <string name="search_add_error_duplicate_name">ఒక్త నిక్షిప్తం చేయబడిన శోధన యంత్రం అదే పేరుతో ఉంది.</string>
+
+    <string name="search_add_error_empty_search">శోధన వాక్యమును నమోదు చేయండి</string>
+
+    <string name="search_add_error_format">శోధన వాక్యము ఉదాహరణ ఆకృతిలో ఉందో లేదో చూడండి</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">ఇన్‌పుట్‌ను తుడిచివేయి</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">విస్మరించు</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">విహరణ చరిత్రను తుడిచేయి</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">తెరిచివున్న ట్యాబులు: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">సురక్షిత అనుసంధానం</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">వస్తోంది</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">వెబ్‌సైటు లోడయింది</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">మరిన్ని ఎంపికలు</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">మరిన్ని ఎంపికల బొత్తం</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">ముందుకు వెళ్ళు</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">వెబ్‌సైటుని మళ్ళీ లోడుచేయి</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">వెనక్కి వెళ్ళు</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">వెబ్‌సైటు లోడుచేయడం ఆపివేయి</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">మునుపటి అనువర్తనానికి తిరిగి వెళ్ళు</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">నిరోధించిన ట్రాకర్ల సంఖ్య</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">ట్రాకర్లను నిరోధించండి</string>
+
+    <string name="your_rights">మీ హక్కులు</string>
+
+    <string name="external_app_prompt_title">ఈ లంకెని మరొక అనువర్తనంలో తెరువు</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">%2$sని తెరువుటకు %1$sని వదలవచ్చును.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">లింక్ను తెరవగల అనువర్తనాన్ని కనుగొనండి</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">మీ పరికరంలోని అనువర్తనాల్లో ఏదీ ఈ లింక్ను తెరవలేకపోతుంది. మీరు చేయగల అనువర్తనం కోసం %2$sను శోధించడానికి %1$sను వదిలివేయవచ్చు.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">అంతరంగిక విహరణను చాలించాలా?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s పూర్తయింది</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">తెరువు</string>
 
 
 
@@ -150,54 +391,166 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
-  <string name="firstrun_search_title">మీ శోధన, మీ మార్గం</string>
-  <string name="firstrun_search_text">విభిన్నమైన వాటి కోసం శోధిస్తున్నారా? అమరికాలలో మరొక అప్రమేయ శోధన యంత్రంను ఎంచుకోండి.</string>
-  <string name="firstrun_shortcut_title">మీ ముంగిలి తెరలో సత్వరమార్గాలను జోడించండి</string>
-  <string name="firstrun_privacy_title">ఆంతరంగికతను అలవాటు చేసుకోండి</string>
-  <string name="firstrun_close_button">సరే, అర్థమయ్యింది!</string>
-  <string name="firstrun_skip_button">దాటు</string>
-  <string name="firstrun_next_button">తరువాత</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">చేర్చు</string>
-  <string name="dialog_addtohomescreen_action_cancel">రద్దుచేయి</string>
-  <string name="dialog_addtohomescreen_tracking_protection">సత్వరమార్గం ట్రాకింగ్ రక్షణ అచేతనపరిచి తెరవబడుతుంది</string>
-  <string name="notification_browsing_session_channel_name">అంతరంగిక విహరణ సెషను</string>
-  <string name="tabs_tray_action_erase">విహరణ చరిత్రను తుడిచివేయి</string>
-  <string name="download_firefox">Firefoxను దింపుకోండి</string>
-  <string name="gv_prompt_username_hint">వాడుకరి పేరు</string>
-  <string name="gv_prompt_password_hint">సంకేతపదం</string>
-  <string name="gv_prompt_clear">తుడిచివేయి</string>
-  <string name="security_popup_secure_connection">సురక్షిత అనుసంధానం</string>
-  <string name="security_popup_insecure_connection">అరక్షిత అనుసంధానం</string>
-  <string name="security_popup_security_verified">దీనిచేత నిర్ధారించబడింది: %1$s</string>
-  <string name="site_security_icon_content_description">సైటు భద్రత</string>
-  <string name="preference_autocomplete_duplicate_url_error">చిరునామా ఇప్పటికే ఉంది</string>
-  <string name="find_in_page">పేజీలో వెతకండి</string>
-  <string name="find_in_page_input">పేజీలో వెతకండి</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_next_result">తదుపరి ఫలితాన్ని కనుగొనండి</string>
-  <string name="accessibility_previous_result">మునుపటి ఫలితాన్ని కనుగొనండి</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">మీ శోధన, మీ మార్గం</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">విభిన్నమైన వాటి కోసం శోధిస్తున్నారా? అమరికాలలో మరొక అప్రమేయ శోధన యంత్రంను ఎంచుకోండి.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">మీ ముంగిలి తెరలో సత్వరమార్గాలను జోడించండి</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">ఆంతరంగికతను అలవాటు చేసుకోండి</string>
+
+    <string name="firstrun_close_button">సరే, అర్థమయ్యింది!</string>
+    <string name="firstrun_skip_button">దాటు</string>
+    <string name="firstrun_next_button">తరువాత</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">చేర్చు</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">రద్దుచేయి</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">సత్వరమార్గం ట్రాకింగ్ రక్షణ అచేతనపరిచి తెరవబడుతుంది</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">అంతరంగిక విహరణ సెషను</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">విహరణ చరిత్రను తుడిచివేయి</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Firefoxను దింపుకోండి</string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">వాడుకరి పేరు</string>
+    <string name="gv_prompt_password_hint">సంకేతపదం</string>
+    <string name="gv_prompt_clear">తుడిచివేయి</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">సురక్షిత అనుసంధానం</string>
+    <string name="security_popup_insecure_connection">అరక్షిత అనుసంధానం</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">దీనిచేత నిర్ధారించబడింది: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">సైటు భద్రత</string>
+    <string name="preference_autocomplete_duplicate_url_error">చిరునామా ఇప్పటికే ఉంది</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">పేజీలో వెతకండి</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">పేజీలో వెతకండి</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">మొత్తం %2$dలో %1$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">తదుపరి ఫలితాన్ని కనుగొనండి</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">మునుపటి ఫలితాన్ని కనుగొనండి</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">డెస్క్‌టాప్ సైటును అభ్యర్థించు</string>
-  <string name="custom_tab_copy_url_action">URL కాపీ అయ్యింది</string>
-  <string name="preference_advanced_summary">డెవలపర్ల పనిముట్లు</string>
-  <string name="preference_category_advanced">ఉన్నతం</string>
-  <string name="biometric_auth_new_session">కొత్త సెషన్</string>
-  <string name="biometric_auth_image_description">వేలిముద్ర చిహ్నం</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">ఇంకా తెలుసుకోండి</string>
-  <string name="enable_search_suggestions_no">వద్దు</string>
-  <string name="enable_search_suggestions_yes">అవును</string>
-  <string name="no_suggestions_message">కొన్ని సెర్చింజన్లు సలహాలను చూపించలేవు</string>
-  <string name="dismiss_no_suggestions_prompt_button">మూసివేయి</string>
-  <string name="open_new_tab_snackbar">మారు</string>
-  <string name="preference_category_safe_browsing">సురక్షిత విహరణ</string>
-  <string name="preference_exceptions">మినహాయింపులు</string>
-  <string name="preference_exceptions_menu_remove">తొలగించు</string>
-  <string name="preference_exceptions_remove_all_button_label">అన్ని వెబ్‌సైట్లను తీసివేయి</string>
-  <string name="tab_crash_report_headline">క్షమించండి. ఈ ట్యాబులో ఏదో సమస్య ఉంది.</string>
-  <string name="tab_crash_report_close_tab_button_label">ట్యాబును మూసివేయి</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">డెస్క్‌టాప్ సైటును అభ్యర్థించు</string>
 
-</resources>
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL కాపీ అయ్యింది</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">డెవలపర్ల పనిముట్లు</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">ఉన్నతం</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">USB/Wi-Fi ద్వారా రిమోట్ డీబగ్గింగ్</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">%1$s‌కు తాళంతీయండి</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">కొనసాగించడానికి వేలిముద్ర సెన్సారును తాకండి.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">కొత్త సెషన్</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">వేలిముద్ర చిహ్నం</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">వేలిముద్ర గుర్తించబడలేదు. మళ్ళీ ప్రయత్నించండి.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">వేలు చాలా వేగంగా కదిలింది. మళ్ళీ ప్రయత్నించండి.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">వెతుకుడు సలహాలను చేతనం చెయ్యమంటారా?</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">ఇంకా తెలుసుకోండి</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">వద్దు</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">అవును</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">కొన్ని సెర్చింజన్లు సలహాలను చూపించలేవు</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">మూసివేయి</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">కొత్త ట్యాబు తెరుచుకుంది</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">మారు</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">సురక్షిత విహరణ</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">మినహాయింపులు</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">తొలగించు</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">అన్ని వెబ్‌సైట్లను తీసివేయి</string>
+
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">క్షమించండి. ఈ ట్యాబులో ఏదో సమస్య ఉంది.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">ట్యాబును మూసివేయి</string>
+
+    </resources>

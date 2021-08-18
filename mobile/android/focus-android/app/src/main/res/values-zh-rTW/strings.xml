@@ -1,152 +1,444 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">取消</string>
-  <string name="action_ok">確定</string>
-  <string name="action_save">儲存</string>
-  <string name="urlbar_hint">進行搜尋或輸入網址</string>
-  <string name="teaser">無痕瀏覽，不留足跡。</string>
-  <string name="feedback_erase">已清除您的瀏覽紀錄。</string>
-  <string name="feedback_erase_custom_tab">已清除分頁瀏覽紀錄。</string>
-  <string name="search_hint">搜尋 %1$s</string>
-  <string name="menu_share">分享…</string>
-  <string name="menu_report_site_issue">回報網站問題</string>
-  <string name="menu_open_with_default_browser2">使用 %1$s 開啟</string>
-  <string name="menu_open_with_a_browser2">開啟於…</string>
-  <string name="menu_add_to_home_screen">新增至裝置主畫面</string>
-  <string name="menu_whats_new">有什麼新鮮事</string>
-  <string name="menu_settings">選項</string>
-  <string name="menu_about">關於</string>
-  <string name="menu_help">說明</string>
-  <string name="menu_rights">您的權利</string>
-  <string name="menu_trackers_blocked_title">追蹤器封鎖數量</string>
-  <string name="menu_trackers_blocked_subtitle">關閉此功能可能可以解決一些網站的問題</string>
-  <string name="menu_content_blocking">內容封鎖</string>
-  <string name="menu_content_blocking_subtitle">關閉此功能來解決一些網站問題</string>
-  <string name="menu_custom_tab_branding">由 %1$s 提供</string>
-  <string name="share_dialog_title">透過下列程式分享</string>
-  <string name="notification_erase_text">清除瀏覽紀錄</string>
-  <string name="notification_action_open">開啟</string>
-  <string name="notification_action_erase_and_open">清除並開啟</string>
-  <string name="shortcut_erase_short_label">清除</string>
-  <string name="shortcut_erase_long_label">清除瀏覽紀錄</string>
-  <string name="shortcut_erase_and_open_short_label">清除並開啟</string>
-  <string name="shortcut_erase_and_open_long_label">清除並開啟 %1$s</string>
-  <string name="text_selection_search_action">隱私搜尋</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">隱私與安全</string>
-  <string name="preference_privacy_and_security_summary">追蹤、Cookie、回報資料</string>
-  <string name="preference_search_summary">設為預設瀏覽器、自動完成</string>
-  <string name="preference_mozilla_summary">關於 %1$s、使用說明</string>
-  <string name="preference_category_tracking_protection">追蹤保護</string>
-  <string name="preference_category_web_content">網站內容</string>
-  <string name="preference_category_switching_apps">切換應用程式</string>
-  <string name="preference_category_general">一般</string>
-  <string name="preference_general_summary">預設瀏覽器、分頁、語言</string>
-  <string name="preference_category_data_collection_use">資料收集與使用</string>
-  <string name="preference_category_search">搜尋</string>
-  <string name="preference_show_search_suggestions">取得搜尋建議</string>
-  <string name="preference_show_search_suggestions_summary">您在網址列打字時，%1$s 就會將您輸入的文字傳送到搜尋引擎</string>
-  <string name="preference_search_engine_default">預設</string>
-  <string name="preference_search_engine_label">搜尋引擎</string>
-  <string name="preference_state_on">開啟</string>
-  <string name="preference_state_off">關閉</string>
-  <string name="preference_subitem_autocomplete">網址自動完成</string>
-  <string name="preference_switch_autocomplete_topsites">針對熱門網站</string>
-  <string name="preference_autocomplete_topsite_summary">在網址列自動完成超過 450 組熱門網址。</string>
-  <string name="preference_switch_autocomplete_user_list">針對您加入的網站</string>
-  <string name="preference_autocomplete_user_list_summary">在網址列自動完成超過 450 組熱門網址。</string>
-  <string name="preference_category_autocomplete_manage_sites">管理網站</string>
-  <string name="preference_autocomplete_subitem_manage_sites">管理網站</string>
-  <string name="preference_autocomplete_action_add">+ 新增自訂網址</string>
-  <string name="preference_autocomplete_title_add">新增自訂網址</string>
-  <string name="custom_autocomplete_quick_add">新增自訂網址</string>
-  <string name="add_custom_autocomplete_label">加入鏈結自動完成</string>
-  <string name="preference_category_cookies">Cookie 與網站資料</string>
-  <string name="preference_category_data_choices">回報資料</string>
-  <string name="preference_autocomplete_title_remove">移除自訂網址</string>
-  <string name="preference_autocomplete_learn_more">了解更多</string>
-  <string name="preference_autocomplete_custom_summary">新增與管理自訂自動完成網址。</string>
-  <string name="preference_autocomplete_add_title">要新增的網址</string>
-  <string name="preference_autocomplete_add_hint">貼上或輸入網址</string>
-  <string name="preference_autocomplete_add_example2">例如: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">舉例: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">已新增自訂網址。</string>
-  <string name="preference_autocomplete_menu_remove">移除</string>
-  <string name="preference_autocomplete_action_remove_content_description">移除</string>
-  <string name="preference_autocomplete_add_error">請檢查您輸入的網址。</string>
-  <string name="preference_language">語言</string>
-  <string name="preference_language_systemdefault">系統預設</string>
-  <string name="preference_category_privacy">隱私權</string>
-  <string name="preference_privacy_block_ads">封鎖廣告型追蹤器</string>
-  <string name="preference_privacy_block_ads_summary">某些廣告就算您不點擊，也會追蹤您造訪的網站</string>
-  <string name="preference_privacy_block_analytics">封鎖分析型追蹤器</string>
-  <string name="preference_privacy_block_analytics_summary">用來收集、分析、測量點擊與滾動等行為</string>
-  <string name="preference_privacy_block_social">封鎖社交追蹤器</string>
-  <string name="preference_privacy_block_social_summary">內嵌於網站，用來追蹤您的造訪紀錄，並提供分享按鈕等功能</string>
-  <string name="preference_privacy_block_content">封鎖其他內容追蹤器</string>
-  <string name="preference_privacy_block_content_summary2">開啟後，可能會造成某些頁面的行為不正常</string>
-  <string name="preference_privacy_category_cookies">封鎖 Cookie</string>
-  <string name="preference_privacy_should_block_cookies_no_option">否</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">僅封鎖第三方追蹤 Cookie</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">僅封鎖第三方 Cookie</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">是</string>
-  <string name="preference_security_biometric">使用指紋解鎖程式</string>
-  <string name="preference_security_biometric_summary">若已在程式中開啟網頁，可使用您的指紋直接解鎖 %1$s。也會開啟隱私模式。</string>
-  <string name="preference_privacy_secure_mode">秘密行動</string>
-  <string name="preference_privacy_stealth_summary">切換程式時，隱藏網頁內容並防止拍攝擷圖。</string>
-  <string name="preference_category_security">安全性</string>
-  <string name="preference_category_performance">效能</string>
-  <string name="preference_performance_block_webfonts">封鎖網路字型</string>
-  <string name="preference_performance_block_webfonts_summary">可能會造成網頁當中的圖示或圖片消失</string>
-  <string name="preference_performance_block_javascript">封鎖 JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">頁面可能會更快載入，但也可能會造成功能不正常</string>
-  <string name="preference_default_browser2">將 %1$s 設為預設瀏覽器</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">傳送使用資料</string>
-  <string name="preference_mozilla_telemetry_summary">了解更多</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla 致力於只收集用來為眾人改善 %1$s 所需的必要資料。</string>
-  <string name="preference_privacy_notice">隱私權公告</string>
-  <string name="preference_about">關於 %1$s</string>
-  <string name="preference_search_installed_search_engines">已安裝的搜尋引擎</string>
-  <string name="preference_search_restore">還原預設搜尋引擎</string>
-  <string name="preference_search_add2">+ 新增其他搜尋引擎</string>
-  <string name="preference_search_remove_title">移除搜尋引擎</string>
-  <string name="preference_search_remove">移除</string>
-  <string name="preference_homescreen_tips">在主畫面顯示小秘訣</string>
-  <string name="action_option_add_search_engine">新增搜尋引擎</string>
-  <string name="search_add_manually_name_hint">搜尋引擎名稱</string>
-  <string name="search_add_manually_string">要使用的搜尋字串</string>
-  <string name="search_add_manually_save">儲存</string>
-  <string name="search_add_manually_example">例如: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">已加入新搜尋引擎。</string>
-  <string name="search_add_error_empty_name">輸入搜尋引擎名稱</string>
-  <string name="search_add_error_duplicate_name">已有安裝的搜尋引擎使用該名稱。</string>
-  <string name="search_add_error_empty_search">輸入搜尋字串</string>
-  <string name="search_add_error_format">請確認搜尋字串是否符合範例格式</string>
-  <string name="content_description_clear_input">清除輸入內容</string>
-  <string name="content_description_dismiss_input">結束輸入</string>
-  <string name="content_description_erase">清除瀏覽紀錄</string>
-  <string name="content_description_tab_counter">開啟分頁數: %1$s</string>
-  <string name="content_description_lock">安全連線</string>
-  <string name="accessibility_announcement_loading">載入中</string>
-  <string name="accessibility_announcement_loading_finished">網站已載入</string>
-  <string name="content_description_menu">更多選項</string>
-  <string name="indicator_content_description_menu">更多選項按鈕</string>
-  <string name="content_description_forward">瀏覽下一頁</string>
-  <string name="content_description_reload">重新載入網站</string>
-  <string name="content_description_back">瀏覽上一頁</string>
-  <string name="content_description_stop">停止載入網站</string>
-  <string name="content_description_customtab_exit">回到先前的應用程式</string>
-  <string name="content_description_trackers_blocked">已封鎖的追蹤器數量</string>
-  <string name="content_description_blocking_switch">封鎖追蹤器</string>
-  <string name="your_rights">您的權利</string>
-  <string name="external_app_prompt_title">用其他應用程式開啟鏈結</string>
-  <string name="external_app_prompt">您可離開 %1$s，到 %2$s 安裝應用程式來開啟此鏈結。</string>
-  <string name="external_app_prompt_no_app_title">尋找可開啟此鏈結的應用程式</string>
-  <string name="external_app_prompt_no_app">您裝置中並未安裝可開啟此鏈結的應用程式。您可離開 %1$s，到 %2$s 安裝一套。</string>
-  <string name="external_multiple_apps_matched_exit">要結束隱私瀏覽嗎？</string>
-  <string name="download_snackbar_finished">%1$s 下載完成</string>
-  <string name="download_snackbar_open">開啟</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">取消</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">確定</string>
+
+    <string name="action_save">儲存</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">進行搜尋或輸入網址</string>
+
+    <string name="teaser">無痕瀏覽，不留足跡。</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">已清除您的瀏覽紀錄。</string>
+    <string name="feedback_erase2">已清除瀏覽紀錄</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">已清除分頁瀏覽紀錄。</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">搜尋 %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">分享…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">回報網站問題</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">使用 %1$s 開啟</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">開啟於…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">新增至裝置主畫面</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">有什麼新鮮事</string>
+    <string name="menu_settings">選項</string>
+    <string name="menu_about">關於</string>
+    <string name="menu_help">說明</string>
+    <string name="menu_rights">您的權利</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">追蹤器封鎖數量</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">關閉此功能可能可以解決一些網站的問題</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">內容封鎖</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">關閉此功能來解決一些網站問題</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">由 %1$s 提供</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">透過下列程式分享</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">清除瀏覽紀錄</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">開啟</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">清除並開啟</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">清除</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">清除瀏覽紀錄</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">清除並開啟</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">清除並開啟 %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">隱私搜尋</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s 讓您可自行控制線上生活。</p>
+<p>可當作私密瀏覽器使用:
+  <ul>
+    <li>直接在程式中搜尋、瀏覽</li>
+    <li>封鎖追蹤器（也可調整設定，允許追蹤器）</li>
+    <li>清除 Cookie、搜尋紀錄、上網紀錄</li>
+  </ul>
+</p>
+<p>%1$s 是由 Mozilla 所打造，我們的使命是培養一個健康、開放的網際網路環境。<br/>
+<a href="%2$s">了解更多</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">隱私與安全</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">追蹤、Cookie、回報資料</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">設為預設瀏覽器、自動完成</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">關於 %1$s、使用說明</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">追蹤保護</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">網站內容</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">切換應用程式</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">一般</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">預設瀏覽器、分頁、語言</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">資料收集與使用</string>
+
+    <string name="preference_category_search">搜尋</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">取得搜尋建議</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">您在網址列打字時，%1$s 就會將您輸入的文字傳送到搜尋引擎</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">預設</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">搜尋引擎</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">開啟</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">關閉</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">網址自動完成</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">針對熱門網站</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">在網址列自動完成超過 450 組熱門網址。</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">針對您加入的網站</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">在網址列自動完成超過 450 組熱門網址。</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">管理網站</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">管理網站</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ 新增自訂網址</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">新增自訂網址</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">新增自訂網址</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">加入鏈結自動完成</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookie 與網站資料</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">回報資料</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">移除自訂網址</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">了解更多</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">新增與管理自訂自動完成網址。</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">要新增的網址</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">貼上或輸入網址</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">例如: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">舉例: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">已新增自訂網址。</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">移除</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">移除</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">請檢查您輸入的網址。</string>
+
+    <string name="preference_language">語言</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">系統預設</string>
+
+    <string name="preference_category_privacy">隱私權</string>
+    <string name="preference_privacy_block_ads">封鎖廣告型追蹤器</string>
+    <string name="preference_privacy_block_ads_summary">某些廣告就算您不點擊，也會追蹤您造訪的網站</string>
+    <string name="preference_privacy_block_analytics">封鎖分析型追蹤器</string>
+    <string name="preference_privacy_block_analytics_summary">用來收集、分析、測量點擊與滾動等行為</string>
+    <string name="preference_privacy_block_social">封鎖社交追蹤器</string>
+    <string name="preference_privacy_block_social_summary">內嵌於網站，用來追蹤您的造訪紀錄，並提供分享按鈕等功能</string>
+    <string name="preference_privacy_block_content">封鎖其他內容追蹤器</string>
+    <string name="preference_privacy_block_content_summary2">開啟後，可能會造成某些頁面的行為不正常</string>
+    <string name="preference_privacy_category_cookies">封鎖 Cookie</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">否</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">僅封鎖第三方追蹤 Cookie</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">僅封鎖第三方 Cookie</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">是</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">使用指紋解鎖程式</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">若已在程式中開啟網頁，可使用您的指紋直接解鎖 %1$s。也會開啟隱私模式。</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">秘密行動</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">切換程式時，隱藏網頁內容並防止拍攝擷圖。</string>
+
+    <string name="preference_category_security">安全性</string>
+
+    <string name="preference_category_performance">效能</string>
+    <string name="preference_performance_block_webfonts">封鎖網路字型</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">可能會造成網頁當中的圖示或圖片消失</string>
+
+    <string name="preference_performance_block_javascript">封鎖 JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">頁面可能會更快載入，但也可能會造成功能不正常</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">將 %1$s 設為預設瀏覽器</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">傳送使用資料</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">了解更多</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla 致力於只收集用來為眾人改善 %1$s 所需的必要資料。</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">隱私權公告</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">關於 %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">已安裝的搜尋引擎</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">還原預設搜尋引擎</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ 新增其他搜尋引擎</string>
+    <string name="preference_search_remove_title">移除搜尋引擎</string>
+    <string name="preference_search_remove">移除</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">在主畫面顯示小秘訣</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">新增搜尋引擎</string>
+
+    <string name="search_add_manually_name_hint">搜尋引擎名稱</string>
+    <string name="search_add_manually_string">要使用的搜尋字串</string>
+    <string name="search_add_manually_save">儲存</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">例如: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">已加入新搜尋引擎。</string>
+
+    <string name="search_add_error_empty_name">輸入搜尋引擎名稱</string>
+    <string name="search_add_error_duplicate_name">已有安裝的搜尋引擎使用該名稱。</string>
+
+    <string name="search_add_error_empty_search">輸入搜尋字串</string>
+
+    <string name="search_add_error_format">請確認搜尋字串是否符合範例格式</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">清除輸入內容</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">結束輸入</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">清除瀏覽紀錄</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">開啟分頁數: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">安全連線</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">載入中</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">網站已載入</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">更多選項</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">更多選項按鈕</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">瀏覽下一頁</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">重新載入網站</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">瀏覽上一頁</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">停止載入網站</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">回到先前的應用程式</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">已封鎖的追蹤器數量</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">封鎖追蹤器</string>
+
+    <string name="your_rights">您的權利</string>
+
+    <string name="external_app_prompt_title">用其他應用程式開啟鏈結</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">您可離開 %1$s，到 %2$s 安裝應用程式來開啟此鏈結。</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">尋找可開啟此鏈結的應用程式</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">您裝置中並未安裝可開啟此鏈結的應用程式。您可離開 %1$s，到 %2$s 安裝一套。</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">要結束隱私瀏覽嗎？</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s 下載完成</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">開啟</string>
 
 
 
@@ -176,91 +468,272 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
-  <string name="firstrun_defaultbrowser_text2">隱私瀏覽功能變得更強大了。現在可封鎖廣告，以及其他可在不同網站間追蹤您的上網紀錄，又拖慢網頁載入的追蹤器。</string>
-  <string name="firstrun_search_title">用你的方式搜尋</string>
-  <string name="firstrun_search_text">想找點不一樣的東西嗎？可在設定畫面中選擇不同的預設搜尋引擎。</string>
-  <string name="firstrun_shortcut_title">在主畫面加入捷徑</string>
-  <string name="firstrun_shortcut_text">只要選擇 %1$s 選單中的「新增至裝置主畫面」即可快速用 %1$s 回到您最愛的網站。</string>
-  <string name="firstrun_privacy_title">讓隱私成為一種習慣。</string>
-  <string name="firstrun_privacy_text">將 %1$s 設為您的預設瀏覽器，從其他程式開啟網頁時即可直接進入隱私瀏覽模式從中受益。</string>
-  <string name="firstrun_close_button">好，知道了！</string>
-  <string name="firstrun_skip_button">略過</string>
-  <string name="firstrun_next_button">下一步</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">新增</string>
-  <string name="dialog_addtohomescreen_action_cancel">取消</string>
-  <string name="dialog_addtohomescreen_tracking_protection">使用此捷徑開啟時，將關閉追蹤保護功能</string>
-  <string name="notification_browsing_session_channel_name">隱私瀏覽階段</string>
-  <string name="notification_browsing_session_channel_description">不需要開啟程式或確認瀏覽器中有哪些資料，只要輕鬆一點，就能清除 %1$s 瀏覽階段的通知項目。</string>
-  <string name="tabs_tray_action_erase">抹除瀏覽紀錄</string>
-  <string name="download_firefox">下載 Firefox</string>
-  <string name="your_rights_content1">%1$s 是由 Mozilla 及貢獻者所打造，自由且開放原始碼的軟體。</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">隱私瀏覽功能變得更強大了。現在可封鎖廣告，以及其他可在不同網站間追蹤您的上網紀錄，又拖慢網頁載入的追蹤器。</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">用你的方式搜尋</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">想找點不一樣的東西嗎？可在設定畫面中選擇不同的預設搜尋引擎。</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">在主畫面加入捷徑</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">只要選擇 %1$s 選單中的「新增至裝置主畫面」即可快速用 %1$s 回到您最愛的網站。</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">讓隱私成為一種習慣。</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">將 %1$s 設為您的預設瀏覽器，從其他程式開啟網頁時即可直接進入隱私瀏覽模式從中受益。</string>
+
+    <string name="firstrun_close_button">好，知道了！</string>
+    <string name="firstrun_skip_button">略過</string>
+    <string name="firstrun_next_button">下一步</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">新增</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">取消</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">使用此捷徑開啟時，將關閉追蹤保護功能</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">隱私瀏覽階段</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">不需要開啟程式或確認瀏覽器中有哪些資料，只要輕鬆一點，就能清除 %1$s 瀏覽階段的通知項目。</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">抹除瀏覽紀錄</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">下載 Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s 是由 Mozilla 及貢獻者所打造，自由且開放原始碼的軟體。]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">使用者名稱</string>
-  <string name="gv_prompt_password_hint">密碼</string>
-  <string name="gv_prompt_clear">清除</string>
-  <string name="security_popup_secure_connection">安全連線</string>
-  <string name="security_popup_insecure_connection">不安全的連線</string>
-  <string name="security_popup_security_verified">驗證機構: %1$s</string>
-  <string name="site_security_icon_content_description">網站安全性</string>
-  <string name="preference_autocomplete_duplicate_url_error">網址已經存在</string>
-  <string name="find_in_page">在頁面中搜尋</string>
-  <string name="find_in_page_input">在頁面中搜尋</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">第 %1$d 筆，共 %2$d 筆</string>
-  <string name="accessibility_next_result">尋找下一筆</string>
-  <string name="accessibility_previous_result">尋找上一筆</string>
-  <string name="accessibility_dismiss_find_in_page">關閉頁面搜尋</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s 是依照 <a href="%2$s">Mozilla Public License</a> 以及其他開放原始碼授權條款提供給您。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[您並未被授權使用 Mozilla 基金會或任何相關部門的商標，包含但不限於 Mozilla、Firefox、%1$s 的文字或圖樣。可以在<a href="%2$s">這裡</a>找到更多資訊。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$s 其他部分的原始碼，則使用各種不同的自由與開放原始碼<a href="%2$s">授權條款</a>提供。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s 還使用由 Disconnect, Inc. 提供的封鎖清單，該清單是一份依照 <a href="%2$s">GNU General Public License v3</a> 條款分別提供的獨立作品，可在<a href="%3$s">此處</a>取得。]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">使用者名稱</string>
+    <string name="gv_prompt_password_hint">密碼</string>
+    <string name="gv_prompt_clear">清除</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">安全連線</string>
+    <string name="security_popup_insecure_connection">不安全的連線</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">驗證機構: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">網站安全性</string>
+    <string name="preference_autocomplete_duplicate_url_error">網址已經存在</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">在頁面中搜尋</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">在頁面中搜尋</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">第 %1$d 筆，共 %2$d 筆</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">尋找下一筆</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">尋找上一筆</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">關閉頁面搜尋</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">開啟桌面版網站</string>
-  <string name="custom_tab_copy_url_action">已複製網址</string>
-  <string name="preference_advanced_summary">開發者工具</string>
-  <string name="preference_category_advanced">進階</string>
-  <string name="preference_remote_debugging">透過 USB/Wi-Fi 進行遠端除錯</string>
-  <string name="biometric_auth_title">解鎖 %1$s</string>
-  <string name="biometric_auth_description">觸碰指紋感測器以繼續。</string>
-  <string name="biometric_auth_new_session">開新使用階段</string>
-  <string name="biometric_auth_image_description">指紋圖示</string>
-  <string name="biometric_auth_not_recognized_error">無法識別指紋，請再試一次。</string>
-  <string name="biometric_auth_moved_too_quickly">手指移動得太快，請再試一次。</string>
-  <string name="enable_search_suggestion_title">想要開啟搜尋建議嗎？</string>
-  <string name="enable_search_suggestion_subtitle">為了取得搜尋建議，%1$s 需要將您在網址列當中輸入的文字傳送至您選擇的搜尋引擎。%2$s。</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">了解更多</string>
-  <string name="enable_search_suggestions_no">不要</string>
-  <string name="enable_search_suggestions_yes">好的</string>
-  <string name="no_suggestions_message">某些搜尋引擎無法提供建議。</string>
-  <string name="dismiss_no_suggestions_prompt_button">知道了！</string>
-  <string name="tip_disable_tracking_protection">網站變得怪怪的？試試關閉追蹤保護功能</string>
-  <string name="tip_add_to_homescreen">快速開啟您最常用的網站%1$s選單 &gt; 新增至裝置主畫面</string>
-  <string name="tip_set_default_browser">使用 %1$s 開啟所有鏈結\n將 %1$s 設為預設瀏覽器</string>
-  <string name="tip_autocomplete_url">自動完成您最常造訪的網站網址\n 長按網址列中的任何網址</string>
-  <string name="tip_open_in_new_tab">使用新分頁開啟鏈結\n長按頁面上的任何鏈結</string>
-  <string name="tip_request_desktop">還是想看到桌機版頁面嗎？%1$s選單 &gt; 開啟桌面版網站</string>
-  <string name="tip_disable_tips2">關閉啟動畫面上的使用秘訣</string>
-  <string name="tip_explain_allowlist">是信任的網站嗎？\n可透過允許清單來針對您信任的網站關閉追蹤保護功能。</string>
-  <string name="new_tab_opened_snackbar">已開啟新分頁</string>
-  <string name="open_new_tab_snackbar">切換</string>
-  <string name="preference_open_new_tab">立即切換到新分頁中的鏈結</string>
-  <string name="preference_category_safe_browsing">安全瀏覽</string>
-  <string name="preference_safe_browsing_title">封鎖可能危險或是詐騙內容的網站</string>
-  <string name="preference_safe_browsing_summary">封鎖已被回報為詐騙、有攻擊性、惡意軟體以及有害軟體的網站。</string>
-  <string name="preference_exceptions">例外網站</string>
-  <string name="preference_exceptions_description">您已針對這些網站關閉內容封鎖功能。</string>
-  <string name="preference_exceptions_menu_remove">移除</string>
-  <string name="preference_exceptions_remove_all_button_label">移除所有網站</string>
-  <string name="tab_crash_report_title">分頁發生錯誤</string>
-  <string name="tab_crash_report_headline">很抱歉，這個分頁有點問題。</string>
-  <string name="tab_crash_report_description">作為一套隱私瀏覽器，我們不會保存上網紀錄，也無法還原此分頁。</string>
-  <string name="tab_crash_report_close_tab_button_label">關閉分頁</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">開啟桌面版網站</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">桌面版網站</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">已複製網址</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">開發者工具</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">進階</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">透過 USB/Wi-Fi 進行遠端除錯</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">解鎖 %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">觸碰指紋感測器以繼續。</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">開新使用階段</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">用新瀏覽階段開啟鏈結</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">指紋圖示</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">無法識別指紋，請再試一次。</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">手指移動得太快，請再試一次。</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">想要開啟搜尋建議嗎？</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">為了取得搜尋建議，%1$s 需要將您在網址列當中輸入的文字傳送至您選擇的搜尋引擎。%2$s。</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">了解更多</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">不要</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">好的</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">某些搜尋引擎無法提供建議。</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">知道了！</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">網站變得怪怪的？試試關閉追蹤保護功能</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[快速開啟您最常用的網站%1$s選單 > 新增至裝置主畫面]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">使用 %1$s 開啟所有鏈結\n將 %1$s 設為預設瀏覽器</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">自動完成您最常造訪的網站網址\n 長按網址列中的任何網址</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">使用新分頁開啟鏈結\n長按頁面上的任何鏈結</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[還是想看到桌機版頁面嗎？%1$s選單 > 開啟桌面版網站]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">關閉啟動畫面上的使用秘訣</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">是信任的網站嗎？\n可透過允許清單來針對您信任的網站關閉追蹤保護功能。</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">已開啟新分頁</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">切換</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">立即切換到新分頁中的鏈結</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">安全瀏覽</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">封鎖可能危險或是詐騙內容的網站</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">封鎖已被回報為詐騙、有攻擊性、惡意軟體以及有害軟體的網站。</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">例外網站</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">您已針對這些網站關閉內容封鎖功能。</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">移除</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">移除所有網站</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">分頁發生錯誤</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">很抱歉，這個分頁有點問題。</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">作為一套隱私瀏覽器，我們不會保存上網紀錄，也無法還原此分頁。</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">關閉分頁</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">傳送錯誤報告給 Mozilla</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">傳送錯誤報告給 Mozilla</string>
 </resources>

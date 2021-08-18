@@ -117,6 +117,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Búsqueda privada</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s te pone al control.</p>
+<p>Úsalo como un navegador privado:
+  <ul>
+    <li>Busca y navega directo desde la app</li>
+    <li>Bloquea rastreadores (o cambia los ajustes para permitirlos)</li>
+    <li>Mantente libre de cookies y del historial de búsqueda y navegación</li>
+  </ul>
+</p>
+<p>%1$s es producido por Mozilla. Nuestra misión es fomentar un Internet sano y abierto.<br/>
+<a href="%2$s">Aprender más</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacidad y seguridad</string>
 

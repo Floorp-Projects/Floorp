@@ -117,6 +117,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">私密搜索</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s 让您掌控线上生活。</p>
+<p>可以用作隐私浏览器：
+  <ul>
+    <li>直接在应用中搜索和浏览</li>
+    <li>拦截跟踪器（也可调整为允许跟踪器）</li>
+    <li>自动清除 Cookie、搜索记录和浏览记录</li>
+  </ul>
+</p>
+<p>%1$s 由 Mozilla 出品。我们的使命是促成健康、开放的互联网。<br/>
+<a href="%2$s">详细了解</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">隐私与安全</string>
 
@@ -522,7 +535,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s 依照 <a href="%2$s">Mozilla 公共许可证</a>及其他一些开源许可证向您授权。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[您没有取得 Mozilla 基金会或任何一方的商标的任何权利或许可，包括 Mozilla、Firefox 和 %1$s 名称或徽标的许可。有关信息请查阅<a href="%2$s">此处</a>。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$s 其他源代码以各类自由和开源<a href="%2$s">许可证</a>开放。]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s 还使用 Disconnect 公司提供的拦截列表，它是以 <a href="%2$s">GNU 通用公共许可证 v3</a> 提供的一个独立的作品，可在<a href="%3$s">这里</a>找到。]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">用户名</string>
     <string name="gv_prompt_password_hint">密码</string>
     <string name="gv_prompt_clear">清除</string>
@@ -588,6 +622,10 @@
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">新会话</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">新建会话打开链接</string>
 
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">指纹图标</string>

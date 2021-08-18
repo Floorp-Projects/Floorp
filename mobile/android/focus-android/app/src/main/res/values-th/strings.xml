@@ -1,152 +1,431 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">ยกเลิก</string>
-  <string name="action_ok">ตกลง</string>
-  <string name="action_save">บันทึก</string>
-  <string name="urlbar_hint">ค้นหาหรือป้อนที่อยู่</string>
-  <string name="teaser">ท่องเว็บแบบส่วนตัวโดยอัตโนมัติ\nท่องเว็บ ล้าง ทำซ้ำ</string>
-  <string name="feedback_erase">ล้างประวัติการท่องเว็บของคุณแล้ว</string>
-  <string name="feedback_erase_custom_tab">ล้างประวัติการท่องเว็บของแท็บแล้ว</string>
-  <string name="search_hint">ค้นหา %1$s</string>
-  <string name="menu_share">แบ่งปัน…</string>
-  <string name="menu_report_site_issue">รายงานปัญหาไซต์</string>
-  <string name="menu_open_with_default_browser2">เปิดใน %1$s</string>
-  <string name="menu_open_with_a_browser2">เปิดใน…</string>
-  <string name="menu_add_to_home_screen">เพิ่มไปยังหน้าจอหลัก</string>
-  <string name="menu_whats_new">มีอะไรใหม่</string>
-  <string name="menu_settings">การตั้งค่า</string>
-  <string name="menu_about">เกี่ยวกับ</string>
-  <string name="menu_help">ช่วยเหลือ</string>
-  <string name="menu_rights">สิทธิของคุณ</string>
-  <string name="menu_trackers_blocked_title">ตัวติดตามที่ถูกปิดกั้น</string>
-  <string name="menu_trackers_blocked_subtitle">การปิดสิ่งนี้อาจแก้ปัญหาไซต์บางอย่าง</string>
-  <string name="menu_content_blocking">การปิดกั้นเนื้อหา</string>
-  <string name="menu_content_blocking_subtitle">ปิดเพื่อแก้ไขไซต์บางส่วน</string>
-  <string name="menu_custom_tab_branding">ขับเคลื่อนโดย %1$s</string>
-  <string name="share_dialog_title">แบ่งปันผ่าน</string>
-  <string name="notification_erase_text">ล้างประวัติการท่องเว็บ</string>
-  <string name="notification_action_open">เปิด</string>
-  <string name="notification_action_erase_and_open">ล้างแล้วเปิด</string>
-  <string name="shortcut_erase_short_label">ล้าง</string>
-  <string name="shortcut_erase_long_label">ล้างประวัติการท่องเว็บ</string>
-  <string name="shortcut_erase_and_open_short_label">ล้างแล้วเปิด</string>
-  <string name="shortcut_erase_and_open_long_label">ล้างแล้วเปิด %1$s</string>
-  <string name="text_selection_search_action">ค้นหาแบบส่วนตัว</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">ความเป็นส่วนตัวและความปลอดภัย</string>
-  <string name="preference_privacy_and_security_summary">การติดตาม, คุกกี้, ทางเลือกข้อมูล</string>
-  <string name="preference_search_summary">ตั้งค่าเริ่มต้น, การเติมอัตโนมัติ</string>
-  <string name="preference_mozilla_summary">เกี่ยวกับ %1$s, ช่วยเหลือ</string>
-  <string name="preference_category_tracking_protection">การป้องกันการติดตาม</string>
-  <string name="preference_category_web_content">เนื้อหาเว็บ</string>
-  <string name="preference_category_switching_apps">การสลับแอป</string>
-  <string name="preference_category_general">ทั่วไป</string>
-  <string name="preference_general_summary">เบราว์เซอร์เริ่มต้น, แท็บ, ภาษา</string>
-  <string name="preference_category_data_collection_use">การเก็บรวบรวมและใช้ข้อมูล</string>
-  <string name="preference_category_search">ค้นหา</string>
-  <string name="preference_show_search_suggestions">รับข้อเสนอแนะการค้นหา</string>
-  <string name="preference_show_search_suggestions_summary">%1$s จะส่งสิ่งที่คุณพิมพ์ในแถบที่อยู่ไปยังเครื่องมือค้นหาของคุณ</string>
-  <string name="preference_search_engine_default">ค่าเริ่มต้น</string>
-  <string name="preference_search_engine_label">เครื่องมือค้นหา</string>
-  <string name="preference_state_on">เปิด</string>
-  <string name="preference_state_off">ปิด</string>
-  <string name="preference_subitem_autocomplete">การเติม URL อัตโนมัติ</string>
-  <string name="preference_switch_autocomplete_topsites">สำหรับไซต์เด่น</string>
-  <string name="preference_autocomplete_topsite_summary">เปิดใช้งานเพื่อเติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
-  <string name="preference_switch_autocomplete_user_list">สำหรับไซต์ที่คุณเพิ่ม</string>
-  <string name="preference_autocomplete_user_list_summary">เปิดใช้งานเพื่อเติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
-  <string name="preference_category_autocomplete_manage_sites">จัดการไซต์</string>
-  <string name="preference_autocomplete_subitem_manage_sites">จัดการไซต์</string>
-  <string name="preference_autocomplete_action_add">+ เพิ่ม URL ที่กำหนดเอง</string>
-  <string name="preference_autocomplete_title_add">เพิ่ม URL ที่กำหนดเอง</string>
-  <string name="custom_autocomplete_quick_add">เพิ่ม URL ที่กำหนดเอง</string>
-  <string name="add_custom_autocomplete_label">เพิ่มลิงก์ไปยังการเติมอัตโนมัติ</string>
-  <string name="preference_category_cookies">คุกกี้และข้อมูลไซต์</string>
-  <string name="preference_category_data_choices">ทางเลือกข้อมูล</string>
-  <string name="preference_autocomplete_title_remove">เอา URL ที่กำหนดเองออก</string>
-  <string name="preference_autocomplete_learn_more">เรียนรู้เพิ่มเติม</string>
-  <string name="preference_autocomplete_custom_summary">เพิ่มและจัดการ URL เติมอัตโนมัติที่กำหนดเอง</string>
-  <string name="preference_autocomplete_add_title">URL ที่จะเพิ่ม</string>
-  <string name="preference_autocomplete_add_hint">วางหรือป้อน URL</string>
-  <string name="preference_autocomplete_add_example2">ตัวอย่าง: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">ตัวอย่าง: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">เพิ่ม URL ที่กำหนดเองใหม่แล้ว</string>
-  <string name="preference_autocomplete_menu_remove">เอาออก</string>
-  <string name="preference_autocomplete_action_remove_content_description">เอาออก</string>
-  <string name="preference_autocomplete_add_error">ตรวจสอบ URL ที่คุณป้อนอีกครั้ง</string>
-  <string name="preference_language">ภาษา</string>
-  <string name="preference_language_systemdefault">ค่าเริ่มต้นของระบบ</string>
-  <string name="preference_category_privacy">ความเป็นส่วนตัว</string>
-  <string name="preference_privacy_block_ads">ปิดกั้นตัวติดตามของโฆษณา</string>
-  <string name="preference_privacy_block_ads_summary">โฆษณาบางตัวติดตามการเยี่ยมชมไซต์ แม้ว่าคุณไม่ได้คลิกโฆษณา</string>
-  <string name="preference_privacy_block_analytics">ปิดกั้นตัวติดตามของการวิเคราะห์</string>
-  <string name="preference_privacy_block_analytics_summary">ใช้เพื่อเก็บรวบรวม วิเคราะห์ และวัดกิจกรรมอย่างการแตะและการเลื่อน</string>
-  <string name="preference_privacy_block_social">ปิดกั้นตัวติดตามทางสังคม</string>
-  <string name="preference_privacy_block_social_summary">ฝังอยู่ในไซต์เพื่อติดตามการเยี่ยมชมของคุณและแสดงผลฟังก์ชันการทำงานอย่างปุ่มแบ่งปัน</string>
-  <string name="preference_privacy_block_content">ปิดกั้นตัวติดตามของเนื้อหาอื่น ๆ</string>
-  <string name="preference_privacy_block_content_summary2">การเปิดใช้งานอาจส่งผลให้หน้าบางส่วนทำงานอย่างไม่คาดคิด</string>
-  <string name="preference_privacy_category_cookies">ปิดกั้นคุกกี้</string>
-  <string name="preference_privacy_should_block_cookies_no_option">ไม่</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">ปิดกั้นคุกกี้ของตัวติดตามจากบุคคลที่สามเท่านั้น</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">ปิดกั้นคุกกี้จากบุคคลที่สามเท่านั้น</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">ใช่</string>
-  <string name="preference_security_biometric">ใช้ลายนิ้วมือเพื่อปลดล็อคแอป</string>
-  <string name="preference_security_biometric_summary">ลายนิ้วมือของคุณสามารถปลดล็อค %1$s หาก URL ถูกเปิดอยู่แล้วในแอป การพรางตัวจะถูกเปิด</string>
-  <string name="preference_privacy_secure_mode">การพรางตัว</string>
-  <string name="preference_privacy_stealth_summary">ซ่อนหน้าเว็บเมื่อสลับแอปและปิดกั้นการจับภาพหน้าจอ</string>
-  <string name="preference_category_security">ความปลอดภัย</string>
-  <string name="preference_category_performance">ประสิทธิภาพ</string>
-  <string name="preference_performance_block_webfonts">ปิดกั้นแบบอักษรเว็บ</string>
-  <string name="preference_performance_block_webfonts_summary">อาจส่งผลให้ไอคอนหรือภาพขาดหายไป</string>
-  <string name="preference_performance_block_javascript">ปิดกั้น JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">หน้าอาจโหลดเร็วขึ้น แต่อาจทำงานอย่างไม่คาดคิด</string>
-  <string name="preference_default_browser2">ทำให้ %1$s เป็นเบราว์เซอร์เริ่มต้น</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">ส่งข้อมูลการใช้งาน</string>
-  <string name="preference_mozilla_telemetry_summary">เรียนรู้เพิ่มเติม</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla มุ่งมั่นที่จะเก็บรวบรวมเฉพาะสิ่งที่เราจำเป็นต้องให้บริการและปรับปรุง %1$s สำหรับทุกคน</string>
-  <string name="preference_privacy_notice">ประกาศความเป็นส่วนตัว</string>
-  <string name="preference_about">เกี่ยวกับ %1$s</string>
-  <string name="preference_search_installed_search_engines">เครื่องมือค้นหาที่ติดตั้งไว้</string>
-  <string name="preference_search_restore">เรียกคืนเครื่องมือค้นหาเริ่มต้น</string>
-  <string name="preference_search_add2">+ เพิ่มเครื่องมือค้นหาอื่น</string>
-  <string name="preference_search_remove_title">เอาเครื่องมือค้นหาออก</string>
-  <string name="preference_search_remove">เอาออก</string>
-  <string name="preference_homescreen_tips">แสดงเคล็ดลับหน้าจอหลัก</string>
-  <string name="action_option_add_search_engine">เพิ่มเครื่องมือค้นหา</string>
-  <string name="search_add_manually_name_hint">ชื่อเครื่องมือค้นหา</string>
-  <string name="search_add_manually_string">สตริงการค้นหาที่จะใช้</string>
-  <string name="search_add_manually_save">บันทึก</string>
-  <string name="search_add_manually_example">ตัวอย่าง: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">เพิ่มเครื่องมือค้นหาใหม่แล้ว</string>
-  <string name="search_add_error_empty_name">ป้อนชื่อเครื่องมือค้นหา</string>
-  <string name="search_add_error_duplicate_name">เครื่องมือค้นหาที่ติดตั้งไว้กำลังใช้ชื่อนั้นอยู่แล้ว</string>
-  <string name="search_add_error_empty_search">ป้อนสตริงการค้นหา</string>
-  <string name="search_add_error_format">ตรวจสอบว่าสตริงการค้นหาตรงกับรูปแบบตัวอย่าง</string>
-  <string name="content_description_clear_input">ล้างข้อมูลที่ป้อน</string>
-  <string name="content_description_dismiss_input">ยกเลิก</string>
-  <string name="content_description_erase">ล้างประวัติการท่องเว็บ</string>
-  <string name="content_description_tab_counter">แท็บที่เปิดอยู่: %1$s</string>
-  <string name="content_description_lock">การเชื่อมต่อปลอดภัย</string>
-  <string name="accessibility_announcement_loading">กำลังโหลด</string>
-  <string name="accessibility_announcement_loading_finished">โหลดเว็บไซต์แล้ว</string>
-  <string name="content_description_menu">ตัวเลือกเพิ่มเติม</string>
-  <string name="indicator_content_description_menu">ปุ่มตัวเลือกเพิ่มเติม</string>
-  <string name="content_description_forward">นำทางเดินหน้า</string>
-  <string name="content_description_reload">โหลดเว็บไซต์ใหม่</string>
-  <string name="content_description_back">นำทางย้อนกลับ</string>
-  <string name="content_description_stop">หยุดการโหลดเว็บไซต์</string>
-  <string name="content_description_customtab_exit">กลับไปที่แอปก่อนหน้า</string>
-  <string name="content_description_trackers_blocked">จำนวนตัวติดตามที่ถูกปิดกั้น</string>
-  <string name="content_description_blocking_switch">ปิดกั้นตัวติดตาม</string>
-  <string name="your_rights">สิทธิของคุณ</string>
-  <string name="external_app_prompt_title">เปิดลิงก์ในแอปอื่น</string>
-  <string name="external_app_prompt">คุณสามารถออกจาก %1$s เพื่อเปิดลิงก์นี้ใน %2$s</string>
-  <string name="external_app_prompt_no_app_title">ค้นหาแอปที่สามารถเปิดลิงก์</string>
-  <string name="external_app_prompt_no_app">ไม่มีแอปในอุปกรณ์ของคุณที่สามารถเปิดลิงก์นี้ คุณสามารถออกจาก %1$s เพื่อค้นหา %2$s สำหรับแอปที่สามารถทำได้</string>
-  <string name="external_multiple_apps_matched_exit">ออกจากการท่องเว็บแบบส่วนตัว?</string>
-  <string name="download_snackbar_finished">%1$s เสร็จแล้ว</string>
-  <string name="download_snackbar_open">เปิด</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">ยกเลิก</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">ตกลง</string>
+
+    <string name="action_save">บันทึก</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">ค้นหาหรือป้อนที่อยู่</string>
+
+    <string name="teaser">ท่องเว็บแบบส่วนตัวโดยอัตโนมัติ\nท่องเว็บ ล้าง ทำซ้ำ</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">ล้างประวัติการท่องเว็บของคุณแล้ว</string>
+    <string name="feedback_erase2">ล้างประวัติการท่องเว็บแล้ว</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">ล้างประวัติการท่องเว็บของแท็บแล้ว</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">ค้นหา %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">แบ่งปัน…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">รายงานปัญหาไซต์</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">เปิดใน %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">เปิดใน…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">เพิ่มไปยังหน้าจอหลัก</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">มีอะไรใหม่</string>
+    <string name="menu_settings">การตั้งค่า</string>
+    <string name="menu_about">เกี่ยวกับ</string>
+    <string name="menu_help">ช่วยเหลือ</string>
+    <string name="menu_rights">สิทธิของคุณ</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">ตัวติดตามที่ถูกปิดกั้น</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">การปิดสิ่งนี้อาจแก้ปัญหาไซต์บางอย่าง</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">การปิดกั้นเนื้อหา</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">ปิดเพื่อแก้ไขไซต์บางส่วน</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">ขับเคลื่อนโดย %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">แบ่งปันผ่าน</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">ล้างประวัติการท่องเว็บ</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">เปิด</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">ล้างแล้วเปิด</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">ล้าง</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">ล้างประวัติการท่องเว็บ</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">ล้างแล้วเปิด</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">ล้างแล้วเปิด %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">ค้นหาแบบส่วนตัว</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">ความเป็นส่วนตัวและความปลอดภัย</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">การติดตาม, คุกกี้, ทางเลือกข้อมูล</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">ตั้งค่าเริ่มต้น, การเติมอัตโนมัติ</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">เกี่ยวกับ %1$s, ช่วยเหลือ</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">การป้องกันการติดตาม</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">เนื้อหาเว็บ</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">การสลับแอป</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">ทั่วไป</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">เบราว์เซอร์เริ่มต้น, แท็บ, ภาษา</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">การเก็บรวบรวมและใช้ข้อมูล</string>
+
+    <string name="preference_category_search">ค้นหา</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">รับข้อเสนอแนะการค้นหา</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s จะส่งสิ่งที่คุณพิมพ์ในแถบที่อยู่ไปยังเครื่องมือค้นหาของคุณ</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">ค่าเริ่มต้น</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">เครื่องมือค้นหา</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">เปิด</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">ปิด</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">การเติม URL อัตโนมัติ</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">สำหรับไซต์เด่น</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">เปิดใช้งานเพื่อเติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">สำหรับไซต์ที่คุณเพิ่ม</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">เปิดใช้งานเพื่อเติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">จัดการไซต์</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">จัดการไซต์</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ เพิ่ม URL ที่กำหนดเอง</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">เพิ่ม URL ที่กำหนดเอง</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">เพิ่ม URL ที่กำหนดเอง</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">เพิ่มลิงก์ไปยังการเติมอัตโนมัติ</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">คุกกี้และข้อมูลไซต์</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">ทางเลือกข้อมูล</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">เอา URL ที่กำหนดเองออก</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">เรียนรู้เพิ่มเติม</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">เพิ่มและจัดการ URL เติมอัตโนมัติที่กำหนดเอง</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL ที่จะเพิ่ม</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">วางหรือป้อน URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">ตัวอย่าง: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">ตัวอย่าง: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">เพิ่ม URL ที่กำหนดเองใหม่แล้ว</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">เอาออก</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">เอาออก</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">ตรวจสอบ URL ที่คุณป้อนอีกครั้ง</string>
+
+    <string name="preference_language">ภาษา</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">ค่าเริ่มต้นของระบบ</string>
+
+    <string name="preference_category_privacy">ความเป็นส่วนตัว</string>
+    <string name="preference_privacy_block_ads">ปิดกั้นตัวติดตามของโฆษณา</string>
+    <string name="preference_privacy_block_ads_summary">โฆษณาบางตัวติดตามการเยี่ยมชมไซต์ แม้ว่าคุณไม่ได้คลิกโฆษณา</string>
+    <string name="preference_privacy_block_analytics">ปิดกั้นตัวติดตามของการวิเคราะห์</string>
+    <string name="preference_privacy_block_analytics_summary">ใช้เพื่อเก็บรวบรวม วิเคราะห์ และวัดกิจกรรมอย่างการแตะและการเลื่อน</string>
+    <string name="preference_privacy_block_social">ปิดกั้นตัวติดตามทางสังคม</string>
+    <string name="preference_privacy_block_social_summary">ฝังอยู่ในไซต์เพื่อติดตามการเยี่ยมชมของคุณและแสดงผลฟังก์ชันการทำงานอย่างปุ่มแบ่งปัน</string>
+    <string name="preference_privacy_block_content">ปิดกั้นตัวติดตามของเนื้อหาอื่น ๆ</string>
+    <string name="preference_privacy_block_content_summary2">การเปิดใช้งานอาจส่งผลให้หน้าบางส่วนทำงานอย่างไม่คาดคิด</string>
+    <string name="preference_privacy_category_cookies">ปิดกั้นคุกกี้</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">ไม่</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">ปิดกั้นคุกกี้ของตัวติดตามจากบุคคลที่สามเท่านั้น</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">ปิดกั้นคุกกี้จากบุคคลที่สามเท่านั้น</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">ใช่</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">ใช้ลายนิ้วมือเพื่อปลดล็อคแอป</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">ลายนิ้วมือของคุณสามารถปลดล็อค %1$s หาก URL ถูกเปิดอยู่แล้วในแอป การพรางตัวจะถูกเปิด</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">การพรางตัว</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">ซ่อนหน้าเว็บเมื่อสลับแอปและปิดกั้นการจับภาพหน้าจอ</string>
+
+    <string name="preference_category_security">ความปลอดภัย</string>
+
+    <string name="preference_category_performance">ประสิทธิภาพ</string>
+    <string name="preference_performance_block_webfonts">ปิดกั้นแบบอักษรเว็บ</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">อาจส่งผลให้ไอคอนหรือภาพขาดหายไป</string>
+
+    <string name="preference_performance_block_javascript">ปิดกั้น JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">หน้าอาจโหลดเร็วขึ้น แต่อาจทำงานอย่างไม่คาดคิด</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">ทำให้ %1$s เป็นเบราว์เซอร์เริ่มต้น</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">ส่งข้อมูลการใช้งาน</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">เรียนรู้เพิ่มเติม</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla มุ่งมั่นที่จะเก็บรวบรวมเฉพาะสิ่งที่เราจำเป็นต้องให้บริการและปรับปรุง %1$s สำหรับทุกคน</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">ประกาศความเป็นส่วนตัว</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">เกี่ยวกับ %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">เครื่องมือค้นหาที่ติดตั้งไว้</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">เรียกคืนเครื่องมือค้นหาเริ่มต้น</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ เพิ่มเครื่องมือค้นหาอื่น</string>
+    <string name="preference_search_remove_title">เอาเครื่องมือค้นหาออก</string>
+    <string name="preference_search_remove">เอาออก</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">แสดงเคล็ดลับหน้าจอหลัก</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">เพิ่มเครื่องมือค้นหา</string>
+
+    <string name="search_add_manually_name_hint">ชื่อเครื่องมือค้นหา</string>
+    <string name="search_add_manually_string">สตริงการค้นหาที่จะใช้</string>
+    <string name="search_add_manually_save">บันทึก</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">ตัวอย่าง: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">เพิ่มเครื่องมือค้นหาใหม่แล้ว</string>
+
+    <string name="search_add_error_empty_name">ป้อนชื่อเครื่องมือค้นหา</string>
+    <string name="search_add_error_duplicate_name">เครื่องมือค้นหาที่ติดตั้งไว้กำลังใช้ชื่อนั้นอยู่แล้ว</string>
+
+    <string name="search_add_error_empty_search">ป้อนสตริงการค้นหา</string>
+
+    <string name="search_add_error_format">ตรวจสอบว่าสตริงการค้นหาตรงกับรูปแบบตัวอย่าง</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">ล้างข้อมูลที่ป้อน</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">ยกเลิก</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">ล้างประวัติการท่องเว็บ</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">แท็บที่เปิดอยู่: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">การเชื่อมต่อปลอดภัย</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">กำลังโหลด</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">โหลดเว็บไซต์แล้ว</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">ตัวเลือกเพิ่มเติม</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">ปุ่มตัวเลือกเพิ่มเติม</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">นำทางเดินหน้า</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">โหลดเว็บไซต์ใหม่</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">นำทางย้อนกลับ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">หยุดการโหลดเว็บไซต์</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">กลับไปที่แอปก่อนหน้า</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">จำนวนตัวติดตามที่ถูกปิดกั้น</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">ปิดกั้นตัวติดตาม</string>
+
+    <string name="your_rights">สิทธิของคุณ</string>
+
+    <string name="external_app_prompt_title">เปิดลิงก์ในแอปอื่น</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">คุณสามารถออกจาก %1$s เพื่อเปิดลิงก์นี้ใน %2$s</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">ค้นหาแอปที่สามารถเปิดลิงก์</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">ไม่มีแอปในอุปกรณ์ของคุณที่สามารถเปิดลิงก์นี้ คุณสามารถออกจาก %1$s เพื่อค้นหา %2$s สำหรับแอปที่สามารถทำได้</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">ออกจากการท่องเว็บแบบส่วนตัว?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s เสร็จแล้ว</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">เปิด</string>
 
 
 
@@ -176,91 +455,251 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">เพิ่มความเป็นส่วนตัวของคุณ</string>
-  <string name="firstrun_defaultbrowser_text2">นำการท่องเว็บแบบส่วนตัวไปสู่ระดับถัดไป ปิดกั้นโฆษณาและเนื้อหาอื่น ๆ ที่สามารถติดตามคุณในไซต์ต่าง ๆ และลดเวลาในการโหลดหน้า</string>
-  <string name="firstrun_search_title">การค้นหาของคุณในแบบของคุณ</string>
-  <string name="firstrun_search_text">กำลังค้นหาอย่างอื่น? เลือกเครื่องมือค้นหาเริ่มต้นอื่นในการตั้งค่า</string>
-  <string name="firstrun_shortcut_title">เพิ่มทางลัดไปยังหน้าจอหลักของคุณ</string>
-  <string name="firstrun_shortcut_text">กลับไปที่ไซต์โปรดของคุณใน %1$s ได้อย่างรวดเร็ว เพียงเลือก \"เพิ่มไปยังหน้าจอหลัก\" จากเมนู %1$s</string>
-  <string name="firstrun_privacy_title">สร้างนิสัยความเป็นส่วนตัว</string>
-  <string name="firstrun_privacy_text">ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้นของคุณและรับประโยชน์จากการท่องเว็บแบบส่วนตัวเมื่อคุณเปิดหน้าเว็บจากแอปอื่น ๆ</string>
-  <string name="firstrun_close_button">ตกลง เข้าใจแล้ว!</string>
-  <string name="firstrun_skip_button">ข้าม</string>
-  <string name="firstrun_next_button">ถัดไป</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">เพิ่ม</string>
-  <string name="dialog_addtohomescreen_action_cancel">ยกเลิก</string>
-  <string name="dialog_addtohomescreen_tracking_protection">ทางลัดจะเปิดพร้อมปิดใช้งานการป้องกันการติดตาม</string>
-  <string name="notification_browsing_session_channel_name">วาระการท่องเว็บแบบส่วนตัว</string>
-  <string name="notification_browsing_session_channel_description">การแจ้งเตือนช่วยให้คุณล้างวาระ %1$s ของคุณด้วยการแตะ คุณไม่จำเป็นต้องเปิดแอปหรือดูสิ่งที่กำลังทำงานในเบราว์เซอร์ของคุณ</string>
-  <string name="tabs_tray_action_erase">ล้างประวัติการท่องเว็บ</string>
-  <string name="download_firefox">ดาวน์โหลด Firefox</string>
-  <string name="your_rights_content1">%1$s เป็นซอฟต์แวร์เสรีและเปิดต้นฉบับที่สร้างขึ้นโดย Mozilla และผู้มีส่วนร่วมอื่น ๆ</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">เพิ่มความเป็นส่วนตัวของคุณ</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">นำการท่องเว็บแบบส่วนตัวไปสู่ระดับถัดไป ปิดกั้นโฆษณาและเนื้อหาอื่น ๆ ที่สามารถติดตามคุณในไซต์ต่าง ๆ และลดเวลาในการโหลดหน้า</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">การค้นหาของคุณในแบบของคุณ</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">กำลังค้นหาอย่างอื่น? เลือกเครื่องมือค้นหาเริ่มต้นอื่นในการตั้งค่า</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">เพิ่มทางลัดไปยังหน้าจอหลักของคุณ</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">กลับไปที่ไซต์โปรดของคุณใน %1$s ได้อย่างรวดเร็ว เพียงเลือก \&quot;เพิ่มไปยังหน้าจอหลัก\&quot; จากเมนู %1$s</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">สร้างนิสัยความเป็นส่วนตัว</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้นของคุณและรับประโยชน์จากการท่องเว็บแบบส่วนตัวเมื่อคุณเปิดหน้าเว็บจากแอปอื่น ๆ</string>
+
+    <string name="firstrun_close_button">ตกลง เข้าใจแล้ว!</string>
+    <string name="firstrun_skip_button">ข้าม</string>
+    <string name="firstrun_next_button">ถัดไป</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">เพิ่ม</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">ยกเลิก</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">ทางลัดจะเปิดพร้อมปิดใช้งานการป้องกันการติดตาม</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">วาระการท่องเว็บแบบส่วนตัว</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">การแจ้งเตือนช่วยให้คุณล้างวาระ %1$s ของคุณด้วยการแตะ คุณไม่จำเป็นต้องเปิดแอปหรือดูสิ่งที่กำลังทำงานในเบราว์เซอร์ของคุณ</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">ล้างประวัติการท่องเว็บ</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">ดาวน์โหลด Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s เป็นซอฟต์แวร์เสรีและเปิดต้นฉบับที่สร้างขึ้นโดย Mozilla และผู้มีส่วนร่วมอื่น ๆ]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">ชื่อผู้ใช้</string>
-  <string name="gv_prompt_password_hint">รหัสผ่าน</string>
-  <string name="gv_prompt_clear">ล้าง</string>
-  <string name="security_popup_secure_connection">การเชื่อมต่อปลอดภัย</string>
-  <string name="security_popup_insecure_connection">การเชื่อมต่อไม่ปลอดภัย</string>
-  <string name="security_popup_security_verified">ยืนยันโดย: %1$s</string>
-  <string name="site_security_icon_content_description">ความปลอดภัยของไซต์</string>
-  <string name="preference_autocomplete_duplicate_url_error">มี URL อยู่แล้ว</string>
-  <string name="find_in_page">ค้นหาในหน้า</string>
-  <string name="find_in_page_input">ค้นหาในหน้า</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d จาก %2$d</string>
-  <string name="accessibility_next_result">ค้นหาผลลัพธ์ถัดไป</string>
-  <string name="accessibility_previous_result">ค้นหาผลลัพธ์ก่อนหน้า</string>
-  <string name="accessibility_dismiss_find_in_page">ยกเลิกการค้นหาในหน้า</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">ชื่อผู้ใช้</string>
+    <string name="gv_prompt_password_hint">รหัสผ่าน</string>
+    <string name="gv_prompt_clear">ล้าง</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">การเชื่อมต่อปลอดภัย</string>
+    <string name="security_popup_insecure_connection">การเชื่อมต่อไม่ปลอดภัย</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">ยืนยันโดย: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">ความปลอดภัยของไซต์</string>
+    <string name="preference_autocomplete_duplicate_url_error">มี URL อยู่แล้ว</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">ค้นหาในหน้า</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">ค้นหาในหน้า</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d จาก %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">ค้นหาผลลัพธ์ถัดไป</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">ค้นหาผลลัพธ์ก่อนหน้า</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">ยกเลิกการค้นหาในหน้า</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">ขอไซต์สำหรับเดสก์ท็อป</string>
-  <string name="custom_tab_copy_url_action">คัดลอก URL แล้ว</string>
-  <string name="preference_advanced_summary">เครื่องมือนักพัฒนา</string>
-  <string name="preference_category_advanced">ขั้นสูง</string>
-  <string name="preference_remote_debugging">การดีบั๊กระยะไกลผ่าน USB/Wi-Fi</string>
-  <string name="biometric_auth_title">ปลดล็อค %1$s</string>
-  <string name="biometric_auth_description">สัมผัสเซนเซอร์ลายนิ้วมือเพื่อดำเนินการต่อ</string>
-  <string name="biometric_auth_new_session">วาระใหม่</string>
-  <string name="biometric_auth_image_description">ไอคอนลายนิ้วมือ</string>
-  <string name="biometric_auth_not_recognized_error">ไม่รู้จักลายนิ้วมือ ลองอีกครั้ง</string>
-  <string name="biometric_auth_moved_too_quickly">ขยับนิ้วเร็วเกินไป ลองอีกครั้ง</string>
-  <string name="enable_search_suggestion_title">คุณต้องการเปิดข้อเสนอแนะการค้นหาหรือไม่?</string>
-  <string name="enable_search_suggestion_subtitle">เพื่อรับข้อเสนอแนะการค้นหา %1$s จำเป็นต้องส่งสิ่งที่คุณพิมพ์ในแถบที่อยู่ไปยังเครื่องมือค้นหาที่คุณเลือก %2$s</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">เรียนรู้เพิ่มเติม</string>
-  <string name="enable_search_suggestions_no">ไม่</string>
-  <string name="enable_search_suggestions_yes">ใช่</string>
-  <string name="no_suggestions_message">เครื่องมือค้นหาบางตัวไม่สามารถแสดงข้อเสนอแนะ</string>
-  <string name="dismiss_no_suggestions_prompt_button">ยกเลิก</string>
-  <string name="tip_disable_tracking_protection">ไซต์ทำงานอย่างไม่คาดคิด?\n ลองปิดการป้องกันการติดตาม</string>
-  <string name="tip_add_to_homescreen">รับการเข้าถึงด้วยการแตะครั้งเดียวไปยังไซต์ที่คุณใช้มากที่สุด%1$s เมนู &gt; เพิ่มไปยังหน้าจอหลัก</string>
-  <string name="tip_set_default_browser">เปิดทุกลิงก์ใน %1$s\n ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้น</string>
-  <string name="tip_autocomplete_url">เติม URL โดยอัตโนมัติสำหรับไซต์ที่คุณใช้มากที่สุด\n แตะค้างที่ URL ใด ๆ ในแถบที่อยู่</string>
-  <string name="tip_open_in_new_tab">เปิดลิงก์ในแท็บใหม่\n แตะค้างที่ลิงก์ใด ๆ ในหน้า</string>
-  <string name="tip_request_desktop">ต้องการเห็นไซต์สำหรับเดสก์ท็อปแบบเต็ม?%1$s เมนู &gt; ขอไซต์สำหรับเดสก์ท็อป</string>
-  <string name="tip_disable_tips2">ปิดเคล็ดลับในหน้าจอเริ่มต้น</string>
-  <string name="tip_explain_allowlist">ไซต์ที่เชื่อถือได้?\n รายการอนุญาตปิดใช้งานการป้องกันการติดตามสำหรับไซต์ที่คุณรู้จักและเชื่อถือ</string>
-  <string name="new_tab_opened_snackbar">เปิดแท็บใหม่แล้ว</string>
-  <string name="open_new_tab_snackbar">สลับ</string>
-  <string name="preference_open_new_tab">สลับไปยังลิงก์ในแท็บใหม่ทันที</string>
-  <string name="preference_category_safe_browsing">การท่องเว็บแบบปลอดภัย</string>
-  <string name="preference_safe_browsing_title">ปิดกั้นไซต์ที่อาจเป็นอันตรายและหลอกลวง</string>
-  <string name="preference_safe_browsing_summary">ปิดกั้นไซต์หลอกลวงและรุกราน, ไซต์ที่มีมัลแวร์ และไซต์ที่มีซอฟต์แวร์ไม่พึงประสงค์ตามการรายงาน</string>
-  <string name="preference_exceptions">ข้อยกเว้น</string>
-  <string name="preference_exceptions_description">คุณได้ปิดใช้งานการปิดกั้นเนื้อหาสำหรับเว็บไซต์เหล่านี้</string>
-  <string name="preference_exceptions_menu_remove">เอาออก</string>
-  <string name="preference_exceptions_remove_all_button_label">เอาเว็บไซต์ทั้งหมดออก</string>
-  <string name="tab_crash_report_title">แท็บขัดข้อง</string>
-  <string name="tab_crash_report_headline">ขออภัย เรากำลังมีปัญหากับแท็บนี้</string>
-  <string name="tab_crash_report_description">ในฐานะเบราว์เซอร์ส่วนตัว เราไม่เคยบันทึกและไม่สามารถเรียกคืนแท็บนี้ได้</string>
-  <string name="tab_crash_report_close_tab_button_label">ปิดแท็บ</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">ขอไซต์สำหรับเดสก์ท็อป</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">ไซต์เดสก์ท็อป</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">คัดลอก URL แล้ว</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">เครื่องมือนักพัฒนา</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">ขั้นสูง</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">การดีบั๊กระยะไกลผ่าน USB/Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">ปลดล็อค %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">สัมผัสเซนเซอร์ลายนิ้วมือเพื่อดำเนินการต่อ</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">วาระใหม่</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">เปิดลิงก์ในวาระใหม่</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">ไอคอนลายนิ้วมือ</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">ไม่รู้จักลายนิ้วมือ ลองอีกครั้ง</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">ขยับนิ้วเร็วเกินไป ลองอีกครั้ง</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">คุณต้องการเปิดข้อเสนอแนะการค้นหาหรือไม่?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">เพื่อรับข้อเสนอแนะการค้นหา %1$s จำเป็นต้องส่งสิ่งที่คุณพิมพ์ในแถบที่อยู่ไปยังเครื่องมือค้นหาที่คุณเลือก %2$s</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">เรียนรู้เพิ่มเติม</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">ไม่</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">ใช่</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">เครื่องมือค้นหาบางตัวไม่สามารถแสดงข้อเสนอแนะ</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">ยกเลิก</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">ไซต์ทำงานอย่างไม่คาดคิด?\n ลองปิดการป้องกันการติดตาม</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[รับการเข้าถึงด้วยการแตะครั้งเดียวไปยังไซต์ที่คุณใช้มากที่สุด%1$s เมนู > เพิ่มไปยังหน้าจอหลัก]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">เปิดทุกลิงก์ใน %1$s\n ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้น</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">เติม URL โดยอัตโนมัติสำหรับไซต์ที่คุณใช้มากที่สุด\n แตะค้างที่ URL ใด ๆ ในแถบที่อยู่</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">เปิดลิงก์ในแท็บใหม่\n แตะค้างที่ลิงก์ใด ๆ ในหน้า</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[ต้องการเห็นไซต์สำหรับเดสก์ท็อปแบบเต็ม?%1$s เมนู > ขอไซต์สำหรับเดสก์ท็อป]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">ปิดเคล็ดลับในหน้าจอเริ่มต้น</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">ไซต์ที่เชื่อถือได้?\n รายการอนุญาตปิดใช้งานการป้องกันการติดตามสำหรับไซต์ที่คุณรู้จักและเชื่อถือ</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">เปิดแท็บใหม่แล้ว</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">สลับ</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">สลับไปยังลิงก์ในแท็บใหม่ทันที</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">การท่องเว็บแบบปลอดภัย</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">ปิดกั้นไซต์ที่อาจเป็นอันตรายและหลอกลวง</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">ปิดกั้นไซต์หลอกลวงและรุกราน, ไซต์ที่มีมัลแวร์ และไซต์ที่มีซอฟต์แวร์ไม่พึงประสงค์ตามการรายงาน</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">ข้อยกเว้น</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">คุณได้ปิดใช้งานการปิดกั้นเนื้อหาสำหรับเว็บไซต์เหล่านี้</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">เอาออก</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">เอาเว็บไซต์ทั้งหมดออก</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">แท็บขัดข้อง</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">ขออภัย เรากำลังมีปัญหากับแท็บนี้</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">ในฐานะเบราว์เซอร์ส่วนตัว เราไม่เคยบันทึกและไม่สามารถเรียกคืนแท็บนี้ได้</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">ปิดแท็บ</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">ส่งรายงานข้อขัดข้องไปยัง Mozilla</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">ส่งรายงานข้อขัดข้องไปยัง Mozilla</string>
 </resources>

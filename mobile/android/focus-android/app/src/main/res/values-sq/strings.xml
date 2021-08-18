@@ -1,152 +1,444 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Anuloje</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">Ruaje</string>
-  <string name="urlbar_hint">Kërkoni ose jepni adresë</string>
-  <string name="teaser">Shfletim automatikisht privat.\nShfletoni. Fshini Gjurmët. Përsëriteni.</string>
-  <string name="feedback_erase">Historiku juaj i shfletimit u fshi.</string>
-  <string name="feedback_erase_custom_tab">Historiku i shfletimit në skedë u fshi.</string>
-  <string name="search_hint">Kërko për %1$s</string>
-  <string name="menu_share">Ndajeni me të tjerët…</string>
-  <string name="menu_report_site_issue">Raporto Problem Sajti</string>
-  <string name="menu_open_with_default_browser2">Hape në %1$s</string>
-  <string name="menu_open_with_a_browser2">Hapeni në…</string>
-  <string name="menu_add_to_home_screen">Shtoje te skena e Kreut</string>
-  <string name="menu_whats_new">Ç’ka të Re</string>
-  <string name="menu_settings">Rregullime</string>
-  <string name="menu_about">Rreth</string>
-  <string name="menu_help">Ndihmë</string>
-  <string name="menu_rights">Të drejtat Tuaja</string>
-  <string name="menu_trackers_blocked_title">Gjurmues të bllokuar</string>
-  <string name="menu_trackers_blocked_subtitle">Mbyllja e kësaj mund të ndreqë disa probleme sajti</string>
-  <string name="menu_content_blocking">Bllokim Lënde</string>
-  <string name="menu_content_blocking_subtitle">Çaktivizojeni që të ndreqen disa sajte</string>
-  <string name="menu_custom_tab_branding">Powered by %1$s</string>
-  <string name="share_dialog_title">Ndajeni përmes</string>
-  <string name="notification_erase_text">Fshini historik shfletimesh</string>
-  <string name="notification_action_open">Hape</string>
-  <string name="notification_action_erase_and_open">Fshije dhe Hape</string>
-  <string name="shortcut_erase_short_label">Fshije</string>
-  <string name="shortcut_erase_long_label">Fshi historik shfletimesh</string>
-  <string name="shortcut_erase_and_open_short_label">Fshije &amp; hape</string>
-  <string name="shortcut_erase_and_open_long_label">Fshini dhe hapni %1$s</string>
-  <string name="text_selection_search_action">Kërkoni Privatisht</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Privatësi &amp; Siguri</string>
-  <string name="preference_privacy_and_security_summary">Gjurmim, cookies, zgjedhje mbi të dhënat</string>
-  <string name="preference_search_summary">Caktoje parazgjedhje, vetëplotësim</string>
-  <string name="preference_mozilla_summary">Mbi %1$s, ndihmë</string>
-  <string name="preference_category_tracking_protection">Mbrojtje Nga Gjurmimet</string>
-  <string name="preference_category_web_content">Lëndë Web</string>
-  <string name="preference_category_switching_apps">Këmbim Aplikacionesh</string>
-  <string name="preference_category_general">Të përgjithshme</string>
-  <string name="preference_general_summary">Shfletues parazgjedhje, skeda, gjuhë</string>
-  <string name="preference_category_data_collection_use">Grumbullim &amp; Përdorim të Dhënash</string>
-  <string name="preference_category_search">Kërkim</string>
-  <string name="preference_show_search_suggestions">Merrni këshillime kërkimi</string>
-  <string name="preference_show_search_suggestions_summary">%1$s do të dërgojë te motori juaj i kërkimeve atë çka shtypni te shtylla e adresave</string>
-  <string name="preference_search_engine_default">Parazgjedhje</string>
-  <string name="preference_search_engine_label">Motor kërkimesh</string>
-  <string name="preference_state_on">On</string>
-  <string name="preference_state_off">Off</string>
-  <string name="preference_subitem_autocomplete">Vetëplotësim URLje</string>
-  <string name="preference_switch_autocomplete_topsites">Për sajtet Kryesues</string>
-  <string name="preference_autocomplete_topsite_summary">Aktivizojeni që të vetëplotësohen te shtylla e adresave mbi 450 URL popullore.</string>
-  <string name="preference_switch_autocomplete_user_list">Për Sajte Që Shtoni</string>
-  <string name="preference_autocomplete_user_list_summary">Aktivizojeni që të vetëplotësohen te shtylla e adresave mbi 450 URL popullore.</string>
-  <string name="preference_category_autocomplete_manage_sites">Administroni sajte</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Administroni sajte</string>
-  <string name="preference_autocomplete_action_add">+ Shtoni URL vetjake</string>
-  <string name="preference_autocomplete_title_add">Shtoni URL vetjake</string>
-  <string name="custom_autocomplete_quick_add">Shtoni URL vetjake</string>
-  <string name="add_custom_autocomplete_label">Shtoni lidhje për vetëplotësim</string>
-  <string name="preference_category_cookies">Cookies dhe të Dhëna Sajtesh</string>
-  <string name="preference_category_data_choices">Zgjedhje Mbi të Dhënat</string>
-  <string name="preference_autocomplete_title_remove">Hiqni URLra Vetjake</string>
-  <string name="preference_autocomplete_learn_more">Mësoni më tepër</string>
-  <string name="preference_autocomplete_custom_summary">Shtoni dhe administroni URLra vetjake vetëplotësimesh.</string>
-  <string name="preference_autocomplete_add_title">URL për shtim</string>
-  <string name="preference_autocomplete_add_hint">Ngjitni ose jepni URL</string>
-  <string name="preference_autocomplete_add_example2">Shembull: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Shembull: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">U shtua URL vetjake e re.</string>
-  <string name="preference_autocomplete_menu_remove">Hiqe</string>
-  <string name="preference_autocomplete_action_remove_content_description">Hiqe</string>
-  <string name="preference_autocomplete_add_error">Rikontrollojeni URL-në që dhatë.</string>
-  <string name="preference_language">Gjuhë</string>
-  <string name="preference_language_systemdefault">Parazgjedhje sistemi</string>
-  <string name="preference_category_privacy">Privatësi</string>
-  <string name="preference_privacy_block_ads">Blloko gjurmues reklamash</string>
-  <string name="preference_privacy_block_ads_summary">Disa reklama ndjekin vizita sajti, madje edhe kur s’klikoni mbi reklamat</string>
-  <string name="preference_privacy_block_analytics">Blloko gjurmues analizash</string>
-  <string name="preference_privacy_block_analytics_summary">Përdorur për të grumbulluar, analizuar dhe matur veprimtari të tilla si prekje dhe rrëshqitje në faqe</string>
-  <string name="preference_privacy_block_social">Blloko gjurmues platformash shoqërore</string>
-  <string name="preference_privacy_block_social_summary">Të trupëzuara në sajte për të gjurmuar vizitat tuaja dhe për të shfaqur funksione, të tillë si butona ndarjeje me të tjerët</string>
-  <string name="preference_privacy_block_content">Blloko të tjerë gjurmues lënde</string>
-  <string name="preference_privacy_block_content_summary2">Aktivizimi mund të bëjë që disa faqe të sillen ndryshe nga ç’pritet</string>
-  <string name="preference_privacy_category_cookies">Blloko cookie-t</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Jo</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blloko vetëm cookie-t nga palë gjurmuese të treta</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blloko vetëm cookie-t nga palë të treta</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Po</string>
-  <string name="preference_security_biometric">Përdor shenjë gishta për shkyçje aplikacioni</string>
-  <string name="preference_security_biometric_summary">Shenjat tuaja të gishtave mund të shkyçin %1$s, nëse te aplikacioni është e hapur tashmë një URL. Stealth-i do të çaktivizohet.</string>
-  <string name="preference_privacy_secure_mode">Fshehtas</string>
-  <string name="preference_privacy_stealth_summary">Fshihi faqet web kur kalohet nga një aplikacion në tjetrin dhe blloko bërje fotosh ekrani.</string>
-  <string name="preference_category_security">Siguri</string>
-  <string name="preference_category_performance">Punim</string>
-  <string name="preference_performance_block_webfonts">Blloko shkronja Web</string>
-  <string name="preference_performance_block_webfonts_summary">Mund të sjellë mungesë ikonash ose figurash</string>
-  <string name="preference_performance_block_javascript">Blloko JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Faqet mund të ngarkohen më shpejt, por mundet gjithashtu të sillen në mënyrë të papritur</string>
-  <string name="preference_default_browser2">Bëje %1$s-in shfletuesin parazgjedhje</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Dërgo të dhëna përdorimi</string>
-  <string name="preference_mozilla_telemetry_summary">Mësoni më tepër</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla rreket të grumbullojë vetëm sa na duhen për të ofruar dhe përmirësuar %1$s-in për këdo.</string>
-  <string name="preference_privacy_notice">Shënim Mbi Privatësinë</string>
-  <string name="preference_about">Mbi %1$s-in</string>
-  <string name="preference_search_installed_search_engines">Motorë të instaluar</string>
-  <string name="preference_search_restore">Rikthe motorë parazgjedhje kërkimi</string>
-  <string name="preference_search_add2">+ Shtoni motor tjetër kërkimesh</string>
-  <string name="preference_search_remove_title">Hiqni motorë kërkimesh</string>
-  <string name="preference_search_remove">Hiqe</string>
-  <string name="preference_homescreen_tips">Shfaq ndihmëza skene kreu</string>
-  <string name="action_option_add_search_engine">Shtoni motorë kërkimesh</string>
-  <string name="search_add_manually_name_hint">Emër motori kërkimesh</string>
-  <string name="search_add_manually_string">Varg kërkimi për t’u përdorur</string>
-  <string name="search_add_manually_save">Ruaje</string>
-  <string name="search_add_manually_example">Shembull: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Motori i ri i kërkimeve u shtua.</string>
-  <string name="search_add_error_empty_name">Jepni emër motori kërkimesh</string>
-  <string name="search_add_error_duplicate_name">Atë emër e përdor tashmë një motor i instaluar kërkimesh.</string>
-  <string name="search_add_error_empty_search">Jepni varg kërkimi</string>
-  <string name="search_add_error_format">Kontrolloni që vargu i kërkimit të përputhet me formatin Shembull</string>
-  <string name="content_description_clear_input">Pastro ç’është dhënë</string>
-  <string name="content_description_dismiss_input">Hidhe tej</string>
-  <string name="content_description_erase">Fshi historik shfletimesh</string>
-  <string name="content_description_tab_counter">Skeda të hapura: %1$s</string>
-  <string name="content_description_lock">Lidhje e sigurt</string>
-  <string name="accessibility_announcement_loading">Po ngarkohet</string>
-  <string name="accessibility_announcement_loading_finished">Sajti u ngarkua</string>
-  <string name="content_description_menu">Më tepër mundësi</string>
-  <string name="indicator_content_description_menu">Buton për më tepër mundësi</string>
-  <string name="content_description_forward">Lëvizni përpara</string>
-  <string name="content_description_reload">Ringarko sajtin</string>
-  <string name="content_description_back">Shko mbrapsht</string>
-  <string name="content_description_stop">Resht së ngarkuari sajtin</string>
-  <string name="content_description_customtab_exit">Kthehu te aplikacioni i mëparshëm</string>
-  <string name="content_description_trackers_blocked">Numër gjurmuesish të bllokuar</string>
-  <string name="content_description_blocking_switch">Blloko gjurmues</string>
-  <string name="your_rights">Të drejtat Tuaja</string>
-  <string name="external_app_prompt_title">Hape lidhjen me një aplikacion tjetër</string>
-  <string name="external_app_prompt">Mund të lini %1$s-in ta hapë këtë lidhje me %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Gjeni një aplikacion që mund të hapë lidhjen</string>
-  <string name="external_app_prompt_no_app">Asnjë nga aplikacionet në pajisjen tuaj s’është në gjendje të hapë këtë lidhje. Mund të lini %1$s-in të kërkojë në %2$s për një aplikacion që mundet.</string>
-  <string name="external_multiple_apps_matched_exit">Të dilet nga Shfletimi Privat?</string>
-  <string name="download_snackbar_finished">%1$s përfundoi</string>
-  <string name="download_snackbar_open">Hape</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Anuloje</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">Ruaje</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Kërkoni ose jepni adresë</string>
+
+    <string name="teaser">Shfletim automatikisht privat.\nShfletoni. Fshini Gjurmët. Përsëriteni.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Historiku juaj i shfletimit u fshi.</string>
+    <string name="feedback_erase2">Historiku i shfletimit u spastrua</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Historiku i shfletimit në skedë u fshi.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Kërko për %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Ndajeni me të tjerët…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Raporto Problem Sajti</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Hape në %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Hapeni në…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Shtoje te skena e Kreut</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Ç’ka të Re</string>
+    <string name="menu_settings">Rregullime</string>
+    <string name="menu_about">Rreth</string>
+    <string name="menu_help">Ndihmë</string>
+    <string name="menu_rights">Të drejtat Tuaja</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Gjurmues të bllokuar</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Mbyllja e kësaj mund të ndreqë disa probleme sajti</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Bllokim Lënde</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Çaktivizojeni që të ndreqen disa sajte</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Powered by %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Ndajeni përmes</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Fshini historik shfletimesh</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Hape</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Fshije dhe Hape</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Fshije</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Fshi historik shfletimesh</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Fshije &amp; hape</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Fshini dhe hapni %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Kërkoni Privatisht</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s ju vë juve në kontroll.</p>
+<p>Përdoreni si një shfletues privat:
+  <ul>
+    <li>Kërkoni dhe shfletoni drejt e nga aplikacioni</li>
+    <li>Bllokoni gjurmues (ose përditësoni rregullimet për lejim gjurmuesish)</li>
+    <li>Fshini cookie-t dhe historik kërkimesh dhe shfletimesh</li>
+  </ul>
+</p>
+<p>%1$s prodhohet nga Mozilla. Misioni ynë është të nxisim një Internet të shëndetshëm, të hapët.<br/>
+<a href="%2$s">Mësoni më tepër</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Privatësi &amp; Siguri</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Gjurmim, cookies, zgjedhje mbi të dhënat</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Caktoje parazgjedhje, vetëplotësim</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Mbi %1$s, ndihmë</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Mbrojtje Nga Gjurmimet</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Lëndë Web</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Këmbim Aplikacionesh</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Të përgjithshme</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Shfletues parazgjedhje, skeda, gjuhë</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Grumbullim &amp; Përdorim të Dhënash</string>
+
+    <string name="preference_category_search">Kërkim</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Merrni këshillime kërkimi</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s do të dërgojë te motori juaj i kërkimeve atë çka shtypni te shtylla e adresave</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Parazgjedhje</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Motor kërkimesh</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">On</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Off</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Vetëplotësim URLje</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Për sajtet Kryesues</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Aktivizojeni që të vetëplotësohen te shtylla e adresave mbi 450 URL popullore.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Për Sajte Që Shtoni</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Aktivizojeni që të vetëplotësohen te shtylla e adresave mbi 450 URL popullore.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Administroni sajte</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Administroni sajte</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Shtoni URL vetjake</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Shtoni URL vetjake</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Shtoni URL vetjake</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Shtoni lidhje për vetëplotësim</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookies dhe të Dhëna Sajtesh</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Zgjedhje Mbi të Dhënat</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Hiqni URLra Vetjake</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Mësoni më tepër</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Shtoni dhe administroni URLra vetjake vetëplotësimesh.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL për shtim</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Ngjitni ose jepni URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Shembull: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Shembull: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">U shtua URL vetjake e re.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Hiqe</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Hiqe</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Rikontrollojeni URL-në që dhatë.</string>
+
+    <string name="preference_language">Gjuhë</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Parazgjedhje sistemi</string>
+
+    <string name="preference_category_privacy">Privatësi</string>
+    <string name="preference_privacy_block_ads">Blloko gjurmues reklamash</string>
+    <string name="preference_privacy_block_ads_summary">Disa reklama ndjekin vizita sajti, madje edhe kur s’klikoni mbi reklamat</string>
+    <string name="preference_privacy_block_analytics">Blloko gjurmues analizash</string>
+    <string name="preference_privacy_block_analytics_summary">Përdorur për të grumbulluar, analizuar dhe matur veprimtari të tilla si prekje dhe rrëshqitje në faqe</string>
+    <string name="preference_privacy_block_social">Blloko gjurmues platformash shoqërore</string>
+    <string name="preference_privacy_block_social_summary">Të trupëzuara në sajte për të gjurmuar vizitat tuaja dhe për të shfaqur funksione, të tillë si butona ndarjeje me të tjerët</string>
+    <string name="preference_privacy_block_content">Blloko të tjerë gjurmues lënde</string>
+    <string name="preference_privacy_block_content_summary2">Aktivizimi mund të bëjë që disa faqe të sillen ndryshe nga ç’pritet</string>
+    <string name="preference_privacy_category_cookies">Blloko cookie-t</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">Jo</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blloko vetëm cookie-t nga palë gjurmuese të treta</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Blloko vetëm cookie-t nga palë të treta</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">Po</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Përdor shenjë gishta për shkyçje aplikacioni</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Shenjat tuaja të gishtave mund të shkyçin %1$s, nëse te aplikacioni është e hapur tashmë një URL. Stealth-i do të çaktivizohet.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Fshehtas</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Fshihi faqet web kur kalohet nga një aplikacion në tjetrin dhe blloko bërje fotosh ekrani.</string>
+
+    <string name="preference_category_security">Siguri</string>
+
+    <string name="preference_category_performance">Punim</string>
+    <string name="preference_performance_block_webfonts">Blloko shkronja Web</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Mund të sjellë mungesë ikonash ose figurash</string>
+
+    <string name="preference_performance_block_javascript">Blloko JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Faqet mund të ngarkohen më shpejt, por mundet gjithashtu të sillen në mënyrë të papritur</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Bëje %1$s-in shfletuesin parazgjedhje</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Dërgo të dhëna përdorimi</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Mësoni më tepër</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla rreket të grumbullojë vetëm sa na duhen për të ofruar dhe përmirësuar %1$s-in për këdo.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Shënim Mbi Privatësinë</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Mbi %1$s-in</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Motorë të instaluar</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Rikthe motorë parazgjedhje kërkimi</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Shtoni motor tjetër kërkimesh</string>
+    <string name="preference_search_remove_title">Hiqni motorë kërkimesh</string>
+    <string name="preference_search_remove">Hiqe</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Shfaq ndihmëza skene kreu</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Shtoni motorë kërkimesh</string>
+
+    <string name="search_add_manually_name_hint">Emër motori kërkimesh</string>
+    <string name="search_add_manually_string">Varg kërkimi për t’u përdorur</string>
+    <string name="search_add_manually_save">Ruaje</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Shembull: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Motori i ri i kërkimeve u shtua.</string>
+
+    <string name="search_add_error_empty_name">Jepni emër motori kërkimesh</string>
+    <string name="search_add_error_duplicate_name">Atë emër e përdor tashmë një motor i instaluar kërkimesh.</string>
+
+    <string name="search_add_error_empty_search">Jepni varg kërkimi</string>
+
+    <string name="search_add_error_format">Kontrolloni që vargu i kërkimit të përputhet me formatin Shembull</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Pastro ç’është dhënë</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Hidhe tej</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Fshi historik shfletimesh</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Skeda të hapura: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Lidhje e sigurt</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Po ngarkohet</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Sajti u ngarkua</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Më tepër mundësi</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Buton për më tepër mundësi</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Lëvizni përpara</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Ringarko sajtin</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Shko mbrapsht</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Resht së ngarkuari sajtin</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Kthehu te aplikacioni i mëparshëm</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Numër gjurmuesish të bllokuar</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Blloko gjurmues</string>
+
+    <string name="your_rights">Të drejtat Tuaja</string>
+
+    <string name="external_app_prompt_title">Hape lidhjen me një aplikacion tjetër</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Mund të lini %1$s-in ta hapë këtë lidhje me %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Gjeni një aplikacion që mund të hapë lidhjen</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Asnjë nga aplikacionet në pajisjen tuaj s’është në gjendje të hapë këtë lidhje. Mund të lini %1$s-in të kërkojë në %2$s për një aplikacion që mundet.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Të dilet nga Shfletimi Privat?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s përfundoi</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Hape</string>
 
 
 
@@ -176,91 +468,272 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Fuqizoni privatësinë tuaj</string>
-  <string name="firstrun_defaultbrowser_text2">Kalojeni shfletimin privat një shkallë më sipër. Bllokoni reklama dhe lëndë tjetër që mund t’ju gjurmojë nga sajti në sajt dhe të ulë kohën e ngarkimit të faqeve.</string>
-  <string name="firstrun_search_title">Kërkimi juaj, me mënyrën tuaj</string>
-  <string name="firstrun_search_text">Po kërkoni për diçka tjetër? Zgjidhni te Rregullimet një tjetër motor parazgjedhje kërkimesh.</string>
-  <string name="firstrun_shortcut_title">Shtoni shkurtore te skena juaj e kreut</string>
-  <string name="firstrun_shortcut_text">Rikthehuni shpejt te sajtet tuaj të parapëlqyer, me %1$s. Thjesht përzgjidhni \"Shtoje te skena e Kreut\", që nga menuja e %1$s-it.</string>
-  <string name="firstrun_privacy_title">Bëjeni zakon privatësinë</string>
-  <string name="firstrun_privacy_text">Vëreni %1$s-in si shfletuesin tuaj parazgjedhje dhe përfitoni të mirat e shfletimit privat, kur hapni faqe në web që nga aplikacione të tjera.</string>
-  <string name="firstrun_close_button">OK, e mora vesh!</string>
-  <string name="firstrun_skip_button">Anashkaloje</string>
-  <string name="firstrun_next_button">Pasuesja</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Shtoje</string>
-  <string name="dialog_addtohomescreen_action_cancel">Anuloje</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Shkurtorja do të hapet me Mbrojtjen Nga Gjurmimet të çaktivizuar</string>
-  <string name="notification_browsing_session_channel_name">Sesion shfletimi privat</string>
-  <string name="notification_browsing_session_channel_description">Njoftimet ju lejojnë të fshini me një prekje sesionin tuaj %1$s. S’ju duhet të hapni aplikacionin apo të shihni se ç’po xhiron në shfletuesin tuaj.</string>
-  <string name="tabs_tray_action_erase">Fshi historik shfletimesh</string>
-  <string name="download_firefox">Shkarkoni Firefox-in</string>
-  <string name="your_rights_content1">%1$s është software i lirë dhe me burim të hapur, i krijuar nga Mozilla dhe kontribues të tjerë.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Fuqizoni privatësinë tuaj</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Kalojeni shfletimin privat një shkallë më sipër. Bllokoni reklama dhe lëndë tjetër që mund t’ju gjurmojë nga sajti në sajt dhe të ulë kohën e ngarkimit të faqeve.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Kërkimi juaj, me mënyrën tuaj</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Po kërkoni për diçka tjetër? Zgjidhni te Rregullimet një tjetër motor parazgjedhje kërkimesh.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Shtoni shkurtore te skena juaj e kreut</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Rikthehuni shpejt te sajtet tuaj të parapëlqyer, me %1$s. Thjesht përzgjidhni \&quot;Shtoje te skena e Kreut\&quot;, që nga menuja e %1$s-it.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Bëjeni zakon privatësinë</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Vëreni %1$s-in si shfletuesin tuaj parazgjedhje dhe përfitoni të mirat e shfletimit privat, kur hapni faqe në web që nga aplikacione të tjera.</string>
+
+    <string name="firstrun_close_button">OK, e mora vesh!</string>
+    <string name="firstrun_skip_button">Anashkaloje</string>
+    <string name="firstrun_next_button">Pasuesja</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Shtoje</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Anuloje</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Shkurtorja do të hapet me Mbrojtjen Nga Gjurmimet të çaktivizuar</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Sesion shfletimi privat</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Njoftimet ju lejojnë të fshini me një prekje sesionin tuaj %1$s. S’ju duhet të hapni aplikacionin apo të shihni se ç’po xhiron në shfletuesin tuaj.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Fshi historik shfletimesh</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Shkarkoni Firefox-in</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s është software i lirë dhe me burim të hapur, i krijuar nga Mozilla dhe kontribues të tjerë.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Emër përdoruesi</string>
-  <string name="gv_prompt_password_hint">Fjalëkalim</string>
-  <string name="gv_prompt_clear">Pastroje</string>
-  <string name="security_popup_secure_connection">Lidhje e Sigurt</string>
-  <string name="security_popup_insecure_connection">Lidhje e Pasigurt</string>
-  <string name="security_popup_security_verified">Verifikuar nga: %1$s</string>
-  <string name="site_security_icon_content_description">Siguri Sajti</string>
-  <string name="preference_autocomplete_duplicate_url_error">Ka tashmë një URL të tillë</string>
-  <string name="find_in_page">Gjej në Faqe</string>
-  <string name="find_in_page_input">Gje në faqe</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d nga %2$d</string>
-  <string name="accessibility_next_result">Gjej përfundimin pasues</string>
-  <string name="accessibility_previous_result">Gjej përfundimin e mëparshëm</string>
-  <string name="accessibility_dismiss_find_in_page">Hidhe tej gjetjen në faqe</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s ju jepet sipas kushteve të <a href="%2$s">Mozilla Public License</a> dhe licencash të tjera burimi të hapët.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Nuk ju jepet ndonjë e drejtë apo licenca mbi shenjat tregtare të Mozilla Foundation-it apo cilësdo palë tjetër, përfshi emrat apo stemat e Mozilla-s, Firefox-it apo %1$s. Hollësi shtesë mund të gjeni <a href="%2$s">këtu</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Më tepër kod burim për %1$s ka sipas <a href="%2$s">licencash</a> të tjera të ndryshme programesh të lira dhe me burim të hapët.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s përdor gjithashtu një listë ndalimesh të furnizuar nga Disconnect, Inc., si vepra më vete dhe të pavarura, nën <a href="%2$s">GNU General Public License v3</a>, dhe të passhme prej <a href="%3$s">këtu</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Emër përdoruesi</string>
+    <string name="gv_prompt_password_hint">Fjalëkalim</string>
+    <string name="gv_prompt_clear">Pastroje</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Lidhje e Sigurt</string>
+    <string name="security_popup_insecure_connection">Lidhje e Pasigurt</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Verifikuar nga: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Siguri Sajti</string>
+    <string name="preference_autocomplete_duplicate_url_error">Ka tashmë një URL të tillë</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Gjej në Faqe</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Gje në faqe</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d nga %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Gjej përfundimin pasues</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Gjej përfundimin e mëparshëm</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Hidhe tej gjetjen në faqe</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Kërko sajtin për dekstop</string>
-  <string name="custom_tab_copy_url_action">URL-ja u kopjua</string>
-  <string name="preference_advanced_summary">Mjete zhvilluesi</string>
-  <string name="preference_category_advanced">Të mëtejshme</string>
-  <string name="preference_remote_debugging">Diagnostikim i largët përmes USB/Wi-Fi</string>
-  <string name="biometric_auth_title">Shkyçe %1$s</string>
-  <string name="biometric_auth_description">Që të vazhdohet, prekni ndijuesin e shenjave të gishtave.</string>
-  <string name="biometric_auth_new_session">Sesion i Ri</string>
-  <string name="biometric_auth_image_description">Ikonë shenjash gishtash</string>
-  <string name="biometric_auth_not_recognized_error">Shenja gishta të papranuar. Riprovoni.</string>
-  <string name="biometric_auth_moved_too_quickly">Gishti lëvizni shumë shpejt. Riprovoni.</string>
-  <string name="enable_search_suggestion_title">Do të donit të aktivizohen këshillime kërkimi?</string>
-  <string name="enable_search_suggestion_subtitle">Që të merrni këshillime kërkimi, %1$s lyp të dërgojë te motori i kërkimeve që keni zgjedhur atë çka shtypni te shtylla e adresave. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Mësoni më tepër</string>
-  <string name="enable_search_suggestions_no">Jo</string>
-  <string name="enable_search_suggestions_yes">Po</string>
-  <string name="no_suggestions_message">Disa motorë kërkimesh s’shfaqin dot këshillimet.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Mos e merr parasysh</string>
-  <string name="tip_disable_tracking_protection">Sajt që sillet çuditshëm?\n Provoni çaktivizimin e Mbrojtjes Nga Gjurmimi</string>
-  <string name="tip_add_to_homescreen">Kini hyrje me-një-prekje për sajtet që përdorni më shpesh%1$s Menu &gt; Shtoje te skena Kreu</string>
-  <string name="tip_set_default_browser">Hape çdo lidhje në %1$s\n Caktojeni %1$s si shfletuesin parazgjedhje</string>
-  <string name="tip_autocomplete_url">Vetëplotësim URL-sh për sajtet që përdorni më shpesh\n Shtypni paksa çfarëdo URL-je te shtylla e adresave</string>
-  <string name="tip_open_in_new_tab">Hapni një lidhje në një skedë të re\n Shtypeni paksa çfarëdo lidhje në një faqe</string>
-  <string name="tip_request_desktop">Më mirë të shihni sajtin e plotë për desktop?%1$s Menu &gt; Kërko sajtin për desktop</string>
-  <string name="tip_disable_tips2">Mbylli ndihmëzat te skena e nisjes</string>
-  <string name="tip_explain_allowlist">Sajt i besueshëm?\n Allowlist e çaktivizon Mbrojtjen Nga Gjurmimet për sajte që i njihni dhe u besoni.</string>
-  <string name="new_tab_opened_snackbar">U hap skedë e re</string>
-  <string name="open_new_tab_snackbar">Kalo në të</string>
-  <string name="preference_open_new_tab">Kalo menjëherë te lidhja në skedën e re</string>
-  <string name="preference_category_safe_browsing">Shfletim i Parrezik</string>
-  <string name="preference_safe_browsing_title">Bllokoni sajte potencialisht të rrezikshëm dhe të rrejshëm</string>
-  <string name="preference_safe_browsing_summary">Bllokoni sajte të raportuar si të rrejshëm dhe sulmesh, sajte malware-i, dhe sajte software-i të padëshiruar.</string>
-  <string name="preference_exceptions">Përjashtime</string>
-  <string name="preference_exceptions_description">E keni çaktivizuar Bllokimin e Lëndës për këto sajte.</string>
-  <string name="preference_exceptions_menu_remove">Hiqe</string>
-  <string name="preference_exceptions_remove_all_button_label">Hiqi krejt sajtet</string>
-  <string name="tab_crash_report_title">Skeda u Vithis</string>
-  <string name="tab_crash_report_headline">Na ndjeni. Po kemi një problem me këtë skedë.</string>
-  <string name="tab_crash_report_description">Si një shfletues privat, nuk e ruajmë kurrë dhe nuk mund të rikthejmë këtë skedë.</string>
-  <string name="tab_crash_report_close_tab_button_label">Mbylle Skedën</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Kërko sajtin për dekstop</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Sajt për desktop</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL-ja u kopjua</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Mjete zhvilluesi</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Të mëtejshme</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Diagnostikim i largët përmes USB/Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Shkyçe %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Që të vazhdohet, prekni ndijuesin e shenjave të gishtave.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Sesion i Ri</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Hape Lidhjen në Sesion të Ri</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Ikonë shenjash gishtash</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Shenja gishta të papranuar. Riprovoni.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Gishti lëvizni shumë shpejt. Riprovoni.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">Do të donit të aktivizohen këshillime kërkimi?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">Që të merrni këshillime kërkimi, %1$s lyp të dërgojë te motori i kërkimeve që keni zgjedhur atë çka shtypni te shtylla e adresave. %2$s.</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">Mësoni më tepër</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Jo</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Po</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Disa motorë kërkimesh s’shfaqin dot këshillimet.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Mos e merr parasysh</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Sajt që sillet çuditshëm?\n Provoni çaktivizimin e Mbrojtjes Nga Gjurmimi</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Kini hyrje me-një-prekje për sajtet që përdorni më shpesh%1$s Menu > Shtoje te skena Kreu]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Hape çdo lidhje në %1$s\n Caktojeni %1$s si shfletuesin parazgjedhje</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Vetëplotësim URL-sh për sajtet që përdorni më shpesh\n Shtypni paksa çfarëdo URL-je te shtylla e adresave</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Hapni një lidhje në një skedë të re\n Shtypeni paksa çfarëdo lidhje në një faqe</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[Më mirë të shihni sajtin e plotë për desktop?%1$s Menu > Kërko sajtin për desktop]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Mbylli ndihmëzat te skena e nisjes</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">Sajt i besueshëm?\n Allowlist e çaktivizon Mbrojtjen Nga Gjurmimet për sajte që i njihni dhe u besoni.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">U hap skedë e re</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Kalo në të</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Kalo menjëherë te lidhja në skedën e re</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Shfletim i Parrezik</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Bllokoni sajte potencialisht të rrezikshëm dhe të rrejshëm</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Bllokoni sajte të raportuar si të rrejshëm dhe sulmesh, sajte malware-i, dhe sajte software-i të padëshiruar.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Përjashtime</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">E keni çaktivizuar Bllokimin e Lëndës për këto sajte.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Hiqe</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Hiqi krejt sajtet</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Skeda u Vithis</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Na ndjeni. Po kemi një problem me këtë skedë.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Si një shfletues privat, nuk e ruajmë kurrë dhe nuk mund të rikthejmë këtë skedë.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Mbylle Skedën</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Dërgoni raport vithisje te Mozilla</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Dërgoni raport vithisje te Mozilla</string>
 </resources>

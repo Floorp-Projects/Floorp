@@ -1,152 +1,444 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Hủy bỏ</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">Lưu</string>
-  <string name="urlbar_hint">Tìm kiếm hoặc nhập địa chỉ</string>
-  <string name="teaser">Duyệt web riêng tư.\nDuyệt. Xóa. Lặp lại.</string>
-  <string name="feedback_erase">Lịch sử duyệt web của bạn đã bị xóa.</string>
-  <string name="feedback_erase_custom_tab">Lịch sử duyệt web của thẻ đã bị xóa.</string>
-  <string name="search_hint">Tìm kiếm %1$s</string>
-  <string name="menu_share">Chia sẻ…</string>
-  <string name="menu_report_site_issue">Báo cáo vấn đề về trang</string>
-  <string name="menu_open_with_default_browser2">Mở bằng %1$s</string>
-  <string name="menu_open_with_a_browser2">Mở bằng…</string>
-  <string name="menu_add_to_home_screen">Thêm vào màn hình chính</string>
-  <string name="menu_whats_new">Có gì mới</string>
-  <string name="menu_settings">Cài đặt</string>
-  <string name="menu_about">Giới thiệu</string>
-  <string name="menu_help">Trợ giúp</string>
-  <string name="menu_rights">Quyền lợi của bạn</string>
-  <string name="menu_trackers_blocked_title">Trình theo dõi đã chặn</string>
-  <string name="menu_trackers_blocked_subtitle">Tắt tính năng này có thể khắc phục một số vấn đề về trang web</string>
-  <string name="menu_content_blocking">Chặn nội dung</string>
-  <string name="menu_content_blocking_subtitle">Tắt để khắc phục lỗi một số trang web</string>
-  <string name="menu_custom_tab_branding">Được hỗ trợ bởi %1$s</string>
-  <string name="share_dialog_title">Chia sẻ qua</string>
-  <string name="notification_erase_text">Xóa lịch sử duyệt web</string>
-  <string name="notification_action_open">Mở</string>
-  <string name="notification_action_erase_and_open">Xóa và mở</string>
-  <string name="shortcut_erase_short_label">Xóa</string>
-  <string name="shortcut_erase_long_label">Xóa lịch sử duyệt web</string>
-  <string name="shortcut_erase_and_open_short_label">Xóa &amp; mở</string>
-  <string name="shortcut_erase_and_open_long_label">Xóa và mở %1$s</string>
-  <string name="text_selection_search_action">Tìm kiếm riêng tư hơn</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Riêng tư &amp; Bảo mật</string>
-  <string name="preference_privacy_and_security_summary">Theo dõi, cookie, lựa chọn dữ liệu</string>
-  <string name="preference_search_summary">Đặt làm mặc định, tự đồng điền</string>
-  <string name="preference_mozilla_summary">Giới thiệu về %1$s, trợ giúp</string>
-  <string name="preference_category_tracking_protection">Trình chống theo dõi</string>
-  <string name="preference_category_web_content">Nội dung web</string>
-  <string name="preference_category_switching_apps">Chuyển đổi ứng dụng</string>
-  <string name="preference_category_general">Chung</string>
-  <string name="preference_general_summary">Trình duyệt mặc định, thẻ, ngôn ngữ</string>
-  <string name="preference_category_data_collection_use">Thu thập &amp; sử dụng dữ liệu</string>
-  <string name="preference_category_search">Tìm kiếm</string>
-  <string name="preference_show_search_suggestions">Nhận gợi ý tìm kiếm</string>
-  <string name="preference_show_search_suggestions_summary">%1$s sẽ gửi nội dung bạn nhập vào thanh địa chỉ đến công cụ tìm kiếm của bạn</string>
-  <string name="preference_search_engine_default">Mặc định</string>
-  <string name="preference_search_engine_label">Máy tìm kiếm</string>
-  <string name="preference_state_on">Bật</string>
-  <string name="preference_state_off">Tắt</string>
-  <string name="preference_subitem_autocomplete">URL tự động điền</string>
-  <string name="preference_switch_autocomplete_topsites">Với các trang web hàng đầu</string>
-  <string name="preference_autocomplete_topsite_summary">Bật để tự động hoàn thành hơn 450 URL phổ biến trong thanh địa chỉ.</string>
-  <string name="preference_switch_autocomplete_user_list">Với trang web bạn thêm</string>
-  <string name="preference_autocomplete_user_list_summary">Bật để tự động hoàn thành hơn 450 URL phổ biến trong thanh địa chỉ.</string>
-  <string name="preference_category_autocomplete_manage_sites">Quản lý trang web</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Quản lý trang web</string>
-  <string name="preference_autocomplete_action_add">+ Thêm URL tùy chỉnh</string>
-  <string name="preference_autocomplete_title_add">Thêm URL tùy chỉnh</string>
-  <string name="custom_autocomplete_quick_add">Thêm URL tùy chỉnh</string>
-  <string name="add_custom_autocomplete_label">Thêm liên kết vào tự động điền</string>
-  <string name="preference_category_cookies">Cookie và dữ liệu trang</string>
-  <string name="preference_category_data_choices">Lựa chọn dữ liệu</string>
-  <string name="preference_autocomplete_title_remove">Loại bỏ các URL tùy chỉnh</string>
-  <string name="preference_autocomplete_learn_more">Tìm hiểu thêm</string>
-  <string name="preference_autocomplete_custom_summary">Thêm và quản lý các URL tùy chỉnh tự động điền.</string>
-  <string name="preference_autocomplete_add_title">URL muốn thêm</string>
-  <string name="preference_autocomplete_add_hint">Dán hoặc nhập URL</string>
-  <string name="preference_autocomplete_add_example2">Ví dụ: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Ví dụ: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">URL tùy chỉnh mới đã được thêm vào.</string>
-  <string name="preference_autocomplete_menu_remove">Loại bỏ</string>
-  <string name="preference_autocomplete_action_remove_content_description">Loại bỏ</string>
-  <string name="preference_autocomplete_add_error">Kiểm tra lại URL mà bạn đã nhập.</string>
-  <string name="preference_language">Ngôn ngữ</string>
-  <string name="preference_language_systemdefault">Mặc định của hệ thống</string>
-  <string name="preference_category_privacy">Riêng tư</string>
-  <string name="preference_privacy_block_ads">Chặn trình theo dõi quảng cáo</string>
-  <string name="preference_privacy_block_ads_summary">Một số quảng cáo theo dõi lượt truy cập trang, ngay cả khi bạn không click vào quảng cáo</string>
-  <string name="preference_privacy_block_analytics">Chặn trình theo dõi phân tích</string>
-  <string name="preference_privacy_block_analytics_summary">Được sử dụng để thu thập, phân tích và đo lường các hoạt động như chạm và cuộn trang</string>
-  <string name="preference_privacy_block_social">Chặn trình theo dõi xã hội</string>
-  <string name="preference_privacy_block_social_summary">Được nhúng vào các trang để theo dõi lượt truy cập của bạn và để hiển thị tính năng chẳng hạn như các nút chia sẻ</string>
-  <string name="preference_privacy_block_content">Chặn trình theo dõi khác</string>
-  <string name="preference_privacy_block_content_summary2">Việc kích hoạt có thể khiến một số trang hoạt động không như mong đợi</string>
-  <string name="preference_privacy_category_cookies">Chặn cookie</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Không</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Chỉ chặn cookie theo dõi của bên thứ ba</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Chỉ chặn cookie bên thứ ba</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Có</string>
-  <string name="preference_security_biometric">Sử dụng vân tay để mở khóa ứng dụng</string>
-  <string name="preference_security_biometric_summary">Cảm biến vân tay của bạn có thể mở khóa %1$s nếu một URL đã được mở trong ứng dụng. Riêng tư sẽ được kích hoạt.</string>
-  <string name="preference_privacy_secure_mode">Chế độ ẩn</string>
-  <string name="preference_privacy_stealth_summary">Ẩn trang web khi chuyển sang ứng dụng khác và chặn chụp ảnh màn hình.</string>
-  <string name="preference_category_security">Bảo mật</string>
-  <string name="preference_category_performance">Hiệu suất</string>
-  <string name="preference_performance_block_webfonts">Chặn phông chữ trang Web</string>
-  <string name="preference_performance_block_webfonts_summary">Có thể dẫn đến thiếu biểu tượng hoặc hình ảnh</string>
-  <string name="preference_performance_block_javascript">Chặn JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Trang có thể tải nhanh hơn, nhưng cũng có thể hoạt động thiếu ổn định</string>
-  <string name="preference_default_browser2">Đặt %1$s làm trình duyệt mặc định</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Gửi dữ liệu sử dụng</string>
-  <string name="preference_mozilla_telemetry_summary">Tìm hiểu thêm</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla chỉ thu thập những gì chúng tôi cần cung cấp và cải tiến %1$s cho tất cả mọi người.</string>
-  <string name="preference_privacy_notice">Chính sách riêng tư</string>
-  <string name="preference_about">Thông tin về %1$s</string>
-  <string name="preference_search_installed_search_engines">Công cụ tìm kiếm đã cài đặt</string>
-  <string name="preference_search_restore">Khôi phục công cụ tìm kiếm mặc định</string>
-  <string name="preference_search_add2">+ Thêm công cụ tìm kiếm khác</string>
-  <string name="preference_search_remove_title">Gỡ bỏ công cụ tìm kiếm</string>
-  <string name="preference_search_remove">Gỡ bỏ</string>
-  <string name="preference_homescreen_tips">Hiện mẹo trên màn hình chính</string>
-  <string name="action_option_add_search_engine">Thêm công cụ tìm kiếm</string>
-  <string name="search_add_manually_name_hint">Tên công cụ tìm kiếm</string>
-  <string name="search_add_manually_string">Chuỗi tìm kiếm để sử dụng</string>
-  <string name="search_add_manually_save">Lưu</string>
-  <string name="search_add_manually_example">Ví dụ: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Đã thêm công cụ tìm kiếm mới.</string>
-  <string name="search_add_error_empty_name">Nhập tên công cụ tìm kiếm</string>
-  <string name="search_add_error_duplicate_name">Một công cụ tìm kiếm đã cài đặt đã sử dụng cùng tên này.</string>
-  <string name="search_add_error_empty_search">Nhập chuỗi tìm kiếm</string>
-  <string name="search_add_error_format">Kiểm tra xem chuỗi tìm kiếm có đúng với định dạng như ở ví dụ không</string>
-  <string name="content_description_clear_input">Xóa trắng</string>
-  <string name="content_description_dismiss_input">Bỏ qua</string>
-  <string name="content_description_erase">Xóa lịch sử duyệt web</string>
-  <string name="content_description_tab_counter">Thẻ đang mở: %1$s</string>
-  <string name="content_description_lock">Kết nối an toàn</string>
-  <string name="accessibility_announcement_loading">Đang tải</string>
-  <string name="accessibility_announcement_loading_finished">Đã tải xong trang web</string>
-  <string name="content_description_menu">Tùy chọn thêm</string>
-  <string name="indicator_content_description_menu">Nút tùy chọn khác</string>
-  <string name="content_description_forward">Điều hướng tiến</string>
-  <string name="content_description_reload">Tải lại trang web</string>
-  <string name="content_description_back">Điều hướng lùi</string>
-  <string name="content_description_stop">Dừng tải trang web</string>
-  <string name="content_description_customtab_exit">Quay về ứng dụng trước đó</string>
-  <string name="content_description_trackers_blocked">Số trình theo dõi đã chặn</string>
-  <string name="content_description_blocking_switch">Chặn theo dõi</string>
-  <string name="your_rights">Quyền lợi của bạn</string>
-  <string name="external_app_prompt_title">Mở đường dẫn trong ứng dụng khác</string>
-  <string name="external_app_prompt">Bạn có thể rời khỏi %1$s để mở liên kết này trong %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Tìm ứng dụng có thể mở liên kết này</string>
-  <string name="external_app_prompt_no_app">Không có ứng dụng nào trên thiết bị của bạn có thể mở liên kết này. Bạn có thể rời khỏi %1$s để tìm ứng dụng có thể mở %2$s.</string>
-  <string name="external_multiple_apps_matched_exit">Thoát duyệt web riêng tư?</string>
-  <string name="download_snackbar_finished">Đã tải xong %1$s</string>
-  <string name="download_snackbar_open">Mở</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Hủy bỏ</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">Lưu</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Tìm kiếm hoặc nhập địa chỉ</string>
+
+    <string name="teaser">Duyệt web riêng tư.\nDuyệt. Xóa. Lặp lại.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Lịch sử duyệt web của bạn đã bị xóa.</string>
+    <string name="feedback_erase2">Lịch sử duyệt web đã bị xóa</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Lịch sử duyệt web của thẻ đã bị xóa.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Tìm kiếm %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Chia sẻ…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Báo cáo vấn đề về trang</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Mở bằng %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Mở bằng…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Thêm vào màn hình chính</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Có gì mới</string>
+    <string name="menu_settings">Cài đặt</string>
+    <string name="menu_about">Giới thiệu</string>
+    <string name="menu_help">Trợ giúp</string>
+    <string name="menu_rights">Quyền lợi của bạn</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Trình theo dõi đã chặn</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Tắt tính năng này có thể khắc phục một số vấn đề về trang web</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Chặn nội dung</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Tắt để khắc phục lỗi một số trang web</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Được hỗ trợ bởi %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Chia sẻ qua</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Xóa lịch sử duyệt web</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Mở</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Xóa và mở</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Xóa</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Xóa lịch sử duyệt web</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Xóa &amp; mở</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Xóa và mở %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Tìm kiếm riêng tư hơn</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s giúp bạn kiểm soát mọi thứ.</p>
+<p>Sử dụng nó như một trình duyệt riêng tư:
+  <ul>
+    <li>Tìm kiếm và duyệt ngay trong ứng dụng</li>
+    <li>Chặn các trình theo dõi (hoặc cập nhật cài đặt để cho phép các trình theo dõi)</li>
+    <li>Xóa cookie cũng như lịch sử tìm kiếm và duyệt web khi xong phiên làm việc</li>
+  </ul>
+</p>
+<p>%1$s được sản xuất bởi Mozilla. Nhiệm vụ của chúng tôi là thúc đẩy một Internet lành mạnh, cởi mở.<br/>
+<a href="%2$s">Tìm hiểu thêm</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Riêng tư &amp; Bảo mật</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Theo dõi, cookie, lựa chọn dữ liệu</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Đặt làm mặc định, tự đồng điền</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Giới thiệu về %1$s, trợ giúp</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Trình chống theo dõi</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Nội dung web</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Chuyển đổi ứng dụng</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Chung</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Trình duyệt mặc định, thẻ, ngôn ngữ</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Thu thập &amp; sử dụng dữ liệu</string>
+
+    <string name="preference_category_search">Tìm kiếm</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Nhận gợi ý tìm kiếm</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s sẽ gửi nội dung bạn nhập vào thanh địa chỉ đến công cụ tìm kiếm của bạn</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Mặc định</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Máy tìm kiếm</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Bật</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Tắt</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL tự động điền</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Với các trang web hàng đầu</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Bật để tự động hoàn thành hơn 450 URL phổ biến trong thanh địa chỉ.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Với trang web bạn thêm</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Bật để tự động hoàn thành hơn 450 URL phổ biến trong thanh địa chỉ.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Quản lý trang web</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Quản lý trang web</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Thêm URL tùy chỉnh</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Thêm URL tùy chỉnh</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Thêm URL tùy chỉnh</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Thêm liên kết vào tự động điền</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookie và dữ liệu trang</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Lựa chọn dữ liệu</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Loại bỏ các URL tùy chỉnh</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Tìm hiểu thêm</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Thêm và quản lý các URL tùy chỉnh tự động điền.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL muốn thêm</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Dán hoặc nhập URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Ví dụ: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Ví dụ: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">URL tùy chỉnh mới đã được thêm vào.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Loại bỏ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Loại bỏ</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Kiểm tra lại URL mà bạn đã nhập.</string>
+
+    <string name="preference_language">Ngôn ngữ</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Mặc định của hệ thống</string>
+
+    <string name="preference_category_privacy">Riêng tư</string>
+    <string name="preference_privacy_block_ads">Chặn trình theo dõi quảng cáo</string>
+    <string name="preference_privacy_block_ads_summary">Một số quảng cáo theo dõi lượt truy cập trang, ngay cả khi bạn không click vào quảng cáo</string>
+    <string name="preference_privacy_block_analytics">Chặn trình theo dõi phân tích</string>
+    <string name="preference_privacy_block_analytics_summary">Được sử dụng để thu thập, phân tích và đo lường các hoạt động như chạm và cuộn trang</string>
+    <string name="preference_privacy_block_social">Chặn trình theo dõi xã hội</string>
+    <string name="preference_privacy_block_social_summary">Được nhúng vào các trang để theo dõi lượt truy cập của bạn và để hiển thị tính năng chẳng hạn như các nút chia sẻ</string>
+    <string name="preference_privacy_block_content">Chặn trình theo dõi khác</string>
+    <string name="preference_privacy_block_content_summary2">Việc kích hoạt có thể khiến một số trang hoạt động không như mong đợi</string>
+    <string name="preference_privacy_category_cookies">Chặn cookie</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">Không</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Chỉ chặn cookie theo dõi của bên thứ ba</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Chỉ chặn cookie bên thứ ba</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">Có</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Sử dụng vân tay để mở khóa ứng dụng</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Cảm biến vân tay của bạn có thể mở khóa %1$s nếu một URL đã được mở trong ứng dụng. Riêng tư sẽ được kích hoạt.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Chế độ ẩn</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Ẩn trang web khi chuyển sang ứng dụng khác và chặn chụp ảnh màn hình.</string>
+
+    <string name="preference_category_security">Bảo mật</string>
+
+    <string name="preference_category_performance">Hiệu suất</string>
+    <string name="preference_performance_block_webfonts">Chặn phông chữ trang Web</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Có thể dẫn đến thiếu biểu tượng hoặc hình ảnh</string>
+
+    <string name="preference_performance_block_javascript">Chặn JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Trang có thể tải nhanh hơn, nhưng cũng có thể hoạt động thiếu ổn định</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Đặt %1$s làm trình duyệt mặc định</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Gửi dữ liệu sử dụng</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Tìm hiểu thêm</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla chỉ thu thập những gì chúng tôi cần cung cấp và cải tiến %1$s cho tất cả mọi người.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Chính sách riêng tư</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Thông tin về %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Công cụ tìm kiếm đã cài đặt</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Khôi phục công cụ tìm kiếm mặc định</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Thêm công cụ tìm kiếm khác</string>
+    <string name="preference_search_remove_title">Gỡ bỏ công cụ tìm kiếm</string>
+    <string name="preference_search_remove">Gỡ bỏ</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Hiện mẹo trên màn hình chính</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Thêm công cụ tìm kiếm</string>
+
+    <string name="search_add_manually_name_hint">Tên công cụ tìm kiếm</string>
+    <string name="search_add_manually_string">Chuỗi tìm kiếm để sử dụng</string>
+    <string name="search_add_manually_save">Lưu</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Ví dụ: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Đã thêm công cụ tìm kiếm mới.</string>
+
+    <string name="search_add_error_empty_name">Nhập tên công cụ tìm kiếm</string>
+    <string name="search_add_error_duplicate_name">Một công cụ tìm kiếm đã cài đặt đã sử dụng cùng tên này.</string>
+
+    <string name="search_add_error_empty_search">Nhập chuỗi tìm kiếm</string>
+
+    <string name="search_add_error_format">Kiểm tra xem chuỗi tìm kiếm có đúng với định dạng như ở ví dụ không</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Xóa trắng</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Bỏ qua</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Xóa lịch sử duyệt web</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Thẻ đang mở: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Kết nối an toàn</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Đang tải</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Đã tải xong trang web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Tùy chọn thêm</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Nút tùy chọn khác</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Điều hướng tiến</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Tải lại trang web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Điều hướng lùi</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Dừng tải trang web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Quay về ứng dụng trước đó</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Số trình theo dõi đã chặn</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Chặn theo dõi</string>
+
+    <string name="your_rights">Quyền lợi của bạn</string>
+
+    <string name="external_app_prompt_title">Mở đường dẫn trong ứng dụng khác</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Bạn có thể rời khỏi %1$s để mở liên kết này trong %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Tìm ứng dụng có thể mở liên kết này</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Không có ứng dụng nào trên thiết bị của bạn có thể mở liên kết này. Bạn có thể rời khỏi %1$s để tìm ứng dụng có thể mở %2$s.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Thoát duyệt web riêng tư?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">Đã tải xong %1$s</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Mở</string>
 
 
 
@@ -176,91 +468,272 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Tăng quyền riêng tư của bạn</string>
-  <string name="firstrun_defaultbrowser_text2">Duyệt web ở chế độ riêng tư để nâng cao bảo mật. Giúp làm giảm thời gian tải trang và chặn các quảng cáo và nội dung mà có thể theo dõi bạn trên các trang web.</string>
-  <string name="firstrun_search_title">Tìm kiếm của bạn, theo cách của bạn</string>
-  <string name="firstrun_search_text">Đang tìm kiếm với cái gì khác? Chọn công cụ tìm kiếm khác thành mặc định trong Cài đặt.</string>
-  <string name="firstrun_shortcut_title">Thêm lối tắt tới màn hình chính của bạn</string>
-  <string name="firstrun_shortcut_text">Quay lại trang web của bạn nhanh hơn trong %1$s. Chỉ cần chọn \"Thêm vào màn hình chính\" trong menu %1$s.</string>
-  <string name="firstrun_privacy_title">Làm cho sự riêng tư thành một thói quen</string>
-  <string name="firstrun_privacy_text">Đặt %1$s làm trình duyệt mặc định của bạn và nhận được lợi ích của duyệt web riêng tư khi bạn mở các trang web từ các ứng dụng khác.</string>
-  <string name="firstrun_close_button">Đã hiểu!</string>
-  <string name="firstrun_skip_button">Bỏ qua</string>
-  <string name="firstrun_next_button">Tiếp</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Thêm</string>
-  <string name="dialog_addtohomescreen_action_cancel">Hủy bỏ</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Lối tắt sẽ mở mà không có trình chống theo dõi</string>
-  <string name="notification_browsing_session_channel_name">Phiên duyệt web riêng tư</string>
-  <string name="notification_browsing_session_channel_description">Thông báo cho phép bạn xóa phiên làm việc của %1$s với một cú nhấp. Bạn không cần mở ứng dụng hoặc xem những gì đang chạy trong trình duyệt của bạn.</string>
-  <string name="tabs_tray_action_erase">Xóa lịch sử duyệt web</string>
-  <string name="download_firefox">Tải Firefox</string>
-  <string name="your_rights_content1">%1$s là phần mềm miễn phí và mã nguồn mở do Mozilla và các cộng tác viên khác cung cấp.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Tăng quyền riêng tư của bạn</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Duyệt web ở chế độ riêng tư để nâng cao bảo mật. Giúp làm giảm thời gian tải trang và chặn các quảng cáo và nội dung mà có thể theo dõi bạn trên các trang web.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Tìm kiếm của bạn, theo cách của bạn</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Đang tìm kiếm với cái gì khác? Chọn công cụ tìm kiếm khác thành mặc định trong Cài đặt.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Thêm lối tắt tới màn hình chính của bạn</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Quay lại trang web của bạn nhanh hơn trong %1$s. Chỉ cần chọn \&quot;Thêm vào màn hình chính\&quot; trong menu %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Làm cho sự riêng tư thành một thói quen</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Đặt %1$s làm trình duyệt mặc định của bạn và nhận được lợi ích của duyệt web riêng tư khi bạn mở các trang web từ các ứng dụng khác.</string>
+
+    <string name="firstrun_close_button">Đã hiểu!</string>
+    <string name="firstrun_skip_button">Bỏ qua</string>
+    <string name="firstrun_next_button">Tiếp</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Thêm</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Hủy bỏ</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Lối tắt sẽ mở mà không có trình chống theo dõi</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Phiên duyệt web riêng tư</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Thông báo cho phép bạn xóa phiên làm việc của %1$s với một cú nhấp. Bạn không cần mở ứng dụng hoặc xem những gì đang chạy trong trình duyệt của bạn.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Xóa lịch sử duyệt web</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Tải Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s là phần mềm miễn phí và mã nguồn mở do Mozilla và các cộng tác viên khác cung cấp.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Tên đăng nhập</string>
-  <string name="gv_prompt_password_hint">Mật khẩu</string>
-  <string name="gv_prompt_clear">Xóa</string>
-  <string name="security_popup_secure_connection">Kết nối an toàn</string>
-  <string name="security_popup_insecure_connection">Kết nối không an toàn</string>
-  <string name="security_popup_security_verified">Xác minh bởi: %1$s</string>
-  <string name="site_security_icon_content_description">Bảo mật trang web</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL đã tồn tại</string>
-  <string name="find_in_page">Tìm trong trang</string>
-  <string name="find_in_page_input">Tìm trong trang</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d trong số %2$d</string>
-  <string name="accessibility_next_result">Tìm kiếm kết quả tiếp theo</string>
-  <string name="accessibility_previous_result">Tìm kiếm kết quả trước đó</string>
-  <string name="accessibility_dismiss_find_in_page">Loại bỏ tìm kiếm trong trang</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s được cung cấp cho bạn theo các điều khoản của <a href="%2$s">Giấy phép Công cộng Mozilla</a> và các giấy phép mã nguồn mở khác.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Bạn không được cấp bất kỳ quyền hoặc giấy phép nào đối với nhãn hiệu của Tổ chức Mozilla hoặc bất kỳ bên nào, bao gồm tên hoặc logo của Mozilla, Firefox hoặc %1$s. Thông tin bổ sung có thể được tìm thấy <a href="%2$s">tại đây</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Mã nguồn bổ sung cho %1$s có sẵn dưới nhiều <a href="%2$s">giấy phép nguồn mở miễn phí</a> khác.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s cũng sử dụng danh sách chặn được cung cấp bởi Disconnect, Inc. là các tác phẩm riêng biệt và độc lập theo <a href="%2$s">GNU General Public License v3</a> và có sẵn <a href="%3$s">ở đây</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Tên đăng nhập</string>
+    <string name="gv_prompt_password_hint">Mật khẩu</string>
+    <string name="gv_prompt_clear">Xóa</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Kết nối an toàn</string>
+    <string name="security_popup_insecure_connection">Kết nối không an toàn</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Xác minh bởi: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Bảo mật trang web</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL đã tồn tại</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Tìm trong trang</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Tìm trong trang</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d trong số %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Tìm kiếm kết quả tiếp theo</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Tìm kiếm kết quả trước đó</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Loại bỏ tìm kiếm trong trang</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Yêu cầu trang web trên máy tính</string>
-  <string name="custom_tab_copy_url_action">Đã sao chép URL</string>
-  <string name="preference_advanced_summary">Công cụ nhà phát triển</string>
-  <string name="preference_category_advanced">Nâng cao</string>
-  <string name="preference_remote_debugging">Gỡ lỗi từ xa qua USB/Wi-Fi</string>
-  <string name="biometric_auth_title">Mở khóa %1$s</string>
-  <string name="biometric_auth_description">Chạm vào cảm biến vân tay để tiếp tục.</string>
-  <string name="biometric_auth_new_session">Phiên mới</string>
-  <string name="biometric_auth_image_description">Biểu tượng vân tay</string>
-  <string name="biometric_auth_not_recognized_error">Không thể nhận dạng vân tay. Vui lòng thử lại.</string>
-  <string name="biometric_auth_moved_too_quickly">Ngón tay đã di chuyển quá nhanh. Vui lòng thử lại.</string>
-  <string name="enable_search_suggestion_title">Bạn có muốn bật gợi ý tìm kiếm không?</string>
-  <string name="enable_search_suggestion_subtitle">Để nhận được các đề xuất tìm kiếm, %1$s cần gửi những gì bạn gõ vào thanh địa chỉ đến công cụ tìm kiếm bạn đã chọn. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Tìm hiểu thêm</string>
-  <string name="enable_search_suggestions_no">Không</string>
-  <string name="enable_search_suggestions_yes">Có</string>
-  <string name="no_suggestions_message">Một vài công cụ tìm kiếm có thể không hiện gợi ý.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Bỏ qua</string>
-  <string name="tip_disable_tracking_protection">Trang web hoạt động không như mong đợi?\n Hay thử tắt Trình chống theo dõi</string>
-  <string name="tip_add_to_homescreen">Truy cập một chạm vào các trang web bạn sử dụng nhiều nhất%1$s Menu &gt; Thêm vào Màn hình chính</string>
-  <string name="tip_set_default_browser">Mở mọi liên kết trong %1$s\n Đặt %1$s làm trình duyệt mặc định</string>
-  <string name="tip_autocomplete_url">Tự động điền URLs cho các trang web bạn sử dụng\n Nhấp và giữ bất kỳ URL trong thanh địa chỉ</string>
-  <string name="tip_open_in_new_tab">Mở liên kết trên thẻ mới\n Nhấp và giữ bất kì liên kết nào trên trang</string>
-  <string name="tip_request_desktop">Muốn xem phiên bản máy tính?%1$s Menu &gt; Yêu cầu trang web trên máy tính</string>
-  <string name="tip_disable_tips2">Tắt mẹo trên màn hình bắt đầu</string>
-  <string name="tip_explain_allowlist">Tin tưởng một trang nào đó?\n Danh sách cho phép vô hiệu hóa Theo dõi bảo vệ cho các trang web bạn biết và tin tưởng.</string>
-  <string name="new_tab_opened_snackbar">Đã mở thẻ mới</string>
-  <string name="open_new_tab_snackbar">Chuyển</string>
-  <string name="preference_open_new_tab">Chuyển sang liên kết trong thẻ mới ngay lập tức</string>
-  <string name="preference_category_safe_browsing">Duyệt web an toàn</string>
-  <string name="preference_safe_browsing_title">Chặn các trang web nguy hiểm và lừa đảo</string>
-  <string name="preference_safe_browsing_summary">Chặn các trang web được báo cáo là lừa đảo và tấn công, trang web phần mềm độc hại và các trang web phần mềm không mong muốn.</string>
-  <string name="preference_exceptions">Ngoại lệ</string>
-  <string name="preference_exceptions_description">Bạn đã tắt chế độ Chặn nội dung cho các trang web này.</string>
-  <string name="preference_exceptions_menu_remove">Xóa</string>
-  <string name="preference_exceptions_remove_all_button_label">Xóa tất cả các trang web</string>
-  <string name="tab_crash_report_title">Thẻ bị hỏng</string>
-  <string name="tab_crash_report_headline">Rất tiếc. Chúng tôi đã gặp sự cố với thẻ này.</string>
-  <string name="tab_crash_report_description">Trong trình duyệt riêng tư, chúng tôi không bao giờ lưu và không thể khôi phục thẻ này.</string>
-  <string name="tab_crash_report_close_tab_button_label">Đóng thẻ</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Yêu cầu trang web trên máy tính</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Trang web cho máy tính</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">Đã sao chép URL</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Công cụ nhà phát triển</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Nâng cao</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Gỡ lỗi từ xa qua USB/Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Mở khóa %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Chạm vào cảm biến vân tay để tiếp tục.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Phiên mới</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Mở liên kết trong phiên mới</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Biểu tượng vân tay</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Không thể nhận dạng vân tay. Vui lòng thử lại.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Ngón tay đã di chuyển quá nhanh. Vui lòng thử lại.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title">Bạn có muốn bật gợi ý tìm kiếm không?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus)
+        %2$s will be replaced with "Learn more" which will be a tappable link
+        using the string: "enable_search_suggestion_subtitle_learnmore" -->
+    <string name="enable_search_suggestion_subtitle">Để nhận được các đề xuất tìm kiếm, %1$s cần gửi những gì bạn gõ vào thanh địa chỉ đến công cụ tìm kiếm bạn đã chọn. %2$s.</string>
+
+    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
+        which will be a "Learn More" link. -->
+    <string name="enable_search_suggestion_subtitle_learnmore">Tìm hiểu thêm</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Không</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Có</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Một vài công cụ tìm kiếm có thể không hiện gợi ý.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Bỏ qua</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Trang web hoạt động không như mong đợi?\n Hay thử tắt Trình chống theo dõi</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Truy cập một chạm vào các trang web bạn sử dụng nhiều nhất%1$s Menu > Thêm vào Màn hình chính]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Mở mọi liên kết trong %1$s\n Đặt %1$s làm trình duyệt mặc định</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Tự động điền URLs cho các trang web bạn sử dụng\n Nhấp và giữ bất kỳ URL trong thanh địa chỉ</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Mở liên kết trên thẻ mới\n Nhấp và giữ bất kì liên kết nào trên trang</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+     Argument 1 will be replaced with a line break in the application. -->
+    <string name="tip_request_desktop"><![CDATA[Muốn xem phiên bản máy tính?%1$s Menu > Yêu cầu trang web trên máy tính]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Tắt mẹo trên màn hình bắt đầu</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist">Tin tưởng một trang nào đó?\n Danh sách cho phép vô hiệu hóa Theo dõi bảo vệ cho các trang web bạn biết và tin tưởng.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Đã mở thẻ mới</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Chuyển</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Chuyển sang liên kết trong thẻ mới ngay lập tức</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Duyệt web an toàn</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Chặn các trang web nguy hiểm và lừa đảo</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Chặn các trang web được báo cáo là lừa đảo và tấn công, trang web phần mềm độc hại và các trang web phần mềm không mong muốn.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Ngoại lệ</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Bạn đã tắt chế độ Chặn nội dung cho các trang web này.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Xóa</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Xóa tất cả các trang web</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Thẻ bị hỏng</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Rất tiếc. Chúng tôi đã gặp sự cố với thẻ này.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Trong trình duyệt riêng tư, chúng tôi không bao giờ lưu và không thể khôi phục thẻ này.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Đóng thẻ</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Gửi báo cáo lỗi đến Mozilla</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Gửi báo cáo lỗi đến Mozilla</string>
 </resources>
