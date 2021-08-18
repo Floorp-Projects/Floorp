@@ -7,17 +7,6 @@ job-defaults:
         using: debian-package
         dist: jessie
 
-deb10-cmake:
-    description: "Cmake backport for Debian buster"
-    treeherder:
-        symbol: Deb10(cmake)
-    run:
-        dist: buster
-        dsc:
-            url: http://snapshot.debian.org/archive/debian/20200202T210747Z/pool/main/c/cmake/cmake_3.16.3-1.dsc
-            sha256: ecfa7cbc93dc6a9749022ccd9538843f4a0e2e77a14bb2f87e325aaf3c36b519
-        pre-build-command: apt-get install debhelper/buster-backports
-
 deb10-mercurial:
     description: "Modern Mercurial for Debian buster"
     treeherder:
@@ -84,21 +73,6 @@ deb11-python-zstandard:
             sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
         pre-build-command: debchange -v 0.15.2-1.deb11moz --distribution bullseye "Mozilla backport for buster"
         name: python-zstandard
-
-deb10-mmdebstrap:
-    # Only a more recent version of mmdebstrap than what is in buster has the
-    # features we want.
-    description: "mmdebstrap 0.7.5 for Debian buster"
-    treeherder:
-        symbol: Deb10(python-mmdebstrap)
-    run:
-        dist: buster
-        dsc:
-            url: http://snapshot.debian.org/archive/debian/20210507T203327Z/pool/main/m/mmdebstrap/mmdebstrap_0.7.5-2.2.dsc
-            sha256: 231ab505fac675acda098a5b328fee0b939be5d5881d7713b8ec759ee9833543
-        pre-build-command: >-
-          sed -i "s/debhelper-compat (= 13)/debhelper/" debian/control &&
-          echo 12 > debian/compat
 
 deb8-gcc-7:
     description: "gcc 7 for Debian jessie"
