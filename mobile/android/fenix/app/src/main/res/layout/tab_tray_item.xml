@@ -53,7 +53,9 @@
             android:layout_height="match_parent"
             android:contentDescription="@string/mozac_browser_tabstray_open_tab" />
 
-        <include layout="@layout/checkbox_item" />
+        <include
+            android:id="@+id/checkbox_include"
+            layout="@layout/checkbox_item" />
 
     </androidx.cardview.widget.CardView>
 

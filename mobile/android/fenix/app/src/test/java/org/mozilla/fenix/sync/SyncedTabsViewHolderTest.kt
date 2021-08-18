@@ -10,9 +10,8 @@ import android.widget.TextView
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.sync_tabs_list_item.view.*
-import kotlinx.android.synthetic.main.view_synced_tabs_group.view.*
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.Device
@@ -24,6 +23,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.SyncTabsListItemBinding
+import org.mozilla.fenix.databinding.ViewSyncedTabsGroupBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -38,6 +39,8 @@ class SyncedTabsViewHolderTest {
     private lateinit var titleViewHolder: SyncedTabsViewHolder.TitleViewHolder
     private lateinit var noTabsView: View
     private lateinit var noTabsViewHolder: SyncedTabsViewHolder.NoTabsViewHolder
+
+    private lateinit var syncTabsListItemBinding: SyncTabsListItemBinding
 
     private val tab = Tab(
         history = listOf(
@@ -60,11 +63,13 @@ class SyncedTabsViewHolderTest {
         tabView = inflater.inflate(SyncedTabsViewHolder.TabViewHolder.LAYOUT_ID, null)
         tabViewHolder = SyncedTabsViewHolder.TabViewHolder(tabView)
 
-        deviceViewGroupName = mockk(relaxUnitFun = true)
-        deviceView = mockk {
-            every { synced_tabs_group_name } returns deviceViewGroupName
-        }
-        deviceViewHolder = SyncedTabsViewHolder.DeviceViewHolder(deviceView)
+        syncTabsListItemBinding = SyncTabsListItemBinding.bind(tabView)
+        val viewSyncedTabsGroupBinding = ViewSyncedTabsGroupBinding.inflate(inflater)
+        deviceView = mockk()
+
+        deviceViewHolder = SyncedTabsViewHolder.DeviceViewHolder(spyk(viewSyncedTabsGroupBinding.root))
+
+        deviceViewGroupName = spyk(viewSyncedTabsGroupBinding.syncedTabsGroupName)
 
         titleView = inflater.inflate(SyncedTabsViewHolder.TitleViewHolder.LAYOUT_ID, null)
         titleViewHolder = SyncedTabsViewHolder.TitleViewHolder(titleView)
@@ -77,8 +82,8 @@ class SyncedTabsViewHolderTest {
     fun `TabViewHolder binds active tab`() {
         tabViewHolder.bind(SyncedTabsAdapter.AdapterItem.Tab(tab), mockk())
 
-        assertEquals("Firefox", tabView.synced_tab_item_title.text)
-        assertEquals("mozilla.org", tabView.synced_tab_item_url.text)
+        assertEquals("Firefox", syncTabsListItemBinding.syncedTabItemTitle.text)
+        assertEquals("mozilla.org", syncTabsListItemBinding.syncedTabItemUrl.text)
     }
 
     @Test
@@ -98,7 +103,7 @@ class SyncedTabsViewHolderTest {
         }
         deviceViewHolder.bind(SyncedTabsAdapter.AdapterItem.Device(device), mockk())
 
-        verify { deviceViewGroupName.text = "Charcoal" }
+        assertEquals("Charcoal", deviceViewHolder.binding.syncedTabsGroupName.text)
     }
 
     @Test
@@ -109,7 +114,7 @@ class SyncedTabsViewHolderTest {
         }
         deviceViewHolder.bind(SyncedTabsAdapter.AdapterItem.Device(device), mockk())
 
-        verify { deviceViewGroupName.text = "Emerald" }
+        assertEquals("Emerald", deviceViewHolder.binding.syncedTabsGroupName.text)
     }
 
     @Test

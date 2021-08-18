@@ -6,9 +6,9 @@ package org.mozilla.fenix.tabstray.browser
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.tab_tray_item.view.*
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
@@ -17,6 +17,8 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.TabTrayGridItemBinding
+import org.mozilla.fenix.databinding.TabTrayItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
@@ -68,14 +70,23 @@ class BrowserTabsAdapter(
 
     override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
-
+        var selectedMaskView: View? = null
         holder.tab?.let { tab ->
-            holder.itemView.mozac_browser_tabstray_close.setOnClickListener {
-                interactor.close(tab)
+            when (getItemViewType(position)) {
+                ViewType.GRID.layoutRes -> {
+                    val gridBinding = TabTrayGridItemBinding.bind(holder.itemView)
+                    selectedMaskView = gridBinding.checkboxInclude.selectedMask
+                    gridBinding.mozacBrowserTabstrayClose.setOnClickListener { interactor.close(tab) }
+                }
+                ViewType.LIST.layoutRes -> {
+                    val listBinding = TabTrayItemBinding.bind(holder.itemView)
+                    selectedMaskView = listBinding.checkboxInclude.selectedMask
+                    listBinding.mozacBrowserTabstrayClose.setOnClickListener { interactor.close(tab) }
+                }
             }
 
             selectionHolder?.let {
-                holder.showTabIsMultiSelectEnabled(it.selectedItems.contains(tab))
+                holder.showTabIsMultiSelectEnabled(selectedMaskView, it.selectedItems.contains(tab))
             }
         }
     }
@@ -103,7 +114,18 @@ class BrowserTabsAdapter(
         }
 
         selectionHolder?.let {
-            holder.showTabIsMultiSelectEnabled(it.selectedItems.contains(holder.tab))
+            var selectedMaskView: View? = null
+            when (getItemViewType(position)) {
+                ViewType.GRID.layoutRes -> {
+                    val gridBinding = TabTrayGridItemBinding.bind(holder.itemView)
+                    selectedMaskView = gridBinding.checkboxInclude.selectedMask
+                }
+                ViewType.LIST.layoutRes -> {
+                    val listBinding = TabTrayItemBinding.bind(holder.itemView)
+                    selectedMaskView = listBinding.checkboxInclude.selectedMask
+                }
+            }
+            holder.showTabIsMultiSelectEnabled(selectedMaskView, it.selectedItems.contains(holder.tab))
         }
     }
 

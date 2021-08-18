@@ -9,9 +9,6 @@ import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.component_tabstray2.view.exit_multi_select
-import kotlinx.android.synthetic.main.component_tabstray2.view.multiselect_title
-import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -19,6 +16,8 @@ import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ComponentTabstray2Binding
+import org.mozilla.fenix.databinding.TabstrayMultiselectItemsBinding
 import org.mozilla.fenix.tabstray.NavigationInteractor
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState
@@ -45,6 +44,7 @@ import org.mozilla.fenix.tabstray.ext.showWithTheme
 @Suppress("LongParameterList")
 class SelectionBannerBinding(
     private val context: Context,
+    private val binding: ComponentTabstray2Binding,
     private val store: TabsTrayStore,
     private val navInteractor: NavigationInteractor,
     private val tabsTrayInteractor: TabsTrayInteractor,
@@ -64,7 +64,7 @@ class SelectionBannerBinding(
     override fun start() {
         super.start()
 
-        initListeners(containerView)
+        initListeners()
     }
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
@@ -89,20 +89,22 @@ class SelectionBannerBinding(
             }
     }
 
-    private fun initListeners(containerView: View) {
-        containerView.share_multi_select.setOnClickListener {
+    private fun initListeners() {
+        val tabsTrayMultiselectItemsBinding = TabstrayMultiselectItemsBinding.bind(binding.root)
+
+        tabsTrayMultiselectItemsBinding.shareMultiSelect.setOnClickListener {
             navInteractor.onShareTabs(store.state.mode.selectedTabs)
         }
 
-        containerView.collect_multi_select.setOnClickListener {
+        tabsTrayMultiselectItemsBinding.collectMultiSelect.setOnClickListener {
             navInteractor.onSaveToCollections(store.state.mode.selectedTabs)
         }
 
-        containerView.exit_multi_select.setOnClickListener {
+        binding.exitMultiSelect.setOnClickListener {
             store.dispatch(ExitSelectMode)
         }
 
-        containerView.menu_multi_select.setOnClickListener { anchor ->
+        tabsTrayMultiselectItemsBinding.menuMultiSelect.setOnClickListener { anchor ->
             val menu = SelectionMenuIntegration(
                 context,
                 store,
@@ -133,9 +135,9 @@ class SelectionBannerBinding(
     @VisibleForTesting
     private fun updateSelectTitle(selectedMode: Boolean, tabCount: Int) {
         if (selectedMode) {
-            containerView.multiselect_title.text =
+            binding.multiselectTitle.text =
                 context.getString(R.string.tab_tray_multi_select_title, tabCount)
-            containerView.multiselect_title.importantForAccessibility =
+            binding.multiselectTitle.importantForAccessibility =
                 View.IMPORTANT_FOR_ACCESSIBILITY_YES
         }
     }

@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.tabstray.browser
 
+import android.view.LayoutInflater
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
@@ -14,6 +16,7 @@ import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.TabTrayItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
@@ -51,10 +54,20 @@ class BrowserTabsAdapterTest {
     @Test
     fun `WHEN the selection holder is set THEN update the selected tab`() {
         val adapter = BrowserTabsAdapter(context, interactor, store)
-        val holder = mockk<AbstractBrowserTabViewHolder>(relaxed = true)
+        val binding = TabTrayItemBinding.inflate(LayoutInflater.from(testContext))
+        val holder = spyk(
+            BrowserTabListViewHolder(
+                imageLoader = mockk(),
+                browserTrayInteractor = interactor,
+                store = store,
+                selectionHolder = null,
+                itemView = binding.root
+            )
+        )
         val tab = createTab("tab1")
 
         every { holder.tab }.answers { tab }
+
         testSelectionHolder.internalState.add(tab)
         adapter.selectionHolder = testSelectionHolder
 
@@ -69,7 +82,7 @@ class BrowserTabsAdapterTest {
 
         adapter.onBindViewHolder(holder, 0, listOf(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM))
 
-        verify { holder.showTabIsMultiSelectEnabled(true) }
+        verify { holder.showTabIsMultiSelectEnabled(any(), true) }
     }
 
     private val testSelectionHolder = object : SelectionHolder<Tab> {

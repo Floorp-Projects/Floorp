@@ -13,7 +13,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.checkbox_item.view.*
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabViewHolder
@@ -102,8 +101,8 @@ abstract class AbstractBrowserTabViewHolder(
         }
     }
 
-    fun showTabIsMultiSelectEnabled(isSelected: Boolean) {
-        itemView.selected_mask.isVisible = isSelected
+    fun showTabIsMultiSelectEnabled(selectedMaskView: View?, isSelected: Boolean) {
+        selectedMaskView?.isVisible = isSelected
         closeView.isInvisible = trayStore.state.mode is TabsTrayState.Mode.Select
     }
 

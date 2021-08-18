@@ -89,21 +89,18 @@
         app:tabRippleColor="@android:color/transparent">
 
         <com.google.android.material.tabs.TabItem
-            android:id="@+id/default_tab_item"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:contentDescription="@string/tab_header_label"
             android:layout="@layout/tabs_tray_tab_counter2" />
 
         <com.google.android.material.tabs.TabItem
-            android:id="@+id/private_tab_item"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:contentDescription="@string/tabs_header_private_tabs_title"
             android:icon="@drawable/ic_private_browsing" />
 
         <com.google.android.material.tabs.TabItem
-            android:id="@+id/synced_tab_item"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:contentDescription="@string/tabs_header_synced_tabs_title"

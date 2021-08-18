@@ -13,9 +13,9 @@ import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.ext.increaseTapArea
 import kotlin.math.max
-import kotlinx.android.synthetic.main.tab_tray_grid_item.view.tab_tray_grid_item
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
@@ -39,7 +39,8 @@ class BrowserTabGridViewHolder(
         )
 
     override fun updateSelectedTabIndicator(showAsSelected: Boolean) {
-        itemView.tab_tray_grid_item.background = if (showAsSelected) {
+        val binding = TabTrayGridItemBinding.bind(itemView)
+        binding.tabTrayGridItem.background = if (showAsSelected) {
             AppCompatResources.getDrawable(itemView.context, R.drawable.tab_tray_grid_item_selected_border)
         } else {
             null
