@@ -40,7 +40,7 @@ only-for-build-platforms:
 job-template:
     worker-type: 'b-linux'
     worker:
-        docker-image: {"in-tree": "debian11-amd64-build"}
+        docker-image: {"in-tree": "debian10-amd64-build"}
     mozharness:
         config:
             by-build-platform:

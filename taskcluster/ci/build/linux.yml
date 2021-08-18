@@ -97,7 +97,7 @@ linux64-plain/opt:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
@@ -181,7 +181,7 @@ linux64-plain-clang-trunk/opt:
         tier: 2
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 5400
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
@@ -425,7 +425,7 @@ linux64-plain/debug:
         tier: 1
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
