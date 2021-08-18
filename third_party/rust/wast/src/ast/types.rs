@@ -726,8 +726,6 @@ pub struct Type<'a> {
     /// An optional identifer to refer to this `type` by as part of name
     /// resolution.
     pub id: Option<ast::Id<'a>>,
-    /// An optional name for this function stored in the custom `name` section.
-    pub name: Option<ast::NameAnnotation<'a>>,
     /// The type that we're declaring.
     pub def: TypeDef<'a>,
 }
@@ -736,7 +734,6 @@ impl<'a> Parse<'a> for Type<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::r#type>()?.0;
         let id = parser.parse()?;
-        let name = parser.parse()?;
         let def = parser.parens(|parser| {
             let mut l = parser.lookahead1();
             if l.peek::<kw::func>() {
@@ -758,12 +755,7 @@ impl<'a> Parse<'a> for Type<'a> {
                 Err(l.error())
             }
         })?;
-        Ok(Type {
-            span,
-            id,
-            name,
-            def,
-        })
+        Ok(Type { span, id, def })
     }
 }
 

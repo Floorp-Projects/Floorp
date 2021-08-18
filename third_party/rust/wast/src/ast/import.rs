@@ -51,7 +51,7 @@ pub enum ItemKind<'a> {
     Table(ast::TableType<'a>),
     Memory(ast::MemoryType),
     Global(ast::GlobalType<'a>),
-    Tag(ast::TagType<'a>),
+    Event(ast::EventType<'a>),
     Module(ast::TypeUse<'a, ast::ModuleType<'a>>),
     Instance(ast::TypeUse<'a, ast::InstanceType<'a>>),
 }
@@ -91,13 +91,13 @@ impl<'a> Parse<'a> for ItemSig<'a> {
                 name: None,
                 kind: ItemKind::Global(parser.parse()?),
             })
-        } else if l.peek::<kw::tag>() {
-            let span = parser.parse::<kw::tag>()?.0;
+        } else if l.peek::<kw::event>() {
+            let span = parser.parse::<kw::event>()?.0;
             Ok(ItemSig {
                 span,
                 id: parser.parse()?,
                 name: None,
-                kind: ItemKind::Tag(parser.parse()?),
+                kind: ItemKind::Event(parser.parse()?),
             })
         } else if l.peek::<kw::module>() {
             let span = parser.parse::<kw::module>()?.0;
