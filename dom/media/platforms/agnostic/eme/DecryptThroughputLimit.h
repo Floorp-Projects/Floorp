@@ -16,11 +16,13 @@ namespace mozilla {
 
 // We throttle our decrypt so that we don't decrypt more than a certain
 // duration of samples per second. This is to work around bugs in the
-// Widevine CDM. See bug 1338924 and bug 1342822.
+// Widevine CDM. See bugs 1338924, 1342822, 1718223.
 class DecryptThroughputLimit {
  public:
-  explicit DecryptThroughputLimit(nsISerialEventTarget* aTargetThread)
-      : mThrottleScheduler(aTargetThread) {}
+  explicit DecryptThroughputLimit(nsISerialEventTarget* aTargetThread,
+                                  uint32_t aMaxThroughputMs)
+      : mThrottleScheduler(aTargetThread),
+        mMaxThroughput(aMaxThroughputMs / 1000.0) {}
 
   typedef MozPromise<RefPtr<MediaRawData>, MediaResult, true> ThrottlePromise;
 
@@ -31,7 +33,8 @@ class DecryptThroughputLimit {
     MOZ_RELEASE_ASSERT(!mThrottleScheduler.IsScheduled());
 
     const TimeDuration WindowSize = TimeDuration::FromSeconds(0.1);
-    const TimeDuration MaxThroughput = TimeDuration::FromSeconds(0.2);
+    const TimeDuration MaxThroughput =
+        TimeDuration::FromSeconds(mMaxThroughput);
 
     // Forget decrypts that happened before the start of our window.
     const TimeStamp now = TimeStamp::Now();
@@ -85,6 +88,8 @@ class DecryptThroughputLimit {
  private:
   DelayedScheduler mThrottleScheduler;
   MozPromiseHolder<ThrottlePromise> mPromiseHolder;
+
+  double mMaxThroughput;
 
   struct DecryptedJob {
     TimeStamp mTimestamp;
