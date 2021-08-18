@@ -11,19 +11,30 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.plus
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.android.FenixDialogFragment
 import org.mozilla.fenix.databinding.FragmentQuickSettingsDialogSheetBinding
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.PhoneFeature
 
 /**
@@ -38,7 +49,10 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
     private lateinit var quickSettingsController: QuickSettingsController
     private lateinit var websiteInfoView: WebsiteInfoView
     private lateinit var websitePermissionsView: WebsitePermissionsView
-    private lateinit var trackingProtectionView: TrackingProtectionView
+
+    @VisibleForTesting
+    internal lateinit var trackingProtectionView: TrackingProtectionView
+
     private lateinit var interactor: QuickSettingsInteractor
 
     private var tryToRequestPermissions: Boolean = false
@@ -101,7 +115,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
         websitePermissionsView =
             WebsitePermissionsView(binding.websitePermissionsLayout, interactor)
         trackingProtectionView =
-            TrackingProtectionView(binding.trackingProtectionLayout, interactor)
+            TrackingProtectionView(binding.trackingProtectionLayout, interactor, context.settings())
 
         return rootView
     }
@@ -109,7 +123,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        observeTrackersChange(requireComponents.core.store)
         consumeFrom(quickSettingsStore) {
             websiteInfoView.update(it.webInfoState)
             websitePermissionsView.update(it.websitePermissionsState)
@@ -156,6 +170,42 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             }
         )
     }
+
+    @VisibleForTesting
+    internal fun provideTabId(): String = args.sessionId
+
+    @VisibleForTesting
+    @ExperimentalCoroutinesApi
+    internal fun observeTrackersChange(store: BrowserStore) {
+        consumeFlow(store) { flow ->
+            flow.mapNotNull { state ->
+                state.findTabOrCustomTab(provideTabId())
+            }.ifAnyChanged { tab ->
+                arrayOf(
+                    tab.trackingProtection.blockedTrackers,
+                    tab.trackingProtection.loadedTrackers
+                )
+            }.collect {
+                updateTrackers(it)
+            }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun updateTrackers(tab: SessionState) {
+        provideTrackingProtectionUseCases().fetchTrackingLogs(
+            tab.id,
+            onSuccess = { trackers ->
+                trackingProtectionView.updateDetailsSection(trackers.isNotEmpty())
+            },
+            onError = {
+                Logger.error("QuickSettingsSheetDialogFragment - fetchTrackingLogs onError", it)
+            }
+        )
+    }
+
+    @VisibleForTesting
+    internal fun provideTrackingProtectionUseCases() = requireComponents.useCases.trackingProtectionUseCases
 
     private companion object {
         const val REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS = 4

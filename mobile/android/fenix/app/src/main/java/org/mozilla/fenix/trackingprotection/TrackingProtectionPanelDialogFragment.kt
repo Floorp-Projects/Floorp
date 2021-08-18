@@ -82,7 +82,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     ): View {
         val store = requireComponents.core.store
         val view = inflateRootView(container)
-        val tab = store.state.findTabOrCustomTab(provideTabId())
+        val tab = store.state.findTabOrCustomTab(provideCurrentTabId())
 
         trackingProtectionStore = StoreProvider.get(this) {
             TrackingProtectionStore(
@@ -201,7 +201,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     internal fun observeUrlChange(store: BrowserStore) {
         consumeFlow(store) { flow ->
             flow.mapNotNull { state ->
-                state.findTabOrCustomTab(provideTabId())
+                state.findTabOrCustomTab(provideCurrentTabId())
             }.ifChanged { tab -> tab.content.url }
                 .collect {
                     trackingProtectionStore.dispatch(TrackingProtectionAction.UrlChange(it.content.url))
@@ -210,13 +210,13 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     }
 
     @VisibleForTesting
-    internal fun provideTabId(): String = args.sessionId
+    internal fun provideCurrentTabId(): String = args.sessionId
 
     @VisibleForTesting
     internal fun observeTrackersChange(store: BrowserStore) {
         consumeFlow(store) { flow ->
             flow.mapNotNull { state ->
-                state.findTabOrCustomTab(provideTabId())
+                state.findTabOrCustomTab(provideCurrentTabId())
             }.ifAnyChanged { tab ->
                 arrayOf(
                     tab.trackingProtection.blockedTrackers,

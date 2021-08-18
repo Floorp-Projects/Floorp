@@ -2,19 +2,19 @@
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.trackingprotection
+package org.mozilla.fenix.settings.quicksettings
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import junit.framework.TestCase.assertNotSame
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction.TrackerBlockedAction
 import mozilla.components.browser.state.action.TrackingProtectionAction.TrackerLoadedAction
@@ -22,6 +22,8 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -33,19 +35,19 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
-class TrackingProtectionPanelDialogFragmentTest {
+class QuickSettingsSheetDialogFragmentTest {
 
     private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
     private lateinit var lifecycleOwner: MockedLifecycleOwner
-    private lateinit var fragment: TrackingProtectionPanelDialogFragment
+    private lateinit var fragment: QuickSettingsSheetDialogFragment
     private lateinit var store: BrowserStore
 
     @Before
     fun setup() {
-        fragment = spyk(TrackingProtectionPanelDialogFragment())
+        fragment = spyk(QuickSettingsSheetDialogFragment())
         lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
 
         store = BrowserStore()
@@ -60,37 +62,14 @@ class TrackingProtectionPanelDialogFragmentTest {
     }
 
     @Test
-    fun `WHEN the url is updated THEN the url view is updated`() {
-        val trackingProtectionStore: TrackingProtectionStore = mockk(relaxed = true)
-        val tab = createTab("mozilla.org")
-
-        every { fragment.trackingProtectionStore } returns trackingProtectionStore
-        every { fragment.provideCurrentTabId() } returns tab.id
-
-        fragment.observeUrlChange(store)
-        addAndSelectTab(tab)
-
-        verify(exactly = 1) {
-            trackingProtectionStore.dispatch(TrackingProtectionAction.UrlChange("mozilla.org"))
-        }
-
-        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "wikipedia.org")).joinBlocking()
-
-        verify(exactly = 1) {
-            trackingProtectionStore.dispatch(TrackingProtectionAction.UrlChange("wikipedia.org"))
-        }
-    }
-
-    @Test
     fun `WHEN a tracker is loaded THEN trackers view is updated`() {
-        val trackingProtectionStore: TrackingProtectionStore = mockk(relaxed = true)
         val tab = createTab("mozilla.org")
 
-        every { fragment.trackingProtectionStore } returns trackingProtectionStore
-        every { fragment.provideCurrentTabId() } returns tab.id
+        every { fragment.provideTabId() } returns tab.id
         every { fragment.updateTrackers(any()) } returns Unit
 
         fragment.observeTrackersChange(store)
+
         addAndSelectTab(tab)
 
         verify(exactly = 1) {
@@ -110,14 +89,13 @@ class TrackingProtectionPanelDialogFragmentTest {
 
     @Test
     fun `WHEN a tracker is blocked THEN trackers view is updated`() {
-        val trackingProtectionStore: TrackingProtectionStore = mockk(relaxed = true)
         val tab = createTab("mozilla.org")
 
-        every { fragment.trackingProtectionStore } returns trackingProtectionStore
-        every { fragment.provideCurrentTabId() } returns tab.id
+        every { fragment.provideTabId() } returns tab.id
         every { fragment.updateTrackers(any()) } returns Unit
 
         fragment.observeTrackersChange(store)
+
         addAndSelectTab(tab)
 
         verify(exactly = 1) {
@@ -131,9 +109,64 @@ class TrackingProtectionPanelDialogFragmentTest {
         assertNotSame(updatedTab, tab)
 
         verify(exactly = 1) {
-            fragment.updateTrackers(tab)
+            fragment.updateTrackers(updatedTab)
         }
     }
+
+    @Test
+    fun `GIVEN no trackers WHEN calling updateTrackers THEN hide the details section`() {
+        val tab = createTab("mozilla.org")
+        val trackingProtectionUseCases: TrackingProtectionUseCases = mockk(relaxed = true)
+        val trackingProtectionView: TrackingProtectionView = mockk(relaxed = true)
+
+        val onComplete = slot<(List<TrackerLog>) -> Unit>()
+
+        every { fragment.trackingProtectionView } returns trackingProtectionView
+
+        every {
+            trackingProtectionUseCases.fetchTrackingLogs.invoke(
+                any(),
+                capture(onComplete),
+                any()
+            )
+        }.answers { onComplete.captured.invoke(emptyList()) }
+
+        every { fragment.provideTrackingProtectionUseCases() } returns trackingProtectionUseCases
+
+        fragment.updateTrackers(tab)
+
+        verify {
+            trackingProtectionView.updateDetailsSection(false)
+        }
+    }
+
+    @Test
+    fun `GIVEN trackers WHEN calling updateTrackers THEN show the details section`() {
+        val tab = createTab("mozilla.org")
+        val trackingProtectionUseCases: TrackingProtectionUseCases = mockk(relaxed = true)
+        val trackingProtectionView: TrackingProtectionView = mockk(relaxed = true)
+
+        val onComplete = slot<(List<TrackerLog>) -> Unit>()
+
+        every { fragment.trackingProtectionView } returns trackingProtectionView
+
+        every {
+            trackingProtectionUseCases.fetchTrackingLogs.invoke(
+                any(),
+                capture(onComplete),
+                any()
+            )
+        }.answers { onComplete.captured.invoke(listOf(TrackerLog(""))) }
+
+        every { fragment.provideTrackingProtectionUseCases() } returns trackingProtectionUseCases
+
+        fragment.updateTrackers(tab)
+
+        verify {
+            trackingProtectionView.updateDetailsSection(true)
+        }
+    }
+
     private fun addAndSelectTab(tab: TabSessionState) {
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()

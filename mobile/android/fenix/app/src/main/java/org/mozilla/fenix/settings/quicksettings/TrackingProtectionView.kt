@@ -6,9 +6,13 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
+import androidx.core.view.isVisible
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.QuicksettingsTrackingProtectionBinding
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.trackingprotection.TrackingProtectionState
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Contract declaring all possible user interactions with [TrackingProtectionView].
@@ -35,24 +39,31 @@ interface TrackingProtectionInteractor {
  *
  * @param containerView [ViewGroup] in which this View will inflate itself.
  * @param interactor [TrackingProtectionInteractor] which will have delegated to all user
+ * @param settings [Settings] application settings.
  * interactions.
  */
 class TrackingProtectionView(
     val containerView: ViewGroup,
     val interactor: TrackingProtectionInteractor,
+    val settings: Settings
 ) {
     private val context = containerView.context
-    private val binding = QuicksettingsTrackingProtectionBinding.inflate(
+    @VisibleForTesting
+    internal val binding = QuicksettingsTrackingProtectionBinding.inflate(
         LayoutInflater.from(containerView.context),
         containerView,
         true
     )
     fun update(state: TrackingProtectionState) {
         bindTrackingProtectionInfo(state.isTrackingProtectionEnabled)
-
+        binding.root.isVisible = settings.shouldUseTrackingProtection
         binding.trackingProtectionDetails.setOnClickListener {
             interactor.onDetailsClicked()
         }
+    }
+
+    fun updateDetailsSection(show: Boolean) {
+        binding.trackingProtectionDetails.isVisible = show
     }
 
     private fun bindTrackingProtectionInfo(isTrackingProtectionEnabled: Boolean) {
