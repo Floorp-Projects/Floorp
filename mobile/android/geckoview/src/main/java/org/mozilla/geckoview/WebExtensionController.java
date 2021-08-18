@@ -12,6 +12,7 @@ import androidx.annotation.UiThread;
 
 import android.os.Build;
 import android.util.Log;
+import android.util.SparseArray;
 
 import org.json.JSONException;
 import org.mozilla.gecko.EventDispatcher;
@@ -43,7 +44,7 @@ public class WebExtensionController {
     private final MultiMap<String, Message> mPendingBrowsingData;
     private final MultiMap<String, Message> mPendingDownload;
 
-    private final HashMap<Integer, WebExtension.Download> mDownloads;
+    private final SparseArray<WebExtension.Download> mDownloads;
 
     private static class Message {
         final GeckoBundle bundle;
@@ -694,7 +695,7 @@ public class WebExtensionController {
         mPendingBrowsingData = new MultiMap<>();
         mPendingDownload = new MultiMap<>();
         mExtensions.setObserver(mInternals);
-        mDownloads = new HashMap<>();
+        mDownloads = new SparseArray<>();
     }
 
     /* package */ WebExtension registerWebExtension(final WebExtension webExtension) {
@@ -1288,7 +1289,7 @@ public class WebExtensionController {
     @Nullable
     @UiThread
     public WebExtension.Download createDownload(final int id) {
-        if (mDownloads.containsKey(id)) {
+        if (mDownloads.indexOfKey(id) >= 0) {
             throw new IllegalArgumentException("Download with this id already exists");
         } else {
             final WebExtension.Download download = new WebExtension.Download(id);

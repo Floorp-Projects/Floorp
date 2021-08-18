@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.DeadObjectException;
 import android.os.RemoteException;
 import android.util.Log;
+import android.util.SparseArray;
 
 import androidx.annotation.RequiresApi;
 
@@ -21,8 +22,6 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -42,8 +41,8 @@ public final class CodecProxy {
     private Queue<Sample> mSurfaceOutputs = new ConcurrentLinkedQueue<>();
     private boolean mFlushed = true;
 
-    private Map<Integer, SampleBuffer> mInputBuffers = new HashMap<>();
-    private Map<Integer, SampleBuffer> mOutputBuffers = new HashMap<>();
+    private SparseArray<SampleBuffer> mInputBuffers = new SparseArray<>();
+    private SparseArray<SampleBuffer> mOutputBuffers = new SparseArray<>();
 
     public interface Callbacks {
         void onInputStatus(long timestamp, boolean processed);
@@ -320,12 +319,12 @@ public final class CodecProxy {
     }
 
     private void resetBuffers() {
-        for (final SampleBuffer b : mInputBuffers.values()) {
-            b.dispose();
+        for (int i = 0; i < mInputBuffers.size(); ++i) {
+            mInputBuffers.valueAt(i).dispose();
         }
         mInputBuffers.clear();
-        for (final SampleBuffer b : mOutputBuffers.values()) {
-            b.dispose();
+        for (int i = 0; i < mOutputBuffers.size(); ++i) {
+            mOutputBuffers.valueAt(i).dispose();
         }
         mOutputBuffers.clear();
     }
