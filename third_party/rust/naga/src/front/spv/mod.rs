@@ -40,7 +40,6 @@ use function::*;
 
 use crate::{
     arena::{Arena, Handle},
-    proc::{Alignment, Layouter},
     FastHashMap,
 };
 
@@ -190,6 +189,28 @@ impl crate::ImageDimension {
             crate::ImageDimension::D3 => Some(crate::VectorSize::Tri),
             crate::ImageDimension::Cube => Some(crate::VectorSize::Tri),
         }
+    }
+}
+
+//TODO: should this be shared with `crate::proc::wgsl::layout` logic?
+fn get_alignment(ty: Handle<crate::Type>, arena: &Arena<crate::Type>) -> crate::Alignment {
+    use crate::TypeInner as Ti;
+    match arena[ty].inner {
+        Ti::Scalar { width, .. } => crate::Alignment::new(width as u32).unwrap(),
+        Ti::Vector { size, width, .. }
+        | Ti::Matrix {
+            rows: size, width, ..
+        } => {
+            let count = if size >= crate::VectorSize::Tri { 4 } else { 2 };
+            crate::Alignment::new((count * width) as u32).unwrap()
+        }
+        Ti::Pointer { .. } | Ti::ValuePointer { .. } => crate::Alignment::new(1).unwrap(),
+        Ti::Array { stride, .. } => crate::Alignment::new(stride).unwrap(),
+        Ti::Struct { ref level, .. } => match *level {
+            crate::StructLevel::Root => crate::Alignment::new(1).unwrap(),
+            crate::StructLevel::Normal { alignment } => alignment,
+        },
+        Ti::Image { .. } | Ti::Sampler { .. } => crate::Alignment::new(1).unwrap(),
     }
 }
 
@@ -374,7 +395,6 @@ impl Default for Options {
 pub struct Parser<I> {
     data: I,
     state: ModuleState,
-    layouter: Layouter,
     temp_bytes: Vec<u8>,
     ext_glsl_id: Option<spirv::Word>,
     future_decor: FastHashMap<spirv::Word, Decoration>,
@@ -412,7 +432,6 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         Parser {
             data,
             state: ModuleState::Empty,
-            layouter: Layouter::default(),
             temp_bytes: Vec::new(),
             ext_glsl_id: None,
             future_decor: FastHashMap::default(),
@@ -905,7 +924,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     log::trace!("\t\t\tlooking up expr {:?}", base_id);
                     let mut acex = {
                         // the base type has to be a pointer,
-                        // so we dereference it here for the traversal
+                        // so we derefernce it here for the traversal
                         let lexp = self.lookup_expression.lookup(base_id)?;
                         let lty = self.lookup_type.lookup(lexp.type_id)?;
                         AccessExpression {
@@ -1478,11 +1497,9 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::ImageWrite => {
                     let extra = inst.expect_at_least(4)?;
-                    block.extend(emitter.finish(expressions));
                     let stmt =
                         self.parse_image_write(extra, type_arena, global_arena, expressions)?;
                     block.push(stmt);
-                    emitter.start(expressions);
                 }
                 Op::ImageFetch | Op::ImageRead => {
                     let extra = inst.expect_at_least(5)?;
@@ -2215,7 +2232,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 } => {
                     if let [S::Break] = reject[..] {
                         // uplift "accept" into the parent
-                        let extracted = mem::take(accept);
+                        let extracted = mem::replace(accept, Vec::new());
                         statements.splice(i + 1..i + 1, extracted.into_iter());
                     } else {
                         self.patch_statements(reject)?;
@@ -2229,7 +2246,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 } => {
                     if cases.is_empty() {
                         // uplift "default" into the parent
-                        let extracted = mem::take(default);
+                        let extracted = mem::replace(default, Vec::new());
                         statements.splice(i + 1..i + 1, extracted.into_iter());
                     } else {
                         for case in cases.iter_mut() {
@@ -2302,7 +2319,6 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             self.index_constants.push(handle);
         }
 
-        self.layouter.clear();
         self.dummy_functions = Arena::new();
         self.lookup_function.clear();
         self.function_call_graph.clear();
@@ -2930,11 +2946,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let parent_decor = self.future_decor.remove(&id);
         let block_decor = parent_decor.as_ref().and_then(|decor| decor.block.clone());
 
-        self.layouter
-            .update(&module.types, &module.constants)
-            .unwrap();
-
-        let mut struct_alignment = Alignment::new(1).unwrap();
+        let mut struct_alignment = crate::Alignment::new(1).unwrap();
         let mut members = Vec::<crate::StructMember>::with_capacity(inst.wc as usize - 2);
         let mut member_lookups = Vec::with_capacity(members.capacity());
         let mut storage_access = crate::StorageAccess::empty();
@@ -2965,30 +2977,20 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             let offset = decor.offset.unwrap_or(0);
 
             if let crate::TypeInner::Matrix {
-                columns,
+                columns: _,
                 rows,
                 width,
             } = module.types[ty].inner
             {
                 if let Some(stride) = decor.matrix_stride {
-                    let rounded_rows = if rows > crate::VectorSize::Bi {
-                        4
-                    } else {
-                        rows as u32
-                    };
-                    if stride.get() != rounded_rows * (width as u32) {
-                        log::warn!(
-                            "Unexpected matrix stride {} for an {}x{} matrix with scalar width={}",
-                            stride.get(),
-                            columns as u8,
-                            rows as u8,
-                            width,
-                        );
+                    if stride.get() != (rows as u32) * (width as u32) {
+                        return Err(Error::UnsupportedMatrixStride(stride.get()));
                     }
                 }
             }
 
-            struct_alignment = struct_alignment.max(self.layouter[ty].alignment);
+            let alignment = get_alignment(ty, &module.types);
+            struct_alignment = struct_alignment.max(alignment);
 
             members.push(crate::StructMember {
                 name: decor.name,
@@ -2999,7 +3001,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         }
 
         let inner = crate::TypeInner::Struct {
-            top_level: block_decor.is_some(),
+            level: match block_decor {
+                Some(_) => crate::StructLevel::Root,
+                None => crate::StructLevel::Normal {
+                    alignment: struct_alignment,
+                },
+            },
             span: match members.last() {
                 Some(member) => {
                     let end = member.offset + module.types[member.ty].inner.span(&module.constants);

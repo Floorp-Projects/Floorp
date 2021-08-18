@@ -11,7 +11,7 @@ use cocoa_foundation::foundation::NSUInteger;
 use copyless::VecHelper;
 use foreign_types::{ForeignType, ForeignTypeRef};
 use hal::{
-    adapter, buffer, device as d, display, format, image, memory,
+    adapter, buffer, device as d, format, image, memory,
     memory::Properties,
     pass,
     pool::CommandPoolCreateFlags,
@@ -29,7 +29,7 @@ use objc::{
     rc::autoreleasepool,
     runtime::{Object, BOOL, NO},
 };
-use parking_lot::{Mutex, MutexGuard};
+use parking_lot::Mutex;
 
 use std::collections::BTreeMap;
 #[cfg(feature = "pipeline-cache")]
@@ -308,7 +308,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 linear_tiling: format::ImageFeature::empty(),
                 optimal_tiling: format::ImageFeature::empty(),
                 buffer_features: format::BufferFeature::empty(),
-                drm_format_properties: Vec::new(),
             },
         }
     }
@@ -390,30 +389,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             ],
             memory_types: self.memory_types.to_vec(),
         }
-    }
-
-    fn external_buffer_properties(
-        &self,
-        _usage: hal::buffer::Usage,
-        _sparse: hal::memory::SparseFlags,
-        _memory_type: hal::external_memory::ExternalMemoryType,
-    ) -> hal::external_memory::ExternalMemoryProperties {
-        unimplemented!()
-    }
-
-    fn external_image_properties(
-        &self,
-        _format: hal::format::Format,
-        _dimensions: u8,
-        _tiling: hal::image::Tiling,
-        _usage: hal::image::Usage,
-        _view_caps: hal::image::ViewCapabilities,
-        _memory_type: hal::external_memory::ExternalMemoryType,
-    ) -> Result<
-        hal::external_memory::ExternalMemoryProperties,
-        hal::external_memory::ExternalImagePropertiesError,
-    > {
-        unimplemented!()
     }
 
     fn features(&self) -> hal::Features {
@@ -573,34 +548,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             ..hal::PhysicalDeviceProperties::default()
         }
     }
-
-    unsafe fn enumerate_displays(&self) -> Vec<hal::display::Display<crate::Backend>> {
-        unimplemented!();
-    }
-
-    unsafe fn enumerate_compatible_planes(
-        &self,
-        _display: &hal::display::Display<crate::Backend>,
-    ) -> Vec<hal::display::Plane> {
-        unimplemented!();
-    }
-
-    unsafe fn create_display_mode(
-        &self,
-        _display: &hal::display::Display<crate::Backend>,
-        _resolution: (u32, u32),
-        _refresh_rate: u32,
-    ) -> Result<hal::display::DisplayMode<crate::Backend>, hal::display::DisplayModeError> {
-        unimplemented!();
-    }
-
-    unsafe fn create_display_plane<'a>(
-        &self,
-        _display: &'a hal::display::DisplayMode<crate::Backend>,
-        _plane: &'a hal::display::Plane,
-    ) -> Result<hal::display::DisplayPlane<'a, crate::Backend>, d::OutOfMemory> {
-        unimplemented!();
-    }
 }
 
 pub struct LanguageVersion {
@@ -615,11 +562,6 @@ impl LanguageVersion {
 }
 
 impl Device {
-    /// Provides access to the underlying Metal device.
-    pub fn lock(&self) -> MutexGuard<'_, metal::Device> {
-        self.shared.device.lock()
-    }
-
     fn _is_heap_coherent(&self, heap: &n::MemoryHeap) -> bool {
         match *heap {
             n::MemoryHeap::Private => false,
@@ -3553,97 +3495,6 @@ impl hal::device::Device<Backend> for Device {
     ) {
         // TODO
     }
-
-    unsafe fn set_display_power_state(
-        &self,
-        _display: &display::Display<Backend>,
-        _power_state: &display::control::PowerState,
-    ) -> Result<(), display::control::DisplayControlError> {
-        unimplemented!()
-    }
-
-    unsafe fn register_device_event(
-        &self,
-        _device_event: &display::control::DeviceEvent,
-        _fence: &mut <Backend as hal::Backend>::Fence,
-    ) -> Result<(), display::control::DisplayControlError> {
-        unimplemented!()
-    }
-
-    unsafe fn register_display_event(
-        &self,
-        _display: &display::Display<Backend>,
-        _display_event: &display::control::DisplayEvent,
-        _fence: &mut <Backend as hal::Backend>::Fence,
-    ) -> Result<(), display::control::DisplayControlError> {
-        unimplemented!()
-    }
-
-    unsafe fn create_allocate_external_buffer(
-        &self,
-        _external_memory_type: hal::external_memory::ExternalBufferMemoryType,
-        _usage: hal::buffer::Usage,
-        _sparse: hal::memory::SparseFlags,
-        _type_mask: u32,
-        _size: u64,
-    ) -> Result<(n::Buffer, n::Memory), hal::external_memory::ExternalResourceError>
-    {
-        unimplemented!()
-    }
-
-    unsafe fn import_external_buffer(
-        &self,
-        _external_memory: hal::external_memory::ExternalBufferMemory,
-        _usage: hal::buffer::Usage,
-        _sparse: hal::memory::SparseFlags,
-        _mem_types: u32,
-        _size: u64,
-    ) -> Result<(n::Buffer, n::Memory), hal::external_memory::ExternalResourceError> {
-        unimplemented!()
-    }
-
-    unsafe fn create_allocate_external_image(
-        &self,
-        _external_memory_type: hal::external_memory::ExternalImageMemoryType,
-        _kind: image::Kind,
-        _num_levels: image::Level,
-        _format: hal::format::Format,
-        _tiling: image::Tiling,
-        _usage: image::Usage,
-        _sparse: memory::SparseFlags,
-        _view_caps: image::ViewCapabilities,
-        _type_mask: u32,
-    ) -> Result<(n::Image, n::Memory), hal::external_memory::ExternalResourceError> {
-        unimplemented!()
-    }
-
-    unsafe fn import_external_image(
-        &self,
-        _external_memory: hal::external_memory::ExternalImageMemory,
-        _kind: image::Kind,
-        _num_levels: image::Level,
-        _format: hal::format::Format,
-        _tiling: image::Tiling,
-        _usage: image::Usage,
-        _sparse: memory::SparseFlags,
-        _view_caps: image::ViewCapabilities,
-        _type_mask: u32,
-    ) -> Result<(n::Image, n::Memory), hal::external_memory::ExternalResourceError> {
-        unimplemented!()
-    }
-
-    unsafe fn export_memory(
-        &self,
-        _external_memory_type: hal::external_memory::ExternalMemoryType,
-        _memory: &n::Memory,
-    ) -> Result<hal::external_memory::PlatformMemory, hal::external_memory::ExternalMemoryExportError>
-    {
-        unimplemented!()
-    }
-
-    /// Query the underlying drm format modifier from an image.
-    unsafe fn drm_format_modifier(&self, _image: &n::Image) -> Option<hal::format::DrmModifier>{None}
-
 
     fn start_capture(&self) {
         let device = self.shared.device.lock();

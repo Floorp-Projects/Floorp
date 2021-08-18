@@ -91,8 +91,8 @@ interface GPUAdapterFeatures {
 };
 
 dictionary GPUDeviceDescriptor {
-    sequence<GPUFeatureName> requiredFeatures = [];
-    record<DOMString, GPUSize32> requiredLimits;
+    sequence<GPUFeatureName> nonGuaranteedFeatures = [];
+    record<DOMString, GPUSize32> nonGuaranteedLimits;
 };
 
 enum GPUFeatureName {
@@ -106,7 +106,7 @@ enum GPUFeatureName {
 
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
-interface GPUSupportedLimits {
+interface GPUAdapterLimits {
     readonly attribute unsigned long maxTextureDimension1D;
     readonly attribute unsigned long maxTextureDimension2D;
     readonly attribute unsigned long maxTextureDimension3D;
@@ -131,8 +131,7 @@ interface GPUSupportedLimits {
 interface GPUAdapter {
     readonly attribute DOMString name;
     [SameObject] readonly attribute GPUAdapterFeatures features;
-    [SameObject] readonly attribute GPUSupportedLimits limits;
-    readonly attribute boolean isSoftware;
+    [SameObject] readonly attribute GPUAdapterLimits limits;
 
     [NewObject]
     Promise<GPUDevice> requestDevice(optional GPUDeviceDescriptor descriptor = {});
@@ -529,11 +528,12 @@ dictionary GPUTextureBindingLayout {
 };
 
 enum GPUStorageTextureAccess {
+    "read-only",
     "write-only",
 };
 
 dictionary GPUStorageTextureBindingLayout {
-    GPUStorageTextureAccess access = "write-only";
+    required GPUStorageTextureAccess access;
     required GPUTextureFormat format;
     GPUTextureViewDimension viewDimension = "2d";
 };
@@ -599,8 +599,6 @@ interface GPUCompilationMessage {
     readonly attribute GPUCompilationMessageType type;
     readonly attribute unsigned long long lineNum;
     readonly attribute unsigned long long linePos;
-    readonly attribute unsigned long long offset;
-    readonly attribute unsigned long long length;
 };
 
 [Pref="dom.webgpu.enabled",
@@ -696,7 +694,7 @@ enum GPUVertexFormat {
     "sint32x4",
 };
 
-enum GPUVertexStepMode {
+enum GPUInputStepMode {
     "vertex",
     "instance",
 };
@@ -709,7 +707,7 @@ dictionary GPUVertexAttribute {
 
 dictionary GPUVertexBufferLayout {
     required GPUSize64 arrayStride;
-    GPUVertexStepMode stepMode = "vertex";
+    GPUInputStepMode stepMode = "vertex";
     required sequence<GPUVertexAttribute> attributes;
 };
 
@@ -872,7 +870,7 @@ enum GPULoadOp {
 
 enum GPUStoreOp {
     "store",
-    "discard"
+    "clear"
 };
 
 dictionary GPURenderPassColorAttachment {
@@ -1067,9 +1065,10 @@ GPURenderBundle includes GPUObjectBase;
 dictionary GPURenderBundleDescriptor : GPUObjectDescriptorBase {
 };
 
-dictionary GPURenderBundleEncoderDescriptor : GPURenderPassLayout {
-    boolean depthReadOnly = false;
-    boolean stencilReadOnly = false;
+dictionary GPURenderBundleEncoderDescriptor : GPUObjectDescriptorBase {
+    required sequence<GPUTextureFormat> colorFormats;
+    GPUTextureFormat depthStencilFormat;
+    GPUSize32 sampleCount = 1;
 };
 
 [Pref="dom.webgpu.enabled",
@@ -1081,14 +1080,8 @@ GPURenderBundleEncoder includes GPUObjectBase;
 GPURenderBundleEncoder includes GPUProgrammablePassEncoder;
 GPURenderBundleEncoder includes GPURenderEncoderBase;
 
-dictionary GPURenderPassLayout: GPUObjectDescriptorBase {
-    required sequence<GPUTextureFormat> colorFormats;
-    GPUTextureFormat depthStencilFormat;
-    GPUSize32 sampleCount = 1;
-};
-
 // ****************************************************************************
-// OTHER (Canvas, Query, Queue, Device)
+// OTHER (Query, Queue, SwapChain, Device)
 // ****************************************************************************
 
 // Query set
@@ -1149,13 +1142,18 @@ interface GPUQueue {
 };
 GPUQueue includes GPUObjectBase;
 
-dictionary GPUCanvasConfiguration {
+[Pref="dom.webgpu.enabled",
+ Exposed=Window]
+interface GPUSwapChain {
+    GPUTexture getCurrentTexture();
+};
+GPUSwapChain includes GPUObjectBase;
+
+dictionary GPUSwapChainDescriptor : GPUObjectDescriptorBase {
     required GPUDevice device;
     required GPUTextureFormat format;
     GPUTextureUsageFlags usage = 0x10; //GPUTextureUsage.OUTPUT_ATTACHMENT
-    //GPUPredefinedColorSpace colorSpace = "srgb"; //TODO
     GPUCanvasCompositingAlphaMode compositingAlphaMode = "opaque";
-    GPUExtent3D size;
 };
 
 enum GPUCanvasCompositingAlphaMode {
@@ -1166,11 +1164,10 @@ enum GPUCanvasCompositingAlphaMode {
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUCanvasContext {
-    // Calling configure() a second time invalidates the previous one,
+    // Calling configureSwapChain a second time invalidates the previous one,
     // and all of the textures it's produced.
-    void configure(GPUCanvasConfiguration descriptor);
-    void unconfigure();
+    [Throws]
+    GPUSwapChain configureSwapChain(GPUSwapChainDescriptor descriptor);
 
-    GPUTextureFormat getPreferredFormat(GPUAdapter adapter);
-    GPUTexture getCurrentTexture();
+    GPUTextureFormat getSwapChainPreferredFormat(GPUAdapter adapter);
 };
