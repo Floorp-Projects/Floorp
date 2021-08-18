@@ -55,6 +55,7 @@ test-info-fission:
             - linux64-nasm
             - linux64-node
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
     run:
         using: run-task
         cwd: '{checkout}'
@@ -82,6 +83,7 @@ test-info-xorigin:
             - linux64-nasm
             - linux64-node
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
     run:
         using: run-task
         cwd: '{checkout}'
@@ -109,6 +111,7 @@ test-info-disabled-by-os:
             - linux64-nasm
             - linux64-node
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
     run:
         using: run-task
         cwd: '{checkout}'
@@ -140,6 +143,7 @@ test-info-all:
             - linux64-nasm
             - linux64-node
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
     run:
         using: run-task
         cwd: '{checkout}'
