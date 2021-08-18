@@ -32,6 +32,7 @@
 #include "base/logging.h"
 #include "base/string_util.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "prenv.h"
 #include "GeckoProfiler.h"
@@ -355,49 +356,53 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
     return false;
   }
 
+  mozilla::Maybe<int> fallocateError;
 #  if defined(HAVE_POSIX_FALLOCATE)
   // Using posix_fallocate will ensure that there's actually space for this
   // file. Otherwise we end up with a sparse file that can give SIGBUS if we
   // run out of space while writing to it.
-  int rv;
   {
+    int rv;
     // Avoid repeated interruptions of posix_fallocate by the profiler's
     // SIGPROF sampling signal. Indicating "thread sleep" here means we'll
     // get up to one interruption but not more. See bug 1658847 for more.
     // This has to be scoped outside the HANDLE_RV_EINTR retry loop.
-    AUTO_PROFILER_THREAD_SLEEP;
-    rv =
-        HANDLE_RV_EINTR(posix_fallocate(fd.get(), 0, static_cast<off_t>(size)));
-  }
-  if (rv != 0) {
-    if (rv == EOPNOTSUPP || rv == EINVAL || rv == ENODEV) {
-      // Some filesystems have trouble with posix_fallocate. For now, we must
-      // fallback ftruncate and accept the allocation failures like we do
-      // without posix_fallocate.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1618914
-      int fallocate_errno = rv;
-      rv = HANDLE_EINTR(ftruncate(fd.get(), static_cast<off_t>(size)));
-      if (rv != 0) {
-        CHROMIUM_LOG(WARNING) << "fallocate failed to set shm size: "
-                              << strerror(fallocate_errno);
-        CHROMIUM_LOG(WARNING)
-            << "ftruncate failed to set shm size: " << strerror(errno);
-        return false;
-      }
-    } else {
+    {
+      AUTO_PROFILER_THREAD_SLEEP;
+
+      rv = HANDLE_RV_EINTR(
+          posix_fallocate(fd.get(), 0, static_cast<off_t>(size)));
+    }
+
+    // Some filesystems have trouble with posix_fallocate. For now, we must
+    // fallback ftruncate and accept the allocation failures like we do
+    // without posix_fallocate.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1618914
+    if (rv != 0 && rv != EOPNOTSUPP && rv != EINVAL && rv != ENODEV) {
       CHROMIUM_LOG(WARNING)
           << "fallocate failed to set shm size: " << strerror(rv);
       return false;
     }
-  }
-#  else
-  int rv = HANDLE_EINTR(ftruncate(fd.get(), static_cast<off_t>(size)));
-  if (rv != 0) {
-    CHROMIUM_LOG(WARNING) << "ftruncate failed to set shm size: "
-                          << strerror(errno);
-    return false;
+    fallocateError = mozilla::Some(rv);
   }
 #  endif
+
+  // If posix_fallocate isn't supported / relevant for this type of
+  // file (either failed with an expected error, or wasn't attempted),
+  // then set the size with ftruncate:
+  if (fallocateError != mozilla::Some(0)) {
+    int rv = HANDLE_EINTR(ftruncate(fd.get(), static_cast<off_t>(size)));
+    if (rv != 0) {
+      int ftruncate_errno = errno;
+      if (fallocateError) {
+        CHROMIUM_LOG(WARNING) << "fallocate failed to set shm size: "
+                              << strerror(*fallocateError);
+      }
+      CHROMIUM_LOG(WARNING)
+          << "ftruncate failed to set shm size: " << strerror(ftruncate_errno);
+      return false;
+    }
+  }
 
   mapped_file_ = std::move(fd);
   frozen_file_ = std::move(frozen_fd);
