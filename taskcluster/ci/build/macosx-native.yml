@@ -106,6 +106,7 @@ macosx64-rusttests/opt:
             - macosx64-cbindgen
             - macosx64-nasm
             - macosx64-node
+            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -137,5 +138,6 @@ macosx64-rusttests/debug:
             - macosx64-cbindgen
             - macosx64-nasm
             - macosx64-node
+            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
