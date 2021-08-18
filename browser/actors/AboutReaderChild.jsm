@@ -223,7 +223,10 @@ class AboutReaderChild extends JSWindowActorChild {
 
     // Only send updates when there are articles; there's no point updating with
     // |false| all the time.
-    if (Readerable.isProbablyReaderable(document)) {
+    if (
+      Readerable.shouldCheckUri(document.baseURIObject, true) &&
+      Readerable.isProbablyReaderable(document)
+    ) {
       this.sendAsyncMessage("Reader:UpdateReaderButton", {
         isArticle: true,
       });
