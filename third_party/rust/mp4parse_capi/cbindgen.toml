@@ -25,9 +25,16 @@ rename_variants = "QualifiedScreamingSnakeCase"
 parse_deps = true
 include = ["mp4parse"]
 
+[export]
+# `mp4parse::Status` was previously defined as `mp4parse_capi::Mp4parseStatus`,
+# but now is referenced from `mp4parse_capi` via `pub use mp4parse::Status as Mp4parseStatus`,
+# the name `Status` does not appear in the public C API, so we must force its inclusion
+include = ["Status"]
+
 [export.rename]
 # We need to declare these types in mp4parse, but we rename them in the generated
 # header to match mp4parse_capi naming conventions
+"Status" = "Mp4parseStatus"
 "ParseStrictness" = "Mp4parseStrictness"
 "ImageSpatialExtentsProperty" = "Mp4parseImageSpatialExtents"
 "ImageRotation" = "Mp4parseIrot"
