@@ -470,11 +470,18 @@ class ToolbarPresenterTest {
 
         verify(toolbar).highlight = Toolbar.Highlight.PERMISSIONS_CHANGED
 
+        store.dispatch(TrackingProtectionAction.ToggleExclusionListAction("tab", true))
+            .joinBlocking()
+
+        testDispatcher.advanceUntilIdle()
+
+        verify(toolbar, times(2)).highlight = Toolbar.Highlight.PERMISSIONS_CHANGED
+
         store.dispatch(UpdatePermissionHighlightsStateAction.Reset("tab")).joinBlocking()
 
         testDispatcher.advanceUntilIdle()
 
-        verify(toolbar, times(2)).highlight = Toolbar.Highlight.NONE
+        verify(toolbar).highlight = Toolbar.Highlight.NONE
     }
 
     @Test

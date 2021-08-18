@@ -88,7 +88,9 @@ class ToolbarPresenter(
 
     private fun updateHighlight(tab: SessionState) {
         toolbar.highlight = when {
-            tab.content.permissionHighlights.permissionsChanged -> Highlight.PERMISSIONS_CHANGED
+            tab.content.permissionHighlights.permissionsChanged ||
+                tab.trackingProtection.ignoredOnTrackingProtection
+            -> Highlight.PERMISSIONS_CHANGED
             else -> Highlight.NONE
         }
     }
