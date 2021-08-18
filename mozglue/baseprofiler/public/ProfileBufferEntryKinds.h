@@ -41,6 +41,7 @@ static constexpr size_t ProfileBufferEntryNumChars = 8;
         sizeof(::mozilla::baseprofiler::BaseProfilerThreadId))    \
   MACRO(Time, double, sizeof(double))                             \
   MACRO(TimeBeforeCompactStack, double, sizeof(double))           \
+  MACRO(TimeBeforeSameSample, double, sizeof(double))             \
   MACRO(CounterId, void*, sizeof(void*))                          \
   MACRO(CounterKey, uint64_t, sizeof(uint64_t))                   \
   MACRO(Number, uint64_t, sizeof(uint64_t))                       \
@@ -77,10 +78,10 @@ enum class ProfileBufferEntryKind : ProfileBufferEntryKindUnderlyingType {
   Marker = LEGACY_LIMIT,
 
   // Entry with "running times", such as CPU usage measurements.
-  // Optional between TimeBeforeCompactStack and CompactStack.
+  // Optional between TimeBeforeX and X.
   RunningTimes,
 
-  // Optional between TimeBeforeCompactStack and CompactStack.
+  // Optional between TimeBeforeX and X.
   UnresponsiveDurationMs,
 
   // Collection of legacy stack entries, must follow a ThreadId and
@@ -88,6 +89,10 @@ enum class ProfileBufferEntryKind : ProfileBufferEntryKindUnderlyingType {
   // TimeBeforeCompactStack is equivalent to Time, but indicates that a
   // CompactStack follows shortly afterwards).
   CompactStack,
+
+  // Indicates that this sample is identical to the previous one, must follow a
+  // ThreadId and TimeBeforeSameSample.
+  SameSample,
 
   MODERN_LIMIT
 };
