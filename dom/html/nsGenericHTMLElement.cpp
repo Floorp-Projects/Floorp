@@ -2409,11 +2409,11 @@ bool nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   return disallowOverridingFocusability;
 }
 
-Result<bool, nsresult> nsGenericHTMLElement::PerformAccesskey(
-    bool aKeyCausesActivation, bool aIsTrustedEvent) {
+bool nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
+                                            bool aIsTrustedEvent) {
   nsPresContext* presContext = GetPresContext(eForComposedDoc);
   if (!presContext) {
-    return Err(NS_ERROR_UNEXPECTED);
+    return false;
   }
 
   // It's hard to say what HTML4 wants us to do in all cases.
@@ -2431,13 +2431,9 @@ Result<bool, nsresult> nsGenericHTMLElement::PerformAccesskey(
     AutoPopupStatePusher popupStatePusher(
         aIsTrustedEvent ? PopupBlocker::openAllowed : PopupBlocker::openAbused);
     DispatchSimulatedClick(this, aIsTrustedEvent, presContext);
-    return focused;
   }
 
-  // If the accesskey won't cause the activation and the focus isn't changed,
-  // either. Return error so EventStateManager would try to find next element
-  // to handle the accesskey.
-  return focused ? Result<bool, nsresult>{focused} : Err(NS_ERROR_ABORT);
+  return focused;
 }
 
 void nsGenericHTMLElement::HandleKeyboardActivation(
