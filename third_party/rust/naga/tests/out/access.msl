@@ -1,0 +1,28 @@
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+struct _mslBufferSizes {
+    metal::uint size0;
+};
+
+typedef int type2[1];
+struct Bar {
+    metal::float4x4 matrix;
+    type2 data;
+};
+struct type5 {
+    int inner[5];
+};
+
+struct fooInput {
+};
+struct fooOutput {
+    metal::float4 member [[position]];
+};
+vertex fooOutput foo(
+  metal::uint vi [[vertex_id]]
+, device Bar& bar [[buffer(0)]]
+, constant _mslBufferSizes& _buffer_sizes [[buffer(24)]]
+) {
+    return fooOutput { static_cast<float4>(metal::int4(type5 {bar.data[(1 + (_buffer_sizes.size0 - 64 - 4) / 4) - 1u], static_cast<int>(bar.matrix[3u].x), 3, 4, 5}.inner[vi])) };
+}
