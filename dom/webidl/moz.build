@@ -678,6 +678,8 @@ WEBIDL_FILES = [
     "LoadURIOptions.webidl",
     "Localization.webidl",
     "Location.webidl",
+    "Lock.webidl",
+    "LockManager.webidl",
     "MathMLElement.webidl",
     "MediaCapabilities.webidl",
     "MediaDebugInfo.webidl",
