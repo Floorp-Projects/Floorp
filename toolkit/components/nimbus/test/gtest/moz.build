@@ -6,6 +6,11 @@
 
 UNIFIED_SOURCES += [
     "NimbusFeatures_GetTest.cpp",
+    "NimbusFeatures_RecordExposure.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/toolkit/components/telemetry/tests/gtest",
 ]
 
 FINAL_LIBRARY = "xul-gtest"

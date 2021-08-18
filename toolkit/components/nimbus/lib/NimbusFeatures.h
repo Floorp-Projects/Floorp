@@ -8,6 +8,7 @@
 #define mozilla_NimbusFeatures_h
 
 #include "mozilla/Preferences.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 
@@ -15,6 +16,10 @@ class NimbusFeatures {
  private:
   static void GetPrefName(const nsACString& aFeatureId,
                           const nsACString& aVariable, nsACString& aPref);
+
+  static nsresult GetExperimentSlug(const nsACString& aFeatureId,
+                                    nsACString& aExperimentSlug,
+                                    nsACString& aBranchSlug);
 
  public:
   static bool GetBool(const nsACString& aFeatureId, const nsACString& aVariable,
@@ -30,6 +35,9 @@ class NimbusFeatures {
   static nsresult OffUpdate(const nsACString& aFeatureId,
                             const nsACString& aVariable,
                             PrefChangedFunc aUserCallback, void* aUserData);
+
+  static nsresult RecordExposureEvent(const nsACString& aFeatureId,
+                                      const bool aForce = false);
 };
 
 }  // namespace mozilla
