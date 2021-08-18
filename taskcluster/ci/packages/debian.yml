@@ -6,7 +6,6 @@ job-defaults:
     run:
         using: debian-package
         dist: jessie
-        snapshot: 20210208T213147Z
 
 deb10-cmake:
     description: "Cmake backport for Debian buster"
