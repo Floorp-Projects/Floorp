@@ -617,7 +617,7 @@ class nsWindow final : public nsWindowBase {
   static TriStateBool sCanQuit;
   static nsWindow* sCurrentWindow;
   static BOOL sIsOleInitialized;
-  static HCURSOR sHCursor;
+  static HCURSOR sCustomHCursor;
   static Cursor sCurrentCursor;
   static bool sSwitchKeyboardLayout;
   static bool sJustGotDeactivate;

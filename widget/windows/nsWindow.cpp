@@ -252,7 +252,7 @@ bool nsWindow::sDropShadowEnabled = true;
 uint32_t nsWindow::sInstanceCount = 0;
 bool nsWindow::sSwitchKeyboardLayout = false;
 BOOL nsWindow::sIsOleInitialized = FALSE;
-HCURSOR nsWindow::sHCursor = nullptr;
+HCURSOR nsWindow::sCustomHCursor = nullptr;
 nsIWidget::Cursor nsWindow::sCurrentCursor = {};
 nsWindow* nsWindow::sCurrentWindow = nullptr;
 bool nsWindow::sJustGotDeactivate = false;
@@ -3244,38 +3244,31 @@ static HCURSOR CursorForImage(const nsIWidget::Cursor& aCursor,
 
 // Setting the actual cursor
 void nsWindow::SetCursor(const Cursor& aCursor) {
-  if (sCurrentCursor == aCursor && sHCursor) {
-    ::SetCursor(sHCursor);
-    return;
-  }
-
   mCursor = aCursor;
 
-  HCURSOR cursor = CursorForImage(aCursor, GetDefaultScale());
-  if (cursor) {
-    ::SetCursor(cursor);
-    sCurrentCursor = aCursor;
-    if (sHCursor) {
-      ::DestroyIcon(sHCursor);
-    }
-    sHCursor = cursor;
+  if (sCurrentCursor == aCursor && sCustomHCursor) {
+    ::SetCursor(sCustomHCursor);
     return;
   }
 
-  cursor = CursorFor(aCursor.mDefaultCursor);
+  if (sCustomHCursor) {
+    ::DestroyIcon(sCustomHCursor);
+    sCustomHCursor = nullptr;
+  }
+
+  sCurrentCursor = aCursor;
+  HCURSOR cursor = CursorForImage(aCursor, GetDefaultScale());
+  if (cursor) {
+    sCustomHCursor = cursor;
+  } else {
+    cursor = CursorFor(aCursor.mDefaultCursor);
+  }
+
   if (!cursor) {
     return;
   }
 
-  HCURSOR oldCursor = ::SetCursor(cursor);
-  sCurrentCursor = aCursor;
-
-  if (sHCursor == oldCursor) {
-    if (sHCursor) {
-      ::DestroyIcon(sHCursor);
-    }
-    sHCursor = nullptr;
-  }
+  ::SetCursor(cursor);
 }
 
 /**************************************************************
