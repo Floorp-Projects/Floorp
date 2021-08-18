@@ -160,7 +160,15 @@ this.analytics = (function() {
   };
 
   exports.incrementCount = function(scalar) {
-    const allowedScalars = ["download", "upload", "copy"];
+    const allowedScalars = [
+      "download",
+      "upload",
+      "copy",
+      "visible",
+      "full_page",
+      "custom",
+      "element",
+    ];
     if (!allowedScalars.includes(scalar)) {
       const err = `incrementCount passed an unrecognized scalar ${scalar}`;
       log.warn(err);
