@@ -5,8 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DetailedPromise.h"
-
-#include "VideoUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "nsPrintfCString.h"
 

@@ -13,7 +13,6 @@
 #include "GMPUtils.h"
 #include "MediaContainerType.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/MediaSource.h"
@@ -294,10 +293,10 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
   nsTArray<KeySystemConfig> keySystemConfigs;
 
   {
-    const nsCString keySystem = nsLiteralCString(kClearKeyKeySystemName);
+    const nsCString keySystem = nsLiteralCString(EME_KEY_SYSTEM_CLEARKEY);
     if (HavePluginForKeySystem(keySystem)) {
       KeySystemConfig clearkey;
-      clearkey.mKeySystem.AssignLiteral(kClearKeyKeySystemName);
+      clearkey.mKeySystem.AssignLiteral(EME_KEY_SYSTEM_CLEARKEY);
       clearkey.mInitDataTypes.AppendElement(u"cenc"_ns);
       clearkey.mInitDataTypes.AppendElement(u"keyids"_ns);
       clearkey.mInitDataTypes.AppendElement(u"webm"_ns);
@@ -335,7 +334,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
         // base clearkey system, so just clone clearkey and change the name.
         KeySystemConfig clearkeyWithProtectionQuery{clearkey};
         clearkeyWithProtectionQuery.mKeySystem.AssignLiteral(
-            kClearKeyWithProtectionQueryKeySystemName);
+            EME_KEY_SYSTEM_CLEARKEY_WITH_PROTECTION_QUERY);
         keySystemConfigs.AppendElement(std::move(clearkeyWithProtectionQuery));
       }
 
@@ -343,10 +342,10 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
     }
   }
   {
-    const nsCString keySystem = nsLiteralCString(kWidevineKeySystemName);
+    const nsCString keySystem = nsLiteralCString(EME_KEY_SYSTEM_WIDEVINE);
     if (HavePluginForKeySystem(keySystem)) {
       KeySystemConfig widevine;
-      widevine.mKeySystem.AssignLiteral(kWidevineKeySystemName);
+      widevine.mKeySystem.AssignLiteral(EME_KEY_SYSTEM_WIDEVINE);
       widevine.mInitDataTypes.AppendElement(u"cenc"_ns);
       widevine.mInitDataTypes.AppendElement(u"keyids"_ns);
       widevine.mInitDataTypes.AppendElement(u"webm"_ns);
@@ -399,8 +398,8 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       };
 
       for (const auto& data : validationList) {
-        if (java::MediaDrmProxy::IsCryptoSchemeSupported(kWidevineKeySystemName,
-                                                         data.mMimeType)) {
+        if (java::MediaDrmProxy::IsCryptoSchemeSupported(
+                EME_KEY_SYSTEM_WIDEVINE, data.mMimeType)) {
           if (AndroidDecoderModule::SupportsMimeType(data.mMimeType)) {
             data.mSupportType->SetCanDecryptAndDecode(data.mEMECodecType);
           } else {
