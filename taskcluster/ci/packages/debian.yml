@@ -33,6 +33,22 @@ deb10-mercurial:
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/buster/" debian/changelog
 
+deb11-mercurial:
+    description: "Modern Mercurial for Debian bullseye"
+    treeherder:
+        symbol: Deb11(hg)
+    run:
+        using: debian-package
+        dist: bullseye
+        tarball:
+            url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
+            sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
+        pre-build-command: >-
+            cp -r contrib/packaging/debian debian &&
+            sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb11moz1/" \
+                         -e "s/__DATE__/$(date --rfc-2822)/" \
+                         -e "s/__CODENAME__/bullseye/" debian/changelog
+
 deb10-valgrind:
     description: "Valgrind for Debian buster"
     treeherder:
@@ -54,6 +70,19 @@ deb10-python-zstandard:
             url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
             sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
         pre-build-command: debchange -v 0.15.2-1.deb10moz --distribution buster "Mozilla backport for buster"
+        name: python-zstandard
+
+deb11-python-zstandard:
+    description: "python-zstandard for Debian bullseye"
+    treeherder:
+        symbol: Deb11(python-zstandard)
+    run:
+        using: debian-package
+        dist: bullseye
+        tarball:
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
+            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
+        pre-build-command: debchange -v 0.15.2-1.deb11moz --distribution bullseye "Mozilla backport for buster"
         name: python-zstandard
 
 deb10-mmdebstrap:
