@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "FrameStatistics.h"
+#include "VideoUtils.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
