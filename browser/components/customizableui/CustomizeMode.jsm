@@ -88,6 +88,8 @@ const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
 const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
 const ALPENGLOW_THEME_ID = "firefox-alpenglow@mozilla.org";
+const MONOCHROMATIC_PURPLE_THEME_ID =
+  "firefox-monochromatic-purple@mozilla.org";
 
 const _defaultImportantThemes = [
   DEFAULT_THEME_ID,
@@ -1584,6 +1586,14 @@ CustomizeMode.prototype = {
 
     // Move the current theme (if any) and the default themes to the start:
     let importantThemes = new Set(_defaultImportantThemes);
+    if (
+      Services.prefs.getBoolPref(
+        "browser.theme.temporary.monochromatic.enabled",
+        false
+      )
+    ) {
+      importantThemes.add(MONOCHROMATIC_PURPLE_THEME_ID);
+    }
     if (currentTheme) {
       importantThemes.add(currentTheme.id);
     }
