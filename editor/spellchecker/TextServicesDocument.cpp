@@ -112,6 +112,26 @@ class OffsetEntry final {
   bool mIsValid;
 };
 
+template <typename ElementType>
+struct MOZ_STACK_CLASS ArrayLengthMutationGuard final {
+  ArrayLengthMutationGuard() = delete;
+  explicit ArrayLengthMutationGuard(const nsTArray<ElementType>& aArray)
+      : mArray(aArray), mOldLength(aArray.Length()) {}
+  ~ArrayLengthMutationGuard() {
+    if (mArray.Length() != mOldLength) {
+      MOZ_CRASH("The array length was changed unexpectedly");
+    }
+  }
+
+ private:
+  const nsTArray<ElementType>& mArray;
+  size_t mOldLength;
+};
+
+#define LockOffsetEntryArrayLengthInDebugBuild(aName, aArray)               \
+  DebugOnly<ArrayLengthMutationGuard<UniquePtr<OffsetEntry>>> const aName = \
+      ArrayLengthMutationGuard<UniquePtr<OffsetEntry>>(aArray);
+
 TextServicesDocument::TextServicesDocument()
     : mTxtSvcFilterType(0), mIteratorStatus(IteratorStatus::eDone) {}
 
@@ -1143,7 +1163,10 @@ nsresult TextServicesDocument::OffsetEntryArray::DidInsertText(
     dom::Selection* aSelection, const nsAString& aInsertedString) {
   MOZ_ASSERT(mSelection.IsSet());
 
-  UniquePtr<OffsetEntry>& entry = ElementAt(mSelection.StartIndex());
+  // When you touch this method, please make sure that the entry instance
+  // won't be deleted.  If you know it'll be deleted, you should set it to
+  // `nullptr`.
+  OffsetEntry* entry = ElementAt(mSelection.StartIndex()).get();
   OwningNonNull<Text> const textNodeAtStartEntry = entry->mTextNode;
 
   NS_ASSERTION((entry->mIsValid), "Invalid insertion point!");
@@ -1244,6 +1267,7 @@ nsresult TextServicesDocument::OffsetEntryArray::DidInsertText(
         MakeUnique<OffsetEntry>(entry->mTextNode,
                                 mSelection.StartOffsetInTextInBlock(),
                                 aInsertedString.Length()));
+    LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
     insertedTextEntry->mIsInsertedText = true;
     insertedTextEntry->mOffsetInTextNode = entry->EndOffsetInTextNode();
     MOZ_DIAGNOSTIC_ASSERT(mSelection.StartIndex() + 1 < Length());
@@ -1256,6 +1280,7 @@ nsresult TextServicesDocument::OffsetEntryArray::DidInsertText(
 
   for (size_t i = mSelection.StartIndex() + 1; i < Length(); i++) {
     const UniquePtr<OffsetEntry>& entry = ElementAt(i);
+    LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
     if (entry->mTextNode != textNodeAtStartEntry) {
       break;
     }
@@ -1295,6 +1320,7 @@ void TextServicesDocument::DidDeleteContent(const nsIContent& aChildContent) {
   for (size_t nodeIndex = *maybeNodeIndex; nodeIndex < mOffsetTable.Length();
        nodeIndex++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[nodeIndex];
+    LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
     if (!entry) {
       return;
     }
@@ -1348,6 +1374,7 @@ void TextServicesDocument::DidJoinNodes(const nsIContent& aLeftContent,
   uint32_t nodeLength = aLeftContent.AsText()->Length();
   for (uint32_t i = leftIndex; i < rightIndex; i++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
+    LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
     if (entry->mTextNode != aLeftContent.AsText()) {
       break;
     }
@@ -1360,6 +1387,7 @@ void TextServicesDocument::DidJoinNodes(const nsIContent& aLeftContent,
   // for all entries referring to the right node.
   for (uint32_t i = rightIndex; i < mOffsetTable.Length(); i++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
+    LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
     if (entry->mTextNode != aRightContent.AsText()) {
       break;
     }
@@ -1507,6 +1535,7 @@ nsresult TextServicesDocument::AdjustContentIterator() {
   const size_t tableLength = mOffsetTable.Length();
   for (size_t i = 0; i < tableLength && !nextValidTextNode; i++) {
     UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
+    LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
     if (entry->mTextNode == node) {
       if (entry->mIsValid) {
         // The iterator is still pointing to something valid!
@@ -1611,6 +1640,7 @@ TextServicesDocument::OffsetEntryArray::WillSetSelection(
   EditorRawDOMPointInText newStart;
   for (size_t i = 0; !newStart.IsSet() && i < Length(); i++) {
     const UniquePtr<OffsetEntry>& entry = ElementAt(i);
+    LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
     if (entry->mIsValid) {
       if (entry->mIsInsertedText) {
         // Caret can only be placed at the end of an
@@ -1630,6 +1660,7 @@ TextServicesDocument::OffsetEntryArray::WillSetSelection(
           // after it!
           if (i + 1 < Length()) {
             const UniquePtr<OffsetEntry>& nextEntry = ElementAt(i + 1);
+            LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
             if (!nextEntry->mIsValid ||
                 nextEntry->mOffsetInTextInBlock != aOffsetInTextInBlock) {
               // Next offset entry isn't an exact match, so we'll
@@ -1667,6 +1698,7 @@ TextServicesDocument::OffsetEntryArray::WillSetSelection(
   const uint32_t endOffset = aOffsetInTextInBlock + aLength;
   for (uint32_t i = Length(); !newEnd.IsSet() && i > 0; i--) {
     const UniquePtr<OffsetEntry>& entry = ElementAt(i - 1);
+    LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
     if (entry->mIsValid) {
       if (entry->mIsInsertedText) {
         if (entry->mOffsetInTextInBlock ==
@@ -1785,6 +1817,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
   UniquePtr<OffsetEntry>& eStart = mOffsetTable[0];
   UniquePtr<OffsetEntry>& eEnd =
       tableCount > 1 ? mOffsetTable[tableCount - 1] : eStart;
+  LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
 
   const uint32_t eStartOffset = eStart->mOffsetInTextNode;
   const uint32_t eEndOffset = eEnd->EndOffsetInTextNode();
@@ -1820,6 +1853,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
 
     for (uint32_t i = 0; i < tableCount; i++) {
       const UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
+      LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
       if (entry->mTextNode == parent->AsText() &&
           entry->OffsetInTextNodeIsInRangeOrEndOffset(offset)) {
         *aSelStatus = BlockSelectionStatus::eBlockContains;
@@ -1927,6 +1961,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
 
   for (size_t i = 0; i < tableCount; i++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
+    LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
     if (entry->mTextNode == textNode &&
         entry->OffsetInTextNodeIsInRangeOrEndOffset(offset)) {
       *aSelStatus = BlockSelectionStatus::eBlockContains;
@@ -1968,6 +2003,7 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   UniquePtr<OffsetEntry>& eStart = mOffsetTable[0];
   UniquePtr<OffsetEntry>& eEnd =
       tableCount > 1 ? mOffsetTable[tableCount - 1] : eStart;
+  LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
 
   const uint32_t eStartOffset = eStart->mOffsetInTextNode;
   const uint32_t eEndOffset = eEnd->EndOffsetInTextNode();
@@ -2132,6 +2168,7 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
   for (size_t i = 0; i < tableCount; i++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
+    LockOffsetEntryArrayLengthInDebugBuild(observer, mOffsetTable);
     if (!found) {
       if (entry->mTextNode == p1.get() &&
           entry->OffsetInTextNodeIsInRangeOrEndOffset(o1)) {
@@ -2466,6 +2503,7 @@ TextServicesDocument::OffsetEntryArray::Init(
 
         UniquePtr<OffsetEntry>& entry = *AppendElement(
             MakeUnique<OffsetEntry>(*content->AsText(), offset, str.Length()));
+        LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
 
         // If one or both of the endpoints of the iteration range
         // are in the text node for this entry, make sure the entry
@@ -2558,8 +2596,8 @@ void TextServicesDocument::OffsetEntryArray::RemoveInvalidElements() {
 
 nsresult TextServicesDocument::OffsetEntryArray::SplitElementAt(
     size_t aIndex, uint32_t aOffsetInTextNode) {
-  UniquePtr<OffsetEntry>& leftEntry = ElementAt(aIndex);
-
+  OffsetEntry* leftEntry = ElementAt(aIndex).get();
+  MOZ_ASSERT(leftEntry);
   NS_ASSERTION((aOffsetInTextNode > 0), "aOffsetInTextNode == 0");
   NS_ASSERTION((aOffsetInTextNode < leftEntry->mLength),
                "aOffsetInTextNode >= mLength");
@@ -2577,6 +2615,7 @@ nsresult TextServicesDocument::OffsetEntryArray::SplitElementAt(
       MakeUnique<OffsetEntry>(leftEntry->mTextNode,
                               leftEntry->mOffsetInTextInBlock + oldLength,
                               aOffsetInTextNode));
+  LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
   leftEntry->mLength = oldLength;
   rightEntry->mOffsetInTextNode = leftEntry->mOffsetInTextNode + oldLength;
 
@@ -2615,6 +2654,7 @@ TextServicesDocument::OffsetEntryArray::FindWordRange(
   // Next we map offset into a string offset.
 
   const UniquePtr<OffsetEntry>& entry = ElementAt(*maybeEntryIndex);
+  LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
   uint32_t strOffset = entry->mOffsetInTextInBlock +
                        aStartPointToScan.Offset() - entry->mOffsetInTextNode;
 
@@ -2656,6 +2696,7 @@ TextServicesDocument::OffsetEntryArray::FindWordRange(
     // character covered by this entry, we will use the next
     // entry if there is one.
     const UniquePtr<OffsetEntry>& entry = ElementAt(i);
+    LockOffsetEntryArrayLengthInDebugBuild(observer, *this);
     if (entry->mOffsetInTextInBlock <= res.mBegin &&
         (res.mBegin < entry->EndOffsetInTextInBlock() ||
          (res.mBegin == entry->EndOffsetInTextInBlock() && i == lastIndex))) {
@@ -2733,5 +2774,7 @@ TextServicesDocument::WillDeleteRanges(
     const nsTArray<RefPtr<nsRange>>& aRangesToDelete) {
   return NS_OK;
 }
+
+#undef LockOffsetEntryArrayLengthInDebugBuild
 
 }  // namespace mozilla
