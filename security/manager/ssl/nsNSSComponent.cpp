@@ -2519,6 +2519,23 @@ already_AddRefed<SharedCertVerifier> GetDefaultCertVerifier() {
   return result.forget();
 }
 
+// Helper for FindClientCertificatesWithPrivateKeys. Copies all
+// CERTCertificates from `from` to `to`.
+static inline void CopyCertificatesTo(UniqueCERTCertList& from,
+                                      UniqueCERTCertList& to) {
+  MOZ_ASSERT(from);
+  MOZ_ASSERT(to);
+  for (CERTCertListNode* n = CERT_LIST_HEAD(from.get());
+       !CERT_LIST_END(n, from.get()); n = CERT_LIST_NEXT(n)) {
+    UniqueCERTCertificate cert(CERT_DupCertificate(n->cert));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("      provisionally adding '%s'", n->cert->subjectName));
+    if (CERT_AddCertToListTail(to.get(), cert.get()) == SECSuccess) {
+      Unused << cert.release();
+    }
+  }
+}
+
 // Lists all private keys on all modules and returns a list of any corresponding
 // client certificates. Returns null if no such certificates can be found. Also
 // returns null if an error is encountered, because this is called as part of
@@ -2537,6 +2554,8 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys() {
     return nullptr;
   }
 
+  UniquePK11SlotInfo internalSlot(PK11_GetInternalKeySlot());
+
   AutoSECMODListReadLock secmodLock;
   SECMODModuleList* list = SECMOD_GetDefaultModuleList();
   while (list) {
@@ -2546,45 +2565,70 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys() {
       PK11SlotInfo* slot = list->module->slots[i];
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("    slot '%s'", PK11_GetSlotName(slot)));
-      if (!PK11_IsPresent(slot)) {
-        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("    (not present)"));
-        continue;
-      }
-      // We may need to log in to be able to find private keys.
-      if (PK11_Authenticate(slot, true, nullptr) != SECSuccess) {
-        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("    (couldn't authenticate)"));
-        continue;
-      }
-      UniqueSECKEYPrivateKeyList privateKeys(
-          PK11_ListPrivKeysInSlot(slot, nullptr, nullptr));
-      if (!privateKeys) {
-        MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("      (no private keys)"));
-        continue;
-      }
-      for (SECKEYPrivateKeyListNode* node = PRIVKEY_LIST_HEAD(privateKeys);
-           !PRIVKEY_LIST_END(node, privateKeys);
-           node = PRIVKEY_LIST_NEXT(node)) {
-        UniqueCERTCertList certs(PK11_GetCertsMatchingPrivateKey(node->key));
-        if (!certs) {
-          MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                  ("      PK11_GetCertsMatchingPrivateKey encountered an error "
-                   "- returning"));
-          return nullptr;
-        }
-        if (CERT_LIST_EMPTY(certs)) {
-          MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("      (no certs for key)"));
+      // If this is the internal certificate/key slot, there may be many more
+      // certificates than private keys, so search by private keys.
+      if (internalSlot.get() == slot) {
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                ("    (looking at internal slot)"));
+        if (PK11_Authenticate(slot, true, nullptr) != SECSuccess) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("    (couldn't authenticate)"));
           continue;
         }
-        for (CERTCertListNode* n = CERT_LIST_HEAD(certs);
-             !CERT_LIST_END(n, certs); n = CERT_LIST_NEXT(n)) {
-          UniqueCERTCertificate cert(CERT_DupCertificate(n->cert));
-          MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                  ("      provisionally adding '%s'", n->cert->subjectName));
-          if (CERT_AddCertToListTail(certsWithPrivateKeys.get(), cert.get()) ==
-              SECSuccess) {
-            Unused << cert.release();
-          }
+        UniqueSECKEYPrivateKeyList privateKeys(
+            PK11_ListPrivKeysInSlot(slot, nullptr, nullptr));
+        if (!privateKeys) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("      (no private keys)"));
+          continue;
         }
+        for (SECKEYPrivateKeyListNode* node = PRIVKEY_LIST_HEAD(privateKeys);
+             !PRIVKEY_LIST_END(node, privateKeys);
+             node = PRIVKEY_LIST_NEXT(node)) {
+          UniqueCERTCertList certs(PK11_GetCertsMatchingPrivateKey(node->key));
+          if (!certs) {
+            MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                    ("      PK11_GetCertsMatchingPrivateKey encountered an "
+                     "error "));
+            continue;
+          }
+          if (CERT_LIST_EMPTY(certs)) {
+            MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("      (no certs for key)"));
+            continue;
+          }
+          CopyCertificatesTo(certs, certsWithPrivateKeys);
+        }
+      } else {
+        // ... otherwise, optimistically assume that searching by certificate
+        // won't take too much time. Since "friendly" slots expose certificates
+        // without needing to be authenticated to, this results in fewer PIN
+        // dialogs shown to the user.
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                ("    (looking at non-internal slot)"));
+
+        if (!PK11_IsPresent(slot)) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("    (not present)"));
+          continue;
+        }
+        // If this isn't a "friendly" slot, authenticate to expose certificates.
+        if (!PK11_IsFriendly(slot) &&
+            PK11_Authenticate(slot, true, nullptr) != SECSuccess) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("    (couldn't authenticate)"));
+          continue;
+        }
+        UniqueCERTCertList certsInSlot(PK11_ListCertsInSlot(slot));
+        if (!certsInSlot) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                  ("      (couldn't list certs in slot)"));
+          continue;
+        }
+        // When NSS decodes a certificate, if that certificate has a
+        // corresponding private key (or public key, if the slot it's on hasn't
+        // been logged into), it notes it as a "user cert".
+        if (CERT_FilterCertListForUserCerts(certsInSlot.get()) != SECSuccess) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                  ("      (couldn't filter certs)"));
+          continue;
+        }
+        CopyCertificatesTo(certsInSlot, certsWithPrivateKeys);
       }
     }
     list = list->next;
