@@ -1,9 +1,0 @@
-# Tell the build system about bits to build sandboxed wasm libraries.
-case "$PERFHERDER_EXTRA_OPTIONS" in
-base-toolchains*)
-    # Clang versions < 8.0 don't support wasm.
-    ;;
-*)
-    export WASM_SANDBOXED_LIBRARIES=graphite,ogg,hunspell
-    ;;
-esac

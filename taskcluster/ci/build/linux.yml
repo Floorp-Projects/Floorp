@@ -123,6 +123,7 @@ linux64-plain/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
 
@@ -208,6 +209,7 @@ linux64-plain-clang-trunk/opt:
             - linux64-dump_syms
             - linux64-toolchain-sysroot
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
 
@@ -449,6 +451,7 @@ linux64-plain/debug:
             - linux64-cbindgen
             - linux64-dump_syms
             - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
 

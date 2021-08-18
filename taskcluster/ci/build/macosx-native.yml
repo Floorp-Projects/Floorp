@@ -41,6 +41,7 @@ macosx64-plain/opt:
             - macosx64-nasm
             - macosx64-node
             - macosx64-rust
+            - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
 
@@ -73,6 +74,7 @@ macosx64-plain/debug:
             - macosx64-nasm
             - macosx64-node
             - macosx64-rust
+            - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
 
