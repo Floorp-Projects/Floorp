@@ -11,9 +11,6 @@
    skin/classic/global/aboutNetworking.css
    skin/classic/global/aboutSupport.css
 
-#  network error page:
-   skin/classic/global/netError.css
-
 #  XUL support:
    skin/classic/global/scrollbars.css
    skin/classic/global/tooltip.css

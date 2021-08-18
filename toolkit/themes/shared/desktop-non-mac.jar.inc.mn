@@ -8,7 +8,7 @@
 # As a result, the source file paths are relative to the location of the
 # actual manifests.
 
-#include jar.inc.mn
+#include desktop-jar.inc.mn
 
   skin/classic/global/dialog.css                           (../../windows/global/dialog.css)
   skin/classic/global/scrollbars.css                       (../../windows/global/xulscrollbars.css)

@@ -7,7 +7,8 @@
  *  (see: netError.xhtml)
  *
  *  Original styling by William Price <bugzilla@mob.rice.edu>
- *  Updated by: Michael Ventnor <m.ventnor@gmail.com>
+ *  Updated by: Steven Garrity <steven@silverorange.com>
+ *              Henrik Skupin  <mozilla@hskupin.info>
  */
 
 html {
@@ -22,18 +23,20 @@ body {
 }
 
 h1 {
-  margin: 0 0 .6em 0;
+  margin: 0 0 .6em;
   border-bottom: 1px solid ThreeDLightShadow;
   font-size: 160%;
 }
 
-ul, ol {
+ul,
+ol {
   margin: 0;
   margin-inline-start: 1.5em;
   padding: 0;
 }
 
-ul > li, ol > li {
+ul > li,
+ol > li {
   margin-bottom: .5em;
 }
 
@@ -49,22 +52,6 @@ ul {
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
   padding: 3em;
-  padding-inline-start: 30px;
-  background: url("moz-icon://stock/gtk-dialog-warning?size=dialog") left 0 no-repeat Field;
-  background-origin: content-box;
-}
-
-#errorPageContainer.certerror {
-  background-image: url("chrome://global/skin/icons/sslWarning.png");
-}
-
-#errorPageContainer:dir(rtl) {
-  background-position: right 0;
-}
-
-#errorLongContent,
-#errorTitle {
-  margin-inline-start: 80px;
 }
 
 #errorShortDesc > p {
@@ -82,7 +69,6 @@ ul {
 
 #errorTryAgain {
   margin-top: 2em;
-  margin-inline-start: 80px;
 }
 
 #errorContainer {
