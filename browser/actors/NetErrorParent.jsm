@@ -12,9 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-const { SessionStore } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionStore.jsm"
-);
 const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
 const { TelemetryController } = ChromeUtils.import(
@@ -145,11 +142,10 @@ class NetErrorParent extends JSWindowActorParent {
    * infected, so we can get them somewhere safe.
    */
   getDefaultHomePage(win) {
-    let url = win.BROWSER_NEW_TAB_URL;
     if (PrivateBrowsingUtils.isWindowPrivate(win)) {
-      return url;
+      return win.BROWSER_NEW_TAB_URL;
     }
-    url = HomePage.getDefault();
+    let url = HomePage.getDefault();
     // If url is a pipe-delimited set of pages, just take the first one.
     if (url.includes("|")) {
       url = url.split("|")[0];
@@ -165,20 +161,15 @@ class NetErrorParent extends JSWindowActorParent {
    * or a default start page so that even when their own homepage is on a server
    * that has certificate errors, we can get them somewhere safe.
    */
-  goBackFromErrorPage(win) {
-    if (!win.gBrowser) {
-      return;
-    }
-
-    let state = JSON.parse(SessionStore.getTabState(win.gBrowser.selectedTab));
-    if (state.index == 1) {
+  goBackFromErrorPage(browser) {
+    if (!browser.canGoBack) {
       // If the unsafe page is the first or the only one in history, go to the
       // start page.
-      win.gBrowser.loadURI(this.getDefaultHomePage(win), {
+      browser.loadURI(this.getDefaultHomePage(browser.ownerGlobal), {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
     } else {
-      win.gBrowser.goBack();
+      browser.goBack();
     }
   }
 
@@ -304,7 +295,7 @@ class NetErrorParent extends JSWindowActorParent {
         this.browser.reload();
         break;
       case "Browser:SSLErrorGoBack":
-        this.goBackFromErrorPage(this.browser.ownerGlobal);
+        this.goBackFromErrorPage(this.browser);
         break;
       case "Browser:SSLErrorReportTelemetry":
         let reportStatus = message.data.reportStatus;
