@@ -368,6 +368,26 @@ android.applicationVariants.all { variant ->
     }
 
 // -------------------------------------------------------------------------------------------------
+// Pocket recommendations: Read token from local file if it exists (Only debug builds)
+// -------------------------------------------------------------------------------------------------
+
+    print("Pocket recommendations token: ")
+
+    if (isDebug) {
+        if (gradle.hasProperty("localProperties.pocketConsumerKey")) {
+            def token = gradle.getProperty("localProperties.pocketConsumerKey")
+            buildConfigField 'String', 'POCKET_TOKEN', '"' + token + '"'
+            println "Added from local.properties file"
+        } else {
+            buildConfigField 'String', 'POCKET_TOKEN', '""'
+            println "Not found in local.properties file"
+        }
+    } else {
+        buildConfigField 'String', 'POCKET_TOKEN', '""'
+        println "Is to be only used in debug"
+    }
+
+// -------------------------------------------------------------------------------------------------
 // BuildConfig: Set flag for official builds; similar to MOZILLA_OFFICIAL in mozilla-central.
 // -------------------------------------------------------------------------------------------------
 
@@ -475,6 +495,7 @@ dependencies {
     implementation Deps.mozilla_feature_webcompat
     implementation Deps.mozilla_feature_webnotifications
     implementation Deps.mozilla_feature_webcompat_reporter
+    implementation Deps.mozilla_service_pocket
 
     implementation Deps.mozilla_service_digitalassetlinks
     implementation Deps.mozilla_service_sync_autofill

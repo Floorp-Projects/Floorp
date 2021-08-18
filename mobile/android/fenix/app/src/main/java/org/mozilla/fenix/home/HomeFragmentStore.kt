@@ -13,6 +13,7 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 
@@ -60,7 +61,8 @@ data class HomeFragmentState(
     val showSetAsDefaultBrowserCard: Boolean = false,
     val recentTabs: List<TabSessionState> = emptyList(),
     val recentBookmarks: List<BookmarkNode> = emptyList(),
-    val historyMetadata: List<HistoryMetadataGroup> = emptyList()
+    val historyMetadata: List<HistoryMetadataGroup> = emptyList(),
+    val pocketArticles: List<PocketRecommendedStory> = emptyList()
 ) : State
 
 sealed class HomeFragmentAction : Action {
@@ -87,6 +89,7 @@ sealed class HomeFragmentAction : Action {
     data class RecentBookmarksChange(val recentBookmarks: List<BookmarkNode>) : HomeFragmentAction()
     data class HistoryMetadataChange(val historyMetadata: List<HistoryMetadataGroup>) : HomeFragmentAction()
     data class HistoryMetadataExpanded(val historyMetadataGroup: HistoryMetadataGroup) : HomeFragmentAction()
+    data class PocketArticlesChange(val pocketArticles: List<PocketRecommendedStory>) : HomeFragmentAction()
     object RemoveCollectionsPlaceholder : HomeFragmentAction()
     object RemoveSetDefaultBrowserCard : HomeFragmentAction()
 }
@@ -141,5 +144,6 @@ private fun homeFragmentStateReducer(
                     }
             )
         }
+        is HomeFragmentAction.PocketArticlesChange -> state.copy(pocketArticles = action.pocketArticles)
     }
 }

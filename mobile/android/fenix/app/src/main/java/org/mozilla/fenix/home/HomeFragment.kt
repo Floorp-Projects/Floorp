@@ -47,6 +47,7 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -68,6 +69,7 @@ import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.service.pocket.stories.PocketStoriesUseCases
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -239,6 +241,13 @@ class HomeFragment : Fragment() {
             )
         }
 
+        if (requireContext().settings().pocketRecommendations) {
+            lifecycleScope.async(IO) {
+                val stories = PocketStoriesUseCases().GetPocketStories(requireContext()).invoke()
+                homeFragmentStore.dispatch(HomeFragmentAction.PocketArticlesChange(stories))
+            }
+        }
+
         topSitesFeature.set(
             feature = TopSitesFeature(
                 view = DefaultTopSitesView(homeFragmentStore),
@@ -328,6 +337,7 @@ class HomeFragment : Fragment() {
 
         updateLayout(binding.root)
         sessionControlView = SessionControlView(
+            homeFragmentStore,
             binding.sessionControlRecyclerView,
             viewLifecycleOwner,
             sessionControlInteractor,

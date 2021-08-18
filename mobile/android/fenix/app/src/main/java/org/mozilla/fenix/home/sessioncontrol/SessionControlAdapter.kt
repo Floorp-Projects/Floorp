@@ -8,6 +8,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
+import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -24,6 +25,7 @@ import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.historymetadata.view.HistoryMetadataGroupViewHolder
 import org.mozilla.fenix.historymetadata.view.HistoryMetadataHeaderViewHolder
 import org.mozilla.fenix.historymetadata.view.HistoryMetadataViewHolder
+import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabViewDecorator
@@ -33,6 +35,7 @@ import org.mozilla.fenix.home.recenttabs.view.RecentTabsItemPosition
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionsMessageViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketStoriesViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSitePagerViewHolder
@@ -227,6 +230,9 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
             other is HistoryMetadataItem && historyMetadata.key.url == other.historyMetadata.key.url
     }
 
+    object PocketStoriesItem :
+        AdapterItem(PocketStoriesViewHolder.LAYOUT_ID)
+
     /**
      * True if this item represents the same value as other. Used by [AdapterItemDiffCallback].
      */
@@ -254,6 +260,7 @@ class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
 }
 
 class SessionControlAdapter(
+    private val store: HomeFragmentStore,
     private val interactor: SessionControlInteractor,
     private val viewLifecycleOwner: LifecycleOwner,
     private val components: Components
@@ -262,6 +269,13 @@ class SessionControlAdapter(
     // This method triggers the ComplexMethod lint error when in fact it's quite simple.
     @SuppressWarnings("ComplexMethod")
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        when (viewType) {
+            PocketStoriesViewHolder.LAYOUT_ID -> return PocketStoriesViewHolder(
+                ComposeView(parent.context),
+                store
+            )
+        }
+
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return when (viewType) {
             ButtonTipViewHolder.LAYOUT_ID -> ButtonTipViewHolder(view, interactor)
@@ -322,6 +336,13 @@ class SessionControlAdapter(
             )
             HistoryMetadataViewHolder.LAYOUT_ID -> HistoryMetadataViewHolder(view, interactor)
             else -> throw IllegalStateException()
+        }
+    }
+
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        when (holder) {
+            is PocketStoriesViewHolder -> holder.composeView.disposeComposition()
+            else -> super.onViewRecycled(holder)
         }
     }
 
@@ -388,6 +409,10 @@ class SessionControlAdapter(
             }
             is HistoryMetadataGroupViewHolder -> {
                 holder.bind((item as AdapterItem.HistoryMetadataGroup).historyMetadataGroup)
+            }
+            is PocketStoriesViewHolder -> {
+                // no-op. This ViewHolder receives the HomeStore as argument and will observe that
+                // without the need for us to manually update from here the data to be displayed.
             }
         }
     }

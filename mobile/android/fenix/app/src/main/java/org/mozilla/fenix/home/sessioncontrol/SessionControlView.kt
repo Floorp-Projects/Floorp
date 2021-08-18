@@ -14,10 +14,12 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentState
+import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
@@ -35,7 +37,8 @@ private fun normalModeAdapterItems(
     showCollectionsPlaceholder: Boolean,
     showSetAsDefaultBrowserCard: Boolean,
     recentTabs: List<TabSessionState>,
-    historyMetadata: List<HistoryMetadataGroup>
+    historyMetadata: List<HistoryMetadataGroup>,
+    pocketArticles: List<PocketRecommendedStory>
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
 
@@ -67,6 +70,10 @@ private fun normalModeAdapterItems(
         }
     } else {
         showCollections(collections, expandedCollections, items)
+    }
+
+    if (pocketArticles.isNotEmpty()) {
+        items.add(AdapterItem.PocketStoriesItem)
     }
 
     return items
@@ -194,7 +201,8 @@ private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
         showCollectionPlaceholder,
         showSetAsDefaultBrowserCard,
         recentTabs,
-        historyMetadata
+        historyMetadata,
+        pocketArticles
     )
     is Mode.Private -> privateModeAdapterItems()
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
@@ -206,6 +214,7 @@ private fun collectionTabItems(collection: TabCollection) =
     }
 
 class SessionControlView(
+    store: HomeFragmentStore,
     val containerView: View,
     viewLifecycleOwner: LifecycleOwner,
     interactor: SessionControlInteractor,
@@ -215,6 +224,7 @@ class SessionControlView(
     val view: RecyclerView = containerView as RecyclerView
 
     private val sessionControlAdapter = SessionControlAdapter(
+        store,
         interactor,
         viewLifecycleOwner,
         containerView.context.components

@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -75,6 +76,24 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isVisible = true
             isChecked = context.settings().nimbusUsePreview
             onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_pocket_homescreen_recommendations).apply {
+            isVisible = Config.channel.isDebug
+            isChecked = context.settings().pocketRecommendations
+            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    (newValue as? Boolean)?.let {
+                        if (it) {
+                            context.components.core.pocketStoriesService.startPeriodicStoriesRefresh()
+                        } else {
+                            context.components.core.pocketStoriesService.stopPeriodicStoriesRefresh()
+                        }
+                    }
+
+                    return super.onPreferenceChange(preference, newValue)
+                }
+            }
         }
     }
 

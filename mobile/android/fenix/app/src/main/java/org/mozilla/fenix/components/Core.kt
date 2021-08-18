@@ -59,6 +59,9 @@ import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
+import mozilla.components.service.pocket.Frequency
+import mozilla.components.service.pocket.PocketStoriesConfig
+import mozilla.components.service.pocket.PocketStoriesService
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.locale.LocaleManager
@@ -84,6 +87,8 @@ import org.mozilla.fenix.telemetry.TelemetryMiddleware
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.getUndoDelay
 import org.mozilla.geckoview.GeckoRuntime
+import java.lang.IllegalStateException
+import java.util.concurrent.TimeUnit
 
 /**
  * Component group for all core browser functionality.
@@ -318,6 +323,14 @@ class Core(
     val thumbnailStorage by lazyMonitored { ThumbnailStorage(context) }
 
     val pinnedSiteStorage by lazyMonitored { PinnedSiteStorage(context) }
+
+    @Suppress("MagicNumber")
+    val pocketStoriesConfig by lazyMonitored {
+        PocketStoriesConfig(
+            BuildConfig.POCKET_TOKEN, client, Frequency(4, TimeUnit.HOURS), 7
+        )
+    }
+    val pocketStoriesService by lazyMonitored { PocketStoriesService(context, pocketStoriesConfig) }
 
     val topSitesStorage by lazyMonitored {
         val defaultTopSites = mutableListOf<Pair<String, String>>()
