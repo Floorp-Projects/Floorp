@@ -38,7 +38,7 @@ let nightlyOnlyFeatures = [
   [
     'exceptions',
     wasmExceptionsEnabled(),
-    `(module (type (func)) (event (type 0)))`
+    `(module (type (func)) (tag (type 0)))`
   ],
   [
     'function-references',
