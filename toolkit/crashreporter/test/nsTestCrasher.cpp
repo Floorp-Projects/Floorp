@@ -10,17 +10,6 @@
 #ifdef XP_WIN
 #  include <malloc.h>
 #  include <windows.h>
-#elif defined(XP_MACOSX)
-#  include <dlfcn.h>  // For dlsym()
-// See https://github.com/apple/darwin-xnu/blob/main/bsd/sys/guarded.h
-#  define GUARD_CLOSE (1u << 0)
-#  define GUARD_DUP (1u << 1)
-#  define GUARD_SOCKET_IPC (1u << 2)
-#  define GUARD_FILEPORT (1u << 3)
-#  define GUARD_WRITE (1u << 4)
-typedef uint64_t guardid_t;
-typedef int (*guarded_open_np_t)(const char*, const guardid_t*, u_int, int,
-                                 ...);
 #endif
 
 #ifdef MOZ_PHC
@@ -96,7 +85,6 @@ const int16_t CRASH_PHC_USE_AFTER_FREE = 21;
 const int16_t CRASH_PHC_DOUBLE_FREE = 22;
 const int16_t CRASH_PHC_BOUNDS_VIOLATION = 23;
 const int16_t CRASH_HEAP_CORRUPTION = 24;
-const int16_t CRASH_EXC_GUARD = 25;
 
 #if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64) && !defined(__MINGW32__)
 
@@ -245,26 +233,6 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
       }
     }
 #endif  // XP_WIN
-#ifdef XP_MACOSX
-    case CRASH_EXC_GUARD: {
-      guarded_open_np_t dl_guarded_open_np;
-      void* kernellib =
-          (void*)dlopen("/usr/lib/system/libsystem_kernel.dylib", RTLD_GLOBAL);
-      dl_guarded_open_np =
-          (guarded_open_np_t)dlsym(kernellib, "guarded_open_np");
-      const guardid_t guard = 0x123456789ABCDEFULL;
-      // Guard the file descriptor against regular close() calls
-      int fd = dl_guarded_open_np(
-          "/tmp/try.txt", &guard,
-          GUARD_CLOSE | GUARD_DUP | GUARD_SOCKET_IPC | GUARD_FILEPORT,
-          O_CREAT | O_CLOEXEC | O_RDWR, 0666);
-
-      if (fd != -1) {
-        close(fd);
-        // not reached
-      }
-    }
-#endif  // XP_MACOSX
     default:
       break;
   }

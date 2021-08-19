@@ -36,7 +36,6 @@
 #ifndef GOOGLE_BREAKPAD_PROCESSOR_SYMBOLIC_CONSTANTS_WIN_H_
 #define GOOGLE_BREAKPAD_PROCESSOR_SYMBOLIC_CONSTANTS_WIN_H_
 
-#include <stdint.h>
 #include <string>
 
 #include "common/using_std_string.h"
@@ -44,17 +43,11 @@
 
 namespace google_breakpad {
 
-/* Converts an NTSTATUS code to its string representation. Returns nullptr if
- * no entry corresponds to the code. */
-const char* NTStatusToString(uint32_t ntstatus);
+/* Converts a NTSTATUS code to a reason string. */
+string NTStatusToString(uint32_t ntstatus);
 
-/* Converts a FAST_FAIL code to its string representation. Returns nullptr if
- * no entry corresponds to the code. */
-const char* FastFailToString(uint32_t fast_fail_code);
-
-/* Converts an ERROR code to its string representation. Returns nullptr if
- * no entry corresponds to the code. */
-const char* WinErrorToString(uint16_t error);
+/* Converts a FAST_FAIL code to a reason string. */
+string FastFailToString(uint32_t fast_fail_code);
 
 }  // namespace google_breakpad
 
