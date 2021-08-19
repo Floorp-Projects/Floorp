@@ -66,14 +66,26 @@ this.reftest = class extends ExtensionAPI {
       null,
       this.extension.rootURI
     );
-    this.chromeHandle = aomStartup.registerChrome(manifestURI, [
+
+    let manifestDirectives = [
       [
         "content",
         "reftest",
         "chrome/reftest/content/",
         "contentaccessible=yes",
       ],
-    ]);
+    ];
+    if (Services.appinfo.OS == "Android") {
+      manifestDirectives.push([
+        "override",
+        "chrome://global/skin/global.css",
+        "chrome://reftest/content/fake-global.css",
+      ]);
+    }
+    this.chromeHandle = aomStartup.registerChrome(
+      manifestURI,
+      manifestDirectives
+    );
 
     // Starting tests is handled quite differently on android and desktop.
     // On Android, OnRefTestLoad() takes over the main browser window so
