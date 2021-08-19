@@ -3,6 +3,39 @@
     {
       "stash": {
         "blocked": [
+          "location-seeker@ext:1.0",
+          "medianewtab@com:1.1.11",
+          "book-enthusiast@ext:1.0",
+          "cnn-news@ext:1.0",
+          "vegan_chef@ext:1.0",
+          "britannica_finder@ext:1.0",
+          "wiki_search@ext:1.0",
+          "video_search@co:1.0",
+          "biology_assistant@ext:1.0",
+          "webclip@com:1.1.4",
+          "besttab@com:1.1.13",
+          "search_the_video@com:1.0",
+          "webtab@com:1.1.4",
+          "anime-freak-net@ext:1.0",
+          "quickpage@com:1.1.13",
+          "oxford-dict-net@ext:1.0",
+          "{b9020031-0ddd-4c54-8eba-4309bc1460e9}:0.6",
+          "shortcutvideo@com:1.0.4",
+          "cutshot@com:1.0.8",
+          "chemistry_assistant@ext:1.0",
+          "clipsearch@ext:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1628879876731,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1629246909829,
+      "id": "c7f775e7-05e6-4e1b-8d7a-ce19dacf1cd7",
+      "last_modified": 1629247069884
+    },
+    {
+      "stash": {
+        "blocked": [
           "{2b072bb6-1644-4f0c-b2d8-51c3497e9936}:0.6",
           "pinterest_pal@ext:1.0",
           "private_srch@com:1.0",
