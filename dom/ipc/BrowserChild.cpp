@@ -1568,7 +1568,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvStopIMEStateManagement() {
   return IPC_OK();
 }
 
-void BrowserChild::ProcessPendingColaescedTouchData() {
+void BrowserChild::ProcessPendingCoalescedTouchData() {
   MOZ_ASSERT(StaticPrefs::dom_events_coalesce_touchmove());
 
   if (mCoalescedTouchData.IsEmpty()) {
@@ -1915,7 +1915,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
 
   if (StaticPrefs::dom_events_coalesce_touchmove()) {
     if (aEvent.mMessage == eTouchEnd || aEvent.mMessage == eTouchStart) {
-      ProcessPendingColaescedTouchData();
+      ProcessPendingCoalescedTouchData();
     }
 
     if (aEvent.mMessage != eTouchMove) {
@@ -2004,7 +2004,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchMoveEvent(
       } else {
         // Flush the pending coalesced touch in order to avoid the first
         // touchmove be overridden by the second one.
-        ProcessPendingColaescedTouchData();
+        ProcessPendingCoalescedTouchData();
       }
       return IPC_OK();
     }
