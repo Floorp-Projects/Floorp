@@ -34,11 +34,6 @@
 
 // this port is based off of v8 svn revision 9837
 
-void* GetStackTop(void* aGuess) {
-  pthread_t thread = pthread_self();
-  return pthread_get_stackaddr_np(thread);
-}
-
 class PlatformData {
  public:
   explicit PlatformData(ProfilerThreadId aThreadId)

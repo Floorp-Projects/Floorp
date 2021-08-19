@@ -185,7 +185,10 @@
 #endif
 
 using namespace mozilla;
+
 using mozilla::profiler::detail::RacyFeatures;
+using ThreadRegistration = mozilla::profiler::ThreadRegistration;
+using ThreadRegistry = mozilla::profiler::ThreadRegistry;
 
 LazyLogModule gProfilerLog("prof");
 
@@ -284,9 +287,18 @@ static uint32_t StartupExtraDefaultFeatures() {
 // RAII class to lock the profiler mutex.
 // It provides a mechanism to determine if it is locked or not in order for
 // memory hooks to avoid re-entering the profiler locked state.
+// Locking order: Profiler, ThreadRegistry, ThreadRegistration.
 class MOZ_RAII PSAutoLock {
  public:
-  PSAutoLock() : mLock(gPSMutex) {}
+  PSAutoLock()
+      : mLock([]() -> mozilla::baseprofiler::detail::BaseProfilerMutex& {
+          // In DEBUG builds, *before* we attempt to lock gPSMutex, we want to
+          // check that the ThreadRegistry and ThreadRegistration mutexes are
+          // *not* locked on this thread, to avoid inversion deadlocks.
+          MOZ_ASSERT(!ThreadRegistry::IsRegistryMutexLockedOnCurrentThread());
+          MOZ_ASSERT(!ThreadRegistration::IsDataMutexLockedOnCurrentThread());
+          return gPSMutex;
+        }()) {}
 
   PSAutoLock(const PSAutoLock&) = delete;
   void operator=(const PSAutoLock&) = delete;
@@ -4194,21 +4206,23 @@ static bool IsRegisteredThreadInRegisteredThreadsList(
   return false;
 }
 
-static ProfilingStack* locked_register_thread(PSLockRef aLock,
-                                              const char* aName,
-                                              void* aStackTop) {
+static ProfilingStack* locked_register_thread(
+    PSLockRef aLock, ThreadRegistry::OffThreadRef aOffThreadRef) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  VTUNE_REGISTER_THREAD(aName);
+  VTUNE_REGISTER_THREAD(aOffThreadRef.UnlockedConstReaderCRef().Info().Name());
 
   if (!TLSRegisteredThread::IsTLSInited()) {
     return nullptr;
   }
 
-  RefPtr<ThreadInfo> info =
-      new ThreadInfo(aName, profiler_current_thread_id(), NS_IsMainThread());
+  RefPtr<ThreadInfo> info = new ThreadInfo(
+      aOffThreadRef.UnlockedConstReaderCRef().Info().Name(),
+      aOffThreadRef.UnlockedConstReaderCRef().Info().ThreadId(),
+      aOffThreadRef.UnlockedConstReaderCRef().Info().IsMainThread());
   UniquePtr<RegisteredThread> registeredThread = MakeUnique<RegisteredThread>(
-      info, NS_GetCurrentThreadNoCreate(), aStackTop);
+      info, NS_GetCurrentThreadNoCreate(),
+      (void*)aOffThreadRef.UnlockedConstReaderCRef().StackTop());
 
   TLSRegisteredThread::SetRegisteredThreadAndAutoProfilerLabelProfilingStack(
       aLock, registeredThread.get());
@@ -4378,6 +4392,8 @@ void profiler_init(void* aStackTop) {
   double interval = PROFILER_DEFAULT_INTERVAL;
   uint64_t activeTabID = PROFILER_DEFAULT_ACTIVE_TAB_ID;
 
+  ThreadRegistration::RegisterThread(kMainThreadName, aStackTop);
+
   {
     PSAutoLock lock;
 
@@ -4385,8 +4401,14 @@ void profiler_init(void* aStackTop) {
     // indicates that the profiler has initialized successfully.
     CorePS::Create(lock);
 
-    // profiler_init implicitly registers this thread as main thread.
-    Unused << locked_register_thread(lock, kMainThreadName, aStackTop);
+    // Make sure threads already in the ThreadRegistry (like the main thread)
+    // get registered in CorePS as well.
+    {
+      ThreadRegistry::LockedRegistry lockedRegistry;
+      for (ThreadRegistry::OffThreadRef offThreadRef : lockedRegistry) {
+        locked_register_thread(lock, offThreadRef);
+      }
+    }
 
     // Platform-specific initialization.
     PlatformInit(lock);
@@ -4581,13 +4603,6 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
     }
 
     CorePS::Destroy(lock);
-
-    // We just destroyed CorePS and the ThreadInfos it contains, so we can
-    // clear this thread's TLSRegisteredThread.
-    TLSRegisteredThread::ResetRegisteredThread(lock);
-    // We can also clear the AutoProfilerLabel's ProfilingStack because the
-    // main thread should not use labels after profiler_shutdown.
-    TLSRegisteredThread::ResetAutoProfilerLabelProfilingStack(lock);
   }
 
   // We do these operations with gPSMutex unlocked. The comments in
@@ -4597,6 +4612,9 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
+
+  // Reverse the registration done in profiler_init.
+  ThreadRegistration::UnregisterThread();
 }
 
 static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
@@ -5477,16 +5495,33 @@ ProfilingStack* profiler_register_thread(const char* aName,
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  // This will call `ThreadRegistry::Register()` (see below).
+  return &ThreadRegistration::RegisterThread(aName, aGuessStackTop);
+}
+
+/* static */
+void ThreadRegistry::Register(ThreadRegistration::OnThreadRef aOnThreadRef) {
   // Make sure we have a nsThread wrapper for the current thread, and that NSPR
   // knows its name.
   (void)NS_GetCurrentThread();
-  NS_SetCurrentThreadName(aName);
-
-  if (!TLSRegisteredThread::IsTLSInited()) {
-    return nullptr;
-  }
+  NS_SetCurrentThreadName(aOnThreadRef.UnlockedConstReaderCRef().Info().Name());
 
   PSAutoLock lock;
+
+  {
+    LockedRegistry lock;
+    MOZ_RELEASE_ASSERT(sRegistryContainer.append(OffThreadRef{aOnThreadRef}));
+  }
+
+  if (!CorePS::Exists()) {
+    // CorePS has not been created yet.
+    // If&when that happens, it will handle already-registered threads then.
+    return;
+  }
+
+  if (!TLSRegisteredThread::IsTLSInited()) {
+    return;
+  }
 
   if (RegisteredThread* thread = TLSRegisteredThread::RegisteredThread(lock)) {
     MOZ_RELEASE_ASSERT(IsRegisteredThreadInRegisteredThreadsList(lock, thread),
@@ -5497,7 +5532,8 @@ ProfilingStack* profiler_register_thread(const char* aName,
         "Thread being re-registered has changed its TID");
     LOG("profiler_register_thread(%s) - thread %" PRIu64
         " already registered as %s",
-        aName, uint64_t(profiler_current_thread_id().ToNumber()),
+        aOnThreadRef.UnlockedConstReaderCRef().Info().Name(),
+        uint64_t(profiler_current_thread_id().ToNumber()),
         thread->Info()->Name());
     // TODO: Use new name. This is currently not possible because the
     // RegisteredThread's ThreadInfo cannot be changed.
@@ -5507,21 +5543,23 @@ ProfilingStack* profiler_register_thread(const char* aName,
     text.AppendLiteral(" \"");
     text.AppendASCII(thread->Info()->Name());
     text.AppendLiteral("\" attempted to re-register as \"");
-    text.AppendASCII(aName);
+    text.AppendASCII(aOnThreadRef.UnlockedConstReaderCRef().Info().Name());
     text.AppendLiteral("\"");
     PROFILER_MARKER_TEXT("profiler_register_thread again", OTHER_Profiling,
                          MarkerThreadId::MainThread(), text);
 
-    return &thread->RacyRegisteredThread().ProfilingStack();
+    return;
   }
 
-  void* stackTop = GetStackTop(aGuessStackTop);
-  return locked_register_thread(lock, aName, stackTop);
+  (void)locked_register_thread(lock, OffThreadRef{aOnThreadRef});
 }
 
 void profiler_unregister_thread() {
-  PSAutoLock lock;
+  // This will call `ThreadRegistry::Unregister()` (see below).
+  ThreadRegistration::UnregisterThread();
+}
 
+static void locked_unregister_thread(PSLockRef lock) {
   if (!TLSRegisteredThread::IsTLSInited()) {
     return;
   }
@@ -5593,6 +5631,20 @@ void profiler_unregister_thread() {
       threadIdString.AppendInt(tid.ToNumber());
       PROFILER_MARKER_TEXT("profiler_unregister_thread again", OTHER_Profiling,
                            MarkerThreadId::MainThread(), threadIdString);
+    }
+  }
+}
+
+/* static */
+void ThreadRegistry::Unregister(ThreadRegistration::OnThreadRef aOnThreadRef) {
+  PSAutoLock psLock;
+  locked_unregister_thread(psLock);
+
+  LockedRegistry registryLock;
+  for (OffThreadRef& thread : sRegistryContainer) {
+    if (thread.IsPointingAt(*aOnThreadRef.mThreadRegistration)) {
+      sRegistryContainer.erase(&thread);
+      break;
     }
   }
 }
