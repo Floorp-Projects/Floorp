@@ -3725,10 +3725,12 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
   // If the range crosses a block boundary, we should do nothing for now
   // because it hits a bug of inserting a padding `<br>` element after
   // joining the blocks.
-  if (HTMLEditUtils::GetInclusiveAncestorBlockElementExceptHRElement(
-          *aRange.GetStartContainer()->AsContent(), aEditingHost) !=
-      HTMLEditUtils::GetInclusiveAncestorBlockElementExceptHRElement(
-          *aRange.GetEndContainer()->AsContent(), aEditingHost)) {
+  if (HTMLEditUtils::GetInclusiveAncestorElement(
+          *aRange.GetStartContainer()->AsContent(),
+          HTMLEditUtils::ClosestEditableBlockElementExceptHRElement) !=
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *aRange.GetEndContainer()->AsContent(),
+          HTMLEditUtils::ClosestEditableBlockElementExceptHRElement)) {
     return false;
   }
 
