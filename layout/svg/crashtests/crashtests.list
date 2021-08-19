@@ -235,6 +235,6 @@ load 1600855.html
 load 1601824.html
 load 1605223-1.html
 load 1609663.html
-load 1671950.html
+skip-if(Android) load 1671950.html # No print-preview support on android
 load 1678947.html
 load 1693032.html

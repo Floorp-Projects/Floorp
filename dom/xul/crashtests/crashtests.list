@@ -8,7 +8,7 @@ load 329982-1.xhtml
 load 336096-1.xhtml
 load chrome://reftest/content/crashtests/dom/xul/crashtests/344215-1.xhtml
 load 354611-1.html
-load chrome://reftest/content/crashtests/dom/xul/crashtests/363791-1.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/dom/xul/crashtests/363791-1.xhtml
 load 384877-1.html
 load 386914-1.html
 load chrome://reftest/content/crashtests/dom/xul/crashtests/425821-1.xhtml

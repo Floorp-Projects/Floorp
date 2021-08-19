@@ -329,7 +329,7 @@ random-if(d2d) fuzzy(0-1,0-16) fuzzy-if(Android,0-8,0-1439) fuzzy-if(webrender,0
 == 299136-1.html 299136-1-ref.html
 == 299837-1.html 299837-1-ref.html
 == chrome://reftest/content/bugs/299837-2.xhtml chrome://reftest/content/bugs/299837-2-ref.xhtml
-random-if(d2d) == chrome://reftest/content/bugs/299837-3.xhtml chrome://reftest/content/bugs/299837-3-ref.xhtml # bug 587631
+skip-if(Android) random-if(d2d) == chrome://reftest/content/bugs/299837-3.xhtml chrome://reftest/content/bugs/299837-3-ref.xhtml # bug 587631
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
@@ -1257,7 +1257,7 @@ fuzzy-if(skiaContent,0-1,0-5) == 474472-1.html 474472-1-ref.html
 == 476598-1b.html 476598-1-ref2.html
 != 476598-1-ref.html about:blank
 == 476856-1.html 476856-1-ref.html
-random-if(d2d) == chrome://reftest/content/bugs/478377-1.xhtml chrome://reftest/content/bugs/478377-1-ref.xhtml
+skip-if(Android) random-if(d2d) == chrome://reftest/content/bugs/478377-1.xhtml chrome://reftest/content/bugs/478377-1-ref.xhtml
 == 478614-1.html 478614-1-ref.html
 == 478614-2.html 478614-1-ref.html
 == 478614-3.html 478614-3-ref.html
@@ -1644,11 +1644,11 @@ fuzzy-if(skiaContent,0-1,0-65536) == 654950-1.html 654950-1-ref.html # Quartz al
 != 656875.html about:blank
 == 658952.html 658952-ref.html
 fuzzy-if(skiaContent,0-10,0-919) fuzzy-if(webrender&&cocoaWidget,2-2,4-23) == 660682-1.html 660682-1-ref.html
-fuzzy-if(d2d,0-1,0-256) fuzzy-if(skiaContent,0-1,0-68000) == chrome://reftest/content/bugs/664127-1.xhtml chrome://reftest/content/bugs/664127-1-ref.xhtml
+skip-if(Android) fuzzy-if(d2d,0-1,0-256) fuzzy-if(skiaContent,0-1,0-68000) == chrome://reftest/content/bugs/664127-1.xhtml chrome://reftest/content/bugs/664127-1-ref.xhtml
 == 665597-1.html 665597-1-ref.html
 != 665597-2.html 665597-2-ref.html
 == 667079-1.html 667079-1-ref.html
-== chrome://reftest/content/bugs/668319-1.xhtml about:blank
+skip-if(Android) == chrome://reftest/content/bugs/668319-1.xhtml about:blank
 != chrome://reftest/content/bugs/669015-1.xhtml chrome://reftest/content/bugs/669015-1-notref.xhtml
 skip-if(azureSkiaGL) == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html

@@ -2,7 +2,7 @@ load chrome://reftest/content/crashtests/view/crashtests/38589-1.xhtml
 load 64049-1.html
 load 281743-1.html
 load 323497-1.html
-load chrome://reftest/content/crashtests/view/crashtests/382756-1.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/view/crashtests/382756-1.xhtml # No <tree> support on Android
 load 387745-1.svg
 load 399852.html
 load 429315-1.html

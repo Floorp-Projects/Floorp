@@ -2,5 +2,5 @@ load 509839-1.html
 load 509839-2.html
 load 576878.xhtml
 asserts-if(Android,0-1) load 793844.html
-load 1662259.html
+skip-if(Android) load 1662259.html
 skip-if(Android) load 1671503.html
