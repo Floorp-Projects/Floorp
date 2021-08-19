@@ -109,18 +109,19 @@ function getMinidump() {
   return null;
 }
 
-function getMinidumpAnalyzerPath() {
-  const binSuffix = AppConstants.platform === "win" ? ".exe" : "";
-  const exeName = "minidump-analyzer" + binSuffix;
-
-  let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
-  exe.append(exeName);
-
-  return exe;
-}
-
 function runMinidumpAnalyzer(dumpFile, additionalArgs) {
-  let bin = getMinidumpAnalyzerPath();
+  if (AppConstants.platform !== "win") {
+    return;
+  }
+
+  // find minidump-analyzer executable.
+  let bin = Services.dirsvc.get("XREExeF", Ci.nsIFile);
+  ok(bin && bin.exists());
+  bin = bin.parent;
+  ok(bin && bin.exists());
+  bin.append("minidump-analyzer.exe");
+  ok(bin.exists());
+
   let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(bin);
   let args = [];

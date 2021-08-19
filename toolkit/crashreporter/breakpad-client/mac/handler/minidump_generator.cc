@@ -1150,19 +1150,7 @@ MinidumpGenerator::WriteExceptionStream(MDRawDirectory *exception_stream) {
   // This naming is confusing, but it is the proper translation from
   // mach naming to minidump naming.
   exception_ptr->exception_record.exception_code = exception_type_;
-
-  uint32_t exception_flags = 0;
-  if (exception_type_ == EXC_RESOURCE || exception_type_ == EXC_GUARD) {
-    // For EXC_RESOURCE and EXC_GUARD crashes Crashpad records the uppermost
-    // 32 bits of the exception code in the exception flags, let's do the same
-    // here.
-    uint64_t unsigned_exception_code = exception_code_;
-    exception_flags = unsigned_exception_code >> 32;
-  } else {
-    exception_flags = exception_code_;
-  }
-
-  exception_ptr->exception_record.exception_flags = exception_flags;
+  exception_ptr->exception_record.exception_flags = exception_code_;
 
   breakpad_thread_state_data_t state;
   mach_msg_type_number_t state_count
@@ -1178,14 +1166,6 @@ MinidumpGenerator::WriteExceptionStream(MDRawDirectory *exception_stream) {
     exception_ptr->exception_record.exception_address = exception_subcode_;
   else
     exception_ptr->exception_record.exception_address = CurrentPCForStack(state);
-
-  // Crashpad stores the exception type and the optional exception codes in
-  // the exception information field, so we do the same here.
-  exception_ptr->exception_record.number_parameters =
-    (exception_subcode_ != 0) ? 3 : 2;
-  exception_ptr->exception_record.exception_information[0] = exception_type_;
-  exception_ptr->exception_record.exception_information[1] = exception_code_;
-  exception_ptr->exception_record.exception_information[2] = exception_subcode_;
 
   return true;
 }

@@ -125,8 +125,7 @@ struct ExceptionReplyMessage {
 // Only catch these three exceptions.  The other ones are nebulously defined
 // and may result in treating a non-fatal exception as fatal.
 exception_mask_t s_exception_mask = EXC_MASK_BAD_ACCESS |
-EXC_MASK_BAD_INSTRUCTION | EXC_MASK_ARITHMETIC | EXC_MASK_BREAKPOINT |
-EXC_MASK_RESOURCE | EXC_MASK_GUARD;
+EXC_MASK_BAD_INSTRUCTION | EXC_MASK_ARITHMETIC | EXC_MASK_BREAKPOINT;
 
 kern_return_t ForwardException(mach_port_t task,
                                mach_port_t failed_thread,
@@ -427,7 +426,7 @@ static void GetPHCAddrInfo(int64_t exception_subcode,
 
 bool ExceptionHandler::WriteMinidumpWithException(
     int exception_type,
-    int64_t exception_code,
+    int exception_code,
     int64_t exception_subcode,
     breakpad_ucontext_t* task_context,
     mach_port_t thread_name,
@@ -615,7 +614,7 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
 
         mach_port_t thread = MACH_PORT_NULL;
         int exception_type = 0;
-        int64_t exception_code = 0;
+        int exception_code = 0;
         if (receive.header.msgh_id == kWriteDumpWithExceptionMessage) {
           thread = receive.thread.name;
           exception_type = EXC_BREAKPOINT;
@@ -660,17 +659,8 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
 #endif
 
           mach_exception_data_type_t subcode = 0;
-          if (receive.code_count > 1) {
-            switch (receive.exception) {
-              case EXC_BAD_ACCESS:
-              case EXC_RESOURCE:
-              case EXC_GUARD:
-                subcode = receive.code[1];
-                break;
-              default:
-                subcode = 0;
-            }
-          }
+          if (receive.exception == EXC_BAD_ACCESS && receive.code_count > 1)
+            subcode = receive.code[1];
 
           // Generate the minidump with the exception data.
           self->WriteMinidumpWithException(receive.exception, receive.code[0],
@@ -731,8 +721,8 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
 
 // static
 bool ExceptionHandler::WriteForwardedExceptionMinidump(int exception_type,
-						       int64_t exception_code,
-						       int64_t exception_subcode,
+						       int exception_code,
+						       int exception_subcode,
 						       mach_port_t thread,
 						       mach_port_t task)
 {
