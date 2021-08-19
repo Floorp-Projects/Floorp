@@ -3610,45 +3610,29 @@ void SamplerThread::Run() {
         if (stackSampling || cpuUtilization) {
           samplingState = SamplingState::SamplingCompleted;
 
-          const Vector<LiveProfiledThreadData>& liveThreads =
-              ActivePS::LiveProfiledThreads(lock);
-
           // Prevent threads from ending (or starting) and allow access to all
           // OffThreadRef's.
           ThreadRegistry::LockedRegistry lockedRegistry;
 
-          for (auto& thread : liveThreads) {
+          for (ThreadRegistry::OffThreadRef offThreadRef : lockedRegistry) {
+            ThreadRegistration::UnlockedRWForLockedProfiler&
+                unlockedThreadData =
+                    offThreadRef.UnlockedRWForLockedProfilerRef();
             ProfiledThreadData* profiledThreadData =
-                thread.mProfiledThreadData.get();
+                unlockedThreadData.GetProfiledThreadData(lock);
+            if (!profiledThreadData) {
+              // This thread is not being profiled, continue with the next one.
+              continue;
+            }
             const ProfilerThreadId threadId =
-                profiledThreadData->Info().ThreadId();
-
-            // TODO in this bug 1722261: Remove! In a later patch the for-loop
-            // through all threads will use ThreadRegistry directly so we will
-            // get real OffThreadRefs that way.
-            // For now, we must search the OffThreadRef that corresponds to the
-            // threadId. It should always be present because threads are
-            // registered with both the old ActivePS::LiveProfiledThreads and
-            // the new ThreadRegistry.
-            ThreadRegistry::OffThreadRef* offThreadRef =
-                [&]() -> ThreadRegistry::OffThreadRef* {
-              for (ThreadRegistry::OffThreadRef& otr : lockedRegistry) {
-                if (otr.UnlockedConstReaderCRef().Info().ThreadId() ==
-                    threadId) {
-                  return &otr;
-                }
-              }
-              return nullptr;
-            }();
-            MOZ_RELEASE_ASSERT(offThreadRef);
+                unlockedThreadData.Info().ThreadId();
 
             const RunningTimes runningTimesDiff = [&]() {
               if (!cpuUtilization) {
                 // If we don't need CPU measurements, we only need a timestamp.
                 return RunningTimes(TimeStamp::Now());
               }
-              return GetThreadRunningTimesDiff(
-                  lock, offThreadRef->UnlockedRWForLockedProfilerRef());
+              return GetThreadRunningTimesDiff(lock, unlockedThreadData);
             }();
 
             const TimeStamp& now = runningTimesDiff.PostMeasurementTimeStamp();
@@ -3667,8 +3651,7 @@ void SamplerThread::Run() {
             //     could result in an unneeded sample.
             // However we're using current running times (instead of copying the
             // old ones) because some work could have happened.
-            if (offThreadRef->UnlockedConstReaderAndAtomicRWRef()
-                    .CanDuplicateLastSampleDueToSleep() ||
+            if (unlockedThreadData.CanDuplicateLastSampleDueToSleep() ||
                 runningTimesDiff.GetThreadCPUDelta() == Some(uint64_t(0))) {
               const bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
                   threadId, threadSampleDeltaMs,
@@ -3707,7 +3690,7 @@ void SamplerThread::Run() {
 
             if (stackSampling) {
               ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock
-                  lockedThreadData = offThreadRef->LockedRWFromAnyThread();
+                  lockedThreadData = offThreadRef.LockedRWFromAnyThread();
               // Suspend the thread and collect its stack data in the local
               // buffer.
               mSampler.SuspendAndSampleAndResumeThread(
