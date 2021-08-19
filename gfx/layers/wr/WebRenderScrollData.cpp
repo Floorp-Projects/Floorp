@@ -56,13 +56,9 @@ void WebRenderLayerScrollData::Initialize(
     asr = nullptr;
   }
 
-  bool seenAncestorTransformId = false;
   while (asr && asr != aStopAtAsr) {
     MOZ_ASSERT(aOwner.GetManager());
     ScrollableLayerGuid::ViewID scrollId = asr->GetViewId();
-    if (aAncestorTransformId == scrollId) {
-      seenAncestorTransformId = true;
-    }
     if (Maybe<size_t> index = aOwner.HasMetadataFor(scrollId)) {
       mScrollIds.AppendElement(index.ref());
     } else {
@@ -80,15 +76,27 @@ void WebRenderLayerScrollData::Initialize(
     asr = asr->mParent;
   }
 
+#ifdef DEBUG
   // Sanity check: if we have an ancestor transform, its scroll id should
   // match one of the scroll metadatas on this node (WebRenderScrollDataWrapper
   // will then use the ancestor transform at the level of that scroll metadata).
   // One exception to this is if we have no scroll metadatas, which can happen
   // if the scroll id of the transform is on an enclosing node.
-  MOZ_ASSERT(aAncestorTransformId == ScrollableLayerGuid::NULL_SCROLL_ID ||
-                 mScrollIds.IsEmpty() || seenAncestorTransformId,
-             "The ancestor transform's view ID should match one of the metrics "
-             "on this node");
+  if (aAncestorTransformId != ScrollableLayerGuid::NULL_SCROLL_ID &&
+      !mScrollIds.IsEmpty()) {
+    bool seenAncestorTransformId = false;
+    for (size_t scrollIdIndex : mScrollIds) {
+      if (aAncestorTransformId ==
+          aOwner.GetScrollMetadata(scrollIdIndex).GetMetrics().GetScrollId()) {
+        seenAncestorTransformId = true;
+      }
+    }
+    MOZ_ASSERT(
+        seenAncestorTransformId,
+        "The ancestor transform's view ID should match one of the metrics "
+        "on this node");
+  }
+#endif
 
   // See the comments on StackingContextHelper::mDeferredTransformItem for an
   // overview of what deferred transforms are.
