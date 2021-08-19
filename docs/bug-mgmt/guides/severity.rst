@@ -75,7 +75,7 @@ Bugs reported from QA
 Rules of thumb
 --------------
 
--  *A crash may be be a ``S1`` or ``S2`` defect, but not all crashes are
+-  *A crash may be be a* ``S1`` *or* ``S2`` *defect, but not all crashes are
    critical defects*
 -  High severity defects (``S1`` or ``S2``) do not need to be assigned
    immediately as they will be reviewed by Engineering Leadership, QA, and
