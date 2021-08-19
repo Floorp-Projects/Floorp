@@ -846,7 +846,6 @@ class BrowserFragment :
 
     private fun toggleTrackingProtection(enable: Boolean) {
 
-        tab.trackingProtection.blockedTrackers.size
         with(requireComponents) {
             if (enable) {
                 trackingProtectionUseCases.removeException(tab.id)
