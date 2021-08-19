@@ -405,6 +405,8 @@ class CorePS {
 
     aProfSize += aMallocSizeOf(sInstance);
 
+    aProfSize += ThreadRegistry::SizeOfIncludingThis(aMallocSizeOf);
+
     for (auto& registeredThread : sInstance->mRegisteredThreads) {
       aProfSize += registeredThread->SizeOfIncludingThis(aMallocSizeOf);
     }
