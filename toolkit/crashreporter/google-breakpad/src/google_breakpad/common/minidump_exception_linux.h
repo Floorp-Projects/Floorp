@@ -88,6 +88,10 @@ typedef enum {
  * asm-generic/siginfo.h.
  */
 typedef enum {
+  /* Generic */
+  MD_EXCEPTION_FLAG_LIN_SI_USER = 0,
+  MD_EXCEPTION_FLAG_LIN_SI_KERNEL = 0x80,
+
   /* SIGILL */
   MD_EXCEPTION_FLAG_LIN_ILL_ILLOPC = 1,
   MD_EXCEPTION_FLAG_LIN_ILL_ILLOPN = 2,
