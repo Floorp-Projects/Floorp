@@ -53,7 +53,7 @@ class ClearableEditText @JvmOverloads constructor(
         // lengthAfter has inconsistent behaviour when there are spaces in the entered text, so we'll use text.length.
         val textLength = text?.length ?: 0
         val drawable = if (shouldShowClearButton(textLength)) {
-            AppCompatResources.getDrawable(context, R.drawable.ic_clear)?.apply {
+            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_clear)?.apply {
                 colorFilter = createBlendModeColorFilterCompat(context.getColorFromAttr(R.attr.primaryText), SRC_IN)
             }
         } else {

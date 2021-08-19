@@ -161,7 +161,7 @@ class HomeMenu(
 
         val helpItem = BrowserMenuImageText(
             context.getString(R.string.browser_menu_help),
-            R.drawable.ic_help,
+            R.drawable.mozac_ic_help,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Help)
@@ -171,7 +171,7 @@ class HomeMenu(
         val variables = experiments.getVariables(FeatureId.NIMBUS_VALIDATION)
         val settingsItem = BrowserMenuImageText(
             variables.getText("settings-title") ?: context.getString(R.string.browser_menu_settings),
-            variables.getDrawableResource("settings-icon") ?: R.drawable.ic_settings,
+            variables.getDrawableResource("settings-icon") ?: R.drawable.mozac_ic_settings,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Settings)

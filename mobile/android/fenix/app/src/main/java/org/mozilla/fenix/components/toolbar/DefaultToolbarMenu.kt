@@ -179,7 +179,7 @@ open class DefaultToolbarMenu(
 
     val installToHomescreen = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_install_on_homescreen),
-        startImageResource = R.drawable.ic_add_to_homescreen,
+        startImageResource = R.drawable.mozac_ic_add_to_home_screen,
         iconTintColorResource = primaryTextColor(),
         highlight = BrowserMenuHighlight.LowPriority(
             label = context.getString(R.string.browser_menu_install_on_homescreen),
@@ -266,7 +266,7 @@ open class DefaultToolbarMenu(
 
     val addToHomeScreenItem = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_add_to_homescreen),
-        imageResource = R.drawable.ic_add_to_homescreen,
+        imageResource = R.drawable.mozac_ic_add_to_home_screen,
         iconTintColorResource = primaryTextColor(),
         isCollapsingMenuLimit = true
     ) {
@@ -291,7 +291,7 @@ open class DefaultToolbarMenu(
 
     val settingsItem = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_settings),
-        startImageResource = R.drawable.ic_settings,
+        startImageResource = R.drawable.mozac_ic_settings,
         iconTintColorResource = if (hasAccountProblem)
             ThemeManager.resolveAttribute(R.attr.syncDisconnected, context) else
             primaryTextColor(),

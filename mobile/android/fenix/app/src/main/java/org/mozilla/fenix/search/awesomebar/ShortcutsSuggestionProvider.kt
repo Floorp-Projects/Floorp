@@ -6,11 +6,14 @@ package org.mozilla.fenix.search.awesomebar
 
 import android.content.Context
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import java.util.UUID
 
@@ -26,7 +29,12 @@ class ShortcutsSuggestionProvider(
     override val id: String = UUID.randomUUID().toString()
 
     private val settingsIcon by lazy {
-        AppCompatResources.getDrawable(context, R.drawable.ic_settings)?.toBitmap()
+        AppCompatResources.getDrawable(context, R.drawable.mozac_ic_settings)?.apply {
+            colorFilter = createBlendModeColorFilterCompat(
+                context.getColorFromAttr(R.attr.primaryText),
+                SRC_IN
+            )
+        }?.toBitmap()
     }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
