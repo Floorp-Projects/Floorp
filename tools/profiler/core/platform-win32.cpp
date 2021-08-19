@@ -36,6 +36,8 @@
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
+#include <type_traits>
+
 static void PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext) {
 #if defined(GP_ARCH_amd64)
   aRegs.mPC = reinterpret_cast<Address>(aContext->Rip);
@@ -100,6 +102,21 @@ class PlatformData {
   HANDLE mProfiledThread;
   RunningTimes mPreviousThreadRunningTimes;
 };
+
+static_assert(
+    std::is_same_v<mozilla::profiler::PlatformData::WindowsHandle, HANDLE>);
+
+mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId)
+    : mProfiledThread(GetRealCurrentThreadHandleForProfiling()) {
+  MOZ_ASSERT(aThreadId == ProfilerThreadId::FromNumber(::GetCurrentThreadId()));
+}
+
+mozilla::profiler::PlatformData::~PlatformData() {
+  if (mProfiledThread) {
+    CloseHandle(mProfiledThread);
+    mProfiledThread = nullptr;
+  }
+}
 
 #if defined(USE_MOZ_STACK_WALK)
 HANDLE
