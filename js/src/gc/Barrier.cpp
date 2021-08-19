@@ -7,7 +7,7 @@
 #include "gc/Barrier.h"
 
 #include "gc/Policy.h"
-#include "jit/Ion.h"
+#include "jit/JitContext.h"
 #include "js/HashTable.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone
 #include "js/Value.h"
