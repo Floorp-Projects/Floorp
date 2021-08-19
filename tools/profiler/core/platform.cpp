@@ -600,7 +600,6 @@ static SamplerThread* NewSamplerThread(PSLockRef aLock, uint32_t aGeneration,
                                        bool aNoTimerResolutionChange);
 
 struct LiveProfiledThreadData {
-  RegisteredThread* mRegisteredThread;
   UniquePtr<ProfiledThreadData> mProfiledThreadData;
 };
 
@@ -1055,19 +1054,17 @@ class ActivePS {
   }
 
   static ProfiledThreadData* AddLiveProfiledThread(
-      PSLockRef, RegisteredThread* aRegisteredThread,
-      UniquePtr<ProfiledThreadData>&& aProfiledThreadData) {
+      PSLockRef, UniquePtr<ProfiledThreadData>&& aProfiledThreadData) {
     MOZ_ASSERT(sInstance);
-    MOZ_RELEASE_ASSERT(
-        sInstance->mLiveProfiledThreads.append(LiveProfiledThreadData{
-            aRegisteredThread, std::move(aProfiledThreadData)}));
+    MOZ_RELEASE_ASSERT(sInstance->mLiveProfiledThreads.append(
+        LiveProfiledThreadData{std::move(aProfiledThreadData)}));
 
     // Return a weak pointer to the ProfiledThreadData object.
     return sInstance->mLiveProfiledThreads.back().mProfiledThreadData.get();
   }
 
   static void UnregisterThread(PSLockRef aLockRef,
-                               RegisteredThread* aRegisteredThread) {
+                               ProfiledThreadData* aProfiledThreadData) {
     MOZ_ASSERT(sInstance);
 
     DiscardExpiredDeadProfiledThreads(aLockRef);
@@ -1075,10 +1072,9 @@ class ActivePS {
     // Find the right entry in the mLiveProfiledThreads array and remove the
     // element, moving the ProfiledThreadData object for the thread into the
     // mDeadProfiledThreads array.
-    // The thread's RegisteredThread object gets destroyed here.
     for (size_t i = 0; i < sInstance->mLiveProfiledThreads.length(); i++) {
       LiveProfiledThreadData& thread = sInstance->mLiveProfiledThreads[i];
-      if (thread.mRegisteredThread == aRegisteredThread) {
+      if (thread.mProfiledThreadData == aProfiledThreadData) {
         thread.mProfiledThreadData->NotifyUnregistered(
             sInstance->mProfileBuffer.BufferRangeEnd());
         MOZ_RELEASE_ASSERT(sInstance->mDeadProfiledThreads.append(
@@ -4145,7 +4141,7 @@ static ProfilingStack* locked_register_thread(
     nsCOMPtr<nsIEventTarget> eventTarget =
         lockedRWFromAnyThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
-        aLock, registeredThread.get(),
+        aLock,
         MakeUnique<ProfiledThreadData>(
             aOffThreadRef.UnlockedConstReaderCRef().Info(), eventTarget));
     lockedRWFromAnyThread->SetIsBeingProfiledWithProfiledThreadData(
@@ -4934,8 +4930,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
           offThreadRef.LockedRWFromAnyThread();
       nsCOMPtr<nsIEventTarget> eventTarget = lockedThreadData->GetEventTarget();
       ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
-          aLock, &lockedThreadData->RegisteredThreadRef(),
-          MakeUnique<ProfiledThreadData>(info, eventTarget));
+          aLock, MakeUnique<ProfiledThreadData>(info, eventTarget));
       lockedThreadData->SetIsBeingProfiledWithProfiledThreadData(
           profiledThreadData, aLock);
       if (ActivePS::FeatureJS(aLock)) {
@@ -5472,6 +5467,8 @@ static void locked_unregister_thread(
 
   RegisteredThread* registeredThread = &lockedThreadData->RegisteredThreadRef();
 
+  ProfiledThreadData* profiledThreadData =
+      lockedThreadData->GetProfiledThreadData(lock);
   lockedThreadData->ClearIsBeingProfiledAndProfiledThreadData(lock);
   lockedThreadData->SetRegisteredThread(nullptr);
 
@@ -5485,8 +5482,8 @@ static void locked_unregister_thread(
 
   DEBUG_LOG("profiler_unregister_thread: %s", lockedThreadData->Info().Name());
 
-  if (ActivePS::Exists(lock)) {
-    ActivePS::UnregisterThread(lock, registeredThread);
+  if (profiledThreadData && ActivePS::Exists(lock)) {
+    ActivePS::UnregisterThread(lock, profiledThreadData);
   }
 
   // Clear the pointer to the RegisteredThread object that we're about to
