@@ -36,7 +36,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
 
         requirePreference<SwitchPreference>(R.string.pref_key_history_metadata_feature).apply {
             isVisible = true
-            isChecked = context.settings().historyMetadataFeature
+            isChecked = context.settings().historyMetadataUIFeature
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                     val result = super.onPreferenceChange(preference, newValue)

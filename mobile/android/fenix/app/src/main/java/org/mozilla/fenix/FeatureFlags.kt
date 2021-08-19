@@ -45,9 +45,9 @@ object FeatureFlags {
     val showRecentTabsFeature = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables recording of history metadata.
+     * Enables UI features based on history metadata.
      */
-    val historyMetadataFeature = Config.channel.isDebug
+    val historyMetadataUIFeature = Config.channel.isDebug
 
     /**
      * Enables the recently saved bookmarks feature in the home screen.

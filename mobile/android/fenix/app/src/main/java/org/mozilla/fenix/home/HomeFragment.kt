@@ -270,7 +270,7 @@ class HomeFragment : Fragment() {
             )
         }
 
-        if (requireContext().settings().historyMetadataFeature) {
+        if (requireContext().settings().historyMetadataUIFeature) {
             historyMetadataFeature.set(
                 feature = HistoryMetadataFeature(
                     homeStore = homeFragmentStore,

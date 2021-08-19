@@ -251,7 +251,7 @@ class AwesomeBarView(
         val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
         if (state.showHistorySuggestions) {
-            if (activity.settings().historyMetadataFeature) {
+            if (activity.settings().historyMetadataUIFeature) {
                 providersToAdd.add(combinedHistoryProvider)
             } else {
                 providersToAdd.add(historyStorageProvider)
@@ -285,7 +285,7 @@ class AwesomeBarView(
         providersToRemove.add(shortcutsEnginePickerProvider)
 
         if (!state.showHistorySuggestions) {
-            if (activity.settings().historyMetadataFeature) {
+            if (activity.settings().historyMetadataUIFeature) {
                 providersToRemove.add(combinedHistoryProvider)
             } else {
                 providersToRemove.add(historyStorageProvider)

@@ -208,12 +208,9 @@ class Core(
                 RecordingDevicesMiddleware(context),
                 PromptMiddleware(),
                 AdsTelemetryMiddleware(adsTelemetry),
-                LastMediaAccessMiddleware()
+                LastMediaAccessMiddleware(),
+                HistoryMetadataMiddleware(historyMetadataService)
             )
-
-        if (context.settings().historyMetadataFeature) {
-            middlewareList += HistoryMetadataMiddleware(historyMetadataService)
-        }
 
         BrowserStore(
             middleware = middlewareList + EngineMiddleware.create(engine)

@@ -1101,10 +1101,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    var historyMetadataFeature by featureFlagPreference(
+    var historyMetadataUIFeature by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
-        default = FeatureFlags.historyMetadataFeature,
-        featureFlag = FeatureFlags.historyMetadataFeature || isHistoryMetadataEnabled
+        default = FeatureFlags.historyMetadataUIFeature,
+        featureFlag = FeatureFlags.historyMetadataUIFeature || isHistoryMetadataEnabled
     )
 
     /**
