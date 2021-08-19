@@ -159,6 +159,9 @@ declare_args() {
   rtc_use_h264 =
       proprietary_codecs && !is_android && !is_ios && !(is_win && !is_clang)
 
+  # Enable this to allow vp9 codec support
+  rtc_libvpx_build_vp9 = true
+
   # Enable this flag to make webrtc::Mutex be implemented by absl::Mutex.
   rtc_use_absl_mutex = false
 
@@ -220,7 +223,6 @@ declare_args() {
   rtc_build_json = !build_with_mozilla
   rtc_build_libsrtp = !build_with_mozilla
   rtc_build_libvpx = !build_with_mozilla
-  rtc_libvpx_build_vp9 = !build_with_mozilla
   rtc_build_opus = !build_with_mozilla
   rtc_build_ssl = !build_with_mozilla
   rtc_build_usrsctp = !build_with_mozilla
