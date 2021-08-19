@@ -3458,7 +3458,7 @@
 # Should VR sessions always be reported as supported, without first
 # checking for VR runtimes?  This will prevent permission prompts
 # from being suppressed on machines without VR runtimes and cause
-# navigatior.xr.isSessionSupported to always report that immersive-vr
+# navigator.xr.isSessionSupported to always report that immersive-vr
 # is supported.
 - name: dom.vr.always_support_vr
   type: RelaxedAtomicBool
@@ -3468,7 +3468,7 @@
 # Should AR sessions always be reported as supported, without first
 # checking for AR runtimes?  This will prevent permission prompts
 # from being suppressed on machines without AR runtimes and cause
-# navigatior.xr.isSessionSupported to always report that immersive-ar
+# navigator.xr.isSessionSupported to always report that immersive-ar
 # is supported.
 - name: dom.vr.always_support_ar
   type: RelaxedAtomicBool
