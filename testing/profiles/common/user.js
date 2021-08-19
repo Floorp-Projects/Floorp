@@ -11,7 +11,6 @@ user_pref("browser.dom.window.dump.enabled", true);
 user_pref("devtools.console.stdout.chrome", true);
 // asrouter expects a plain object or null
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "null");
-user_pref("browser.newtabpage.activity-stream.asrouter.providers.cfr-fxa", "null");
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "null");
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.message-groups", "null");
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel", "null");

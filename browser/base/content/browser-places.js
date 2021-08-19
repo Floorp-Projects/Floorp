@@ -10,9 +10,6 @@ XPCOMUtils.defineLazyScriptGetter(
   ["PlacesToolbar", "PlacesMenu", "PlacesPanelview", "PlacesPanelMenuView"],
   "chrome://browser/content/places/browserPlacesViews.js"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
-});
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "NEWTAB_ENABLED",
@@ -221,14 +218,6 @@ var StarUI = {
     }
   },
 
-  getRecommendation(data) {
-    return BookmarkPanelHub.messageRequest(data, window);
-  },
-
-  toggleRecommendation() {
-    BookmarkPanelHub.toggleRecommendation();
-  },
-
   async showEditBookmarkPopup(aNode, aIsNewBookmark, aUrl) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
@@ -268,21 +257,6 @@ var StarUI = {
     }
 
     this._setIconAndPreviewImage();
-
-    await this.getRecommendation({
-      container: this._element("editBookmarkPanelRecommendation"),
-      infoButton: this._element("editBookmarkPanelInfoButton"),
-      recommendationContainer: this._element("editBookmarkPanelRecommendation"),
-      document,
-      url: aUrl.href,
-      close: e => {
-        e.stopPropagation();
-        BookmarkPanelHub.toggleRecommendation(false);
-      },
-      hidePopup: () => {
-        this.panel.hidePopup();
-      },
-    });
 
     this.beginBatch();
 

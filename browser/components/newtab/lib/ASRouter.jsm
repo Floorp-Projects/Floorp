@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
   SnippetsTestMessageProvider:
     "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
   PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.jsm",
@@ -79,7 +78,7 @@ const STARTPAGE_VERSION = "6";
 const RS_SERVER_PREF = "services.settings.server";
 const RS_MAIN_BUCKET = "main";
 const RS_COLLECTION_L10N = "ms-language-packs"; // "ms" stands for Messaging System
-const RS_PROVIDERS_WITH_L10N = ["cfr", "cfr-fxa", "whats-new-panel"];
+const RS_PROVIDERS_WITH_L10N = ["cfr", "whats-new-panel"];
 const RS_FLUENT_VERSION = "v1";
 const RS_FLUENT_RECORD_PREFIX = `cfr-${RS_FLUENT_VERSION}`;
 const RS_DOWNLOAD_MAX_RETRIES = 2;
@@ -259,7 +258,7 @@ const MessageLoaderUtils = {
    * _remoteSettingsLoader - Loads messages for a RemoteSettings provider
    *
    * Note:
-   * 1). Both "cfr" and "cfr-fxa" require the Fluent file for l10n, so there is
+   * 1). The "cfr" provider requires the Fluent file for l10n, so there is
    * another file downloading phase for those two providers after their messages
    * are successfully fetched from Remote Settings. Currently, they share the same
    * attachment of the record "${RS_FLUENT_RECORD_PREFIX}-${locale}" in the
@@ -892,11 +891,6 @@ class _ASRouter {
 
     ASRouterPreferences.init();
     ASRouterPreferences.addListener(this.onPrefChange);
-    BookmarkPanelHub.init(
-      this.handleMessageRequest,
-      this.addImpression,
-      this.sendTelemetry
-    );
     ToolbarBadgeHub.init(this.waitForInitialized, {
       handleMessageRequest: this.handleMessageRequest,
       addImpression: this.addImpression,
@@ -957,7 +951,6 @@ class _ASRouter {
 
     ASRouterPreferences.removeListener(this.onPrefChange);
     ASRouterPreferences.uninit();
-    BookmarkPanelHub.uninit();
     ToolbarPanelHub.uninit();
     ToolbarBadgeHub.uninit();
     MomentsPageHub.uninit();
@@ -1195,11 +1188,6 @@ class _ASRouter {
             message,
             this.dispatchCFRAction
           );
-        }
-        break;
-      case "fxa_bookmark_panel":
-        if (force) {
-          BookmarkPanelHub.forceShowMessage(browser, message);
         }
         break;
       case "toolbar_badge":
