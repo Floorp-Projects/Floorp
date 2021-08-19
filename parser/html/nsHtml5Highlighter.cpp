@@ -289,6 +289,7 @@ int32_t nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume,
     case nsHtml5Tokenizer::COMMENT_START_DASH:
     case nsHtml5Tokenizer::BOGUS_COMMENT:
     case nsHtml5Tokenizer::BOGUS_COMMENT_HYPHEN:
+    case nsHtml5Tokenizer::COMMENT_LESSTHAN_BANG_DASH_DASH:
       if (aState == nsHtml5Tokenizer::DATA) {
         AddClass(sComment);
         FinishTag();
