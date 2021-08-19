@@ -7,6 +7,7 @@
 #ifdef MOZ_GECKO_PROFILER
 
 #  include "ProfileBuffer.h"
+#  include "ThreadInfo.h"
 
 #  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"

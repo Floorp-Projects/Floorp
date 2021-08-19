@@ -11,7 +11,6 @@
 #  include "nsProfiler.h"
 #endif
 
-#include "GeckoProfiler.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DataMutex.h"

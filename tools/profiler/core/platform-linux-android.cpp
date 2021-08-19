@@ -74,6 +74,8 @@
 
 using namespace mozilla;
 
+void* GetStackTop(void* aGuess) { return aGuess; }
+
 static void PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext) {
   aRegs.mContext = aContext;
   mcontext_t& mcontext = aContext->uc_mcontext;
@@ -133,14 +135,31 @@ int tgkill(pid_t tgid, pid_t tid, int signalno) {
 #  define tgkill thr_kill2
 #endif
 
-mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId) {
-  MOZ_ASSERT(aThreadId == profiler_current_thread_id());
-  if (clockid_t clockid; pthread_getcpuclockid(pthread_self(), &clockid) == 0) {
-    mClockId = Some(clockid);
+class PlatformData {
+ public:
+  explicit PlatformData(ProfilerThreadId aThreadId) {
+    MOZ_ASSERT(aThreadId == profiler_current_thread_id());
+    MOZ_COUNT_CTOR(PlatformData);
+    if (clockid_t clockid;
+        pthread_getcpuclockid(pthread_self(), &clockid) == 0) {
+      mClockId = Some(clockid);
+    }
   }
-}
 
-mozilla::profiler::PlatformData::~PlatformData() = default;
+  MOZ_COUNTED_DTOR(PlatformData)
+
+  // Clock Id for this profiled thread. `Nothing` if `pthread_getcpuclockid`
+  // failed (e.g., if the system doesn't support per-thread clocks).
+  Maybe<clockid_t> GetClockId() const { return mClockId; }
+
+  RunningTimes& PreviousThreadRunningTimesRef() {
+    return mPreviousThreadRunningTimes;
+  }
+
+ private:
+  Maybe<clockid_t> mClockId;
+  RunningTimes mPreviousThreadRunningTimes;
+};
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN Sampler target specifics
@@ -291,13 +310,12 @@ static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
 }
 
 static RunningTimes GetThreadRunningTimesDiff(
-    PSLockRef aLock,
-    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
+    PSLockRef aLock, const RegisteredThread& aRegisteredThread) {
   AUTO_PROFILER_STATS(GetRunningTimes_clock_gettime_thread);
 
-  const mozilla::profiler::PlatformData& platformData =
-      aThreadData.PlatformDataCRef();
-  Maybe<clockid_t> maybeCid = platformData.GetClockId();
+  PlatformData* platformData = aRegisteredThread.GetPlatformData();
+  MOZ_RELEASE_ASSERT(platformData);
+  Maybe<clockid_t> maybeCid = platformData->GetClockId();
 
   if (MOZ_UNLIKELY(!maybeCid)) {
     // No clock id -> Nothing to measure apart from the timestamp.
@@ -317,20 +335,22 @@ static RunningTimes GetThreadRunningTimesDiff(
         }
       });
 
-  ProfiledThreadData* profiledThreadData =
-      aThreadData.GetProfiledThreadData(aLock);
-  MOZ_ASSERT(profiledThreadData);
-  RunningTimes& previousRunningTimes =
-      profiledThreadData->PreviousThreadRunningTimesRef();
-  const RunningTimes diff = newRunningTimes - previousRunningTimes;
-  previousRunningTimes = newRunningTimes;
+  const RunningTimes diff =
+      newRunningTimes - platformData->PreviousThreadRunningTimesRef();
+  platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
   return diff;
+}
+
+static void ClearThreadRunningTimes(PSLockRef aLock,
+                                    const RegisteredThread& aRegisteredThread) {
+  PlatformData* const platformData = aRegisteredThread.GetPlatformData();
+  MOZ_RELEASE_ASSERT(platformData);
+  platformData->PreviousThreadRunningTimesRef().Clear();
 }
 
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
-    PSLockRef aLock,
-    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
     const TimeStamp& aNow, const Func& aProcessRegs) {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
@@ -339,7 +359,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
   if (!mSamplerTid.IsSpecified()) {
     mSamplerTid = profiler_current_thread_id();
   }
-  ProfilerThreadId sampleeTid = aThreadData.Info().ThreadId();
+  ProfilerThreadId sampleeTid = aRegisteredThread.Info()->ThreadId();
   MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
 
   //----------------------------------------------------------------//

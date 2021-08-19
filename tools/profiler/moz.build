@@ -25,6 +25,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         "core/ProfilerBacktrace.cpp",
         "core/ProfilerCodeAddressService.cpp",
         "core/ProfilerMarkers.cpp",
+        "core/RegisteredThread.cpp",
         "gecko/ChildProfilerController.cpp",
         "gecko/nsProfilerStartParams.cpp",
         "gecko/ProfilerChild.cpp",
@@ -161,7 +162,6 @@ EXPORTS.mozilla += [
     "public/ProfilerThreadRegistrationData.h",
     "public/ProfilerThreadRegistrationInfo.h",
     "public/ProfilerThreadRegistry.h",
-    "public/ProfilerThreadState.h",
     "public/ProfilerUtils.h",
 ]
 
