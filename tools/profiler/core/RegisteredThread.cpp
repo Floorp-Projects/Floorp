@@ -20,9 +20,7 @@ RacyRegisteredThread::RacyRegisteredThread(
 
 RegisteredThread::RegisteredThread(
     mozilla::profiler::ThreadRegistration& aThreadRegistration)
-    : mRacyRegisteredThread(aThreadRegistration),
-      mPlatformData(
-          AllocPlatformData(aThreadRegistration.mData.mInfo.ThreadId())) {
+    : mRacyRegisteredThread(aThreadRegistration) {
   MOZ_COUNT_CTOR(RegisteredThread);
 
   // NOTE: aThread can be null for the first thread, before the ThreadManager
@@ -35,10 +33,6 @@ size_t RegisteredThread::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
 
-  // Measurement of the following members may be added later if DMD finds it
-  // is worthwhile:
-  // - mPlatformData
-  //
   // The following members are not measured:
   // - mThreadInfo: because it is non-owning
 
