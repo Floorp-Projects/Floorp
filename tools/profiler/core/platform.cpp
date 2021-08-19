@@ -5620,43 +5620,17 @@ Maybe<uint64_t> profiler_get_inner_window_id_from_docshell(
 }  // namespace geckoprofiler::markers::detail
 
 void profiler_thread_sleep() {
-  // This function runs both on and off the main thread.
-
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  RacyRegisteredThread* racyRegisteredThread =
-      TLSRegisteredThread::RacyRegisteredThread();
-  if (!racyRegisteredThread) {
-    return;
-  }
-
-  racyRegisteredThread->SetSleeping();
+  ThreadRegistration::WithOnThreadRef(
+      [](ThreadRegistration::OnThreadRef aOnThreadRef) {
+        aOnThreadRef.UnlockedConstReaderAndAtomicRWRef().SetSleeping();
+      });
 }
 
 void profiler_thread_wake() {
-  // This function runs both on and off the main thread.
-
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  RacyRegisteredThread* racyRegisteredThread =
-      TLSRegisteredThread::RacyRegisteredThread();
-  if (!racyRegisteredThread) {
-    return;
-  }
-
-  racyRegisteredThread->SetAwake();
-}
-
-bool profiler_thread_is_sleeping() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  RacyRegisteredThread* racyRegisteredThread =
-      TLSRegisteredThread::RacyRegisteredThread();
-  if (!racyRegisteredThread) {
-    return false;
-  }
-  return racyRegisteredThread->IsSleeping();
+  ThreadRegistration::WithOnThreadRef(
+      [](ThreadRegistration::OnThreadRef aOnThreadRef) {
+        aOnThreadRef.UnlockedConstReaderAndAtomicRWRef().SetAwake();
+      });
 }
 
 void profiler_js_interrupt_callback() {
