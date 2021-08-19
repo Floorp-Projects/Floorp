@@ -133,27 +133,6 @@ int tgkill(pid_t tgid, pid_t tid, int signalno) {
 #  define tgkill thr_kill2
 #endif
 
-class PlatformData {
- public:
-  explicit PlatformData(ProfilerThreadId aThreadId) {
-    MOZ_ASSERT(aThreadId == profiler_current_thread_id());
-    MOZ_COUNT_CTOR(PlatformData);
-    if (clockid_t clockid;
-        pthread_getcpuclockid(pthread_self(), &clockid) == 0) {
-      mClockId = Some(clockid);
-    }
-  }
-
-  MOZ_COUNTED_DTOR(PlatformData)
-
-  // Clock Id for this profiled thread. `Nothing` if `pthread_getcpuclockid`
-  // failed (e.g., if the system doesn't support per-thread clocks).
-  Maybe<clockid_t> GetClockId() const { return mClockId; }
-
- private:
-  Maybe<clockid_t> mClockId;
-};
-
 mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId) {
   MOZ_ASSERT(aThreadId == profiler_current_thread_id());
   if (clockid_t clockid; pthread_getcpuclockid(pthread_self(), &clockid) == 0) {
