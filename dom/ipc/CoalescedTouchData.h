@@ -15,6 +15,8 @@ namespace dom {
 
 class CoalescedTouchData final : public CoalescedInputData<WidgetTouchEvent> {
  public:
+  void CreateCoalescedTouchEvent(const WidgetTouchEvent& aEvent);
+
   void Coalesce(const WidgetTouchEvent& aEvent,
                 const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId,
                 const nsEventStatus& aApzResponse);
