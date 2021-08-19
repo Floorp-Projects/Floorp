@@ -1151,24 +1151,6 @@ class HTMLEditUtils final {
   }
 
   /**
-   * GetInclusiveAncestorBlockElementExceptHRElement() returns inclusive
-   * ancestor block element except `<hr>` element.
-   */
-  static Element* GetInclusiveAncestorBlockElementExceptHRElement(
-      const nsIContent& aContent, const nsINode* aAncestorLimiter = nullptr) {
-    Element* blockElement =
-        GetInclusiveAncestorBlockElement(aContent, aAncestorLimiter);
-    if (!blockElement || !blockElement->IsHTMLElement(nsGkAtoms::hr)) {
-      return blockElement;
-    }
-    if (!blockElement->GetParentElement()) {
-      return nullptr;
-    }
-    return GetInclusiveAncestorBlockElementExceptHRElement(
-        *blockElement->GetParentElement(), aAncestorLimiter);
-  }
-
-  /**
    * GetAncestorElement() and GetInclusiveAncestorElement() return
    * (inclusive) block ancestor element of aContent whose time matches
    * aAncestorTypes.
@@ -1177,6 +1159,7 @@ class HTMLEditUtils final {
     ClosestBlockElement,
     MostDistantInlineElementInBlock,
     EditableElement,
+    IgnoreHRElement,  // Ignore ancestor <hr> element since invalid structure
   };
   using AncestorTypes = EnumSet<AncestorType>;
   constexpr static AncestorTypes
@@ -1186,6 +1169,9 @@ class HTMLEditUtils final {
           AncestorType::EditableElement};
   constexpr static AncestorTypes ClosestEditableBlockElement = {
       AncestorType::ClosestBlockElement, AncestorType::EditableElement};
+  constexpr static AncestorTypes ClosestEditableBlockElementExceptHRElement = {
+      AncestorType::ClosestBlockElement, AncestorType::IgnoreHRElement,
+      AncestorType::EditableElement};
   static Element* GetAncestorElement(const nsIContent& aContent,
                                      const AncestorTypes& aAncestorTypes,
                                      const Element* aAncestorLimiter = nullptr);
