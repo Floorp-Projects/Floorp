@@ -13,7 +13,6 @@
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
 #include "jit/BaselineIC.h"
-#include "jit/Ion.h"
 #include "jit/IonIC.h"
 #include "jit/TrialInlining.h"
 #include "jit/VMFunctions.h"

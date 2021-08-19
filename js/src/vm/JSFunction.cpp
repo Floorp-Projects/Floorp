@@ -33,6 +33,7 @@
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
+#include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable
 #include "js/CallNonGenericMethod.h"

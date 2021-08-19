@@ -12,7 +12,6 @@
 #include <utility>
 
 #include "jit/BaselineIC.h"
-#include "jit/BaselineJIT.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/IonScript.h"
 #include "jit/JitFrames.h"

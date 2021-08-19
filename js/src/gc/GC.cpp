@@ -226,13 +226,13 @@
 #include "gc/ParallelWork.h"
 #include "gc/Policy.h"
 #include "gc/WeakMap.h"
-#include "jit/Assembler.h"
-#include "jit/ExecutableAllocator.h"
+#include "jit/BaselineJIT.h"
 #include "jit/JitCode.h"
+#include "jit/JitcodeMap.h"
 #include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitZone.h"
-#include "jit/ProcessExecutableMemory.h"
+#include "jit/MacroAssembler.h"     // js::jit::CodeAlignment
 #include "js/HeapAPI.h"             // JS::GCCellPtr
 #include "js/Object.h"              // JS::GetClass
 #include "js/PropertyAndElement.h"  // JS_DefineProperty

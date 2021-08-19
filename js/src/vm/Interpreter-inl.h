@@ -11,6 +11,7 @@
 
 #include "jsnum.h"
 
+#include "jit/Ion.h"
 #include "js/friend/DumpFunctions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/ArgumentsObject.h"

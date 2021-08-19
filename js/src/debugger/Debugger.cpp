@@ -57,7 +57,7 @@
 #include "jit/BaselineDebugModeOSR.h"  // for RecompileOnStackBaselineScriptsForDebugMode
 #include "jit/BaselineJIT.h"           // for FinishDiscardBaselineScript
 #include "jit/Invalidation.h"         // for RecompileInfoVector
-#include "jit/JitContext.h"           // for JitContext
+#include "jit/Ion.h"                  // for JitContext
 #include "jit/JitScript.h"            // for JitScript
 #include "jit/JSJitFrameIter.h"       // for InlineFrameIterator
 #include "jit/RematerializedFrame.h"  // for RematerializedFrame
