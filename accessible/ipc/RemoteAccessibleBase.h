@@ -12,7 +12,6 @@
 #include "AccAttributes.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "nsRect.h"
 #include "LocalAccessible.h"
@@ -164,6 +163,8 @@ class RemoteAccessibleBase : public Accessible {
     // when we serialize the local accessible into eNumericValue.
     return HasGenericType(eNumericValue);
   }
+
+  virtual ENameValueFlag Name(nsString& aName) const override;
 
   /**
    * Allow the platform to store a pointers worth of data on us.
