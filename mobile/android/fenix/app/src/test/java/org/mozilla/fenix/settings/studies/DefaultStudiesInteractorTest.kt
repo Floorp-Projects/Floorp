@@ -7,7 +7,10 @@ package org.mozilla.fenix.settings.studies
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.service.nimbus.NimbusApi
@@ -30,7 +33,7 @@ class DefaultStudiesInteractorTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        interactor = DefaultStudiesInteractor(activity, experiments)
+        interactor = spyk(DefaultStudiesInteractor(activity, experiments))
     }
 
     @Test
@@ -48,6 +51,7 @@ class DefaultStudiesInteractorTest {
         val experiment = mockk<EnrolledExperiment>(relaxed = true)
 
         every { experiment.slug } returns "slug"
+        every { interactor.killApplication() } just runs
 
         interactor.removeStudy(experiment)
 

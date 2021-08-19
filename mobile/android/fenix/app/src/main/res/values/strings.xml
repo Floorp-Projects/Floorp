@@ -623,6 +623,12 @@
     <string name="studies_description">Firefox may install and run studies from time to time.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Learn more</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">The application will quit to apply changes</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Cancel</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->

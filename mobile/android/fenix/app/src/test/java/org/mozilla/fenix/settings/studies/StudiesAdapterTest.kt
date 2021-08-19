@@ -16,9 +16,9 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.spyk
 import io.mockk.verify
-import junit.framework.TestCase.assertTrue
-import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
@@ -69,7 +69,7 @@ class StudiesAdapterTest {
     fun `WHEN bindStudy THEN bind the study information`() {
         val holder = mockk<StudyViewHolder>()
         val study = mockk<EnrolledExperiment>()
-        val titleView = mockk<TextView>(relaxed = true)
+        val titleView = spyk(TextView(testContext))
         val summaryView = mockk<TextView>(relaxed = true)
         val deleteButton = spyk(MaterialButton(testContext))
 
@@ -82,6 +82,8 @@ class StudiesAdapterTest {
 
         adapter = spyk(StudiesAdapter(delegate, listOf(study), false))
 
+        every { adapter.showDeleteDialog(any(), any()) } returns mockk()
+
         adapter.bindStudy(holder, study)
 
         verify {
@@ -92,7 +94,7 @@ class StudiesAdapterTest {
         deleteButton.performClick()
 
         verify {
-            delegate.onRemoveButtonClicked(study)
+            adapter.showDeleteDialog(any(), any())
         }
     }
 

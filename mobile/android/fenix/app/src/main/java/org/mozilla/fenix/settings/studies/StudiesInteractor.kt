@@ -4,10 +4,12 @@
 
 package org.mozilla.fenix.settings.studies
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.service.nimbus.NimbusApi
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import kotlin.system.exitProcess
 
 interface StudiesInteractor {
     /**
@@ -35,5 +37,11 @@ class DefaultStudiesInteractor(
 
     override fun removeStudy(experiment: EnrolledExperiment) {
         experiments.optOut(experiment.slug)
+        killApplication()
+    }
+
+    @VisibleForTesting
+    internal fun killApplication() {
+        exitProcess(0)
     }
 }
