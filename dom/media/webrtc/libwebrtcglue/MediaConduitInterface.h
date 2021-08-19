@@ -16,7 +16,6 @@
 #include "mozilla/media/MediaUtils.h"
 #include "VideoTypes.h"
 #include "WebrtcVideoCodecFactory.h"
-#include "RtcpEventObserver.h"
 #include "nsTArray.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
 
@@ -199,6 +198,9 @@ class MediaSessionConduit {
 
   virtual bool HasCodecPluginID(uint64_t aPluginID) const = 0;
 
+  virtual MediaEventSource<void>& RtcpByeEvent() = 0;
+  virtual MediaEventSource<void>& RtcpTimeoutEvent() = 0;
+
   virtual void DeliverPacket(rtc::CopyOnWriteBuffer packet,
                              PacketType type) = 0;
 
@@ -206,8 +208,6 @@ class MediaSessionConduit {
 
   virtual Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() = 0;
   virtual Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() = 0;
-
-  virtual void SetRtcpEventObserver(RtcpEventObserver* observer) = 0;
 
   virtual webrtc::Call::Stats GetCallStats() const = 0;
 
