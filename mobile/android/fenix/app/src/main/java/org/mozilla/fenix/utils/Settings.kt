@@ -352,23 +352,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    val isFirstRun: Boolean
-        get() {
-            val isFirstRun = preferences.getBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_is_first_run),
-                true
-            )
-
-            if (isFirstRun) {
-                preferences.edit()
-                    .putBoolean(
-                        appContext.getPreferenceKey(R.string.pref_key_is_first_run),
-                        false
-                    )
-                    .apply()
-            }
-
-            return isFirstRun
+    val isFirstRun: Boolean =
+        if (!preferences.contains(appContext.getPreferenceKey(R.string.pref_key_is_first_run))) {
+            preferences.edit()
+                .putBoolean(
+                    appContext.getPreferenceKey(R.string.pref_key_is_first_run),
+                    false
+                )
+                .apply()
+            true
+        } else {
+            false
         }
 
     /**
