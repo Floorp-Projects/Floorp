@@ -1283,7 +1283,7 @@ var checkCanvasRectColor = function(gl, x, y, width, height, color, opt_errorRan
           was += "," + buf[offset + j];
         }
         differentFn('at (' + (x + (i % width)) + ', ' + (y + Math.floor(i / width)) +
-                    ') expected: ' + color + ' was ' + was);
+                    ') expected: ' + color + ' was ' + was, buf);
         return;
       }
     }
@@ -1611,6 +1611,17 @@ var create3DContext = function(opt_canvas, opt_attributes, opt_version) {
 };
 
 /**
+ * Indicates whether the given context is WebGL 2.0 or greater.
+ * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
+ * @return {boolean} True if the given context is WebGL 2.0 or greater.
+ */
+var isWebGL2 = function(gl) {
+  // Duck typing is used so that the conformance suite can be run
+  // against libraries emulating WebGL 1.0 on top of WebGL 2.0.
+  return !!gl.drawArraysInstanced;
+};
+
+/**
  * Defines the exception type for a GL error.
  * @constructor
  * @param {string} message The error message.
@@ -1722,6 +1733,10 @@ var glErrorShouldBe = function(gl, glErrors, opt_msg) {
   return glErrorShouldBeImpl(gl, glErrors, true, opt_msg);
 };
 
+const glErrorAssert = function(gl, glErrors, opt_msg) {
+  return glErrorShouldBeImpl(gl, glErrors, false, opt_msg);
+};
+
 /**
  * Tests that the given framebuffer has a specific status
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
@@ -1740,13 +1755,23 @@ var framebufferStatusShouldBe = function(gl, target, glStatuses, opt_msg) {
     return glEnumToString(gl, status);
   }).join(' or ');
   if (ndx < 0) {
-    var msg = "checkFramebufferStatus expected" + ((glStatuses.length > 1) ? " one of: " : ": ");
-    testFailed(msg + expected +  ". Was " + glEnumToString(gl, status) + " : " + opt_msg);
-  } else {
-    var msg = "checkFramebufferStatus was " + ((glStatuses.length > 1) ? "one of: " : "expected value: ");
-    testPassed(msg + expected + " : " + opt_msg);
+    let msg = "checkFramebufferStatus expected" + ((glStatuses.length > 1) ? " one of: " : ": ") +
+      expected +  ". Was " + glEnumToString(gl, status);
+    if (opt_msg) {
+      msg += ": " + opt_msg;
+    }
+    testFailed(msg);
+    return false;
   }
-  return status;
+  let msg = `checkFramebufferStatus was ${glEnumToString(gl, status)}`;
+  if (glStatuses.length > 1) {
+    msg += `, one of: ${expected}`;
+  }
+  if (opt_msg) {
+    msg += ": " + opt_msg;
+  }
+  testPassed(msg);
+  return [status];
 }
 
 /**
@@ -2162,7 +2187,7 @@ var loadShaderFromScript = function(
   if (!shaderScript) {
     throw("*** Error: unknown script element " + scriptId);
   }
-  shaderSource = shaderScript.text;
+  shaderSource = shaderScript.text.trim();
 
   if (!opt_shaderType) {
     if (shaderScript.type == "x-shader/x-vertex") {
@@ -2902,6 +2927,14 @@ var requestAnimFrame = function(callback) {
   _requestAnimFrame.call(window, callback);
 };
 
+/**
+ * Provides video.requestVideoFrameCallback in a cross browser way.
+ * Returns a property, or undefined if unsuported.
+ */
+var getRequestVidFrameCallback = function() {
+  return HTMLVideoElement.prototype["requestVideoFrameCallback"];
+};
+
 var _cancelAnimFrame;
 
 /**
@@ -3103,21 +3136,21 @@ var runSteps = function(steps) {
  * @param {!function(!HTMLVideoElement): void} callback Function to call when
  *        video is ready.
  */
-var startPlayingAndWaitForVideo = function(video, callback) {
-  var timeWatcher = function() {
-    if (video.currentTime > 0) {
-      callback(video);
-    } else {
-      requestAnimFrame.call(window, timeWatcher);
+function startPlayingAndWaitForVideo(video, callback) {
+  (async () => {
+    video.load(); // reset it
+    video.loop = true;
+    video.muted = true;
+    // See whether setting the preload flag de-flakes video-related tests.
+    video.preload = 'auto';
+    try {
+      await video.play();
+    } catch (e) {
+      testFailed('video.play failed: ' + e);
+      return;
     }
-  };
-
-  requestAnimFrame.call(window, timeWatcher);
-  video.loop = true;
-  video.muted = true;
-  // See whether setting the preload flag de-flakes video-related tests.
-  video.preload = 'auto';
-  video.play();
+    callback(video);
+  })();
 };
 
 var getHost = function(url) {
@@ -3145,13 +3178,16 @@ var getBaseDomain = function(host) {
 }
 
 var runningOnLocalhost = function() {
-  return window.location.hostname.indexOf("localhost") != -1 ||
-      window.location.hostname.indexOf("127.0.0.1") != -1;
+  let hostname = window.location.hostname;
+  return hostname == "localhost" ||
+    hostname == "127.0.0.1" ||
+    hostname == "::1";
 }
 
 var getLocalCrossOrigin = function() {
   var domain;
   if (window.location.host.indexOf("localhost") != -1) {
+    // TODO(kbr): figure out whether to use an IPv6 loopback address.
     domain = "127.0.0.1";
   } else {
     domain = "localhost";
@@ -3183,25 +3219,22 @@ var getRelativePath = function(path) {
   return relparts.join("/");
 }
 
-function chooseUrlForCrossOriginImage(imgUrl, localUrl) {
-    if (runningOnLocalhost())
-      return getLocalCrossOrigin() + getRelativePath(localUrl);
+async function loadCrossOriginImage(img, webUrl, localUrl) {
+  if (runningOnLocalhost()) {
+    img.src = getLocalCrossOrigin() + getRelativePath(localUrl);
+    console.log('[loadCrossOriginImage]', '  trying', img.src);
+    await img.decode();
+    return;
+  }
 
-    return img.src = getUrlOptions().imgUrl || imgUrl;
-}
+  try {
+    img.src = getUrlOptions().imgUrl || webUrl;
+    console.log('[loadCrossOriginImage]', 'trying', img.src);
+    await img.decode();
+    return;
+  } catch {}
 
-var setupImageForCrossOriginTest = function(img, imgUrl, localUrl, callback) {
-  window.addEventListener("load", function() {
-    if (typeof(img) == "string")
-      img = document.querySelector(img);
-    if (!img)
-      img = new Image();
-
-    img.addEventListener("load", callback, false);
-    img.addEventListener("error", callback, false);
-
-    img.src = chooseUrlForCrossOriginImage(imgUrl, localUrl);
-  }, false);
+  throw 'createCrossOriginImage failed';
 }
 
 /**
@@ -3293,12 +3326,12 @@ function comparePixels(cmp, ref, tolerance, diff) {
 }
 
 function destroyContext(gl) {
-  gl.canvas.width = 1;
-  gl.canvas.height = 1;
   const ext = gl.getExtension('WEBGL_lose_context');
   if (ext) {
     ext.loseContext();
   }
+  gl.canvas.width = 1;
+  gl.canvas.height = 1;
 }
 
 function destroyAllContexts() {
@@ -3344,6 +3377,19 @@ async function awaitTimeout(ms) {
       res();
     }, ms);
   });
+}
+
+async function awaitOrTimeout(promise, opt_timeout_ms) {
+  async function throwOnTimeout(ms) {
+    await awaitTimeout(ms);
+    throw 'timeout';
+  }
+
+  let timeout_ms = opt_timeout_ms;
+  if (timeout_ms === undefined)
+    timeout_ms = 5000;
+
+  await Promise.race([promise, throwOnTimeout(timeout_ms)]);
 }
 
 var API = {
@@ -3395,11 +3441,14 @@ var API = {
   getAttribMap: getAttribMap,
   getUniformMap: getUniformMap,
   glEnumToString: glEnumToString,
+  glErrorAssert: glErrorAssert,
   glErrorShouldBe: glErrorShouldBe,
   glTypeToTypedArrayType: glTypeToTypedArrayType,
   hasAttributeCaseInsensitive: hasAttributeCaseInsensitive,
   insertImage: insertImage,
+  isWebGL2: isWebGL2,
   linkProgram: linkProgram,
+  loadCrossOriginImage: loadCrossOriginImage,
   loadImageAsync: loadImageAsync,
   loadImagesAsync: loadImagesAsync,
   loadProgram: loadProgram,
@@ -3472,8 +3521,7 @@ var API = {
   runningOnLocalhost: runningOnLocalhost,
   getLocalCrossOrigin: getLocalCrossOrigin,
   getRelativePath: getRelativePath,
-  chooseUrlForCrossOriginImage: chooseUrlForCrossOriginImage,
-  setupImageForCrossOriginTest: setupImageForCrossOriginTest,
+  awaitOrTimeout: awaitOrTimeout,
   awaitTimeout: awaitTimeout,
 
   none: false
