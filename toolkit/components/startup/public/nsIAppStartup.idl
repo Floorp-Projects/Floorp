@@ -118,6 +118,18 @@ interface nsIAppStartup : nsISupports
     const uint32_t eRestart = 0x10;
 
     /**
+     * Only valid when combined with eRestart. Only relevant on macOS.
+     *
+     * On macOS, it is possible for Firefox to run with no windows open (the
+     * icon in the dock will retain the little dot under it to indicate that
+     * the application is still running). Normally, we never want to launch
+     * Firefox into this state. But we do occasionally want it to restart this
+     * way. Passing this flag prevents Firefox from opening any windows when it
+     * restarts.
+     */
+    const uint32_t eSilently = 0x100;
+
+    /**
      * Exit the event loop, and shut down the app.
      *
      * @param aMode
@@ -164,6 +176,12 @@ interface nsIAppStartup : nsISupports
      * was restarted using quit(eRestart*).
      */
     readonly attribute boolean wasRestarted;
+
+    /**
+     * True if this is the startup following a silent restart, i.e. if the
+     * application was restarted using quit(eSilently*).
+     */
+    readonly attribute boolean wasSilentlyRestarted;
 
     /**
      * The number of seconds since the OS was last rebooted
