@@ -165,8 +165,8 @@ class ExceptionHandler {
 
   // Write a minidump for an exception that was received by another handler.
   static bool WriteForwardedExceptionMinidump(int exception_type,
-					      int exception_code,
-					      int exception_subcode,
+					      int64_t exception_code,
+					      int64_t exception_subcode,
 					      mach_port_t thread,
 					      mach_port_t task);
 
@@ -202,7 +202,7 @@ class ExceptionHandler {
   // |task_context| can be NULL. If not, it will be used to retrieve the
   // context of the current thread, instead of using |thread_get_state|.
   bool WriteMinidumpWithException(int exception_type,
-                                  int exception_code,
+                                  int64_t exception_code,
                                   int64_t exception_subcode,
                                   breakpad_ucontext_t *task_context,
                                   mach_port_t thread_name,
