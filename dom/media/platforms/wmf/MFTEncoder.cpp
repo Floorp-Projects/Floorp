@@ -74,7 +74,15 @@ static const char* ErrorStr(HRESULT hr) {
 }
 
 static const char* CodecStr(const GUID& aGUID) {
-  return IsEqualGUID(aGUID, MFVideoFormat_H264) ? "H.264" : "???";
+  if (IsEqualGUID(aGUID, MFVideoFormat_H264)) {
+    return "H.264";
+  } else if (IsEqualGUID(aGUID, MFVideoFormat_VP80)) {
+    return "VP8";
+  } else if (IsEqualGUID(aGUID, MFVideoFormat_VP90)) {
+    return "VP9";
+  } else {
+    return "Unsupported codec";
+  }
 }
 
 static UINT32 EnumHW(const GUID& aSubtype, IMFActivate**& aActivates) {
@@ -160,6 +168,8 @@ nsTArray<MFTEncoder::Info> MFTEncoder::Enumerate() {
   }
 
   PopulateHWEncoderInfo(MFVideoFormat_H264, infos);
+  PopulateHWEncoderInfo(MFVideoFormat_VP90, infos);
+  PopulateHWEncoderInfo(MFVideoFormat_VP80, infos);
 
   wmf::MFShutdown();
   return infos;
