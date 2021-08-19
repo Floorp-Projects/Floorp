@@ -40,7 +40,6 @@
 #include "ProfilerParent.h"
 #include "RegisteredThread.h"
 #include "shared-libraries.h"
-#include "ThreadInfo.h"
 #include "VTuneProfiler.h"
 
 #include "js/TraceLoggerAPI.h"
@@ -188,6 +187,7 @@ using namespace mozilla;
 
 using mozilla::profiler::detail::RacyFeatures;
 using ThreadRegistration = mozilla::profiler::ThreadRegistration;
+using ThreadRegistrationInfo = mozilla::profiler::ThreadRegistrationInfo;
 using ThreadRegistry = mozilla::profiler::ThreadRegistry;
 
 LazyLogModule gProfilerLog("prof");
@@ -865,10 +865,11 @@ class ActivePS {
     return n;
   }
 
-  static bool ShouldProfileThread(PSLockRef aLock, ThreadInfo* aInfo) {
+  static bool ShouldProfileThread(PSLockRef aLock,
+                                  const ThreadRegistrationInfo& aInfo) {
     MOZ_ASSERT(sInstance);
-    return ((aInfo->IsMainThread() || FeatureThreads(aLock)) &&
-            sInstance->ThreadSelected(aInfo->Name()));
+    return ((aInfo.IsMainThread() || FeatureThreads(aLock)) &&
+            sInstance->ThreadSelected(aInfo.Name()));
   }
 
   [[nodiscard]] static bool AppendPostSamplingCallback(
@@ -1017,8 +1018,8 @@ class ActivePS {
     std::sort(array.begin(), array.end(),
               [](const std::pair<RegisteredThread*, ProfiledThreadData*>& a,
                  const std::pair<RegisteredThread*, ProfiledThreadData*>& b) {
-                return a.second->Info()->RegisterTime() <
-                       b.second->Info()->RegisterTime();
+                return a.second->Info().RegisterTime() <
+                       b.second->Info().RegisterTime();
               });
     return array;
   }
@@ -2421,7 +2422,7 @@ static void DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
   const uint64_t bufferRangeStart = aBuffer.BufferRangeStart();
 
   const uint64_t samplePos =
-      aBuffer.AddThreadIdEntry(aRegisteredThread.Info()->ThreadId());
+      aBuffer.AddThreadIdEntry(aRegisteredThread.Info().ThreadId());
 
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
   aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
@@ -3014,9 +3015,9 @@ static void locked_profiler_stream_json_for_this_process(
       // tid that doesn't conflict with it for the Java side. So we just use 0.
       // Once we add support for profiling of other java threads, we'll have to
       // get their thread id and name via JNI.
-      RefPtr<ThreadInfo> threadInfo =
-          new ThreadInfo("AndroidUI (JVM)", ProfilerThreadId{}, false,
-                         CorePS::ProcessStartTime());
+      const ThreadRegistrationInfo threadInfo{"AndroidUI (JVM)",
+                                              ProfilerThreadId{}, false,
+                                              CorePS::ProcessStartTime()};
       ProfiledThreadData profiledThreadData(threadInfo, nullptr);
       profiledThreadData.StreamJSON(
           javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
@@ -3612,7 +3613,7 @@ void SamplerThread::Run() {
             RegisteredThread* registeredThread = thread.mRegisteredThread;
             ProfiledThreadData* profiledThreadData =
                 thread.mProfiledThreadData.get();
-            RefPtr<ThreadInfo> info = registeredThread->Info();
+            const ThreadRegistrationInfo& info = registeredThread->Info();
 
             const RunningTimes runningTimesDiff = [&]() {
               if (!cpuUtilization) {
@@ -3642,7 +3643,7 @@ void SamplerThread::Run() {
                     .CanDuplicateLastSampleDueToSleep() ||
                 runningTimesDiff.GetThreadCPUDelta() == Some(uint64_t(0))) {
               const bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
-                  info->ThreadId(), threadSampleDeltaMs,
+                  info.ThreadId(), threadSampleDeltaMs,
                   profiledThreadData->LastSample(), runningTimesDiff);
               if (dup_ok) {
                 continue;
@@ -3658,8 +3659,7 @@ void SamplerThread::Run() {
             // Add the thread ID now, so we know its position in the main
             // buffer, which is used by some JS data.
             // (DoPeriodicSample only knows about the temporary local buffer.)
-            const uint64_t samplePos =
-                buffer.AddThreadIdEntry(registeredThread->Info()->ThreadId());
+            const uint64_t samplePos = buffer.AddThreadIdEntry(info.ThreadId());
             profiledThreadData->LastSample() = Some(samplePos);
 
             // Also add the time, so it's always there after the thread ID, as
@@ -4109,17 +4109,12 @@ static ProfilingStack* locked_register_thread(
     return nullptr;
   }
 
-  RefPtr<ThreadInfo> info = new ThreadInfo(
-      aOffThreadRef.UnlockedConstReaderCRef().Info().Name(),
-      aOffThreadRef.UnlockedConstReaderCRef().Info().ThreadId(),
-      aOffThreadRef.UnlockedConstReaderCRef().Info().IsMainThread());
   // Temporary hack: Ugly-copy ThreadRegistration* from inside aOffThreadRef!
   ThreadRegistration* tr;
   static_assert(sizeof(tr) == sizeof(aOffThreadRef));
   memcpy(&tr, &aOffThreadRef, sizeof(tr));
-  UniquePtr<RegisteredThread> registeredThread = MakeUnique<RegisteredThread>(
-      *tr, info, NS_GetCurrentThreadNoCreate(),
-      (void*)aOffThreadRef.UnlockedConstReaderCRef().StackTop());
+  UniquePtr<RegisteredThread> registeredThread =
+      MakeUnique<RegisteredThread>(*tr);
 
   TLSRegisteredThread::SetRegisteredThread(aLock, registeredThread.get());
 
@@ -4135,12 +4130,15 @@ static ProfilingStack* locked_register_thread(
       "on the main thread registering that main thread).");
   lockedRWOnThread->SetRegisteredThread(registeredThread.get());
 
-  if (ActivePS::Exists(aLock) && ActivePS::ShouldProfileThread(aLock, info)) {
+  if (ActivePS::Exists(aLock) &&
+      ActivePS::ShouldProfileThread(
+          aLock, aOffThreadRef.UnlockedConstReaderCRef().Info())) {
     registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
     nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
         aLock, registeredThread.get(),
-        MakeUnique<ProfiledThreadData>(info, eventTarget));
+        MakeUnique<ProfiledThreadData>(
+            aOffThreadRef.UnlockedConstReaderCRef().Info(), eventTarget));
 
     if (ActivePS::FeatureJS(aLock)) {
       // This StartJSSampling() call is on-thread, so we can poll manually to
@@ -4921,7 +4919,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(aLock);
   for (auto& registeredThread : registeredThreads) {
-    RefPtr<ThreadInfo> info = registeredThread->Info();
+    const ThreadRegistrationInfo& info = registeredThread->Info();
 
     if (ActivePS::ShouldProfileThread(aLock, info)) {
       registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
@@ -4932,11 +4930,11 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
       ClearThreadRunningTimes(aLock, *registeredThread);
       if (ActivePS::FeatureJS(aLock)) {
         registeredThread->StartJSSampling(ActivePS::JSFlags(aLock));
-        if (info->ThreadId() == tid) {
+        if (info.ThreadId() == tid) {
           // We can manually poll the current thread so it starts sampling
           // immediately.
           registeredThread->PollJSSampling();
-        } else if (info->IsMainThread()) {
+        } else if (info.IsMainThread()) {
           // Dispatch a runnable to the main thread to call PollJSSampling(),
           // so that we don't have wait for the next JS interrupt callback in
           // order to start profiling JS.
@@ -4944,7 +4942,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
         }
       }
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-      if (info->IsMainThread()) {
+      if (info.IsMainThread()) {
         isMainThreadBeingProfiled = true;
       }
 #endif
@@ -5130,12 +5128,12 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
     registeredThread->RacyRegisteredThread().SetIsBeingProfiled(false);
     if (ActivePS::FeatureJS(aLock)) {
       registeredThread->StopJSSampling();
-      RefPtr<ThreadInfo> info = registeredThread->Info();
-      if (info->ThreadId() == tid) {
+      const ThreadRegistrationInfo& info = registeredThread->Info();
+      if (info.ThreadId() == tid) {
         // We can manually poll the current thread so it stops profiling
         // immediately.
         registeredThread->PollJSSampling();
-      } else if (info->IsMainThread()) {
+      } else if (info.IsMainThread()) {
         // Dispatch a runnable to the main thread to call PollJSSampling(),
         // so that we don't have wait for the next JS interrupt callback in
         // order to start profiling JS.
@@ -5457,11 +5455,11 @@ static void locked_unregister_thread(PSLockRef lock) {
         "Thread being unregistered is not in registered thread list even "
         "though its TLS is non-null");
     MOZ_RELEASE_ASSERT(
-        registeredThread->Info()->ThreadId() == profiler_current_thread_id(),
+        registeredThread->Info().ThreadId() == profiler_current_thread_id(),
         "Thread being unregistered has changed its TID");
-    RefPtr<ThreadInfo> info = registeredThread->Info();
+    const ThreadRegistrationInfo& info = registeredThread->Info();
 
-    DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
+    DEBUG_LOG("profiler_unregister_thread: %s", info.Name());
 
     if (ActivePS::Exists(lock)) {
       ActivePS::UnregisterThread(lock, registeredThread);
@@ -5819,11 +5817,11 @@ void profiler_suspend_and_sample_thread(ProfilerThreadId aThreadId,
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(lock);
   for (auto& thread : registeredThreads) {
-    RefPtr<ThreadInfo> info = thread->Info();
+    const ThreadRegistrationInfo& info = thread->Info();
     RegisteredThread& registeredThread = *thread.get();
 
-    if (info->ThreadId() == aThreadId) {
-      if (info->IsMainThread()) {
+    if (info.ThreadId() == aThreadId) {
+      if (info.IsMainThread()) {
         aCollector.SetIsMainThread();
       }
 
