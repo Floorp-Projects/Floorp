@@ -35,11 +35,7 @@ runNetworkTest(async function (options) {
   // [TODO] re-enable HW decoder after bug 1526207 is fixed.
   if (navigator.userAgent.includes("Android")) {
     await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
-                    ["media.webrtc.hw.h264.enabled", false],
-                    // Android platform encoders don't support small (e.g.,
-                    // 80x60) or non-even (e.g., 20x15) resolutions.
-                    // [TODO] re-enable after SW fallback is implemented.
-                    ["media.webrtc.platformencoder", false]);
+                    ["media.webrtc.hw.h264.enabled", false]);
   }
 
   let test = new PeerConnectionTest(options);
