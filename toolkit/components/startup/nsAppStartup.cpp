@@ -160,7 +160,17 @@ nsAppStartup::nsAppStartup()
       mAttemptingQuit(false),
       mInterrupted(false),
       mIsSafeModeNecessary(false),
-      mStartupCrashTrackingEnded(false) {}
+      mStartupCrashTrackingEnded(false) {
+  char* mozAppSilentRestart = PR_GetEnv("MOZ_APP_SILENT_RESTART");
+
+  /* When calling PR_SetEnv() with an empty value the existing variable may
+   * be unset or set to the empty string depending on the underlying platform
+   * thus we have to check if the variable is present and not empty. */
+  mWasSilentlyRestarted =
+      mozAppSilentRestart && (strcmp(mozAppSilentRestart, "") != 0);
+  // Make sure to clear this in case we restart again non-silently.
+  PR_SetEnv("MOZ_APP_SILENT_RESTART=");
+}
 
 nsresult nsAppStartup::Init() {
   nsresult rv;
@@ -291,6 +301,11 @@ nsAppStartup::Run(void) {
 
 NS_IMETHODIMP
 nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
+  if ((aMode & eSilently) != 0 && (aMode & eRestart) == 0) {
+    // eSilently is only valid when combined with eRestart.
+    return NS_ERROR_INVALID_ARG;
+  }
+
   uint32_t ferocity = (aMode & 0xF);
 
   // If the shutdown was cancelled due to a hidden window or
@@ -384,6 +399,12 @@ nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
       /* Firefox-restarts reuse the process so regular process start-time isn't
          a useful indicator of startup time anymore. */
       TimeStamp::RecordProcessRestart();
+    }
+
+    if ((aMode & eSilently) != 0) {
+      // Mark the next startup as a silent restart.
+      // See the eSilently definition for details.
+      PR_SetEnv("MOZ_APP_SILENT_RESTART=1");
     }
 
     obsService = mozilla::services::GetObserverService();
@@ -560,6 +581,12 @@ nsAppStartup::GetWasRestarted(bool* aResult) {
    * thus we have to check if the variable is present and not empty. */
   *aResult = mozAppRestart && (strcmp(mozAppRestart, "") != 0);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::GetWasSilentlyRestarted(bool* aResult) {
+  *aResult = mWasSilentlyRestarted;
   return NS_OK;
 }
 
