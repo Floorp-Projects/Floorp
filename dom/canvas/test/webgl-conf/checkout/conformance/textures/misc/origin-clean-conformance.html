@@ -12,6 +12,13 @@ found in the LICENSE.txt file.
 <link rel="stylesheet" href="../../../resources/js-test-style.css"/>
 <script src="../../../js/js-test-pre.js"></script>
 <script src="../../../js/webgl-test-utils.js"></script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+<canvas id="canvas1"></canvas>
+<canvas id="canvas2"></canvas>
+<img id="img" style="display:none;">
 <script>
 "use strict";
 var wtu = WebGLTestUtils;
@@ -34,9 +41,8 @@ var imgDomain;
 var pageDomain;
 var successfullyParsed;
 
-function imageLoaded() {
+function imageLoaded(img) {
   description("This test ensures WebGL implementations follow proper same-origin restrictions.");
-  var img = this;
 
   assertMsg(img.width > 0 && img.height > 0, "img was loaded");
   imgDomain = wtu.getBaseDomain(wtu.getHost(img.src));
@@ -115,14 +121,17 @@ function imageLoaded() {
   notifyFinishedToHarness();
 }
 
-wtu.setupImageForCrossOriginTest("#img", defaultImgUrl, localImgUrl, imageLoaded);
+(async function() {
+  const img = document.getElementById('img');
+  try {
+    await wtu.awaitOrTimeout(wtu.loadCrossOriginImage(img, defaultImgUrl, localImgUrl));
+  } catch (e) {
+    testFailed(`Image setup failed (${e}).`);
+    finishTest();
+    return;
+  }
+  imageLoaded(img);
+})();
 </script>
-</head>
-<body>
-<div id="description"></div>
-<div id="console"></div>
-<canvas id="canvas1"></canvas>
-<canvas id="canvas2"></canvas>
-<img id="img" style="display:none;">
 </body>
 </html>
