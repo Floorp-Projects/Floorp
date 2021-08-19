@@ -2376,14 +2376,16 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
   // Look for leaf node to put caret if we remove some empty inline ancestors
   // at new caret position.
   if (!newCaretPosition.IsInTextNode()) {
-    if (nsIContent* currentBlock = HTMLEditUtils::
-            GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
-                *newCaretPosition.ContainerAsContent())) {
+    if (const Element* editableBlockElementOrInlineEditingHost =
+            HTMLEditUtils::GetInclusiveAncestorElement(
+                *newCaretPosition.ContainerAsContent(),
+                HTMLEditUtils::
+                    ClosestEditableBlockElementOrInlineEditingHost)) {
       Element* editingHost = GetActiveEditingHost();
       // Try to put caret next to immediately after previous editable leaf.
       nsIContent* previousContent =
           HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-              newCaretPosition, *currentBlock,
+              newCaretPosition, *editableBlockElementOrInlineEditingHost,
               {LeafNodeType::LeafNodeOrNonEditableNode}, editingHost);
       if (previousContent && !HTMLEditUtils::IsBlockElement(*previousContent)) {
         newCaretPosition =
@@ -2396,7 +2398,8 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
       // a child block, look for next editable leaf instead.
       else if (nsIContent* nextContent =
                    HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-                       newCaretPosition, *currentBlock,
+                       newCaretPosition,
+                       *editableBlockElementOrInlineEditingHost,
                        {LeafNodeType::LeafNodeOrNonEditableNode},
                        editingHost)) {
         newCaretPosition = nextContent->IsText() ||
