@@ -27,7 +27,6 @@
 
 #include "jit/Disassemble.h"
 #include "jit/ExecutableAllocator.h"
-#include "jit/MacroAssembler.h"
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
 #endif
@@ -40,6 +39,7 @@
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmStubs.h"
 
+#include "jit/MacroAssembler-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -12,6 +12,7 @@
 
 #include "gc/GC.h"
 #include "gc/PublicIterators.h"
+#include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitRuntime.h"

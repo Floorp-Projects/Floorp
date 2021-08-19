@@ -22,6 +22,7 @@
 #include "mozilla/BinarySearch.h"
 
 #include "jit/ABIArgGenerator.h"  // For ABIArgIter
+#include "jit/Label.h"
 #include "js/AllocPolicy.h"
 #include "js/Vector.h"
 #include "util/Memory.h"
@@ -30,7 +31,6 @@
 namespace js {
 
 namespace jit {
-class Label;
 class MacroAssembler;
 }  // namespace jit
 

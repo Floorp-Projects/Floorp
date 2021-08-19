@@ -28,8 +28,10 @@
 
 #include "jit/AtomicOperations.h"
 #include "jit/Disassemble.h"
+#include "jit/InlinableNatives.h"
 #include "jit/JitCommon.h"
 #include "jit/JitRuntime.h"
+#include "jit/JitScript.h"
 #include "js/ForOfIterator.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "util/StringBuffer.h"
