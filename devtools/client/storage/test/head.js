@@ -1122,6 +1122,12 @@ function checkStorageData(name, value) {
   );
 }
 
+async function waitForStorageData(name, value) {
+  info("Waiting for data to appear in the table");
+  await waitFor(() => hasStorageData(name, value));
+  ok(true, `Table row has an entry for: ${name} with value: ${value}`);
+}
+
 /**
  * Returns whether the pair <name, value> is displayed at the data table
  * @param {String} name

@@ -1539,11 +1539,18 @@ Column.prototype = {
     }
     this.items = {};
     // Otherwise, just use the sorted array passed to update the cells value.
-    items.forEach((item, i) => {
+    for (const [i, item] of items.entries()) {
+      // See Bug 1706679 (Intermittent)
+      // Sometimes we would reach the situation in which we were trying to sort
+      // and item that was no longer available in the TableWidget.
+      // We should find exactly what is triggering it.
+      if (!this.cells[i]) {
+        continue;
+      }
       this.items[item[this.uniqueId]] = i;
       this.cells[i].value = item[this.id];
       this.cells[i].id = item[this.uniqueId];
-    });
+    }
     if (this.selectedRow) {
       this.cells[this.items[this.selectedRow]].classList.add("theme-selected");
     }

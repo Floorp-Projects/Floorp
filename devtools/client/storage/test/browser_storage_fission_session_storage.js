@@ -25,9 +25,9 @@ add_task(async function() {
   checkTree(doc, ["sessionStorage", "http://example.com"]);
   // check the table for values
   await selectTreeItem(["sessionStorage", "http://example.com"]);
-  checkStorageData("foo", "bar");
+  await waitForStorageData("foo", "bar");
   await selectTreeItem(["sessionStorage", "http://example.net"]);
-  checkStorageData("lorem", "ipsum");
+  await waitForStorageData("lorem", "ipsum");
 
   // add more storage data to the main wrapper
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
@@ -39,7 +39,7 @@ add_task(async function() {
   });
   // check that the new data is shown in the table
   await selectTreeItem(["sessionStorage", "http://example.com"]);
-  checkStorageData("foo2", "bar2");
+  await waitForStorageData("foo2", "bar2");
   await selectTreeItem(["sessionStorage", "http://example.net"]);
-  checkStorageData("lorem2", "ipsum2");
+  await waitForStorageData("lorem2", "ipsum2");
 });
