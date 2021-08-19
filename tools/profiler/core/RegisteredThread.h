@@ -8,7 +8,6 @@
 #define RegisteredThread_h
 
 #include "platform.h"
-#include "ThreadInfo.h"
 
 #include "mozilla/NotNull.h"
 #include "mozilla/ProfilerThreadRegistration.h"
@@ -26,8 +25,7 @@ class ProfilingStack;
 class RacyRegisteredThread final {
  public:
   explicit RacyRegisteredThread(
-      mozilla::profiler::ThreadRegistration& aThreadRegistration,
-      ProfilerThreadId aThreadId);
+      mozilla::profiler::ThreadRegistration& aThreadRegistration);
 
   MOZ_COUNTED_DTOR(RacyRegisteredThread)
 
@@ -72,8 +70,8 @@ class RacyRegisteredThread final {
 // protected by the profiler state lock.
 class RegisteredThread final {
  public:
-  RegisteredThread(mozilla::profiler::ThreadRegistration& aThreadRegistration,
-                   ThreadInfo* aInfo, nsIThread* aThread, void* aStackTop);
+  explicit RegisteredThread(
+      mozilla::profiler::ThreadRegistration& aThreadRegistration);
   ~RegisteredThread();
 
   class RacyRegisteredThread& RacyRegisteredThread() {
@@ -114,7 +112,9 @@ class RegisteredThread final {
     return mRacyRegisteredThread.mThreadRegistration.mData.mJSContext;
   }
 
-  const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
+  const mozilla::profiler::ThreadRegistrationInfo& Info() const {
+    return mRacyRegisteredThread.mThreadRegistration.mData.mInfo;
+  }
   nsCOMPtr<nsIEventTarget> GetEventTarget() const {
     return mRacyRegisteredThread.mThreadRegistration.mData.mThread;
   }
@@ -142,8 +142,6 @@ class RegisteredThread final {
   class RacyRegisteredThread mRacyRegisteredThread;
 
   const UniquePlatformData mPlatformData;
-
-  const RefPtr<ThreadInfo> mThreadInfo;
 };
 
 #endif  // RegisteredThread_h

@@ -13,18 +13,16 @@
 #include "mozilla/ProfilerThreadRegistrationData.h"
 
 RacyRegisteredThread::RacyRegisteredThread(
-    mozilla::profiler::ThreadRegistration& aThreadRegistration,
-    ProfilerThreadId aThreadId)
+    mozilla::profiler::ThreadRegistration& aThreadRegistration)
     : mThreadRegistration(aThreadRegistration) {
   MOZ_COUNT_CTOR(RacyRegisteredThread);
 }
 
 RegisteredThread::RegisteredThread(
-    mozilla::profiler::ThreadRegistration& aThreadRegistration,
-    ThreadInfo* aInfo, nsIThread* aThread, void* aStackTop)
-    : mRacyRegisteredThread(aThreadRegistration, aInfo->ThreadId()),
-      mPlatformData(AllocPlatformData(aInfo->ThreadId())),
-      mThreadInfo(aInfo) {
+    mozilla::profiler::ThreadRegistration& aThreadRegistration)
+    : mRacyRegisteredThread(aThreadRegistration),
+      mPlatformData(
+          AllocPlatformData(aThreadRegistration.mData.mInfo.ThreadId())) {
   MOZ_COUNT_CTOR(RegisteredThread);
 
   // NOTE: aThread can be null for the first thread, before the ThreadManager
