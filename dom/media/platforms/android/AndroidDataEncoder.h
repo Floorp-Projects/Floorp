@@ -16,11 +16,10 @@
 
 namespace mozilla {
 
+template <typename ConfigType>
 class AndroidDataEncoder final : public MediaDataEncoder {
  public:
-  using Config = H264Config;
-
-  AndroidDataEncoder(const Config& aConfig, RefPtr<TaskQueue> aTaskQueue)
+  AndroidDataEncoder(const ConfigType& aConfig, RefPtr<TaskQueue> aTaskQueue)
       : mConfig(aConfig), mTaskQueue(aTaskQueue) {
     MOZ_ASSERT(mConfig.mSize.width > 0 && mConfig.mSize.height > 0);
     MOZ_ASSERT(mTaskQueue);
@@ -68,7 +67,7 @@ class AndroidDataEncoder final : public MediaDataEncoder {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   }
 
-  Config mConfig;
+  const ConfigType mConfig;
 
   RefPtr<TaskQueue> mTaskQueue;
 
