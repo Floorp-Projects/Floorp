@@ -1673,13 +1673,14 @@ class StackWalkControl {
 // This copy is necessary since, like the native stack, the JS stack is iterated
 // youngest-to-oldest and we need to iterate oldest-to-youngest in MergeStacks.
 static uint32_t ExtractJsFrames(
-    bool aIsSynchronous, const RegisteredThread& aRegisteredThread,
+    bool aIsSynchronous,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const Registers& aRegs, ProfilerStackCollector& aCollector,
     JsFrameBuffer aJsFrames, StackWalkControl* aStackWalkControlIfSupported) {
   uint32_t jsFramesCount = 0;
 
   // Only walk jit stack if profiling frame iterator is turned on.
-  JSContext* context = aRegisteredThread.GetJSContext();
+  JSContext* context = aThreadData.GetJSContext();
   if (context && JS::IsProfilingEnabledForContext(context)) {
     AutoWalkJSStack autoWalkJSStack;
 
@@ -1749,17 +1750,17 @@ static uint32_t ExtractJsFrames(
 
 // Merges the profiling stack, native stack, and JS stack, outputting the
 // details to aCollector.
-static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
-                        const RegisteredThread& aRegisteredThread,
-                        const Registers& aRegs, const NativeStack& aNativeStack,
-                        ProfilerStackCollector& aCollector,
-                        JsFrameBuffer aJsFrames, uint32_t aJsFramesCount) {
+static void MergeStacks(
+    uint32_t aFeatures, bool aIsSynchronous,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    const Registers& aRegs, const NativeStack& aNativeStack,
+    ProfilerStackCollector& aCollector, JsFrameBuffer aJsFrames,
+    uint32_t aJsFramesCount) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
 
-  const ProfilingStack& profilingStack =
-      aRegisteredThread.RacyRegisteredThread().ProfilingStack();
+  const ProfilingStack& profilingStack = aThreadData.ProfilingStackCRef();
   const js::ProfilingStackFrame* profilingStackFrames = profilingStack.frames;
   uint32_t profilingStackFrameCount = profilingStack.stackSize();
 
@@ -1939,8 +1940,8 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
   // in that case, aCollector.BufferRangeStart() will return Nothing().
   if (!aIsSynchronous) {
     aCollector.BufferRangeStart().apply(
-        [&aRegisteredThread](uint64_t aBufferRangeStart) {
-          JSContext* context = aRegisteredThread.GetJSContext();
+        [&aThreadData](uint64_t aBufferRangeStart) {
+          JSContext* context = aThreadData.GetJSContext();
           if (context) {
             JS::SetJSContextProfilerSampleBufferRangeStart(context,
                                                            aBufferRangeStart);
@@ -1948,10 +1949,6 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
         });
   }
 }
-
-#if defined(GP_OS_windows) && defined(USE_MOZ_STACK_WALK)
-static HANDLE GetThreadHandle(PlatformData* aData);
-#endif
 
 #if defined(USE_FRAME_POINTER_STACK_WALK) || defined(USE_MOZ_STACK_WALK)
 static void StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP,
@@ -1966,8 +1963,10 @@ static void StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP,
 
 #if defined(USE_FRAME_POINTER_STACK_WALK)
 static void DoFramePointerBacktrace(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread, Registers aRegs,
-    NativeStack& aNativeStack, StackWalkControl* aStackWalkControlIfSupported) {
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    Registers aRegs, NativeStack& aNativeStack,
+    StackWalkControl* aStackWalkControlIfSupported) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
@@ -1978,7 +1977,7 @@ static void DoFramePointerBacktrace(
   // number argument.
   StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
 
-  const void* const stackEnd = aRegisteredThread.StackTop();
+  const void* const stackEnd = aThreadData.StackTop();
 
   // This is to check forward-progress after using a resume point.
   void* previousResumeSp = nullptr;
@@ -2040,7 +2039,8 @@ static void DoFramePointerBacktrace(
 
 #if defined(USE_MOZ_STACK_WALK)
 static void DoMozStackWalkBacktrace(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const Registers& aRegs, NativeStack& aNativeStack,
     StackWalkControl* aStackWalkControlIfSupported) {
   // WARNING: this function runs within the profiler's "critical section".
@@ -2053,7 +2053,7 @@ static void DoMozStackWalkBacktrace(
   // argument.
   StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
 
-  HANDLE thread = GetThreadHandle(aRegisteredThread.GetPlatformData());
+  HANDLE thread = aThreadData.PlatformDataCRef().ProfiledThread();
   MOZ_ASSERT(thread);
 
   CONTEXT context_buf;
@@ -2137,18 +2137,18 @@ static void DoMozStackWalkBacktrace(
 #endif
 
 #ifdef USE_EHABI_STACKWALK
-static void DoEHABIBacktrace(PSLockRef aLock,
-                             const RegisteredThread& aRegisteredThread,
-                             const Registers& aRegs, NativeStack& aNativeStack,
-                             StackWalkControl* aStackWalkControlIfSupported) {
+static void DoEHABIBacktrace(
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    const Registers& aRegs, NativeStack& aNativeStack,
+    StackWalkControl* aStackWalkControlIfSupported) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
 
-  aNativeStack.mCount =
-      EHABIStackWalk(aRegs.mContext->uc_mcontext,
-                     const_cast<void*>(aRegisteredThread.StackTop()),
-                     aNativeStack.mSPs, aNativeStack.mPCs, MAX_NATIVE_FRAMES);
+  aNativeStack.mCount = EHABIStackWalk(
+      aRegs.mContext->uc_mcontext, const_cast<void*>(aThreadData.StackTop()),
+      aNativeStack.mSPs, aNativeStack.mPCs, MAX_NATIVE_FRAMES);
   (void)aStackWalkControlIfSupported;  // TODO: Implement.
 }
 #endif
@@ -2172,10 +2172,11 @@ MOZ_ASAN_BLACKLIST static void ASAN_memcpy(void* aDst, const void* aSrc,
 }
 #  endif
 
-static void DoLULBacktrace(PSLockRef aLock,
-                           const RegisteredThread& aRegisteredThread,
-                           const Registers& aRegs, NativeStack& aNativeStack,
-                           StackWalkControl* aStackWalkControlIfSupported) {
+static void DoLULBacktrace(
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    const Registers& aRegs, NativeStack& aNativeStack,
+    StackWalkControl* aStackWalkControlIfSupported) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
@@ -2278,7 +2279,7 @@ static void DoLULBacktrace(PSLockRef aLock,
 #  else
 #    error "Unknown plat"
 #  endif
-    uintptr_t end = reinterpret_cast<uintptr_t>(aRegisteredThread.StackTop());
+    uintptr_t end = reinterpret_cast<uintptr_t>(aThreadData.StackTop());
     uintptr_t ws = sizeof(void*);
     start &= ~(ws - 1);
     end &= ~(ws - 1);
@@ -2326,26 +2327,27 @@ static void DoLULBacktrace(PSLockRef aLock,
 #endif
 
 #ifdef HAVE_NATIVE_UNWIND
-static void DoNativeBacktrace(PSLockRef aLock,
-                              const RegisteredThread& aRegisteredThread,
-                              const Registers& aRegs, NativeStack& aNativeStack,
-                              StackWalkControl* aStackWalkControlIfSupported) {
+static void DoNativeBacktrace(
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    const Registers& aRegs, NativeStack& aNativeStack,
+    StackWalkControl* aStackWalkControlIfSupported) {
   // This method determines which stackwalker is used for periodic and
   // synchronous samples. (Backtrace samples are treated differently, see
   // profiler_suspend_and_sample_thread() for details). The only part of the
   // ordering that matters is that LUL must precede FRAME_POINTER, because on
   // Linux they can both be present.
 #  if defined(USE_LUL_STACKWALK)
-  DoLULBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack,
+  DoLULBacktrace(aLock, aThreadData, aRegs, aNativeStack,
                  aStackWalkControlIfSupported);
 #  elif defined(USE_EHABI_STACKWALK)
-  DoEHABIBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack,
+  DoEHABIBacktrace(aLock, aThreadData, aRegs, aNativeStack,
                    aStackWalkControlIfSupported);
 #  elif defined(USE_FRAME_POINTER_STACK_WALK)
-  DoFramePointerBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack,
+  DoFramePointerBacktrace(aLock, aThreadData, aRegs, aNativeStack,
                           aStackWalkControlIfSupported);
 #  elif defined(USE_MOZ_STACK_WALK)
-  DoMozStackWalkBacktrace(aLock, aRegisteredThread, aRegs, aNativeStack,
+  DoMozStackWalkBacktrace(aLock, aThreadData, aRegs, aNativeStack,
                           aStackWalkControlIfSupported);
 #  else
 #    error "Invalid configuration"
@@ -2360,7 +2362,8 @@ static void DoNativeBacktrace(PSLockRef aLock,
 // The grammar for entry sequences is in a comment above
 // ProfileBuffer::StreamSamplesToJSON.
 static inline void DoSharedSample(
-    PSLockRef aLock, bool aIsSynchronous, RegisteredThread& aRegisteredThread,
+    PSLockRef aLock, bool aIsSynchronous,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const Registers& aRegs, uint64_t aSamplePos, uint64_t aBufferRangeStart,
     ProfileBuffer& aBuffer,
     StackCaptureOptions aCaptureOptions = StackCaptureOptions::Full) {
@@ -2385,21 +2388,21 @@ static inline void DoSharedSample(
   }
 #endif  // defined(HAVE_NATIVE_UNWIND)
   const uint32_t jsFramesCount =
-      ExtractJsFrames(aIsSynchronous, aRegisteredThread, aRegs, collector,
-                      jsFrames, stackWalkControlIfSupported);
+      ExtractJsFrames(aIsSynchronous, aThreadData, aRegs, collector, jsFrames,
+                      stackWalkControlIfSupported);
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (captureNative) {
-    DoNativeBacktrace(aLock, aRegisteredThread, aRegs, nativeStack,
+    DoNativeBacktrace(aLock, aThreadData, aRegs, nativeStack,
                       stackWalkControlIfSupported);
 
-    MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aRegisteredThread,
-                aRegs, nativeStack, collector, jsFrames, jsFramesCount);
+    MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aThreadData, aRegs,
+                nativeStack, collector, jsFrames, jsFramesCount);
   } else
 #endif
   {
-    MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aRegisteredThread,
-                aRegs, nativeStack, collector, jsFrames, jsFramesCount);
+    MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aThreadData, aRegs,
+                nativeStack, collector, jsFrames, jsFramesCount);
 
     // We can't walk the whole native stack, but we can record the top frame.
     if (ActivePS::FeatureLeaf(aLock) &&
@@ -2410,10 +2413,11 @@ static inline void DoSharedSample(
 }
 
 // Writes the components of a synchronous sample to the given ProfileBuffer.
-static void DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
-                         const TimeStamp& aNow, const Registers& aRegs,
-                         ProfileBuffer& aBuffer,
-                         StackCaptureOptions aCaptureOptions) {
+static void DoSyncSample(
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    const TimeStamp& aNow, const Registers& aRegs, ProfileBuffer& aBuffer,
+    StackCaptureOptions aCaptureOptions) {
   // WARNING: this function runs within the profiler's "critical section".
 
   MOZ_ASSERT(aCaptureOptions != StackCaptureOptions::NoStack,
@@ -2422,26 +2426,26 @@ static void DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
   const uint64_t bufferRangeStart = aBuffer.BufferRangeStart();
 
   const uint64_t samplePos =
-      aBuffer.AddThreadIdEntry(aRegisteredThread.Info().ThreadId());
+      aBuffer.AddThreadIdEntry(aThreadData.Info().ThreadId());
 
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
   aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
-  DoSharedSample(aLock, /* aIsSynchronous = */ true, aRegisteredThread, aRegs,
+  DoSharedSample(aLock, /* aIsSynchronous = */ true, aThreadData, aRegs,
                  samplePos, bufferRangeStart, aBuffer, aCaptureOptions);
 }
 
 // Writes the components of a periodic sample to ActivePS's ProfileBuffer.
 // The ThreadId entry is already written in the main ProfileBuffer, its location
 // is `aSamplePos`, we can write the rest to `aBuffer` (which may be different).
-static inline void DoPeriodicSample(PSLockRef aLock,
-                                    RegisteredThread& aRegisteredThread,
-                                    const Registers& aRegs, uint64_t aSamplePos,
-                                    uint64_t aBufferRangeStart,
-                                    ProfileBuffer& aBuffer) {
+static inline void DoPeriodicSample(
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    const Registers& aRegs, uint64_t aSamplePos, uint64_t aBufferRangeStart,
+    ProfileBuffer& aBuffer) {
   // WARNING: this function runs within the profiler's "critical section".
 
-  DoSharedSample(aLock, /* aIsSynchronous = */ false, aRegisteredThread, aRegs,
+  DoSharedSample(aLock, /* aIsSynchronous = */ false, aThreadData, aRegs,
                  aSamplePos, aBufferRangeStart, aBuffer);
 }
 
@@ -3262,7 +3266,8 @@ class Sampler {
   // Func must be a function-like object of type `void()`.
   template <typename Func>
   void SuspendAndSampleAndResumeThread(
-      PSLockRef aLock, const RegisteredThread& aRegisteredThread,
+      PSLockRef aLock,
+      const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
       const TimeStamp& aNow, const Func& aProcessRegs);
 
  private:
@@ -3609,11 +3614,35 @@ void SamplerThread::Run() {
           const Vector<LiveProfiledThreadData>& liveThreads =
               ActivePS::LiveProfiledThreads(lock);
 
+          // Prevent threads from ending (or starting) and allow access to all
+          // OffThreadRef's.
+          ThreadRegistry::LockedRegistry lockedRegistry;
+
           for (auto& thread : liveThreads) {
             RegisteredThread* registeredThread = thread.mRegisteredThread;
             ProfiledThreadData* profiledThreadData =
                 thread.mProfiledThreadData.get();
-            const ThreadRegistrationInfo& info = registeredThread->Info();
+            const ProfilerThreadId threadId =
+                profiledThreadData->Info().ThreadId();
+
+            // TODO in this bug 1722261: Remove! In a later patch the for-loop
+            // through all threads will use ThreadRegistry directly so we will
+            // get real OffThreadRefs that way.
+            // For now, we must search the OffThreadRef that corresponds to the
+            // threadId. It should always be present because threads are
+            // registered with both the old ActivePS::LiveProfiledThreads and
+            // the new ThreadRegistry.
+            ThreadRegistry::OffThreadRef* offThreadRef =
+                [&]() -> ThreadRegistry::OffThreadRef* {
+              for (ThreadRegistry::OffThreadRef& otr : lockedRegistry) {
+                if (otr.UnlockedConstReaderCRef().Info().ThreadId() ==
+                    threadId) {
+                  return &otr;
+                }
+              }
+              return nullptr;
+            }();
+            MOZ_RELEASE_ASSERT(offThreadRef);
 
             const RunningTimes runningTimesDiff = [&]() {
               if (!cpuUtilization) {
@@ -3639,11 +3668,11 @@ void SamplerThread::Run() {
             //     could result in an unneeded sample.
             // However we're using current running times (instead of copying the
             // old ones) because some work could have happened.
-            if (registeredThread->RacyRegisteredThread()
+            if (offThreadRef->UnlockedConstReaderAndAtomicRWRef()
                     .CanDuplicateLastSampleDueToSleep() ||
                 runningTimesDiff.GetThreadCPUDelta() == Some(uint64_t(0))) {
               const bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
-                  info.ThreadId(), threadSampleDeltaMs,
+                  threadId, threadSampleDeltaMs,
                   profiledThreadData->LastSample(), runningTimesDiff);
               if (dup_ok) {
                 continue;
@@ -3659,7 +3688,7 @@ void SamplerThread::Run() {
             // Add the thread ID now, so we know its position in the main
             // buffer, which is used by some JS data.
             // (DoPeriodicSample only knows about the temporary local buffer.)
-            const uint64_t samplePos = buffer.AddThreadIdEntry(info.ThreadId());
+            const uint64_t samplePos = buffer.AddThreadIdEntry(threadId);
             profiledThreadData->LastSample() = Some(samplePos);
 
             // Also add the time, so it's always there after the thread ID, as
@@ -3678,13 +3707,16 @@ void SamplerThread::Run() {
             }
 
             if (stackSampling) {
+              ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock
+                  lockedThreadData = offThreadRef->LockedRWFromAnyThread();
               // Suspend the thread and collect its stack data in the local
               // buffer.
               mSampler.SuspendAndSampleAndResumeThread(
-                  lock, *registeredThread, now,
+                  lock, lockedThreadData.DataCRef(), now,
                   [&](const Registers& aRegs, const TimeStamp& aNow) {
-                    DoPeriodicSample(lock, *registeredThread, aRegs, samplePos,
-                                     bufferRangeStart, localProfileBuffer);
+                    DoPeriodicSample(lock, lockedThreadData.DataCRef(), aRegs,
+                                     samplePos, bufferRangeStart,
+                                     localProfileBuffer);
 
                     // For "eventDelay", we want the input delay - but if
                     // there are no events in the input queue (or even if there
@@ -5650,29 +5682,25 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
     return false;
   }
 
-  RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(lock);
-  if (!registeredThread) {
-    // If this was called from a non-registered thread, return false and do no
-    // more work. This can happen from a memory hook. Before the allocation
-    // tracking there was a MOZ_ASSERT() here checking for the existence of a
-    // registeredThread.
-    return false;
-  }
+  return ThreadRegistration::WithOnThreadRefOr(
+      [&](ThreadRegistration::OnThreadRef aOnThreadRef) {
+        ProfileBuffer profileBuffer(aChunkedBuffer);
 
-  ProfileBuffer profileBuffer(aChunkedBuffer);
-
-  Registers regs;
+        Registers regs;
 #if defined(HAVE_NATIVE_UNWIND)
-  regs.SyncPopulate();
+        regs.SyncPopulate();
 #else
-  regs.Clear();
+        regs.Clear();
 #endif
 
-  DoSyncSample(lock, *registeredThread, TimeStamp::Now(), regs, profileBuffer,
-               aCaptureOptions);
+        DoSyncSample(lock, aOnThreadRef.UnlockedReaderAndAtomicRWOnThreadCRef(),
+                     TimeStamp::Now(), regs, profileBuffer, aCaptureOptions);
 
-  return true;
+        return true;
+      },
+      // If this was called from a non-registered thread, return false and do no
+      // more work. This can happen from a memory hook.
+      false);
 }
 
 UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
@@ -5795,6 +5823,88 @@ void profiler_clear_js_context() {
   registeredThread->ClearJSContext();
 }
 
+static void profiler_suspend_and_sample_thread(
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    bool aIsSynchronous, uint32_t aFeatures, ProfilerStackCollector& aCollector,
+    bool aSampleNative) {
+  const ThreadRegistrationInfo& info = aThreadData.Info();
+
+  if (info.IsMainThread()) {
+    aCollector.SetIsMainThread();
+  }
+
+  // Allocate the space for the native stack
+  NativeStack nativeStack;
+
+  auto collectStack = [&](const Registers& aRegs, const TimeStamp& aNow) {
+    // The target thread is now suspended. Collect a native backtrace,
+    // and call the callback.
+    JsFrameBuffer& jsFrames = CorePS::JsFrames(aLock);
+    StackWalkControl* stackWalkControlIfSupported = nullptr;
+#if defined(HAVE_FASTINIT_NATIVE_UNWIND)
+    StackWalkControl stackWalkControl;
+    if constexpr (StackWalkControl::scIsSupported) {
+      if (aSampleNative) {
+        stackWalkControlIfSupported = &stackWalkControl;
+      }
+    }
+#endif
+    const uint32_t jsFramesCount =
+        ExtractJsFrames(aIsSynchronous, aThreadData, aRegs, aCollector,
+                        jsFrames, stackWalkControlIfSupported);
+
+#if defined(HAVE_FASTINIT_NATIVE_UNWIND)
+    if (aSampleNative) {
+      // We can only use FramePointerStackWalk or MozStackWalk from
+      // suspend_and_sample_thread as other stackwalking methods may not be
+      // initialized.
+#  if defined(USE_FRAME_POINTER_STACK_WALK)
+      DoFramePointerBacktrace(aLock, aThreadData, aRegs, nativeStack,
+                              stackWalkControlIfSupported);
+#  elif defined(USE_MOZ_STACK_WALK)
+      DoMozStackWalkBacktrace(aLock, aThreadData, aRegs, nativeStack,
+                              stackWalkControlIfSupported);
+#  else
+#    error "Invalid configuration"
+#  endif
+
+      MergeStacks(aFeatures, aIsSynchronous, aThreadData, aRegs, nativeStack,
+                  aCollector, jsFrames, jsFramesCount);
+    } else
+#endif
+    {
+      MergeStacks(aFeatures, aIsSynchronous, aThreadData, aRegs, nativeStack,
+                  aCollector, jsFrames, jsFramesCount);
+
+      if (ProfilerFeature::HasLeaf(aFeatures)) {
+        aCollector.CollectNativeLeafAddr((void*)aRegs.mPC);
+      }
+    }
+  };
+
+  if (aIsSynchronous) {
+    // Sampling the current thread, do NOT suspend it!
+    Registers regs;
+#if defined(HAVE_NATIVE_UNWIND)
+    regs.SyncPopulate();
+#else
+    regs.Clear();
+#endif
+    collectStack(regs, TimeStamp::Now());
+  } else {
+    // Suspend, sample, and then resume the target thread.
+    Sampler sampler(aLock);
+    TimeStamp now = TimeStamp::Now();
+    sampler.SuspendAndSampleAndResumeThread(aLock, aThreadData, now,
+                                            collectStack);
+
+    // NOTE: Make sure to disable the sampler before it is destroyed, in
+    // case the profiler is running at the same time.
+    sampler.Disable(aLock);
+  }
+}
+
 // NOTE: aCollector's methods will be called while the target thread is paused.
 // Doing things in those methods like allocating -- which may try to claim
 // locks -- is a surefire way to deadlock.
@@ -5802,100 +5912,35 @@ void profiler_suspend_and_sample_thread(ProfilerThreadId aThreadId,
                                         uint32_t aFeatures,
                                         ProfilerStackCollector& aCollector,
                                         bool aSampleNative /* = true */) {
-  const bool isSynchronous = [&aThreadId]() {
-    const ProfilerThreadId currentThreadId = profiler_current_thread_id();
-    if (!aThreadId.IsSpecified()) {
-      aThreadId = currentThreadId;
-      return true;
-    }
-    return aThreadId == currentThreadId;
-  }();
-
-  // Lock the profiler mutex
-  PSAutoLock lock;
-
-  const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
-      CorePS::RegisteredThreads(lock);
-  for (auto& thread : registeredThreads) {
-    const ThreadRegistrationInfo& info = thread->Info();
-    RegisteredThread& registeredThread = *thread.get();
-
-    if (info.ThreadId() == aThreadId) {
-      if (info.IsMainThread()) {
-        aCollector.SetIsMainThread();
-      }
-
-      // Allocate the space for the native stack
-      NativeStack nativeStack;
-
-      auto collectStack = [&](const Registers& aRegs, const TimeStamp& aNow) {
-        // The target thread is now suspended. Collect a native backtrace,
-        // and call the callback.
-        JsFrameBuffer& jsFrames = CorePS::JsFrames(lock);
-        StackWalkControl* stackWalkControlIfSupported = nullptr;
-#if defined(HAVE_FASTINIT_NATIVE_UNWIND)
-        StackWalkControl stackWalkControl;
-        if constexpr (StackWalkControl::scIsSupported) {
-          if (aSampleNative) {
-            stackWalkControlIfSupported = &stackWalkControl;
-          }
-        }
-#endif
-        const uint32_t jsFramesCount =
-            ExtractJsFrames(isSynchronous, registeredThread, aRegs, aCollector,
-                            jsFrames, stackWalkControlIfSupported);
-
-#if defined(HAVE_FASTINIT_NATIVE_UNWIND)
-        if (aSampleNative) {
-          // We can only use FramePointerStackWalk or MozStackWalk from
-          // suspend_and_sample_thread as other stackwalking methods may not be
-          // initialized.
-#  if defined(USE_FRAME_POINTER_STACK_WALK)
-          DoFramePointerBacktrace(lock, registeredThread, aRegs, nativeStack,
-                                  stackWalkControlIfSupported);
-#  elif defined(USE_MOZ_STACK_WALK)
-          DoMozStackWalkBacktrace(lock, registeredThread, aRegs, nativeStack,
-                                  stackWalkControlIfSupported);
-#  else
-#    error "Invalid configuration"
-#  endif
-
-          MergeStacks(aFeatures, isSynchronous, registeredThread, aRegs,
-                      nativeStack, aCollector, jsFrames, jsFramesCount);
-        } else
-#endif
-        {
-          MergeStacks(aFeatures, isSynchronous, registeredThread, aRegs,
-                      nativeStack, aCollector, jsFrames, jsFramesCount);
-
-          if (ProfilerFeature::HasLeaf(aFeatures)) {
-            aCollector.CollectNativeLeafAddr((void*)aRegs.mPC);
-          }
-        }
-      };
-
-      if (isSynchronous) {
-        // Sampling the current thread, do NOT suspend it!
-        Registers regs;
-#if defined(HAVE_NATIVE_UNWIND)
-        regs.SyncPopulate();
-#else
-        regs.Clear();
-#endif
-        collectStack(regs, TimeStamp::Now());
-      } else {
-        // Suspend, sample, and then resume the target thread.
-        Sampler sampler(lock);
-        TimeStamp now = TimeStamp::Now();
-        sampler.SuspendAndSampleAndResumeThread(lock, registeredThread, now,
-                                                collectStack);
-
-        // NOTE: Make sure to disable the sampler before it is destroyed, in
-        // case the profiler is running at the same time.
-        sampler.Disable(lock);
-      }
-      break;
-    }
+  if (!aThreadId.IsSpecified() || aThreadId == profiler_current_thread_id()) {
+    // Sampling the current thread. Get its information from the TLS (no locking
+    // required.)
+    ThreadRegistration::WithOnThreadRef(
+        [&](ThreadRegistration::OnThreadRef aOnThreadRef) {
+          aOnThreadRef.WithUnlockedReaderAndAtomicRWOnThread(
+              [&](const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread&
+                      aThreadData) {
+                // TODO: Remove this lock when on-thread sampling doesn't
+                // require it anymore.
+                PSAutoLock lock;
+                profiler_suspend_and_sample_thread(lock, aThreadData, true,
+                                                   aFeatures, aCollector,
+                                                   aSampleNative);
+              });
+        });
+  } else {
+    // Lock the profiler before accessing the ThreadRegistry.
+    PSAutoLock lock;
+    ThreadRegistry::WithOffThreadRef(
+        aThreadId, [&](ThreadRegistry::OffThreadRef aOffThreadRef) {
+          aOffThreadRef.WithLockedRWFromAnyThread(
+              [&](const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread&
+                      aThreadData) {
+                profiler_suspend_and_sample_thread(lock, aThreadData, false,
+                                                   aFeatures, aCollector,
+                                                   aSampleNative);
+              });
+        });
   }
 }
 

@@ -357,7 +357,8 @@ static void ClearThreadRunningTimes(PSLockRef aLock,
 
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const TimeStamp& aNow, const Func& aProcessRegs) {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
@@ -366,7 +367,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
   if (!mSamplerTid.IsSpecified()) {
     mSamplerTid = profiler_current_thread_id();
   }
-  ProfilerThreadId sampleeTid = aRegisteredThread.Info().ThreadId();
+  ProfilerThreadId sampleeTid = aThreadData.Info().ThreadId();
   MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
 
   //----------------------------------------------------------------//
