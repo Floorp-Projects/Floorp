@@ -394,4 +394,4 @@ style:
   WildcardImport:
     active: true
     excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
-    excludeImports: 'java.util.*,kotlinx.android.synthetic.*'
+    excludeImports: 'java.util.*'

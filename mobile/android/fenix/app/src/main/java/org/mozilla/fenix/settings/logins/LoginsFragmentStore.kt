@@ -5,7 +5,7 @@
 package org.mozilla.fenix.settings.logins
 
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 import mozilla.components.concept.storage.Login
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State

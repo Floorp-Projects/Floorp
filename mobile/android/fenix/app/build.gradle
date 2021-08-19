@@ -4,7 +4,7 @@ plugins {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
 apply plugin: 'jacoco'
 apply plugin: 'androidx.navigation.safeargs.kotlin'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
@@ -396,10 +396,6 @@ android.applicationVariants.all { variant ->
     } else {
         buildConfigField 'Boolean', 'MOZILLA_OFFICIAL', 'false'
     }
-}
-
-androidExtensions {
-    experimental = true
 }
 
 // Generate Kotlin code for the Fenix Glean metrics.

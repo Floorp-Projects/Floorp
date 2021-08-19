@@ -6,7 +6,7 @@ package org.mozilla.fenix.trackingprotection
 
 import android.os.Parcelable
 import androidx.annotation.StringRes
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 import org.mozilla.fenix.R
 
 @Parcelize
