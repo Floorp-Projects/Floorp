@@ -38,9 +38,12 @@ const kIsMac = navigator.platform.includes("Mac");
 const selection = getSelection();
 
 async function doTests(aEnableMiddlePaste, aEditable, aDescription) {
-  await SpecialPowers.pushPrefEnv({"set": [["middlemouse.paste", aEnableMiddlePaste],
-                                           ["middlemouse.contentLoadURL", false],
-                                           ["general.autoScroll", false]]});
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.paste", aEnableMiddlePaste],
+    ["middlemouse.contentLoadURL", false],
+    ["general.autoScroll", false],
+    ["general.autoscroll.prevent_to_collapse_selection_by_middle_mouse_down", false],
+  ]});
 
   if (aEditable) {
     document.getElementById("container").setAttribute("contenteditable", "true");
@@ -193,6 +196,107 @@ async function doTests(aEnableMiddlePaste, aEditable, aDescription) {
   document.getElementById("container").removeEventListener("paste", pasteEventHandler, true);
 }
 
+async function runTestPreventingToCollapseSelectionByPrefs() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.contentLoadURL", false],
+    ["general.autoscroll.prevent_to_collapse_selection_by_middle_mouse_down", true],
+  ]});
+
+  // If middle click paste is disabled and autoscroll is enabled, we should
+  // allow users to prevent to collapse selection by middle mouse down.
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.paste", false],
+    ["general.autoScroll", true],
+  ]});
+
+  const container = document.getElementById("container");
+  container.removeAttribute("contenteditable");
+  container.getBoundingClientRect();
+
+  const span1 = container.querySelector("span#span1");
+  const span2 = container.querySelector("span#span2");
+  function checkSelectAllChildrenOfSpan2(description) {
+    is(
+      getSelection().focusNode,
+      span2,
+      `Selection shouldn't be collapsed by ${description} (focusNode)`
+    );
+    is(
+      getSelection().focusOffset,
+      span2.childNodes.length,
+      `Selection shouldn't be collapsed by ${description} (focusOffset)`
+    );
+    is(
+      getSelection().anchorNode,
+      span2,
+      `Selection shouldn't be collapsed by ${description} (anchorNode)`
+    );
+    is(
+      getSelection().anchorOffset,
+      0,
+      `Selection shouldn't be collapsed by ${description} (anchorOffset)`
+    );
+  }
+
+  function checkSelectionCollapsedInSpan1(description) {
+    ok(
+      getSelection().isCollapsed,
+      `Selection should be collapsed into the clicked text node ${description} (isCollapsed)`
+    );
+    is(
+      getSelection().focusNode,
+      span1.firstChild,
+      `Selection should be collapsed into the clicked text node ${description} (focusNode)`
+    );
+    is(
+      getSelection().anchorNode,
+      span1.firstChild,
+      `Selection should be collapsed into the clicked text node ${description} (anchorNode)`
+    );
+  }
+  getSelection().selectAllChildren(span2);
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mousedown", button: 1 });
+  checkSelectAllChildrenOfSpan2("middle mousedown if the pref is enabled and middle click paste is disabled and autoscroll are enabled");
+
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mouseup", button: 1 });
+  checkSelectAllChildrenOfSpan2("middle mouseup if the pref is enabled and middle click paste is disabled and autoscroll are enabled");
+
+  container.setAttribute("contenteditable", "true");
+  container.getBoundingClientRect();
+  getSelection().selectAllChildren(span2);
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mousedown", button: 1 });
+  checkSelectionCollapsedInSpan1("by middle mousedown if it's editable content");
+
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mouseup", button: 1 });
+  checkSelectionCollapsedInSpan1("after middle mouseup if it's editable content");
+
+  container.removeAttribute("contenteditable");
+  container.getBoundingClientRect();
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.paste", false],
+    ["general.autoScroll", false],
+  ]});
+
+  getSelection().selectAllChildren(span2);
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mousedown", button: 1 });
+  checkSelectionCollapsedInSpan1("by middle mousedown if the pref is enabled but autoscroll are disabled");
+
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mouseup", button: 1 });
+  checkSelectionCollapsedInSpan1("after middle mousedown if the pref is enabled but autoscroll are disabled");
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["middlemouse.paste", true],
+    ["general.autoScroll", true],
+  ]});
+
+  getSelection().selectAllChildren(span2);
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mousedown", button: 1 });
+  checkSelectionCollapsedInSpan1("by middle mousedown if the pref is enabled but middle mouse paste is enabled");
+
+  synthesizeMouseAtCenter(document.getElementById("span1"), { type: "mouseup", button: 1 });
+  checkSelectionCollapsedInSpan1("after middle mousedown if the pref is enabled but middle mouse paste is enabled");
+}
+
 async function runAllTests() {
   let textarea = document.getElementById("textarea");
   textarea.focus();
@@ -218,6 +322,8 @@ async function runAllTests() {
 
   await doTests(true, true, "Testing in editable content with the middle paste enabled: ");
   await doTests(false, true, "Testing in editable content with the middle paste disabled: ");
+
+  await runTestPreventingToCollapseSelectionByPrefs();
 
   SimpleTest.finish();
 }

@@ -229,6 +229,17 @@ pref("general.autoscroll.prevent_to_start.altKey", false);  // Alt
 pref("general.autoscroll.prevent_to_start.metaKey", false); // Command on macOS
 pref("general.autoscroll.prevent_to_start.osKey", false);   // Windows key on Windows or Super key on Linux
 
+// When this pref is set to true, middle click on non-editable content keeps
+// selected range rather than collapsing selection at the clicked position.
+// This behavior is incompatible with Chrome, so enabling this could cause
+// breaking some web apps.
+// Note that this pref is ignored when "general.autoScroll" is set to false
+// or "middlemouse.paste" is set to true.  For the former case, there is no
+// reason do be incompatible with Chrome.  For the latter case, the selection
+// change is important for "paste" event listeners even if it's non-editable
+// content.
+pref("general.autoscroll.prevent_to_collapse_selection_by_middle_mouse_down", false);
+
 // maximum number of dated backups to keep at any time
 pref("browser.bookmarks.max_backups",       5);
 
