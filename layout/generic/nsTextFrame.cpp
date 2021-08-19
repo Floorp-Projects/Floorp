@@ -4384,6 +4384,31 @@ void nsTextFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
+nsTArray<nsTextFrame*>* nsTextFrame::GetContinuations() {
+  // Only for use on the primary frame, which has no prev-continuation.
+  MOZ_ASSERT(!GetPrevContinuation());
+  if (mHasContinuationsProperty) {
+    return GetProperty(ContinuationsProperty());
+  }
+  size_t count = 0;
+  for (nsIFrame* f = this; f; f = f->GetNextContinuation()) {
+    ++count;
+  }
+  auto* continuations = new nsTArray<nsTextFrame*>;
+  if (continuations->SetCapacity(count, fallible)) {
+    for (nsTextFrame* f = this; f;
+         f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
+      continuations->AppendElement(f);
+    }
+  } else {
+    delete continuations;
+    continuations = nullptr;
+  }
+  AddProperty(ContinuationsProperty(), continuations);
+  mHasContinuationsProperty = true;
+  return continuations;
+}
+
 class nsContinuingTextFrame final : public nsTextFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsContinuingTextFrame)
@@ -4410,10 +4435,16 @@ class nsContinuingTextFrame final : public nsTextFrame {
     nsTextFrame* prevFirst = mFirstContinuation;
     if (mPrevContinuation) {
       mFirstContinuation = mPrevContinuation->FirstContinuation();
+      if (mFirstContinuation) {
+        mFirstContinuation->ClearCachedContinuations();
+      }
     } else {
       mFirstContinuation = nullptr;
     }
     if (mFirstContinuation != prevFirst) {
+      if (prevFirst) {
+        prevFirst->ClearCachedContinuations();
+      }
       auto* f = static_cast<nsContinuingTextFrame*>(mNextContinuation);
       while (f) {
         f->mFirstContinuation = mFirstContinuation;
@@ -4438,10 +4469,16 @@ class nsContinuingTextFrame final : public nsTextFrame {
     nsTextFrame* prevFirst = mFirstContinuation;
     if (mPrevContinuation) {
       mFirstContinuation = mPrevContinuation->FirstContinuation();
+      if (mFirstContinuation) {
+        mFirstContinuation->ClearCachedContinuations();
+      }
     } else {
       mFirstContinuation = nullptr;
     }
     if (mFirstContinuation != prevFirst) {
+      if (prevFirst) {
+        prevFirst->ClearCachedContinuations();
+      }
       auto* f = static_cast<nsContinuingTextFrame*>(mNextContinuation);
       while (f) {
         f->mFirstContinuation = mFirstContinuation;
@@ -4452,6 +4489,8 @@ class nsContinuingTextFrame final : public nsTextFrame {
 
   nsIFrame* FirstInFlow() const final;
   nsTextFrame* FirstContinuation() const final { return mFirstContinuation; };
+
+  nsTArray<nsTextFrame*>* GetContinuations() final { return nullptr; }
 
   void AddInlineMinISize(gfxContext* aRenderingContext,
                          InlineMinISizeData* aData) final;
