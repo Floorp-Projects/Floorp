@@ -777,12 +777,19 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       MOZ_ASSERT(leafContent->GetParent());
       MOZ_ASSERT(EditorUtils::IsEditableContent(*leafContent->GetParent(),
                                                 EditorType::HTML));
-      Element* container =
-          HTMLEditUtils::GetAncestorBlockElement(*leafContent, editingHost);
-      nsresult rv = CollapseSelectionTo(EditorDOMPoint(container, 0));
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::CollapseSelectionTo() failed");
-      return rv;
+      if (const Element* editableBlockElementOrInlineEditingHost =
+              HTMLEditUtils::GetAncestorElement(
+                  *leafContent,
+                  HTMLEditUtils::
+                      ClosestEditableBlockElementOrInlineEditingHost)) {
+        nsresult rv = CollapseSelectionTo(
+            EditorDOMPoint(editableBlockElementOrInlineEditingHost, 0));
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "HTMLEditor::CollapseSelectionTo() failed");
+        return rv;
+      }
+      NS_WARNING("Found leaf content did not have editable parent, why?");
+      return NS_ERROR_FAILURE;
     }
 
     // When we meet an empty inline element, we should look for a next sibling.
