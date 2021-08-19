@@ -20,13 +20,6 @@
 
 #include <thread>
 
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#  include <processthreadsapi.h>
-#  include <realtimeapiset.h>
-#elif defined(__APPLE__)
-#  include <mach/thread_act.h>
-#endif
-
 #ifdef MOZ_GECKO_PROFILER
 
 #  include "GeckoProfiler.h"
@@ -192,36 +185,8 @@ static void TestConstUnlockedConstReader(
   EXPECT_EQ(aData.Info().ThreadId(), aThreadId);
   EXPECT_FALSE(aData.Info().IsMainThread());
 
-#if defined(_MSC_VER) || defined(__MINGW32__)
-  HANDLE threadHandle = aData.PlatformDataCRef().ProfiledThread();
-  EXPECT_NE(threadHandle, nullptr);
-  EXPECT_EQ(ProfilerThreadId::FromNumber(::GetThreadId(threadHandle)),
-            aThreadId);
-  // Test calling QueryThreadCycleTime, we cannot assume that it will always
-  // work, but at least it shouldn't crash.
-  ULONG64 cycles;
-  (void)QueryThreadCycleTime(threadHandle, &cycles);
-#elif defined(__APPLE__)
-  // Test calling thread_info, we cannot assume that it will always work, but at
-  // least it shouldn't crash.
-  thread_basic_info_data_t threadBasicInfo;
-  mach_msg_type_number_t basicCount = THREAD_BASIC_INFO_COUNT;
-  (void)thread_info(
-      aData.PlatformDataCRef().ProfiledThread(), THREAD_BASIC_INFO,
-      reinterpret_cast<thread_info_t>(&threadBasicInfo), &basicCount);
-#elif defined(__linux__) || defined(__ANDROID__) || defined(__FreeBSD__)
-  // Test calling GetClockId, we cannot assume that it will always work, but at
-  // least it shouldn't crash.
-  Maybe<clockid_t> maybeClockId = aData.PlatformDataCRef().GetClockId();
-  if (maybeClockId) {
-    // Test calling clock_gettime, we cannot assume that it will always work,
-    // but at least it shouldn't crash.
-    timespec ts;
-    (void)clock_gettime(*maybeClockId, &ts);
-  }
-#else
+  // TODO in bug 1722261: Platform-specific tests, when implemented.
   (void)aData.PlatformDataCRef();
-#endif
 
   EXPECT_GE(aData.StackTop(), aOnStackObject)
       << "StackTop should be at &onStackChar, or higher on some "
@@ -361,13 +326,11 @@ static void TestLockedRWFromAnyThread(
                                         aAfterRegistration, aOnStackObject,
                                         aThreadId);
 
-  // We can't create a ProfiledThreadData nor PSAutoLock here, so just verify
-  // that the call would compile and return the expected type.
-  static_assert(
-      std::is_same_v<decltype(aData.SetIsBeingProfiledWithProfiledThreadData(
-                         std::declval<ProfiledThreadData*>(),
-                         std::declval<PSAutoLock>())),
-                     void>);
+  // We can't create a PSAutoLock here, so just verify that the call would
+  // compile and return the expected type.
+  static_assert(std::is_same_v<decltype(aData.SetIsBeingProfiled(
+                                   true, std::declval<PSAutoLock>())),
+                               void>);
 
   aData.ResetMainThread(nullptr);
 

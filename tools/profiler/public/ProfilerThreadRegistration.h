@@ -309,15 +309,6 @@ class ThreadRegistration {
     return false;
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
-    DataLock lock(mDataMutex);
-    return mData.SizeOfExcludingThis(aMallocSizeOf);
-  }
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-  }
-
  private:
   friend class ThreadRegistry;
 
@@ -334,7 +325,7 @@ class ThreadRegistration {
 
   // Used when writing on self thread, and for any access from any thread.
   // Locking order: Profiler, ThreadRegistry, ThreadRegistration.
-  mutable DataMutex mDataMutex;
+  DataMutex mDataMutex;
 
   // In case of nested (non-RAII) registrations. Only accessed on thread.
   int mOtherRegistrations = 0;
