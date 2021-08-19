@@ -4121,7 +4121,9 @@ static ProfilingStack* locked_register_thread(
       lockedRWOnThread,
       "At the moment, we should only get here when registering the current "
       "thread (either through profiler_register_thread or from profiler_init "
-      "on the main thread registering that main thread).");
+      "on the main thread registering that main thread). But in the future "
+      "this may be done for other already-registered threads, so we need to "
+      "null-check the pointer in long-term code below.");
   lockedRWOnThread->SetRegisteredThread(registeredThread.get());
 
   if (ActivePS::Exists(aLock) &&
@@ -4136,11 +4138,13 @@ static ProfilingStack* locked_register_thread(
         profiledThreadData, aLock);
 
     if (ActivePS::FeatureJS(aLock)) {
-      // This StartJSSampling() call is on-thread, so we can poll manually to
-      // start JS sampling immediately.
-      registeredThread->StartJSSampling(ActivePS::JSFlags(aLock));
-      registeredThread->PollJSSampling();
-      if (registeredThread->GetJSContext()) {
+      lockedRWFromAnyThread->StartJSSampling(ActivePS::JSFlags(aLock));
+      if (lockedRWOnThread) {
+        // We can manually poll the current thread so it starts sampling
+        // immediately.
+        lockedRWOnThread->PollJSSampling();
+      }
+      if (lockedRWFromAnyThread->GetJSContext()) {
         profiledThreadData->NotifyReceivedJSContext(
             ActivePS::Buffer(aLock).BufferRangeEnd());
       }
@@ -4772,17 +4776,13 @@ Maybe<ProfilerBufferInfo> profiler_get_buffer_info() {
 }
 
 static void PollJSSamplingForCurrentThread() {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  PSAutoLock lock;
-
-  RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(lock);
-  if (!registeredThread) {
-    return;
-  }
-
-  registeredThread->PollJSSampling();
+  ThreadRegistration::WithOnThreadRef(
+      [](ThreadRegistration::OnThreadRef aOnThreadRef) {
+        aOnThreadRef.WithLockedRWOnThread(
+            [](ThreadRegistration::LockedRWOnThread& aThreadData) {
+              aThreadData.PollJSSampling();
+            });
+      });
 }
 
 // When the profiler is started on a background thread, we can't synchronously
@@ -4910,7 +4910,6 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   bool isMainThreadBeingProfiled = false;
 #endif
-  ProfilerThreadId tid = profiler_current_thread_id();
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(aLock);
   for (auto& registeredThread : registeredThreads) {
@@ -4923,34 +4922,35 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
           MakeUnique<ProfiledThreadData>(info, eventTarget));
       ThreadRegistry::WithOffThreadRef(
           info.ThreadId(), [&](ThreadRegistry::OffThreadRef aOffThreadRef) {
-            aOffThreadRef.WithLockedRWFromAnyThread(
-                [&](ThreadRegistration::LockedRWFromAnyThread& aRW) {
-                  aRW.SetIsBeingProfiledWithProfiledThreadData(
-                      profiledThreadData, aLock);
-                });
-          });
-      if (ActivePS::FeatureJS(aLock)) {
-        registeredThread->StartJSSampling(ActivePS::JSFlags(aLock));
-        if (info.ThreadId() == tid) {
-          // We can manually poll the current thread so it starts sampling
-          // immediately.
-          registeredThread->PollJSSampling();
-        } else if (info.IsMainThread()) {
-          // Dispatch a runnable to the main thread to call PollJSSampling(),
-          // so that we don't have wait for the next JS interrupt callback in
-          // order to start profiling JS.
-          TriggerPollJSSamplingOnMainThread();
-        }
-      }
+            ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock
+                lockedThreadData = aOffThreadRef.LockedRWFromAnyThread();
+            lockedThreadData->SetIsBeingProfiledWithProfiledThreadData(
+                profiledThreadData, aLock);
+            if (ActivePS::FeatureJS(aLock)) {
+              lockedThreadData->StartJSSampling(ActivePS::JSFlags(aLock));
+              if (ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
+                      lockedThreadData.GetLockedRWOnThread();
+                  lockedRWOnThread) {
+                // We can manually poll the current thread so it starts sampling
+                // immediately.
+                lockedRWOnThread->PollJSSampling();
+              } else if (info.IsMainThread()) {
+                // Dispatch a runnable to the main thread to call
+                // PollJSSampling(), so that we don't have wait for the next JS
+                // interrupt callback in order to start profiling JS.
+                TriggerPollJSSamplingOnMainThread();
+              }
+            }
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-      if (info.IsMainThread()) {
-        isMainThreadBeingProfiled = true;
-      }
+            if (info.IsMainThread()) {
+              isMainThreadBeingProfiled = true;
+            }
 #endif
-      registeredThread->RacyRegisteredThread().ReinitializeOnResume();
-      if (registeredThread->GetJSContext()) {
-        profiledThreadData->NotifyReceivedJSContext(0);
-      }
+            lockedThreadData->ReinitializeOnResume();
+            if (lockedThreadData->GetJSContext()) {
+              profiledThreadData->NotifyReceivedJSContext(0);
+            }
+          });
     }
   }
 
