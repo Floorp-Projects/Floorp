@@ -114,7 +114,10 @@ RTCRtpReceiver::RTCRtpReceiver(
   // so we'll disable muting on RTCP BYE and timeout for now.
   if (Preferences::GetBool("media.peerconnection.mute_on_bye_or_timeout",
                            false)) {
-    aConduit->SetRtcpEventObserver(this);
+    mRtcpByeListener = aConduit->RtcpByeEvent().Connect(
+        mMainThread, this, &RTCRtpReceiver::OnRtcpBye);
+    mRtcpTimeoutListener = aConduit->RtcpTimeoutEvent().Connect(
+        mMainThread, this, &RTCRtpReceiver::OnRtcpTimeout);
   }
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
     mPipeline = new MediaPipelineReceiveAudio(
@@ -519,11 +522,12 @@ void RTCRtpReceiver::Shutdown() {
   ASSERT_ON_THREAD(mMainThread);
   if (mPipeline) {
     mPipeline->Shutdown();
-    mPipeline->mConduit->SetRtcpEventObserver(nullptr);
     mPipeline = nullptr;
   }
   mTransceiverImpl = nullptr;
   mCallThread = nullptr;
+  mRtcpByeListener.DisconnectIfExists();
+  mRtcpTimeoutListener.DisconnectIfExists();
 }
 
 void RTCRtpReceiver::UpdateTransport() {
