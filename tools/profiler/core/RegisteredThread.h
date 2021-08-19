@@ -39,11 +39,6 @@ class RacyRegisteredThread final {
     mThreadRegistration.mData.ReinitializeOnResume();
   }
 
-  // This returns true for the second and subsequent calls in each sleep cycle.
-  bool CanDuplicateLastSampleDueToSleep() {
-    return mThreadRegistration.mData.CanDuplicateLastSampleDueToSleep();
-  }
-
   // Call this whenever the current thread sleeps. Calling it twice in a row
   // without an intervening setAwake() call is an error.
   void SetSleeping() { mThreadRegistration.mData.SetSleeping(); }
@@ -82,9 +77,6 @@ class RegisteredThread final {
   }
 
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
-  const void* StackTop() const {
-    return mRacyRegisteredThread.mThreadRegistration.mData.mStackTop;
-  }
 
   // aDelay is the time the event that is currently running on the thread
   // was queued before starting to run (if a PrioritizedEventQueue
