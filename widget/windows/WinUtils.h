@@ -198,12 +198,7 @@ class WinUtils {
    * and physical (device) pixels.
    */
   static double LogToPhysFactor(HMONITOR aMonitor);
-  static double LogToPhysFactor(HWND aWnd) {
-    // if there's an ancestor window, we want to share its DPI setting
-    HWND ancestor = ::GetAncestor(aWnd, GA_ROOTOWNER);
-    return LogToPhysFactor(::MonitorFromWindow(ancestor ? ancestor : aWnd,
-                                               MONITOR_DEFAULTTOPRIMARY));
-  }
+  static double LogToPhysFactor(HWND aWnd);
   static double LogToPhysFactor(HDC aDC) {
     return LogToPhysFactor(::WindowFromDC(aDC));
   }
