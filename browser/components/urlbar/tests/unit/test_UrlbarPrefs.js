@@ -94,6 +94,7 @@ add_task(function makeResultBuckets_true() {
             },
             // general
             {
+              group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
               flex: 1,
               children: [
                 {
@@ -167,6 +168,7 @@ add_task(function makeResultBuckets_false() {
           children: [
             // general
             {
+              group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
               flex: 2,
               children: [
                 {

@@ -53,6 +53,7 @@ var UrlbarUtils = {
   RESULT_GROUP: {
     ABOUT_PAGES: "aboutPages",
     GENERAL: "general",
+    GENERAL_PARENT: "generalParent",
     FORM_HISTORY: "formHistory",
     HEURISTIC_AUTOFILL: "heuristicAutofill",
     HEURISTIC_ENGINE_ALIAS: "heuristicEngineAlias",
@@ -495,7 +496,11 @@ var UrlbarUtils = {
    *   The reuslt's group.
    */
   getResultGroup(result) {
-    if (result.hasSuggestedIndex) {
+    if (result.group) {
+      return result.group;
+    }
+
+    if (result.hasSuggestedIndex && !result.isSuggestedIndexRelativeToGroup) {
       return UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX;
     }
     if (result.heuristic) {
@@ -539,6 +544,8 @@ var UrlbarUtils = {
         return UrlbarUtils.RESULT_GROUP.INPUT_HISTORY;
       case "PreloadedSites":
         return UrlbarUtils.RESULT_GROUP.PRELOADED;
+      case "UrlbarProviderQuickSuggest":
+        return UrlbarUtils.RESULT_GROUP.GENERAL_PARENT;
       default:
         break;
     }
