@@ -936,15 +936,6 @@ class UrlbarView {
       // result if the suggestedIndex values are different.
       return false;
     }
-    if (
-      (result.providerName == "UrlbarProviderQuickSuggest") !=
-      (row.result.providerName == "UrlbarProviderQuickSuggest")
-    ) {
-      // Don't replace a quick suggest result with a non-quick suggest result or
-      // vice versa.
-      // TODO (Bug 1710518): Come up with a more general solution.
-      return false;
-    }
     let resultIsSearchSuggestion = this._resultIsSearchSuggestion(result);
     // If the row is same type, just update it.
     if (
@@ -1003,12 +994,7 @@ class UrlbarView {
           resultIndex++;
           continue;
         }
-        if (
-          result.hasSuggestedIndex ||
-          row.result.hasSuggestedIndex ||
-          result.providerName == "UrlbarProviderQuickSuggest" ||
-          row.result.providerName == "UrlbarProviderQuickSuggest"
-        ) {
+        if (result.hasSuggestedIndex || row.result.hasSuggestedIndex) {
           seenMisplacedResult = true;
         }
       }
@@ -1033,32 +1019,29 @@ class UrlbarView {
       let result = results[resultIndex];
       this._updateRow(row, result);
       if (!seenMisplacedResult && result.hasSuggestedIndex) {
-        // We need to check whether the new suggestedIndex result will end up at
-        // its right index if we append it here. The "right" index is the final
-        // index the result will occupy once the update is done and all stale
-        // rows have been removed. We could use a more flexible definition, but
-        // we use this strict one in order to avoid all perceived flicker and
-        // movement of suggestedIndex results. Once stale rows are removed, the
-        // final number of rows in the view will be the new result count, so we
-        // base our arithmetic here on it.
-        let finalIndex =
-          result.suggestedIndex >= 0
-            ? Math.min(results.length - 1, result.suggestedIndex)
-            : Math.max(0, results.length + result.suggestedIndex);
-        if (this._rows.children.length != finalIndex) {
+        if (result.isSuggestedIndexRelativeToGroup) {
+          // We can't know at this point what the right index of a group-
+          // relative suggestedIndex result will be. To avoid all all possible
+          // flicker, don't make it (and all rows after it) visible until stale
+          // rows are removed.
           seenMisplacedResult = true;
+        } else {
+          // We need to check whether the new suggestedIndex result will end up
+          // at its right index if we append it here. The "right" index is the
+          // final index the result will occupy once the update is done and all
+          // stale rows have been removed. We could use a more flexible
+          // definition, but we use this strict one in order to avoid all
+          // perceived flicker and movement of suggestedIndex results. Once
+          // stale rows are removed, the final number of rows in the view will
+          // be the new result count, so we base our arithmetic here on it.
+          let finalIndex =
+            result.suggestedIndex >= 0
+              ? Math.min(results.length - 1, result.suggestedIndex)
+              : Math.max(0, results.length + result.suggestedIndex);
+          if (this._rows.children.length != finalIndex) {
+            seenMisplacedResult = true;
+          }
         }
-      }
-      if (
-        !seenMisplacedResult &&
-        result.providerName == "UrlbarProviderQuickSuggest"
-      ) {
-        // Quick suggest results always come last in the general bucket, so we
-        // can't know at this point what their right indexes will be. To avoid
-        // all possible flicker, don't make new quick suggest rows (and all rows
-        // after quick suggest rows) visible until stale rows are removed.
-        // TODO (Bug 1710518): Come up with a more general solution.
-        seenMisplacedResult = true;
       }
       let newVisibleSpanCount =
         visibleSpanCount + UrlbarUtils.getSpanForResult(result);

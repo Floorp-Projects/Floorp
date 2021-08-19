@@ -3260,7 +3260,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 116;
+    const UI_VERSION = 117;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3875,7 +3875,7 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 116) {
+    if (currentUIVersion < 117) {
       // Update urlbar result groups for the following changes:
       // 110 (bug 1662167): Add INPUT_HISTORY group
       // 111 (bug 1677126): Add REMOTE_TABS group
@@ -3884,6 +3884,7 @@ BrowserGlue.prototype = {
       // 114 (bug 1662172): Add HEURISTIC_BOOKMARK_KEYWORD group
       // 115 (bug 1713322): Move TAIL_SUGGESTION group and rename properties
       // 116 (bug 1717509): Remove HEURISTIC_UNIFIED_COMPLETE group
+      // 117 (bug 1710518): Add GENERAL_PARENT group
       UrlbarPrefs.migrateResultBuckets();
     }
 
