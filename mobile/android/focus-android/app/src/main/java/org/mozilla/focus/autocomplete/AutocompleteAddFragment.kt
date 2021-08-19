@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
+import org.mozilla.focus.GleanMetrics.SettingsScreen
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
@@ -104,6 +105,7 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
             CustomDomains.add(context, domain)
 
             TelemetryWrapper.saveAutocompleteDomainEvent(TelemetryWrapper.AutoCompleteEventSource.SETTINGS)
+            SettingsScreen.autocompleteDomainAdded.add()
         }
 
         ViewUtils.showBrandedSnackbar(view, R.string.preference_autocomplete_add_confirmation, 0)
