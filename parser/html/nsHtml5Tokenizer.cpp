@@ -4349,7 +4349,7 @@ stateloop_end:;
 
 void nsHtml5Tokenizer::initDoctypeFields() {
   clearStrBufAfterUse();
-  doctypeName = nsGkAtoms::_empty;
+  doctypeName = nullptr;
   if (systemIdentifier) {
     systemIdentifier.Release();
     systemIdentifier = nullptr;
@@ -4508,7 +4508,7 @@ eofloop:
           emitComment(0, 0);
         } else {
           errEofInDoctype();
-          doctypeName = nsGkAtoms::_empty;
+          doctypeName = nullptr;
           if (systemIdentifier) {
             systemIdentifier.Release();
             systemIdentifier = nullptr;
