@@ -8902,7 +8902,7 @@
 
 - name: media.webrtc.platformencoder
   type: bool
-#if defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_ANDROID) || defined(NIGHTLY_BUILD)
   value: true
 #else
   value: false
