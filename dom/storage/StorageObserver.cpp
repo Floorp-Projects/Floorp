@@ -7,6 +7,7 @@
 #include "StorageObserver.h"
 
 #include "LocalStorageCache.h"
+#include "StorageCommon.h"
 #include "StorageDBThread.h"
 #include "StorageIPC.h"
 #include "StorageUtils.h"
@@ -46,6 +47,8 @@ StorageObserver* StorageObserver::sSelf = nullptr;
 
 // static
 nsresult StorageObserver::Init() {
+  static_assert(kPrivateBrowsingIdCount * sizeof(mBackgroundThread[0]) ==
+                sizeof(mBackgroundThread));
   if (sSelf) {
     return NS_OK;
   }
@@ -135,7 +138,7 @@ void StorageObserver::Notify(const char* aTopic,
 
 void StorageObserver::NoteBackgroundThread(const uint32_t aPrivateBrowsingId,
                                            nsIEventTarget* aBackgroundThread) {
-  MOZ_ASSERT(aPrivateBrowsingId <= 1);
+  MOZ_RELEASE_ASSERT(aPrivateBrowsingId < kPrivateBrowsingIdCount);
 
   mBackgroundThread[aPrivateBrowsingId] = aBackgroundThread;
 }
