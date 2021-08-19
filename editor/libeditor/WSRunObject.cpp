@@ -1422,23 +1422,24 @@ WSRunScanner::TextFragmentData::TextFragmentData(
           *mScanStartPoint.ContainerAsContent(), EditorType::HTML))) {
     return;
   }
-  Element* editableBlockParentOrTopmostEditableInlineElement = HTMLEditUtils::
-      GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
-          *mScanStartPoint.ContainerAsContent());
-  if (!editableBlockParentOrTopmostEditableInlineElement) {
+  const Element* editableBlockElementOrInlineEditingHost =
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *mScanStartPoint.ContainerAsContent(),
+          HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost);
+  if (!editableBlockElementOrInlineEditingHost) {
     NS_WARNING(
-        "HTMLEditUtils::"
-        "GetInclusiveAncestorEditableBlockElementOrInlineEditingHost() "
-        "couldn't find editing host");
+        "HTMLEditUtils::GetInclusiveAncestorElement(HTMLEditUtils::"
+        "ClosestEditableBlockElementOrInlineEditingHost) couldn't find "
+        "editing host");
     return;
   }
 
   mStart = BoundaryData::ScanCollapsibleWhiteSpaceStartFrom(
-      mScanStartPoint, *editableBlockParentOrTopmostEditableInlineElement,
-      mEditingHost, &mNBSPData);
+      mScanStartPoint, *editableBlockElementOrInlineEditingHost, mEditingHost,
+      &mNBSPData);
   mEnd = BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
-      mScanStartPoint, *editableBlockParentOrTopmostEditableInlineElement,
-      mEditingHost, &mNBSPData);
+      mScanStartPoint, *editableBlockElementOrInlineEditingHost, mEditingHost,
+      &mNBSPData);
   // If scan start point is start/end of preformatted text node, only
   // mEnd/mStart crosses a preformatted character so that when one of
   // them crosses a preformatted character, this fragment's range is
@@ -2393,28 +2394,28 @@ WSRunScanner::TextFragmentData::GetInclusiveNextEditableCharPoint(
   NS_ASSERTION(
       mScanStartPoint.ContainerAsContent()->GetAsElementOrParentElement(),
       "Given content is not an element and an orphan node");
-  nsIContent* editableBlockParentOrTopmostEditableInlineContent =
+  nsIContent* editableBlockElementOrInlineEditingHost =
       mScanStartPoint.ContainerAsContent() &&
               EditorUtils::IsEditableContent(
                   *mScanStartPoint.ContainerAsContent(), EditorType::HTML)
-          ? HTMLEditUtils::
-                GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
-                    *mScanStartPoint.ContainerAsContent())
+          ? HTMLEditUtils::GetInclusiveAncestorElement(
+                *mScanStartPoint.ContainerAsContent(),
+                HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost)
           : nullptr;
-  if (NS_WARN_IF(!editableBlockParentOrTopmostEditableInlineContent)) {
+  if (NS_WARN_IF(!editableBlockElementOrInlineEditingHost)) {
     // Meaning that the container of `mScanStartPoint` is not editable.
-    editableBlockParentOrTopmostEditableInlineContent =
+    editableBlockElementOrInlineEditingHost =
         mScanStartPoint.ContainerAsContent();
   }
 
   for (nsIContent* nextContent =
            HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
                *point.ContainerAsContent(),
-               *editableBlockParentOrTopmostEditableInlineContent,
+               *editableBlockElementOrInlineEditingHost,
                {LeafNodeType::LeafNodeOrNonEditableNode}, mEditingHost);
        nextContent;
        nextContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-           *nextContent, *editableBlockParentOrTopmostEditableInlineContent,
+           *nextContent, *editableBlockElementOrInlineEditingHost,
            {LeafNodeType::LeafNodeOrNonEditableNode}, mEditingHost)) {
     if (!nextContent->IsText() || !nextContent->IsEditable()) {
       if (nextContent == GetEndReasonContent()) {
@@ -2474,30 +2475,29 @@ WSRunScanner::TextFragmentData::GetPreviousEditableCharPoint(
   NS_ASSERTION(
       mScanStartPoint.ContainerAsContent()->GetAsElementOrParentElement(),
       "Given content is not an element and an orphan node");
-  nsIContent* editableBlockParentOrTopmostEditableInlineContent =
+  nsIContent* editableBlockElementOrInlineEditingHost =
       mScanStartPoint.ContainerAsContent() &&
               EditorUtils::IsEditableContent(
                   *mScanStartPoint.ContainerAsContent(), EditorType::HTML)
-          ? HTMLEditUtils::
-                GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
-                    *mScanStartPoint.ContainerAsContent())
+          ? HTMLEditUtils::GetInclusiveAncestorElement(
+                *mScanStartPoint.ContainerAsContent(),
+                HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost)
           : nullptr;
-  if (NS_WARN_IF(!editableBlockParentOrTopmostEditableInlineContent)) {
+  if (NS_WARN_IF(!editableBlockElementOrInlineEditingHost)) {
     // Meaning that the container of `mScanStartPoint` is not editable.
-    editableBlockParentOrTopmostEditableInlineContent =
+    editableBlockElementOrInlineEditingHost =
         mScanStartPoint.ContainerAsContent();
   }
 
   for (nsIContent* previousContent =
            HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
                *point.ContainerAsContent(),
-               *editableBlockParentOrTopmostEditableInlineContent,
+               *editableBlockElementOrInlineEditingHost,
                {LeafNodeType::LeafNodeOrNonEditableNode}, mEditingHost);
        previousContent;
        previousContent =
            HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-               *previousContent,
-               *editableBlockParentOrTopmostEditableInlineContent,
+               *previousContent, *editableBlockElementOrInlineEditingHost,
                {LeafNodeType::LeafNodeOrNonEditableNode}, mEditingHost)) {
     if (!previousContent->IsText() || !previousContent->IsEditable()) {
       if (previousContent == GetStartReasonContent()) {
@@ -2818,16 +2818,14 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           NS_ASSERTION(
               aPoint.ContainerAsContent()->GetAsElementOrParentElement(),
               "Given content is not an element and an orphan node");
-          nsIContent* blockParentOrTopmostEditableInlineContent =
+          const Element* editableBlockElement =
               EditorUtils::IsEditableContent(*aPoint.ContainerAsContent(),
                                              EditorType::HTML)
-                  ? HTMLEditUtils::
-                        GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
-                            *aPoint.ContainerAsContent())
+                  ? HTMLEditUtils::GetInclusiveAncestorElement(
+                        *aPoint.ContainerAsContent(),
+                        HTMLEditUtils::ClosestEditableBlockElement)
                   : nullptr;
-          insertBRElement = blockParentOrTopmostEditableInlineContent &&
-                            HTMLEditUtils::IsBlockElement(
-                                *blockParentOrTopmostEditableInlineContent);
+          insertBRElement = !!editableBlockElement;
         }
         if (insertBRElement) {
           // We are at a block boundary.  Insert a <br>.  Why?  Well, first note
