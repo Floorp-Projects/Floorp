@@ -1568,7 +1568,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvStopIMEStateManagement() {
   return IPC_OK();
 }
 
-void BrowserChild::ProcessPendingCoalescedTouchData() {
+void BrowserChild::ProcessPendingColaescedTouchData() {
   MOZ_ASSERT(StaticPrefs::dom_events_coalesce_touchmove());
 
   if (mCoalescedTouchData.IsEmpty()) {
@@ -1915,7 +1915,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
 
   if (StaticPrefs::dom_events_coalesce_touchmove()) {
     if (aEvent.mMessage == eTouchEnd || aEvent.mMessage == eTouchStart) {
-      ProcessPendingCoalescedTouchData();
+      ProcessPendingColaescedTouchData();
     }
 
     if (aEvent.mMessage != eTouchMove) {
@@ -1975,9 +1975,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityRealTouchEvent(
 mozilla::ipc::IPCResult BrowserChild::RecvRealTouchMoveEvent(
     const WidgetTouchEvent& aEvent, const ScrollableLayerGuid& aGuid,
     const uint64_t& aInputBlockId, const nsEventStatus& aApzResponse) {
+  // Only start to coalesce the second touchmove to ensure the first
+  // touchmove isn't overridden by the second one.
   if (StaticPrefs::dom_events_coalesce_touchmove()) {
     ++sConsecutiveTouchMoveCount;
-    if (mCoalescedTouchMoveEventFlusher) {
+    if (mCoalescedTouchMoveEventFlusher && sConsecutiveTouchMoveCount > 1) {
       MOZ_ASSERT(aEvent.mMessage == eTouchMove);
       if (mCoalescedTouchData.IsEmpty() ||
           mCoalescedTouchData.CanCoalesce(aEvent, aGuid, aInputBlockId,
@@ -1998,14 +2000,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchMoveEvent(
           return IPC_FAIL_NO_REASON(this);
         }
       }
-
-      if (sConsecutiveTouchMoveCount > 1) {
-        mCoalescedTouchMoveEventFlusher->StartObserver();
-      } else {
-        // Flush the pending coalesced touch in order to avoid the first
-        // touchmove be overridden by the second one.
-        ProcessPendingCoalescedTouchData();
-      }
+      mCoalescedTouchMoveEventFlusher->StartObserver();
       return IPC_OK();
     }
   }
