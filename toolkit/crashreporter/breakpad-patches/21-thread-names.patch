@@ -121,7 +121,7 @@ diff --git a/src/google_breakpad/processor/call_stack.h b/src/google_breakpad/pr
    uint32_t tid_;
    // The last error the OS set for this thread (win32's GetLastError())
    uint32_t last_error_;
-+  // The name of this thread, empty if it's not available
++  // The name of this thread, NULL if it's not available
 +  string name_;
  };
  
@@ -131,7 +131,7 @@ diff --git a/src/google_breakpad/processor/call_stack.h b/src/google_breakpad/pr
 diff --git a/src/google_breakpad/processor/minidump.h b/src/google_breakpad/processor/minidump.h
 --- a/src/google_breakpad/processor/minidump.h
 +++ b/src/google_breakpad/processor/minidump.h
-@@ -1197,16 +1197,96 @@ class MinidumpMacCrashInfo : public Mini
+@@ -1197,16 +1197,98 @@ class MinidumpMacCrashInfo : public Mini
    bool ReadCrashInfoRecord(MDLocationDescriptor location,
                             uint32_t record_start_size);
    bool Read(uint32_t expected_size);
@@ -181,7 +181,9 @@ diff --git a/src/google_breakpad/processor/minidump.h b/src/google_breakpad/proc
 +  // allow contiguous reading of thread names by MinidumpThreadNameList.
 +  bool ReadAuxiliaryData();
 +
++  // TODO?
 +  bool valid_;
++
 +  MDRawThreadName thread_name_;
 +  const string* name_;
 +};
