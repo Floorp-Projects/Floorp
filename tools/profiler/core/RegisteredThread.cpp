@@ -39,10 +39,6 @@ size_t RegisteredThread::SizeOfIncludingThis(
   return n;
 }
 
-void RegisteredThread::SetJSContext(JSContext* aContext) {
-  mRacyRegisteredThread.mThreadRegistration.mData.SetJSContext(aContext);
-}
-
 void RegisteredThread::PollJSSampling() {
   mRacyRegisteredThread.mThreadRegistration.mData.PollJSSampling();
 }
