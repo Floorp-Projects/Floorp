@@ -14,4 +14,12 @@
 #include "mozilla/ProfilerThreadRegistration.h"
 #include "mozilla/ProfilerThreadRegistry.h"
 
+// During profiling, if the current thread is registered, return true
+// (regardless of whether it is actively being profiled).
+// (Same caveats and recommented usage as profiler_is_active().)
+[[nodiscard]] inline bool profiler_is_active_and_thread_is_registered() {
+  return profiler_is_active() &&
+         mozilla::profiler::ThreadRegistration::IsRegistered();
+}
+
 #endif  // ProfilerThreadState_h

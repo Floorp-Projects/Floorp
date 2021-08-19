@@ -5713,16 +5713,6 @@ bool mozilla::profiler::detail::IsThreadBeingProfiled() {
   return racyRegisteredThread && racyRegisteredThread->IsBeingProfiled();
 }
 
-bool mozilla::profiler::detail::IsThreadRegistered() {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  const RacyRegisteredThread* racyRegisteredThread =
-      TLSRegisteredThread::RacyRegisteredThread();
-  // The simple presence of this TLS pointer is proof that the thread is
-  // registered.
-  return !!racyRegisteredThread;
-}
-
 bool profiler_thread_is_sleeping() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
