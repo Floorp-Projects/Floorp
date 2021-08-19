@@ -7,16 +7,17 @@ package org.mozilla.fenix.perf
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
-import kotlinx.android.synthetic.main.activity_home.*
 import org.junit.Assert.assertEquals
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 
@@ -94,7 +95,7 @@ class StartupExcessiveResourceUseTest {
         val actualRunBlocking = RunBlockingCounter.count.get()
         val actualComponentInitCount = ComponentInitCount.count.get()
 
-        val rootView = activityTestRule.activity.rootContainer
+        val rootView = activityTestRule.activity.findViewById<LinearLayout>(R.id.rootContainer)
         val actualViewHierarchyDepth = countAndLogViewHierarchyDepth(rootView, 1)
         val actualRecyclerViewConstraintLayoutChildren = countRecyclerViewConstraintLayoutChildren(rootView, null)
 

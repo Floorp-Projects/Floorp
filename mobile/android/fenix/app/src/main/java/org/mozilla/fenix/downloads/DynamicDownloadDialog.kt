@@ -9,14 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.download_dialog_layout.view.*
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.databinding.DownloadDialogLayoutBinding
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
 
@@ -27,29 +26,26 @@ import org.mozilla.fenix.ext.settings
  */
 @Suppress("LongParameterList")
 class DynamicDownloadDialog(
-    private val container: ViewGroup,
+    private val context: Context,
     private val downloadState: DownloadState?,
     private val metrics: MetricController,
     private val didFail: Boolean,
     private val tryAgain: (String) -> Unit,
     private val onCannotOpenFile: (DownloadState) -> Unit,
-    private val view: View,
+    private val binding: DownloadDialogLayoutBinding,
     private val toolbarHeight: Int,
     private val onDismiss: () -> Unit
-) : LayoutContainer {
+) {
 
-    override val containerView: View?
-        get() = container
-
-    private val settings = container.context.settings()
+    private val settings = context.settings()
 
     init {
-        setupDownloadDialog(view)
+        setupDownloadDialog()
     }
 
-    private fun setupDownloadDialog(view: View) {
+    private fun setupDownloadDialog() {
         if (downloadState == null) return
-        view.apply {
+        binding.root.apply {
             if (layoutParams is CoordinatorLayout.LayoutParams) {
                 (layoutParams as CoordinatorLayout.LayoutParams).apply {
 
@@ -65,40 +61,40 @@ class DynamicDownloadDialog(
 
         if (settings.shouldUseBottomToolbar) {
             val params: ViewGroup.MarginLayoutParams =
-                view.layoutParams as ViewGroup.MarginLayoutParams
+                binding.root.layoutParams as ViewGroup.MarginLayoutParams
             params.bottomMargin = toolbarHeight
         }
 
         if (didFail) {
-            view.download_dialog_title.text =
-                container.context.getString(R.string.mozac_feature_downloads_failed_notification_text2)
+            binding.downloadDialogTitle.text =
+                context.getString(R.string.mozac_feature_downloads_failed_notification_text2)
 
-            view.download_dialog_icon.setImageResource(
+            binding.downloadDialogIcon.setImageResource(
                 mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_failed
             )
 
-            view.download_dialog_action_button.apply {
+            binding.downloadDialogActionButton.apply {
                 text = context.getString(
                     mozilla.components.feature.downloads.R.string.mozac_feature_downloads_button_try_again
                 )
                 setOnClickListener {
                     tryAgain(downloadState.id)
                     context.metrics.track(Event.InAppNotificationDownloadTryAgain)
-                    dismiss(view)
+                    dismiss()
                 }
             }
         } else {
-            val titleText = container.context.getString(
+            val titleText = context.getString(
                 R.string.mozac_feature_downloads_completed_notification_text2
             ) + " (${downloadState.contentLength?.toMegabyteOrKilobyteString()})"
 
-            view.download_dialog_title.text = titleText
+            binding.downloadDialogTitle.text = titleText
 
-            view.download_dialog_icon.setImageResource(
+            binding.downloadDialogIcon.setImageResource(
                 mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_complete
             )
 
-            view.download_dialog_action_button.apply {
+            binding.downloadDialogActionButton.apply {
                 text = context.getString(
                     mozilla.components.feature.downloads.R.string.mozac_feature_downloads_button_open
                 )
@@ -115,28 +111,28 @@ class DynamicDownloadDialog(
                     }
 
                     context.metrics.track(Event.InAppNotificationDownloadOpen)
-                    dismiss(view)
+                    dismiss()
                 }
             }
         }
 
-        view.download_dialog_close_button.setOnClickListener {
-            dismiss(view)
+        binding.downloadDialogCloseButton.setOnClickListener {
+            dismiss()
         }
 
-        view.download_dialog_filename.text = downloadState.fileName
+        binding.downloadDialogFilename.text = downloadState.fileName
     }
 
     fun show() {
-        view.visibility = View.VISIBLE
+        binding.root.visibility = View.VISIBLE
 
-        (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            (behavior as DynamicDownloadDialogBehavior).forceExpand(view)
+        (binding.root.layoutParams as CoordinatorLayout.LayoutParams).apply {
+            (behavior as DynamicDownloadDialogBehavior).forceExpand(binding.root)
         }
     }
 
-    private fun dismiss(view: View) {
-        view.visibility = View.GONE
+    private fun dismiss() {
+        binding.root.visibility = View.GONE
         onDismiss()
     }
 

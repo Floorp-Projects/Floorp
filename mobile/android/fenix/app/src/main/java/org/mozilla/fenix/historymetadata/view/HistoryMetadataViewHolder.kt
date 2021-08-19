@@ -5,11 +5,11 @@
 package org.mozilla.fenix.historymetadata.view
 
 import android.view.View
-import kotlinx.android.synthetic.main.history_metadata_list_row.*
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.concept.storage.HistoryMetadata
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.HistoryMetadataListRowBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
@@ -29,14 +29,16 @@ class HistoryMetadataViewHolder(
     private val icons: BrowserIcons = view.context.components.core.icons
 ) : ViewHolder(view) {
 
+    val binding = HistoryMetadataListRowBinding.bind(view)
+
     fun bind(historyMetadata: HistoryMetadata) {
-        history_metadata_title.text = if (historyMetadata.title.isNullOrEmpty()) {
+        binding.historyMetadataTitle.text = if (historyMetadata.title.isNullOrEmpty()) {
             historyMetadata.key.url
         } else {
             historyMetadata.title
         }
 
-        icons.loadIntoView(history_metadata_icon, historyMetadata.key.url)
+        icons.loadIntoView(binding.historyMetadataIcon, historyMetadata.key.url)
 
         itemView.setOnClickListener {
             interactor.onHistoryMetadataItemClicked(historyMetadata.key.url, historyMetadata.key)

@@ -38,7 +38,7 @@ interface AddonDetailsInteractor {
 /**
  * Shows the details of an add-on.
  */
-class AddonDetailsView(
+class AddonDetailsBindingDelegate(
     private val binding: FragmentAddOnDetailsBinding,
     private val interactor: AddonDetailsInteractor
 ) {

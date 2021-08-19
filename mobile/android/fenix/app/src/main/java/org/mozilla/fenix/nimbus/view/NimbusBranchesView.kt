@@ -7,7 +7,6 @@ package org.mozilla.fenix.nimbus.view
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.service.nimbus.ui.NimbusBranchAdapter
 import org.mozilla.fenix.nimbus.NimbusBranchesState
 import org.mozilla.fenix.nimbus.controller.NimbusBranchesController
@@ -16,9 +15,9 @@ import org.mozilla.fenix.nimbus.controller.NimbusBranchesController
  * View used for managing a Nimbus experiment's branches.
  */
 class NimbusBranchesView(
-    override val containerView: ViewGroup,
+    private val containerView: ViewGroup,
     val controller: NimbusBranchesController
-) : LayoutContainer {
+) {
 
     private val nimbusAdapter = NimbusBranchAdapter(controller)
 

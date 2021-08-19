@@ -15,7 +15,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
-import kotlinx.android.synthetic.main.fragment_recently_closed_tabs.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -30,6 +29,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.databinding.FragmentRecentlyClosedTabsBinding
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
@@ -100,8 +100,8 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_recently_closed_tabs, container, false)
+    ): View {
+        val binding = FragmentRecentlyClosedTabsBinding.inflate(inflater, container, false)
         recentlyClosedFragmentStore = StoreProvider.get(this) {
             RecentlyClosedFragmentStore(
                 RecentlyClosedFragmentState(
@@ -126,10 +126,10 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
         )
         recentlyClosedInteractor = RecentlyClosedFragmentInteractor(recentlyClosedController)
         _recentlyClosedFragmentView = RecentlyClosedFragmentView(
-            view.recentlyClosedLayout,
+            binding.recentlyClosedLayout,
             recentlyClosedInteractor
         )
-        return view
+        return binding.root
     }
 
     override fun onDestroyView() {

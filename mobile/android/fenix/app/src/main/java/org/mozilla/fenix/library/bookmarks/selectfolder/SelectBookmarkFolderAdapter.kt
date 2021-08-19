@@ -12,7 +12,6 @@ import androidx.core.view.updatePaddingRelative
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibrarySiteItemView
@@ -61,9 +60,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
 
     class BookmarkFolderViewHolder(
         val view: LibrarySiteItemView
-    ) : RecyclerView.ViewHolder(view), LayoutContainer {
-
-        override val containerView get() = view
+    ) : RecyclerView.ViewHolder(view) {
 
         init {
             view.displayAs(LibrarySiteItemView.ItemType.FOLDER)
@@ -74,12 +71,12 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
             view.changeSelected(selected)
             view.iconView.setImageDrawable(
                 AppCompatResources.getDrawable(
-                    containerView.context,
+                    view.context,
                     R.drawable.ic_folder_icon
                 )?.apply {
                     setTint(
                         ContextCompat.getColor(
-                            containerView.context,
+                            view.context,
                             R.color.primary_text_light_theme
                         )
                     )

@@ -12,7 +12,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.collection_tab_list_row.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -20,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.CollectionTabListRowBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.Tab
 
@@ -67,20 +67,21 @@ class CollectionCreationTabListAdapterTest {
 
         val holder = adapter.createViewHolder(FrameLayout(testContext), 0)
         adapter.bindViewHolder(holder, 0)
+        val binding = CollectionTabListRowBinding.bind(holder.itemView)
 
-        assertEquals("Mozilla", holder.tab_title.text)
-        assertEquals("mozilla.org", holder.hostname.text)
-        assertFalse(holder.tab_selected_checkbox.isInvisible)
+        assertEquals("Mozilla", binding.tabTitle.text)
+        assertEquals("mozilla.org", binding.hostname.text)
+        assertFalse(binding.tabSelectedCheckbox.isInvisible)
         assertTrue(holder.itemView.isClickable)
 
         every { interactor.addTabToSelection(mozillaTab) } just Runs
         every { interactor.removeTabFromSelection(mozillaTab) } just Runs
-        assertFalse(holder.tab_selected_checkbox.isChecked)
+        assertFalse(binding.tabSelectedCheckbox.isChecked)
 
-        holder.tab_selected_checkbox.isChecked = true
+        binding.tabSelectedCheckbox.isChecked = true
         verify { interactor.addTabToSelection(mozillaTab) }
 
-        holder.tab_selected_checkbox.isChecked = false
+        binding.tabSelectedCheckbox.isChecked = false
         verify { interactor.removeTabFromSelection(mozillaTab) }
     }
 
@@ -96,10 +97,11 @@ class CollectionCreationTabListAdapterTest {
 
         val holder = adapter.createViewHolder(FrameLayout(testContext), 0)
         adapter.bindViewHolder(holder, 0)
+        val binding = CollectionTabListRowBinding.bind(holder.itemView)
 
-        assertEquals("Mozilla", holder.tab_title.text)
-        assertEquals("mozilla.org", holder.hostname.text)
-        assertTrue(holder.tab_selected_checkbox.isInvisible)
+        assertEquals("Mozilla", binding.tabTitle.text)
+        assertEquals("mozilla.org", binding.hostname.text)
+        assertTrue(binding.tabSelectedCheckbox.isInvisible)
         assertFalse(holder.itemView.isClickable)
     }
 

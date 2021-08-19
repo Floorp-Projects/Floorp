@@ -9,8 +9,6 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
-import kotlinx.android.synthetic.main.component_downloads.*
-import kotlinx.android.synthetic.main.component_downloads.view.*
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentDownloadsBinding
@@ -112,10 +110,10 @@ class DownloadView(
     }
 
     fun updateEmptyState(userHasDownloads: Boolean) {
-        download_list.isVisible = userHasDownloads
-        download_empty_view.isVisible = !userHasDownloads
+        binding.downloadList.isVisible = userHasDownloads
+        binding.downloadEmptyView.isVisible = !userHasDownloads
         if (!userHasDownloads) {
-            download_empty_view.announceForAccessibility(context.getString(R.string.download_empty_message_1))
+            binding.downloadEmptyView.announceForAccessibility(context.getString(R.string.download_empty_message_1))
         }
     }
 

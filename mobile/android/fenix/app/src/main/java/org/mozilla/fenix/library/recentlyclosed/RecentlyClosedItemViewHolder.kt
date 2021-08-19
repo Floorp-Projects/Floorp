@@ -6,10 +6,9 @@ package org.mozilla.fenix.library.recentlyclosed
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.history_list_item.view.*
-import kotlinx.android.synthetic.main.library_site_item.view.*
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.HistoryListItemBinding
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.selection.SelectionHolder
@@ -22,6 +21,8 @@ class RecentlyClosedItemViewHolder(
     private val selectionHolder: SelectionHolder<RecoverableTab>
 ) : RecyclerView.ViewHolder(view) {
 
+    private val binding = HistoryListItemBinding.bind(view)
+
     private var item: RecoverableTab? = null
 
     init {
@@ -31,21 +32,21 @@ class RecentlyClosedItemViewHolder(
     fun bind(
         item: RecoverableTab
     ) {
-        itemView.history_layout.titleView.text =
+        binding.historyLayout.titleView.text =
             if (item.title.isNotEmpty()) item.title else item.url
-        itemView.history_layout.urlView.text = item.url
+        binding.historyLayout.urlView.text = item.url
 
-        itemView.history_layout.setSelectionInteractor(item, selectionHolder, recentlyClosedFragmentInteractor)
-        itemView.history_layout.changeSelected(item in selectionHolder.selectedItems)
+        binding.historyLayout.setSelectionInteractor(item, selectionHolder, recentlyClosedFragmentInteractor)
+        binding.historyLayout.changeSelected(item in selectionHolder.selectedItems)
 
         if (this.item?.url != item.url) {
-            itemView.history_layout.loadFavicon(item.url)
+            binding.historyLayout.loadFavicon(item.url)
         }
 
         if (selectionHolder.selectedItems.isEmpty()) {
-            itemView.overflow_menu.showAndEnable()
+            binding.historyLayout.overflowView.showAndEnable()
         } else {
-            itemView.overflow_menu.hideAndDisable()
+            binding.historyLayout.overflowView.hideAndDisable()
         }
 
         this.item = item
@@ -67,7 +68,7 @@ class RecentlyClosedItemViewHolder(
             }
         }
 
-        itemView.history_layout.attachMenu(historyMenu.menuController)
+        binding.historyLayout.attachMenu(historyMenu.menuController)
     }
 
     companion object {

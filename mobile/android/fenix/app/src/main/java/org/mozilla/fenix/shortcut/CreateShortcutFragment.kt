@@ -11,14 +11,17 @@ import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
-import kotlinx.android.synthetic.main.fragment_create_shortcut.*
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.selectedTab
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentCreateShortcutBinding
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.requireComponents
 
 class CreateShortcutFragment : DialogFragment() {
+    private var _binding: FragmentCreateShortcutBinding? = null
+    private val binding get() = _binding!!
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.CreateShortcutDialogStyle)
@@ -28,7 +31,11 @@ class CreateShortcutFragment : DialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_create_shortcut, container, false)
+    ): View {
+        _binding = FragmentCreateShortcutBinding.inflate(inflater, container, false)
+
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -38,29 +45,35 @@ class CreateShortcutFragment : DialogFragment() {
         if (tab == null) {
             dismiss()
         } else {
-            requireComponents.core.icons.loadIntoView(favicon_image, tab.content.url)
+            requireComponents.core.icons.loadIntoView(binding.faviconImage, tab.content.url)
 
-            cancel_button.setOnClickListener { dismiss() }
-            add_button.setOnClickListener {
-                val text = shortcut_text.text.toString().trim()
+            binding.cancelButton.setOnClickListener { dismiss() }
+            binding.addButton.setOnClickListener {
+                val text = binding.shortcutText.text.toString().trim()
                 requireActivity().lifecycleScope.launch {
                     requireComponents.useCases.webAppUseCases.addToHomescreen(text)
                 }
                 dismiss()
             }
 
-            shortcut_text.addTextChangedListener {
+            binding.shortcutText.addTextChangedListener {
                 updateAddButtonEnabledState()
             }
 
-            shortcut_text.setText(tab.content.title)
+            binding.shortcutText.setText(tab.content.title)
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        _binding = null
+    }
+
     private fun updateAddButtonEnabledState() {
-        val text = shortcut_text.text
-        add_button.isEnabled = text.isNotBlank()
-        add_button.alpha = if (text.isNotBlank()) ENABLED_ALPHA else DISABLED_ALPHA
+        val text = binding.shortcutText.text
+        binding.addButton.isEnabled = text.isNotBlank()
+        binding.addButton.alpha = if (text.isNotBlank()) ENABLED_ALPHA else DISABLED_ALPHA
     }
 
     companion object {

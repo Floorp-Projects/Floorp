@@ -7,7 +7,6 @@ package org.mozilla.fenix.share
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.extensions.LayoutContainer
 import org.mozilla.fenix.databinding.ShareToAppsBinding
 import org.mozilla.fenix.share.listadapters.AppShareAdapter
 import org.mozilla.fenix.share.listadapters.AppShareOption
@@ -20,9 +19,9 @@ interface ShareToAppsInteractor {
 }
 
 class ShareToAppsView(
-    override val containerView: ViewGroup,
+    containerView: ViewGroup,
     interactor: ShareToAppsInteractor
-) : LayoutContainer {
+) {
 
     private val adapter = AppShareAdapter(interactor)
     private val recentAdapter = AppShareAdapter(interactor)

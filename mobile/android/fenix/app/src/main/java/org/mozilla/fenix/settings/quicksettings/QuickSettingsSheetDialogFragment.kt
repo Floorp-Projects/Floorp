@@ -43,6 +43,7 @@ import org.mozilla.fenix.settings.PhoneFeature
  * - website tracking protection.
  * - website permission.
  */
+@Suppress("TooManyFunctions")
 class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
 
     private lateinit var quickSettingsStore: QuickSettingsFragmentStore
@@ -129,6 +130,12 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             websitePermissionsView.update(it.websitePermissionsState)
             trackingProtectionView.update(it.trackingProtectionState)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        _binding = null
     }
 
     override fun onRequestPermissionsResult(

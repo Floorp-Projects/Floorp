@@ -484,7 +484,7 @@ abstract class BaseBrowserFragment :
                 )
 
                 val dynamicDownloadDialog = DynamicDownloadDialog(
-                    container = binding.browserLayout,
+                    context = context,
                     downloadState = downloadState,
                     metrics = requireComponents.analytics.metrics,
                     didFail = downloadJobStatus == DownloadState.Status.FAILED,
@@ -492,7 +492,7 @@ abstract class BaseBrowserFragment :
                     onCannotOpenFile = {
                         showCannotOpenFileError(binding.browserLayout, context, it)
                     },
-                    view = binding.viewDynamicDownloadDialog.root,
+                    binding = binding.viewDynamicDownloadDialog,
                     toolbarHeight = toolbarHeight,
                     onDismiss = { sharedViewModel.downloadDialogState.remove(downloadState.sessionId) }
                 )
@@ -885,7 +885,7 @@ abstract class BaseBrowserFragment :
             { sharedViewModel.downloadDialogState.remove(sessionId) }
 
         DynamicDownloadDialog(
-            container = binding.browserLayout,
+            context = context,
             downloadState = savedDownloadState.first,
             metrics = requireComponents.analytics.metrics,
             didFail = savedDownloadState.second,
@@ -893,7 +893,7 @@ abstract class BaseBrowserFragment :
             onCannotOpenFile = {
                 showCannotOpenFileError(binding.browserLayout, context, it)
             },
-            view = binding.viewDynamicDownloadDialog.root,
+            binding = binding.viewDynamicDownloadDialog,
             toolbarHeight = toolbarHeight,
             onDismiss = onDismiss
         ).show()
@@ -1158,7 +1158,7 @@ abstract class BaseBrowserFragment :
     )
 
     /**
-     * Returns the layout [android.binding.Gravity] for the quick settings and ETP dialog.
+     * Returns the layout [android.view.Gravity] for the quick settings and ETP dialog.
      */
     protected fun getAppropriateLayoutGravity(): Int =
         requireComponents.settings.toolbarPosition.androidGravity

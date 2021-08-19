@@ -5,11 +5,9 @@
 package org.mozilla.fenix.historymetadata.view
 
 import android.view.LayoutInflater
-import android.view.View
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.history_metadata_list_row.view.*
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.storage.DocumentType
@@ -20,13 +18,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.HistoryMetadataListRowBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryMetadataViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: HistoryMetadataListRowBinding
     private lateinit var interactor: SessionControlInteractor
     private lateinit var icons: BrowserIcons
 
@@ -41,28 +40,28 @@ class HistoryMetadataViewHolderTest {
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext).inflate(HistoryMetadataViewHolder.LAYOUT_ID, null)
+        binding = HistoryMetadataListRowBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
 
         icons = mockk(relaxed = true)
 
-        every { icons.loadIntoView(view.history_metadata_icon, any()) } returns mockk()
+        every { icons.loadIntoView(binding.historyMetadataIcon, any()) } returns mockk()
     }
 
     @Test
     fun `GIVEN a history metadata on bind THEN set the title text and load the tab icon`() {
-        HistoryMetadataViewHolder(view, interactor, icons).bind(historyEntry)
+        HistoryMetadataViewHolder(binding.root, interactor, icons).bind(historyEntry)
 
-        assertEquals(historyEntry.title, view.history_metadata_title.text)
+        assertEquals(historyEntry.title, binding.historyMetadataTitle.text)
 
-        verify { icons.loadIntoView(view.history_metadata_icon, IconRequest(historyEntry.key.url)) }
+        verify { icons.loadIntoView(binding.historyMetadataIcon, IconRequest(historyEntry.key.url)) }
     }
 
     @Test
     fun `WHEN a history metadata item is clicked THEN interactor is called`() {
-        HistoryMetadataViewHolder(view, interactor, icons).bind(historyEntry)
+        HistoryMetadataViewHolder(binding.root, interactor, icons).bind(historyEntry)
 
-        view.performClick()
+        binding.root.performClick()
 
         verify { interactor.onHistoryMetadataItemClicked(historyEntry.key.url, historyEntry.key) }
     }
@@ -78,8 +77,8 @@ class HistoryMetadataViewHolderTest {
             documentType = DocumentType.Regular
         )
 
-        HistoryMetadataViewHolder(view, interactor, icons).bind(historyEntryWithoutTitle)
+        HistoryMetadataViewHolder(binding.root, interactor, icons).bind(historyEntryWithoutTitle)
 
-        assertEquals(historyEntry.key.url, view.history_metadata_title.text)
+        assertEquals(historyEntry.key.url, binding.historyMetadataTitle.text)
     }
 }

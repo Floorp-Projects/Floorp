@@ -87,7 +87,6 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     override fun onDestroy() {
         super.onDestroy()
         requireComponents.analytics.metrics.track(Event.SyncAuthClosed)
-        _binding = null
     }
 
     override fun onResume() {
@@ -137,6 +136,12 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             setOnClickListener(createAccountClickListener)
         }
         return binding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        _binding = null
     }
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {

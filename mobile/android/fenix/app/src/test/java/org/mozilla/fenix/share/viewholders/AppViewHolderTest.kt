@@ -9,13 +9,13 @@ import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.app_share_list_item.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.AppShareListItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.share.ShareToAppsInteractor
 import org.mozilla.fenix.share.listadapters.AppShareOption
@@ -23,6 +23,7 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
 @RunWith(FenixRobolectricTestRunner::class)
 class AppViewHolderTest {
 
+    private lateinit var binding: AppShareListItemBinding
     private lateinit var viewHolder: AppViewHolder
     private lateinit var interactor: ShareToAppsInteractor
 
@@ -30,8 +31,8 @@ class AppViewHolderTest {
     fun setup() {
         interactor = mockk(relaxUnitFun = true)
 
-        val view = LayoutInflater.from(testContext).inflate(AppViewHolder.LAYOUT_ID, null)
-        viewHolder = AppViewHolder(view, interactor)
+        binding = AppShareListItemBinding.inflate(LayoutInflater.from(testContext))
+        viewHolder = AppViewHolder(binding.root, interactor)
     }
 
     @Test
@@ -44,8 +45,8 @@ class AppViewHolderTest {
         )
         viewHolder.bind(app)
 
-        assertEquals("Pocket", viewHolder.itemView.appName.text)
-        assertEquals(app.icon, viewHolder.itemView.appIcon.drawable)
+        assertEquals("Pocket", binding.appName.text)
+        assertEquals(app.icon, binding.appIcon.drawable)
     }
 
     @Test

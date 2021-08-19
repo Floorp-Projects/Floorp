@@ -10,9 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
-import kotlinx.android.synthetic.main.fragment_create_shortcut.*
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentPwaOnboardingBinding
 import org.mozilla.fenix.ext.requireComponents
 
 /**
@@ -33,9 +33,10 @@ class PwaOnboardingDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val components = requireComponents
+        val binding = FragmentPwaOnboardingBinding.bind(view)
 
-        cancel_button.setOnClickListener { dismiss() }
-        add_button.setOnClickListener {
+        binding.cancelButton.setOnClickListener { dismiss() }
+        binding.addButton.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 components.useCases.webAppUseCases.addToHomescreen()
             }.invokeOnCompletion {

@@ -5,14 +5,11 @@
 package org.mozilla.fenix.tabhistory
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_tabhistory.*
 import mozilla.components.browser.state.state.content.HistoryState
-import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ComponentTabhistoryBinding
 
 interface TabHistoryViewInteractor {
 
@@ -26,13 +23,12 @@ class TabHistoryView(
     container: ViewGroup,
     private val expandDialog: () -> Unit,
     interactor: TabHistoryViewInteractor
-) : LayoutContainer {
+) {
 
-    override val containerView: View = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_tabhistory, container, true)
+    private val binding = ComponentTabhistoryBinding.inflate(LayoutInflater.from(container.context), container, true)
 
     private val adapter = TabHistoryAdapter(interactor)
-    private val layoutManager = object : LinearLayoutManager(containerView.context) {
+    private val layoutManager = object : LinearLayoutManager(container.context) {
 
         private var shouldScrollToSelected = true
 
@@ -45,10 +41,10 @@ class TabHistoryView(
                     // Force expansion of the dialog, otherwise scrolling to the current history item
                     // won't work when its position is near the bottom of the recyclerview.
                     expandDialog.invoke()
-                    val itemView = tabHistoryRecyclerView.findViewHolderForLayoutPosition(
+                    val itemView = binding.tabHistoryRecyclerView.findViewHolderForLayoutPosition(
                         findFirstCompletelyVisibleItemPosition()
                     )?.itemView
-                    val offset = tabHistoryRecyclerView.height / 2 - (itemView?.height ?: 0) / 2
+                    val offset = binding.tabHistoryRecyclerView.height / 2 - (itemView?.height ?: 0) / 2
                     scrollToPositionWithOffset(index, offset)
                     shouldScrollToSelected = false
                 }
@@ -61,8 +57,8 @@ class TabHistoryView(
     private var currentIndex: Int? = null
 
     init {
-        tabHistoryRecyclerView.adapter = adapter
-        tabHistoryRecyclerView.layoutManager = layoutManager
+        binding.tabHistoryRecyclerView.adapter = adapter
+        binding.tabHistoryRecyclerView.layoutManager = layoutManager
     }
 
     fun updateState(historyState: HistoryState) {

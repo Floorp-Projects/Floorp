@@ -71,6 +71,12 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
         )
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        _binding = null
+    }
+
     private fun getCurrentTab(): SessionState? {
         return requireComponents.core.store.state.findTabOrCustomTab(args.sessionId)
     }

@@ -13,10 +13,10 @@ import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.migration_list_item.view.*
 import mozilla.components.support.migration.Migration
 import mozilla.components.support.migration.MigrationResults
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.MigrationListItemBinding
 
 internal data class MigrationItem(
     val migration: Migration,
@@ -60,9 +60,11 @@ internal class MigrationStatusAdapter :
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
         private val context = view.context
-        private val title = view.migration_item_name
-        private val status = view.migration_status_image
+        private val binding = MigrationListItemBinding.bind(view)
+        private val title = binding.migrationItemName
+        private val status = binding.migrationStatusImage
 
         fun bind(item: MigrationItem) {
             // Get the resource ID for the item.

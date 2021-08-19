@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.account_share_list_item.view.*
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.support.test.robolectric.testContext
@@ -17,6 +16,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.AccountShareListItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.share.ShareToAccountDevicesInteractor
 import org.mozilla.fenix.share.listadapters.SyncShareOption
@@ -34,6 +34,7 @@ class AccountDeviceViewHolderTest {
         subscriptionExpired = false,
         subscription = null
     )
+    private lateinit var binding: AccountShareListItemBinding
     private lateinit var viewHolder: AccountDeviceViewHolder
     private lateinit var interactor: ShareToAccountDevicesInteractor
 
@@ -41,14 +42,14 @@ class AccountDeviceViewHolderTest {
     fun setup() {
         interactor = mockk(relaxUnitFun = true)
 
-        val view = LayoutInflater.from(testContext).inflate(AccountDeviceViewHolder.LAYOUT_ID, null)
-        viewHolder = AccountDeviceViewHolder(view, interactor)
+        binding = AccountShareListItemBinding.inflate(LayoutInflater.from(testContext))
+        viewHolder = AccountDeviceViewHolder(binding.root, interactor)
     }
 
     @Test
     fun `bind SignIn option`() {
         viewHolder.bind(SyncShareOption.SignIn)
-        assertEquals("Sign in to Sync", viewHolder.itemView.deviceName.text)
+        assertEquals("Sign in to Sync", binding.deviceName.text)
 
         viewHolder.itemView.performClick()
         verify { interactor.onSignIn() }
@@ -58,7 +59,7 @@ class AccountDeviceViewHolderTest {
     @Test
     fun `bind Reconnect option`() {
         viewHolder.bind(SyncShareOption.Reconnect)
-        assertEquals("Reconnect to Sync", viewHolder.itemView.deviceName.text)
+        assertEquals("Reconnect to Sync", binding.deviceName.text)
 
         viewHolder.itemView.performClick()
         verify { interactor.onReauth() }
@@ -68,7 +69,7 @@ class AccountDeviceViewHolderTest {
     @Test
     fun `bind Offline option`() {
         viewHolder.bind(SyncShareOption.Offline)
-        assertEquals("Offline", viewHolder.itemView.deviceName.text)
+        assertEquals("Offline", binding.deviceName.text)
 
         viewHolder.itemView.performClick()
         verify { interactor wasNot Called }
@@ -78,7 +79,7 @@ class AccountDeviceViewHolderTest {
     @Test
     fun `bind AddNewDevice option`() {
         viewHolder.bind(SyncShareOption.AddNewDevice)
-        assertEquals("Connect another device", viewHolder.itemView.deviceName.text)
+        assertEquals("Connect another device", binding.deviceName.text)
 
         viewHolder.itemView.performClick()
         verify { interactor.onAddNewDevice() }
@@ -89,7 +90,7 @@ class AccountDeviceViewHolderTest {
     fun `bind SendAll option`() {
         val devices = listOf<Device>(mockk())
         viewHolder.bind(SyncShareOption.SendAll(devices))
-        assertEquals("Send to all devices", viewHolder.itemView.deviceName.text)
+        assertEquals("Send to all devices", binding.deviceName.text)
 
         viewHolder.itemView.performClick()
         verify { interactor.onShareToAllDevices(devices) }
@@ -103,7 +104,7 @@ class AccountDeviceViewHolderTest {
             displayName = "Mobile"
         )
         viewHolder.bind(SyncShareOption.SingleDevice(device))
-        assertEquals("Mobile", viewHolder.itemView.deviceName.text)
+        assertEquals("Mobile", binding.deviceName.text)
 
         viewHolder.itemView.performClick()
         verify { interactor.onShareToDevice(device) }
@@ -117,7 +118,7 @@ class AccountDeviceViewHolderTest {
             displayName = "Desktop"
         )
         viewHolder.bind(SyncShareOption.SingleDevice(device))
-        assertEquals("Desktop", viewHolder.itemView.deviceName.text)
+        assertEquals("Desktop", binding.deviceName.text)
 
         viewHolder.itemView.performClick()
         verify { interactor.onShareToDevice(device) }

@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.activity_migration.*
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.migration.AbstractMigrationProgressActivity
@@ -21,6 +20,7 @@ import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ActivityMigrationBinding
 import org.mozilla.fenix.ext.components
 
 class MigrationProgressActivity : AbstractMigrationProgressActivity() {
@@ -28,38 +28,43 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
     private val statusAdapter = MigrationStatusAdapter()
     override val store: MigrationStore by lazy { components.migrationStore }
 
+    private lateinit var binding: ActivityMigrationBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_migration)
+
+        binding = ActivityMigrationBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         init()
     }
 
     fun init() {
         window.navigationBarColor = getColorFromAttr(R.attr.foundation)
 
-        val appName = migration_description.context.getString(R.string.app_name)
+        val appName = binding.migrationDescription.context.getString(R.string.app_name)
 
-        migration_description.apply {
+        binding.migrationDescription.apply {
             text = context.getString(R.string.migration_description, appName)
         }
 
-        migration_status_list.apply {
+        binding.migrationStatusList.apply {
             val margin = resources.getDimensionPixelSize(R.dimen.migration_margin)
             addItemDecoration(MigrationStatusItemDecoration(margin))
             layoutManager = LinearLayoutManager(this@MigrationProgressActivity)
             adapter = statusAdapter
         }
 
-        migration_welcome_title.apply {
+        binding.migrationWelcomeTitle.apply {
             text = context.getString(R.string.migration_title, appName)
         }
 
-        migration_button_text_view.text = getString(R.string.migration_updating_app_button_text, appName)
+        binding.migrationButtonTextView.text = getString(R.string.migration_updating_app_button_text, appName)
     }
 
     override fun onMigrationCompleted(results: MigrationResults) {
         // Enable clicking the finish button
-        migration_button.apply {
+        binding.migrationButton.apply {
             setOnClickListener {
                 AbstractMigrationService.dismissNotification(context)
 
@@ -79,12 +84,12 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
                 }
             }
         }
-        migration_button_text_view.apply {
+        binding.migrationButtonTextView.apply {
             text = getString(R.string.migration_update_app_button, getString(R.string.app_name))
             setTextColor(ContextCompat.getColor(context, R.color.white_color))
         }
-        migration_button.setBackgroundResource(R.drawable.migration_button_background)
-        migration_button_progress_bar.visibility = View.INVISIBLE
+        binding.migrationButton.setBackgroundResource(R.drawable.migration_button_background)
+        binding.migrationButtonProgressBar.visibility = View.INVISIBLE
         // Keep the results list up-to-date.
         statusAdapter.updateData(results)
     }

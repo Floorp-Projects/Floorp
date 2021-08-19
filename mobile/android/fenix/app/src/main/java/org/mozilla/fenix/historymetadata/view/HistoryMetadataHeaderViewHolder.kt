@@ -5,8 +5,8 @@
 package org.mozilla.fenix.historymetadata.view
 
 import android.view.View
-import kotlinx.android.synthetic.main.history_metadata_header.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.HistoryMetadataHeaderBinding
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
 import org.mozilla.fenix.utils.view.ViewHolder
 
@@ -22,7 +22,8 @@ class HistoryMetadataHeaderViewHolder(
 ) : ViewHolder(view) {
 
     init {
-        show_all_button.setOnClickListener {
+        val binding = HistoryMetadataHeaderBinding.bind(view)
+        binding.showAllButton.setOnClickListener {
             interactor.onHistoryMetadataShowAllClicked()
         }
     }

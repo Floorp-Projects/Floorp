@@ -32,7 +32,6 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
     abstract fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener)
 
     class TabViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
-
         override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) {
             bindTab(item as AdapterItem.Tab)
 
@@ -56,7 +55,6 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
     }
 
     class ErrorViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
-
         override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) {
             val errorItem = item as AdapterItem.Error
             val binding = SyncTabsErrorRowBinding.bind(itemView)
@@ -105,7 +103,6 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
     }
 
     class TitleViewHolder(itemView: View) : SyncedTabsViewHolder(itemView) {
-
         override fun <T : AdapterItem> bind(item: T, interactor: SyncedTabsView.Listener) {
             val binding = ViewSyncedTabsTitleBinding.bind(itemView)
             binding.refreshIcon.setOnClickListener { v ->

@@ -18,8 +18,8 @@ import androidx.core.widget.TextViewCompat
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fenix_snackbar.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FenixSnackbarBinding
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Mockable
@@ -27,20 +27,20 @@ import org.mozilla.fenix.utils.Mockable
 @Mockable
 class FenixSnackbar private constructor(
     parent: ViewGroup,
-    content: View,
+    private val binding: FenixSnackbarBinding,
     contentViewCallback: FenixSnackbarCallback,
     isError: Boolean
-) : BaseTransientBottomBar<FenixSnackbar>(parent, content, contentViewCallback) {
+) : BaseTransientBottomBar<FenixSnackbar>(parent, binding.root, contentViewCallback) {
 
     init {
         view.setBackgroundColor(Color.TRANSPARENT)
 
         setAppropriateBackground(isError)
 
-        content.snackbar_btn.increaseTapArea(actionButtonIncreaseDps)
+        binding.snackbarBtn.increaseTapArea(actionButtonIncreaseDps)
 
         TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
-            content.snackbar_text,
+            binding.snackbarText,
             minTextSize,
             maxTextSize,
             stepGranularity,
@@ -49,7 +49,7 @@ class FenixSnackbar private constructor(
     }
 
     fun setAppropriateBackground(isError: Boolean) {
-        view.snackbar_layout.background = if (isError) {
+        binding.snackbarLayout.background = if (isError) {
             AppCompatResources.getDrawable(context, R.drawable.fenix_snackbar_error_background)
         } else {
             AppCompatResources.getDrawable(context, R.drawable.fenix_snackbar_background)
@@ -57,7 +57,7 @@ class FenixSnackbar private constructor(
     }
 
     fun setText(text: String) = this.apply {
-        view.snackbar_text.text = text
+        binding.snackbarText.text = text
     }
 
     fun setLength(duration: Int) = this.apply {
@@ -65,7 +65,7 @@ class FenixSnackbar private constructor(
     }
 
     fun setAction(text: String, action: () -> Unit) = this.apply {
-        view.snackbar_btn.apply {
+        binding.snackbarBtn.apply {
             setText(text)
             visibility = View.VISIBLE
             setOnClickListener {
@@ -110,7 +110,7 @@ class FenixSnackbar private constructor(
             }
 
             val inflater = LayoutInflater.from(parent.context)
-            val content = inflater.inflate(R.layout.fenix_snackbar, parent, false)
+            val binding = FenixSnackbarBinding.inflate(inflater, parent, false)
 
             val durationOrAccessibleDuration =
                 if (parent.context.settings().accessibilityServicesEnabled) {
@@ -119,12 +119,12 @@ class FenixSnackbar private constructor(
                     duration
                 }
 
-            val callback = FenixSnackbarCallback(content)
+            val callback = FenixSnackbarCallback(binding.root)
             val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
             val toolbarHeight = view.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
             val dynamicToolbarEnabled = view.context.settings().isDynamicToolbarEnabled
 
-            return FenixSnackbar(parent, content, callback, isError).also {
+            return FenixSnackbar(parent, binding, callback, isError).also {
                 it.duration = durationOrAccessibleDuration
 
                 it.view.updatePadding(

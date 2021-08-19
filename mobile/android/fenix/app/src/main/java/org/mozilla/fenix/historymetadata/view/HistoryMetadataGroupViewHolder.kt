@@ -5,8 +5,8 @@
 package org.mozilla.fenix.historymetadata.view
 
 import android.view.View
-import kotlinx.android.synthetic.main.history_metadata_group.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.HistoryMetadataGroupBinding
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
 import org.mozilla.fenix.utils.view.ViewHolder
@@ -22,8 +22,10 @@ class HistoryMetadataGroupViewHolder(
     private val interactor: HistoryMetadataInteractor
 ) : ViewHolder(view) {
 
+    private val binding = HistoryMetadataGroupBinding.bind(view)
+
     fun bind(historyMetadataGroup: HistoryMetadataGroup) {
-        history_metadata_group_title.text = historyMetadataGroup.title
+        binding.historyMetadataGroupTitle.text = historyMetadataGroup.title
 
         itemView.isActivated = historyMetadataGroup.expanded
 

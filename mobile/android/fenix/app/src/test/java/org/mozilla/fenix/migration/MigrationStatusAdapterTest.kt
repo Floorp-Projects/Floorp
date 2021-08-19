@@ -6,7 +6,6 @@ package org.mozilla.fenix.migration
 
 import android.view.View
 import android.widget.FrameLayout
-import kotlinx.android.synthetic.main.migration_list_item.view.*
 import mozilla.components.support.migration.Migration
 import mozilla.components.support.migration.MigrationRun
 import mozilla.components.support.test.robolectric.testContext
@@ -14,6 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.MigrationListItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -50,14 +50,16 @@ class MigrationStatusAdapterTest {
 
         val holder1 = adapter.createViewHolder(FrameLayout(testContext), 0)
         val holder2 = adapter.createViewHolder(FrameLayout(testContext), 0)
+        val binding1 = MigrationListItemBinding.bind(holder1.itemView)
+        val binding2 = MigrationListItemBinding.bind(holder2.itemView)
         adapter.bindViewHolder(holder1, 0)
         adapter.bindViewHolder(holder2, 1)
 
-        assertEquals("Settings", holder1.itemView.migration_item_name.text)
-        assertEquals(View.INVISIBLE, holder1.itemView.migration_status_image.visibility)
+        assertEquals("Settings", binding1.migrationItemName.text)
+        assertEquals(View.INVISIBLE, binding1.migrationStatusImage.visibility)
 
-        assertEquals("History", holder2.itemView.migration_item_name.text)
-        assertEquals(View.VISIBLE, holder2.itemView.migration_status_image.visibility)
-        assertEquals("Migration completed", holder2.itemView.migration_status_image.contentDescription)
+        assertEquals("History", binding2.migrationItemName.text)
+        assertEquals(View.VISIBLE, binding2.migrationStatusImage.visibility)
+        assertEquals("Migration completed", binding2.migrationStatusImage.contentDescription)
     }
 }

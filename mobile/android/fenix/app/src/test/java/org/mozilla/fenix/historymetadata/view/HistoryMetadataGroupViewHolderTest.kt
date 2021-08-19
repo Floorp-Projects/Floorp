@@ -5,10 +5,8 @@
 package org.mozilla.fenix.historymetadata.view
 
 import android.view.LayoutInflater
-import android.view.View
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.history_metadata_group.view.*
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
@@ -17,6 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.HistoryMetadataGroupBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
@@ -24,7 +23,7 @@ import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryMetadataGroupViewHolderTest {
 
-    private lateinit var view: View
+    private lateinit var binding: HistoryMetadataGroupBinding
     private lateinit var interactor: HistoryMetadataInteractor
 
     private val historyEntry = HistoryMetadata(
@@ -42,23 +41,23 @@ class HistoryMetadataGroupViewHolderTest {
 
     @Before
     fun setup() {
-        view = LayoutInflater.from(testContext).inflate(HistoryMetadataGroupViewHolder.LAYOUT_ID, null)
+        binding = HistoryMetadataGroupBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
     }
 
     @Test
     fun `GIVEN a history metadata group on bind THEN set the title text and isActivated state`() {
-        HistoryMetadataGroupViewHolder(view, interactor).bind(historyGroup)
+        HistoryMetadataGroupViewHolder(binding.root, interactor).bind(historyGroup)
 
-        assertEquals(historyGroup.title, view.history_metadata_group_title.text)
-        assertEquals(historyGroup.expanded, view.isActivated)
+        assertEquals(historyGroup.title, binding.historyMetadataGroupTitle.text)
+        assertEquals(historyGroup.expanded, binding.root.isActivated)
     }
 
     @Test
     fun `WHEN a history metadata group is clicked THEN interactor is called`() {
-        HistoryMetadataGroupViewHolder(view, interactor).bind(historyGroup)
+        HistoryMetadataGroupViewHolder(binding.root, interactor).bind(historyGroup)
 
-        view.performClick()
+        binding.root.performClick()
 
         verify { interactor.onToggleHistoryMetadataGroupExpanded(historyGroup) }
     }

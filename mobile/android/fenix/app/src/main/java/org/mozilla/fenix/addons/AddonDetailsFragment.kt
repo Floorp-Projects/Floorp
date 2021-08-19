@@ -40,7 +40,7 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details), AddonDe
         }
 
         val binding = FragmentAddOnDetailsBinding.bind(view)
-        AddonDetailsView(binding, interactor = this).bind(args.addon)
+        AddonDetailsBindingDelegate(binding, interactor = this).bind(args.addon)
     }
 
     override fun openWebsite(addonSiteUrl: Uri) {

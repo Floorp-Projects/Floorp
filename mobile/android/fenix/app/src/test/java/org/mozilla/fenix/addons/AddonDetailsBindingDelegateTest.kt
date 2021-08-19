@@ -21,12 +21,12 @@ import org.mozilla.fenix.databinding.FragmentAddOnDetailsBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
-class AddonDetailsViewTest {
+class AddonDetailsBindingDelegateTest {
 
     private lateinit var view: View
     private lateinit var binding: FragmentAddOnDetailsBinding
     private lateinit var interactor: AddonDetailsInteractor
-    private lateinit var detailsView: AddonDetailsView
+    private lateinit var detailsBindingDelegate: AddonDetailsBindingDelegate
     private val baseAddon = Addon(
         id = "",
         translatableDescription = mapOf(
@@ -41,19 +41,19 @@ class AddonDetailsViewTest {
         view = binding.root
         interactor = mockk(relaxed = true)
 
-        detailsView = AddonDetailsView(binding, interactor)
+        detailsBindingDelegate = AddonDetailsBindingDelegate(binding, interactor)
     }
 
     @Test
     fun `bind addons rating`() {
-        detailsView.bind(
+        detailsBindingDelegate.bind(
             baseAddon.copy(
                 rating = null
             )
         )
         assertEquals(0f, binding.ratingView.rating)
 
-        detailsView.bind(
+        detailsBindingDelegate.bind(
             baseAddon.copy(
                 rating = Addon.Rating(
                     average = 4.3f,
@@ -68,7 +68,7 @@ class AddonDetailsViewTest {
 
     @Test
     fun `bind addons website`() {
-        detailsView.bind(
+        detailsBindingDelegate.bind(
             baseAddon.copy(
                 siteUrl = "https://mozilla.org"
             )
@@ -81,7 +81,7 @@ class AddonDetailsViewTest {
 
     @Test
     fun `bind addons last updated`() {
-        detailsView.bind(baseAddon)
+        detailsBindingDelegate.bind(baseAddon)
 
         assertEquals("Nov 23, 2020", binding.lastUpdatedText.text)
     }
@@ -93,7 +93,7 @@ class AddonDetailsViewTest {
             installedState = null
         )
 
-        detailsView.bind(addon1)
+        detailsBindingDelegate.bind(addon1)
         assertEquals("1.0.0", binding.versionText.text)
         binding.versionText.performLongClick()
         verify(exactly = 0) { interactor.showUpdaterDialog(addon1) }
@@ -106,7 +106,7 @@ class AddonDetailsViewTest {
                 optionsPageUrl = null
             )
         )
-        detailsView.bind(addon2)
+        detailsBindingDelegate.bind(addon2)
         assertEquals("2.0.0", binding.versionText.text)
         binding.versionText.performLongClick()
         verify { interactor.showUpdaterDialog(addon2) }
@@ -115,7 +115,7 @@ class AddonDetailsViewTest {
     @Test
     fun `bind addons authors`() {
         val baseAuthor = Addon.Author("", "", "", "")
-        detailsView.bind(
+        detailsBindingDelegate.bind(
             baseAddon.copy(
                 authors = listOf(
                     baseAuthor.copy(name = " Sarah Jane"),
@@ -129,7 +129,7 @@ class AddonDetailsViewTest {
 
     @Test
     fun `bind addons details`() {
-        detailsView.bind(baseAddon)
+        detailsBindingDelegate.bind(baseAddon)
 
         assertEquals(
             "Some blank addon\nwith a blank line",

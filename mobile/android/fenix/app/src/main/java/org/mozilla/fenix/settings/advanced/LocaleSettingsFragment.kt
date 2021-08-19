@@ -104,9 +104,14 @@ class LocaleSettingsFragment : Fragment() {
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        _binding = null
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         requireComponents.analytics.metrics.track(Event.SyncAuthClosed)
-        _binding = null
     }
 }

@@ -9,9 +9,9 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentCrashReporterBinding
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.requireComponents
@@ -25,10 +25,12 @@ class CrashReporterFragment : Fragment(R.layout.fragment_crash_reporter) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val binding = FragmentCrashReporterBinding.bind(view)
+
         val args: CrashReporterFragmentArgs by navArgs()
         val crash = Crash.fromIntent(args.crashIntent)
 
-        title.text = getString(R.string.tab_crash_title_2, getString(R.string.app_name))
+        binding.title.text = getString(R.string.tab_crash_title_2, getString(R.string.app_name))
 
         val controller = CrashReporterController(
             crash,
@@ -38,17 +40,17 @@ class CrashReporterFragment : Fragment(R.layout.fragment_crash_reporter) {
             settings = requireContext().settings()
         )
 
-        restoreTabButton.apply {
+        binding.restoreTabButton.apply {
             increaseTapArea(TAP_INCREASE_DP)
             setOnClickListener {
-                controller.handleCloseAndRestore(sendCrashCheckbox.isChecked)
+                controller.handleCloseAndRestore(binding.sendCrashCheckbox.isChecked)
             }
         }
 
-        closeTabButton.apply {
+        binding.closeTabButton.apply {
             increaseTapArea(TAP_INCREASE_DP)
             setOnClickListener {
-                controller.handleCloseAndRemove(sendCrashCheckbox.isChecked)
+                controller.handleCloseAndRemove(binding.sendCrashCheckbox.isChecked)
             }
         }
     }

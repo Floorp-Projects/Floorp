@@ -9,7 +9,6 @@ import android.os.Looper
 import android.text.InputFilter
 import android.view.KeyEvent
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.constraintlayout.widget.ConstraintSet
@@ -18,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.AutoTransition
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
@@ -30,16 +28,15 @@ import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.Tab
 
 class CollectionCreationView(
-    container: ViewGroup,
+    private val container: ViewGroup,
     private val interactor: CollectionCreationInteractor
-) : LayoutContainer {
+) {
 
     private val binding = ComponentCollectionCreationBinding.inflate(
         LayoutInflater.from(container.context),
         container,
         true
     )
-    override val containerView: View = binding.root
 
     private val bottomBarView = CollectionCreationBottomBarView(
         interactor = interactor,
@@ -82,12 +79,12 @@ class CollectionCreationView(
         binding.tabList.run {
             adapter = collectionCreationTabListAdapter
             itemAnimator = null
-            layoutManager = LinearLayoutManager(containerView.context, RecyclerView.VERTICAL, true)
+            layoutManager = LinearLayoutManager(container.context, RecyclerView.VERTICAL, true)
         }
 
         binding.collectionsList.run {
             adapter = collectionSaveListAdapter
-            layoutManager = LinearLayoutManager(containerView.context, RecyclerView.VERTICAL, true)
+            layoutManager = LinearLayoutManager(container.context, RecyclerView.VERTICAL, true)
         }
     }
 
@@ -113,7 +110,7 @@ class CollectionCreationView(
     }
 
     private fun updateForSelectTabs(state: CollectionCreationState) {
-        containerView.context.components.analytics.metrics.track(Event.CollectionTabSelectOpened)
+        container.context.components.analytics.metrics.track(Event.CollectionTabSelectOpened)
 
         binding.tabList.isClickable = true
 
@@ -136,7 +133,7 @@ class CollectionCreationView(
         }
 
         selectTabsConstraints.clone(
-            containerView.context,
+            container.context,
             R.layout.component_collection_creation
         )
         collectionCreationTabListAdapter.updateData(state.tabs, state.selectedTabs)
@@ -146,7 +143,7 @@ class CollectionCreationView(
     private fun updateForSelectCollection() {
         binding.tabList.isClickable = false
         selectCollectionConstraints.clone(
-            containerView.context,
+            container.context,
             R.layout.component_collection_creation_select_collection
         )
         selectCollectionConstraints.applyTo(binding.collectionConstraintLayout)
@@ -163,7 +160,7 @@ class CollectionCreationView(
     private fun updateForNameCollection(state: CollectionCreationState) {
         binding.tabList.isClickable = false
         nameCollectionConstraints.clone(
-            containerView.context,
+            container.context,
             R.layout.component_collection_creation_name_collection
         )
         nameCollectionConstraints.applyTo(binding.collectionConstraintLayout)
@@ -186,7 +183,7 @@ class CollectionCreationView(
         binding.nameCollectionEdittext.showKeyboard()
 
         binding.nameCollectionEdittext.setText(
-            containerView.context.getString(
+            container.context.getString(
                 R.string.create_collection_default_name,
                 state.defaultCollectionNumber
             )
@@ -198,7 +195,7 @@ class CollectionCreationView(
         binding.tabList.isClickable = false
 
         state.selectedTabCollection?.let { tabCollection ->
-            val publicSuffixList = containerView.context.components.publicSuffixList
+            val publicSuffixList = container.context.components.publicSuffixList
             tabCollection.tabs.map { tab ->
                 Tab(
                     sessionId = tab.id.toString(),
@@ -211,7 +208,7 @@ class CollectionCreationView(
             }
         }
         nameCollectionConstraints.clone(
-            containerView.context,
+            container.context,
             R.layout.component_collection_creation_name_collection
         )
         nameCollectionConstraints.applyTo(binding.collectionConstraintLayout)

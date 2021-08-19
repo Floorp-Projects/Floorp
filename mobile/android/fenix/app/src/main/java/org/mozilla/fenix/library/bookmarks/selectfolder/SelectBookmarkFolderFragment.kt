@@ -15,7 +15,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -23,6 +22,7 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentSelectBookmarkFolderBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.showToolbar
@@ -30,6 +30,8 @@ import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
 
 class SelectBookmarkFolderFragment : Fragment() {
+    private var _binding: FragmentSelectBookmarkFolderBinding? = null
+    private val binding get() = _binding!!
 
     private val sharedViewModel: BookmarksSharedViewModel by activityViewModels()
     private var bookmarkNode: BookmarkNode? = null
@@ -40,7 +42,15 @@ class SelectBookmarkFolderFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_select_bookmark_folder, container, false)
+        _binding = FragmentSelectBookmarkFolderBinding.inflate(inflater, container, false)
+
+        return binding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        _binding = null
     }
 
     override fun onResume() {
@@ -57,7 +67,7 @@ class SelectBookmarkFolderFragment : Fragment() {
                     ?.let { DesktopFolders(context, showMobileRoot = true).withOptionalDesktopFolders(it) }
             }
             val adapter = SelectBookmarkFolderAdapter(sharedViewModel)
-            recylerViewBookmarkFolders.adapter = adapter
+            binding.recylerViewBookmarkFolders.adapter = adapter
             adapter.updateData(bookmarkNode, args.hideFolderGuid)
         }
     }

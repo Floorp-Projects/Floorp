@@ -6,7 +6,6 @@ package org.mozilla.fenix.share
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.concept.sync.Device
 import org.mozilla.fenix.databinding.ShareToAccountDevicesBinding
 import org.mozilla.fenix.share.listadapters.AccountDevicesShareAdapter
@@ -24,9 +23,9 @@ interface ShareToAccountDevicesInteractor {
 }
 
 class ShareToAccountDevicesView(
-    override val containerView: ViewGroup,
+    containerView: ViewGroup,
     interactor: ShareToAccountDevicesInteractor
-) : LayoutContainer {
+) {
 
     private val adapter = AccountDevicesShareAdapter(interactor)
 
