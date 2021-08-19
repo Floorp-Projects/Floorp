@@ -3,7 +3,7 @@
     <!-- Text for context menu item to open the link in a new tab. -->
     <string name="mozac_feature_contextmenu_open_link_in_new_tab">Відкрити посилання в новій вкладці</string>
     <!-- Text for context menu item to open the link in a private tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Відкрити посилання на приватній вкладці</string>
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Відкрити посилання у приватній вкладці</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Відкрити зображення в новій вкладці</string>
     <!-- Text for context menu item to save / download the link. -->
