@@ -264,7 +264,6 @@ function runTest(bindingTarget, program)
             }
         }
     }
-
 }
 
 var gl = wtu.create3DContext("example");
@@ -275,6 +274,29 @@ program = wtu.setupTexturedQuadWithCubeMap(gl);
 runTest(gl.TEXTURE_CUBE_MAP, program);
 
 wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
+
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+
+const validDatas = [
+  `new Uint8Array(4)`,
+  `new Uint8Array(new ArrayBuffer(4))`,
+  `new Uint8ClampedArray(4)`,
+  `new Uint8ClampedArray(new ArrayBuffer(4))`,
+];
+if (window.SharedArrayBuffer) {
+  validDatas.push(
+    `new Uint8Array(new SharedArrayBuffer(4))`,
+    `new Uint8ClampedArray(new SharedArrayBuffer(4))`
+  );
+}
+for (const x of validDatas) {
+  shouldNotThrow(`gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1, 0, gl.RGBA, gl.UNSIGNED_BYTE, ${x});`);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
+  shouldNotThrow(`gl.texSubImage2D(gl.TEXTURE_2D, 0, 0,0, 1,1, gl.RGBA, gl.UNSIGNED_BYTE, ${x});`);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
+}
+
 var successfullyParsed = true;
 </script>
 <script src="../../../js/js-test-post.js"></script>
