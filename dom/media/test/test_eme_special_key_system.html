@@ -8,8 +8,7 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-// Tests that org.mozilla.clearkey_with_protection_query cannot be accessed from JS if not preffed on.
-add_task(async function protectionQueryKeySystemShouldBeHidden() {
+function requestProtectionQueryKeySystemAccess() {
   const kKeySystemOptions = [
     {
       initDataTypes: ["cenc"],
@@ -18,13 +17,16 @@ add_task(async function protectionQueryKeySystemShouldBeHidden() {
   ];
   const kClearKeyWithProtectionQuery =
     "org.mozilla.clearkey_with_protection_query";
-
+  return navigator.requestMediaKeySystemAccess(
+    kClearKeyWithProtectionQuery,
+    kKeySystemOptions
+  );
+}
+// Tests that org.mozilla.clearkey_with_protection_query cannot be accessed from JS if not preffed on.
+add_task(async function protectionQueryKeySystemShouldBeHidden() {
   try {
     // Should throw since special key systems are not enabled.
-    await navigator.requestMediaKeySystemAccess(
-      kClearKeyWithProtectionQuery,
-      kKeySystemOptions
-    );
+    await requestProtectionQueryKeySystemAccess();
     ok(
       false,
       "Test should have thrown by default because media.clearkey.test-key-systems.enabled should not be set"
@@ -36,6 +38,23 @@ add_task(async function protectionQueryKeySystemShouldBeHidden() {
       "Key system is unsupported",
       "Should get message that key system is unsupported"
     );
+  }
+});
+
+// Tests that org.mozilla.clearkey_with_protection_query can be accessed from JS if preffed on.
+add_task(async function protectionQueryKeySystemShouldBeExposed() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.clearkey.test-key-systems.enabled", true]],
+  });
+  try {
+    // Should not throw since special key systems are enabled.
+    let access = await requestProtectionQueryKeySystemAccess();
+    ok(
+      access,
+      "Should get access to protection query key system when preffed on"
+    );
+  } catch (e) {
+    ok(false, "Test should not have thrown and key system should be available");
   }
 });
 </script>
