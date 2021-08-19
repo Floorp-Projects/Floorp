@@ -15,6 +15,7 @@ import mozilla.components.browser.state.state.AppIntentState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
@@ -54,11 +55,13 @@ class AppLinksFeatureTest {
     private lateinit var mockOpenRedirect: AppLinksUseCases.OpenAppLinkRedirect
     private lateinit var mockEngineSession: EngineSession
     private lateinit var mockDialog: RedirectDialogFragment
+    private lateinit var mockLoadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase
     private lateinit var feature: AppLinksFeature
 
     private val webUrl = "https://example.com"
     private val webUrlWithAppLink = "https://soundcloud.com"
     private val intentUrl = "zxing://scan"
+    private val aboutUrl = "about://scan"
 
     @Before
     fun setup() {
@@ -70,6 +73,7 @@ class AppLinksFeatureTest {
         mockUseCases = mock()
         mockEngineSession = mock()
         mockDialog = mock()
+        mockLoadUrlUseCase = mock()
 
         mockGetRedirect = mock()
         mockOpenRedirect = mock()
@@ -90,7 +94,8 @@ class AppLinksFeatureTest {
                 store = store,
                 fragmentManager = mockFragmentManager,
                 useCases = mockUseCases,
-                dialog = mockDialog
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase
             )
         ).also {
             it.start()
@@ -176,5 +181,19 @@ class AppLinksFeatureTest {
         doReturn(mockDialog).`when`(mockFragmentManager).findFragmentByTag(RedirectDialogFragment.FRAGMENT_TAG)
         feature.handleAppIntent(tab, intentUrl, mock())
         verify(mockDialog, times(1)).showNow(mockFragmentManager, RedirectDialogFragment.FRAGMENT_TAG)
+    }
+
+    @Test
+    fun `only loads URL if scheme is supported`() {
+        val tab = createTab(webUrl, private = true)
+
+        feature.loadUrlIfSchemeSupported(tab, intentUrl)
+        verify(mockLoadUrlUseCase, never()).invoke(anyString(), anyString(), any(), any())
+
+        feature.loadUrlIfSchemeSupported(tab, webUrl)
+        verify(mockLoadUrlUseCase, times(1)).invoke(anyString(), anyString(), any(), any())
+
+        feature.loadUrlIfSchemeSupported(tab, aboutUrl)
+        verify(mockLoadUrlUseCase, times(2)).invoke(anyString(), anyString(), any(), any())
     }
 }

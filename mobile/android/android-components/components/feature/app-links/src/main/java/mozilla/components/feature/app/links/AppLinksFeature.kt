@@ -6,6 +6,7 @@ package mozilla.components.feature.app.links
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +18,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SUPPORTED_SCHEMES
 import mozilla.components.feature.app.links.RedirectDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.state.ext.flowScoped
@@ -52,7 +54,8 @@ class AppLinksFeature(
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
     private val failedToLaunchAction: () -> Unit = {},
-    private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null
+    private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null,
+    private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -90,7 +93,7 @@ class AppLinksFeature(
         }
 
         val doNotOpenApp = {
-            loadUrlUseCase?.invoke(url, tab.id, EngineSession.LoadUrlFlags.none())
+            loadUrlIfSchemeSupported(tab, url)
         }
 
         val doOpenApp = {
@@ -125,6 +128,14 @@ class AppLinksFeature(
         SimpleRedirectDialogFragment.newInstance().also {
             dialog = it
             return it
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun loadUrlIfSchemeSupported(tab: SessionState, url: String) {
+        val schemeSupported = engineSupportedSchemes.contains(Uri.parse(url).scheme)
+        if (schemeSupported) {
+            loadUrlUseCase?.invoke(url, tab.id, EngineSession.LoadUrlFlags.none())
         }
     }
 
