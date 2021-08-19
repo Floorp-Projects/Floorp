@@ -3296,9 +3296,8 @@ class Sampler {
 
 // Platform-specific function that retrieves per-thread CPU measurements.
 static RunningTimes GetThreadRunningTimesDiff(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread);
-static void ClearThreadRunningTimes(PSLockRef aLock,
-                                    const RegisteredThread& aRegisteredThread);
+    PSLockRef aLock,
+    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData);
 
 // Template function to be used by `GetThreadRunningTimesDiff()` (unless some
 // platform has a better way to achieve this).
@@ -3619,7 +3618,6 @@ void SamplerThread::Run() {
           ThreadRegistry::LockedRegistry lockedRegistry;
 
           for (auto& thread : liveThreads) {
-            RegisteredThread* registeredThread = thread.mRegisteredThread;
             ProfiledThreadData* profiledThreadData =
                 thread.mProfiledThreadData.get();
             const ProfilerThreadId threadId =
@@ -3649,7 +3647,8 @@ void SamplerThread::Run() {
                 // If we don't need CPU measurements, we only need a timestamp.
                 return RunningTimes(TimeStamp::Now());
               }
-              return GetThreadRunningTimesDiff(lock, *registeredThread);
+              return GetThreadRunningTimesDiff(
+                  lock, offThreadRef->UnlockedRWForLockedProfilerRef());
             }();
 
             const TimeStamp& now = runningTimesDiff.PostMeasurementTimeStamp();
@@ -4959,7 +4958,6 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
       ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
           aLock, registeredThread.get(),
           MakeUnique<ProfiledThreadData>(info, eventTarget));
-      ClearThreadRunningTimes(aLock, *registeredThread);
       ThreadRegistry::WithOffThreadRef(
           info.ThreadId(), [&](ThreadRegistry::OffThreadRef aOffThreadRef) {
             aOffThreadRef.WithLockedRWFromAnyThread(
