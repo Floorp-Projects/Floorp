@@ -58,3 +58,14 @@ reftest.jar:
   res/progress.css (../../../layout/reftests/forms/progress/style.css)
 *  res/manifest.jsm (manifest.jsm)
 *  res/reftest.jsm (reftest.jsm)
+
+# Android doesn't ship global.css
+# Accessing missing non-test chrome:// files crashes, to avoid relying on
+# non-existing files.
+# A bunch of our older crash- and reftests use it, and it's unclear to what
+# extent they rely on it (ie removing the CSS file may stop the tests testing
+# what they are supposed to test on OSes that do ship global.css).
+# We also would like to move towards shipping less and less XUL/ex-XBL files
+# on android, so adding it everywhere doesn't seem like the right direction.
+# Instead, add an empty file only for reftests:
+  content/fake-global.css (fake-global.css)
