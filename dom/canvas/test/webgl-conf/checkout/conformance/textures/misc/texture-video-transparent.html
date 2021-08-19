@@ -99,31 +99,33 @@ function runOneIteration(videoElement, useTexSubImage2D)
     // - Left is green and right is transparent-blended-with-red
     let leftIsGreen = false, leftIsRed = false, rightIsBlue = false, rightIsRed = false;
     let greenRedError = "", redBlueError = "";
+    let leftGreenError = "", rightBlueError = "";
+    let bufLeft, bufRight;
     wtu.checkCanvasRectColor(gl, 4, 4, 8, 24, green, tolerance,
-        /* sameFn */ () => { leftIsGreen = true; }, /* differentFn */ m => {}, debug);
+        /* sameFn */ () => { leftIsGreen = true; }, /* differentFn */ (m, b) => { leftGreenError = m; bufLeft = b;}, debug);
     wtu.checkCanvasRectColor(gl, 20, 4, 8, 24, red, tolerance,
-        /* sameFn */ () => { rightIsRed = true; }, /* differentFn */ m => { greenRedError = m; }, debug);
+        /* sameFn */ () => { rightIsRed = true; }, /* differentFn */ (m, b) => { greenRedError = m; bufRight = b;}, debug);
 
     // - Right is blue and left is transparent-blended-with-red
     wtu.checkCanvasRectColor(gl, 20, 4, 8, 24, blue, tolerance,
-        /* sameFn */ () => { rightIsBlue = true; }, /* differentFn */ m => {}, debug);
+        /* sameFn */ () => { rightIsBlue = true; }, /* differentFn */ (m, b) => { rightBlueError = m; bufRight = b;}, debug);
     wtu.checkCanvasRectColor(gl, 4, 4, 8, 24, red, tolerance,
-        /* sameFn */ () => { leftIsRed = true; }, /* differentFn */ m => { redBlueError = m; }, debug);
+        /* sameFn */ () => { leftIsRed = true; }, /* differentFn */ (m, b) => { redBlueError = m; bufLeft = b;}, debug);
 
     if (leftIsGreen) {
         if (rightIsRed) {
-            testPassed("left is green, right is transparent-blended-with-red")
+            testPassed("left is green, right is transparent-blended-with-red");
         } else {
-            testFailed("left is green, but: " + greenRedError);
+            testFailed("left is green, but: " + greenRedError + "\n" + bufRight);
         }
     } else if (rightIsBlue) {
         if (leftIsRed) {
             testPassed("right is blue, left is transparent-blended-with-red");
         } else {
-            testFailed("right is blue, but: " + redBlueError);
+            testFailed("right is blue, but: " + redBlueError + "\n" + bufLeft);
         }
     } else {
-        testFailed("neither left is green nor right is blue")
+        testFailed("neither left is green nor right is blue \n" + leftGreenError + "\n" + rightBlueError + "\n" + bufLeft + "\n" + bufRight);
     }
 }
 </script>
