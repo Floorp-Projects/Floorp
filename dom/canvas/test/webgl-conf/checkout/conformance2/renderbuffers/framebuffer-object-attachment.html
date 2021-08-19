@@ -412,29 +412,6 @@ testFramebufferWithImagesOfDifferentSizes();
 testUsingIncompleteFramebuffer();
 testReadingFromMissingAttachment();
 
-// -
-
-debug("");
-debug("Test calling framebufferTexture2D with impossible mip levels.");
-
-const fb = gl.createFramebuffer();
-gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-
-const tex = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, tex);
-
-gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 1000);
-wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "Mip level attachment impossibly high.");
-gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 10);
-wtu.glErrorShouldBe(gl, 0, "Mip level attachment within acceptable range.");
-
-// Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1636517 :
-gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 1000);
-wtu.glErrorShouldBe(gl, 0, "Mip level detachment can be impossibly high.");
-shouldBe("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)", "0");
-
-// -
-
 debug("")
 var successfullyParsed = true;
 </script>
