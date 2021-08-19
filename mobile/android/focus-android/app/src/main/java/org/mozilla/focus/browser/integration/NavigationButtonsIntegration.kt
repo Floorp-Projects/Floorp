@@ -34,7 +34,7 @@ class NavigationButtonsIntegration(
     init {
         toolbar.addNavigationAction(
             NavigationButton(
-                image = ContextCompat.getDrawable(context, R.drawable.ic_back)!!,
+                image = ContextCompat.getDrawable(context, R.drawable.mozac_ic_back)!!,
                 contentDescription = context.getString(R.string.content_description_back),
                 isEnabled = { store.state.findCustomTabOrSelectedTab(customTabId)?.content?.canGoBack ?: false },
                 listener = { sessionUseCases.goBack(store.state.findCustomTabOrSelectedTab(customTabId)?.id) }
@@ -43,7 +43,7 @@ class NavigationButtonsIntegration(
 
         toolbar.addNavigationAction(
             NavigationButton(
-                image = ContextCompat.getDrawable(context, R.drawable.ic_forward)!!,
+                image = ContextCompat.getDrawable(context, R.drawable.mozac_ic_forward)!!,
                 contentDescription = context.getString(R.string.content_description_forward),
                 isEnabled = { store.state.findCustomTabOrSelectedTab(customTabId)?.content?.canGoForward ?: false },
                 listener = { sessionUseCases.goForward(store.state.findCustomTabOrSelectedTab(customTabId)?.id) }
@@ -52,8 +52,8 @@ class NavigationButtonsIntegration(
 
         toolbar.addNavigationAction(
             RefreshStopButton(
-                refreshImage = ContextCompat.getDrawable(context, R.drawable.ic_refresh)!!,
-                stopImage = ContextCompat.getDrawable(context, R.drawable.ic_stop)!!,
+                refreshImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_refresh)!!,
+                stopImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_stop)!!,
                 refreshContentDescription = context.getString(R.string.content_description_reload),
                 stopContentDescription = context.getString(R.string.content_description_stop),
                 isLoading = { store.state.findCustomTabOrSelectedTab(customTabId)?.content?.loading ?: false },

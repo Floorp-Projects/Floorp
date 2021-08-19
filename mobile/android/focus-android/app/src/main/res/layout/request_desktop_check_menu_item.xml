@@ -10,7 +10,7 @@
     android:background="?android:attr/selectableItemBackground"
     android:button="@null"
     android:clickable="true"
-    android:drawableStart="@drawable/ic_device_desktop"
+    android:drawableStart="@drawable/mozac_ic_device_desktop"
     android:drawableEnd="?android:attr/listChoiceIndicatorMultiple"
     android:drawablePadding="16dp"
     android:ellipsize="end"

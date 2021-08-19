@@ -16,7 +16,7 @@
         android:layout_weight="1"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_forward"
-        android:src="@drawable/ic_forward"/>
+        android:src="@drawable/mozac_ic_forward"/>
 
     <ImageButton
         android:id="@+id/refresh"
@@ -25,14 +25,14 @@
         android:layout_weight="1"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_reload"
-        android:src="@drawable/ic_refresh"/>
+        android:src="@drawable/mozac_ic_refresh"/>
 
     <ImageButton
         android:id="@+id/stop"
         android:layout_width="0dp"
         android:layout_height="48dp"
         android:layout_weight="1"
-        android:src="@drawable/ic_stop"
+        android:src="@drawable/mozac_ic_stop"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_stop" />
 </LinearLayout>

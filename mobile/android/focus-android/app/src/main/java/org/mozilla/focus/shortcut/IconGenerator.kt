@@ -62,7 +62,7 @@ class IconGenerator {
             val options = BitmapFactory.Options()
             options.inMutable = true
             val shape = BitmapFactory.decodeResource(context.resources, R.drawable.ic_search_engine_shape, options)
-            return drawVectorOnBitmap(context, R.drawable.ic_search, shape, SEARCH_ICON_FRAME)
+            return drawVectorOnBitmap(context, R.drawable.mozac_ic_search, shape, SEARCH_ICON_FRAME)
         }
 
         private fun drawVectorOnBitmap(context: Context, vectorId: Int, bitmap: Bitmap, frame: Double): Bitmap {

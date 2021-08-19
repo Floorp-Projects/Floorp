@@ -145,7 +145,7 @@ private fun SearchSuggestions(
     val components = components
     val query = viewModel.searchQuery.observeAsState()
 
-    val icon = ContextCompat.getDrawable(LocalContext.current, R.drawable.ic_search)
+    val icon = ContextCompat.getDrawable(LocalContext.current, R.drawable.mozac_ic_search)
         ?.toBitmap()
 
     val provider = remember(context) {

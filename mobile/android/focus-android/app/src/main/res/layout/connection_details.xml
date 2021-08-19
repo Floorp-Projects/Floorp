@@ -21,7 +21,7 @@
         android:scaleType="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_back" />
+        app:srcCompat="@drawable/mozac_ic_back" />
 
     <ImageView
         android:id="@+id/site_favicon"

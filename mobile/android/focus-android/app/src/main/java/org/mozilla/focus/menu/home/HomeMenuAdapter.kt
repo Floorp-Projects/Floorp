@@ -66,9 +66,9 @@ private class MenuItemViewHolder(
 
     fun bind(item: MenuItem) {
         val iconResourceId = if (item.id == R.id.help) {
-            R.drawable.ic_help
+            R.drawable.mozac_ic_help
         } else {
-            R.drawable.ic_settings2
+            R.drawable.mozac_ic_settings
         }
         containerView.apply {
             id = item.id

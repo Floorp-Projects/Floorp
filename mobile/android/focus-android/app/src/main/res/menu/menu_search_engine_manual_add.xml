@@ -9,7 +9,7 @@
     <!-- We modify the Setting's theme's actionButtonStyle in order to change the padding between
          these two items - not great, but it works. Details in @style/SettingsActionButtonStyle. -->
     <item android:id="@+id/learn_more"
-          android:icon="@drawable/ic_menu_info"
+          android:icon="@drawable/mozac_ic_info"
           android:title="@string/preference_autocomplete_learn_more"
           app:showAsAction="ifRoom"/>
 
