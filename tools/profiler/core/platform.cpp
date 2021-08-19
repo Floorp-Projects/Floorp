@@ -4158,12 +4158,9 @@ static ProfilingStack* locked_register_thread(
       registeredThread == TLSRegisteredThread::RegisteredThread(aLock),
       "TLS should be set as expected when registering thread");
 
-  ProfilingStack* profilingStack =
-      &registeredThread->RacyRegisteredThread().ProfilingStack();
-
   CorePS::AppendRegisteredThread(aLock, std::move(registeredThread));
 
-  return profilingStack;
+  return &aOffThreadRef.UnlockedConstReaderAndAtomicRWRef().ProfilingStackRef();
 }
 
 static void NotifyObservers(const char* aTopic,

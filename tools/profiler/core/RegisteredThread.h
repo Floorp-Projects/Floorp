@@ -29,13 +29,6 @@ class RacyRegisteredThread final {
 
   MOZ_COUNTED_DTOR(RacyRegisteredThread)
 
-  class ProfilingStack& ProfilingStack() {
-    return mThreadRegistration.mData.ProfilingStackRef();
-  }
-  const class ProfilingStack& ProfilingStack() const {
-    return mThreadRegistration.mData.ProfilingStackCRef();
-  }
-
   mozilla::profiler::ThreadRegistration& mThreadRegistration;
 };
 
