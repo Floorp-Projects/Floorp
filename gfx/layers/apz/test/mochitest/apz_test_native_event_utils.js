@@ -191,11 +191,6 @@ function getBoundingClientRectRelativeToVisualViewport(aElement) {
 // |aTarget| may be an element (contained in the root content document or
 // a subdocument) or, as a special case, the root content window.
 // FIXME: Support iframe windows as targets.
-function getTargetOrigin(aTarget) {
-  const rect = getTargetRect(aTarget);
-  return { left: rect.left, top: rect.top };
-}
-
 function getTargetRect(aTarget) {
   let rect = { left: 0, top: 0, width: 0, height: 0 };
 
