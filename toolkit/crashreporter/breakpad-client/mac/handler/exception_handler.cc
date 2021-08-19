@@ -126,7 +126,7 @@ struct ExceptionReplyMessage {
 // and may result in treating a non-fatal exception as fatal.
 exception_mask_t s_exception_mask = EXC_MASK_BAD_ACCESS |
 EXC_MASK_BAD_INSTRUCTION | EXC_MASK_ARITHMETIC | EXC_MASK_BREAKPOINT |
-EXC_MASK_RESOURCE;
+EXC_MASK_RESOURCE | EXC_MASK_GUARD;
 
 kern_return_t ForwardException(mach_port_t task,
                                mach_port_t failed_thread,
@@ -664,6 +664,7 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
             switch (receive.exception) {
               case EXC_BAD_ACCESS:
               case EXC_RESOURCE:
+              case EXC_GUARD:
                 subcode = receive.code[1];
                 break;
               default:

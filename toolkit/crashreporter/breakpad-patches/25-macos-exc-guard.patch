@@ -1,0 +1,348 @@
+diff --git a/src/google_breakpad/common/minidump_exception_mac.h b/src/google_breakpad/common/minidump_exception_mac.h
+--- a/src/google_breakpad/common/minidump_exception_mac.h
++++ b/src/google_breakpad/common/minidump_exception_mac.h
+@@ -64,16 +64,18 @@ typedef enum {
+   MD_EXCEPTION_MAC_SYSCALL         = 7,
+       /* EXC_SYSCALL */
+   MD_EXCEPTION_MAC_MACH_SYSCALL    = 8,
+       /* EXC_MACH_SYSCALL */
+   MD_EXCEPTION_MAC_RPC_ALERT       = 9,
+       /* EXC_RPC_ALERT */
+   MD_EXCEPTION_MAC_RESOURCE        = 11,
+       /* EXC_RESOURCE */
++  MD_EXCEPTION_MAC_GUARD           = 12,
++      /* EXC_GUARD */
+   MD_EXCEPTION_MAC_SIMULATED       = 0x43507378
+       /* Fake exception code used by Crashpad's SimulateCrash ('CPsx'). */
+ } MDExceptionMac;
+ 
+ /* For (MDException).exception_flags.  Breakpad minidump extension for Mac OS X
+  * support.  Based on Darwin/Mac OS X' mach/ppc/exception.h and
+  * mach/i386/exception.h.  This is what Mac OS X calls a "code". */
+ typedef enum {
+@@ -236,9 +238,77 @@ typedef enum MDMacExcResourceIOFlavor {
+   MD_MAC_EXC_RESOURCE_FLAVOR_IO_PHYSICAL_WRITES = 1,
+   MD_MAC_EXC_RESOURCE_FLAVOR_IO_LOGICAL_WRITES = 2,
+ } MDMacExcResourceIOFlavor;
+ 
+ typedef enum MDMacExcResourceThreadsFlavor {
+   MD_MAC_EXC_RESOURCE_FLAVOR_THREADS_HIGH_WATERMARK = 1,
+ } MDMacExcResourceThreadsFlavor;
+ 
++// See https://github.com/apple/darwin-xnu/blob/main/osfmk/kern/exc_guard.h
++
++typedef enum MDMacExcGuardType {
++  MD_MAC_EXC_GUARD_TYPE_NONE        = 0x0,
++  MD_MAC_EXC_GUARD_TYPE_MACH_PORT   = 0x1,
++  MD_MAC_EXC_GUARD_TYPE_FD          = 0x2,
++  MD_MAC_EXC_GUARD_TYPE_USER        = 0x3,
++  MD_MAC_EXC_GUARD_TYPE_VN          = 0x4,
++  MD_MAC_EXC_GUARD_TYPE_VIRT_MEMORY = 0x5
++} MDMacExcGuardType;
++
++// See https://github.com/apple/darwin-xnu/osfmk/mach/port.h
++
++typedef enum MDMacExcGuardMachPortFlavor {
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_DESTROY              = 1u << 0,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MOD_REFS             = 1u << 1,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SET_CONTEXT          = 1u << 2,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_UNGUARDED            = 1u << 3,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INCORRECT_GUARD      = 1u << 4,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_IMMOVABLE            = 1u << 5,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_STRICT_REPLY         = 1u << 6,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MSG_FILTERED         = 1u << 7,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_RIGHT        = 1u << 8,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_NAME         = 1u << 9,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_VALUE        = 1u << 10,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_ARGUMENT     = 1u << 11,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RIGHT_EXISTS         = 1u << 12,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_NO_SPACE        = 1u << 13,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_FAILURE         = 1u << 14,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_RESOURCE        = 1u << 15,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_REPLY   = 1u << 16,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_VOUCHER = 1u << 17,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_RIGHT   = 1u << 18,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RCV_INVALID_NAME     = 1u << 19,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RCV_GUARDED_DESC     = 1u << 20,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MOD_REFS_NON_FATAL   = 1u << 21,
++  MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_IMMOVABLE_NON_FATAL  = 1u << 22,
++} MDMacExcGuardMachPortFlavor;
++
++// See https://github.com/apple/darwin-xnu/blob/main/bsd/sys/guarded.h
++
++typedef enum MDMacExcGuardFDFlavor {
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_CLOSE      = 1u << 0,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_DUP        = 1u << 1,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_NOCLOEXEC  = 1u << 2,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_SOCKET_IPC = 1u << 3,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_FILEPORT   = 1u << 4,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_MISMATCH   = 1u << 5,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_WRITE      = 1u << 6
++} MDMacExcGuardFDFlavor;
++
++
++typedef enum MDMacExcGuardVNFlavor {
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_RENAME_TO   = 1u << 0,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_RENAME_FROM = 1u << 1,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_UNLINK      = 1u << 2,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_WRITE_OTHER = 1u << 3,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_TRUNC_OTHER = 1u << 4,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_LINK        = 1u << 5,
++  MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_EXCHDATA    = 1u << 6,
++} MDMacExcGuardVNFlavor;
++
++// See https://github.com/apple/darwin-xnu/osfmk/mach/vm_statistics.h
++
++typedef enum MDMacExcGuardVirtMemoryFlavor {
++  MD_MAC_EXC_GUARD_VIRT_MEMORY_FLAVOR_GUARD_EXC_DEALLOC_GAP = 1u << 0
++} MDMacExcGuardVirtMemoryFlavor;
++
+ #endif  /* GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_MAC_OSX_H__ */
+diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_processor.cc
+--- a/src/processor/minidump_processor.cc
++++ b/src/processor/minidump_processor.cc
+@@ -1210,16 +1210,244 @@ string MinidumpProcessor::GetCrashReason
+                   reason.append(flavor_string);
+                 }
+                 break;
+               default:
+                 reason.append(flags_string);
+             }
+           }
+           break;
++        case MD_EXCEPTION_MAC_GUARD:
++          reason = "EXC_GUARD / ";
++          {
++            uint32_t type = (exception_flags >> 29) & 0x7ULL;
++            uint32_t flavor = exception_flags & 0x1FFFFFFFULL;
++            switch (type) {
++              case MD_MAC_EXC_GUARD_TYPE_NONE:
++                reason.append("GUARD_TYPE_NONE");
++                break;
++              case MD_MAC_EXC_GUARD_TYPE_MACH_PORT:
++                reason.append("GUARD_TYPE_MACH_PORT");
++
++                if (flavor) {
++                  std::vector<std::string> flavors;
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_DESTROY) {
++                    flavors.push_back("GUARD_EXC_DESTROY");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MOD_REFS) {
++                    flavors.push_back("GUARD_EXC_MOD_REFS");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SET_CONTEXT) {
++                    flavors.push_back("GUARD_EXC_SET_CONTEXT");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SET_CONTEXT) {
++                    flavors.push_back("GUARD_EXC_SET_CONTEXT");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_UNGUARDED) {
++                    flavors.push_back("GUARD_EXC_UNGUARDED");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INCORRECT_GUARD) {
++                    flavors.push_back("GUARD_EXC_INCORRECT_GUARD");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_IMMOVABLE) {
++                    flavors.push_back("GUARD_EXC_IMMOVABLE");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_STRICT_REPLY) {
++                    flavors.push_back("GUARD_EXC_STRICT_REPLY");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MSG_FILTERED) {
++                    flavors.push_back("GUARD_EXC_MSG_FILTERED");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_RIGHT) {
++                    flavors.push_back("GUARD_EXC_INVALID_RIGHT");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_NAME) {
++                    flavors.push_back("GUARD_EXC_INVALID_NAME");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_VALUE) {
++                    flavors.push_back("GUARD_EXC_INVALID_VALUE");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_ARGUMENT) {
++                    flavors.push_back("GUARD_EXC_INVALID_ARGUMENT");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RIGHT_EXISTS) {
++                    flavors.push_back("GUARD_EXC_RIGHT_EXISTS");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_NO_SPACE) {
++                    flavors.push_back("GUARD_EXC_KERN_NO_SPACE");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_FAILURE) {
++                    flavors.push_back("GUARD_EXC_KERN_FAILURE");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_RESOURCE) {
++                    flavors.push_back("GUARD_EXC_KERN_RESOURCE");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_REPLY) {
++                    flavors.push_back("GUARD_EXC_SEND_INVALID_REPLY");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_VOUCHER) {
++                    flavors.push_back("GUARD_EXC_SEND_INVALID_VOUCHER");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_RIGHT) {
++                    flavors.push_back("GUARD_EXC_SEND_INVALID_RIGHT");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RCV_INVALID_NAME) {
++                    flavors.push_back("GUARD_EXC_RCV_INVALID_NAME");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RCV_GUARDED_DESC) {
++                    flavors.push_back("GUARD_EXC_RCV_GUARDED_DESC");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MOD_REFS_NON_FATAL) {
++                    flavors.push_back("GUARD_EXC_MOD_REFS_NON_FATAL");
++                  }
++
++                  if (MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_IMMOVABLE_NON_FATAL) {
++                    flavors.push_back("GUARD_EXC_IMMOVABLE_NON_FATAL");
++                  }
++
++                  reason.append(" / ");
++                  for (size_t i = 0; i < flavors.size(); i++) {
++                    if (i > 0) {
++                      reason.append(" | ");
++                    }
++
++                    reason.append(flavors[i]);
++                  }
++                }
++
++                break;
++              case MD_MAC_EXC_GUARD_TYPE_FD:
++                reason.append("GUARD_TYPE_FD");
++
++                if (flavor) {
++                  std::vector<std::string> flavors;
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_CLOSE) {
++                    flavors.push_back("GUARD_EXC_CLOSE");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_DUP) {
++                    flavors.push_back("GUARD_EXC_DUP");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_NOCLOEXEC) {
++                    flavors.push_back("GUARD_EXC_NOCLOEXEC");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_SOCKET_IPC) {
++                    flavors.push_back("GUARD_EXC_SOCKET_IPC");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_FILEPORT) {
++                    flavors.push_back("GUARD_EXC_FILEPORT");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_MISMATCH) {
++                    flavors.push_back("GUARD_EXC_MISMATCH");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_WRITE) {
++                    flavors.push_back("GUARD_EXC_WRITE");
++                  }
++
++                  reason.append(" / ");
++                  for (size_t i = 0; i < flavors.size(); i++) {
++                    if (i > 0) {
++                      reason.append(" | ");
++                    }
++
++                    reason.append(flavors[i]);
++                  }
++                }
++
++                break;
++              case MD_MAC_EXC_GUARD_TYPE_USER:
++                reason.append("GUARD_TYPE_USER");
++                break;
++              case MD_MAC_EXC_GUARD_TYPE_VN:
++                reason.append("GUARD_TYPE_VN");
++
++                if (flavor) {
++                  std::vector<std::string> flavors;
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_RENAME_TO) {
++                    flavors.push_back("GUARD_EXC_RENAME_TO");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_RENAME_FROM) {
++                    flavors.push_back("GUARD_EXC_RENAME_FROM");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_UNLINK) {
++                    flavors.push_back("GUARD_EXC_UNLINK");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_WRITE_OTHER) {
++                    flavors.push_back("GUARD_EXC_WRITE_OTHER");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_TRUNC_OTHER) {
++                    flavors.push_back("GUARD_EXC_TRUNC_OTHER");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_LINK) {
++                    flavors.push_back("GUARD_EXC_LINK");
++                  }
++
++                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_EXCHDATA) {
++                    flavors.push_back("GUARD_EXC_EXCHDATA");
++                  }
++
++                  reason.append(" / ");
++                  for (size_t i = 0; i < flavors.size(); i++) {
++                    if (i > 0) {
++                      reason.append(" | ");
++                    }
++
++                    reason.append(flavors[i]);
++                  }
++                }
++
++                break;
++              case MD_MAC_EXC_GUARD_TYPE_VIRT_MEMORY:
++                reason.append("GUARD_TYPE_VIRT_MEMORY");
++
++                if (flavor & MD_MAC_EXC_GUARD_VIRT_MEMORY_FLAVOR_GUARD_EXC_DEALLOC_GAP) {
++                  reason.append(" / GUARD_EXC_DEALLOC_GAP");
++                }
++
++                break;
++              default:
++                reason.append(flags_string);
++            }
++          }
++          break;
+         case MD_EXCEPTION_MAC_SIMULATED:
+           reason = "Simulated Exception";
+           break;
+       }
+       break;
+     }
+ 
+     case MD_OS_WIN32_NT:
