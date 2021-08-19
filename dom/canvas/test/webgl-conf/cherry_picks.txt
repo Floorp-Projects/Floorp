@@ -1,15 +1,23 @@
-commit dbc420cd0ff865a6ccbf6d2e5fce7d95e3f5c38d
+commit 2217a5170cf68932020867dd40c4137a748dd2e1
 Author: Jeff Gilbert <jdashg@gmail.com>
-Date:   Wed Aug 11 16:01:51 2021 -0700
+Date:   Fri Mar 13 13:10:49 2020 -0700
 
-    Simplify startPlayingAndWaitForVideo with modern async/await.
+    Add Render();NoOpResize();Render(); tests.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1621523
 
 Cherries picked
 ================================================================================
-Merge base from: ups/main
+Merge base from: ups/master
 
-commit 7318622fa1bfa507f6e77b4bf38844f9d7c1af36
+commit b49347b2c51eba1a60e63046bd8b9db0f2f8efba
 Author: Jeff Gilbert <jdashg@gmail.com>
-Date:   Wed Aug 18 23:17:18 2021 -0700
+Date:   Mon Mar 9 11:48:08 2020 -0700
 
-    [video-rotation] Remember to finishTest() after e.g. !supports_vp9. (#3323)
+    Add testcase for minimal glsl line comment, and related. (#3035)
+    
+    * Add testcase for minimal glsl line comment, and related.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1620876
+    
+    * Improve testcase description.
