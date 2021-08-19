@@ -1,0 +1,25 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: Canvas: WebGL
+
+origin:
+  name: webgl-cts
+
+  description: WebGL Conformance Test Suite
+
+  url: https://github.com/KhronosGroup/WebGL/
+
+  license: MIT
+
+  release: commit 7318622fa1bfa507f6e77b4bf38844f9d7c1af36 Wed Aug 18 23:17:18 2021 -0700
+  revision: 7318622fa1bfa507f6e77b4bf38844f9d7c1af36
+
+
+updatebot:
+    maintainer-phab: jgilbert
+    maintainer-bz: jgilbert@mozilla.com
+
+vendoring:
+  url: https://github.com/KhronosGroup/WebGL/tree/main/sdk/tests

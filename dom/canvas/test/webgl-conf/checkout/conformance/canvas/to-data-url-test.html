@@ -26,13 +26,34 @@ var ctx;
 var main = function() {
   description();
   ctx = document.getElementById("c2d").getContext("2d");
-  gl = wtu.create3DContext("c3d");
 
-  if (!gl) {
-    testFailed("can't create 3d context");
-    finishTest();
-    return;
-  }
+  var updateCanvas = function(width, height, attributes) {
+    var canvas = document.getElementById("c3d");
+
+    if (gl && (gl.attributes !== attributes)) {
+      // Attributes changed, recreate the canvas
+      var newCanvas = canvas.cloneNode();
+      canvas.parentNode.replaceChild(newCanvas, canvas);
+      canvas = newCanvas;
+      gl = undefined;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
+    if (!gl) {
+      gl = wtu.create3DContext(canvas, attributes);
+
+      if (!gl) {
+        testFailed("can't create 3d context");
+        return;
+      }
+
+      gl.attributes = attributes;
+    }
+
+    return gl;
+  };
 
   var clearRect = function(gl, x, y, width, height, color) {
     gl.clearColor(color[0] / 255, color[1] / 255, color[2] / 255, color[3] / 255);
@@ -40,10 +61,18 @@ var main = function() {
     gl.clear(gl.COLOR_BUFFER_BIT);
   };
 
-  var testSize = function(gl, width, height, callback) {
-    debug("testing " + width + " by " + height);
-    gl.canvas.width = width;
-    gl.canvas.height = height;
+  var testSize = function(width, height, attributes, callback) {
+    let attributesDebugMessage = "";
+    if (attributes) {
+      attributesDebugMessage = " attributes: " + JSON.stringify(attributes);
+    }
+    debug("testing " + width + " by " + height + attributesDebugMessage);
+    var gl = updateCanvas(width, height, attributes);
+    if (!gl) {
+      callback();
+      return;
+    }
+
     gl.viewport(0, 0, width, height);
     gl.enable(gl.SCISSOR_TEST);
 
@@ -71,6 +100,9 @@ var main = function() {
     });
   };
 
+  const premultipliedAlphaAttributes =  {
+    premultipliedAlpha: false,
+  };
   var tests = [
     { width:  16    , height:  16    , },
     { width:  16 - 1, height:  16    , },
@@ -87,6 +119,7 @@ var main = function() {
     { width: 512 - 1, height: 512 - 1, },
     { width: 512 + 1, height: 512 - 1, },
     { width: 512 - 1, height: 512 + 1, },
+    { width:  16    , height:  16    , attributes: premultipliedAlphaAttributes},
   ];
   var testIndex = 0;
   var runNextTest = function() {
@@ -95,7 +128,7 @@ var main = function() {
       return;
     }
     var test = tests[testIndex++];
-    testSize(gl, test.width, test.height, function() {
+    testSize(test.width, test.height, test.attributes, function() {
       setTimeout(runNextTest, 0);
     })
   };

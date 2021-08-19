@@ -12,7 +12,7 @@ found in the LICENSE.txt file.
 <script src="../../js/js-test-pre.js"></script>
 <script src="../../js/webgl-test-utils.js"></script>
 <script src="../../js/tests/compressed-texture-utils.js"></script>
-<title>WebGL WEBGL_compressed_texture_s3tc Conformance Tests</title>
+<title>WebGL WEBGL_compressed_texture_s3tc and EXT_texture_compression_rgtc Conformance Tests</title>
 <style>
 img {
  border: 1px solid black;
@@ -35,7 +35,7 @@ img {
 <div id="console"></div>
 <script>
 "use strict";
-description("This test verifies the functionality of the WEBGL_compressed_texture_s3tc extension, if it is available.");
+description("This test verifies the functionality of the WEBGL_compressed_texture_s3tc extension, if it is available. It also tests the related formats from the EXT_texture_compression_rgtc extension.");
 
 debug("");
 
@@ -130,6 +130,31 @@ var img_4x4_rgba_dxt5 = new Uint8Array([
     0x00, 0xF8, 0xE0, 0x07, 0x1B, 0x5B, 0xAB, 0xFF
 ]);
 
+// BC4 - just the alpha block from BC3 above, interpreted as the red channel.
+// See http://www.reedbeta.com/blog/understanding-bcn-texture-compression-formats/#bc4
+// for format details.
+var img_4x4_r_bc4 = new Uint8Array([
+    0xFF, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+]);
+
+// BC5 - Two BC3 alpha blocks, interpreted as the red and green channels.
+var img_4x4_rg_bc5 = new Uint8Array([
+    0xFF, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x00, 0xFF, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+]);
+
+// Signed BC4 - change endpoints to use full -1 to 1 range.
+var img_4x4_signed_r_bc4 = new Uint8Array([
+    0x7F, 0x80, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+]);
+
+// Signed BC5 - Two BC3 alpha blocks, interpreted as the red and green channels.
+var img_4x4_signed_rg_bc5 = new Uint8Array([
+    0x7F, 0x80, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x80, 0x7F, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+]);
+
+
 /*
 8x8 block endpoints use half-intensity values (appear darker than 4x4)
 */
@@ -151,6 +176,18 @@ var img_8x8_rgba_dxt5 = new Uint8Array([
     0xff,0x69,0x00,0x00,0x00,0x01,0x10,0x00,0x0f,0x78,0xe0,0x03,0x11,0x10,0x15,0x00,
     0xff,0xff,0x00,0x00,0x00,0x00,0x00,0x00,0xef,0x03,0xef,0x00,0x11,0x10,0x15,0x00
 ]);
+var img_8x8_r_bc4 = new Uint8Array([
+    0x7F, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x7F, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x7F, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x7F, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+]);
+var img_8x8_rg_bc5 = new Uint8Array([
+    0x7F, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6, 0x00, 0x7F, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x7F, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6, 0x00, 0x7F, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x7F, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6, 0x00, 0x7F, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+    0x7F, 0x00, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6, 0x00, 0x7F, 0x88, 0x16, 0x8D, 0x1A, 0x3B, 0xD6,
+]);
 
 var wtu = WebGLTestUtils;
 var ctu = CompressedTextureUtils;
@@ -159,6 +196,7 @@ var canvas = document.getElementById("canvas");
 var gl = wtu.create3DContext(canvas, {antialias: false});
 var program = wtu.setupTexturedQuad(gl);
 var ext = null;
+var ext_rgtc = {};
 var vao = null;
 var validFormats = {
     COMPRESSED_RGB_S3TC_DXT1_EXT  : 0x83F0,
@@ -187,6 +225,14 @@ if (!gl) {
 
         wtu.runExtensionSupportedTest(gl, "WEBGL_compressed_texture_s3tc", true);
         runTestExtension();
+    }
+    ext_rgtc = wtu.getExtensionWithKnownPrefixes(gl, "EXT_texture_compression_rgtc");
+    if (ext_rgtc) {
+        ext = ext || {};
+        // Make ctu.formatToString work for rgtc enums.
+        for (const name in ext_rgtc)
+            ext[name] = ext_rgtc[name];
+        runTestRGTC();
     }
 }
 
@@ -221,6 +267,145 @@ function runTestExtension() {
     if (contextVersion >= 2) {
         testDXT5_RGBA_PBO();
     }
+
+    // Test TexImage validation on level dimensions combinations.
+    debug("");
+    debug("When level equals 0, width and height must be a multiple of 4.");
+    debug("When level is larger than 0, this constraint doesn't apply.");
+    ctu.testTexImageLevelDimensions(gl, ext, validFormats, expectedByteLength, getBlockDimensions,
+      [
+        { level: 0, width: 4, height: 3, expectation: gl.INVALID_OPERATION, message: "0: 4x3" },
+        { level: 0, width: 3, height: 4, expectation: gl.INVALID_OPERATION, message: "0: 3x4" },
+        { level: 0, width: 2, height: 2, expectation: gl.INVALID_OPERATION, message: "0: 2x2" },
+        { level: 0, width: 4, height: 4, expectation: gl.NO_ERROR, message: "0: 4x4" },
+        { level: 1, width: 2, height: 2, expectation: gl.NO_ERROR, message: "1: 2x2" },
+        { level: 2, width: 1, height: 1, expectation: gl.NO_ERROR, message: "2: 1x1" },
+    ]);
+
+    ctu.testTexSubImageDimensions(gl, ext, validFormats, expectedByteLength, getBlockDimensions, 16, 16,
+      [
+        { xoffset: 0, yoffset: 0, width: 4, height: 3,
+          expectation: gl.INVALID_OPERATION, message: "height is not a multiple of 4" },
+        { xoffset: 0, yoffset: 0, width: 3, height: 4,
+          expectation: gl.INVALID_OPERATION, message: "width is not a multiple of 4" },
+        { xoffset: 1, yoffset: 0, width: 4, height: 4,
+          expectation: gl.INVALID_OPERATION, message: "xoffset is not a multiple of 4" },
+        { xoffset: 0, yoffset: 1, width: 4, height: 4,
+          expectation: gl.INVALID_OPERATION, message: "yoffset is not a multiple of 4" },
+        { xoffset: 12, yoffset: 12, width: 4, height: 4,
+          expectation: gl.NO_ERROR, message: "is valid" },
+    ]);
+
+    if (contextVersion >= 2) {
+        debug("");
+        debug("Testing NPOT textures");
+        ctu.testTexImageLevelDimensions(gl, ext, validFormats, expectedByteLength, getBlockDimensions,
+          [
+            { level: 0, width: 0, height: 0, expectation: gl.NO_ERROR, message: "0: 0x0 is valid" },
+            { level: 0, width: 1, height: 1, expectation: gl.INVALID_OPERATION, message: "0: 1x1 is invalid" },
+            { level: 0, width: 2, height: 2, expectation: gl.INVALID_OPERATION, message: "0: 2x2 is invalid" },
+            { level: 0, width: 3, height: 3, expectation: gl.INVALID_OPERATION, message: "0: 3x3 is invalid" },
+            { level: 0, width: 10, height: 10, expectation: gl.INVALID_OPERATION, message: "0: 10x10 is invalid" },
+            { level: 0, width: 11, height: 11, expectation: gl.INVALID_OPERATION, message: "0: 11x11 is invalid" },
+            { level: 0, width: 11, height: 12, expectation: gl.INVALID_OPERATION, message: "0: 11x12 is invalid" },
+            { level: 0, width: 12, height: 11, expectation: gl.INVALID_OPERATION, message: "0: 12x11 is invalid" },
+            { level: 0, width: 12, height: 12, expectation: gl.NO_ERROR, message: "0: 12x12 is valid" },
+            { level: 1, width:  0, height:  0, expectation: gl.NO_ERROR, message: "1: 0x0, is valid" },
+            { level: 1, width:  3, height:  3, expectation: gl.INVALID_OPERATION, message: "1: 3x3, is invalid" },
+            { level: 1, width:  5, height:  5, expectation: gl.INVALID_OPERATION, message: "1: 5x5, is invalid" },
+            { level: 1, width:  5, height:  6, expectation: gl.INVALID_OPERATION, message: "1: 5x6, is invalid" },
+            { level: 1, width:  6, height:  5, expectation: gl.INVALID_OPERATION, message: "1: 6x5, is invalid" },
+            { level: 1, width:  6, height:  6, expectation: gl.NO_ERROR, message: "1: 6x6, is valid" },
+            { level: 2, width:  0, height:  0, expectation: gl.NO_ERROR, message: "2: 0x0, is valid" },
+            { level: 2, width:  3, height:  3, expectation: gl.NO_ERROR, message: "2: 3x3, is valid" },
+            { level: 3, width:  1, height:  3, expectation: gl.NO_ERROR, message: "3: 1x3, is valid" },
+            { level: 3, width:  1, height:  1, expectation: gl.NO_ERROR, message: "3: 1x1, is valid" },
+        ]);
+
+        debug("");
+        debug("Testing partial updates");
+        ctu.testTexSubImageDimensions(gl, ext, validFormats, expectedByteLength, getBlockDimensions, 12, 12,
+        [
+          { xoffset: 0, yoffset: 0, width: 4, height: 3,
+            expectation: gl.INVALID_OPERATION, message: "height is not a multiple of 4" },
+          { xoffset: 0, yoffset: 0, width: 3, height: 4,
+            expectation: gl.INVALID_OPERATION, message: "width is not a multiple of 4" },
+          { xoffset: 1, yoffset: 0, width: 4, height: 4,
+            expectation: gl.INVALID_OPERATION, message: "xoffset is not a multiple of 4" },
+          { xoffset: 0, yoffset: 1, width: 4, height: 4,
+            expectation: gl.INVALID_OPERATION, message: "yoffset is not a multiple of 4" },
+          { xoffset: 8, yoffset: 8, width: 4, height: 4,
+            expectation: gl.NO_ERROR, message: "is valid" },
+        ]);
+
+        debug("");
+        debug("Testing immutable NPOT textures");
+        ctu.testTexStorageLevelDimensions(gl, ext, validFormats, expectedByteLength, getBlockDimensions,
+          [
+            { width: 12, height: 12, expectation: gl.NO_ERROR, message: "0: 12x12 is valid" },
+            { width:  6, height:  6, expectation: gl.NO_ERROR, message: "1: 6x6, is valid" },
+            { width:  3, height:  3, expectation: gl.NO_ERROR, message: "2: 3x3, is valid" },
+            { width:  1, height:  1, expectation: gl.NO_ERROR, message: "3: 1x1, is valid" },
+        ]);
+    }
+}
+
+function runTestRGTC() {
+    var tests = [
+        {   width: 4,
+            height: 4,
+            channels: 1,
+            data: img_4x4_r_bc4,
+            format: ext_rgtc.COMPRESSED_RED_RGTC1_EXT,
+            hasAlpha: false,
+        },
+        {   width: 4,
+            height: 4,
+            channels: 1,
+            data: img_4x4_signed_r_bc4,
+            format: ext_rgtc.COMPRESSED_SIGNED_RED_RGTC1_EXT,
+            hasAlpha: false,
+        },
+        {   width: 4,
+            height: 4,
+            channels: 2,
+            data: img_4x4_rg_bc5,
+            format: ext_rgtc.COMPRESSED_RED_GREEN_RGTC2_EXT,
+            hasAlpha: false,
+        },
+        {   width: 4,
+            height: 4,
+            channels: 2,
+            data: img_4x4_signed_rg_bc5,
+            format: ext_rgtc.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT,
+            hasAlpha: false,
+        },
+        {   width: 8,
+            height: 8,
+            channels: 2,
+            data: img_8x8_r_bc4,
+            format: ext_rgtc.COMPRESSED_RED_RGTC1_EXT,
+            hasAlpha: false,
+            subX0: 0,
+            subY0: 0,
+            subWidth: 4,
+            subHeight: 4,
+            subData: img_4x4_r_bc4,
+        },
+        {   width: 8,
+            height: 8,
+            channels: 2,
+            data: img_8x8_rg_bc5,
+            format: ext_rgtc.COMPRESSED_RED_GREEN_RGTC2_EXT,
+            hasAlpha: false,
+            subX0: 0,
+            subY0: 0,
+            subWidth: 4,
+            subHeight: 4,
+            subData: img_4x4_rg_bc5,
+        },
+    ];
+    testDXTTextures(tests);
 }
 
 function testDXT1_RGB() {
@@ -365,20 +550,29 @@ function uncompressDXTBlock(
         }
         return r;
     }
-    var isDXT1 = format == ext.COMPRESSED_RGB_S3TC_DXT1_EXT ||
-                 format == ext.COMPRESSED_RGBA_S3TC_DXT1_EXT;
-    var colorOffset = srcOffset + (isDXT1 ? 0 : 8);
-    var color0 = make565(src, colorOffset + 0);
-    var color1 = make565(src, colorOffset + 2);
-    var c0gtc1 = color0 > color1 || !isDXT1;
-    var rgba0 = make8888From565(color0);
-    var rgba1 = make8888From565(color1);
-    var colors = [
-            rgba0,
-            rgba1,
-            c0gtc1 ? mix(2, rgba0, rgba1, 3) : mix(1, rgba0, rgba1, 2),
-            c0gtc1 ? mix(2, rgba1, rgba0, 3) : [0, 0, 0, 255]
-        ];
+    var isBC45 = ext_rgtc &&
+        (format == ext_rgtc.COMPRESSED_RED_RGTC1_EXT ||
+         format == ext_rgtc.COMPRESSED_RED_GREEN_RGTC2_EXT ||
+         format == ext_rgtc.COMPRESSED_SIGNED_RED_RGTC1_EXT ||
+         format == ext_rgtc.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT);
+    if (!isBC45) {
+        var isDXT1 = format == ext.COMPRESSED_RGB_S3TC_DXT1_EXT ||
+                     format == ext.COMPRESSED_RGBA_S3TC_DXT1_EXT;
+        var colorOffset = srcOffset + (isDXT1 ? 0 : 8);
+        var color0 = make565(src, colorOffset + 0);
+        var color1 = make565(src, colorOffset + 2);
+        var c0gtc1 = color0 > color1 || !isDXT1;
+        var rgba0 = make8888From565(color0);
+        var rgba1 = make8888From565(color1);
+        var colors = [
+                rgba0,
+                rgba1,
+                c0gtc1 ? mix(2, rgba0, rgba1, 3) : mix(1, rgba0, rgba1, 2),
+                c0gtc1 ? mix(2, rgba1, rgba0, 3) : [0, 0, 0, 255]
+            ];
+    }
+    const isSigned = ext_rgtc && (format == ext_rgtc.COMPRESSED_SIGNED_RED_RGTC1_EXT || format == ext_rgtc.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT);
+    const signedSrc = new Int8Array(src);
 
     // yea I know there is a lot of math in this inner loop.
     // so sue me.
@@ -386,9 +580,57 @@ function uncompressDXTBlock(
         var pixels = src[colorOffset + 4 + yy];
         for (var xx = 0; xx < 4; ++xx) {
             var dstOff = ((destY + yy) * destWidth + destX + xx) * 4;
-            var code = (pixels >> (xx * 2)) & 0x3;
-            var srcColor = colors[code];
+            if (!isBC45) {
+                var code = (pixels >> (xx * 2)) & 0x3;
+                var srcColor = colors[code];
+            }
             var alpha;
+            var rgChannel2 = 0;
+            let decodeAlpha = (offset) => {
+                let alpha;
+                var alpha0 = (isSigned ? signedSrc : src)[offset + 0];
+                var alpha1 = (isSigned ? signedSrc : src)[offset + 1];
+                var alphaOff = (yy >> 1) * 3 + 2;
+                var alphaBits =
+                     src[offset + alphaOff + 0] +
+                     src[offset + alphaOff + 1] * 256 +
+                     src[offset + alphaOff + 2] * 65536;
+                var alphaShift = (yy % 2) * 12 + xx * 3;
+                var alphaCode = (alphaBits >> alphaShift) & 0x7;
+                if (alpha0 > alpha1) {
+                    switch (alphaCode) {
+                    case 0:
+                        alpha = alpha0;
+                        break;
+                    case 1:
+                        alpha = alpha1;
+                        break;
+                    default:
+                        alpha = Math.floor(((8 - alphaCode) * alpha0 + (alphaCode - 1) * alpha1) / 7.0 + 0.5);
+                        break;
+                    }
+                } else {
+                    switch (alphaCode) {
+                    case 0:
+                        alpha = alpha0;
+                        break;
+                    case 1:
+                        alpha = alpha1;
+                        break;
+                    case 6:
+                        alpha = 0;
+                        break;
+                    case 7:
+                        alpha = 255;
+                        break;
+                    default:
+                        alpha = Math.floor(((6 - alphaCode) * alpha0 + (alphaCode - 1) * alpha1) / 5.0 + 0.5);
+                        break;
+                    }
+                }
+                return alpha;
+            }
+
             switch (format) {
             case ext.COMPRESSED_RGB_S3TC_DXT1_EXT:
                 alpha = 255;
@@ -403,57 +645,33 @@ function uncompressDXTBlock(
                     alpha = alpha1 | (alpha1 << 4);
                 }
                 break;
+            case ext_rgtc.COMPRESSED_RED_GREEN_RGTC2_EXT:
+            case ext_rgtc.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT:
+                rgChannel2 = decodeAlpha(srcOffset + 8);
+                // FALLTHROUGH
             case ext.COMPRESSED_RGBA_S3TC_DXT5_EXT:
-                {
-                    var alpha0 = src[srcOffset + 0];
-                    var alpha1 = src[srcOffset + 1];
-                    var alphaOff = (yy >> 1) * 3 + 2;
-                    var alphaBits =
-                         src[srcOffset + alphaOff + 0] +
-                         src[srcOffset + alphaOff + 1] * 256 +
-                         src[srcOffset + alphaOff + 2] * 65536;
-                    var alphaShift = (yy % 2) * 12 + xx * 3;
-                    var alphaCode = (alphaBits >> alphaShift) & 0x7;
-                    if (alpha0 > alpha1) {
-                        switch (alphaCode) {
-                        case 0:
-                            alpha = alpha0;
-                            break;
-                        case 1:
-                            alpha = alpha1;
-                            break;
-                        default:
-                            alpha = Math.floor(((8 - alphaCode) * alpha0 + (alphaCode - 1) * alpha1) / 7.0 + 0.5);
-                            break;
-                        }
-                    } else {
-                        switch (alphaCode) {
-                        case 0:
-                            alpha = alpha0;
-                            break;
-                        case 1:
-                            alpha = alpha1;
-                            break;
-                        case 6:
-                            alpha = 0;
-                            break;
-                        case 7:
-                            alpha = 255;
-                            break;
-                        default:
-                            alpha = Math.floor(((6 - alphaCode) * alpha0 + (alphaCode - 1) * alpha1) / 5.0 + 0.5);
-                            break;
-                        }
-                    }
-                }
+            case ext_rgtc.COMPRESSED_RED_RGTC1_EXT:
+            case ext_rgtc.COMPRESSED_SIGNED_RED_RGTC1_EXT:
+                alpha = decodeAlpha(srcOffset);
                 break;
             default:
                 throw "bad format";
             }
-            destBuffer[dstOff + 0] = srcColor[0];
-            destBuffer[dstOff + 1] = srcColor[1];
-            destBuffer[dstOff + 2] = srcColor[2];
-            destBuffer[dstOff + 3] = alpha;
+            if (isBC45) {
+                destBuffer[dstOff + 0] = alpha;
+                destBuffer[dstOff + 1] = rgChannel2;
+                destBuffer[dstOff + 2] = 0;
+                destBuffer[dstOff + 3] = 255;
+                if (isSigned) {
+                    destBuffer[dstOff + 0] = Math.max(0, alpha) * 2;
+                    destBuffer[dstOff + 1] = Math.max(0, rgChannel2) * 2;
+                }
+            } else {
+                destBuffer[dstOff + 0] = srcColor[0];
+                destBuffer[dstOff + 1] = srcColor[1];
+                destBuffer[dstOff + 2] = srcColor[2];
+                destBuffer[dstOff + 3] = alpha;
+            }
         }
     }
 }
@@ -461,7 +679,8 @@ function uncompressDXTBlock(
 function getBlockSize(format) {
   var isDXT1 = format == ext.COMPRESSED_RGB_S3TC_DXT1_EXT ||
                format == ext.COMPRESSED_RGBA_S3TC_DXT1_EXT;
-  return isDXT1 ? 8 : 16;
+  var isBC4 = ext_rgtc && (format == ext_rgtc.COMPRESSED_RED_RGTC1_EXT || format == ext_rgtc.COMPRESSED_SIGNED_RED_RGTC1_EXT);
+  return isDXT1 || isBC4 ? 8 : 16;
 }
 
 function uncompressDXT(width, height, data, format) {
@@ -487,8 +706,10 @@ function uncompressDXTIntoSubRegion(width, height, subX0, subY0, subWidth, subHe
         throw "bad dimension";
 
     var dest = new Uint8Array(width * height * 4);
-    // Zero-filled DXT1 texture represents [0, 0, 0, 255]
-    if (format == ext.COMPRESSED_RGB_S3TC_DXT1_EXT || format == ext.COMPRESSED_RGBA_S3TC_DXT1_EXT) {
+    // Zero-filled DXT1 or BC4/5 texture represents [0, 0, 0, 255]
+    if (format == ext.COMPRESSED_RGB_S3TC_DXT1_EXT || format == ext.COMPRESSED_RGBA_S3TC_DXT1_EXT ||
+        format == ext.COMPRESSED_RED_RGTC1_EXT || format == ext.COMPRESSED_SIGNED_RED_RGTC1_EXT ||
+        format == ext.COMPRESSED_RED_GREEN_RGTC2_EXT || format == ext.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT) {
         for (var i = 3; i < dest.length; i += 4) dest[i] = 255;
     }
     var blocksAcross = subWidth / 4;
@@ -612,14 +833,16 @@ function testDXTTexture(test, useTexStorage) {
         wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions");
 
         if (width == 4) {
+            // The width/height of the implied base level must be a multiple of the block size.
             gl.compressedTexImage2D(gl.TEXTURE_2D, 1, format, 1, height, 0, data);
-            wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions for level 1");
+            wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions for level > 0");
             gl.compressedTexImage2D(gl.TEXTURE_2D, 1, format, 2, height, 0, data);
             wtu.glErrorShouldBe(gl, gl.NO_ERROR, "valid dimensions for level > 0");
         }
         if (height == 4) {
+            // The width/height of the implied base level must be a multiple of the block size.
             gl.compressedTexImage2D(gl.TEXTURE_2D, 1, format, width, 1, 0, data);
-            wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions for level 1");
+            wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions for level > 0");
             gl.compressedTexImage2D(gl.TEXTURE_2D, 1, format, width, 2, 0, data);
             wtu.glErrorShouldBe(gl, gl.NO_ERROR, "valid dimensions for level > 0");
         }
@@ -639,6 +862,14 @@ function testDXTTexture(test, useTexStorage) {
       break;
     case ext.COMPRESSED_RGBA_S3TC_DXT5_EXT:
       wrongFormat = ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+      break;
+    case ext_rgtc.COMPRESSED_RED_RGTC1_EXT:
+    case ext_rgtc.COMPRESSED_SIGNED_RED_RGTC1_EXT:
+      wrongFormat = ext_rgtc.COMPRESSED_RED_GREEN_RGTC2_EXT;
+      break;
+    case ext_rgtc.COMPRESSED_RED_GREEN_RGTC2_EXT:
+    case ext_rgtc.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT:
+      wrongFormat = ext_rgtc.COMPRESSED_RED_RGTC1_EXT;
       break;
     }
 

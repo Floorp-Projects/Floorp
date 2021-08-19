@@ -146,6 +146,7 @@ const wtu = WebGLTestUtils;
 const canvas = document.getElementById("canvas");
 const gl = wtu.create3DContext(canvas);
 const instancedExt = gl && gl.getExtension('ANGLE_instanced_arrays');
+const bufferUsageSet = [ gl.STATIC_DRAW, gl.DYNAMIC_DRAW ];
 
 // Check if the extension is either both enabled and supported or
 // not enabled and not supported.
@@ -187,18 +188,18 @@ function runTest() {
 
 function doTest(ext, instanced) {
 
-  function runValidationTests() {
+  function runValidationTests(bufferUsage) {
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0.2,0.2, 0.8,0.2, 0.5,0.8 ]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0.2,0.2, 0.8,0.2, 0.5,0.8 ]), bufferUsage);
 
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array([ 0, 1, 2, 0]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array([ 0, 1, 2, 0]), bufferUsage);
 
     const instanceBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0, 1, 2, 3 ]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0, 1, 2, 3 ]), bufferUsage);
 
     const program = wtu.setupProgram(gl, ["vshaderNoDrawID", "fshader"], ["vPosition", "vInstance"], [0, 1]);
     expectTrue(program != null, "can compile simple program");
@@ -354,7 +355,7 @@ function doTest(ext, instanced) {
     }
   }
 
-  function runShaderTests() {
+  function runShaderTests(bufferUsage) {
     const illegalProgram = wtu.setupProgram(gl, ["vshaderIllegalDrawID", "fshader"], ["vPosition"], [0]);
     expectTrue(illegalProgram == null, "cannot compile program with gl_DrawID but no extension directive");
 
@@ -363,14 +364,14 @@ function doTest(ext, instanced) {
     expectTrue(drawIDProgram !== null, "can compile program with gl_DrawID");
     gl.useProgram(drawIDProgram);
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0,0, 1,0, 0,1, 0,1, 1,0, 1,1 ]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0,0, 1,0, 0,1, 0,1, 1,0, 1,1 ]), bufferUsage);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     wtu.checkCanvas(gl, [0, 255, 0, 255], "gl_DrawID is 0 for non-Multi* draw calls", 0);
   }
 
-  function runPixelTests() {
+  function runPixelTests(bufferUsage, useSharedArrayBuffer) {
     // An array of quads is tiled across the screen.
     // gl_DrawID is checked by using it to select the color of the draw.
     // Instanced entrypoints are tested here scaling and then instancing the
@@ -438,16 +439,16 @@ function doTest(ext, instanced) {
     const instanceBuffer = gl.createBuffer();
 
     gl.bindBuffer(gl.ARRAY_BUFFER, nonIndexedVertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, nonIndexedVertices, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, nonIndexedVertices, bufferUsage);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, bufferUsage);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, bufferUsage);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([1, 2, 3, 4]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([1, 2, 3, 4]), bufferUsage);
 
     function checkResult(config, msg) {
       const rects = [];
@@ -505,10 +506,18 @@ function doTest(ext, instanced) {
       wtu.checkCanvasRects(gl, rects);
     }
 
-    const firsts = new Uint32Array(tri_count);
-    const counts = new Uint32Array(tri_count);
-    const offsets = new Uint32Array(tri_count);
-    const instances = new Uint32Array(tri_count);
+    function newIntArray(count) {
+      if (!useSharedArrayBuffer) {
+        return new Int32Array(count);
+      }
+      let sab = new SharedArrayBuffer(count * Int32Array.BYTES_PER_ELEMENT);
+      return new Int32Array(sab);
+    }
+
+    const firsts = newIntArray(tri_count);
+    const counts = newIntArray(tri_count);
+    const offsets = newIntArray(tri_count);
+    const instances = newIntArray(tri_count);
 
     for (let i = 0; i < firsts.length; ++i) firsts[i] = i * 3;
     counts.fill(3);
@@ -520,7 +529,7 @@ function doTest(ext, instanced) {
     const offsetsOffset = countsOffset + counts.length;
     const instancesOffset = offsetsOffset + instances.length;
 
-    const buffer = new Uint32Array(firstsOffset + firsts.length + counts.length + offsets.length + instances.length);
+    const buffer = newIntArray(firstsOffset + firsts.length + counts.length + offsets.length + instances.length);
     buffer.set(firsts, firstsOffset);
     buffer.set(counts, countsOffset);
     buffer.set(offsets, offsetsOffset);
@@ -663,6 +672,8 @@ function doTest(ext, instanced) {
         config.instanced ? ' instanced' : ''
       ) + (
         config.drawID ? ' with gl_DrawID' : ''
+      ) + (
+        useSharedArrayBuffer ? ' and SharedArrayBuffer' : ''
       ));
 
       gl.disableVertexAttribArray(0);
@@ -821,9 +832,18 @@ function doTest(ext, instanced) {
     }
   }
 
-  runValidationTests();
-  runShaderTests();
-  runPixelTests();
+  for (let i = 0; i < bufferUsageSet.length; i++) {
+    let bufferUsage = bufferUsageSet[i];
+    debug("Testing with BufferUsage = " + bufferUsage);
+    runValidationTests(bufferUsage);
+    runShaderTests(bufferUsage);
+    runPixelTests(bufferUsage, false);
+  }
+
+  // Run a subset of the pixel tests with SharedArrayBuffer if supported.
+  if (window.SharedArrayBuffer) {
+    runPixelTests(bufferUsageSet[0], true);
+  }
 }
 
 runTest();
