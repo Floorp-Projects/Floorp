@@ -69,6 +69,7 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
@@ -511,7 +512,7 @@ class BrowserFragment :
 
         val addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(
             tab.content.url,
-            tab.content.title,
+            tab.content.titleOrDomain,
             tab.trackingProtection.enabled,
             requestDesktop = requestDesktop
         )

@@ -5,6 +5,7 @@
 package org.mozilla.focus.ext
 
 import android.net.Uri
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.utils.UrlUtils
 
 // Extension functions for the String class
@@ -75,3 +76,10 @@ fun String.removePrefixesIgnoreCase(vararg prefixes: String): String {
 
     return value
 }
+
+/**
+ * Tries to parse and get root domain part if [String] is a valid URL.
+ */
+val String.tryGetRootDomain: String
+    get() =
+        this.tryGetHostFromUrl().replaceAfter(".", "").removeSuffix(".")

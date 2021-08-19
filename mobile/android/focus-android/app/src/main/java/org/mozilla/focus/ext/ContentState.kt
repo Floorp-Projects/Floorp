@@ -8,3 +8,9 @@ import mozilla.components.browser.state.state.ContentState
 
 val ContentState.isSearch: Boolean
     get() = searchTerms.isNotEmpty()
+
+/**
+ * Returns the tab site title or domain name if title is empty.
+ */
+val ContentState.titleOrDomain: String
+    get() = title.ifEmpty { url.tryGetRootDomain }
