@@ -1,5 +1,5 @@
-# include the XUL reftests
-include xul/reftest.list
+# include the XUL reftests, except on Android which doesn't have XUL.
+skip-if(Android) include xul/reftest.list
 
 != newline-1.html newline-ref.html
 == newline-2.html newline-ref.html
