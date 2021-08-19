@@ -1,43 +1,15 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ProfilerThreadRegistrationData.h"
+#include "RegisteredThread.h"
 
 #include "mozilla/ProfilerMarkers.h"
 #include "js/AllocationRecording.h"
 #include "js/ProfilingStack.h"
 #include "js/TraceLoggerAPI.h"
-
-#if defined(XP_WIN)
-#  include <windows.h>
-#elif defined(XP_DARWIN)
-#  include <pthread.h>
-#endif
-
-namespace mozilla::profiler {
-
-ThreadRegistrationData::ThreadRegistrationData(const char* aName,
-                                               const void* aStackTop)
-    : mInfo(aName),
-      mPlatformData(mInfo.ThreadId()),
-      mStackTop(
-#if defined(XP_WIN)
-          // We don't have to guess on Windows.
-          reinterpret_cast<const void*>(
-              reinterpret_cast<PNT_TIB>(NtCurrentTeb())->StackBase)
-#elif defined(XP_DARWIN)
-          // We don't have to guess on Mac/Darwin.
-          reinterpret_cast<const void*>(
-              pthread_get_stackaddr_np(pthread_self()))
-#else
-          // Otherwise use the given guess.
-          aStackTop
-#endif
-      ) {
-}
 
 // This is a simplified version of profiler_add_marker that can be easily passed
 // into the JS engine.
@@ -98,28 +70,89 @@ static void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
       info.size, info.inNursery);
 }
 
-void ThreadRegistrationLockedRWFromAnyThread::SetIsBeingProfiled(
-    bool aIsBeingProfiled, const PSAutoLock&) {
-  mIsBeingProfiled = aIsBeingProfiled;
+RacyRegisteredThread::RacyRegisteredThread(ProfilerThreadId aThreadId)
+    : mProfilingStackOwner(
+          mozilla::MakeNotNull<RefPtr<mozilla::ProfilingStackOwner>>()),
+      mThreadId(aThreadId),
+      mSleep(AWAKE),
+      mIsBeingProfiled(false) {
+  MOZ_COUNT_CTOR(RacyRegisteredThread);
 }
 
-void ThreadRegistrationLockedRWOnThread::SetJSContext(JSContext* aJSContext) {
-  MOZ_ASSERT(aJSContext && !mJSContext);
+RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIThread* aThread,
+                                   void* aStackTop)
+    : mRacyRegisteredThread(aInfo->ThreadId()),
+      mPlatformData(AllocPlatformData(aInfo->ThreadId())),
+      mStackTop(aStackTop),
+      mThreadInfo(aInfo),
+      mThread(aThread),
+      mContext(nullptr),
+      mJSSampling(INACTIVE),
+      mJSFlags(0) {
+  MOZ_COUNT_CTOR(RegisteredThread);
 
-  mJSContext = aJSContext;
+  // NOTE: aThread can be null for the first thread, before the ThreadManager
+  // is initialized.
+
+  // We don't have to guess on mac
+#if defined(GP_OS_darwin)
+  pthread_t self = pthread_self();
+  mStackTop = pthread_get_stackaddr_np(self);
+#endif
+}
+
+RegisteredThread::~RegisteredThread() { MOZ_COUNT_DTOR(RegisteredThread); }
+
+size_t RegisteredThread::SizeOfIncludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
+  size_t n = aMallocSizeOf(this);
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mPlatformData
+  //
+  // The following members are not measured:
+  // - mThreadInfo: because it is non-owning
+
+  return n;
+}
+
+void RegisteredThread::GetRunningEventDelay(const mozilla::TimeStamp& aNow,
+                                            mozilla::TimeDuration& aDelay,
+                                            mozilla::TimeDuration& aRunning) {
+  if (mThread) {  // can be null right at the start of a process
+    mozilla::TimeStamp start;
+    mThread->GetRunningEventDelay(&aDelay, &start);
+    if (!start.IsNull()) {
+      // Note: the timestamp used here will be from when we started to
+      // suspend and sample the thread; which is also the timestamp
+      // associated with the sample.
+      aRunning = aNow - start;
+      return;
+    }
+  }
+  aDelay = mozilla::TimeDuration();
+  aRunning = mozilla::TimeDuration();
+}
+
+void RegisteredThread::SetJSContext(JSContext* aContext) {
+  // This function runs on-thread.
+
+  MOZ_ASSERT(aContext && !mContext);
+
+  mContext = aContext;
 
   // We give the JS engine a non-owning reference to the ProfilingStack. It's
   // important that the JS engine doesn't touch this once the thread dies.
-  js::SetContextProfilingStack(aJSContext, &ProfilingStackRef());
+  js::SetContextProfilingStack(aContext,
+                               &RacyRegisteredThread().ProfilingStack());
 }
 
-void ThreadRegistrationLockedRWOnThread::ClearJSContext() {
-  mJSContext = nullptr;
-}
+void RegisteredThread::PollJSSampling() {
+  // This function runs on-thread.
 
-void ThreadRegistrationLockedRWOnThread::PollJSSampling() {
   // We can't start/stop profiling until we have the thread's JSContext.
-  if (mJSContext) {
+  if (mContext) {
     // It is possible for mJSSampling to go through the following sequences.
     //
     // - INACTIVE, ACTIVE_REQUESTED, INACTIVE_REQUESTED, INACTIVE
@@ -131,29 +164,26 @@ void ThreadRegistrationLockedRWOnThread::PollJSSampling() {
     //
     if (mJSSampling == ACTIVE_REQUESTED) {
       mJSSampling = ACTIVE;
-      js::EnableContextProfilingStack(mJSContext, true);
+      js::EnableContextProfilingStack(mContext, true);
       if (JSTracerEnabled()) {
-        JS::StartTraceLogger(mJSContext);
+        JS::StartTraceLogger(mContext);
       }
       if (JSAllocationsEnabled()) {
         // TODO - This probability should not be hardcoded. See Bug 1547284.
-        JS::EnableRecordingAllocations(mJSContext,
+        JS::EnableRecordingAllocations(mContext,
                                        profiler_add_js_allocation_marker, 0.01);
       }
-      js::RegisterContextProfilingEventMarker(mJSContext,
-                                              profiler_add_js_marker);
+      js::RegisterContextProfilingEventMarker(mContext, profiler_add_js_marker);
 
     } else if (mJSSampling == INACTIVE_REQUESTED) {
       mJSSampling = INACTIVE;
-      js::EnableContextProfilingStack(mJSContext, false);
+      js::EnableContextProfilingStack(mContext, false);
       if (JSTracerEnabled()) {
-        JS::StopTraceLogger(mJSContext);
+        JS::StopTraceLogger(mContext);
       }
       if (JSAllocationsEnabled()) {
-        JS::DisableRecordingAllocations(mJSContext);
+        JS::DisableRecordingAllocations(mContext);
       }
     }
   }
 }
-
-}  // namespace mozilla::profiler

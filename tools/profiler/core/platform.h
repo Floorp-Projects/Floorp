@@ -73,6 +73,18 @@ typedef uint8_t* Address;
 // ----------------------------------------------------------------------------
 // Miscellaneous
 
+class PlatformData;
+
+// We can't new/delete the type safely without defining it
+// (-Wdelete-incomplete).  Use these to hide the details from clients.
+struct PlatformDataDestructor {
+  void operator()(PlatformData*);
+};
+
+typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
+    UniquePlatformData;
+UniquePlatformData AllocPlatformData(ProfilerThreadId aThreadId);
+
 namespace mozilla {
 class JSONWriter;
 }

@@ -34,13 +34,38 @@
 
 // this port is based off of v8 svn revision 9837
 
-mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId)
-    : mProfiledThread(mach_thread_self()) {}
-
-mozilla::profiler::PlatformData::~PlatformData() {
-  // Deallocate Mach port for thread.
-  mach_port_deallocate(mach_task_self(), mProfiledThread);
+void* GetStackTop(void* aGuess) {
+  pthread_t thread = pthread_self();
+  return pthread_get_stackaddr_np(thread);
 }
+
+class PlatformData {
+ public:
+  explicit PlatformData(ProfilerThreadId aThreadId)
+      : mProfiledThread(mach_thread_self()) {
+    MOZ_COUNT_CTOR(PlatformData);
+  }
+
+  ~PlatformData() {
+    // Deallocate Mach port for thread.
+    mach_port_deallocate(mach_task_self(), mProfiledThread);
+
+    MOZ_COUNT_DTOR(PlatformData);
+  }
+
+  thread_act_t ProfiledThread() const { return mProfiledThread; }
+
+  RunningTimes& PreviousThreadRunningTimesRef() {
+    return mPreviousThreadRunningTimes;
+  }
+
+ private:
+  // Note: for mProfiledThread Mach primitives are used instead of pthread's
+  // because the latter doesn't provide thread manipulation primitives required.
+  // For details, consult "Mac OS X Internals" book, Section 7.3.
+  thread_act_t mProfiledThread;
+  RunningTimes mPreviousThreadRunningTimes;
+};
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN Sampler target specifics
@@ -56,19 +81,18 @@ static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
 }
 
 static RunningTimes GetThreadRunningTimesDiff(
-    PSLockRef aLock,
-    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
+    PSLockRef aLock, const RegisteredThread& aRegisteredThread) {
   AUTO_PROFILER_STATS(GetRunningTimes);
 
-  const mozilla::profiler::PlatformData& platformData =
-      aThreadData.PlatformDataCRef();
+  PlatformData* platformData = aRegisteredThread.GetPlatformData();
+  MOZ_RELEASE_ASSERT(platformData);
 
   const RunningTimes newRunningTimes = GetRunningTimesWithTightTimestamp(
-      [&platformData](RunningTimes& aRunningTimes) {
+      [platformData](RunningTimes& aRunningTimes) {
         AUTO_PROFILER_STATS(GetRunningTimes_thread_info);
         thread_basic_info_data_t threadBasicInfo;
         mach_msg_type_number_t basicCount = THREAD_BASIC_INFO_COUNT;
-        if (thread_info(platformData.ProfiledThread(), THREAD_BASIC_INFO,
+        if (thread_info(platformData->ProfiledThread(), THREAD_BASIC_INFO,
                         reinterpret_cast<thread_info_t>(&threadBasicInfo),
                         &basicCount) == KERN_SUCCESS &&
             basicCount == THREAD_BASIC_INFO_COUNT) {
@@ -86,22 +110,25 @@ static RunningTimes GetThreadRunningTimesDiff(
         }
       });
 
-  ProfiledThreadData* profiledThreadData =
-      aThreadData.GetProfiledThreadData(aLock);
-  MOZ_ASSERT(profiledThreadData);
-  RunningTimes& previousRunningTimes =
-      profiledThreadData->PreviousThreadRunningTimesRef();
-  const RunningTimes diff = newRunningTimes - previousRunningTimes;
-  previousRunningTimes = newRunningTimes;
+  const RunningTimes diff =
+      newRunningTimes - platformData->PreviousThreadRunningTimesRef();
+  platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
   return diff;
+}
+
+static void ClearThreadRunningTimes(PSLockRef aLock,
+                                    const RegisteredThread& aRegisteredThread) {
+  PlatformData* const platformData = aRegisteredThread.GetPlatformData();
+  MOZ_RELEASE_ASSERT(platformData);
+  platformData->PreviousThreadRunningTimesRef().Clear();
 }
 
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
-    PSLockRef aLock,
-    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
+    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
     const TimeStamp& aNow, const Func& aProcessRegs) {
-  thread_act_t samplee_thread = aThreadData.PlatformDataCRef().ProfiledThread();
+  thread_act_t samplee_thread =
+      aRegisteredThread.GetPlatformData()->ProfiledThread();
 
   //----------------------------------------------------------------//
   // Suspend the samplee thread and get its context.

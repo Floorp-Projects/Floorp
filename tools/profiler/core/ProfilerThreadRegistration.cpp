@@ -6,7 +6,6 @@
 
 #include "mozilla/ProfilerThreadRegistration.h"
 
-#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerThreadRegistry.h"
 
 namespace mozilla::profiler {
@@ -32,16 +31,6 @@ ThreadRegistration::ThreadRegistration(const char* aName, const void* aStackTop)
       // This is a nested ThreadRegistration object, so the thread is already
       // registered in the TLS and ThreadRegistry and we don't need to register
       // again.
-      MOZ_ASSERT(
-          mData.Info().ThreadId() == rootRegistration->mData.Info().ThreadId(),
-          "Thread being re-registered has changed its TID");
-      // TODO: Use new name. This is currently not possible because the
-      // TLS-stored RegisteredThread's ThreadInfo cannot be changed.
-      // In the meantime, we record a marker that could be used in the frontend.
-      PROFILER_MARKER_TEXT(
-          "Nested ThreadRegistration()", OTHER_Profiling,
-          MarkerThreadId::MainThread(),
-          ProfilerString8View::WrapNullTerminatedString(aName));
       return;
     }
 
@@ -64,29 +53,8 @@ ThreadRegistration::~ThreadRegistration() {
   mDataMutex.Unlock();
 #endif  // DEBUG
   if (auto* tls = GetTLS(); tls) {
-    ThreadRegistration* threadRegistrationInTLS = tls->get();
-    if (!threadRegistrationInTLS) {
-      // Already removed from the TLS!? This could happen with improperly-nested
-      // register/unregister calls, and the first ThreadRegistration has already
-      // been unregistered.
-      // We cannot record a marker on this thread because it was already
-      // unregistered. Send it to the main thread (unless this *is* already the
-      // main thread, which has been unregistered); this may be useful to catch
-      // mismatched register/unregister pairs in Firefox.
-      if (!profiler_is_main_thread()) {
-        PROFILER_MARKER_TEXT(
-            "~ThreadRegistration() but TLS is empty", OTHER_Profiling,
-            MarkerThreadId::MainThread(),
-            ProfilerString8View::WrapNullTerminatedString(mData.Info().Name()));
-      }
-      return;
-    }
-    if (threadRegistrationInTLS != this) {
+    if (tls->get() != this) {
       // This was a nested registration, nothing to unregister yet.
-      PROFILER_MARKER_TEXT(
-          "Nested ~ThreadRegistration()", OTHER_Profiling,
-          MarkerThreadId::MainThread(),
-          ProfilerString8View::WrapNullTerminatedString(mData.Info().Name()));
       return;
     }
 
@@ -102,9 +70,6 @@ ProfilingStack& ThreadRegistration::RegisterThread(const char* aName,
     // Already registered, record the extra depth to ignore the matching
     // UnregisterThread.
     ++rootRegistration->mOtherRegistrations;
-    PROFILER_MARKER_TEXT("Nested ThreadRegistration::RegisterThread()",
-                         OTHER_Profiling, MarkerThreadId::MainThread(),
-                         ProfilerString8View::WrapNullTerminatedString(aName));
     return rootRegistration->mData.mProfilingStack;
   }
 
@@ -121,9 +86,6 @@ void ThreadRegistration::UnregisterThread() {
       // This is assumed to be a matching UnregisterThread() for a nested
       // RegisterThread(). Decrease depth and we're done.
       --rootRegistration->mOtherRegistrations;
-      // We don't know what name was used in the related RegisterThread().
-      PROFILER_MARKER_UNTYPED("Nested ThreadRegistration::UnregisterThread()",
-                              OTHER_Profiling, MarkerThreadId::MainThread());
       return;
     }
     // Just delete the root registration, it will de-register itself from the
