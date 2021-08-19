@@ -779,4 +779,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Top Sites -->
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Remove</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">Saved and shared images &lt;b>will not be&lt;/b> deleted when you erase %1s history</string>
 </resources>
