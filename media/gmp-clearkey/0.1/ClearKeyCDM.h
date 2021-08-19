@@ -25,6 +25,7 @@ class ClearKeyCDM : public cdm::ContentDecryptionModule_10 {
 #ifdef ENABLE_WMF
   RefPtr<VideoDecoder> mVideoDecoder;
 #endif
+  bool mIsProtectionQueryEnabled = false;
 
  protected:
   cdm::Host_10* mHost;
@@ -94,6 +95,8 @@ class ClearKeyCDM : public cdm::ContentDecryptionModule_10 {
                    uint32_t aStorageIdSize) override;
 
   void Destroy() override;
+
+  void EnableProtectionQuery();
 };
 
 #endif
