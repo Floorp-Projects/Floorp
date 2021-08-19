@@ -147,9 +147,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     };
 
     if (!suggestion.isSponsored) {
-      // In addition to the view, we also use `sponsoredText` in the muxer to
-      // tell whether the result is sponsored or non-sponsored, so be careful
-      // about changing it. See also bug 1695302 re: these property names.
       payload.sponsoredText = NONSPONSORED_ACTION_TEXT;
     }
 
@@ -157,6 +154,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
+    );
+    result.isSuggestedIndexRelativeToGroup = true;
+    result.suggestedIndex = UrlbarPrefs.get(
+      suggestion.isSponsored
+        ? "quickSuggestSponsoredIndex"
+        : "quickSuggestNonSponsoredIndex"
     );
     addCallback(this, result);
 

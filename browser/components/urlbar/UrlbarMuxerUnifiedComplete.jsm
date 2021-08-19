@@ -57,7 +57,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // Global state we'll use to make decisions during this sort.
     let state = {
       context,
+      // RESULT_GROUP => array of results belonging to the group, excluding
+      // group-relative suggestedIndex results
       resultsByGroup: new Map(),
+      // RESULT_GROUP => array of group-relative suggestedIndex results
+      // belonging to the group
+      suggestedIndexResultsByGroup: new Map(),
       // This is analogous to `maxResults` except it's the total available
       // result span instead of the total available result count. We'll add
       // results until `usedResultSpan` would exceed `availableResultSpan`.
@@ -85,42 +90,21 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Do the first pass over all results to build some state.
     for (let result of context.results) {
-      if (result.providerName == "UrlbarProviderQuickSuggest") {
-        // Quick suggest results are handled specially and are inserted at a
-        // Nimbus-configurable position within the general bucket.
-        // TODO (Bug 1710518): Come up with a more general solution.
-        state.quickSuggestResult = result;
-        this._updateStatePreAdd(result, state);
-        continue;
-      }
-
-      // Add each result to the resultsByGroup map:
-      // group => array of results belonging to the group
+      // Add each result to the appropriate `resultsByGroup` map.
       let group = UrlbarUtils.getResultGroup(result);
-      let results = state.resultsByGroup.get(group);
+      let resultsByGroup =
+        result.hasSuggestedIndex && result.isSuggestedIndexRelativeToGroup
+          ? state.suggestedIndexResultsByGroup
+          : state.resultsByGroup;
+      let results = resultsByGroup.get(group);
       if (!results) {
         results = [];
-        state.resultsByGroup.set(group, results);
+        resultsByGroup.set(group, results);
       }
       results.push(result);
 
       // Update pre-add state.
       this._updateStatePreAdd(result, state);
-    }
-
-    // Subtract from `availableResultSpan` the total span of suggestedIndex
-    // results so there will be room for them at the end of the sort.
-    let suggestedIndexResults = state.resultsByGroup.get(
-      UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX
-    );
-    if (suggestedIndexResults) {
-      let span = suggestedIndexResults.reduce((sum, result) => {
-        if (this._canAddResult(result, state)) {
-          sum += UrlbarUtils.getSpanForResult(result);
-        }
-        return sum;
-      }, 0);
-      state.availableResultSpan = Math.max(state.availableResultSpan - span, 0);
     }
 
     // Determine the buckets to use for this sort.  In search mode with an
@@ -137,7 +121,17 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state
     );
 
-    this._addSuggestedIndexResults(sortedResults, state);
+    // Add global suggestedIndex results.
+    let suggestedIndexResults = state.resultsByGroup.get(
+      UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX
+    );
+    if (suggestedIndexResults) {
+      this._addSuggestedIndexResults(
+        suggestedIndexResults,
+        sortedResults,
+        state
+      );
+    }
 
     context.results = sortedResults;
   }
@@ -156,6 +150,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   _copyState(state) {
     let copy = Object.assign({}, state, {
       resultsByGroup: new Map(),
+      suggestedIndexResultsByGroup: new Map(),
       strippedUrlToTopPrefixAndTitle: new Map(
         state.strippedUrlToTopPrefixAndTitle
       ),
@@ -163,9 +158,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       addedRemoteTabUrls: new Set(state.addedRemoteTabUrls),
       suggestions: new Set(state.suggestions),
     });
-    for (let [group, results] of state.resultsByGroup) {
-      copy.resultsByGroup.set(group, [...results]);
+
+    // Deep copy the `resultsByGroup` maps.
+    for (let key of ["resultsByGroup", "suggestedIndexResultsByGroup"]) {
+      for (let [group, results] of state[key]) {
+        copy[key].set(group, [...results]);
+      }
     }
+
     return copy;
   }
 
@@ -209,9 +209,35 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   `[results, usedLimits, hasMoreResults]` -- see `_addResults`.
    */
   _fillGroup(group, limits, state, flexDataArray = null) {
+    // Get the group's suggestedIndex results.
+    let suggestedIndexResults;
+    if ("group" in group) {
+      // Reminder: `group.group` is a `RESULT_GROUP`.
+      suggestedIndexResults = state.suggestedIndexResultsByGroup.get(
+        group.group
+      );
+      if (suggestedIndexResults) {
+        // Subtract their span and count from the group's limits so there will
+        // be room for them later.
+        let span = suggestedIndexResults.reduce((sum, result) => {
+          sum += UrlbarUtils.getSpanForResult(result);
+          return sum;
+        }, 0);
+        limits.availableSpan = Math.max(limits.availableSpan - span, 0);
+        limits.maxResultCount = Math.max(
+          limits.maxResultCount - suggestedIndexResults.length,
+          0
+        );
+      }
+    }
+
     // If there are no child groups, fill the group directly.
     if (!group.children) {
-      return this._addResults(group.group, limits, state);
+      let [results, ...rest] = this._addResults(group.group, limits, state);
+      if (suggestedIndexResults) {
+        this._addSuggestedIndexResults(suggestedIndexResults, results, state);
+      }
+      return [results, ...rest];
     }
 
     // If the group has flexed children, update the data we use during flex
@@ -303,6 +329,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       for (let [key, value] of Object.entries(stateCopy)) {
         state[key] = value;
       }
+    }
+
+    if (suggestedIndexResults) {
+      this._addSuggestedIndexResults(suggestedIndexResults, results, state);
     }
 
     return [results, usedLimits, anyChildHasMoreResults];
@@ -508,17 +538,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       limits.maxResultCount = 0;
     }
 
-    let addQuickSuggest =
-      state.quickSuggestResult &&
-      groupConst == UrlbarUtils.RESULT_GROUP.GENERAL &&
-      this._canAddResult(state.quickSuggestResult, state);
-    if (addQuickSuggest) {
-      let span = UrlbarUtils.getSpanForResult(state.quickSuggestResult);
-      usedLimits.availableSpan += span;
-      usedLimits.maxResultCount++;
-      state.usedResultSpan += span;
-    }
-
     let addedResults = [];
     let groupResults = state.resultsByGroup.get(groupConst);
     while (
@@ -548,31 +567,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // same `RESULT_GROUP` won't include results that earlier groups have
       // added or discarded.
       groupResults.shift();
-    }
-
-    if (addQuickSuggest) {
-      let { quickSuggestResult } = state;
-      state.quickSuggestResult = null;
-      // Determine the index within the general group to insert the quick
-      // suggest result. There are separate Nimbus variables for the sponsored
-      // and non-sponsored types. If `payload.sponsoredText` is defined, then
-      // the result is a non-sponsored type; otherwise it's a sponsored type.
-      // (Yes, correct -- the name of that payload property is misleading, so
-      // just ignore it for now. See bug 1695302.)
-      let index = UrlbarPrefs.get(
-        quickSuggestResult.payload.sponsoredText
-          ? "quickSuggestNonSponsoredIndex"
-          : "quickSuggestSponsoredIndex"
-      );
-      // A positive index is relative to the start of the group and a negative
-      // index is relative to the end, similar to `suggestedIndex`.
-      if (index < 0) {
-        index = Math.max(index + addedResults.length + 1, 0);
-      } else {
-        index = Math.min(index, addedResults.length);
-      }
-      addedResults.splice(index, 0, quickSuggestResult);
-      this._updateStatePostAdd(quickSuggestResult, state);
     }
 
     return [addedResults, usedLimits, !!groupResults?.length];
@@ -845,6 +839,19 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   Global state that we use to make decisions during this sort.
    */
   _updateStatePreAdd(result, state) {
+    // Subtract from `availableResultSpan` the span of global suggestedIndex
+    // results so there will be room for them at the end of the sort.
+    if (
+      result.hasSuggestedIndex &&
+      !result.isSuggestedIndexRelativeToGroup &&
+      this._canAddResult(result, state)
+    ) {
+      state.availableResultSpan = Math.max(
+        state.availableResultSpan - UrlbarUtils.getSpanForResult(result),
+        0
+      );
+    }
+
     // Save some state we'll use later to dedupe URL results.
     if (
       (result.type == UrlbarUtils.RESULT_TYPE.URL ||
@@ -976,19 +983,24 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   }
 
   /**
-   * Inserts results with suggested indexes.  This should be called at the end
-   * of the sort, after all buckets have been filled.
+   * Inserts results with suggested indexes. This can be called for either
+   * global or group-relative suggestedIndex results. It should be called after
+   * `sortedResults` has been filled in.
    *
+   * @param {array} suggestedIndexResults
+   *   Results with a `suggestedIndex` property.
    * @param {array} sortedResults
-   *   The sorted results produced by the muxer so far.  Updated in place.
+   *   The sorted results. For global suggestedIndex results, this should be the
+   *   final list of all results before suggestedIndex results are inserted. For
+   *   group-relative suggestedIndex results, this should be the final list of
+   *   results in the group before group-relative suggestedIndex results are
+   *   inserted.
    * @param {object} state
    *   Global state that we use to make decisions during this sort.
    */
-  _addSuggestedIndexResults(sortedResults, state) {
-    let suggestedIndexResults = state.resultsByGroup.get(
-      UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX
-    );
-    if (!suggestedIndexResults) {
+  _addSuggestedIndexResults(suggestedIndexResults, sortedResults, state) {
+    if (!suggestedIndexResults?.length) {
+      // This is just a slight optimization; no need to continue.
       return;
     }
 
@@ -1017,7 +1029,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // insert one before the other, and there's no right or wrong order.
     for (let results of [positive, negative]) {
       for (let result of results) {
-        this._updateStatePreAdd(result, state);
         if (this._canAddResult(result, state)) {
           let index =
             result.suggestedIndex >= 0

@@ -378,6 +378,9 @@ properties, supported by all of the results.
     autofill.selectionEnd: {integer} The last index in the autofill selection.
     suggestedIndex: {integer} Suggest a preferred position for this result
                     within the result set. Undefined if none.
+    isSuggestedIndexRelativeToGroup: {boolean} Whether the suggestedIndex
+                                     property is relative to the result's group
+                                     instead of the entire result set.
   }
 
 The following RESULT_TYPEs are supported:
