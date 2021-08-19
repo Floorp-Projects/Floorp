@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StorageDBThread.h"
+
+#include "StorageCommon.h"
 #include "StorageDBUpdater.h"
 #include "StorageUtils.h"
 #include "LocalStorageCache.h"
@@ -53,10 +55,10 @@ using namespace StorageUtils;
 
 namespace {  // anon
 
-StorageDBThread* sStorageThread[2] = {nullptr, nullptr};
+StorageDBThread* sStorageThread[kPrivateBrowsingIdCount] = {nullptr, nullptr};
 
 // False until we shut the storage thread down.
-bool sStorageThreadDown[2] = {false, false};
+bool sStorageThreadDown[kPrivateBrowsingIdCount] = {false, false};
 
 }  // namespace
 
@@ -106,7 +108,9 @@ class StorageDBThread::NoteBackgroundThreadRunnable final : public Runnable {
   explicit NoteBackgroundThreadRunnable(const uint32_t aPrivateBrowsingId)
       : Runnable("dom::StorageDBThread::NoteBackgroundThreadRunnable"),
         mPrivateBrowsingId(aPrivateBrowsingId),
-        mOwningThread(GetCurrentEventTarget()) {}
+        mOwningThread(GetCurrentEventTarget()) {
+    MOZ_RELEASE_ASSERT(aPrivateBrowsingId < kPrivateBrowsingIdCount);
+  }
 
  private:
   ~NoteBackgroundThreadRunnable() override = default;
@@ -126,13 +130,13 @@ StorageDBThread::StorageDBThread(const uint32_t aPrivateBrowsingId)
       mFlushImmediately(false),
       mPrivateBrowsingId(aPrivateBrowsingId),
       mPriorityCounter(0) {
-  MOZ_ASSERT(aPrivateBrowsingId <= 1);
+  MOZ_RELEASE_ASSERT(aPrivateBrowsingId < kPrivateBrowsingIdCount);
 }
 
 // static
 StorageDBThread* StorageDBThread::Get(const uint32_t aPrivateBrowsingId) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aPrivateBrowsingId <= 1);
+  MOZ_RELEASE_ASSERT(aPrivateBrowsingId < kPrivateBrowsingIdCount);
 
   return sStorageThread[aPrivateBrowsingId];
 }
@@ -141,7 +145,7 @@ StorageDBThread* StorageDBThread::Get(const uint32_t aPrivateBrowsingId) {
 StorageDBThread* StorageDBThread::GetOrCreate(
     const nsString& aProfilePath, const uint32_t aPrivateBrowsingId) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aPrivateBrowsingId <= 1);
+  MOZ_RELEASE_ASSERT(aPrivateBrowsingId < kPrivateBrowsingIdCount);
 
   StorageDBThread*& storageThread = sStorageThread[aPrivateBrowsingId];
   if (storageThread || sStorageThreadDown[aPrivateBrowsingId]) {
@@ -1608,6 +1612,7 @@ StorageDBThread::ShutdownRunnable::Run() {
   }
 
   ::mozilla::ipc::AssertIsOnBackgroundThread();
+  MOZ_RELEASE_ASSERT(mPrivateBrowsingId < kPrivateBrowsingIdCount);
 
   StorageDBThread*& storageThread = sStorageThread[mPrivateBrowsingId];
   if (storageThread) {
