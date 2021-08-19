@@ -130,9 +130,6 @@ class HTMLSelectElement final : public nsGenericHTMLFormElementWithState,
   void SetDisabled(bool aVal, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aVal, aRv);
   }
-  HTMLFormElement* GetForm() const {
-    return nsGenericHTMLFormElementWithState::GetForm();
-  }
   bool Multiple() const { return GetBoolAttr(nsGkAtoms::multiple); }
   void SetMultiple(bool aVal, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::multiple, aVal, aRv);
