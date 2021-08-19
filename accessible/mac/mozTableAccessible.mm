@@ -612,11 +612,8 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
 - (NSString*)moxLabel {
   nsAutoString title;
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    acc->Name(title);
-  } else {
-    mGeckoAccessible->AsRemote()->Name(title);
-  }
+  mGeckoAccessible->Name(title);
+
   // XXX: When parsing outlines built with ul/lu's, we
   // include the bullet in this description even
   // though webkit doesn't. Not all outlines are built with

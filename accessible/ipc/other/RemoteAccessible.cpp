@@ -31,18 +31,14 @@ uint64_t RemoteAccessible::NativeState() const {
   return state;
 }
 
-uint32_t RemoteAccessible::Name(nsString& aName) const {
-  uint32_t flag = 0;
+ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
   if (mCachedFields) {
-    if (mCachedFields->GetAttribute(nsGkAtoms::name, aName)) {
-      auto nameFlag =
-          mCachedFields->GetAttribute<int32_t>(nsGkAtoms::explicit_name);
-      flag = nameFlag ? *nameFlag : 0;
-    }
-  } else {
-    Unused << mDoc->SendName(mID, &aName, &flag);
+    return RemoteAccessibleBase<RemoteAccessible>::Name(aName);
   }
-  return flag;
+
+  uint32_t flag = 0;
+  Unused << mDoc->SendName(mID, &aName, &flag);
+  return static_cast<ENameValueFlag>(flag);
 }
 
 void RemoteAccessible::Value(nsString& aValue) const {

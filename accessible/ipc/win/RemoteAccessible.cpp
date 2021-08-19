@@ -118,7 +118,11 @@ static RemoteAccessible* GetProxyFor(DocAccessibleParent* aDoc,
   return aDoc->GetAccessible(id);
 }
 
-uint32_t RemoteAccessible::Name(nsString& aName) const {
+ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::Name(aName);
+  }
+
   /* The return values here exist only to match behvaiour required
    * by the header declaration of this function. On Mac, we'd like
    * to return the associated ENameValueFlag, but we don't have
