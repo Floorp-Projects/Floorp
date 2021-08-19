@@ -81,11 +81,17 @@ class DefaultHistoryMetadataService(
     }
 
     override fun updateMetadata(key: HistoryMetadataKey, tab: TabSessionState) {
-        logger.debug("Updating metadata for tab $tab")
+        val lastAccess = tab.lastAccess
+        if (lastAccess == 0L) {
+            logger.debug("Not updating metadata for tab $tab - lastAccess=0")
+            return
+        } else {
+            logger.debug("Updating metadata for tab $tab")
+        }
 
         scope.launch {
             val viewTimeObservation = HistoryMetadataObservation.ViewTimeObservation(
-                viewTime = (System.currentTimeMillis() - tab.lastAccess).toInt()
+                viewTime = (System.currentTimeMillis() - lastAccess).toInt()
             )
             storage.noteHistoryMetadataObservation(key, viewTimeObservation)
         }
