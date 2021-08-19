@@ -47,7 +47,7 @@ HTMLFormElement* HTMLLabelElement::GetForm() const {
     return nullptr;
   }
 
-  return formControl->GetFormElement();
+  return formControl->GetForm();
 }
 
 void HTMLLabelElement::Focus(const FocusOptions& aOptions,

@@ -1340,7 +1340,6 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
     return;
   }
-
 }
 
 GroupPos LocalAccessible::GroupPosition() {
@@ -2051,7 +2050,7 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
         // HTML form controls implements nsIFormControl interface.
         nsCOMPtr<nsIFormControl> control(do_QueryInterface(mContent));
         if (control) {
-          if (dom::HTMLFormElement* form = control->GetFormElement()) {
+          if (dom::HTMLFormElement* form = control->GetForm()) {
             nsCOMPtr<nsIContent> formContent =
                 do_QueryInterface(form->GetDefaultSubmitElement());
             return Relation(mDoc, formContent);

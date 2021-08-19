@@ -3032,7 +3032,7 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
       KeyAppendInt(int32_t(control->ControlType()), aKey);
 
       // If in a form, add form name / index of form / index in form
-      HTMLFormElement* formElement = control->GetFormElement();
+      HTMLFormElement* formElement = control->GetForm();
       if (formElement) {
         if (IsAutocompleteOff(formElement)) {
           aKey.Truncate();

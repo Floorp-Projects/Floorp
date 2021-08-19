@@ -45,7 +45,7 @@ class HTMLLegendElement final : public nsGenericHTMLElement {
   HTMLFormElement* GetFormElement() const {
     nsCOMPtr<nsIFormControl> fieldsetControl = do_QueryInterface(GetFieldSet());
 
-    return fieldsetControl ? fieldsetControl->GetFormElement() : nullptr;
+    return fieldsetControl ? fieldsetControl->GetForm() : nullptr;
   }
 
   enum class LegendAlignValue : uint8_t {

@@ -88,7 +88,7 @@ Relation HTMLRadioButtonAccessible::ComputeGroupAttributes(
   RefPtr<nsContentList> inputElms;
 
   nsCOMPtr<nsIFormControl> formControlNode(do_QueryInterface(mContent));
-  if (dom::Element* formElm = formControlNode->GetFormElement()) {
+  if (dom::Element* formElm = formControlNode->GetForm()) {
     inputElms = NS_GetContentList(formElm, namespaceId, tagName);
   } else {
     inputElms = NS_GetContentList(mContent->OwnerDoc(), namespaceId, tagName);
@@ -392,7 +392,7 @@ uint64_t HTMLTextFieldAccessible::NativeState() const {
                                    autocomplete);
 
     if (!autocomplete.LowerCaseEqualsLiteral("off")) {
-      Element* formElement = input->GetFormElement();
+      Element* formElement = input->GetForm();
       if (formElement) {
         formElement->GetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete,
                              autocomplete);
