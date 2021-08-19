@@ -687,6 +687,9 @@ class WidgetPointerEvent : public WidgetMouseEvent {
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
 
+  WidgetPointerEvent()
+      : mWidth(1), mHeight(1), mIsPrimary(true), mFromTouchEvent(false) {}
+
  public:
   virtual WidgetPointerEvent* AsPointerEvent() override { return this; }
 

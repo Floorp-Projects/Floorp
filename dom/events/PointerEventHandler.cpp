@@ -312,7 +312,7 @@ void PointerEventHandler::ProcessPointerCaptureForTouch(
       continue;
     }
     WidgetPointerEvent event(aEvent->IsTrusted(), eVoidEvent, aEvent->mWidget);
-    InitPointerEventFromTouch(event, *aEvent, *touch, i == 0);
+    InitPointerEventFromTouch(&event, aEvent, touch, i == 0);
     CheckPointerCaptureState(&event);
   }
 }
@@ -528,36 +528,40 @@ void PointerEventHandler::InitPointerEventFromMouse(
 
 /* static */
 void PointerEventHandler::InitPointerEventFromTouch(
-    WidgetPointerEvent& aPointerEvent, const WidgetTouchEvent& aTouchEvent,
-    const mozilla::dom::Touch& aTouch, bool aIsPrimary) {
+    WidgetPointerEvent* aPointerEvent, WidgetTouchEvent* aTouchEvent,
+    mozilla::dom::Touch* aTouch, bool aIsPrimary) {
+  MOZ_ASSERT(aPointerEvent);
+  MOZ_ASSERT(aTouchEvent);
+
   // Use mButton/mButtons only when mButton got a value (from pen input)
-  int16_t button = aTouchEvent.mMessage == eTouchMove ? MouseButton::eNotPressed
-                   : aTouchEvent.mButton != MouseButton::eNotPressed
-                       ? aTouchEvent.mButton
+  int16_t button = aTouchEvent->mMessage == eTouchMove
+                       ? MouseButton::eNotPressed
+                   : aTouchEvent->mButton != MouseButton::eNotPressed
+                       ? aTouchEvent->mButton
                        : MouseButton::ePrimary;
-  int16_t buttons = aTouchEvent.mMessage == eTouchEnd
+  int16_t buttons = aTouchEvent->mMessage == eTouchEnd
                         ? MouseButtonsFlag::eNoButtons
-                    : aTouchEvent.mButton != MouseButton::eNotPressed
-                        ? aTouchEvent.mButtons
+                    : aTouchEvent->mButton != MouseButton::eNotPressed
+                        ? aTouchEvent->mButtons
                         : MouseButtonsFlag::ePrimaryFlag;
 
-  aPointerEvent.mIsPrimary = aIsPrimary;
-  aPointerEvent.pointerId = aTouch.Identifier();
-  aPointerEvent.mRefPoint = aTouch.mRefPoint;
-  aPointerEvent.mModifiers = aTouchEvent.mModifiers;
-  aPointerEvent.mWidth = aTouch.RadiusX(CallerType::System);
-  aPointerEvent.mHeight = aTouch.RadiusY(CallerType::System);
-  aPointerEvent.tiltX = aTouch.tiltX;
-  aPointerEvent.tiltY = aTouch.tiltY;
-  aPointerEvent.twist = aTouch.twist;
-  aPointerEvent.mTime = aTouchEvent.mTime;
-  aPointerEvent.mTimeStamp = aTouchEvent.mTimeStamp;
-  aPointerEvent.mFlags = aTouchEvent.mFlags;
-  aPointerEvent.mButton = button;
-  aPointerEvent.mButtons = buttons;
-  aPointerEvent.mInputSource = aTouchEvent.mInputSource;
-  aPointerEvent.mFromTouchEvent = true;
-  aPointerEvent.mPressure = aTouch.mForce;
+  aPointerEvent->mIsPrimary = aIsPrimary;
+  aPointerEvent->pointerId = aTouch->Identifier();
+  aPointerEvent->mRefPoint = aTouch->mRefPoint;
+  aPointerEvent->mModifiers = aTouchEvent->mModifiers;
+  aPointerEvent->mWidth = aTouch->RadiusX(CallerType::System);
+  aPointerEvent->mHeight = aTouch->RadiusY(CallerType::System);
+  aPointerEvent->tiltX = aTouch->tiltX;
+  aPointerEvent->tiltY = aTouch->tiltY;
+  aPointerEvent->twist = aTouch->twist;
+  aPointerEvent->mTime = aTouchEvent->mTime;
+  aPointerEvent->mTimeStamp = aTouchEvent->mTimeStamp;
+  aPointerEvent->mFlags = aTouchEvent->mFlags;
+  aPointerEvent->mButton = button;
+  aPointerEvent->mButtons = buttons;
+  aPointerEvent->mInputSource = aTouchEvent->mInputSource;
+  aPointerEvent->mFromTouchEvent = true;
+  aPointerEvent->mPressure = aTouch->mForce;
 }
 
 /* static */
@@ -658,9 +662,8 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
       WidgetPointerEvent event(touchEvent->IsTrusted(), pointerMessage,
                                touchEvent->mWidget);
 
-      InitPointerEventFromTouch(event, *touchEvent, *touch, i == 0);
+      InitPointerEventFromTouch(&event, touchEvent, touch, i == 0);
       event.convertToPointer = touch->convertToPointer = false;
-      event.mCoalescedWidgetEvents = touch->mCoalescedWidgetEvents;
       if (aEvent->mMessage == eTouchStart) {
         // We already did hit test for touchstart in PresShell. We should
         // dispatch pointerdown to the same target as touchstart.

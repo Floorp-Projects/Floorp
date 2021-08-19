@@ -176,9 +176,9 @@ class PointerEventHandler final {
                                         WidgetMouseEvent* aMouseEvent,
                                         EventMessage aMessage);
 
-  static void InitPointerEventFromTouch(WidgetPointerEvent& aPointerEvent,
-                                        const WidgetTouchEvent& aTouchEvent,
-                                        const mozilla::dom::Touch& aTouch,
+  static void InitPointerEventFromTouch(WidgetPointerEvent* aPointerEvent,
+                                        WidgetTouchEvent* aTouchEvent,
+                                        mozilla::dom::Touch* aTouch,
                                         bool aIsPrimary);
 
   static bool ShouldGeneratePointerEventFromMouse(WidgetGUIEvent* aEvent) {
