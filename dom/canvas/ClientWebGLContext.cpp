@@ -360,7 +360,7 @@ void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
   if (!xrFb) {
     mIsCanvasDirty = false;
   }
-
+  CancelAutoFlush();
   Run<RPROC(Present)>(xrFb ? xrFb->mId : 0, type, webvr);
 }
 
@@ -2705,12 +2705,14 @@ void ClientWebGLContext::DepthRange(GLclampf zNear, GLclampf zFar) {
   Run<RPROC(DepthRange)>(zNear, zFar);
 }
 
-void ClientWebGLContext::Flush() {
+void ClientWebGLContext::Flush(const bool flushGl) {
   const FuncScope funcScope(*this, "flush");
   const auto notLost = mNotLost;
   if (IsContextLost()) return;
 
-  Run<RPROC(Flush)>();
+  if (flushGl) {
+    Run<RPROC(Flush)>();
+  }
 
   if (notLost->inProcess) return;
   const auto& child = mNotLost->outOfProcess;
