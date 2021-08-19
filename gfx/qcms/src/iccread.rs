@@ -337,10 +337,15 @@ fn read_tag_table(_profile: &mut Profile, mem: &mut MemSource) -> Vec<Tag> {
     }
     let mut index = Vec::with_capacity(count as usize);
     for i in 0..count {
+        let tag_start = (128 + 4 + 4 * i * 3) as usize;
+        let offset = read_u32(mem, tag_start + 4);
+        if offset as usize > mem.buf.len() {
+            invalid_source(mem, "tag points beyond the end of the buffer");
+        }
         index.push(Tag {
-            signature: read_u32(mem, (128 + 4 + 4 * i * 3) as usize),
-            offset: read_u32(mem, (128 + 4 + 4 * i * 3 + 4) as usize),
-            size: read_u32(mem, (128 + 4 + 4 * i * 3 + 8) as usize),
+            signature: read_u32(mem, tag_start),
+            offset,
+            size: read_u32(mem, tag_start + 8),
         });
     }
 
