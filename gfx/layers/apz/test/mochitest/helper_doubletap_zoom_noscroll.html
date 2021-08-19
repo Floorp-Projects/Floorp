@@ -16,7 +16,7 @@ function within(a, b, tolerance) {
 async function test() {
   let useTouchpad = (location.search == "?touchpad");
 
-  let resolution = getResolution();
+  let resolution = await getResolution();
   let initial_resolution = resolution;
   ok(resolution > 0,
      "The initial_resolution is " + resolution + ", which is some sane value");
@@ -27,7 +27,7 @@ async function test() {
   // Check that double-tapping once zooms in
   await doubleTapOn(document.getElementById("target"), 10, 10, useTouchpad);
   let prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
   ok(window.scrollY == 0, "window not scrolled");
   info("window.scrollY " + window.scrollY);
@@ -37,7 +37,7 @@ async function test() {
   // Check that near the bottom doesn't scroll but zooms out
   await doubleTapOn(document.getElementById("target"), x, y, useTouchpad);
   prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
   // slight float inaccuracy, not sure why
   ok(within(resolution, initial_resolution, 0.0002), "The second double-tap has restored the resolution to " + resolution);

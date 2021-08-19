@@ -16,7 +16,7 @@
 
     async function test() {
       // Initial state
-      is(getResolution(), 1.0, "should not be zoomed");
+      is(await getResolution(), 1.0, "should not be zoomed");
 
       // Zoom in and go to the bottom-right corner. This ensures the layout
       // and visual scroll offsets are nonzero, which increases the chances
@@ -31,7 +31,7 @@
       await promiseApzFlushedRepaints();
 
       // Check that we're at the right place
-      is(getResolution(), 5.0, "should be zoomed to 5.0");
+      is(await getResolution(), 5.0, "should be zoomed to 5.0");
       is(window.scrollX, window.scrollMaxX, "layout x-coord should be maxed");
       is(window.scrollY, window.scrollMaxY, "layout y-coord should be maxed");
       ok(visualViewport.offsetLeft > 0, "visual x-coord should be even further");
@@ -52,7 +52,7 @@
       // visual viewport.
       for (let entry of zoom_out) {
         for (let i = 0; i < entry.length; i++) {
-          entry[i] = coordinatesRelativeToScreen({
+          entry[i] = await coordinatesRelativeToScreen({
             offsetX: entry[i].x,
             offsetY: entry[i].y,
             target: document.body,
@@ -101,7 +101,7 @@
       await promiseApzFlushedRepaints();
 
       // Verify that the zoom completed and we're back at 1.0 resolution
-      isfuzzy(getResolution(), 1.0, 0.0001, "should be back at initial resolution");
+      isfuzzy(await getResolution(), 1.0, 0.0001, "should be back at initial resolution");
     }
 
     waitUntilApzStable().then(test).then(subtestDone, subtestFailed);

@@ -12,7 +12,7 @@
 async function test() {
   let useTouchpad = (location.search == "?touchpad");
 
-  var resolution = getResolution();
+  var resolution = await getResolution();
   var start_resolution = resolution;
   ok(resolution > 0,
      "The initial_resolution is " + resolution + ", which is some sane value");
@@ -20,7 +20,7 @@ async function test() {
   // Check that double-tapping once zooms in
   await doubleTapOn(document.getElementById("target"), 10, 10, useTouchpad);
   var prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
 
   // instant scroll to the middle of the page
@@ -42,7 +42,7 @@ async function test() {
   // Need to divide by resolution because the coords are assumed to be inside the resolution
   await doubleTapOn(window, (window.innerWidth/2)/resolution, (window.innerHeight - 5)/resolution, useTouchpad);
   prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
   ok(resolution == start_resolution, "The second double-tap has decreased the resolution to the start to " + resolution);
 
