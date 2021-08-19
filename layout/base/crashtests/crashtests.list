@@ -69,8 +69,8 @@ load 317934-1.html
 load 320459-1.html
 load chrome://reftest/content/crashtests/layout/base/crashtests/321058-1.xhtml
 load chrome://reftest/content/crashtests/layout/base/crashtests/321058-2.xhtml
-load chrome://reftest/content/crashtests/layout/base/crashtests/321077-1.xhtml
-load chrome://reftest/content/crashtests/layout/base/crashtests/321077-2.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/321077-1.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/321077-2.xhtml
 load 322436-1.html
 load 322678.html
 load 325024.html
@@ -88,14 +88,14 @@ load 331679-3.xml
 load 331883-1.html
 load 335140-1.html
 load 336291-1.html
-load chrome://reftest/content/crashtests/layout/base/crashtests/336999-1.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/336999-1.xhtml
 load 337066-1.xhtml
 load 337268-1.html
 load 337419-1.html
 load chrome://reftest/content/crashtests/layout/base/crashtests/337476-1.xhtml
 load 338703-1.html
 load 339651-1.html
-load chrome://reftest/content/crashtests/layout/base/crashtests/340093-1.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/340093-1.xhtml
 load 341382-1.html
 load 341382-2.html
 load 341858-1.html
@@ -121,8 +121,8 @@ load 355989-1.xhtml
 load 355993-1.xhtml
 load chrome://reftest/content/crashtests/layout/base/crashtests/356325-1.xhtml
 load 358729-1.xhtml
-load chrome://reftest/content/crashtests/layout/base/crashtests/360339-1.xhtml
-load chrome://reftest/content/crashtests/layout/base/crashtests/360339-2.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/360339-1.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/360339-2.xhtml
 load 363729-1.html
 load 363729-2.html
 load 363729-3.html
@@ -241,13 +241,13 @@ load 448543-2.html
 load 448543-3.html
 load 450319-1.xhtml
 asserts(1) asserts-if(Android,1-2) load 453894-1.xhtml # Bug 398043
-load chrome://reftest/content/crashtests/layout/base/crashtests/454751-1.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/454751-1.xhtml
 load 455063-1.html
 load 455063-2.html
 load 455063-3.html
 load 455171-4.html
 load 455623-1.html
-load 457362-1.xhtml
+skip-if(Android) load 457362-1.xhtml
 load 457514.html
 asserts(0-1) load 460389-1.html # bug 780985
 load 462392.html
@@ -301,7 +301,7 @@ load 534768-1.html
 load 534768-2.html
 load 535721-1.xhtml
 load 535911-1.xhtml
-load chrome://reftest/content/crashtests/layout/base/crashtests/536720.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/536720.xhtml
 load 537562-1.xhtml
 load 537624-1.html
 load 537631-1.html
@@ -309,7 +309,7 @@ load chrome://reftest/content/crashtests/layout/base/crashtests/538082-1.xhtml
 load 538207-1.xhtml
 load 538210-1.html
 load 538267-1.html
-load chrome://reftest/content/crashtests/layout/base/crashtests/540760.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/540760.xhtml
 load 540771-1.xhtml
 load 541869-1.xhtml
 load 541869-2.html

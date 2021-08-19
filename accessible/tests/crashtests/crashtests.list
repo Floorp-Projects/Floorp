@@ -1,5 +1,5 @@
 load 448064.xhtml # This test instantiates a11y, so be careful about adding tests before it
-load chrome://reftest/content/crashtests/accessible/tests/crashtests/471493.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/accessible/tests/crashtests/471493.xhtml
 asserts-if(!browserIsRemote,2) load 884202.html
 load 1572811.html
 load 1578282.html

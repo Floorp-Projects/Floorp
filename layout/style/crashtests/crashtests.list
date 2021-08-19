@@ -19,7 +19,7 @@ load 404470-1.html
 load 411603-1.html
 load 412588-1.html
 load 413274-1.xhtml
-load chrome://reftest/content/crashtests/layout/style/crashtests/416461-1.xhtml
+skip-if(Android) load chrome://reftest/content/crashtests/layout/style/crashtests/416461-1.xhtml
 load 418007-1.xhtml
 load chrome://reftest/content/crashtests/layout/style/crashtests/431705-1.xhtml
 load 432561-1.html
