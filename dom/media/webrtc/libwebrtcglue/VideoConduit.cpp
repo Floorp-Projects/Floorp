@@ -1848,33 +1848,9 @@ void WebrtcVideoConduit::CollectTelemetryData() {
   }
 }
 
-void WebrtcVideoConduit::OnRtcpBye() {
-  RefPtr<WebrtcVideoConduit> self = this;
-  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (self->mRtcpEventObserver) {
-      self->mRtcpEventObserver->OnRtcpBye();
-    }
-    return NS_OK;
-  }));
-}
+void WebrtcVideoConduit::OnRtcpBye() { mRtcpByeEvent.Notify(); }
 
-void WebrtcVideoConduit::OnRtcpTimeout() {
-  RefPtr<WebrtcVideoConduit> self = this;
-  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (self->mRtcpEventObserver) {
-      self->mRtcpEventObserver->OnRtcpTimeout();
-    }
-    return NS_OK;
-  }));
-}
-
-void WebrtcVideoConduit::SetRtcpEventObserver(
-    mozilla::RtcpEventObserver* observer) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mRtcpEventObserver = observer;
-}
+void WebrtcVideoConduit::OnRtcpTimeout() { mRtcpTimeoutEvent.Notify(); }
 
 bool WebrtcVideoConduit::HasCodecPluginID(uint64_t aPluginID) const {
   MOZ_ASSERT(NS_IsMainThread());

@@ -369,33 +369,9 @@ webrtc::Call::Stats WebrtcAudioConduit::GetCallStats() const {
   return mCall->Call()->GetStats();
 }
 
-void WebrtcAudioConduit::OnRtcpBye() {
-  RefPtr<WebrtcAudioConduit> self = this;
-  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (self->mRtcpEventObserver) {
-      self->mRtcpEventObserver->OnRtcpBye();
-    }
-    return NS_OK;
-  }));
-}
+void WebrtcAudioConduit::OnRtcpBye() { mRtcpByeEvent.Notify(); }
 
-void WebrtcAudioConduit::OnRtcpTimeout() {
-  RefPtr<WebrtcAudioConduit> self = this;
-  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (self->mRtcpEventObserver) {
-      self->mRtcpEventObserver->OnRtcpTimeout();
-    }
-    return NS_OK;
-  }));
-}
-
-void WebrtcAudioConduit::SetRtcpEventObserver(
-    mozilla::RtcpEventObserver* observer) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mRtcpEventObserver = observer;
-}
+void WebrtcAudioConduit::OnRtcpTimeout() { mRtcpTimeoutEvent.Notify(); }
 
 // AudioSessionConduit Implementation
 MediaConduitErrorCode WebrtcAudioConduit::SetTransmitterTransport(

@@ -40,8 +40,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   void OnRtcpBye() override;
   void OnRtcpTimeout() override;
 
-  void SetRtcpEventObserver(mozilla::RtcpEventObserver* observer) override;
-
   /**
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTCP Frames to the Receiver for decoding.
@@ -149,6 +147,11 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   webrtc::Call::Stats GetCallStats() const override;
 
   bool IsSamplingFreqSupported(int freq) const override;
+
+  MediaEventSource<void>& RtcpByeEvent() override { return mRtcpByeEvent; }
+  MediaEventSource<void>& RtcpTimeoutEvent() override {
+    return mRtcpTimeoutEvent;
+  }
 
  private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
@@ -268,8 +271,9 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Accessed only on mStsThread
   Maybe<DOMHighResTimeStamp> mLastRtcpReceived;
 
-  // Accessed only on main thread.
-  mozilla::RtcpEventObserver* mRtcpEventObserver = nullptr;
+  // Thread safe
+  MediaEventProducer<void> mRtcpByeEvent;
+  MediaEventProducer<void> mRtcpTimeoutEvent;
 };
 
 }  // namespace mozilla
