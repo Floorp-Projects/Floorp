@@ -193,7 +193,7 @@ function getBoundingClientRectRelativeToVisualViewport(aElement) {
 // |aTarget| may be an element (contained in the root content document or
 // a subdocument) or, as a special case, the root content window.
 // FIXME: Support iframe windows as targets.
-function getTargetRect(aTarget) {
+function _getTargetRect(aTarget) {
   let rect = { left: 0, top: 0, width: 0, height: 0 };
 
   // If the target is the root content window, its origin relative
@@ -258,17 +258,16 @@ function getTargetRect(aTarget) {
     aTarget = iframe;
   }
 
-  // Now we have coordinates relative to the root content document's
-  // layout viewport. Subtract the offset of the visual viewport
-  // relative to the layout viewport, to get coordinates relative to
-  // the visual viewport.
-  var offsetX = {},
-    offsetY = {};
-  let rootUtils = SpecialPowers.getDOMWindowUtils(window.top);
-  rootUtils.getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
-  rect.left -= offsetX.value;
-  rect.top -= offsetY.value;
   return rect;
+}
+
+// Returns the in-process root window for the given |aWindow|.
+function getInProcessRootWindow(aWindow) {
+  let window = aWindow;
+  while (window.frameElement) {
+    window = window.frameElement.ownerDocument.defaultView;
+  }
+  return window;
 }
 
 // Convert (offsetX, offsetY) of target or center of it, in CSS pixels to device
@@ -290,31 +289,53 @@ async function coordinatesRelativeToScreen(aParams) {
   //     harness.
   //  2. The mochitest itself creates an iframe and calls this function from
   //     script running in the context of the iframe.
-  // Since the resolution applies to the root content document, below we use
-  // the mozInnerScreen{X,Y} of the root content window (window.top) only,
-  // and factor any offsets between iframe windows and the root content window
-  // into |origin|.
-  const utils = SpecialPowers.getDOMWindowUtils(window);
-  const deviceScale = utils.screenPixelsPerCSSPixel;
-  const deviceScaleNoOverride = utils.screenPixelsPerCSSPixelNoOverride;
-  const resolution = await getResolution();
-  const rect = getTargetRect(target);
-  // moxInnerScreen{X,Y} are in CSS coordinates of the browser chrome.
-  // The device scale applies to them, but the resolution only zooms the content.
-  // In addition, if we're inside RDM, RDM overrides the device scale;
-  // the overridden scale only applies to the content inside the RDM
-  // document, not to mozInnerScreen{X,Y}.
+  // Since the resolution applies to the top level content document, below we
+  // use the mozInnerScreen{X,Y} of the top level content window (window.top)
+  // only for the case where this function gets called in the top level content
+  // document. In other cases we use nsIDOMWindowUtils.toScreenRect().
+
+  // We do often specify `window` as the target, if it's the top level window,
+  // `nsIDOMWindowUtils.toScreenRect` isn't suitable because the function is
+  // supposed to be called with values in the document coords, so for example
+  // if desktop zoom is being applied, (0, 0) in the document coords might be
+  // outside of the visual viewport, i.e. it's going to be negative with the
+  // `toScreenRect` conversion, whereas the call sites with `window` of this
+  // function expect (0, 0) position should be the visual viport's offset. So
+  // in such cases we simply use mozInnerScreen{X,Y} to convert the given value
+  // to the screen coords.
+  if (target instanceof Window && window.parent == window) {
+    // moxInnerScreen{X,Y} are in CSS coordinates of the browser chrome.
+    // The device scale applies to them, but the resolution only zooms the content.
+    // In addition, if we're inside RDM, RDM overrides the device scale;
+    // the overridden scale only applies to the content inside the RDM
+    // document, not to mozInnerScreen{X,Y}.
+    const utils = SpecialPowers.getDOMWindowUtils(window);
+    const resolution = await getResolution();
+    const deviceScale = utils.screenPixelsPerCSSPixel;
+    const deviceScaleNoOverride = utils.screenPixelsPerCSSPixelNoOverride;
+    return {
+      x:
+        window.mozInnerScreenX * deviceScaleNoOverride +
+        (atCenter ? 0 : offsetX) * resolution * deviceScale,
+      y:
+        window.mozInnerScreenY * deviceScaleNoOverride +
+        (atCenter ? 0 : offsetY) * resolution * deviceScale,
+    };
+  }
+
+  const rect = _getTargetRect(target);
+
+  const utils = SpecialPowers.getDOMWindowUtils(getInProcessRootWindow(window));
+  const positionInScreenCoords = utils.toScreenRect(
+    rect.left + (atCenter ? rect.width / 2 : offsetX),
+    rect.top + (atCenter ? rect.height / 2 : offsetY),
+    0,
+    0
+  );
+
   return {
-    x:
-      window.top.mozInnerScreenX * deviceScaleNoOverride +
-      (rect.left + (atCenter ? rect.width / 2 : offsetX)) *
-        resolution *
-        deviceScale,
-    y:
-      window.top.mozInnerScreenY * deviceScaleNoOverride +
-      (rect.top + (atCenter ? rect.height / 2 : offsetY)) *
-        resolution *
-        deviceScale,
+    x: positionInScreenCoords.x,
+    y: positionInScreenCoords.y,
   };
 }
 
