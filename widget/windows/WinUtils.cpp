@@ -431,6 +431,9 @@ EnableNonClientDpiScalingProc WinUtils::sEnableNonClientDpiScaling = NULL;
 GetSystemMetricsForDpiProc WinUtils::sGetSystemMetricsForDpi = NULL;
 bool WinUtils::sHasPackageIdentity = false;
 
+using GetDpiForWindowProc = UINT (WINAPI*)(HWND);
+static GetDpiForWindowProc sGetDpiForWindow = NULL;
+
 /* static */
 void WinUtils::Initialize() {
   // Dpi-Awareness is not supported with Win32k Lockdown enabled, so we don't
@@ -460,6 +463,8 @@ void WinUtils::Initialize() {
 
       sGetSystemMetricsForDpi = (GetSystemMetricsForDpiProc)::GetProcAddress(
           user32Dll, "GetSystemMetricsForDpi");
+      sGetDpiForWindow = (GetDpiForWindowProc)::GetProcAddress(
+          user32Dll, "GetDpiForWindow");
     }
   }
 
@@ -660,6 +665,26 @@ double WinUtils::LogToPhysFactor(HMONITOR aMonitor) {
 /* static */
 int32_t WinUtils::LogToPhys(HMONITOR aMonitor, double aValue) {
   return int32_t(NS_round(aValue * LogToPhysFactor(aMonitor)));
+}
+
+/* static */
+double WinUtils::LogToPhysFactor(HWND aWnd) {
+  // The GetDpiForWindow api is not available everywhere where we run as
+  // per-monitor, but if it is available rely on it to tell us the scale
+  // factor of the window.  See bug 1722085.
+  if (sGetDpiForWindow)
+  {
+    UINT dpi = sGetDpiForWindow(aWnd);
+    if (dpi > 0)
+    {
+      return static_cast<double>(dpi) / 96.0;
+    }
+  }
+
+  // if there's an ancestor window, we want to share its DPI setting
+  HWND ancestor = ::GetAncestor(aWnd, GA_ROOTOWNER);
+  return LogToPhysFactor(::MonitorFromWindow(ancestor ? ancestor : aWnd,
+                                             MONITOR_DEFAULTTOPRIMARY));
 }
 
 /* static */
