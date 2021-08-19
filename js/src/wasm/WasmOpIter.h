@@ -24,7 +24,6 @@
 
 #include <type_traits>
 
-#include "jit/AtomicOp.h"
 #include "js/Printf.h"
 #include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmUtility.h"

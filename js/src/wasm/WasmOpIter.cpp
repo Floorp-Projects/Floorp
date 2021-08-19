@@ -18,6 +18,8 @@
 
 #include "wasm/WasmOpIter.h"
 
+#include "jit/AtomicOp.h"
+
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
