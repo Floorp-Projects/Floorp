@@ -47,10 +47,18 @@ export default class FxAccountsButton extends HTMLElement {
     this._loggedOutView.hidden = !!this._loggedIn;
     this._loggedInView.hidden = !this._loggedIn;
     this._emailText.textContent = this._email;
-    this._avatarButton.style.setProperty(
-      "--avatar-url",
-      `url(${this._avatarURL})`
-    );
+    if (this._avatarURL) {
+      this._avatarButton.style.setProperty(
+        "--avatar-url",
+        `url(${this._avatarURL})`
+      );
+    } else {
+      let defaultAvatar = "chrome://browser/skin/fxa/avatar-color.svg";
+      this._avatarButton.style.setProperty(
+        "--avatar-url",
+        `url(${defaultAvatar})`
+      );
+    }
   }
 
   /**
