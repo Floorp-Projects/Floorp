@@ -154,7 +154,7 @@ async function setup(getPayload = EXPERIMENT_PAYLOAD) {
       ["app.shield.optoutstudies.enabled", true],
       [
         "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
-        `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["cfr","whats-new-panel","moments-page","snippets","cfr-fxa"],"updateCycleInMs":0}`,
+        `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["cfr","whats-new-panel","moments-page","snippets"],"updateCycleInMs":0}`,
       ],
     ],
   });

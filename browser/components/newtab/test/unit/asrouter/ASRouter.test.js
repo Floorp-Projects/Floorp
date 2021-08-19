@@ -49,7 +49,6 @@ describe("ASRouter", () => {
   let getStringPrefStub;
   let fakeAttributionCode;
   let fakeTargetingContext;
-  let FakeBookmarkPanelHub;
   let FakeToolbarBadgeHub;
   let FakeToolbarPanelHub;
   let FakeMomentsPageHub;
@@ -145,7 +144,6 @@ describe("ASRouter", () => {
         ],
         providerCohorts: {
           onboarding: "",
-          "cfr-fxa": "",
           cfr: "",
           "message-groups": "",
           "messaging-experiments": "",
@@ -203,11 +201,6 @@ describe("ASRouter", () => {
       writeAttributionFile: () => Promise.resolve(),
       getCachedAttributionData: sinon.stub(),
     };
-    FakeBookmarkPanelHub = {
-      init: sandbox.stub(),
-      uninit: sandbox.stub(),
-      forceShowMessage: sandbox.stub(),
-    };
     FakeToolbarPanelHub = {
       init: sandbox.stub(),
       uninit: sandbox.stub(),
@@ -243,7 +236,6 @@ describe("ASRouter", () => {
       SnippetsTestMessageProvider,
       PanelTestProvider,
       MacAttribution: { applicationPath: "" },
-      BookmarkPanelHub: FakeBookmarkPanelHub,
       ToolbarBadgeHub: FakeToolbarBadgeHub,
       ToolbarPanelHub: FakeToolbarPanelHub,
       MomentsPageHub: FakeMomentsPageHub,
@@ -353,7 +345,6 @@ describe("ASRouter", () => {
 
       assert.calledOnce(FakeToolbarBadgeHub.init);
       assert.calledOnce(FakeToolbarPanelHub.init);
-      assert.calledOnce(FakeBookmarkPanelHub.init);
       assert.calledOnce(FakeMomentsPageHub.init);
 
       assert.calledWithExactly(
@@ -386,13 +377,6 @@ describe("ASRouter", () => {
           blockMessageById: Router.blockMessageById,
           sendTelemetry: Router.sendTelemetry,
         }
-      );
-
-      assert.calledWithExactly(
-        FakeBookmarkPanelHub.init,
-        Router.handleMessageRequest,
-        Router.addImpression,
-        Router.sendTelemetry
       );
     });
     it("should set state.messageImpressions to the messageImpressions object in persistent storage", async () => {
@@ -715,7 +699,6 @@ describe("ASRouter", () => {
 
       assert.calledOnce(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeMomentsPageHub.executeAction);
@@ -726,7 +709,6 @@ describe("ASRouter", () => {
       assert.calledOnce(FakeMomentsPageHub.executeAction);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
     });
@@ -735,7 +717,6 @@ describe("ASRouter", () => {
 
       assert.calledOnce(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeMomentsPageHub.executeAction);
@@ -750,24 +731,8 @@ describe("ASRouter", () => {
 
       assert.calledOnce(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(FakeMomentsPageHub.executeAction);
-    });
-    it("should route fxa_bookmark_panel message to the right hub force = true", () => {
-      Router.routeCFRMessage(
-        { template: "fxa_bookmark_panel" },
-        browser,
-        {},
-        true
-      );
-
-      assert.calledOnce(FakeBookmarkPanelHub.forceShowMessage);
-      assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
-      assert.notCalled(CFRPageActions.addRecommendation);
-      assert.notCalled(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route cfr_doorhanger message to the right hub force = false", () => {
@@ -780,7 +745,6 @@ describe("ASRouter", () => {
 
       assert.calledOnce(CFRPageActions.addRecommendation);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeMomentsPageHub.executeAction);
@@ -791,7 +755,6 @@ describe("ASRouter", () => {
       assert.calledOnce(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
@@ -808,7 +771,6 @@ describe("ASRouter", () => {
       // Host should be null
       assert.isNull(args[1]);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeMomentsPageHub.executeAction);
@@ -824,7 +786,6 @@ describe("ASRouter", () => {
       assert.calledOnce(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
@@ -834,7 +795,6 @@ describe("ASRouter", () => {
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.forceRecommendation);
       assert.notCalled(CFRPageActions.addRecommendation);
-      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
@@ -1742,12 +1702,6 @@ describe("ASRouter", () => {
       Router.routeCFRMessage(testMessage, {}, null, true);
 
       assert.calledOnce(CFRPageActions.forceRecommendation);
-    });
-    it("should call BookmarkPanelHub.forceShowMessage the provider is cfr-fxa", async () => {
-      const testMessage = { id: "foo", template: "fxa_bookmark_panel" };
-      await Router.setState({ messages: [testMessage] });
-      Router.routeCFRMessage(testMessage, {}, null, true);
-      assert.calledOnce(FakeBookmarkPanelHub.forceShowMessage);
     });
     it("should call CFRPageActions.addRecommendation if the template is cfr_action and force is false", async () => {
       sandbox.stub(CFRPageActions, "addRecommendation");
