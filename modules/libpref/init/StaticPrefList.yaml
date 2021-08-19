@@ -11431,6 +11431,16 @@
   value: false
   mirror: always
 
+- name: webgl.auto-flush
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: webgl.auto-flush.gl
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: webgl.can-lose-context-in-foreground
   type: RelaxedAtomicBool
   value: true
