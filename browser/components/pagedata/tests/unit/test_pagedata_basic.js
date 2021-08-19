@@ -27,15 +27,20 @@ add_task(async function test_pageDataDiscoverd_notifies() {
   );
 
   let promise = PageDataService.once("page-data");
+  let fakeBrowser = {};
 
-  PageDataService.pageDataDiscovered(url, [
-    {
-      type: PageDataCollector.DATA_TYPE.PRODUCT,
-      data: {
-        price: 276,
+  PageDataService.pageDataDiscovered(
+    url,
+    [
+      {
+        type: PageDataCollector.DATA_TYPE.PRODUCT,
+        data: {
+          price: 276,
+        },
       },
-    },
-  ]);
+    ],
+    fakeBrowser
+  );
 
   let pageData = await promise;
   Assert.equal(
@@ -54,6 +59,11 @@ add_task(async function test_pageDataDiscoverd_notifies() {
       },
     ],
     "Should have returned the correct product data"
+  );
+  Assert.equal(
+    pageData.weakBrowser.get(),
+    fakeBrowser,
+    "Should have returned the fakeBrowser object"
   );
 
   Assert.deepEqual(
@@ -75,4 +85,9 @@ add_task(async function test_queueFetch_notifies() {
     "Should have notified data for the expected url"
   );
   Assert.equal(pageData.data.length, 0, "Should have returned no data");
+  Assert.equal(
+    pageData.weakBrowser,
+    null,
+    "Should have returned a null weakBrowser"
+  );
 });
