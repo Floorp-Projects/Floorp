@@ -64,15 +64,6 @@ class RegisteredThread final {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  // Set the JSContext of the thread to be sampled. Sampling cannot begin until
-  // this has been set.
-  void SetJSContext(JSContext* aContext);
-
-  void ClearJSContext() {
-    // This function runs on-thread.
-    mRacyRegisteredThread.mThreadRegistration.mData.mJSContext = nullptr;
-  }
-
   JSContext* GetJSContext() const {
     return mRacyRegisteredThread.mThreadRegistration.mData.mJSContext;
   }

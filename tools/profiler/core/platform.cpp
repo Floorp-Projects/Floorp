@@ -1038,20 +1038,6 @@ class ActivePS {
     return array;
   }
 
-  // Do a linear search through mLiveProfiledThreads to find the
-  // ProfiledThreadData object for a RegisteredThread.
-  static ProfiledThreadData* GetProfiledThreadData(
-      PSLockRef, RegisteredThread* aRegisteredThread) {
-    MOZ_ASSERT(sInstance);
-    for (const LiveProfiledThreadData& thread :
-         sInstance->mLiveProfiledThreads) {
-      if (thread.mRegisteredThread == aRegisteredThread) {
-        return thread.mProfiledThreadData.get();
-      }
-    }
-    return nullptr;
-  }
-
   static ProfiledThreadData* AddLiveProfiledThread(
       PSLockRef, RegisteredThread* aRegisteredThread,
       UniquePtr<ProfiledThreadData>&& aProfiledThreadData) {
@@ -5721,70 +5707,68 @@ bool profiler_is_locked_on_current_thread() {
 
 void profiler_set_js_context(JSContext* aCx) {
   MOZ_ASSERT(aCx);
+  ThreadRegistration::WithOnThreadRef(
+      [&](ThreadRegistration::OnThreadRef aOnThreadRef) {
+        // The profiler mutex must be locked before the ThreadRegistration's.
+        PSAutoLock lock;
+        aOnThreadRef.WithLockedRWOnThread(
+            [&](ThreadRegistration::LockedRWOnThread& aThreadData) {
+              aThreadData.SetJSContext(aCx);
 
-  PSAutoLock lock;
+              // This call is on-thread, so we can call PollJSSampling() to
+              // start JS sampling immediately.
+              aThreadData.PollJSSampling();
 
-  RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(lock);
-  if (!registeredThread) {
-    return;
-  }
-
-  registeredThread->SetJSContext(aCx);
-
-  // This call is on-thread, so we can call PollJSSampling() to start JS
-  // sampling immediately.
-  registeredThread->PollJSSampling();
-
-  if (ActivePS::Exists(lock)) {
-    ProfiledThreadData* profiledThreadData =
-        ActivePS::GetProfiledThreadData(lock, registeredThread);
-    if (profiledThreadData) {
-      profiledThreadData->NotifyReceivedJSContext(
-          ActivePS::Buffer(lock).BufferRangeEnd());
-    }
-  }
+              if (ProfiledThreadData* profiledThreadData =
+                      aThreadData.GetProfiledThreadData(lock);
+                  profiledThreadData) {
+                profiledThreadData->NotifyReceivedJSContext(
+                    ActivePS::Buffer(lock).BufferRangeEnd());
+              }
+            });
+      });
 }
 
 void profiler_clear_js_context() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock;
+  ThreadRegistration::WithOnThreadRef(
+      [](ThreadRegistration::OnThreadRef aOnThreadRef) {
+        JSContext* cx =
+            aOnThreadRef.UnlockedReaderAndAtomicRWOnThreadCRef().GetJSContext();
+        if (!cx) {
+          return;
+        }
 
-  RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(lock);
-  if (!registeredThread) {
-    return;
-  }
+        // The profiler mutex must be locked before the ThreadRegistration's.
+        PSAutoLock lock;
+        ThreadRegistration::OnThreadRef::RWOnThreadWithLock lockedThreadData =
+            aOnThreadRef.LockedRWOnThread();
 
-  JSContext* cx = registeredThread->GetJSContext();
-  if (!cx) {
-    return;
-  }
+        if (ProfiledThreadData* profiledThreadData =
+                lockedThreadData->GetProfiledThreadData(lock);
+            profiledThreadData && ActivePS::Exists(lock) &&
+            ActivePS::FeatureJS(lock)) {
+          profiledThreadData->NotifyAboutToLoseJSContext(
+              cx, CorePS::ProcessStartTime(), ActivePS::Buffer(lock));
 
-  if (ActivePS::Exists(lock) && ActivePS::FeatureJS(lock)) {
-    ProfiledThreadData* profiledThreadData =
-        ActivePS::GetProfiledThreadData(lock, registeredThread);
-    if (profiledThreadData) {
-      profiledThreadData->NotifyAboutToLoseJSContext(
-          cx, CorePS::ProcessStartTime(), ActivePS::Buffer(lock));
+          // Notify the JS context that profiling for this context has
+          // stopped. Do this by calling StopJSSampling and PollJSSampling
+          // before nulling out the JSContext.
+          lockedThreadData->StopJSSampling();
+          lockedThreadData->PollJSSampling();
 
-      // Notify the JS context that profiling for this context has stopped.
-      // Do this by calling StopJSSampling and PollJSSampling before
-      // nulling out the JSContext.
-      registeredThread->StopJSSampling();
-      registeredThread->PollJSSampling();
+          lockedThreadData->ClearJSContext();
 
-      registeredThread->ClearJSContext();
-
-      // Tell the thread that we'd like to have JS sampling on this
-      // thread again, once it gets a new JSContext (if ever).
-      registeredThread->StartJSSampling(ActivePS::JSFlags(lock));
-      return;
-    }
-  }
-
-  registeredThread->ClearJSContext();
+          // Tell the thread that we'd like to have JS sampling on this
+          // thread again, once it gets a new JSContext (if ever).
+          lockedThreadData->StartJSSampling(ActivePS::JSFlags(lock));
+        } else {
+          // This thread is not being profiled or JS profiling is off, we only
+          // need to clear the context pointer.
+          lockedThreadData->ClearJSContext();
+        }
+      });
 }
 
 static void profiler_suspend_and_sample_thread(
