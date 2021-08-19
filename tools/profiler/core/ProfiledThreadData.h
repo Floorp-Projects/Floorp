@@ -7,6 +7,8 @@
 #ifndef ProfiledThreadData_h
 #define ProfiledThreadData_h
 
+#include "platform.h"
+
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfilerThreadRegistrationInfo.h"
 #include "mozilla/TimeStamp.h"
@@ -62,6 +64,7 @@ class ProfiledThreadData final {
                "unregistered");
     mUnregisterTime = mozilla::TimeStamp::Now();
     mBufferPositionWhenUnregistered = mozilla::Some(aBufferPosition);
+    mPreviousThreadRunningTimes.Clear();
   }
   mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() {
     return mBufferPositionWhenUnregistered;
@@ -95,6 +98,10 @@ class ProfiledThreadData final {
                                   const mozilla::TimeStamp& aProcessStartTime,
                                   ProfileBuffer& aBuffer);
 
+  RunningTimes& PreviousThreadRunningTimesRef() {
+    return mPreviousThreadRunningTimes;
+  }
+
  private:
   // Group A:
   // The following fields are interesting for the entire lifetime of a
@@ -112,7 +119,7 @@ class ProfiledThreadData final {
 
   // Group B:
   // The following fields are only used while this thread is alive and
-  // registered. They become Nothing() once the thread is unregistered.
+  // registered. They become Nothing() or empty once the thread is unregistered.
 
   // When sampling, this holds the position in ActivePS::mBuffer of the most
   // recent sample for this thread, or Nothing() if there is no sample for this
@@ -121,6 +128,9 @@ class ProfiledThreadData final {
 
   // Only non-Nothing() if the thread currently has a JSContext.
   mozilla::Maybe<uint64_t> mBufferPositionWhenReceivedJSContext;
+
+  // RunningTimes at the previous sample if any, or empty.
+  RunningTimes mPreviousThreadRunningTimes;
 
   // Group C:
   // The following fields are only used once this thread has been unregistered.

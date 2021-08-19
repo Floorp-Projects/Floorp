@@ -62,8 +62,6 @@ class RegisteredThread final {
     return mRacyRegisteredThread;
   }
 
-  PlatformData* GetPlatformData() const { return mPlatformData.get(); }
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   // Set the JSContext of the thread to be sampled. Sampling cannot begin until

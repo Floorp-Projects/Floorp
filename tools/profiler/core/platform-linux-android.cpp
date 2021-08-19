@@ -150,13 +150,8 @@ class PlatformData {
   // failed (e.g., if the system doesn't support per-thread clocks).
   Maybe<clockid_t> GetClockId() const { return mClockId; }
 
-  RunningTimes& PreviousThreadRunningTimesRef() {
-    return mPreviousThreadRunningTimes;
-  }
-
  private:
   Maybe<clockid_t> mClockId;
-  RunningTimes mPreviousThreadRunningTimes;
 };
 
 mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId) {
@@ -317,12 +312,13 @@ static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
 }
 
 static RunningTimes GetThreadRunningTimesDiff(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread) {
+    PSLockRef aLock,
+    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
   AUTO_PROFILER_STATS(GetRunningTimes_clock_gettime_thread);
 
-  PlatformData* platformData = aRegisteredThread.GetPlatformData();
-  MOZ_RELEASE_ASSERT(platformData);
-  Maybe<clockid_t> maybeCid = platformData->GetClockId();
+  const mozilla::profiler::PlatformData& platformData =
+      aThreadData.PlatformDataCRef();
+  Maybe<clockid_t> maybeCid = platformData.GetClockId();
 
   if (MOZ_UNLIKELY(!maybeCid)) {
     // No clock id -> Nothing to measure apart from the timestamp.
@@ -342,17 +338,14 @@ static RunningTimes GetThreadRunningTimesDiff(
         }
       });
 
-  const RunningTimes diff =
-      newRunningTimes - platformData->PreviousThreadRunningTimesRef();
-  platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
+  ProfiledThreadData* profiledThreadData =
+      aThreadData.GetProfiledThreadData(aLock);
+  MOZ_ASSERT(profiledThreadData);
+  RunningTimes& previousRunningTimes =
+      profiledThreadData->PreviousThreadRunningTimesRef();
+  const RunningTimes diff = newRunningTimes - previousRunningTimes;
+  previousRunningTimes = newRunningTimes;
   return diff;
-}
-
-static void ClearThreadRunningTimes(PSLockRef aLock,
-                                    const RegisteredThread& aRegisteredThread) {
-  PlatformData* const platformData = aRegisteredThread.GetPlatformData();
-  MOZ_RELEASE_ASSERT(platformData);
-  platformData->PreviousThreadRunningTimesRef().Clear();
 }
 
 template <typename Func>

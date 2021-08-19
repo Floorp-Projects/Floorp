@@ -50,16 +50,11 @@ class PlatformData {
 
   thread_act_t ProfiledThread() const { return mProfiledThread; }
 
-  RunningTimes& PreviousThreadRunningTimesRef() {
-    return mPreviousThreadRunningTimes;
-  }
-
  private:
   // Note: for mProfiledThread Mach primitives are used instead of pthread's
   // because the latter doesn't provide thread manipulation primitives required.
   // For details, consult "Mac OS X Internals" book, Section 7.3.
   thread_act_t mProfiledThread;
-  RunningTimes mPreviousThreadRunningTimes;
 };
 
 mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId)
@@ -84,18 +79,19 @@ static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
 }
 
 static RunningTimes GetThreadRunningTimesDiff(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread) {
+    PSLockRef aLock,
+    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
   AUTO_PROFILER_STATS(GetRunningTimes);
 
-  PlatformData* platformData = aRegisteredThread.GetPlatformData();
-  MOZ_RELEASE_ASSERT(platformData);
+  const mozilla::profiler::PlatformData& platformData =
+      aThreadData.PlatformDataCRef();
 
   const RunningTimes newRunningTimes = GetRunningTimesWithTightTimestamp(
-      [platformData](RunningTimes& aRunningTimes) {
+      [&platformData](RunningTimes& aRunningTimes) {
         AUTO_PROFILER_STATS(GetRunningTimes_thread_info);
         thread_basic_info_data_t threadBasicInfo;
         mach_msg_type_number_t basicCount = THREAD_BASIC_INFO_COUNT;
-        if (thread_info(platformData->ProfiledThread(), THREAD_BASIC_INFO,
+        if (thread_info(platformData.ProfiledThread(), THREAD_BASIC_INFO,
                         reinterpret_cast<thread_info_t>(&threadBasicInfo),
                         &basicCount) == KERN_SUCCESS &&
             basicCount == THREAD_BASIC_INFO_COUNT) {
@@ -113,17 +109,14 @@ static RunningTimes GetThreadRunningTimesDiff(
         }
       });
 
-  const RunningTimes diff =
-      newRunningTimes - platformData->PreviousThreadRunningTimesRef();
-  platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
+  ProfiledThreadData* profiledThreadData =
+      aThreadData.GetProfiledThreadData(aLock);
+  MOZ_ASSERT(profiledThreadData);
+  RunningTimes& previousRunningTimes =
+      profiledThreadData->PreviousThreadRunningTimesRef();
+  const RunningTimes diff = newRunningTimes - previousRunningTimes;
+  previousRunningTimes = newRunningTimes;
   return diff;
-}
-
-static void ClearThreadRunningTimes(PSLockRef aLock,
-                                    const RegisteredThread& aRegisteredThread) {
-  PlatformData* const platformData = aRegisteredThread.GetPlatformData();
-  MOZ_RELEASE_ASSERT(platformData);
-  platformData->PreviousThreadRunningTimesRef().Clear();
 }
 
 template <typename Func>
