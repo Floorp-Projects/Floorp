@@ -622,15 +622,52 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   return nsCocoaUtils::ToNSString(title);
 }
 
+enum CheckedState {
+  kUncheckable = -1,
+  kUnchecked = 0,
+  kChecked = 1,
+  kMixed = 2
+};
+
+- (int)checkedValue {
+  uint64_t state = [self
+      stateWithMask:(states::CHECKABLE | states::CHECKED | states::MIXED)];
+
+  if (state & states::CHECKABLE) {
+    if (state & states::CHECKED) {
+      return kChecked;
+    }
+
+    if (state & states::MIXED) {
+      return kMixed;
+    }
+
+    return kUnchecked;
+  }
+
+  return kUncheckable;
+}
+
+- (id)moxValue {
+  int checkedValue = [self checkedValue];
+  return checkedValue >= 0 ? @(checkedValue) : nil;
+}
+
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
   [super stateChanged:state isEnabled:enabled];
 
-  if (state == states::EXPANDED) {
+  if (state & states::EXPANDED) {
     // If the EXPANDED state is updated, fire appropriate events on the
     // outline row.
     [self moxPostNotification:(enabled
                                    ? NSAccessibilityRowExpandedNotification
                                    : NSAccessibilityRowCollapsedNotification)];
+  }
+
+  if (state & (states::CHECKED | states::CHECKABLE | states::MIXED)) {
+    // If the MIXED, CHECKED or CHECKABLE state changes, update the value we
+    // expose for the row, which communicates checked status.
+    [self moxPostNotification:NSAccessibilityValueChangedNotification];
   }
 }
 
