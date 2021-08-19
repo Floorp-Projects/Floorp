@@ -1148,6 +1148,73 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           reason = "EXC_RPC_ALERT / ";
           reason.append(flags_string);
           break;
+        case MD_EXCEPTION_MAC_RESOURCE:
+          reason = "EXC_RESOURCE / ";
+          {
+            uint32_t type = (exception_flags >> 29) & 0x7ULL;
+            uint32_t flavor = (exception_flags >> 26) & 0x7ULL;
+            char flavor_string[4] = {};
+            switch (type) {
+              case MD_MAC_EXC_RESOURCE_TYPE_CPU:
+                reason.append("RESOURCE_TYPE_CPU / ");
+                switch (flavor) {
+                  case MD_MAC_EXC_RESOURCE_FLAVOR_CPU_MONITOR:
+                    reason.append("FLAVOR_CPU_MONITOR");
+                    break;
+                  case MD_MAC_EXC_RESOURCE_FLAVOR_CPU_MONITOR_FATAL:
+                    reason.append("FLAVOR_CPU_MONITOR_FATAL");
+                    break;
+                  default:
+                    snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
+                    reason.append(flavor_string);
+                }
+                break;
+              case MD_MAC_EXC_RESOURCE_TYPE_WAKEUPS:
+                reason.append("RESOURCE_TYPE_WAKEUPS / ");
+                if (flavor == MD_MAC_EXC_RESOURCE_FLAVOR_WAKEUPS_MONITOR) {
+                  reason.append("FLAVOR_WAKEUPS_MONITOR");
+                } else {
+                  snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
+                  reason.append(flavor_string);
+                }
+                break;
+              case MD_MAC_EXC_RESOURCE_TYPE_MEMORY:
+                reason.append("RESOURCE_TYPE_MEMORY / ");
+                if (flavor == MD_MAC_EXC_RESOURCE_FLAVOR_HIGH_WATERMARK) {
+                  reason.append("FLAVOR_HIGH_WATERMARK");
+                } else {
+                  snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
+                  reason.append(flavor_string);
+                }
+                break;
+              case MD_MAC_EXC_RESOURCE_TYPE_IO:
+                reason.append("EXC_RESOURCE_TYPE_IO / ");
+                switch (flavor) {
+                  case MD_MAC_EXC_RESOURCE_FLAVOR_IO_PHYSICAL_WRITES:
+                    reason.append("FLAVOR_IO_PHYSICAL_WRITES");
+                    break;
+                  case MD_MAC_EXC_RESOURCE_FLAVOR_IO_LOGICAL_WRITES:
+                    reason.append("FLAVOR_IO_LOGICAL_WRITES");
+                    break;
+                  default:
+                    snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
+                    reason.append(flavor_string);
+                }
+                break;
+              case MD_MAC_EXC_RESOURCE_TYPE_THREADS:
+                reason.append("EXC_RESOURCE_TYPE_THREADS / ");
+                if (flavor == MD_MAC_EXC_RESOURCE_FLAVOR_THREADS_HIGH_WATERMARK) {
+                  reason.append("FLAVOR_THREADS_HIGH_WATERMARK");
+                } else {
+                  snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
+                  reason.append(flavor_string);
+                }
+                break;
+              default:
+                reason.append(flags_string);
+            }
+          }
+          break;
         case MD_EXCEPTION_MAC_SIMULATED:
           reason = "Simulated Exception";
           break;
