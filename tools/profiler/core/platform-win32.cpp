@@ -36,11 +36,6 @@
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
-void* GetStackTop(void* aGuess) {
-  PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
-  return reinterpret_cast<void*>(pTib->StackBase);
-}
-
 static void PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext) {
 #if defined(GP_ARCH_amd64)
   aRegs.mPC = reinterpret_cast<Address>(aContext->Rip);
