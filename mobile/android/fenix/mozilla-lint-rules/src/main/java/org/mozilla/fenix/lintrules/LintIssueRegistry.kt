@@ -21,8 +21,7 @@ class LintIssueRegistry : IssueRegistry() {
         TextViewAndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
         ImageViewAndroidTintXmlDetector.ISSUE_XML_SRC_USAGE,
         LicenseDetector.ISSUE_MISSING_LICENSE,
-        LicenseDetector.ISSUE_INVALID_LICENSE_FORMAT,
-        KotlinSyntheticsDetector.DEPRECATED_KOTLIN_SYNTHETICS_ISSUE
+        LicenseDetector.ISSUE_INVALID_LICENSE_FORMAT
     ) + ConstraintLayoutPerfDetector.ISSUES + ContextCompatDetector.ISSUES
     override val vendor: Vendor = Vendor(
         vendorName = "Mozilla",
