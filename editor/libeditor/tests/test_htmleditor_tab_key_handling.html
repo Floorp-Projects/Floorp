@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing indentation with `Tab` key</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  function initEditor(aEditingHostTag) {
+    const editor = document.createElement(aEditingHostTag);
+    editor.setAttribute("contenteditable", "true");
+    document.body.insertBefore(editor, document.body.firstChild);
+    editor.getBoundingClientRect();
+    const htmlEditor = SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
+    htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorAllowInteraction;
+    return editor;
+  }
+
+  (function test_tab_in_paragraph() {
+    const editor = initEditor("div");
+    editor.innerHTML = "<p>abc</p><p>def</p>";
+    editor.getBoundingClientRect();
+    editor.focus();
+    getSelection().collapse(editor.querySelector("p").firstChild, 1);
+    synthesizeKey("KEY_Tab");
+    is(
+      editor.innerHTML.replace(/&nbsp;/g, " "),
+      `<p>a    bc</p><p>def</p>`,
+      "4 white-spaces should be inserted into the paragraph by Tab"
+    );
+
+    let blurred = false;
+    editor.addEventListener("blur", () => {
+      blurred = true;
+    }, {once: true});
+    synthesizeKey("KEY_Tab", {shiftKey: true});
+    is(
+      editor.innerHTML.replace(/&nbsp;/g, " "),
+      `<p>a    bc</p><p>def</p>`,
+      "The spaces in the paragraph shouldn't be removed by Shift-Tab"
+    );
+    ok(blurred, "Shift-Tab should cause moving focus");
+    editor.remove();
+  })();
+
+  (function test_tab_in_body_text() {
+    const editor = initEditor("div");
+    editor.innerHTML = "abc";
+    editor.getBoundingClientRect();
+    editor.focus();
+    getSelection().collapse(editor.firstChild, 1);
+    synthesizeKey("KEY_Tab");
+    is(
+      editor.innerHTML.replace(/&nbsp;/g, " "),
+      `a    bc`,
+      "4 white-spaces should be inserted into the body text by Tab"
+    );
+    editor.remove();
+  })();
+
+  (function test_tab_in_li() {
+    const editor = initEditor("div");
+    for (const list of ["ol", "ul"]) {
+      editor.innerHTML = `abc<${list}><li>def</li><li>ghi</li><li>jkl</li></${list}>`;
+      editor.getBoundingClientRect();
+      editor.focus();
+      getSelection().collapse(editor.querySelector("li + li").firstChild, 1);
+      synthesizeKey("KEY_Tab");
+      is(
+        editor.innerHTML,
+        `abc<${list}><li>def</li><${list}><li>ghi</li></${list}><li>jkl</li></${list}>`,
+        `The list item containing caret should be moved into new sub-<${list}> by Tab`
+      );
+      synthesizeKey("KEY_Tab", {shiftKey: true});
+      is(
+        editor.innerHTML,
+        `abc<${list}><li>def</li><li>ghi</li><li>jkl</li></${list}>`,
+        `The list item containing caret should be moved into parent <${list}> by Shift-Tab`
+      );
+    }
+    editor.remove();
+  })();
+
+  (function test_tab_in_nested_editing_host_in_li() {
+    const editor = initEditor("div");
+    editor.innerHTML = `abc<ul><li>def</li><li><span contenteditable="false">g<span contenteditable="true">h</span>i</span></li><li>jkl</li></ul>`;
+    editor.getBoundingClientRect();
+    editor.focus();
+    getSelection().collapse(editor.querySelector("span[contenteditable=true]").firstChild, 1);
+    synthesizeKey("KEY_Tab");
+    is(
+      editor.innerHTML,
+      `abc<ul><li>def</li><li><span contenteditable="false">g<span contenteditable="true">h</span>i</span></li><li>jkl</li></ul>`,
+      `The list item containing caret should be modified by Tab`
+    );
+    editor.remove();
+  })();
+
+  // TODO: Add table cell cases.
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
