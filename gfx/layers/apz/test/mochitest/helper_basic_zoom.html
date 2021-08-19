@@ -23,7 +23,7 @@ async function test() {
   let visResEvtContent = new EventCounter(window, "mozvisualresize");
   let visScrEvtContent = new EventCounter(window, "mozvisualscroll");
 
-  var initial_resolution = getResolution();
+  var initial_resolution = await getResolution();
   ok(initial_resolution > 0,
       "The initial_resolution is " + initial_resolution + ", which is some sane value");
 
@@ -31,7 +31,7 @@ async function test() {
 
   // Flush state and get the resolution we're at now
   await promiseApzFlushedRepaints();
-  let final_resolution = getResolution();
+  let final_resolution = await getResolution();
   ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
 
   // Check we've got the expected events.

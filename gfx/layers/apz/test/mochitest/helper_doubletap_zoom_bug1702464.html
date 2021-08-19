@@ -20,7 +20,8 @@ async function test() {
   info("window.innerwh " + window.innerWidth + " " + window.innerHeight);
   info("vv " + visualViewport.offsetLeft + " " + visualViewport.offsetTop + " " + visualViewport.width + " " + visualViewport.height);
 
-  let vvHeightAtUnitZoom = visualViewport.height*getResolution();
+  let resolution = await getResolution();
+  let vvHeightAtUnitZoom = visualViewport.height * resolution;
 
   // The max amount of zoom is 10 (as defined in dom/base/nsViewportInfo.h),
   // but that includes the deviceScale (bug 1700865 is filed about this), so
@@ -59,20 +60,20 @@ async function test() {
 
   await promiseApzFlushedRepaints();
 
-  var resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution > 0,
      "The initial_resolution is " + resolution + ", which is some sane value");
 
   // Check that double-tapping once zooms in
   await doubleTapOn(document.getElementById("target1"), 10, 10, useTouchpad);
   var prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
 
   // Check that double-tapping the smaller element zooms in more
   await doubleTapOn(target2, 8, elementHeight-8, useTouchpad);
   prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution > prev_resolution, "The second double-tap has increased the resolution to " + resolution);
 
   let rect = target2.getBoundingClientRect();

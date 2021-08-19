@@ -15,7 +15,7 @@
     const utils = SpecialPowers.getDOMWindowUtils(window);
 
     async function test() {
-      is(getResolution(), 1.0, "should not be zoomed (1)");
+      is(await getResolution(), 1.0, "should not be zoomed (1)");
 
       is(window.scrollX, 0, "shouldn't have scrolled (2)");
       is(window.scrollY, 0, "shouldn't have scrolled (3)");
@@ -26,7 +26,7 @@
       SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
       await promiseApzFlushedRepaints();
 
-      is(getResolution(), 2.0, "should have zoomed (6)");
+      is(await getResolution(), 2.0, "should have zoomed (6)");
 
       is(window.scrollX, 0, "shouldn't have scrolled (7)");
       is(window.scrollY, 0, "shouldn't have scrolled (8)");
@@ -37,7 +37,7 @@
 
       await promiseApzFlushedRepaints();
 
-      is(getResolution(), 2.0, "should be zoomed (11)");
+      is(await getResolution(), 2.0, "should be zoomed (11)");
 
       is(window.scrollX, 0, "shouldn't have scrolled (12)");
       is(window.scrollY, 0, "shouldn't have scrolled (13)");
@@ -48,7 +48,7 @@
 
       await promiseApzFlushedRepaints();
 
-      is(getResolution(), 2.0, "should be zoomed (16)");
+      is(await getResolution(), 2.0, "should be zoomed (16)");
 
       is(window.scrollX, 0, "shouldn't have scrolled (17)");
       is(window.scrollY, 0, "shouldn't have scrolled (18)");
@@ -59,7 +59,7 @@
       SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(1.0);
       await promiseApzFlushedRepaints();
 
-      is(getResolution(), 1.0, "should not be zoomed (21)");
+      is(await getResolution(), 1.0, "should not be zoomed (21)");
     }
 
     waitUntilApzStable()

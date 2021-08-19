@@ -10,7 +10,7 @@
   <script>
 
 async function test() {
-  let initial_resolution = getResolution();
+  let initial_resolution = await getResolution();
   ok(initial_resolution > 0,
       "The initial_resolution is " + initial_resolution + ", which is some sane value");
 
@@ -18,7 +18,7 @@ async function test() {
   SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0*initial_resolution);
   await promiseApzFlushedRepaints();
 
-  let resolution = getResolution();
+  let resolution = await getResolution();
   ok(resolution > 1.5*initial_resolution,
       "The resolution is " + resolution + ", after zooming in");
 
@@ -45,7 +45,7 @@ async function test() {
   SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(initial_resolution);
   await promiseApzFlushedRepaints();
 
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution == initial_resolution,
       "The resolution is " + resolution + ", after restoring");
 }

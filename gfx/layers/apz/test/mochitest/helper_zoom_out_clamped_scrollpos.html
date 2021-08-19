@@ -16,13 +16,13 @@
 
     async function test() {
       // Initial state
-      is(getResolution(), 1.0, "should not be zoomed");
+      is(await getResolution(), 1.0, "should not be zoomed");
 
       // Zoom in
       utils.setResolutionAndScaleTo(2.0);
       await promiseApzFlushedRepaints();
       // Check that we're still at 0,0 in both layout and visual viewport
-      is(getResolution(), 2.0, "should be zoomed to 2.0");
+      is(await getResolution(), 2.0, "should be zoomed to 2.0");
       is(window.scrollX, 0, "shouldn't have scrolled (1)");
       is(window.scrollY, 0, "shouldn't have scrolled (2)");
       is(visualViewport.pageLeft, 0, "shouldn't have scrolled (3)");
@@ -70,7 +70,7 @@
       await promiseApzFlushedRepaints();
 
       // Check that we're back at 1.0 resolution
-      is(getResolution(), 1.0, "should be back at initial resolution");
+      is(await getResolution(), 1.0, "should be back at initial resolution");
 
       // More sanity checks
       is(window.scrollX, 0, "shouldn't have scrolled (5)");

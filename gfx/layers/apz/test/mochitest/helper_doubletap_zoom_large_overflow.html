@@ -12,7 +12,7 @@
 async function test() {
   let useTouchpad = (location.search == "?touchpad");
 
-  var resolution = getResolution();
+  var resolution = await getResolution();
   ok(resolution > 0,
      "The initial_resolution is " + resolution + ", which is some sane value");
 
@@ -42,7 +42,7 @@ async function test() {
   // Check that double-tapping once zooms in
   await doubleTapOn(target, x, y, useTouchpad);
   var prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
 
   ok(window.scrollY > 1500, "window is still scrolled down");
