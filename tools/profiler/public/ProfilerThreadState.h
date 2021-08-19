@@ -35,4 +35,14 @@
   ;
 }
 
+// Is the current thread registered and sleeping?
+[[nodiscard]] inline bool profiler_thread_is_sleeping() {
+  return profiler_is_active() &&
+         mozilla::profiler::ThreadRegistration::WithOnThreadRefOr(
+             [](mozilla::profiler::ThreadRegistration::OnThreadRef aTR) {
+               return aTR.UnlockedConstReaderAndAtomicRWCRef().IsSleeping();
+             },
+             false);
+}
+
 #endif  // ProfilerThreadState_h
