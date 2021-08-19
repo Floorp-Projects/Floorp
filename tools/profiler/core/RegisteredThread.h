@@ -65,12 +65,6 @@ class RegisteredThread final {
   const mozilla::profiler::ThreadRegistrationInfo& Info() const {
     return mRacyRegisteredThread.mThreadRegistration.mData.mInfo;
   }
-  nsCOMPtr<nsIEventTarget> GetEventTarget() const {
-    return mRacyRegisteredThread.mThreadRegistration.mData.mThread;
-  }
-  void ResetMainThread(nsIThread* aThread) {
-    mRacyRegisteredThread.mThreadRegistration.mData.mThread = aThread;
-  }
 
  private:
   class RacyRegisteredThread mRacyRegisteredThread;
