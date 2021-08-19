@@ -13,14 +13,15 @@
 #include "CTLogVerifier.h"
 #include "CTVerifyResult.h"
 #include "SignedCertificateTimestamp.h"
+#include "mozpkix/Time.h"
 #include "gtest/gtest.h"
 #include "hasht.h"
 #include "prtime.h"
 
 // Implemented in CertVerifier.cpp.
-extern mozilla::pkix::Result GetCertLifetimeInFullMonths(PRTime certNotBefore,
-                                                         PRTime certNotAfter,
-                                                         size_t& months);
+extern mozilla::pkix::Result GetCertLifetimeInFullMonths(
+    mozilla::pkix::Time certNotBefore, mozilla::pkix::Time certNotAfter,
+    size_t& months);
 
 namespace mozilla {
 namespace ct {
@@ -341,8 +342,8 @@ TEST_F(CTPolicyEnforcerTest,
 
 TEST_F(CTPolicyEnforcerTest, TestEdgeCasesOfGetCertLifetimeInFullMonths) {
   const struct TestData {
-    PRTime notBefore;
-    PRTime notAfter;
+    uint64_t notBefore;
+    uint64_t notAfter;
     size_t expectedMonths;
   } kTestData[] = {
       {                   // 1 second less than 1 month
@@ -372,8 +373,11 @@ TEST_F(CTPolicyEnforcerTest, TestEdgeCasesOfGetCertLifetimeInFullMonths) {
 
     size_t months;
     ASSERT_EQ(Success,
-              GetCertLifetimeInFullMonths(kTestData[i].notBefore,
-                                          kTestData[i].notAfter, months))
+              GetCertLifetimeInFullMonths(mozilla::pkix::TimeFromEpochInSeconds(
+                                              kTestData[i].notBefore / 1000000),
+                                          mozilla::pkix::TimeFromEpochInSeconds(
+                                              kTestData[i].notAfter / 1000000),
+                                          months))
         << "i=" << i;
     EXPECT_EQ(kTestData[i].expectedMonths, months) << "i=" << i;
   }

@@ -26,6 +26,7 @@
 #include "nsServiceManagerUtils.h"
 #include "pk11pub.h"
 #include "mozpkix/pkix.h"
+#include "mozpkix/pkixcheck.h"
 #include "mozpkix/pkixnss.h"
 #include "mozpkix/pkixutil.h"
 #include "secmod.h"
@@ -38,19 +39,32 @@ mozilla::LazyLogModule gCertVerifierLog("certverifier");
 
 // Returns the certificate validity period in calendar months (rounded down).
 // "extern" to allow unit tests in CTPolicyEnforcerTest.cpp.
-extern mozilla::pkix::Result GetCertLifetimeInFullMonths(PRTime certNotBefore,
-                                                         PRTime certNotAfter,
+extern mozilla::pkix::Result GetCertLifetimeInFullMonths(Time certNotBefore,
+                                                         Time certNotAfter,
                                                          size_t& months) {
   if (certNotBefore >= certNotAfter) {
     MOZ_ASSERT_UNREACHABLE("Expected notBefore < notAfter");
     return mozilla::pkix::Result::FATAL_ERROR_INVALID_ARGS;
   }
+  uint64_t notBeforeSeconds;
+  Result rv = SecondsSinceEpochFromTime(certNotBefore, &notBeforeSeconds);
+  if (rv != Success) {
+    return rv;
+  }
+  uint64_t notAfterSeconds;
+  rv = SecondsSinceEpochFromTime(certNotAfter, &notAfterSeconds);
+  if (rv != Success) {
+    return rv;
+  }
+  // PRTime is microseconds
+  PRTime notBeforePR = static_cast<PRTime>(notBeforeSeconds) * 1000000;
+  PRTime notAfterPR = static_cast<PRTime>(notAfterSeconds) * 1000000;
 
   PRExplodedTime explodedNotBefore;
   PRExplodedTime explodedNotAfter;
 
-  PR_ExplodeTime(certNotBefore, PR_LocalTimeParameters, &explodedNotBefore);
-  PR_ExplodeTime(certNotAfter, PR_LocalTimeParameters, &explodedNotAfter);
+  PR_ExplodeTime(notBeforePR, PR_LocalTimeParameters, &explodedNotBefore);
+  PR_ExplodeTime(notAfterPR, PR_LocalTimeParameters, &explodedNotAfter);
 
   PRInt32 signedMonths =
       (explodedNotAfter.tm_year - explodedNotBefore.tm_year) * 12 +
@@ -354,24 +368,13 @@ Result CertVerifier::VerifyCertificateTransparencyPolicy(
   if (rv != Success) {
     return rv;
   }
+
   BackCert issuerBackCert(issuerInput, EndEntityOrCA::MustBeCA, nullptr);
   rv = issuerBackCert.Init();
   if (rv != Success) {
     return rv;
   }
   Input issuerPublicKeyInput = issuerBackCert.GetSubjectPublicKeyInfo();
-
-  SECItem endEntityDERItem = UnsafeMapInputToSECItem(endEntityInput);
-  UniqueCERTCertificate endEntityCert(CERT_NewTempCertificate(
-      CERT_GetDefaultCertDB(), &endEntityDERItem, nullptr, false, true));
-  if (!endEntityCert) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  if (endEntityCert->subjectName) {
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-            ("Verifying CT Policy compliance of subject %s\n",
-             endEntityCert->subjectName));
-  }
 
   CTVerifyResult result;
   rv = mCTVerifier->Verify(endEntityInput, issuerPublicKeyInput, embeddedSCTs,
@@ -421,11 +424,17 @@ Result CertVerifier::VerifyCertificateTransparencyPolicy(
          invalidSignatureCount, invalidTimestampCount, result.decodingErrors));
   }
 
-  PRTime notBefore;
-  PRTime notAfter;
-  if (CERT_GetCertTimes(endEntityCert.get(), &notBefore, &notAfter) !=
-      SECSuccess) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  BackCert endEntityBackCert(endEntityInput, EndEntityOrCA::MustBeEndEntity,
+                             nullptr);
+  rv = endEntityBackCert.Init();
+  if (rv != Success) {
+    return rv;
+  }
+  Time notBefore(Time::uninitialized);
+  Time notAfter(Time::uninitialized);
+  rv = ParseValidity(endEntityBackCert.GetValidity(), &notBefore, &notAfter);
+  if (rv != Success) {
+    return rv;
   }
   size_t lifetimeInMonths;
   rv = GetCertLifetimeInFullMonths(notBefore, notAfter, lifetimeInMonths);
