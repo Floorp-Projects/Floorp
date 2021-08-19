@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
     <string name="app_name_private_2">Firefox Preview anonimo</string>
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
@@ -733,6 +733,8 @@
     <string name="tab_collection_dialog_message">Scanseƚare %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Scanseƚa</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Anuƚa</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Pasa a schermo intiero</string>
     <!-- Message for copying the URL via long press on the toolbar -->

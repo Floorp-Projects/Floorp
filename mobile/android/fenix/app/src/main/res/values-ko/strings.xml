@@ -1167,6 +1167,8 @@
     <string name="delete_tab_and_collection_dialog_title">%1$s 모음집을 삭제하시겠습니까?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">삭제</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">취소</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">전체 화면 모드로 전환 중</string>
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">निजी %s</string>
@@ -965,6 +965,8 @@
     <string name="delete_tab_and_collection_dialog_title">%1$s को मिटाएं?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">मिटाएं</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">रद्द करें</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">पूर्ण स्क्रीन मोड में प्रवेश</string>
     <!-- Message for copying the URL via long press on the toolbar -->

@@ -1156,6 +1156,8 @@
     <string name="delete_tab_and_collection_dialog_title">要删除“%1$s”吗？</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">删除</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">取消</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">进入全屏模式</string>
 

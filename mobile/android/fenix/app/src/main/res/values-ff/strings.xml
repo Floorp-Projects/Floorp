@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Cuuriɗum %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -710,6 +710,8 @@
     <string name="tab_collection_dialog_message">Aɗa yenanaa yiɗde momtude %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Momtu</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Haaytu</string>
 
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Ñiiɓirde geese nattaama</string>
