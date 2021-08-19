@@ -9909,6 +9909,18 @@
   value: 32
   mirror: always
 
+# Receive buffer size of QUIC socket
+- name: network.http.http3.max_data
+  type: RelaxedAtomicUint32
+  value: 25165824
+  mirror: always
+
+# Receive buffer size of QUIC socket
+- name: network.http.http3.max_stream_data
+  type: RelaxedAtomicUint32
+  value: 12582912
+  mirror: always
+
 # When true, a http request will be upgraded to https when HTTPS RR is
 # available.
 - name: network.dns.upgrade_with_https_rr
