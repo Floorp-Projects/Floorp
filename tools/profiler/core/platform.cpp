@@ -38,7 +38,6 @@
 #include "ProfilerCodeAddressService.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "ProfilerParent.h"
-#include "RegisteredThread.h"
 #include "shared-libraries.h"
 #include "VTuneProfiler.h"
 
@@ -359,9 +358,6 @@ using JsFrameBuffer = JS::ProfilingFrameIterator::Frame[MAX_JS_FRAMES];
 // The exceptions to this rule:
 //
 // - mProcessStartTime, because it's immutable;
-//
-// - each thread's RacyRegisteredThread object is accessible without locking via
-//   TLSRegisteredThread::RacyRegisteredThread().
 class CorePS {
  private:
   CorePS()
@@ -407,18 +403,12 @@ class CorePS {
 
     aProfSize += ThreadRegistry::SizeOfIncludingThis(aMallocSizeOf);
 
-    for (auto& registeredThread : sInstance->mRegisteredThreads) {
-      aProfSize += registeredThread->SizeOfIncludingThis(aMallocSizeOf);
-    }
-
     for (auto& registeredPage : sInstance->mRegisteredPages) {
       aProfSize += registeredPage->SizeOfIncludingThis(aMallocSizeOf);
     }
 
     // Measurement of the following things may be added later if DMD finds it
     // is worthwhile:
-    // - CorePS::mRegisteredThreads itself (its elements' children are
-    // measured above)
     // - CorePS::mRegisteredPages itself (its elements' children are
     // measured above)
     // - CorePS::mInterposeObserver
@@ -436,28 +426,7 @@ class CorePS {
   // No PSLockRef is needed for this field because it's thread-safe.
   PS_GET_LOCKLESS(ProfileChunkedBuffer&, CoreBuffer)
 
-  PS_GET(const Vector<UniquePtr<RegisteredThread>>&, RegisteredThreads)
-
   PS_GET(JsFrameBuffer&, JsFrames)
-
-  static void AppendRegisteredThread(
-      PSLockRef, UniquePtr<RegisteredThread>&& aRegisteredThread) {
-    MOZ_ASSERT(sInstance);
-    MOZ_RELEASE_ASSERT(
-        sInstance->mRegisteredThreads.append(std::move(aRegisteredThread)));
-  }
-
-  static void RemoveRegisteredThread(PSLockRef,
-                                     RegisteredThread* aRegisteredThread) {
-    MOZ_ASSERT(sInstance);
-    // Remove aRegisteredThread from mRegisteredThreads.
-    for (UniquePtr<RegisteredThread>& rt : sInstance->mRegisteredThreads) {
-      if (rt.get() == aRegisteredThread) {
-        sInstance->mRegisteredThreads.erase(&rt);
-        return;
-      }
-    }
-  }
 
   PS_GET(Vector<RefPtr<PageInformation>>&, RegisteredPages)
 
@@ -554,10 +523,6 @@ class CorePS {
   // attempt to write some data shortly after ActivePS has shutdown and deleted
   // the underlying buffer in memory.
   ProfileChunkedBuffer mCoreBuffer;
-
-  // Info on all the registered threads.
-  // ThreadIds in mRegisteredThreads are unique.
-  Vector<UniquePtr<RegisteredThread>> mRegisteredThreads;
 
   // Info on all the registered pages.
   // InnerWindowIDs in mRegisteredPages are unique.
@@ -1447,82 +1412,6 @@ static void invoke_profiler_state_change_callbacks(
 }
 
 Atomic<uint32_t, MemoryOrdering::Relaxed> RacyFeatures::sActiveAndFeatures(0);
-
-// Each live thread has a RegisteredThread, and we store a reference to it in
-// TLS. This class encapsulates that TLS, and also handles the associated
-// profiling stack used by AutoProfilerLabel.
-class TLSRegisteredThread {
- public:
-  // This should only be called once before any other access.
-  // In this case it's called from `profiler_init()` on the main thread, before
-  // the main thread registers itself.
-  static void Init() {
-    MOZ_ASSERT(sState == State::Uninitialized, "Already initialized");
-    sState = sRegisteredThread.init() ? State::Initialized : State::Unavailable;
-  }
-
-  static bool IsTLSInited() {
-    MOZ_ASSERT(sState != State::Uninitialized,
-               "TLSRegisteredThread should only be accessed after Init()");
-    return sState == State::Initialized;
-  }
-
-  // Get the entire RegisteredThread. Accesses are guarded by gPSMutex.
-  static class RegisteredThread* RegisteredThread(PSLockRef) {
-    if (!IsTLSInited()) {
-      return nullptr;
-    }
-    return sRegisteredThread.get();
-  }
-
-  // Get only the RacyRegisteredThread. Accesses are not guarded by gPSMutex.
-  static class RacyRegisteredThread* RacyRegisteredThread() {
-    if (!IsTLSInited()) {
-      return nullptr;
-    }
-    class RegisteredThread* registeredThread = sRegisteredThread.get();
-    return registeredThread ? &registeredThread->RacyRegisteredThread()
-                            : nullptr;
-  }
-
-  static void SetRegisteredThread(PSLockRef,
-                                  class RegisteredThread* aRegisteredThread) {
-    if (!IsTLSInited()) {
-      return;
-    }
-    MOZ_RELEASE_ASSERT(
-        aRegisteredThread,
-        "Use ResetRegisteredThread() instead of SetRegisteredThread(nullptr)");
-    sRegisteredThread.set(aRegisteredThread);
-  }
-
-  static void ResetRegisteredThread(PSLockRef) {
-    if (!IsTLSInited()) {
-      return;
-    }
-    sRegisteredThread.set(nullptr);
-  }
-
- private:
-  // Only written once from `profiler_init` calling
-  // `TLSRegisteredThread::Init()`; all reads should only happen after `Init()`,
-  // so there is no need to make it atomic.
-  enum class State { Uninitialized = 0, Initialized, Unavailable };
-  static State sState;
-
-  // This is a non-owning reference to the RegisteredThread;
-  // CorePS::mRegisteredThreads is the owning reference. On thread
-  // deregistration, this reference is cleared and the RegisteredThread is
-  // destroyed.
-  static MOZ_THREAD_LOCAL(class RegisteredThread*) sRegisteredThread;
-};
-
-// Zero-initialized to State::Uninitialized.
-/* static */
-TLSRegisteredThread::State TLSRegisteredThread::sState;
-
-/* static */
-MOZ_THREAD_LOCAL(RegisteredThread*) TLSRegisteredThread::sRegisteredThread;
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
@@ -4090,54 +3979,18 @@ uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
   return features;
 }
 
-static bool IsRegisteredThreadInRegisteredThreadsList(
-    PSLockRef aLock, RegisteredThread* aThread) {
-  const auto& registeredThreads = CorePS::RegisteredThreads(aLock);
-  for (const auto& registeredThread : registeredThreads) {
-    if (registeredThread.get() == aThread) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 static ProfilingStack* locked_register_thread(
     PSLockRef aLock, ThreadRegistry::OffThreadRef aOffThreadRef) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   VTUNE_REGISTER_THREAD(aOffThreadRef.UnlockedConstReaderCRef().Info().Name());
 
-  if (!TLSRegisteredThread::IsTLSInited()) {
-    return nullptr;
-  }
-
-  // Temporary hack: Ugly-copy ThreadRegistration* from inside aOffThreadRef!
-  ThreadRegistration* tr;
-  static_assert(sizeof(tr) == sizeof(aOffThreadRef));
-  memcpy(&tr, &aOffThreadRef, sizeof(tr));
-  UniquePtr<RegisteredThread> registeredThread =
-      MakeUnique<RegisteredThread>(*tr);
-
-  TLSRegisteredThread::SetRegisteredThread(aLock, registeredThread.get());
-
-  ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock lockedRWFromAnyThread =
-      aOffThreadRef.LockedRWFromAnyThread();
-
-  ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
-      lockedRWFromAnyThread.GetLockedRWOnThread();
-  MOZ_RELEASE_ASSERT(
-      lockedRWOnThread,
-      "At the moment, we should only get here when registering the current "
-      "thread (either through profiler_register_thread or from profiler_init "
-      "on the main thread registering that main thread). But in the future "
-      "this may be done for other already-registered threads, so we need to "
-      "null-check the pointer in long-term code below.");
-  lockedRWOnThread->SetRegisteredThread(registeredThread.get());
-
   if (ActivePS::Exists(aLock) &&
       ActivePS::ShouldProfileThread(
           aLock, aOffThreadRef.UnlockedConstReaderCRef().Info())) {
+    ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock
+        lockedRWFromAnyThread = aOffThreadRef.LockedRWFromAnyThread();
+
     nsCOMPtr<nsIEventTarget> eventTarget =
         lockedRWFromAnyThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
@@ -4149,7 +4002,9 @@ static ProfilingStack* locked_register_thread(
 
     if (ActivePS::FeatureJS(aLock)) {
       lockedRWFromAnyThread->StartJSSampling(ActivePS::JSFlags(aLock));
-      if (lockedRWOnThread) {
+      if (ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
+              lockedRWFromAnyThread.GetLockedRWOnThread();
+          lockedRWOnThread) {
         // We can manually poll the current thread so it starts sampling
         // immediately.
         lockedRWOnThread->PollJSSampling();
@@ -4160,14 +4015,6 @@ static ProfilingStack* locked_register_thread(
       }
     }
   }
-
-  MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(aLock),
-                     "TLS should be set when registering thread");
-  MOZ_RELEASE_ASSERT(
-      registeredThread == TLSRegisteredThread::RegisteredThread(aLock),
-      "TLS should be set as expected when registering thread");
-
-  CorePS::AppendRegisteredThread(aLock, std::move(registeredThread));
 
   return &aOffThreadRef.UnlockedConstReaderAndAtomicRWRef().ProfilingStackRef();
 }
@@ -4287,9 +4134,6 @@ void profiler_init(void* aStackTop) {
   if (getenv("MOZ_PROFILER_HELP")) {
     PrintUsageThenExit(1);  // terminates execution
   }
-
-  // This must be before any TLS access (e.g.: Thread registration, labels...).
-  TLSRegisteredThread::Init();
 
   SharedLibraryInfo::Initialize();
 
@@ -5449,33 +5293,22 @@ void profiler_unregister_thread() {
 
 static void locked_unregister_thread(
     PSLockRef lock, ThreadRegistration::OnThreadRef aOnThreadRef) {
-  if (!TLSRegisteredThread::IsTLSInited()) {
-    return;
-  }
-
   if (!CorePS::Exists()) {
     // This function can be called after the main thread has already shut
     // down.
     return;
   }
 
-  // We don't call RegisteredThread::StopJSSampling() here; there's no point
-  // doing that for a JS thread that is in the process of disappearing.
+  // We don't call StopJSSampling() here; there's no point doing that for a JS
+  // thread that is in the process of disappearing.
 
   ThreadRegistration::OnThreadRef::RWOnThreadWithLock lockedThreadData =
       aOnThreadRef.LockedRWOnThread();
 
-  RegisteredThread* registeredThread = &lockedThreadData->RegisteredThreadRef();
-
   ProfiledThreadData* profiledThreadData =
       lockedThreadData->GetProfiledThreadData(lock);
   lockedThreadData->ClearIsBeingProfiledAndProfiledThreadData(lock);
-  lockedThreadData->SetRegisteredThread(nullptr);
 
-  MOZ_RELEASE_ASSERT(
-      IsRegisteredThreadInRegisteredThreadsList(lock, registeredThread),
-      "Thread being unregistered is not in registered thread list even "
-      "though its TLS is non-null");
   MOZ_RELEASE_ASSERT(
       lockedThreadData->Info().ThreadId() == profiler_current_thread_id(),
       "Thread being unregistered has changed its TID");
@@ -5485,21 +5318,6 @@ static void locked_unregister_thread(
   if (profiledThreadData && ActivePS::Exists(lock)) {
     ActivePS::UnregisterThread(lock, profiledThreadData);
   }
-
-  // Clear the pointer to the RegisteredThread object that we're about to
-  // destroy.
-  TLSRegisteredThread::ResetRegisteredThread(lock);
-
-  // Remove the thread from the list of registered threads. This deletes the
-  // registeredThread object.
-  CorePS::RemoveRegisteredThread(lock, registeredThread);
-
-  MOZ_RELEASE_ASSERT(
-      !IsRegisteredThreadInRegisteredThreadsList(lock, registeredThread),
-      "After unregistering, thread should no longer be in the registered "
-      "thread list");
-  MOZ_RELEASE_ASSERT(!TLSRegisteredThread::RegisteredThread(lock),
-                     "TLS should have been reset after un-registering thread");
 }
 
 /* static */
