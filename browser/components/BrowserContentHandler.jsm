@@ -925,6 +925,22 @@ nsDefaultCommandLineHandler.prototype = {
   handle: function dch_handle(cmdLine) {
     var urilist = [];
 
+    if (
+      AppConstants.platform == "macosx" &&
+      cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
+      Services.startup.wasSilentlyRestarted
+    ) {
+      // If we are starting up after a silent restart, don't open a window.
+      // We also need to make sure that the application doesn't immediately
+      // exit, so stay in a LastWindowClosingSurvivalArea until a window opens.
+      Services.startup.enterLastWindowClosingSurvivalArea();
+      Services.obs.addObserver(function windowOpenObserver() {
+        Services.startup.exitLastWindowClosingSurvivalArea();
+        Services.obs.removeObserver(windowOpenObserver, "domwindowopened");
+      }, "domwindowopened");
+      return;
+    }
+
     if (AppConstants.platform == "win") {
       // If we don't have a profile selected yet (e.g. the Profile Manager is
       // displayed) we will crash if we open an url and then select a profile. To
