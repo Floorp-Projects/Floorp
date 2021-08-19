@@ -1414,9 +1414,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
       typedef TreeBuildingState::DeferredTransformMap::value_type PairType;
       if (!aAncestorTransform.ContainsPerspectiveTransform() &&
           !apzc->AncestorTransformContainsPerspective()) {
-        NS_ASSERTION(false,
-                     "Two layers that scroll together have different ancestor "
-                     "transforms");
+        MOZ_ASSERT(false,
+                   "Two layers that scroll together have different ancestor "
+                   "transforms");
       } else if (!aAncestorTransform.ContainsPerspectiveTransform()) {
         aState.mPerspectiveTransformsDeferredToChildren.insert(
             PairType{apzc, apzc->GetAncestorTransformPerspective()});
