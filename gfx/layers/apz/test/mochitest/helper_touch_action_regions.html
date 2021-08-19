@@ -123,9 +123,9 @@ function RunAfterProcessedQueuedInputEvents(aCallback) {
 }
 
 var scrollerPosition;
-function getScrollerPosition() {
+async function getScrollerPosition() {
   const scroller = document.getElementById("scroller");
-  scrollerPosition = coordinatesRelativeToScreen({
+  scrollerPosition = await coordinatesRelativeToScreen({
     offsetX: 0,
     offsetY: 0,
     target: scroller,
@@ -328,7 +328,7 @@ if (SpecialPowers.isMainProcess()) {
   subtestDone();
 } else {
   waitUntilApzStable()
-  .then(getScrollerPosition)
+  .then(async () => { await getScrollerPosition(); })
   .then(runContinuation(test))
   .then(subtestDone, subtestFailed);
 }

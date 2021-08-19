@@ -12,7 +12,7 @@
 async function test() {
   let useTouchpad = (location.search == "?touchpad");
 
-  let resolution = getResolution();
+  let resolution = await getResolution();
   ok(resolution > 0,
      "The initial_resolution is " + resolution + ", which is some sane value");
 
@@ -20,21 +20,21 @@ async function test() {
   info("sending first double tap");
   await doubleTapOn(document.getElementById("target1"), 10, 10, useTouchpad);
   let prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution == prev_resolution, "The first double-tap did not change the resolution: " + resolution);
 
   // Check that double-tapping does not zoom in
   info("sending second double tap");
   await doubleTapOn(document.getElementById("target2"), 10, 10, useTouchpad);
   prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution == prev_resolution, "The second double-tap did not change the resolution: " + resolution);
 
   // Check that double-tapping does zoom in
   info("sending third double tap");
   await doubleTapOn(document.getElementById("target3"), 10, 10, useTouchpad);
   prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution > prev_resolution, "The third double-tap has increased the resolution to " + resolution);
 }
 

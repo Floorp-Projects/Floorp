@@ -12,13 +12,13 @@
 
 async function test() {
   // Scenario 1: zoom in
-  var initial_resolution = getResolution();
+  var initial_resolution = await getResolution();
   ok(initial_resolution > 0,
       "The initial_resolution is " + initial_resolution + ", which is some sane value");
   await pinchZoomInWithTouchpad(641, 465);
   // Flush state and get the resolution we're at now
   await promiseApzFlushedRepaints();
-  let final_resolution = getResolution();
+  let final_resolution = await getResolution();
   ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
 
   // Scenario 2: zoom out
@@ -27,7 +27,7 @@ async function test() {
       "The initial_resolution is " + initial_resolution + ", which is some sane value");
   await pinchZoomOutWithTouchpad(641, 465);
   await promiseApzFlushedRepaints();
-  final_resolution = getResolution();
+  final_resolution = await getResolution();
   ok(final_resolution < initial_resolution, "The final resolution (" + final_resolution + ") is smaller after zooming Out");
 
   // Scenario 3: zoom in and out in the same gesture
@@ -36,7 +36,7 @@ async function test() {
       "The initial_resolution is " + initial_resolution + ", which is some sane value");
   await pinchZoomInOutWithTouchpad (641, 465);
   await promiseApzFlushedRepaints();
-  final_resolution = getResolution();
+  final_resolution = await getResolution();
   isfuzzy(initial_resolution, final_resolution, 0.0001, "The final resolution approximatly the same after zooming In and Out");
 
   // Scenario 4: zoom in, with the page using preventDefault()
@@ -64,7 +64,7 @@ async function test() {
   await pinchZoomInWithTouchpad(641, 465, { waitForTransformEnd: false });
   await wheelPromise;
   document.removeEventListener("wheel", onWheel, { passive: false });
-  final_resolution = getResolution();
+  final_resolution = await getResolution();
   is(final_resolution, initial_resolution,
      "Calling preventDefault() on wheel event successfully prevents zooming");
 
@@ -91,7 +91,7 @@ async function test() {
   });
   await DOMMouseScrollPromise;
   document.removeEventListener("DOMMouseScroll", onDOMMouseScroll, { passive: false });
-  final_resolution = getResolution();
+  final_resolution = await getResolution();
   is(final_resolution, initial_resolution,
      "Calling preventDefault() on DOMMouseScroll event successfully prevents zooming");
 }

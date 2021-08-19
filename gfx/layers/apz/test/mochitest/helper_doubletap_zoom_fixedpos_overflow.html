@@ -29,7 +29,7 @@ async function makeActive(x, y, targetId) {
 async function test() {
   let useTouchpad = (location.search == "?touchpad");
 
-  let resolution = getResolution();
+  let resolution = await getResolution();
   ok(resolution > 0,
      "The initial_resolution is " + resolution + ", which is some sane value");
 
@@ -42,13 +42,13 @@ async function test() {
   // bug we are testing.
   await doubleTapOn(target, 25, 120, useTouchpad);
   let prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
 
   // Check that double-tapping again on the same spot zooms out
   await doubleTapOn(target, 25, 120, useTouchpad);
   prev_resolution = resolution;
-  resolution = getResolution();
+  resolution = await getResolution();
   ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
 }
 
