@@ -1961,7 +1961,7 @@ void EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent) {
                              aTouchEvent->mWidget);
 
     PointerEventHandler::InitPointerEventFromTouch(
-        &event, aTouchEvent, aTouchEvent->mTouches[0], true);
+        event, *aTouchEvent, *aTouchEvent->mTouches[0], true);
 
     event.convertToPointer = false;
     presShell->HandleEventWithTarget(&event, targetFrame, content, &status);
