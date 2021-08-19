@@ -9,8 +9,8 @@ use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
 use neqo_qpack::QpackSettings;
 use neqo_transport::{
-    CongestionControlAlgorithm, ConnectionParameters, Error as TransportError, Output, QuicVersion,
-    RandomConnectionIdGenerator,
+    stream_id::StreamType, CongestionControlAlgorithm, ConnectionParameters, Error as TransportError,
+    Output, QuicVersion, RandomConnectionIdGenerator,
 };
 use nserror::*;
 use nsstring::*;
@@ -44,6 +44,8 @@ impl NeqoHttp3Conn {
         remote_addr: &nsACString,
         max_table_size: u64,
         max_blocked_streams: u16,
+        max_data: u64,
+        max_stream_data: u64,
         qlog_dir: &nsACString,
     ) -> Result<RefPtr<NeqoHttp3Conn>, nsresult> {
         // Nss init.
@@ -94,7 +96,9 @@ impl NeqoHttp3Conn {
             remote,
             ConnectionParameters::default()
                 .quic_version(quic_version)
-                .cc_algorithm(CongestionControlAlgorithm::Cubic),
+                .cc_algorithm(CongestionControlAlgorithm::Cubic)
+                .max_data(max_data)
+                .max_stream_data(StreamType::BiDi, false, max_stream_data),
             &http3_settings,
             Instant::now(),
         ) {
@@ -177,6 +181,8 @@ pub extern "C" fn neqo_http3conn_new(
     remote_addr: &nsACString,
     max_table_size: u64,
     max_blocked_streams: u16,
+    max_data: u64,
+    max_stream_data: u64,
     qlog_dir: &nsACString,
     result: &mut *const NeqoHttp3Conn,
 ) -> nsresult {
@@ -189,6 +195,8 @@ pub extern "C" fn neqo_http3conn_new(
         remote_addr,
         max_table_size,
         max_blocked_streams,
+        max_data,
+        max_stream_data,
         qlog_dir,
     ) {
         Ok(http3_conn) => {
