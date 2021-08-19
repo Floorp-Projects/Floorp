@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 
+class ProfiledThreadData;
 class PSAutoLock;
 struct JSContext;
 
@@ -65,6 +66,16 @@ class ThreadRegistrationData {
   // `protected` to allow derived classes to read all data members.
  protected:
   ThreadRegistrationData(const char* aName, const void* aStackTop);
+
+#ifdef DEBUG
+  // Destructor only used to check invariants.
+  ~ThreadRegistrationData() {
+    MOZ_ASSERT(mIsBeingProfiled == !!mProfiledThreadData);
+    MOZ_ASSERT(!mProfiledThreadData,
+               "mProfiledThreadData pointer should have been reset before "
+               "~ThreadRegistrationData");
+  }
+#endif  // DEBUG
 
   // Trust these to access mData.
   // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
@@ -163,6 +174,7 @@ class ThreadRegistrationData {
 
   // Is this thread being profiled? (e.g., should markers be recorded?)
   // Written from profiler, read from thread.
+  // Invariant: `mIsBeingProfiled == !!mProfiledThreadData` (set together.)
   Atomic<bool, MemoryOrdering::Relaxed> mIsBeingProfiled{false};
 
   // mSleep tracks whether the thread is sleeping, and if so, whether it has
@@ -203,6 +215,12 @@ class ThreadRegistrationData {
   static const int SLEEPING_OBSERVED = 2;
   // Read&written from thread and suspended thread.
   Atomic<int> mSleep{AWAKE};
+
+  // If the profiler is active and this thread is selected for profiling, this
+  // points at the relevant ProfiledThreadData.
+  // Fully controlled by the profiler.
+  // Invariant: `mIsBeingProfiled == !!mProfiledThreadData` (set together.)
+  ProfiledThreadData* mProfiledThreadData = nullptr;
 
   // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
   RegisteredThread* mRegisteredThread;
@@ -308,9 +326,21 @@ class ThreadRegistrationUnlockedRWForLockedProfiler
   // (Because there is no other lock.)
 
   // This is like IsBeingProfiled, but guaranteed to be stable while the lock is
-  // held (unless modified under the same lock, of course).
+  // held (unless modified under the same lock, of course), and is a bit faster
+  // by not doing an atomic read.
   [[nodiscard]] bool IsBeingProfiled(const PSAutoLock&) const {
-    return mIsBeingProfiled;
+    // Invariant: `mIsBeingProfiled == !!mProfiledThreadData` (set together),
+    // but mProfiledThreadData is not atomic and therefore faster to read.
+    return mProfiledThreadData;
+  }
+
+  [[nodiscard]] const ProfiledThreadData* GetProfiledThreadData(
+      const PSAutoLock&) const {
+    return mProfiledThreadData;
+  }
+
+  [[nodiscard]] ProfiledThreadData* GetProfiledThreadData(const PSAutoLock&) {
+    return mProfiledThreadData;
   }
 
  protected:
@@ -344,7 +374,9 @@ class ThreadRegistrationUnlockedReaderAndAtomicRWOnThread
 class ThreadRegistrationLockedRWFromAnyThread
     : public ThreadRegistrationUnlockedReaderAndAtomicRWOnThread {
  public:
-  void SetIsBeingProfiled(bool aIsBeingProfiled, const PSAutoLock&);
+  void SetIsBeingProfiledWithProfiledThreadData(
+      ProfiledThreadData* aProfiledThreadData, const PSAutoLock&);
+  void ClearIsBeingProfiledAndProfiledThreadData(const PSAutoLock&);
 
   [[nodiscard]] const nsCOMPtr<nsIEventTarget> GetEventTarget() const {
     return mThread;

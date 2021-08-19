@@ -4165,12 +4165,13 @@ static ProfilingStack* locked_register_thread(
   if (ActivePS::Exists(aLock) &&
       ActivePS::ShouldProfileThread(
           aLock, aOffThreadRef.UnlockedConstReaderCRef().Info())) {
-    registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
     nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
         aLock, registeredThread.get(),
         MakeUnique<ProfiledThreadData>(
             aOffThreadRef.UnlockedConstReaderCRef().Info(), eventTarget));
+    lockedRWFromAnyThread->SetIsBeingProfiledWithProfiledThreadData(
+        profiledThreadData, aLock);
 
     if (ActivePS::FeatureJS(aLock)) {
       // This StartJSSampling() call is on-thread, so we can poll manually to
@@ -4954,12 +4955,19 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     const ThreadRegistrationInfo& info = registeredThread->Info();
 
     if (ActivePS::ShouldProfileThread(aLock, info)) {
-      registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
       nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
       ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
           aLock, registeredThread.get(),
           MakeUnique<ProfiledThreadData>(info, eventTarget));
       ClearThreadRunningTimes(aLock, *registeredThread);
+      ThreadRegistry::WithOffThreadRef(
+          info.ThreadId(), [&](ThreadRegistry::OffThreadRef aOffThreadRef) {
+            aOffThreadRef.WithLockedRWFromAnyThread(
+                [&](ThreadRegistration::LockedRWFromAnyThread& aRW) {
+                  aRW.SetIsBeingProfiledWithProfiledThreadData(
+                      profiledThreadData, aLock);
+                });
+          });
       if (ActivePS::FeatureJS(aLock)) {
         registeredThread->StartJSSampling(ActivePS::JSFlags(aLock));
         if (info.ThreadId() == tid) {
@@ -5156,8 +5164,15 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   const Vector<LiveProfiledThreadData>& liveProfiledThreads =
       ActivePS::LiveProfiledThreads(aLock);
   for (auto& thread : liveProfiledThreads) {
+    ThreadRegistry::WithOffThreadRef(
+        thread.mProfiledThreadData->Info().ThreadId(),
+        [&](ThreadRegistry::OffThreadRef aOffThreadRef) {
+          aOffThreadRef.WithLockedRWFromAnyThread(
+              [&](ThreadRegistration::LockedRWFromAnyThread& aRW) {
+                aRW.ClearIsBeingProfiledAndProfiledThreadData(aLock);
+              });
+        });
     RegisteredThread* registeredThread = thread.mRegisteredThread;
-    registeredThread->RacyRegisteredThread().SetIsBeingProfiled(false);
     if (ActivePS::FeatureJS(aLock)) {
       registeredThread->StopJSSampling();
       const ThreadRegistrationInfo& info = registeredThread->Info();
@@ -5498,9 +5513,10 @@ static void locked_unregister_thread(PSLockRef lock) {
     }
 
     ThreadRegistration::WithOnThreadRef(
-        [](ThreadRegistration::OnThreadRef threadRegistration) {
+        [&](ThreadRegistration::OnThreadRef threadRegistration) {
           threadRegistration.WithLockedRWOnThread(
-              [](ThreadRegistration::LockedRWOnThread& aRW) {
+              [&](ThreadRegistration::LockedRWOnThread& aRW) {
+                aRW.ClearIsBeingProfiledAndProfiledThreadData(lock);
                 aRW.SetRegisteredThread(nullptr);
               });
         });

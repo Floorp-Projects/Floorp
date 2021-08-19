@@ -29,10 +29,6 @@ class RacyRegisteredThread final {
 
   MOZ_COUNTED_DTOR(RacyRegisteredThread)
 
-  void SetIsBeingProfiled(bool aIsBeingProfiled) {
-    mThreadRegistration.mData.mIsBeingProfiled = aIsBeingProfiled;
-  }
-
   // This is called on every profiler restart. Put things that should happen at
   // that time here.
   void ReinitializeOnResume() {
