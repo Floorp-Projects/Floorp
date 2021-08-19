@@ -122,8 +122,9 @@ HTMLLegendElement::LegendAlignValue HTMLLegendElement::LogicalAlign(
   }
 }
 
-already_AddRefed<HTMLFormElement> HTMLLegendElement::GetForm() {
-  return do_AddRef(GetFormElement());
+HTMLFormElement* HTMLLegendElement::GetForm() const {
+  nsCOMPtr<nsIFormControl> fieldsetControl = do_QueryInterface(GetFieldSet());
+  return fieldsetControl ? fieldsetControl->GetForm() : nullptr;
 }
 
 JSObject* HTMLLegendElement::WrapNode(JSContext* aCx,
