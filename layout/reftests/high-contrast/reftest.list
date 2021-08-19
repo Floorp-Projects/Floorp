@@ -88,3 +88,6 @@ test-pref(browser.display.document_color_use,0) == forced-colors-002.html prefer
 test-pref(browser.display.document_color_use,0) != forced-colors-001.html prefers-contrast-black-ref.html
 
 != system-colors.html system-colors-notref.html
+
+== border-color-transparent.html border-color-transparent-ref.html
+!= border-color-transparent.html border-color-transparent-notref.html
