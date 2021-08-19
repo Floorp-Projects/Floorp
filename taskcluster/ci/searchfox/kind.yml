@@ -68,7 +68,7 @@ jobs:
             platform: osx-cross/debug
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian10-amd64-build}
+            docker-image: {in-tree: debian11-amd64-build}
             max-run-time: 36000
             env:
                 PERFHERDER_EXTRA_OPTIONS: searchfox
@@ -109,7 +109,7 @@ jobs:
             platform: windows2012-64/debug
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian10-amd64-build}
+            docker-image: {in-tree: debian11-amd64-build}
             max-run-time: 36000
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"

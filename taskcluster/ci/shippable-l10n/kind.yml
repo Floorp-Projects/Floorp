@@ -91,7 +91,7 @@ job-template:
                 win64-devedition: win64-devedition-opt
                 win64-aarch64-devedition: win64-aarch64-devedition-opt
     worker-type: b-linux
-    docker-image: {in-tree: debian10-amd64-build}
+    docker-image: {in-tree: debian11-amd64-build}
     treeherder:
         symbol: L10n(B)
         tier: 1

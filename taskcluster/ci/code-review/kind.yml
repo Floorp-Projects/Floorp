@@ -33,7 +33,7 @@ jobs:
         # Dummy execution for now, we only need the pulse message
         worker:
             docker-image:
-                in-tree: debian10-amd64-build
+                in-tree: debian11-amd64-build
             max-run-time: 600
         run:
             using: run-task

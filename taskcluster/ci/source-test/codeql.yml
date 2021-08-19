@@ -12,7 +12,7 @@ javascript:
     worker-type: b-linux-xlarge
     expires-after: 4 days
     worker:
-        docker-image: {in-tree: debian10-amd64-build}
+        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 86400
         artifacts:
             - type: file
