@@ -1712,8 +1712,6 @@ void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
   AfterClearForm(aUnbindOrDelete);
 }
 
-HTMLFormElement* nsGenericHTMLFormElement::GetFormElement() { return mForm; }
-
 HTMLFieldSetElement* nsGenericHTMLFormElement::GetFieldSet() {
   return mFieldSet;
 }

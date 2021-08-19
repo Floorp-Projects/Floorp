@@ -968,8 +968,9 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 
   // nsIFormControl
   virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet() override;
-  virtual mozilla::dom::HTMLFormElement* GetFormElement() override;
-  mozilla::dom::HTMLFormElement* GetForm() const { return mForm; }
+  virtual mozilla::dom::HTMLFormElement* GetForm() const override {
+    return mForm;
+  }
   virtual void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
   virtual void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
 

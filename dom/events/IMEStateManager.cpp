@@ -1305,7 +1305,7 @@ static void GetActionHint(const IMEState& aState, const nsIContent& aContent,
   bool isLastElement = false;
   nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
   if (control) {
-    HTMLFormElement* formElement = control->GetFormElement();
+    HTMLFormElement* formElement = control->GetForm();
     // is this a form and does it have a default submit element?
     if (formElement) {
       if (formElement->IsLastActiveElement(control)) {
