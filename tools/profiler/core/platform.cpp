@@ -4123,6 +4123,18 @@ static ProfilingStack* locked_register_thread(
 
   TLSRegisteredThread::SetRegisteredThread(aLock, registeredThread.get());
 
+  ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock lockedRWFromAnyThread =
+      aOffThreadRef.LockedRWFromAnyThread();
+
+  ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
+      lockedRWFromAnyThread.GetLockedRWOnThread();
+  MOZ_RELEASE_ASSERT(
+      lockedRWOnThread,
+      "At the moment, we should only get here when registering the current "
+      "thread (either through profiler_register_thread or from profiler_init "
+      "on the main thread registering that main thread).");
+  lockedRWOnThread->SetRegisteredThread(registeredThread.get());
+
   if (ActivePS::Exists(aLock) && ActivePS::ShouldProfileThread(aLock, info)) {
     registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
     nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
@@ -5454,6 +5466,14 @@ static void locked_unregister_thread(PSLockRef lock) {
     if (ActivePS::Exists(lock)) {
       ActivePS::UnregisterThread(lock, registeredThread);
     }
+
+    ThreadRegistration::WithOnThreadRef(
+        [](ThreadRegistration::OnThreadRef threadRegistration) {
+          threadRegistration.WithLockedRWOnThread(
+              [](ThreadRegistration::LockedRWOnThread& aRW) {
+                aRW.SetRegisteredThread(nullptr);
+              });
+        });
 
     // Clear the pointer to the RegisteredThread object that we're about to
     // destroy.
