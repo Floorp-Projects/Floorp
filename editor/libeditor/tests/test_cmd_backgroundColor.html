@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing "cmd_backgroundColor" behavior</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div contenteditable></div>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  document.execCommand("styleWithCSS", false, "true");
+  const commandManager =
+    SpecialPowers.wrap(window).
+      docShell.
+      QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+      getInterface(SpecialPowers.Ci.nsICommandManager);
+  const editor = document.querySelector("div[contenteditable]");
+  editor.style.backgroundColor = "#ff0000";
+
+  editor.innerHTML = "<p>abc</p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("p").firstChild, 1);
+  let params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(255, 0, 0)",
+    "cmd_backgroundColor should return the editing host's background color (should ignore the transparent paragraph)"
+  );
+
+  editor.innerHTML = "<p style=\"background-color: #00ff00\">abc</p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("p").firstChild, 1);
+  params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(0, 255, 0)",
+    "cmd_backgroundColor should return the paragraph's background color"
+  );
+
+  editor.innerHTML = "<span style=\"background-color: #00ff00\">abc</span>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("span").firstChild, 1);
+  params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(255, 0, 0)",
+    "cmd_backgroundColor shouldn't return the span's background color due to inline element"
+  );
+
+  editor.innerHTML = "<p style=\"background-color: #00ff00\" contenteditable=\"false\">a<span style=\"background-color: #0000ff\" contenteditable=\"true\">b</span>c</p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("span[contenteditable=true]").firstChild, 1);
+  params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(0, 255, 0)",
+    "cmd_backgroundColor should return non-editable block element's background color"
+  );
+
+  editor.innerHTML = "<p contenteditable=\"false\">a<span style=\"background-color: #0000ff\" contenteditable=\"true\">b</span>c</p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("span[contenteditable=true]").firstChild, 1);
+  params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(255, 0, 0)",
+    "cmd_backgroundColor should return the parent editing host's background color (should ignore the transparent non-editable paragraph)"
+  );
+
+  // TODO: Add testcase for HTML styling mode.
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
