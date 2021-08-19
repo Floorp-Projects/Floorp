@@ -8,108 +8,12 @@
   padding-block: 0;
 }
 
-#editBookmarkPanelTitle {
-  margin-inline-start: 32px;
+html|div#editBookmarkPanelFaviconContainer {
+  display: flex;
 }
 
 #editBookmarkPanelInfoArea {
-  overflow: hidden;
-  position: relative;
   padding: 4px var(--arrowpanel-padding) 0;
-}
-
-#editBookmarkPanelRecommendation {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  transition: transform 0.25s cubic-bezier(0.07, 0.95, 0, 1);
-}
-
-#editBookmarkPanelRecommendation[disabled] {
-  transform: translateY(-100%);
-}
-
-#editBookmarkPanelRecommendation #cfrMessageContainer {
-  border-radius: 2px;
-  display: flex;
-  flex-direction: column;
-  min-height: 150px;
-  position: relative;
-  padding: 0 16px;
-}
-
-#editBookmarkPanelRecommendation #cfrMessageContainer.longMessagePadding {
-  padding-bottom: 10px;
-}
-
-#editBookmarkPanelRecommendation > div::-moz-focus-inner {
-  border: none;
-}
-
-#editBookmarkPanelRecommendationTitle {
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.25;
-  margin: 0;
-}
-
-#editBookmarkPanelRecommendationContent {
-  font-size: 11px;
-  line-height: 1.5;
-  margin: 0;
-}
-
-#editBookmarkPanelRecommendationCta {
-  appearance: none;
-  background: transparent;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 700;
-  margin: auto 0;
-  padding: 0;
-  text-align: start;
-}
-
-#editBookmarkPanelRecommendationCta:hover {
-  text-decoration: underline;
-}
-
-#editBookmarkPanelRecommendation .cfrMessageHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  margin-block: 10px 6px;
-  padding-top: 2px;
-}
-
-#editBookmarkPanelRecommendation #cfrClose {
-  padding: 10px;
-  border: none;
-  border-radius: var(--toolbarbutton-border-radius);
-  background-color: transparent;
-  background-image: url(chrome://global/skin/icons/close.svg);
-  background-size: 12px;
-  background-repeat: no-repeat;
-  background-position: center;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.8;
-  margin-inline-end: -4px;
-  color: inherit;
-}
-
-#editBookmarkPanelRecommendation #cfrClose:is(:hover, :focus) {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#editBookmarkPanelRecommendation #cfrClose:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-html|div#editBookmarkPanelFaviconContainer {
-  display: flex;
 }
 
 html|img#editBookmarkPanelFavicon[src] {
@@ -132,11 +36,6 @@ html|img#editBookmarkPanelFavicon[src] {
   background-repeat: no-repeat;
   background-size: cover;
   margin: 0;
-  /* When adjusting the height for long CFR messages we want the animations
-   * to align. The delay is used to force the animation to start when the
-   * panel message has finished sliding down. */
-  transition: height 0.28s cubic-bezier(0.07, 0.95, 0, 1);
-  transition-delay: 10ms;
 }
 
 #editBookmarkPanelRows,

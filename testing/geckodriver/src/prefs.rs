@@ -153,6 +153,7 @@ lazy_static! {
 
         // asrouter expects a plain object or null
         ("browser.newtabpage.activity-stream.asrouter.providers.cfr", Pref::new("null")),
+        // TODO: Remove once minimum supported Firefox release is 93.
         ("browser.newtabpage.activity-stream.asrouter.providers.cfr-fxa", Pref::new("null")),
         ("browser.newtabpage.activity-stream.asrouter.providers.snippets", Pref::new("null")),
         ("browser.newtabpage.activity-stream.asrouter.providers.message-groups", Pref::new("null")),
