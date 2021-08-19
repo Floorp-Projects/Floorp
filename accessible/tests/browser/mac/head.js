@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent,
+/* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent, waitForStateChange,
    NSRange, NSDictionary, stringForRange, AXTextStateChangeTypeEdit,
    AXTextEditTypeDelete, AXTextEditTypeTyping, AXTextStateChangeTypeSelectionMove,
    AXTextStateChangeTypeSelectionExtend, AXTextSelectionDirectionUnknown,
