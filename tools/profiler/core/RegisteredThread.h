@@ -68,17 +68,6 @@ class RegisteredThread final {
 
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
 
-  // aDelay is the time the event that is currently running on the thread
-  // was queued before starting to run (if a PrioritizedEventQueue
-  // (i.e. MainThread), this will be 0 for any event at a lower priority
-  // than Input).
-  // aRunning is the time the event has been running.  If no event is
-  // running these will both be TimeDuration() (i.e. 0).  Both are out
-  // params, and are always set.  Their initial value is discarded.
-  void GetRunningEventDelay(const mozilla::TimeStamp& aNow,
-                            mozilla::TimeDuration& aDelay,
-                            mozilla::TimeDuration& aRunning);
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   // Set the JSContext of the thread to be sampled. Sampling cannot begin until
