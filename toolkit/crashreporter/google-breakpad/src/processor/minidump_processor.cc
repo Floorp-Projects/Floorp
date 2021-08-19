@@ -1246,7 +1246,13 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
                 static_cast<uint32_t>
                 (raw_exception->exception_record.exception_information[2]);
             reason.append(" / ");
-            reason.append(NTStatusToString(ntstatus));
+            const char* ntstatus_str = NTStatusToString(ntstatus);
+            if (ntstatus_str) {
+              reason.append(ntstatus_str);
+            } else {
+              snprintf(reason_string, sizeof(reason_string), "%#010x", ntstatus);
+              reason.append(reason_string);
+            }
           }
           break;
         case MD_EXCEPTION_CODE_WIN_INVALID_HANDLE:
@@ -1309,8 +1315,16 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
             uint32_t fast_fail_code =
                 static_cast<uint32_t>
                 (raw_exception->exception_record.exception_information[0]);
+            char fast_fail_buff[11] = {};
+            const char* fast_fail_string = FastFailToString(fast_fail_code);
+            if (!fast_fail_string) {
+              snprintf(fast_fail_buff, sizeof(fast_fail_buff), "%#010x",
+                       fast_fail_code);
+              fast_fail_string = fast_fail_buff;
+            }
+
             reason.append(" / ");
-            reason.append(FastFailToString(fast_fail_code));
+            reason.append(fast_fail_string);
           }
 
           break;
@@ -1324,9 +1338,14 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           reason = "Simulated Exception";
           break;
         default:
-          reason = NTStatusToString(exception_code);
-          if (reason.substr(0, 2) == "0x") {
-            BPLOG(INFO) << "Unknown exception reason " << reason;
+          fprintf(stderr, "exception_code = %u\n", exception_code);
+          const char* exception_str = NTStatusToString(exception_code);
+          fprintf(stderr, "exception_str = %s\n", exception_str);
+          if (exception_str == nullptr) {
+            exception_str = WinErrorToString(exception_code);
+          }
+          if (exception_str != nullptr) {
+            reason = exception_str;
           }
           break;
       }
@@ -1387,6 +1406,12 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
         case MD_EXCEPTION_CODE_LIN_SIGBUS:
           reason = "SIGBUS / ";
           switch (exception_flags) {
+            case MD_EXCEPTION_FLAG_LIN_SI_USER:
+              reason.append("SI_USER");
+              break;
+            case MD_EXCEPTION_FLAG_LIN_SI_KERNEL:
+              reason.append("SI_KERNEL");
+              break;
             case MD_EXCEPTION_FLAG_LIN_BUS_ADRALN:
               reason.append("BUS_ADRALN");
               break;
@@ -1448,8 +1473,14 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           reason = "SIGUSR1";
           break;
         case MD_EXCEPTION_CODE_LIN_SIGSEGV:
-          reason = "SIGSEGV /";
+          reason = "SIGSEGV / ";
           switch (exception_flags) {
+            case MD_EXCEPTION_FLAG_LIN_SI_USER:
+              reason.append("SI_USER");
+              break;
+            case MD_EXCEPTION_FLAG_LIN_SI_KERNEL:
+              reason.append("SI_KERNEL");
+              break;
             case MD_EXCEPTION_FLAG_LIN_SEGV_MAPERR:
               reason.append("SEGV_MAPERR");
               break;
