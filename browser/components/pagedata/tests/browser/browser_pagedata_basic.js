@@ -21,6 +21,11 @@ add_task(async function test_pagedata_no_data() {
       pageData,
       "Should return the same data from the cache"
     );
+    Assert.equal(
+      pageData.weakBrowser.get(),
+      browser,
+      "Should return the collection browser"
+    );
 
     promise = PageDataService.once("no-page-data");
     BrowserTestUtils.loadURI(browser, TEST_URL2);
@@ -36,6 +41,11 @@ add_task(async function test_pagedata_no_data() {
       PageDataService.getCached(TEST_URL2),
       pageData,
       "Should return the same data from the cache"
+    );
+    Assert.equal(
+      pageData.weakBrowser.get(),
+      browser,
+      "Should return the collection browser"
     );
 
     info("Test going back still triggers collection");
@@ -59,6 +69,11 @@ add_task(async function test_pagedata_no_data() {
       PageDataService.getCached(TEST_URL),
       pageData,
       "Should return the same data from the cache"
+    );
+    Assert.equal(
+      pageData.weakBrowser.get(),
+      browser,
+      "Should return the collection browser"
     );
   });
 });

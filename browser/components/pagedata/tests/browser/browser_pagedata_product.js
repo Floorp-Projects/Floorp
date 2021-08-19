@@ -39,6 +39,11 @@ add_task(async function test_single_product_data() {
       ],
       "Should have returned the expected data"
     );
+    Assert.equal(
+      pageData.weakBrowser.get(),
+      browser,
+      "Should return the collection browser"
+    );
   });
 });
 
@@ -77,6 +82,11 @@ add_task(async function test_single_multiple_data() {
         },
       ],
       "Should have returned the expected data"
+    );
+    Assert.equal(
+      pageData.weakBrowser.get(),
+      browser,
+      "Should return the collection browser"
     );
   });
 });

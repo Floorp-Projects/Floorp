@@ -38,6 +38,11 @@ add_task(async function test_type_website() {
       ],
       "Should have returned the expected data"
     );
+    Assert.equal(
+      pageData.weakBrowser.get(),
+      browser,
+      "Should return the collection browser"
+    );
   });
 });
 
@@ -67,6 +72,11 @@ add_task(async function test_type_movie() {
         },
       ],
       "Should have returned the expected data"
+    );
+    Assert.equal(
+      pageData.weakBrowser.get(),
+      browser,
+      "Should return the collection browser"
     );
   });
 });
