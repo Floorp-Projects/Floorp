@@ -67,6 +67,8 @@ typedef enum {
       /* EXC_MACH_SYSCALL */
   MD_EXCEPTION_MAC_RPC_ALERT       = 9,
       /* EXC_RPC_ALERT */
+  MD_EXCEPTION_MAC_RESOURCE        = 11,
+      /* EXC_RESOURCE */
   MD_EXCEPTION_MAC_SIMULATED       = 0x43507378
       /* Fake exception code used by Crashpad's SimulateCrash ('CPsx'). */
 } MDExceptionMac;
@@ -205,5 +207,38 @@ typedef enum {
   /* EXC_I386_ENOEXTFLT = 32: should be handled by the kernel */
   /* EXC_I386_ENDPERR   = 33: should not occur */
 } MDExceptionCodeMac;
+
+// The following definitions were taken from  Darwin/XNU kernel sources.
+// See https://github.com/apple/darwin-xnu/blob/main/osfmk/kern/exc_resource.h
+
+typedef enum MDMacExcResourceType {
+  MD_MAC_EXC_RESOURCE_TYPE_CPU     = 1,
+  MD_MAC_EXC_RESOURCE_TYPE_WAKEUPS = 2,
+  MD_MAC_EXC_RESOURCE_TYPE_MEMORY  = 3,
+  MD_MAC_EXC_RESOURCE_TYPE_IO      = 4,
+  MD_MAC_EXC_RESOURCE_TYPE_THREADS = 5
+} MDMacExcResourceType;
+
+typedef enum MDMacExcResourceFlavorCpu {
+  MD_MAC_EXC_RESOURCE_FLAVOR_CPU_MONITOR       = 1,
+  MD_MAC_EXC_RESOURCE_FLAVOR_CPU_MONITOR_FATAL = 2
+} MDMacExcResourceFlavorCpu;
+
+typedef enum MDMacExcResourceFlavorWakeup {
+  MD_MAC_EXC_RESOURCE_FLAVOR_WAKEUPS_MONITOR = 1,
+} MDMacExcResourceFlavorWakeup;
+
+typedef enum MDMacExcResourceFlavorMemory {
+  MD_MAC_EXC_RESOURCE_FLAVOR_HIGH_WATERMARK = 1,
+} MDMacExcResourceFlavorMemory;
+
+typedef enum MDMacExcResourceIOFlavor {
+  MD_MAC_EXC_RESOURCE_FLAVOR_IO_PHYSICAL_WRITES = 1,
+  MD_MAC_EXC_RESOURCE_FLAVOR_IO_LOGICAL_WRITES = 2,
+} MDMacExcResourceIOFlavor;
+
+typedef enum MDMacExcResourceThreadsFlavor {
+  MD_MAC_EXC_RESOURCE_FLAVOR_THREADS_HIGH_WATERMARK = 1,
+} MDMacExcResourceThreadsFlavor;
 
 #endif  /* GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_MAC_OSX_H__ */

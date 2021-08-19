@@ -1,0 +1,152 @@
+diff --git a/src/google_breakpad/common/minidump_exception_mac.h b/src/google_breakpad/common/minidump_exception_mac.h
+--- a/src/google_breakpad/common/minidump_exception_mac.h
++++ b/src/google_breakpad/common/minidump_exception_mac.h
+@@ -62,16 +62,18 @@ typedef enum {
+   MD_EXCEPTION_MAC_BREAKPOINT      = 6,  /* code is CPU-specific */
+       /* EXC_BREAKPOINT */
+   MD_EXCEPTION_MAC_SYSCALL         = 7,
+       /* EXC_SYSCALL */
+   MD_EXCEPTION_MAC_MACH_SYSCALL    = 8,
+       /* EXC_MACH_SYSCALL */
+   MD_EXCEPTION_MAC_RPC_ALERT       = 9,
+       /* EXC_RPC_ALERT */
++  MD_EXCEPTION_MAC_RESOURCE        = 11,
++      /* EXC_RESOURCE */
+   MD_EXCEPTION_MAC_SIMULATED       = 0x43507378
+       /* Fake exception code used by Crashpad's SimulateCrash ('CPsx'). */
+ } MDExceptionMac;
+ 
+ /* For (MDException).exception_flags.  Breakpad minidump extension for Mac OS X
+  * support.  Based on Darwin/Mac OS X' mach/ppc/exception.h and
+  * mach/i386/exception.h.  This is what Mac OS X calls a "code". */
+ typedef enum {
+@@ -201,9 +203,42 @@ typedef enum {
+   /* EXC_I386_PGFLT     = 14: should not occur in user space */
+   /* EXC_I386_EXTERRFLT = 16: mapped to EXC_ARITHMETIC/EXC_I386_EXTERR */
+   MD_EXCEPTION_CODE_MAC_X86_ALIGNMENT_FAULT            = 17
+       /* EXC_ALIGNFLT (for vector operations) */
+   /* EXC_I386_ENOEXTFLT = 32: should be handled by the kernel */
+   /* EXC_I386_ENDPERR   = 33: should not occur */
+ } MDExceptionCodeMac;
+ 
++// The following definitions were taken from  Darwin/XNU kernel sources.
++// See https://github.com/apple/darwin-xnu/blob/main/osfmk/kern/exc_resource.h
++
++typedef enum MDMacExcResourceType {
++  MD_MAC_EXC_RESOURCE_TYPE_CPU     = 1,
++  MD_MAC_EXC_RESOURCE_TYPE_WAKEUPS = 2,
++  MD_MAC_EXC_RESOURCE_TYPE_MEMORY  = 3,
++  MD_MAC_EXC_RESOURCE_TYPE_IO      = 4,
++  MD_MAC_EXC_RESOURCE_TYPE_THREADS = 5
++} MDMacExcResourceType;
++
++typedef enum MDMacExcResourceFlavorCpu {
++  MD_MAC_EXC_RESOURCE_FLAVOR_CPU_MONITOR       = 1,
++  MD_MAC_EXC_RESOURCE_FLAVOR_CPU_MONITOR_FATAL = 2
++} MDMacExcResourceFlavorCpu;
++
++typedef enum MDMacExcResourceFlavorWakeup {
++  MD_MAC_EXC_RESOURCE_FLAVOR_WAKEUPS_MONITOR = 1,
++} MDMacExcResourceFlavorWakeup;
++
++typedef enum MDMacExcResourceFlavorMemory {
++  MD_MAC_EXC_RESOURCE_FLAVOR_HIGH_WATERMARK = 1,
++} MDMacExcResourceFlavorMemory;
++
++typedef enum MDMacExcResourceIOFlavor {
++  MD_MAC_EXC_RESOURCE_FLAVOR_IO_PHYSICAL_WRITES = 1,
++  MD_MAC_EXC_RESOURCE_FLAVOR_IO_LOGICAL_WRITES = 2,
++} MDMacExcResourceIOFlavor;
++
++typedef enum MDMacExcResourceThreadsFlavor {
++  MD_MAC_EXC_RESOURCE_FLAVOR_THREADS_HIGH_WATERMARK = 1,
++} MDMacExcResourceThreadsFlavor;
++
+ #endif  /* GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_MAC_OSX_H__ */
+diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_processor.cc
+--- a/src/processor/minidump_processor.cc
++++ b/src/processor/minidump_processor.cc
+@@ -1143,16 +1143,83 @@ string MinidumpProcessor::GetCrashReason
+         case MD_EXCEPTION_MAC_MACH_SYSCALL:
+           reason = "EXC_MACH_SYSCALL / ";
+           reason.append(flags_string);
+           break;
+         case MD_EXCEPTION_MAC_RPC_ALERT:
+           reason = "EXC_RPC_ALERT / ";
+           reason.append(flags_string);
+           break;
++        case MD_EXCEPTION_MAC_RESOURCE:
++          reason = "EXC_RESOURCE / ";
++          {
++            uint32_t type = (exception_flags >> 29) & 0x7ULL;
++            uint32_t flavor = (exception_flags >> 26) & 0x7ULL;
++            char flavor_string[4] = {};
++            switch (type) {
++              case MD_MAC_EXC_RESOURCE_TYPE_CPU:
++                reason.append("RESOURCE_TYPE_CPU / ");
++                switch (flavor) {
++                  case MD_MAC_EXC_RESOURCE_FLAVOR_CPU_MONITOR:
++                    reason.append("FLAVOR_CPU_MONITOR");
++                    break;
++                  case MD_MAC_EXC_RESOURCE_FLAVOR_CPU_MONITOR_FATAL:
++                    reason.append("FLAVOR_CPU_MONITOR_FATAL");
++                    break;
++                  default:
++                    snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
++                    reason.append(flavor_string);
++                }
++                break;
++              case MD_MAC_EXC_RESOURCE_TYPE_WAKEUPS:
++                reason.append("RESOURCE_TYPE_WAKEUPS / ");
++                if (flavor == MD_MAC_EXC_RESOURCE_FLAVOR_WAKEUPS_MONITOR) {
++                  reason.append("FLAVOR_WAKEUPS_MONITOR");
++                } else {
++                  snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
++                  reason.append(flavor_string);
++                }
++                break;
++              case MD_MAC_EXC_RESOURCE_TYPE_MEMORY:
++                reason.append("RESOURCE_TYPE_MEMORY / ");
++                if (flavor == MD_MAC_EXC_RESOURCE_FLAVOR_HIGH_WATERMARK) {
++                  reason.append("FLAVOR_HIGH_WATERMARK");
++                } else {
++                  snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
++                  reason.append(flavor_string);
++                }
++                break;
++              case MD_MAC_EXC_RESOURCE_TYPE_IO:
++                reason.append("EXC_RESOURCE_TYPE_IO / ");
++                switch (flavor) {
++                  case MD_MAC_EXC_RESOURCE_FLAVOR_IO_PHYSICAL_WRITES:
++                    reason.append("FLAVOR_IO_PHYSICAL_WRITES");
++                    break;
++                  case MD_MAC_EXC_RESOURCE_FLAVOR_IO_LOGICAL_WRITES:
++                    reason.append("FLAVOR_IO_LOGICAL_WRITES");
++                    break;
++                  default:
++                    snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
++                    reason.append(flavor_string);
++                }
++                break;
++              case MD_MAC_EXC_RESOURCE_TYPE_THREADS:
++                reason.append("EXC_RESOURCE_TYPE_THREADS / ");
++                if (flavor == MD_MAC_EXC_RESOURCE_FLAVOR_THREADS_HIGH_WATERMARK) {
++                  reason.append("FLAVOR_THREADS_HIGH_WATERMARK");
++                } else {
++                  snprintf(flavor_string, sizeof(flavor_string), "%#3x", flavor);
++                  reason.append(flavor_string);
++                }
++                break;
++              default:
++                reason.append(flags_string);
++            }
++          }
++          break;
+         case MD_EXCEPTION_MAC_SIMULATED:
+           reason = "Simulated Exception";
+           break;
+       }
+       break;
+     }
+ 
+     case MD_OS_WIN32_NT:

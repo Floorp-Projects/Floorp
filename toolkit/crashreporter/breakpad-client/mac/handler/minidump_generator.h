@@ -114,7 +114,7 @@ class MinidumpGenerator {
   bool Write(const char *path);
 
   // Specify some exception information, if applicable
-  void SetExceptionInformation(int type, int code, int64_t subcode,
+  void SetExceptionInformation(int type, int64_t code, int64_t subcode,
                                mach_port_t thread_name) {
     exception_type_ = type;
     exception_code_ = code;
@@ -227,7 +227,7 @@ class MinidumpGenerator {
  private:
   // Exception information
   int exception_type_;
-  int exception_code_;
+  int64_t exception_code_;
   int64_t exception_subcode_;
   mach_port_t exception_thread_;
   mach_port_t crashing_task_;
