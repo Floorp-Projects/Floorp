@@ -20,7 +20,7 @@ jobs:
             tier: 1
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian10-amd64-build}
+            docker-image: {in-tree: debian11-amd64-build}
             max-run-time: 3600
             env:
                 PYTHONUNBUFFERED: "1"

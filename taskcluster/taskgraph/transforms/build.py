@@ -36,7 +36,7 @@ def set_defaults(config, jobs):
         worker.setdefault("env", {})
         worker["chain-of-trust"] = True
         if worker_os == "linux":
-            worker.setdefault("docker-image", {"in-tree": "debian10-amd64-build"})
+            worker.setdefault("docker-image", {"in-tree": "debian11-amd64-build"})
 
         yield job
 
