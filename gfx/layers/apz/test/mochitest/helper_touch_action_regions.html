@@ -122,6 +122,16 @@ function RunAfterProcessedQueuedInputEvents(aCallback) {
   tm.dispatchToMainThread(aCallback, SpecialPowers.Ci.nsIRunnablePriority.PRIORITY_INPUT_HIGH);
 }
 
+var scrollerPosition;
+function getScrollerPosition() {
+  const scroller = document.getElementById("scroller");
+  scrollerPosition = coordinatesRelativeToScreen({
+    offsetX: 0,
+    offsetY: 0,
+    target: scroller,
+  });
+}
+
 function* test(testDriver) {
   // The main part of this test should run completely before the child process'
   // main-thread deals with the touch event, so check to make sure that happens.
@@ -207,13 +217,22 @@ function* test(testDriver) {
 
   // Set up the child process events and callbacks
   var scroller = document.getElementById("scroller");
-  synthesizeNativeTouch(scroller, 10, 110, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, 0);
+  var utils = utilsForTarget(window);
+  utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT,
+                             scrollerPosition.x + 10, scrollerPosition.y + 110,
+                             1, 90, null);
   RunAfterProcessedQueuedInputEvents(testDriver);
   for (let i = 1; i < 10; i++) {
-    synthesizeNativeTouch(scroller, 10, 110 - (i * 10), SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, 0);
+    utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT,
+                               scrollerPosition.x + 10,
+                               scrollerPosition.y + 110 - (i * 10),
+                               1, 90, null);
     RunAfterProcessedQueuedInputEvents(testDriver);
   }
-  synthesizeNativeTouch(scroller, 10, 10, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, null, 0);
+  utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE,
+                             scrollerPosition.x + 10,
+                             scrollerPosition.y + 10,
+                             1, 90, null);
   RunAfterProcessedQueuedInputEvents(testDriver);
   ok(true, "Finished setting up event queue");
 
@@ -309,6 +328,7 @@ if (SpecialPowers.isMainProcess()) {
   subtestDone();
 } else {
   waitUntilApzStable()
+  .then(getScrollerPosition)
   .then(runContinuation(test))
   .then(subtestDone, subtestFailed);
 }
