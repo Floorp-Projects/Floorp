@@ -71,7 +71,7 @@ function clear_srgb_color_buffer(iter) {
     }
 
     var color_ref = wtu.linearToSRGB(color);
-    var tolerance = 3;
+    var tolerance = 1;
     var msg = "";
     wtu.checkCanvasRect(gl, 0, 0, size, size, color_ref, msg, tolerance);
 }

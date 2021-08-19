@@ -12,12 +12,6 @@ found in the LICENSE.txt file.
 <link rel="stylesheet" href="../../../resources/js-test-style.css"/>
 <script src="../../../js/js-test-pre.js"></script>
 <script src="../../../js/webgl-test-utils.js"></script>
-</head>
-<body>
-<div id="description"></div>
-<div id="console"></div>
-<canvas id="canvas"></canvas>
-<img id="img" style="display:none;">
 <script>
 "use strict";
 var wtu = WebGLTestUtils;
@@ -39,7 +33,7 @@ var localImgUrl = "../../../resources/opengl_logo.jpg";
 var imgDomain;
 var pageDomain;
 
-function imageLoaded(img) {
+function imageLoaded() {
   description("This test ensures WebGL2 implementations for OffscreenCanvas follow proper same-origin restrictions.");
 
   if (!window.OffscreenCanvas) {
@@ -47,6 +41,8 @@ function imageLoaded(img) {
     finishTest();
     return;
   }
+
+  var img = this;
 
   assertMsg(img.width > 0 && img.height > 0, "img was loaded");
   imgDomain = wtu.getBaseDomain(wtu.getHost(img.src));
@@ -130,17 +126,13 @@ function imageLoaded(img) {
   finishTest();
 }
 
-(async function() {
-  const img = document.getElementById('img');
-  try {
-    await wtu.awaitOrTimeout(wtu.loadCrossOriginImage(img, defaultImgUrl, localImgUrl), 1000);
-  } catch (e) {
-    testFailed(`Image setup failed (${e}).`);
-    finishTest();
-    return;
-  }
-  imageLoaded(img);
-})();
+wtu.setupImageForCrossOriginTest("#img", defaultImgUrl, localImgUrl, imageLoaded);
 </script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+<canvas id="canvas"></canvas>
+<img id="img" style="display:none;">
 </body>
 </html>
