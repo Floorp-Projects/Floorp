@@ -1412,8 +1412,11 @@ Element* HTMLEditUtils::GetAncestorElement(
       aAncestorTypes.contains(AncestorType::ClosestBlockElement);
   const bool lookingForMostDistantInlineElementInBlock =
       aAncestorTypes.contains(AncestorType::MostDistantInlineElementInBlock);
+  const bool ignoreHRElement =
+      aAncestorTypes.contains(AncestorType::IgnoreHRElement);
   auto isSerachingElementType = [&](const nsIContent& aContent) -> bool {
-    if (!aContent.IsElement()) {
+    if (!aContent.IsElement() ||
+        (ignoreHRElement && aContent.IsHTMLElement(nsGkAtoms::hr))) {
       return false;
     }
     if (editableElementOnly &&
@@ -1431,6 +1434,12 @@ Element* HTMLEditUtils::GetAncestorElement(
       return lastAncestorElement && isSerachingElementType(*lastAncestorElement)
                  ? lastAncestorElement  // editing host (can be inline element)
                  : nullptr;
+    }
+    if (ignoreHRElement && element->IsHTMLElement(nsGkAtoms::hr)) {
+      if (element == aAncestorLimiter) {
+        break;
+      }
+      continue;
     }
     if (HTMLEditUtils::IsBlockElement(*element)) {
       if (lookingForClosesetBlockElement) {
@@ -1464,8 +1473,11 @@ Element* HTMLEditUtils::GetInclusiveAncestorElement(
       aAncestorTypes.contains(AncestorType::ClosestBlockElement);
   const bool lookingForMostDistantInlineElementInBlock =
       aAncestorTypes.contains(AncestorType::MostDistantInlineElementInBlock);
+  const bool ignoreHRElement =
+      aAncestorTypes.contains(AncestorType::IgnoreHRElement);
   auto isSerachingElementType = [&](const nsIContent& aContent) -> bool {
-    if (!aContent.IsElement()) {
+    if (!aContent.IsElement() ||
+        (ignoreHRElement && aContent.IsHTMLElement(nsGkAtoms::hr))) {
       return false;
     }
     if (editableElementOnly &&
@@ -1480,7 +1492,8 @@ Element* HTMLEditUtils::GetInclusiveAncestorElement(
 
   // If aContent is a block element, we don't need to climb up the tree.
   // Consider the result right now.
-  if (HTMLEditUtils::IsBlockElement(aContent)) {
+  if (HTMLEditUtils::IsBlockElement(aContent) &&
+      !(ignoreHRElement && aContent.IsHTMLElement(nsGkAtoms::hr))) {
     return isSerachingElementType(aContent)
                ? const_cast<Element*>(aContent.AsElement())
                : nullptr;
@@ -1493,7 +1506,9 @@ Element* HTMLEditUtils::GetInclusiveAncestorElement(
       (editableElementOnly && !EditorUtils::IsEditableContent(
                                   *aContent.GetParent(), EditorType::HTML)) ||
       (!lookingForClosesetBlockElement &&
-       HTMLEditUtils::IsBlockElement(*aContent.GetParent()))) {
+       HTMLEditUtils::IsBlockElement(*aContent.GetParent()) &&
+       !(ignoreHRElement &&
+         aContent.GetParent()->IsHTMLElement(nsGkAtoms::hr)))) {
     return isSerachingElementType(aContent)
                ? const_cast<Element*>(aContent.AsElement())
                : nullptr;

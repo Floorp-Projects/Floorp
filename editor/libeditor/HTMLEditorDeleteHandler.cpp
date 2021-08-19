@@ -4243,12 +4243,12 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
 Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     AutoBlockElementsJoiner::AutoInclusiveAncestorBlockElementsJoiner::Prepare(
         const HTMLEditor& aHTMLEditor) {
-  mLeftBlockElement =
-      HTMLEditUtils::GetInclusiveAncestorBlockElementExceptHRElement(
-          mInclusiveDescendantOfLeftBlockElement);
-  mRightBlockElement =
-      HTMLEditUtils::GetInclusiveAncestorBlockElementExceptHRElement(
-          mInclusiveDescendantOfRightBlockElement);
+  mLeftBlockElement = HTMLEditUtils::GetInclusiveAncestorElement(
+      mInclusiveDescendantOfLeftBlockElement,
+      HTMLEditUtils::ClosestEditableBlockElementExceptHRElement);
+  mRightBlockElement = HTMLEditUtils::GetInclusiveAncestorElement(
+      mInclusiveDescendantOfRightBlockElement,
+      HTMLEditUtils::ClosestEditableBlockElementExceptHRElement);
 
   if (NS_WARN_IF(!IsSet())) {
     mCanJoinBlocks = false;
