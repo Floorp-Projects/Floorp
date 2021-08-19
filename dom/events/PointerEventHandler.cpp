@@ -660,6 +660,7 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
 
       InitPointerEventFromTouch(event, *touchEvent, *touch, i == 0);
       event.convertToPointer = touch->convertToPointer = false;
+      event.mCoalescedWidgetEvents = touch->mCoalescedWidgetEvents;
       if (aEvent->mMessage == eTouchStart) {
         // We already did hit test for touchstart in PresShell. We should
         // dispatch pointerdown to the same target as touchstart.
