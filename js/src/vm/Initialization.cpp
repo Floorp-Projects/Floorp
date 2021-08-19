@@ -18,9 +18,9 @@
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
 #include "jit/AtomicOperations.h"
-#include "jit/ExecutableAllocator.h"
 #include "jit/Ion.h"
 #include "jit/JitCommon.h"
+#include "jit/ProcessExecutableMemory.h"
 #include "js/Utility.h"
 
 #if JS_HAS_INTL_API
