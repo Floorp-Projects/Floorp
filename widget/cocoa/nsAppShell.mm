@@ -305,17 +305,19 @@ void nsAppShell::OnRunLoopActivityChanged(CFRunLoopActivity aActivity) {
   // practice, the label frame will be at the very tip of the stack, looking like it's "inside" the
   // mach_msg_trap wait function.
   if (aActivity == kCFRunLoopBeforeWaiting) {
-    if (ProfilingStackOwner* profilingStackOwner =
-            AutoProfilerLabel::ProfilingStackOwnerTLS::Get()) {
-      mProfilingStackOwnerWhileWaiting = profilingStackOwner;
+    using ThreadRegistration = mozilla::profiler::ThreadRegistration;
+    ThreadRegistration::WithOnThreadRef([&](ThreadRegistration::OnThreadRef aOnThreadRef) {
+      ProfilingStack& profilingStack =
+          aOnThreadRef.UnlockedConstReaderAndAtomicRWRef().ProfilingStackRef();
+      mProfilingStackWhileWaiting = &profilingStack;
       uint8_t variableOnStack = 0;
-      mProfilingStackOwnerWhileWaiting->ProfilingStack().pushLabelFrame(
-          "Native event loop idle", nullptr, &variableOnStack, JS::ProfilingCategoryPair::IDLE, 0);
-    }
+      profilingStack.pushLabelFrame("Native event loop idle", nullptr, &variableOnStack,
+                                    JS::ProfilingCategoryPair::IDLE, 0);
+    });
   } else {
-    if (mProfilingStackOwnerWhileWaiting) {
-      mProfilingStackOwnerWhileWaiting->ProfilingStack().pop();
-      mProfilingStackOwnerWhileWaiting = nullptr;
+    if (mProfilingStackWhileWaiting) {
+      mProfilingStackWhileWaiting->pop();
+      mProfilingStackWhileWaiting = nullptr;
     }
   }
 }

@@ -71,8 +71,18 @@ static void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
 }
 
 RacyRegisteredThread::RacyRegisteredThread(ProfilerThreadId aThreadId)
-    : mProfilingStackOwner(
-          mozilla::MakeNotNull<RefPtr<mozilla::ProfilingStackOwner>>()),
+    : mProfilingStack([]() -> class ProfilingStack& {
+        using namespace mozilla::profiler;
+        class ProfilingStack* profilingStack =
+            ThreadRegistration::WithOnThreadRefOr(
+                [](ThreadRegistration::OnThreadRef aThread) {
+                  return &aThread.UnlockedConstReaderAndAtomicRWRef()
+                              .ProfilingStackRef();
+                },
+                nullptr);
+        MOZ_RELEASE_ASSERT(profilingStack);
+        return *profilingStack;
+      }()),
       mThreadId(aThreadId),
       mSleep(AWAKE),
       mIsBeingProfiled(false) {
