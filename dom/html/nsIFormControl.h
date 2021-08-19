@@ -102,7 +102,7 @@ class nsIFormControl : public nsISupports {
    * Get the form for this form control.
    * @return the form
    */
-  virtual mozilla::dom::HTMLFormElement* GetFormElement() = 0;
+  virtual mozilla::dom::HTMLFormElement* GetForm() const = 0;
 
   /**
    * Set the form for this form control.
