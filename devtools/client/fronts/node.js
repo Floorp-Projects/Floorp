@@ -122,6 +122,8 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     this._next = null;
     // The previous sibling of this node.
     this._prev = null;
+    // Store the flag to use it after destroy, where targetFront is set to null.
+    this._hasParentProcessTarget = targetFront.isParentProcess;
   }
 
   /**
@@ -281,7 +283,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.numChildren;
   }
   get remoteFrame() {
-    if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
+    if (!BROWSER_TOOLBOX_FISSION_ENABLED && this._hasParentProcessTarget) {
       return false;
     }
 
