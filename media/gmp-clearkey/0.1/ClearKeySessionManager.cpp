@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-#include "ClearKeyDecryptionManager.h"
 #include "ClearKeySessionManager.h"
-#include "ClearKeyUtils.h"
-#include "ClearKeyStorage.h"
-#include "ClearKeyPersistence.h"
-// This include is required in order for content_decryption_module to work
-// on Unix systems.
-#include "stddef.h"
-#include "content_decryption_module.h"
-#include "psshparser/PsshParser.h"
 
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "content_decryption_module.h"
+
+#include "ClearKeyDecryptionManager.h"
+#include "ClearKeyPersistence.h"
+#include "ClearKeyStorage.h"
+#include "ClearKeyUtils.h"
+#include "psshparser/PsshParser.h"
 
 using namespace cdm;
 

@@ -17,11 +17,12 @@
 #ifndef __RefCount_h__
 #define __RefCount_h__
 
-#include <stdint.h>
 #include <assert.h>
-#include "ClearKeyUtils.h"
+#include <stdint.h>
 
 #include <atomic>
+
+#include "ClearKeyUtils.h"
 
 // Note: Thread safe.
 class RefCounted {

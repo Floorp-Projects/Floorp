@@ -19,14 +19,16 @@
 
 // This include is required in order for content_decryption_module to work
 // on Unix systems.
-#include "stddef.h"
-#include "content_decryption_module.h"
-#include "RefCounted.h"
+#include <stddef.h>
 
 #include <functional>
 #include <set>
 #include <string>
 #include <vector>
+
+#include "content_decryption_module.h"
+
+#include "RefCounted.h"
 
 class ClearKeySessionManager;
 

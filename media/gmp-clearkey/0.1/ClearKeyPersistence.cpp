@@ -16,15 +16,16 @@
 
 #include "ClearKeyPersistence.h"
 
-#include "ClearKeyUtils.h"
-#include "ClearKeyStorage.h"
-#include "ClearKeySessionManager.h"
-#include "RefCounted.h"
-
 #include <assert.h>
 #include <stdint.h>
-#include <sstream>
 #include <string.h>
+
+#include <sstream>
+
+#include "ClearKeySessionManager.h"
+#include "ClearKeyStorage.h"
+#include "ClearKeyUtils.h"
+#include "RefCounted.h"
 
 using namespace cdm;
 
