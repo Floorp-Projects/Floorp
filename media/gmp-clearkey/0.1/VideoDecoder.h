@@ -17,13 +17,14 @@
 #ifndef __VideoDecoder_h__
 #define __VideoDecoder_h__
 
+// This include is required in order for content_decryption_module to work
+// on Unix systems.
+#include <stddef.h>
+
 #include <atomic>
 #include <queue>
 #include <thread>
 
-// This include is required in order for content_decryption_module to work
-// on Unix systems.
-#include "stddef.h"
 #include "content_decryption_module.h"
 #include "WMFH264Decoder.h"
 

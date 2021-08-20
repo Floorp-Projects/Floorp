@@ -19,8 +19,8 @@
 #include <limits>
 
 #include "BigEndian.h"
-#include "ClearKeyDecryptionManager.h"
 #include "ClearKeyUtils.h"
+#include "ClearKeyDecryptionManager.h"
 #include "VideoDecoder.h"
 #include "mozilla/CheckedInt.h"
 

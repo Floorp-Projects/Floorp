@@ -15,14 +15,15 @@
  */
 
 #include "WMFUtils.h"
-#include "ClearKeyUtils.h"
-#include <versionhelpers.h>
-
-#include <algorithm>
-#include <stdio.h>
 
 #define INITGUID
 #include <guiddef.h>
+#include <stdio.h>
+#include <versionhelpers.h>
+
+#include <algorithm>
+
+#include "ClearKeyUtils.h"
 
 #ifndef __MINGW32__
 #  pragma comment(lib, "mfuuid.lib")

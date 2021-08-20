@@ -17,19 +17,19 @@
 #ifndef __WMFUtils_h__
 #define __WMFUtils_h__
 
-#include <cstdint>
-#include <string>
-
 #include <assert.h>
 #include <mfapi.h>
 #include <mferror.h>
 #include <mfobjects.h>
 #include <mftransform.h>
 #include <wmcodecdsp.h>
-#include "mozilla/Attributes.h"
-#include "VideoLimits.h"
 
+#include <cstdint>
+#include <string>
+
+#include "VideoLimits.h"
 #include "gmp-platform.h"
+#include "mozilla/Attributes.h"
 
 void LOG(const char* format, ...);
 

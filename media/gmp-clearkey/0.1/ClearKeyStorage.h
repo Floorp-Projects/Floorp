@@ -17,8 +17,9 @@
 #ifndef __ClearKeyStorage_h__
 #define __ClearKeyStorage_h__
 
-#include <functional>
 #include <stdint.h>
+
+#include <functional>
 #include <string>
 #include <vector>
 

@@ -17,14 +17,16 @@
 #ifndef __ClearKeyDecryptionManager_h__
 #define __ClearKeyDecryptionManager_h__
 
-#include "ClearKeyUtils.h"
 // This include is required in order for content_decryption_module to work
 // on Unix systems.
-#include "stddef.h"
-#include "content_decryption_module.h"
-#include "RefCounted.h"
+#include <stddef.h>
 
 #include <map>
+
+#include "content_decryption_module.h"
+
+#include "ClearKeyUtils.h"
+#include "RefCounted.h"
 
 class ClearKeyDecryptor;
 

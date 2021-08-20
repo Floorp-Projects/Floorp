@@ -16,15 +16,15 @@
 
 #include "ClearKeyDecryptionManager.h"
 
-#include "psshparser/PsshParser.h"
-
 #include <assert.h>
 #include <string.h>
+
 #include <vector>
 #include <algorithm>
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Span.h"
+#include "psshparser/PsshParser.h"
 
 using namespace cdm;
 
