@@ -31,12 +31,12 @@ Once you have downloaded the repository bundle, follow the steps below to recrea
 
 2. Un-bundle the bundle file to that repository:
 
-On Linux/Mac click on the properties of the file and you can find the path. In case the name of the file is not bundle.hg rename it.
+Move the bundle file next to ``mozilla-central`` directory, and rename it to ``bundle.hg``.
 
 .. code-block:: shell
 
                cd mozilla-central
-               hg unbundle /path/to/your/bundle.hg
+               hg unbundle ../bundle.hg
 
 Get comfortable. Grab a coffee (or your favorite tasty beverage). Maybe a nap. This unbundling process is going to take quite a lot of time.
 
