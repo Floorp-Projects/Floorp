@@ -28,6 +28,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/Result.h"
+#include "js/WaitCallbacks.h"
 #include "vm/GlobalObject.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
