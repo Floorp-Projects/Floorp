@@ -1218,6 +1218,235 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
             }
           }
           break;
+        case MD_EXCEPTION_MAC_GUARD:
+          reason = "EXC_GUARD / ";
+          {
+            uint32_t type = (exception_flags >> 29) & 0x7ULL;
+            uint32_t flavor = exception_flags & 0x1FFFFFFFULL;
+            switch (type) {
+              case MD_MAC_EXC_GUARD_TYPE_NONE:
+                reason.append("GUARD_TYPE_NONE");
+                break;
+              case MD_MAC_EXC_GUARD_TYPE_MACH_PORT:
+                reason.append("GUARD_TYPE_MACH_PORT");
+
+                if (flavor) {
+                  std::vector<std::string> flavors;
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_DESTROY) {
+                    flavors.push_back("GUARD_EXC_DESTROY");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MOD_REFS) {
+                    flavors.push_back("GUARD_EXC_MOD_REFS");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SET_CONTEXT) {
+                    flavors.push_back("GUARD_EXC_SET_CONTEXT");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SET_CONTEXT) {
+                    flavors.push_back("GUARD_EXC_SET_CONTEXT");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_UNGUARDED) {
+                    flavors.push_back("GUARD_EXC_UNGUARDED");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INCORRECT_GUARD) {
+                    flavors.push_back("GUARD_EXC_INCORRECT_GUARD");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_IMMOVABLE) {
+                    flavors.push_back("GUARD_EXC_IMMOVABLE");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_STRICT_REPLY) {
+                    flavors.push_back("GUARD_EXC_STRICT_REPLY");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MSG_FILTERED) {
+                    flavors.push_back("GUARD_EXC_MSG_FILTERED");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_RIGHT) {
+                    flavors.push_back("GUARD_EXC_INVALID_RIGHT");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_NAME) {
+                    flavors.push_back("GUARD_EXC_INVALID_NAME");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_VALUE) {
+                    flavors.push_back("GUARD_EXC_INVALID_VALUE");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_INVALID_ARGUMENT) {
+                    flavors.push_back("GUARD_EXC_INVALID_ARGUMENT");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RIGHT_EXISTS) {
+                    flavors.push_back("GUARD_EXC_RIGHT_EXISTS");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_NO_SPACE) {
+                    flavors.push_back("GUARD_EXC_KERN_NO_SPACE");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_FAILURE) {
+                    flavors.push_back("GUARD_EXC_KERN_FAILURE");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_KERN_RESOURCE) {
+                    flavors.push_back("GUARD_EXC_KERN_RESOURCE");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_REPLY) {
+                    flavors.push_back("GUARD_EXC_SEND_INVALID_REPLY");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_VOUCHER) {
+                    flavors.push_back("GUARD_EXC_SEND_INVALID_VOUCHER");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_SEND_INVALID_RIGHT) {
+                    flavors.push_back("GUARD_EXC_SEND_INVALID_RIGHT");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RCV_INVALID_NAME) {
+                    flavors.push_back("GUARD_EXC_RCV_INVALID_NAME");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_RCV_GUARDED_DESC) {
+                    flavors.push_back("GUARD_EXC_RCV_GUARDED_DESC");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_MOD_REFS_NON_FATAL) {
+                    flavors.push_back("GUARD_EXC_MOD_REFS_NON_FATAL");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_MACH_PORT_FLAVOR_GUARD_EXC_IMMOVABLE_NON_FATAL) {
+                    flavors.push_back("GUARD_EXC_IMMOVABLE_NON_FATAL");
+                  }
+
+                  reason.append(" / ");
+                  for (size_t i = 0; i < flavors.size(); i++) {
+                    if (i > 0) {
+                      reason.append(" | ");
+                    }
+
+                    reason.append(flavors[i]);
+                  }
+                }
+
+                break;
+              case MD_MAC_EXC_GUARD_TYPE_FD:
+                reason.append("GUARD_TYPE_FD");
+
+                if (flavor) {
+                  std::vector<std::string> flavors;
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_CLOSE) {
+                    flavors.push_back("GUARD_EXC_CLOSE");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_DUP) {
+                    flavors.push_back("GUARD_EXC_DUP");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_NOCLOEXEC) {
+                    flavors.push_back("GUARD_EXC_NOCLOEXEC");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_SOCKET_IPC) {
+                    flavors.push_back("GUARD_EXC_SOCKET_IPC");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_FILEPORT) {
+                    flavors.push_back("GUARD_EXC_FILEPORT");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_MISMATCH) {
+                    flavors.push_back("GUARD_EXC_MISMATCH");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_WRITE) {
+                    flavors.push_back("GUARD_EXC_WRITE");
+                  }
+
+                  reason.append(" / ");
+                  for (size_t i = 0; i < flavors.size(); i++) {
+                    if (i > 0) {
+                      reason.append(" | ");
+                    }
+
+                    reason.append(flavors[i]);
+                  }
+                }
+
+                break;
+              case MD_MAC_EXC_GUARD_TYPE_USER:
+                reason.append("GUARD_TYPE_USER");
+                break;
+              case MD_MAC_EXC_GUARD_TYPE_VN:
+                reason.append("GUARD_TYPE_VN");
+
+                if (flavor) {
+                  std::vector<std::string> flavors;
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_RENAME_TO) {
+                    flavors.push_back("GUARD_EXC_RENAME_TO");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_RENAME_FROM) {
+                    flavors.push_back("GUARD_EXC_RENAME_FROM");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_UNLINK) {
+                    flavors.push_back("GUARD_EXC_UNLINK");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_WRITE_OTHER) {
+                    flavors.push_back("GUARD_EXC_WRITE_OTHER");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_TRUNC_OTHER) {
+                    flavors.push_back("GUARD_EXC_TRUNC_OTHER");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_LINK) {
+                    flavors.push_back("GUARD_EXC_LINK");
+                  }
+
+                  if (flavor & MD_MAC_EXC_GUARD_FD_FLAVOR_GUARD_EXC_EXCHDATA) {
+                    flavors.push_back("GUARD_EXC_EXCHDATA");
+                  }
+
+                  reason.append(" / ");
+                  for (size_t i = 0; i < flavors.size(); i++) {
+                    if (i > 0) {
+                      reason.append(" | ");
+                    }
+
+                    reason.append(flavors[i]);
+                  }
+                }
+
+                break;
+              case MD_MAC_EXC_GUARD_TYPE_VIRT_MEMORY:
+                reason.append("GUARD_TYPE_VIRT_MEMORY");
+
+                if (flavor & MD_MAC_EXC_GUARD_VIRT_MEMORY_FLAVOR_GUARD_EXC_DEALLOC_GAP) {
+                  reason.append(" / GUARD_EXC_DEALLOC_GAP");
+                }
+
+                break;
+              default:
+                reason.append(flags_string);
+                break;
+            }
+          }
+          break;
         case MD_EXCEPTION_MAC_SIMULATED:
           reason = "Simulated Exception";
           break;
