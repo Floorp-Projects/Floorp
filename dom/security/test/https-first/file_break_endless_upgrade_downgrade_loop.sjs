@@ -1,7 +1,7 @@
 "use strict";
 
 const REDIRECT_URI = "http://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?verify";
-
+const DOWNGRADE_URI = "http://example.com/tests/dom/security/test/https-first/file_downgrade_with_different_path.sjs";
 const RESPONSE_ERROR = "unexpected-query";
 
 // An onload postmessage to window opener
@@ -26,6 +26,14 @@ const RESPONSE_HTTP_SCHEME = `
 function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
   const query = request.queryString;
+
+  if (query == "downgrade") {
+    // send same-origin downgrade from https: to http: with a different path.
+    // we don't consider it's an endless upgrade downgrade loop in this case.
+    response.setStatusLine(request.httpVersion, 302, "Found");
+    response.setHeader("Location", DOWNGRADE_URI, false);
+    return;
+  }
 
   // handle the redirect case
   if ((query >= 301 && query <= 303) || query == 307) {

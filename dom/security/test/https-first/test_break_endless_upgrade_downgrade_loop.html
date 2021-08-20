@@ -39,6 +39,17 @@ Test that same origin redirect does not cause endless loop with https-first enab
       return;
     }
     window.removeEventListener("message", receiveMessage);
+    window.addEventListener("message", receiveMessageForDifferentPathTest);
+    testDifferentPath();
+  }
+
+  async function receiveMessageForDifferentPathTest(event) {
+    is(event.data.result,
+       "scheme-https",
+       "scheme should be https when the path is different"
+    );
+    testWin.close();
+    window.removeEventListener("message", receiveMessageForDifferentPathTest);
     SimpleTest.finish();
   }
 
@@ -50,11 +61,19 @@ Test that same origin redirect does not cause endless loop with https-first enab
     testWin = window.open(uri);
   }
 
+  async function testDifferentPath() {
+    // Load an https:// window which gets downgraded to http://
+    let uri =
+      `https://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?downgrade`;
+    testWin = window.open(uri);
+  }
+
   // Set preference and start test
   SpecialPowers.pushPrefEnv({ set: [
     ["dom.security.https_first", true],
     ["security.mixed_content.block_active_content", false],
     ["security.mixed_content.block_display_content", false],
+    ["dom.security.https_only_check_path_upgrade_downgrade_endless_loop", true],
   ]}, startTest);
   </script>
 </body>
