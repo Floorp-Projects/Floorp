@@ -28,8 +28,6 @@ DEFINE_WEBGL_EXTENSION_GOOP(EXT_texture_filter_anisotropic,
                             WebGLExtensionTextureFilterAnisotropic)
 DEFINE_WEBGL_EXTENSION_GOOP(EXT_texture_norm16, WebGLExtensionTextureNorm16)
 DEFINE_WEBGL_EXTENSION_GOOP(MOZ_debug, WebGLExtensionMOZDebug)
-DEFINE_WEBGL_EXTENSION_GOOP(OES_draw_buffers_indexed,
-                            WebGLExtensionDrawBuffersIndexed)
 DEFINE_WEBGL_EXTENSION_GOOP(OES_element_index_uint,
                             WebGLExtensionElementIndexUint)
 DEFINE_WEBGL_EXTENSION_GOOP(OES_fbo_render_mipmap,

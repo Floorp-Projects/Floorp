@@ -201,7 +201,6 @@ static const char* const sExtensionNames[] = {
     "GL_OES_depth24",
     "GL_OES_depth32",
     "GL_OES_depth_texture",
-    "GL_OES_draw_buffers_indexed",
     "GL_OES_element_index_uint",
     "GL_OES_fbo_render_mipmap",
     "GL_OES_framebuffer_object",
@@ -1257,26 +1256,6 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
         };
         const SymLoadStruct extSymbols[] = {
             { (PRFuncPtr*) &mSymbols.fDrawBuffers, {{ "glDrawBuffersARB", "glDrawBuffersEXT" }} },
-            END_SYMBOLS
-        };
-        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_buffers);
-    }
-
-    if (IsSupported(GLFeature::draw_buffers_indexed)) {
-        const SymLoadStruct coreSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fBlendEquationSeparatei, {{ "glBlendEquationSeparatei" }} },
-            { (PRFuncPtr*) &mSymbols.fBlendFuncSeparatei, {{ "glBlendFuncSeparatei" }} },
-            { (PRFuncPtr*) &mSymbols.fColorMaski, {{ "glColorMaski" }} },
-            { (PRFuncPtr*) &mSymbols.fDisablei, {{ "glDisablei" }} },
-            { (PRFuncPtr*) &mSymbols.fEnablei, {{ "glEnablei" }} },
-            END_SYMBOLS
-        };
-        const SymLoadStruct extSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fBlendEquationSeparatei, {{ "glBlendEquationSeparateiOES" }} },
-            { (PRFuncPtr*) &mSymbols.fBlendFuncSeparatei, {{ "glBlendFuncSeparateiOES" }} },
-            { (PRFuncPtr*) &mSymbols.fColorMaski, {{ "glColorMaskiOES" }} },
-            { (PRFuncPtr*) &mSymbols.fDisablei, {{ "glDisableiOES" }} },
-            { (PRFuncPtr*) &mSymbols.fEnablei, {{ "glEnableiOES" }} },
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_buffers);

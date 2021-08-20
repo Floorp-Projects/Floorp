@@ -124,12 +124,6 @@ class WebGLExtensionDepthTexture : public WebGLExtensionBase {
   static bool IsSupported(const WebGLContext*);
 };
 
-class WebGLExtensionDrawBuffersIndexed : public WebGLExtensionBase {
- public:
-  explicit WebGLExtensionDrawBuffersIndexed(WebGLContext* webgl)
-      : WebGLExtensionBase(webgl) {}
-};
-
 class WebGLExtensionElementIndexUint : public WebGLExtensionBase {
  public:
   explicit WebGLExtensionElementIndexUint(WebGLContext* webgl)
