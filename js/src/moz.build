@@ -191,6 +191,7 @@ EXPORTS.js += [
     "../public/RootingAPI.h",
     "../public/SavedFrameAPI.h",
     "../public/ScalarType.h",
+    "../public/ScriptPrivate.h",
     "../public/SharedArrayBuffer.h",
     "../public/SliceBudget.h",
     "../public/SourceText.h",

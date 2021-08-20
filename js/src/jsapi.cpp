@@ -54,6 +54,7 @@
 #include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
+#include "js/ScriptPrivate.h"
 #include "js/StableStringChars.h"
 #include "js/Stack.h"
 #include "js/String.h"  // JS::MaxStringLength
