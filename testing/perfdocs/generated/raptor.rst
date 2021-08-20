@@ -2061,6 +2061,18 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: mozilla-central
             * browsertime-firefox-youtube-playback-widevine-h264-sfr-fis-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: None
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: None
+      * test-windows10-64-ref-hw-2017-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-h264-sfr-fis-e10s: mozilla-central
 
 
 .. dropdown:: youtube-playback-widevine-hfr (FF , GV, FE, RB, CH)
@@ -2096,6 +2108,18 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-firefox-youtube-playback-widevine-hfr-e10s: mozilla-central
             * browsertime-firefox-youtube-playback-widevine-hfr-fis-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: None
+            * browsertime-firefox-youtube-playback-widevine-hfr-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: None
+      * test-windows10-64-ref-hw-2017-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-hfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-hfr-fis-e10s: mozilla-central
 
 
 .. dropdown:: youtube-playback-widevine-vp9-sfr (FF , GV, FE, RB, CH)
@@ -2129,6 +2153,18 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
             * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: mozilla-central
             * browsertime-firefox-youtube-playback-widevine-vp9-sfr-fis-e10s: mozilla-central
       * test-macosx1015-64-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: mozilla-central
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-fis-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: None
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: None
+      * test-windows10-64-ref-hw-2017-qr/opt
+            * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: None
+      * test-windows10-64-shippable-qr/opt
             * browsertime-firefox-youtube-playback-widevine-vp9-sfr-e10s: mozilla-central
             * browsertime-firefox-youtube-playback-widevine-vp9-sfr-fis-e10s: mozilla-central
 
