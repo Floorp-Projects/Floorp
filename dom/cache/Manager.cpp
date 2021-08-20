@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/Manager.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
@@ -230,6 +231,17 @@ class Manager::Factory {
   static Result<SafeRefPtr<Manager>, nsresult> AcquireCreateIfNonExistent(
       const SafeRefPtr<ManagerId>& aManagerId) {
     mozilla::ipc::AssertIsOnBackgroundThread();
+
+    // If we get here during/after quota manager shutdown, we bail out.
+    MOZ_ASSERT(AppShutdown::GetCurrentShutdownPhase() <
+               ShutdownPhase::AppShutdownQM);
+    if (AppShutdown::GetCurrentShutdownPhase() >=
+        ShutdownPhase::AppShutdownQM) {
+      NS_WARNING(
+          "Attempt to AcquireCreateIfNonExistent a Manager during QM "
+          "shutdown.");
+      return Err(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+    }
 
     // Ensure there is a factory instance.  This forces the Acquire() call
     // below to use the same factory.
