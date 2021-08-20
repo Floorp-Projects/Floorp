@@ -629,6 +629,8 @@
     <string name="studies_restart_dialog_ok">OK</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Cancel</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application">Quitting the application to apply changes…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->

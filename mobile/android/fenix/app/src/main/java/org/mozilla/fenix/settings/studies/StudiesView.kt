@@ -5,12 +5,15 @@
 package org.mozilla.fenix.settings.studies
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.text.HtmlCompat
@@ -27,6 +30,7 @@ import org.mozilla.fenix.databinding.SettingsStudiesBinding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.OPT_OUT_STUDIES
 import org.mozilla.fenix.utils.Settings
+import kotlin.system.exitProcess
 
 @Suppress("LongParameterList")
 class StudiesView(
@@ -51,6 +55,7 @@ class StudiesView(
             settings.isExperimentationEnabled = isChecked
             experiments.globalUserParticipation = isChecked
             provideStudiesTitle().text = getSwitchTitle()
+            quitTheApp()
         }
         bindDescription()
 
@@ -130,4 +135,23 @@ class StudiesView(
 
     @VisibleForTesting
     internal fun provideStudiesList(): RecyclerView = binding.studiesList
+
+    @VisibleForTesting
+    internal fun quitTheApp() {
+        Toast.makeText(
+            context,
+            context.getString(R.string.studies_toast_quit_application),
+            Toast.LENGTH_LONG
+        ).show()
+        Handler(Looper.getMainLooper()).postDelayed(
+            {
+                exitProcess(0)
+            },
+            OVERRIDE_EXIT_DELAY
+        )
+    }
+
+    companion object {
+        private const val OVERRIDE_EXIT_DELAY = 3000L
+    }
 }
