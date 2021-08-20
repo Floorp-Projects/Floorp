@@ -78,6 +78,12 @@ class WebGLFBAttachPoint final {
   WebGLTexture* Texture() const { return mTexturePtr; }
   WebGLRenderbuffer* Renderbuffer() const { return mRenderbufferPtr; }
 
+  Maybe<size_t> ColorAttachmentId() const {
+    const size_t id = mAttachmentPoint - LOCAL_GL_COLOR_ATTACHMENT0;
+    if (id >= webgl::kMaxDrawBuffers) return {};
+    return Some(id);
+  }
+
   auto Layer() const { return mTexImageLayer; }
   auto ZLayerCount() const { return mTexImageZLayerCount; }
   auto MipLevel() const { return mTexImageLevel; }
@@ -150,14 +156,8 @@ class WebGLFramebuffer final : public WebGLContextBoundObject,
   WebGLFBAttachPoint mStencilAttachment;
   WebGLFBAttachPoint mDepthStencilAttachment;
 
-  // In theory, this number can be unbounded based on the driver. However, no
-  // driver appears to expose more than 8. We might as well stop there too, for
-  // now.
-  // (http://opengl.gpuinfo.org/gl_stats_caps_single.php?listreportsbycap=GL_MAX_COLOR_ATTACHMENTS)
-  static const size_t kMaxColorAttachments =
-      8;  // jgilbert's MacBook Pro exposes 8.
-  WebGLFBAttachPoint mColorAttachments[kMaxColorAttachments];
-
+  std::array<WebGLFBAttachPoint, webgl::kMaxDrawBuffers> mColorAttachments = {};
+  std::bitset<webgl::kMaxDrawBuffers> mDrawBufferEnabled = {1};
   ////
 
   std::vector<WebGLFBAttachPoint*> mAttachments;  // Non-null.
@@ -172,7 +172,8 @@ class WebGLFramebuffer final : public WebGLContextBoundObject,
 
     uint32_t width = 0;
     uint32_t height = 0;
-    bool hasFloat32 = false;
+    std::bitset<webgl::kMaxDrawBuffers> hasAttachment = 0;
+    std::bitset<webgl::kMaxDrawBuffers> isAttachmentF32 = 0;
     uint8_t zLayerCount = 1;
     bool isMultiview = false;
 
@@ -236,7 +237,7 @@ class WebGLFramebuffer final : public WebGLContextBoundObject,
 #undef GETTER
 
   const auto& ColorAttachment0() const { return mColorAttachments[0]; }
-  bool IsDrawBufferEnabled(uint32_t slotId) const;
+  const auto& DrawBufferEnabled() const { return mDrawBufferEnabled; }
 
   ////////////////
   // Invalidation

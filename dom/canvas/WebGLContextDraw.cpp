@@ -333,18 +333,30 @@ static bool DoSetsIntersect(const std::set<T>& a, const std::set<T>& b) {
   return bool(intersection.size());
 }
 
+template<size_t N>
+static size_t FindFirstOne(const std::bitset<N>& bs) {
+  MOZ_ASSERT(bs.any());
+  // We don't need this to be fast, so don't bother with CLZ intrinsics.
+  for (const auto i : IntegerRange(N)) {
+    if (bs[i]) return i;
+  }
+  return -1;
+}
+
 const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
                                                  const GLenum mode,
                                                  const uint32_t instanceCount) {
   if (!webgl->BindCurFBForDraw()) return nullptr;
 
   const auto& fb = webgl->mBoundDrawFramebuffer;
-  if (fb && webgl->mBlendEnabled) {
+  if (fb) {
     const auto& info = *fb->GetCompletenessInfo();
-    if (info.hasFloat32) {
+    const auto isF32WithBlending = info.isAttachmentF32 & webgl->mBlendEnabled;
+    if (isF32WithBlending.any()) {
       if (!webgl->IsExtensionEnabled(WebGLExtensionID::EXT_float_blend)) {
+        const auto first = FindFirstOne(isF32WithBlending);
         webgl->ErrorInvalidOperation(
-            "Float32 blending requires EXT_float_blend.");
+            "Attachment %u is float32 with blending enabled, which requires EXT_float_blend.", uint32_t(first));
         return nullptr;
       }
       webgl->WarnIfImplicit(WebGLExtensionID::EXT_float_blend);
@@ -420,14 +432,7 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
   const auto fnValidateFragOutputType =
       [&](const uint8_t loc, const webgl::TextureBaseType dstBaseType) {
         const auto itr = fragOutputs.find(loc);
-        if (MOZ_UNLIKELY(itr == fragOutputs.end())) {
-          webgl->ErrorInvalidOperation(
-              "Program has no frag output at location %u, but"
-              " destination draw buffer has an attached"
-              " image.",
-              uint32_t(loc));
-          return false;
-        }
+        MOZ_DIAGNOSTIC_ASSERT(itr != fragOutputs.end());
 
         const auto& info = itr->second;
         const auto& srcBaseType = info.baseType;
@@ -445,9 +450,15 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
 
   if (!webgl->mRasterizerDiscardEnabled) {
     uint8_t fbZLayerCount = 1;
+    auto hasAttachment = std::bitset<webgl::kMaxDrawBuffers>(1);
+    auto drawBufferEnabled = std::bitset<webgl::kMaxDrawBuffers>();
     if (fb) {
+      drawBufferEnabled = fb->DrawBufferEnabled();
       const auto& info = *fb->GetCompletenessInfo();
       fbZLayerCount = info.zLayerCount;
+      hasAttachment = info.hasAttachment;
+    } else {
+      drawBufferEnabled[0] = (webgl->mDefaultFB_DrawBuffer0 == LOCAL_GL_BACK);
     }
 
     if (fbZLayerCount != linkInfo->zLayerCount) {
@@ -457,19 +468,39 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
       return nullptr;
     }
 
-    if (webgl->mColorWriteMask) {
+    const auto writable = hasAttachment & drawBufferEnabled & webgl->mColorWriteMaskNonzero;
+    if (writable.any()) {
+      // Do we have any undefined outputs with real attachments that
+      // aren't masked-out by color write mask or drawBuffers?
+      const auto wouldWriteUndefined = ~linkInfo->hasOutput & writable;
+      if (wouldWriteUndefined.any()) {
+        const auto first = FindFirstOne(wouldWriteUndefined);
+        webgl->ErrorInvalidOperation(
+                  "Program has no frag output at location %u, the"
+                  " destination draw buffer has an attached"
+                  " image, and its color write mask is not all false,"
+                  " and DRAW_BUFFER%u is not NONE.",
+                  uint32_t(first), uint32_t(first));
+        return nullptr;
+      }
+
+      const auto outputWrites = linkInfo->hasOutput & writable;
+
       if (fb) {
         for (const auto& attach : fb->ColorDrawBuffers()) {
           const auto i =
               uint8_t(attach->mAttachmentPoint - LOCAL_GL_COLOR_ATTACHMENT0);
+          if (!outputWrites[i]) continue;
           const auto& imageInfo = attach->GetImageInfo();
           if (!imageInfo) continue;
           const auto& dstBaseType = imageInfo->mFormat->format->baseType;
           if (!fnValidateFragOutputType(i, dstBaseType)) return nullptr;
         }
       } else {
-        if (!fnValidateFragOutputType(0, webgl::TextureBaseType::Float))
-          return nullptr;
+        if (outputWrites[0]) {
+          if (!fnValidateFragOutputType(0, webgl::TextureBaseType::Float))
+            return nullptr;
+        }
       }
     }
   }

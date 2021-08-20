@@ -63,10 +63,9 @@ TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget) {
 // This version is fallible and will return nullptr if unrecognized.
 const char* GetEnumName(const GLenum val, const char* const defaultRet) {
   switch (val) {
-#define XX(x)        \
-  case LOCAL_GL_##x: \
-    return #x
-    XX(NONE);
+    case 0: return "0";
+#define XX(x) case LOCAL_GL_##x: return #x
+    //XX(NONE);
     XX(ALPHA);
     XX(COMPRESSED_RGBA_PVRTC_2BPPV1);
     XX(COMPRESSED_RGBA_PVRTC_4BPPV1);
@@ -410,17 +409,22 @@ std::string EnumString(const GLenum val) {
 
 void WebGLContext::ErrorInvalidEnumArg(const char* const argName,
                                        const GLenum val) const {
-  nsCString enumName;
-  EnumName(val, &enumName);
-  ErrorInvalidEnum("Bad `%s`: %s", argName, enumName.BeginReading());
+  const auto info = nsPrintfCString("Bad `%s`", argName);
+  ErrorInvalidEnumInfo(info.BeginReading(), val);
 }
 
 void WebGLContext::ErrorInvalidEnumInfo(const char* const info,
                                         const GLenum enumValue) const {
   nsCString name;
   EnumName(enumValue, &name);
-  return ErrorInvalidEnum("%s: Invalid enum value %s", info,
-                          name.BeginReading());
+
+  const char* hint = "";
+  if (!enumValue) {
+    hint = " (Did you typo `gl.SOMETHINGG` and pass `undefined`?)";
+  }
+
+  ErrorInvalidEnum("%s: Invalid enum value %s%s", info,
+              name.BeginReading(), hint);
 }
 
 #ifdef DEBUG
