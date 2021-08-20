@@ -11,7 +11,6 @@
 #include <stddef.h>  // size_t
 #include <stdio.h>   // FILE
 
-#include "jsapi.h"    // JSGetElementCallback
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::ReadOnlyCompileOptions
@@ -90,6 +89,11 @@ extern JS_PUBLIC_API bool JS_ExecuteScript(JSContext* cx,
 extern JS_PUBLIC_API bool JS_ExecuteScript(JSContext* cx,
                                            JS::HandleObjectVector envChain,
                                            JS::Handle<JSScript*> script);
+
+// Callback for the embedding to map from a ScriptSourceObject private-value to
+// an object that is exposed as the source "element" in debugger API.  This hook
+// must be infallible, but can return nullptr if no such element exists.
+using JSSourceElementCallback = JSObject* (*)(JSContext*, JS::HandleValue);
 
 namespace JS {
 
