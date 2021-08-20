@@ -44,6 +44,7 @@
 #include "js/GCVector.h"
 #include "js/HashTable.h"
 #include "js/Initialization.h"
+#include "js/MemoryCallbacks.h"
 #include "js/Modules.h"  // JS::Module{DynamicImport,Metadata,Resolve}Hook
 #ifdef DEBUG
 #  include "js/Proxy.h"  // For AutoEnterPolicy
@@ -1013,7 +1014,7 @@ struct JSRuntime {
     autoWritableJitCodeActive_ = b;
   }
 
-  /* See comment for JS::SetOutOfMemoryCallback in jsapi.h. */
+  /* See comment for JS::SetOutOfMemoryCallback in js/MemoryCallbacks.h. */
   js::MainThreadData<JS::OutOfMemoryCallback> oomCallback;
   js::MainThreadData<void*> oomCallbackData;
 

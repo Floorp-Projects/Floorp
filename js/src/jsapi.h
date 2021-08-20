@@ -41,6 +41,7 @@
 #include "js/HashTable.h"
 #include "js/Id.h"
 #include "js/MapAndSet.h"
+#include "js/MemoryCallbacks.h"
 #include "js/MemoryFunctions.h"
 #include "js/OffThreadScriptCompilation.h"
 #include "js/Principals.h"
@@ -1101,36 +1102,6 @@ class MOZ_RAII AutoHideScriptedCaller {
  * fail.
  */
 [[nodiscard]] extern JS_PUBLIC_API bool DisableWasmHugeMemory();
-
-/**
- * If a large allocation fails when calling pod_{calloc,realloc}CanGC, the JS
- * engine may call the large-allocation-failure callback, if set, to allow the
- * embedding to flush caches, possibly perform shrinking GCs, etc. to make some
- * room. The allocation will then be retried (and may still fail.) This callback
- * can be called on any thread and must be set at most once in a process.
- */
-
-using LargeAllocationFailureCallback = void (*)();
-
-extern JS_PUBLIC_API void SetProcessLargeAllocationFailureCallback(
-    LargeAllocationFailureCallback afc);
-
-/**
- * Unlike the error reporter, which is only called if the exception for an OOM
- * bubbles up and is not caught, the OutOfMemoryCallback is called immediately
- * at the OOM site to allow the embedding to capture the current state of heap
- * allocation before anything is freed. If the large-allocation-failure callback
- * is called at all (not all allocation sites call the large-allocation-failure
- * callback on failure), it is called before the out-of-memory callback; the
- * out-of-memory callback is only called if the allocation still fails after the
- * large-allocation-failure callback has returned.
- */
-
-using OutOfMemoryCallback = void (*)(JSContext*, void*);
-
-extern JS_PUBLIC_API void SetOutOfMemoryCallback(JSContext* cx,
-                                                 OutOfMemoryCallback cb,
-                                                 void* data);
 
 /**
  * When the JSRuntime is about to block in an Atomics.wait() JS call or in a
