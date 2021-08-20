@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TextUtils.h"
 
+#include "jsapi.h"
 #include "NamespaceImports.h"
 
 #include "js/MapAndSet.h"
