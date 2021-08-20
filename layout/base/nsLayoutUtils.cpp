@@ -12,6 +12,7 @@
 #include "ActiveLayerTracker.h"
 #include "ClientLayerManager.h"
 #include "DisplayItemClip.h"
+#include "FrameLayerBuilder.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxDrawable.h"
@@ -1409,6 +1410,49 @@ SideBits nsLayoutUtils::GetSideBitsAndAdjustAnchorForFixedPositionContent(
     }
   }
   return sides;
+}
+
+/* static */
+void nsLayoutUtils::SetFixedPositionLayerData(
+    Layer* aLayer, const nsIFrame* aViewportFrame, const nsRect& aAnchorRect,
+    const nsIFrame* aFixedPosFrame, nsPresContext* aPresContext,
+    const ContainerLayerParameters& aContainerParameters) {
+  // Find out the rect of the viewport frame relative to the reference frame.
+  // This, in conjunction with the container scale, will correspond to the
+  // coordinate-space of the built layer.
+  float factor = aPresContext->AppUnitsPerDevPixel();
+  Rect anchorRect(NSAppUnitsToFloatPixels(aAnchorRect.x, factor) *
+                      aContainerParameters.mXScale,
+                  NSAppUnitsToFloatPixels(aAnchorRect.y, factor) *
+                      aContainerParameters.mYScale,
+                  NSAppUnitsToFloatPixels(aAnchorRect.width, factor) *
+                      aContainerParameters.mXScale,
+                  NSAppUnitsToFloatPixels(aAnchorRect.height, factor) *
+                      aContainerParameters.mYScale);
+  // Need to transform anchorRect from the container layer's coordinate system
+  // into aLayer's coordinate system.
+  Matrix transform2d;
+  if (aLayer->GetTransform().Is2D(&transform2d)) {
+    transform2d.Invert();
+    anchorRect = transform2d.TransformBounds(anchorRect);
+  } else {
+    NS_ERROR(
+        "3D transform found between fixedpos content and its viewport (should "
+        "never happen)");
+    anchorRect = Rect(0, 0, 0, 0);
+  }
+
+  // Work out the anchor point for this fixed position layer. We assume that
+  // any positioning set (left/top/right/bottom) indicates that the
+  // corresponding side of its container should be the anchor point,
+  // defaulting to top-left.
+  LayerPoint anchor(anchorRect.x, anchorRect.y);
+
+  SideBits sides = GetSideBitsAndAdjustAnchorForFixedPositionContent(
+      aViewportFrame, aFixedPosFrame, &anchor, &anchorRect);
+
+  ViewID id = ScrollIdForRootScrollFrame(aPresContext);
+  aLayer->SetFixedPositionData(id, anchor, sides);
 }
 
 ScrollableLayerGuid::ViewID nsLayoutUtils::ScrollIdForRootScrollFrame(
@@ -3076,6 +3120,12 @@ static void DumpAfterPaintDisplayList(UniquePtr<std::stringstream>& aStream,
   nsIFrame::PrintDisplayList(aBuilder, *aList, *aStream,
                              gfxEnv::DumpPaintToFile());
 
+  *aStream << "Painting --- layer tree:\n";
+  if (aManager) {
+    FrameLayerBuilder::DumpRetainedLayerTree(aManager, *aStream,
+                                             gfxEnv::DumpPaintToFile());
+  }
+
   fprint_stderr(gfxUtils::sDumpPaintFile, *aStream);
 
 #ifdef MOZ_DUMP_PAINTING
@@ -3522,6 +3572,12 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 #ifdef MOZ_DUMP_PAINTING
   gfxUtils::sDumpPaintFile = savedDumpFile;
 #endif
+
+  if (StaticPrefs::layers_dump_client_layers() && layerManager) {
+    std::stringstream ss;
+    FrameLayerBuilder::DumpRetainedLayerTree(layerManager, ss, false);
+    print_stderr(ss);
+  }
 
   // Update the widget's opaque region information. This sets
   // glass boundaries on Windows. Also set up the window dragging region.
@@ -8630,7 +8686,8 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     nsIContent* aContent, const nsIFrame* aReferenceFrame,
     LayerManager* aLayerManager, ViewID aScrollParentId,
     const nsSize& aScrollPortSize, const Maybe<nsRect>& aClipRect,
-    bool aIsRootContent) {
+    bool aIsRootContent,
+    const Maybe<ContainerLayerParameters>& aContainerParameters) {
   const nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
@@ -8860,8 +8917,11 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   // don't have a aContainerParameters. In that case we're also not rasterizing
   // in Gecko anyway, so the only resolution we care about here is the presShell
   // resolution which we need to propagate to WebRender.
-  metrics.SetCumulativeResolution(LayoutDeviceToLayerScale2D(
-      LayoutDeviceToLayerScale(presShell->GetCumulativeResolution())));
+  metrics.SetCumulativeResolution(
+      aContainerParameters
+          ? aContainerParameters->Scale()
+          : LayoutDeviceToLayerScale2D(LayoutDeviceToLayerScale(
+                presShell->GetCumulativeResolution())));
 
   LayoutDeviceToScreenScale2D resolutionToScreen(
       presShell->GetCumulativeResolution() *
@@ -9002,6 +9062,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
 /*static*/
 Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
     nsDisplayListBuilder* aBuilder, LayerManager* aLayerManager,
+    const ContainerLayerParameters& aContainerParameters,
     const std::function<bool(ViewID& aScrollId)>& aCallback) {
   nsIFrame* frame = aBuilder->RootReferenceFrame();
   nsPresContext* presContext = frame->PresContext();
@@ -9051,7 +9112,7 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
     return Some(nsLayoutUtils::ComputeScrollMetadata(
         frame, rootScrollFrame, content, aBuilder->FindReferenceFrameFor(frame),
         aLayerManager, ScrollableLayerGuid::NULL_SCROLL_ID, scrollPortSize,
-        Nothing(), isRootContent));
+        Nothing(), isRootContent, Some(aContainerParameters)));
   }
 
   return Nothing();

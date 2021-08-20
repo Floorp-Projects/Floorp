@@ -28,6 +28,7 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
+#include "FrameLayerBuilder.h"
 #include <algorithm>
 
 // TABLECELL SELECTION

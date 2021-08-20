@@ -140,6 +140,7 @@ class nsDisplayListSet;
 
 class EventStates;
 class ServoRestyleState;
+class DisplayItemData;
 class EffectSet;
 class LazyLogModule;
 class PresShell;
@@ -638,6 +639,8 @@ class nsIFrame : public nsQueryFrame {
   typedef mozilla::gfx::Matrix4x4Flagged Matrix4x4Flagged;
   typedef mozilla::Sides Sides;
   typedef mozilla::LogicalSides LogicalSides;
+  typedef mozilla::SmallPointerArray<mozilla::DisplayItemData>
+      DisplayItemDataArray;
   typedef mozilla::SmallPointerArray<nsDisplayItem> DisplayItemArray;
 
   typedef nsQueryFrame::ClassID ClassID;
@@ -1387,6 +1390,9 @@ class nsIFrame : public nsQueryFrame {
                                          nsPlaceholderFrame)
 
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(OffsetPathCache, mozilla::gfx::Path)
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(DisplayItemDataProperty,
+                                      DisplayItemDataArray)
 
   mozilla::FrameBidiData GetBidiData() const {
     bool exists;
@@ -4859,6 +4865,10 @@ class nsIFrame : public nsQueryFrame {
                              aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
                              length.valueOr(ExtremumLength::MinContent),
                              availbleISizeOverride, aSizeOverrides, aFlags);
+  }
+
+  DisplayItemDataArray* DisplayItemData() const {
+    return GetProperty(nsIFrame::DisplayItemDataProperty());
   }
 
   DisplayItemArray& DisplayItems() { return mDisplayItems; }

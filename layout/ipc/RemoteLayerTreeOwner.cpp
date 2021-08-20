@@ -112,6 +112,7 @@ bool RemoteLayerTreeOwner::AttachWindowRenderer() {
       renderer != mWindowRenderer) {
     mLayersConnected =
         renderer->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
+    FrameLayerBuilder::InvalidateAllLayers(renderer->AsLayerManager());
   }
 
   mWindowRenderer = std::move(renderer);

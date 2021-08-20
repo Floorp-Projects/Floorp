@@ -58,6 +58,7 @@
 #include <stdint.h>
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Telemetry.h"
+#include "FrameLayerBuilder.h"
 #include "nsSubDocumentFrame.h"
 #include "mozilla/Attributes.h"
 #include "ScrollbarActivity.h"
@@ -2866,38 +2867,6 @@ bool ScrollFrameHelper::GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
   return mHadDisplayPortAtLastFrameUpdate;
 }
 
-gfxSize GetPaintedLayerScaleForFrame(nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame, "need a frame");
-
-  nsPresContext* presCtx = aFrame->PresContext()->GetRootPresContext();
-
-  if (!presCtx) {
-    presCtx = aFrame->PresContext();
-    MOZ_ASSERT(presCtx);
-  }
-
-  nsIFrame* root = presCtx->PresShell()->GetRootFrame();
-
-  MOZ_ASSERT(root);
-
-  float resolution = presCtx->PresShell()->GetResolution();
-
-  Matrix4x4Flagged transform = Matrix4x4::Scaling(resolution, resolution, 1.0);
-  if (aFrame != root) {
-    // aTransform is applied first, then the scale is applied to the result
-    transform = nsLayoutUtils::GetTransformToAncestor(RelativeTo{aFrame},
-                                                      RelativeTo{root}) *
-                transform;
-  }
-
-  Matrix transform2d;
-  if (transform.CanDraw2D(&transform2d)) {
-    return ThebesMatrix(transform2d).ScaleFactors();
-  }
-
-  return gfxSize(1.0, 1.0);
-}
-
 void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
                                      ScrollOrigin aOrigin) {
   // None is never a valid scroll origin to be passed in.
@@ -2947,7 +2916,8 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   // 'scale' is our estimate of the scale factor that will be applied
   // when rendering the scrolled content to its own PaintedLayer.
-  gfxSize scale = GetPaintedLayerScaleForFrame(mScrolledFrame);
+  gfxSize scale =
+      FrameLayerBuilder::GetPaintedLayerScaleForFrame(mScrolledFrame);
   nsPoint curPos = GetScrollPosition();
 
   nsPoint alignWithPos = mScrollPosForLayerPixelAlignment == nsPoint(-1, -1)
@@ -4503,6 +4473,7 @@ void ScrollFrameHelper::NotifyApzTransaction() {
 
 Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
     LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
+    const Maybe<ContainerLayerParameters>& aParameters,
     const DisplayItemClip* aClip) const {
   if (!mWillBuildScrollableLayer) {
     return Nothing();
@@ -4521,7 +4492,36 @@ Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
   return Some(nsLayoutUtils::ComputeScrollMetadata(
       mScrolledFrame, mOuter, mOuter->GetContent(), aContainerReferenceFrame,
       aLayerManager, mScrollParentID, mScrollPort.Size(), parentLayerClip,
-      isRootContent));
+      isRootContent, aParameters));
+}
+
+void ScrollFrameHelper::ClipLayerToDisplayPort(
+    Layer* aLayer, const DisplayItemClip* aClip,
+    const ContainerLayerParameters& aParameters) const {
+  // If APZ is not enabled, we still need the displayport to be clipped
+  // in the compositor.
+  if (!nsLayoutUtils::UsesAsyncScrolling(mOuter)) {
+    Maybe<nsRect> parentLayerClip;
+    if (aClip) {
+      parentLayerClip = Some(aClip->GetClipRect());
+    }
+
+    if (parentLayerClip) {
+      ParentLayerIntRect displayportClip =
+          ViewAs<ParentLayerPixel>(parentLayerClip->ScaleToNearestPixels(
+              aParameters.mXScale, aParameters.mYScale,
+              mScrolledFrame->PresContext()->AppUnitsPerDevPixel()));
+
+      ParentLayerIntRect layerClip;
+      if (const ParentLayerIntRect* origClip =
+              aLayer->GetClipRect().ptrOr(nullptr)) {
+        layerClip = displayportClip.Intersect(*origClip);
+      } else {
+        layerClip = displayportClip;
+      }
+      aLayer->SetClipRect(Some(layerClip));
+    }
+  }
 }
 
 bool ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const {
@@ -7103,7 +7103,8 @@ nsRect ScrollFrameHelper::GetScrolledRect() const {
   // We snap to layer pixels, so we need to respect the layer's scale.
   nscoord appUnitsPerDevPixel =
       mScrolledFrame->PresContext()->AppUnitsPerDevPixel();
-  gfxSize scale = GetPaintedLayerScaleForFrame(mScrolledFrame);
+  gfxSize scale =
+      FrameLayerBuilder::GetPaintedLayerScaleForFrame(mScrolledFrame);
   if (scale.IsEmpty()) {
     scale = gfxSize(1.0f, 1.0f);
   }

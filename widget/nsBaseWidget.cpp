@@ -11,6 +11,7 @@
 
 #include "BasicLayers.h"
 #include "ClientLayerManager.h"
+#include "FrameLayerBuilder.h"
 #include "GLConsts.h"
 #include "InputData.h"
 #include "LiveResizeListener.h"

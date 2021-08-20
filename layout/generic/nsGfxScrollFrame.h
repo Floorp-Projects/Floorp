@@ -489,7 +489,12 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
+      const Maybe<ContainerLayerParameters>& aParameters,
       const mozilla::DisplayItemClip* aClip) const;
+  void ClipLayerToDisplayPort(
+      Layer* aLayer, const mozilla::DisplayItemClip* aClip,
+      const ContainerLayerParameters& aParameters) const;
+
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
                     nsIScrollbarMediator::ScrollSnapMode aSnap =
@@ -1092,9 +1097,15 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
+      const Maybe<ContainerLayerParameters>& aParameters,
       const mozilla::DisplayItemClip* aClip) const final {
-    return mHelper.ComputeScrollMetadata(aLayerManager,
-                                         aContainerReferenceFrame, aClip);
+    return mHelper.ComputeScrollMetadata(
+        aLayerManager, aContainerReferenceFrame, aParameters, aClip);
+  }
+  void ClipLayerToDisplayPort(
+      Layer* aLayer, const mozilla::DisplayItemClip* aClip,
+      const ContainerLayerParameters& aParameters) const final {
+    mHelper.ClipLayerToDisplayPort(aLayer, aClip, aParameters);
   }
   void MarkScrollbarsDirtyForReflow() const final {
     mHelper.MarkScrollbarsDirtyForReflow();
@@ -1572,9 +1583,15 @@ class nsXULScrollFrame final : public nsBoxFrame,
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
+      const Maybe<ContainerLayerParameters>& aParameters,
       const mozilla::DisplayItemClip* aClip) const final {
-    return mHelper.ComputeScrollMetadata(aLayerManager,
-                                         aContainerReferenceFrame, aClip);
+    return mHelper.ComputeScrollMetadata(
+        aLayerManager, aContainerReferenceFrame, aParameters, aClip);
+  }
+  void ClipLayerToDisplayPort(
+      Layer* aLayer, const mozilla::DisplayItemClip* aClip,
+      const ContainerLayerParameters& aParameters) const final {
+    mHelper.ClipLayerToDisplayPort(aLayer, aClip, aParameters);
   }
   void MarkScrollbarsDirtyForReflow() const final {
     mHelper.MarkScrollbarsDirtyForReflow();
