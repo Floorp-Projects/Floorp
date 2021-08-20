@@ -12,7 +12,6 @@ context-attributes-alpha-depth-stencil-antialias.html
 context-lost-restored.html
 context-lost.html
 --max-version 1.9.9 context-type-test.html
---min-version 1.0.4 deleted-object-behavior.html
 incorrect-context-object-behaviour.html
 --max-version 1.9.9 methods.html
 premultiplyalpha-test.html
