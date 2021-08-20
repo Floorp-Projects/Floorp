@@ -33,6 +33,7 @@
 #include "js/Class.h"
 #include "js/CompileOptions.h"
 #include "js/Context.h"
+#include "js/Debug.h"
 #include "js/ErrorInterceptor.h"
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
@@ -265,10 +266,6 @@ extern JS_PUBLIC_API bool JS_InitReflectParse(JSContext* cx,
  */
 extern JS_PUBLIC_API bool JS_DefineProfilingFunctions(JSContext* cx,
                                                       JS::HandleObject obj);
-
-/* Defined in vm/Debugger.cpp. */
-extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
-                                                  JS::HandleObject obj);
 
 namespace JS {
 

@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <utility>
 
+#include "jsapi.h"
+
 #include "builtin/MapObject.h"
 #include "debugger/Debugger.h"
 #include "gc/Marking.h"
