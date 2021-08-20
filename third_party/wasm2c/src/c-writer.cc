@@ -220,6 +220,8 @@ class CWriter {
   std::string GetFuncStaticOrExport(std::string);
   void WriteFuncDeclarations();
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&, bool add_storage_class);
+  void WriteEntryFuncs();
+  void WriteEntryFunc(const FuncDeclaration&, const std::string&, bool add_storage_class);
   void WriteImportFuncDeclaration(const FuncDeclaration&, const std::string&);
   std::string GetMainMemoryName();
   void WriteGlobalInitializers();
@@ -933,6 +935,27 @@ void CWriter::WriteFuncDeclarations() {
   }
 }
 
+
+void CWriter::WriteEntryFuncs() {
+  if (module_->funcs.size() == module_->num_func_imports)
+    return;
+
+  Write(Newline());
+  Write("#if defined(ENTRY_PROLOGUE) || defined(ENTRY_EPILOGUE)", Newline());
+
+  Index func_index = 0;
+  for (const Func* func : module_->funcs) {
+    bool is_import = func_index < module_->num_func_imports;
+    if (!is_import) {
+      WriteEntryFunc(func->decl, GetGlobalName(func->name), true /* add_storage_class */);
+      Write(Newline());
+    }
+    ++func_index;
+  }
+
+  Write("#endif", Newline());
+}
+
 std::string CWriter::GetFuncStaticOrExport(std::string name) {
   std::string static_export_string = "";
   if (name.rfind("w2c___", 0) == 0 || name == "w2c_main") {
@@ -958,6 +981,38 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
     Write(", ", decl.GetParamType(i));
   }
   Write(")");
+}
+
+void CWriter::WriteEntryFunc(const FuncDeclaration& decl,
+                             const std::string& name,
+                             bool add_storage_class) {
+  // LLVM adds some extra function calls to all wasm objects prefixed with "__".
+  // Keep this static (private), else we cause symbol collisions when linking multiple wasm modules
+  // Additionally windows dlls have to export functions explicitly
+  if (add_storage_class) {
+    Write(GetFuncStaticOrExport(name));
+  }
+  Write(ResultType(decl.sig.result_types), " w2centry_", name, "(wasm2c_sandbox_t* const sbx");
+  for (Index i = 0; i < decl.GetNumParams(); ++i) {
+    Write(", ", decl.GetParamType(i), " p", std::to_string(i));
+  }
+  Write(") ", OpenBrace());
+  {
+    Write("ENTRY_PROLOGUE;", Newline());
+    if (!decl.sig.result_types.empty()) {
+      Write(ResultType(decl.sig.result_types), " ret = ");
+    }
+    Write(name, "(sbx");
+    for (Index i = 0; i < decl.GetNumParams(); ++i) {
+      Write(", p", std::to_string(i));
+    }
+    Write(");", Newline());
+    Write("ENTRY_EPILOGUE;", Newline());
+    if (!decl.sig.result_types.empty()) {
+      Write("return ret;", Newline());
+    }
+  }
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteImportFuncDeclaration(const FuncDeclaration& decl,
@@ -1212,8 +1267,8 @@ void CWriter::WriteElemInitializers() {
       Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
 
       Write("sbx->",ExternalRef(table->name), ".data[offset + ", i,
-            "] = (wasm_rt_elem_t){sbx->func_types[", func_type_index,
-            "], (wasm_rt_anyfunc_t)", ExternalPtr(func->name), "};", Newline());
+            "] = (wasm_rt_elem_t){ WASM_RT_INTERNAL_FUNCTION, sbx->func_types[", func_type_index,
+            "], (wasm_rt_anyfunc_t)", ExternalPtr(func->name), " };", Newline());
       if (i >= first_unused_elem) {
         first_unused_elem = i+1;
       }
@@ -1253,7 +1308,7 @@ void CWriter::WriteFuncIndexLookup() {
 void CWriter::WriteCallbackAddRemove() {
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
-  Write(Newline(), "static u32 add_wasm2c_callback(void* sbx_ptr, u32 func_type_idx, void* func_ptr) ", OpenBrace());
+  Write(Newline(), "static u32 add_wasm2c_callback(void* sbx_ptr, u32 func_type_idx, void* func_ptr, wasm_rt_elem_target_class_t func_class) ", OpenBrace());
   {
     Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
 
@@ -1275,7 +1330,7 @@ void CWriter::WriteCallbackAddRemove() {
       Write("if (sbx->", ExternalRef(table->name), ".data[i].func == 0) ", OpenBrace());
       {
         Write("sbx->",ExternalRef(table->name), ".data[i]",
-          " = (wasm_rt_elem_t){func_type_idx, ",
+          " = (wasm_rt_elem_t){ func_class, func_type_idx, ",
           "(wasm_rt_anyfunc_t) func_ptr };", Newline());
         Write("return i;", Newline());
       }
@@ -1561,10 +1616,6 @@ void CWriter::Write(const ExprList& exprs) {
         Index num_params = decl.GetNumParams();
         Index num_results = decl.GetNumResults();
         assert(type_stack_.size() > num_params);
-        if (num_results > 0) {
-          assert(num_results == 1);
-          Write(StackVar(num_params, decl.GetResultType(0)), " = ");
-        }
 
         assert(module_->tables.size() == 1);
         const Table* table = module_->tables[0];
@@ -1572,7 +1623,14 @@ void CWriter::Write(const ExprList& exprs) {
         assert(decl.has_func_type);
         Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
 
-        Write("CALL_INDIRECT(sbx->", ExternalRef(table->name), ", ");
+        if (num_results > 0) {
+          assert(num_results == 1);
+          Write("CALL_INDIRECT_RES(", StackVar(num_params, decl.GetResultType(0)), ", ");
+        } else {
+          Write("CALL_INDIRECT_VOID(");
+        }
+
+        Write("sbx->", ExternalRef(table->name), ", ");
         WriteFuncDeclaration(decl, "(*)", false /* add_storage_class*/);
         Write(", ", func_type_index, ", ", StackVar(0));
         Write(", sbx->func_types, sbx");
@@ -2420,6 +2478,7 @@ void CWriter::WriteCSource() {
   WriteSandboxStruct();
   WriteFuncTypes();
   WriteFuncDeclarations();
+  WriteEntryFuncs();
   WriteGlobalInitializers();
   WriteFuncs();
   WriteDataInitializers();

@@ -88,8 +88,17 @@ typedef enum {
  * call. */
 typedef void (*wasm_rt_anyfunc_t)(void);
 
+/**
+ * The class of the indirect function being invoked
+ */
+typedef enum {
+  WASM_RT_INTERNAL_FUNCTION,
+  WASM_RT_EXTERNAL_FUNCTION
+} wasm_rt_elem_target_class_t;
+
 /** A single element of a Table. */
 typedef struct {
+  wasm_rt_elem_target_class_t func_class;
   /** The index as returned from `wasm_rt_register_func_type`. */
   uint32_t func_type;
   /** The function. The embedder must know the actual C signature of the
@@ -168,7 +177,7 @@ typedef void* (*create_wasm2c_sandbox_t)(void);
 typedef void (*destroy_wasm2c_sandbox_t)(void* sbx_ptr);
 typedef void* (*lookup_wasm2c_nonfunc_export_t)(void* sbx_ptr, const char* name);
 typedef uint32_t (*lookup_wasm2c_func_index_t)(void* sbx_ptr, uint32_t param_count, uint32_t result_count, wasm_rt_type_t* types);
-typedef uint32_t (*add_wasm2c_callback_t)(void* sbx_ptr, uint32_t func_type_idx, void* func_ptr);
+typedef uint32_t (*add_wasm2c_callback_t)(void* sbx_ptr, uint32_t func_type_idx, void* func_ptr, wasm_rt_elem_target_class_t func_class);
 typedef void (*remove_wasm2c_callback_t)(void* sbx_ptr, uint32_t callback_idx);
 
 typedef struct wasm2c_sandbox_funcs_t {
