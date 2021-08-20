@@ -57,6 +57,24 @@ static MaybeIntSize GetImageSize(const Mp4parseAvifImage& image) {
   return Nothing();
 }
 
+// Translate the number of bits per channel into a single ColorDepth.
+// Return Nothing if the number of bits per channel is not uniform.
+static Maybe<uint8_t> BitsPerChannelToBitDepth(
+    const Mp4parseByteData& bits_per_channel) {
+  if (bits_per_channel.length == 0) {
+    return Nothing();
+  }
+
+  for (uintptr_t i = 1; i < bits_per_channel.length; ++i) {
+    if (bits_per_channel.data[i] != bits_per_channel.data[0]) {
+      // log mismatch
+      return Nothing();
+    }
+  }
+
+  return Some(bits_per_channel.data[0]);
+}
+
 // Translate the MIAF/HEIF-based orientation transforms (imir, irot) into
 // ImageLib's representation. Note that the interpretation of imir was reversed
 // Between HEIF (ISO 23008-12:2017) and ISO/IEC 23008-12:2017/DAmd 2. This is
@@ -177,8 +195,8 @@ class AVIFParser {
       MOZ_LOG(sAVIFLog, LogLevel::Debug,
               ("[this=%p] mp4parse_avif_get_image -> %d; primary_item length: "
                "%zu, alpha_item length: %zu",
-               this, status, mAvifImage->primary_item.length,
-               mAvifImage->alpha_item.length));
+               this, status, mAvifImage->primary_image.coded_data.length,
+               mAvifImage->alpha_image.coded_data.length));
       if (status != MP4PARSE_STATUS_OK) {
         mAvifImage.reset();
         return nullptr;
@@ -453,22 +471,24 @@ class Dav1dDecoder final : AVIFDecoderInterface {
 
     MOZ_LOG(sAVIFLog, LogLevel::Verbose, ("[this=%p] Beginning Decode", this));
 
-    if (!parsedImg.primary_item.data || !parsedImg.primary_item.length) {
+    if (!parsedImg.primary_image.coded_data.data ||
+        !parsedImg.primary_image.coded_data.length) {
       return AsVariant(NonDecoderResult::NoPrimaryItem);
     }
 
     mPicture.emplace();
-    Dav1dResult r =
-        GetPicture(parsedImg.primary_item, mPicture.ptr(), aIsMetadataDecode);
+    Dav1dResult r = GetPicture(parsedImg.primary_image.coded_data,
+                               mPicture.ptr(), aIsMetadataDecode);
     if (r != 0) {
       mPicture.reset();
       return AsVariant(r);
     }
 
-    if (parsedImg.alpha_item.data && parsedImg.alpha_item.length) {
+    if (parsedImg.alpha_image.coded_data.data &&
+        parsedImg.alpha_image.coded_data.length) {
       mAlphaPlane.emplace();
-      Dav1dResult r = GetPicture(parsedImg.alpha_item, mAlphaPlane.ptr(),
-                                 aIsMetadataDecode);
+      Dav1dResult r = GetPicture(parsedImg.alpha_image.coded_data,
+                                 mAlphaPlane.ptr(), aIsMetadataDecode);
       if (r != 0) {
         mAlphaPlane.reset();
         return AsVariant(r);
@@ -606,13 +626,14 @@ class AOMDecoder final : AVIFDecoderInterface {
     MOZ_ASSERT(mContext.isSome());
     MOZ_ASSERT(mDecodedData.isNothing());
 
-    if (!parsedImg.primary_item.data || !parsedImg.primary_item.length) {
+    if (!parsedImg.primary_image.coded_data.data ||
+        !parsedImg.primary_image.coded_data.length) {
       return AsVariant(NonDecoderResult::NoPrimaryItem);
     }
 
     aom_image_t* aomImg = nullptr;
-    DecodeResult r =
-        GetImage(parsedImg.primary_item, &aomImg, aIsMetadataDecode);
+    DecodeResult r = GetImage(parsedImg.primary_image.coded_data, &aomImg,
+                              aIsMetadataDecode);
     if (!IsDecodeSuccess(r)) {
       return r;
     }
@@ -628,10 +649,11 @@ class AOMDecoder final : AVIFDecoderInterface {
     }
     mOwnedImage.reset(clonedImg);
 
-    if (parsedImg.alpha_item.data && parsedImg.alpha_item.length) {
+    if (parsedImg.alpha_image.coded_data.data &&
+        parsedImg.alpha_image.coded_data.length) {
       aom_image_t* alphaImg = nullptr;
-      DecodeResult r =
-          GetImage(parsedImg.alpha_item, &alphaImg, aIsMetadataDecode);
+      DecodeResult r = GetImage(parsedImg.alpha_image.coded_data, &alphaImg,
+                                aIsMetadataDecode);
       if (!IsDecodeSuccess(r)) {
         return r;
       }
@@ -1132,7 +1154,7 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   }
   const Mp4parseAvifImage& parsedImg = *parsedImagePtr;
 
-  if (parsedImg.alpha_item.data) {
+  if (parsedImg.alpha_image.coded_data.data) {
     PostHasTransparency();
   }
 
@@ -1140,11 +1162,16 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
                                 ? GetImageOrientation(parsedImg)
                                 : Orientation{};
   MaybeIntSize parsedImageSize = GetImageSize(parsedImg);
+  Maybe<uint8_t> primaryBitDepth =
+      BitsPerChannelToBitDepth(parsedImg.primary_image.bits_per_channel);
+  Maybe<uint8_t> alphaBitDepth =
+      BitsPerChannelToBitDepth(parsedImg.alpha_image.bits_per_channel);
 
   if (parsedImageSize.isSome()) {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
-            ("[this=%p] Parser returned image size %d x %d", this,
-             parsedImageSize->width, parsedImageSize->height));
+            ("[this=%p] Parser returned image size %d x %d (%d/%d bit)", this,
+             parsedImageSize->width, parsedImageSize->height,
+             primaryBitDepth.valueOr(0), alphaBitDepth.valueOr(0)));
     PostSize(parsedImageSize->width, parsedImageSize->height, orientation);
     if (IsMetadataDecode()) {
       MOZ_LOG(
