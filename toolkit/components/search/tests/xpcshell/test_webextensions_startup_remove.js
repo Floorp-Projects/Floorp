@@ -51,7 +51,7 @@ add_task(async function test_removeAddonOnStartup() {
   // Now remove it, reset the search service and start up the add-on manager.
   // Note: the saved settings will have the engine in. If this didn't work,
   // the engine would still be present.
-  await OS.File.remove(
+  await IOUtils.remove(
     OS.Path.join(profile.path, "extensions", `${ENGINE_ID}.xpi`)
   );
 
