@@ -214,9 +214,6 @@ class nsTextFrame : public nsIFrame {
   // nsQueryFrame
   NS_DECL_QUERYFRAME
 
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContinuationsProperty,
-                                      nsTArray<nsTextFrame*>)
-
   // nsIFrame
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) final;
@@ -231,9 +228,6 @@ class nsTextFrame : public nsIFrame {
 
   nsresult CharacterDataChanged(const CharacterDataChangeInfo&) final;
 
-  nsTextFrame* FirstContinuation() const override {
-    return const_cast<nsTextFrame*>(this);
-  }
   nsTextFrame* GetPrevContinuation() const override { return nullptr; }
   nsTextFrame* GetNextContinuation() const final { return mNextContinuation; }
   void SetNextContinuation(nsIFrame* aNextContinuation) final {
@@ -784,12 +778,6 @@ class nsTextFrame : public nsIFrame {
 
   nsRect WebRenderBounds();
 
-  // Find the continuation (which may be this frame itself) containing the
-  // given offset. Note that this may return null, if the offset is beyond the
-  // text covered by the continuation chain.
-  // (To be used only on the first textframe in the chain.)
-  nsTextFrame* FindContinuationForOffset(int32_t aOffset);
-
  protected:
   virtual ~nsTextFrame();
 
@@ -823,9 +811,6 @@ class nsTextFrame : public nsIFrame {
     NotSelected,
   };
   mutable SelectionState mIsSelected;
-
-  // Whether a cached continuations array is present.
-  bool mHasContinuationsProperty = false;
 
   /**
    * Return true if the frame is part of a Selection.
@@ -1011,19 +996,6 @@ class nsTextFrame : public nsIFrame {
 
   void ClearMetrics(ReflowOutput& aMetrics);
 
-  // Return pointer to an array of all frames in the continuation chain, or
-  // null if we're too short of memory.
-  nsTArray<nsTextFrame*>* GetContinuations();
-
-  // Clear any cached continuations array; this should be called whenever the
-  // chain is modified.
-  void ClearCachedContinuations() {
-    if (mHasContinuationsProperty) {
-      RemoveProperty(ContinuationsProperty());
-      mHasContinuationsProperty = false;
-    }
-  }
-
   /**
    * UpdateIteratorFromOffset() updates the iterator from a given offset.
    * Also, aInOffset may be updated to cluster start if aInOffset isn't
@@ -1035,6 +1007,8 @@ class nsTextFrame : public nsIFrame {
 
   nsPoint GetPointFromIterator(const gfxSkipCharsIterator& aIter,
                                PropertyProvider& aProperties);
+
+ public:
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrame::TrimmedOffsetFlags)
