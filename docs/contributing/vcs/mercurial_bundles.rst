@@ -3,18 +3,24 @@ Mercurial Bundles
 
 If you have a poor network connection that is preventing ``hg clone`` from completing, you may want to try downloading a bundle of the repository you're interested in. This is useful since a file download, unlike ``hg clone``, can be resumed if the connection is interrupted. Once you have the bundle, staying up-to-date shouldn't take much time at all, if you keep up with it regularly.
 
+This document explains the steps to setup the `mozilla-central <https://hg.mozilla.org/mozilla-central/>`__ repository using a bundle file. Be sure to replace "``mozilla-central``" with the project you're working with as appropriate.
 
-Clone the sources
------------------
+Download the bundle
+-------------------
 
-Up-to-date bundles of some of the repositories listed at https://hg.mozilla.org/ are available on a CDN at https://hg.cdn.mozilla.net/.
+1. Open https://hg.cdn.mozilla.net/ :
 
-If you have Mercurial 4.1 (released March 2017) or later, download the zstd bundle for the repository you're interested in. The zstd bundles are faster to download (smaller) and faster to decompress.
+It lists up-to-date bundles for some of the repositories listed at https://hg.mozilla.net/ .
+Each row corresponds to each repository, and each column corresponds to each compression format.
+
+2. Download the bundle file for the ``mozilla-central`` repository:
+
+Click the link in the "mozilla-central" row, the "zstd (max)" column.
 
 Setting up the repository
 -------------------------
 
-Once you have downloaded the repository bundle, follow the steps below to recreate the repository locally based upon that bundle. Be sure to replace "``mozilla-central``" with the project you're working with as appropriate.
+Once you have downloaded the repository bundle, follow the steps below to recreate the repository locally based upon that bundle.
 
 1. Initialize a new repository (in a directory called ``mozilla-central`` here):
 
