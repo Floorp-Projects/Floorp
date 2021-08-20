@@ -298,6 +298,11 @@ class nsCocoaUtils {
   static NSString* ToNSString(const nsAString& aString);
 
   /**
+   * Returns an NSURL instance for the provided string.
+   */
+  static NSURL* ToNSURL(const nsAString& aURLString);
+
+  /**
    * Makes NSString instance for aCString.
    */
   static NSString* ToNSString(const nsACString& aCString);
