@@ -27,6 +27,9 @@
                 "fallbackPref": {
                   "type": "string"
                 },
+                "enum": {
+                  "description": "Validate feature value using a list of possible options (for string only values)."
+                },
                 "description": {
                   "type": "string",
                   "description": "Explain how this value is being used"
