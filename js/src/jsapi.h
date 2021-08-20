@@ -33,6 +33,7 @@
 #include "js/Class.h"
 #include "js/CompileOptions.h"
 #include "js/Context.h"
+#include "js/ErrorInterceptor.h"
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
 #include "js/GCAPI.h"
@@ -127,18 +128,6 @@ struct JSWrapObjectCallbacks {
   JSPreWrapCallback preWrap;
 };
 
-/**
- * Callback used to intercept JavaScript errors.
- */
-struct JSErrorInterceptor {
-  /**
-   * This method is called whenever an error has been raised from JS code.
-   *
-   * This method MUST be infallible.
-   */
-  virtual void interceptError(JSContext* cx, JS::HandleValue error) = 0;
-};
-
 /************************************************************************/
 
 static MOZ_ALWAYS_INLINE JS::Value JS_NumberValue(double d) {
@@ -206,26 +195,6 @@ extern JS_PUBLIC_API const char* JS_GetImplementationVersion(void);
 
 extern JS_PUBLIC_API void JS_SetWrapObjectCallbacks(
     JSContext* cx, const JSWrapObjectCallbacks* callbacks);
-
-// Set a callback that will be called whenever an error
-// is thrown in this runtime. This is designed as a mechanism
-// for logging errors. Note that the VM makes no attempt to sanitize
-// the contents of the error (so it may contain private data)
-// or to sort out among errors (so it may not be the error you
-// are interested in or for the component in which you are
-// interested).
-//
-// If the callback sets a new error, this new error
-// will replace the original error.
-//
-// May be `nullptr`.
-// This is a no-op if built without NIGHTLY_BUILD.
-extern JS_PUBLIC_API void JS_SetErrorInterceptorCallback(
-    JSRuntime*, JSErrorInterceptor* callback);
-
-// This returns nullptr if built without NIGHTLY_BUILD.
-extern JS_PUBLIC_API JSErrorInterceptor* JS_GetErrorInterceptorCallback(
-    JSRuntime*);
 
 // Examine a value to determine if it is one of the built-in Error types.
 // If so, return the error type.
