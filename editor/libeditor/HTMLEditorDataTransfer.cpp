@@ -787,10 +787,11 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
   EditorDOMPoint pointToInsert{aPointToInsert};
 
   // Loop over the node list and paste the nodes:
-  RefPtr<Element> blockElement =
+  const RefPtr<const Element> maybeNonEditableBlockElement =
       pointToInsert.IsInContentNode()
-          ? HTMLEditUtils::GetInclusiveAncestorBlockElement(
-                *pointToInsert.ContainerAsContent())
+          ? HTMLEditUtils::GetInclusiveAncestorElement(
+                *pointToInsert.ContainerAsContent(),
+                HTMLEditUtils::ClosestBlockElement)
           : nullptr;
 
   EditorDOMPoint lastInsertedPoint;
@@ -915,7 +916,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
     }
     // If pasting into a `<pre>` element and current node is a `<pre>` element,
     // move only its children.
-    else if (blockElement && HTMLEditUtils::IsPre(blockElement) &&
+    else if (HTMLEditUtils::IsPre(maybeNonEditableBlockElement) &&
              HTMLEditUtils::IsPre(content)) {
       // Check for pre's going into pre's.
       for (nsCOMPtr<nsIContent> firstChild = content->GetFirstChild();
