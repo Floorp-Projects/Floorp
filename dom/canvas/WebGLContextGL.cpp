@@ -130,7 +130,7 @@ void WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb) {
   funcScope.mBindFailureGuard = false;
 }
 
-void WebGLContext::BlendEquationSeparate(Maybe<GLuint> i, GLenum modeRGB, GLenum modeAlpha) {
+void WebGLContext::BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha) {
   const FuncScope funcScope(*this, "blendEquationSeparate");
   if (IsContextLost()) return;
 
@@ -139,18 +139,7 @@ void WebGLContext::BlendEquationSeparate(Maybe<GLuint> i, GLenum modeRGB, GLenum
     return;
   }
 
-  if (i) {
-    MOZ_RELEASE_ASSERT(IsExtensionEnabled(WebGLExtensionID::OES_draw_buffers_indexed));
-    const auto limit = MaxValidDrawBuffers();
-    if (*i >= limit) {
-      ErrorInvalidValue("`index` (%u) must be < %s (%u)", *i, "MAX_DRAW_BUFFERS", limit);
-      return;
-    }
-
-    gl->fBlendEquationSeparatei(*i, modeRGB, modeAlpha);
-  } else {
-    gl->fBlendEquationSeparate(modeRGB, modeAlpha);
-  }
+  gl->fBlendEquationSeparate(modeRGB, modeAlpha);
 }
 
 static bool ValidateBlendFuncEnum(WebGLContext* webgl, GLenum factor,
@@ -204,7 +193,7 @@ static bool ValidateBlendFuncEnums(WebGLContext* webgl, GLenum srcRGB,
   return true;
 }
 
-void WebGLContext::BlendFuncSeparate(Maybe<GLuint> i, GLenum srcRGB, GLenum dstRGB,
+void WebGLContext::BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
                                      GLenum srcAlpha, GLenum dstAlpha) {
   const FuncScope funcScope(*this, "blendFuncSeparate");
   if (IsContextLost()) return;
@@ -217,18 +206,7 @@ void WebGLContext::BlendFuncSeparate(Maybe<GLuint> i, GLenum srcRGB, GLenum dstR
   if (!ValidateBlendFuncEnumsCompatibility(srcRGB, dstRGB, "srcRGB and dstRGB"))
     return;
 
-  if (i) {
-    MOZ_RELEASE_ASSERT(IsExtensionEnabled(WebGLExtensionID::OES_draw_buffers_indexed));
-    const auto limit = MaxValidDrawBuffers();
-    if (*i >= limit) {
-      ErrorInvalidValue("`index` (%u) must be < %s (%u)", *i, "MAX_DRAW_BUFFERS", limit);
-      return;
-    }
-
-    gl->fBlendFuncSeparatei(*i, srcRGB, dstRGB, srcAlpha, dstAlpha);
-  } else {
-    gl->fBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
-  }
+  gl->fBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
 
 GLenum WebGLContext::CheckFramebufferStatus(GLenum target) {

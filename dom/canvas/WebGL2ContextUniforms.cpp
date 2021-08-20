@@ -25,36 +25,6 @@ Maybe<double> WebGL2Context::GetIndexedParameter(const GLenum pname,
   const FuncScope funcScope(*this, "getIndexedParameter");
   if (IsContextLost()) return {};
 
-  if (IsExtensionEnabled(WebGLExtensionID::OES_draw_buffers_indexed)) {
-    switch (pname) {
-      case LOCAL_GL_BLEND_EQUATION_RGB:
-      case LOCAL_GL_BLEND_EQUATION_ALPHA:
-      case LOCAL_GL_BLEND_SRC_RGB:
-      case LOCAL_GL_BLEND_SRC_ALPHA:
-      case LOCAL_GL_BLEND_DST_RGB:
-      case LOCAL_GL_BLEND_DST_ALPHA:
-      case LOCAL_GL_COLOR_WRITEMASK: {
-        const auto limit = MaxValidDrawBuffers();
-        if (index >= limit) {
-          ErrorInvalidValue("`index` (%u) must be < %s (%u)", index, "MAX_DRAW_BUFFERS", limit);
-          return {};
-        }
-
-        std::array<GLint, 4> data = {};
-        gl->fGetIntegeri_v(pname, index, data.data());
-        auto val = data[0];
-        if (pname == LOCAL_GL_COLOR_WRITEMASK) {
-          val = (bool(data[0]) << 0 |
-                 bool(data[1]) << 1 |
-                 bool(data[2]) << 2 |
-                 bool(data[3]) << 3);
-        }
-        return Some(val);
-      }
-    }
-  }
-
-
   const auto* bindings = &mIndexedUniformBufferBindings;
   const char* limitStr = "MAX_UNIFORM_BUFFER_BINDINGS";
   switch (pname) {
@@ -69,7 +39,7 @@ Maybe<double> WebGL2Context::GetIndexedParameter(const GLenum pname,
       break;
 
     default:
-      ErrorInvalidEnumArg("pname", pname);
+      ErrorInvalidEnumInfo("pname", pname);
       return {};
   }
 
