@@ -27,7 +27,9 @@ typedef enum {
   url_XPAlphas =
       1u
       << 1,  // As url_XAlphas, but convert spaces (0x20) to '+' and plus to %2B
-  url_Path = 1u << 2  // As url_XAlphas, but don't escape slash ('/')
+  url_Path = 1u << 2,       // As url_XAlphas, but don't escape slash ('/')
+  url_AppleExtra = 1u << 3  // Extra encoding required for Apple's
+                            // NSURL compatibility
 } nsEscapeMask;
 
 #ifdef __cplusplus

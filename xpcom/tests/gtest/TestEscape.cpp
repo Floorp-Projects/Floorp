@@ -7,6 +7,7 @@
 #include "nsEscape.h"
 #include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla;
 
@@ -141,4 +142,47 @@ TEST(Escape, EscapeSpaces)
   rv = NS_EscapeURL(toEscape, esc_OnlyNonASCII | esc_Spaces, escaped, fallible);
   EXPECT_EQ(rv, NS_OK);
   EXPECT_STREQ(escaped.BeginReading(), "data:%0D%0A%20spa%20ces%C4%9F");
+}
+
+TEST(Escape, AppleNSURLEscapeHash)
+{
+  nsCString toEscape("#");
+  nsCString escaped;
+  bool isEscapedOK = NS_Escape(toEscape, escaped, url_AppleExtra);
+  EXPECT_EQ(isEscapedOK, true);
+  EXPECT_STREQ(escaped.BeginReading(), "%23");
+}
+
+TEST(Escape, AppleNSURLEscapeNoDouble)
+{
+  // The '%' in "%23" shouldn't be encoded again.
+  nsCString toEscape("%23");
+  nsCString escaped;
+  bool isEscapedOK = NS_Escape(toEscape, escaped, url_AppleExtra);
+  EXPECT_EQ(isEscapedOK, true);
+  EXPECT_STREQ(escaped.BeginReading(), "%23");
+}
+
+// Test that a URL with a '#' within the URL ref component gets escaped
+// correctly when the url_AppleExtra encoding mode is used. Specifically,
+// ensure the second '#' is escaped.
+TEST(Escape, AppleNSURLEscapeURL)
+{
+  nsCString toEscape("https://chat.mozilla.org/#/room/#macdev:mozilla.org");
+  nsCString escaped;
+  nsresult rv = NS_GetSpecWithNSURLEncoding(escaped, toEscape);
+  EXPECT_EQ(rv, NS_OK);
+  EXPECT_STREQ(escaped.BeginReading(),
+               "https://chat.mozilla.org/#/room/%23macdev%3Amozilla.org");
+}
+
+// Test that '%' encoded characters are not double encoded when used in a URL.
+TEST(Escape, AppleNSURLEscapeURLDouble)
+{
+  const nsCString toEscape(
+      "https://chat.mozilla.org/#/room/%23macdev%3Amozilla.org");
+  nsCString escaped;
+  nsresult rv = NS_GetSpecWithNSURLEncoding(escaped, toEscape);
+  EXPECT_EQ(rv, NS_OK);
+  EXPECT_STREQ(toEscape.BeginReading(), escaped.BeginReading());
 }
