@@ -1672,8 +1672,6 @@ class MediaPipelineReceiveVideo::PipelineRenderer
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& aBuffer,
                         uint32_t aTimeStamp, int64_t aRenderTime) override {
     mPipeline->mListener->RenderVideoFrame(aBuffer, aTimeStamp, aRenderTime);
-    // This is what drives SSRC/CSRC stats updates in VideoConduit
-    mPipeline->OnFrameDelivered();
   }
 
  private:
@@ -1737,10 +1735,6 @@ void MediaPipelineReceiveVideo::UpdateListener() {
   if (mListener) {
     mListener->SetEnabled(mActive.Ref());
   }
-}
-
-void MediaPipelineReceiveVideo::OnFrameDelivered() {
-  (*mConduit->AsVideoSessionConduit())->OnFrameDelivered();
 }
 
 DOMHighResTimeStamp MediaPipeline::GetNow() const { return mConduit->GetNow(); }

@@ -98,8 +98,6 @@ class WebrtcVideoConduit
   Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
   DOMHighResTimeStamp GetNow() const override;
 
-  void OnFrameDelivered() override;
-
   MediaConduitErrorCode StopTransmittingLocked();
   MediaConduitErrorCode StartTransmittingLocked();
   MediaConduitErrorCode StopReceivingLocked();
@@ -227,6 +225,8 @@ class WebrtcVideoConduit
 
   void OnRtcpBye() override;
   void OnRtcpTimeout() override;
+
+  std::vector<webrtc::RtpSource> GetUpstreamRtpSources() const override;
 
  private:
   // Don't allow copying/assigning.

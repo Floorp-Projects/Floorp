@@ -15,6 +15,10 @@ namespace mozilla {
 void MediaSessionConduit::GetRtpSources(
     nsTArray<dom::RTCRtpSourceEntry>& outSources) const {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mSourcesUpdateNeeded) {
+    UpdateRtpSources(GetUpstreamRtpSources());
+    OnSourcesUpdated();
+  }
   outSources.Clear();
   for (auto& [key, entry] : mSourcesCache) {
     (void)key;
@@ -51,7 +55,7 @@ static double rtpToDomAudioLevel(uint8_t aAudioLevel) {
 }
 
 void MediaSessionConduit::UpdateRtpSources(
-    const std::vector<webrtc::RtpSource>& aSources) {
+    const std::vector<webrtc::RtpSource>& aSources) const {
   MOZ_ASSERT(NS_IsMainThread());
   // Empty out the cache; we'll copy things back as needed
   auto cache = std::move(mSourcesCache);
@@ -102,11 +106,29 @@ void MediaSessionConduit::UpdateRtpSources(
   }
 }
 
+void MediaSessionConduit::OnSourcesUpdated() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mSourcesUpdateNeeded);
+  mSourcesUpdateNeeded = false;
+  // Reset the updateNeeded flag and clear the cache in a direct task, i.e.,
+  // as soon as the current task has finished.
+  AbstractThread::GetCurrent()->TailDispatcher().AddDirectTask(
+      NS_NewRunnableFunction(
+          __func__, [this, self = RefPtr<const MediaSessionConduit>(this)] {
+            mSourcesUpdateNeeded = true;
+            mSourcesCache.clear();
+          }));
+}
+
 void MediaSessionConduit::InsertAudioLevelForContributingSource(
     const uint32_t aCsrcSource, const int64_t aTimestamp,
     const uint32_t aRtpTimestamp, const bool aHasAudioLevel,
     const uint8_t aAudioLevel) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mSourcesUpdateNeeded) {
+    OnSourcesUpdated();
+  }
 
   dom::RTCRtpSourceEntry domEntry;
   domEntry.mSource = aCsrcSource;
@@ -123,9 +145,6 @@ void MediaSessionConduit::InsertAudioLevelForContributingSource(
   double ago = jsNow - aTimestamp;
   uint64_t convertedTimestamp = libwebrtcNow - ago;
 
-  // This will get stomped the next time UpdateRtpSources is called; the tests
-  // that use this don't relinquish the event loop after calling this, so
-  // that's ok.
   SourceKey key(convertedTimestamp, aCsrcSource);
   mSourcesCache[key] = domEntry;
 }
