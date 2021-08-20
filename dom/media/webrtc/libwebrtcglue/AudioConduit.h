@@ -153,6 +153,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
     return mRtcpTimeoutEvent;
   }
 
+  std::vector<webrtc::RtpSource> GetUpstreamRtpSources() const override;
+
  private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
   void operator=(const WebrtcAudioConduit& other) = delete;

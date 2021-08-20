@@ -213,17 +213,26 @@ class MediaSessionConduit {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
 
-  void UpdateRtpSources(const std::vector<webrtc::RtpSource>& aSources);
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
 
-  // test-only: inserts fake CSRCs and audio level data
+  // test-only: inserts fake CSRCs and audio level data.
+  // NB: fake data is only valid during the current main thread task.
   void InsertAudioLevelForContributingSource(const uint32_t aCsrcSource,
                                              const int64_t aTimestamp,
                                              const uint32_t aRtpTimestamp,
                                              const bool aHasAudioLevel,
                                              const uint8_t aAudioLevel);
 
+ protected:
+  virtual std::vector<webrtc::RtpSource> GetUpstreamRtpSources() const = 0;
+
  private:
+  void UpdateRtpSources(const std::vector<webrtc::RtpSource>& aSources) const;
+
+  // Marks the cache as having been updated in the current task, and keeps it
+  // stable until the current task is finished.
+  void OnSourcesUpdated() const;
+
   // Accessed only on main thread. This exists for a couple of reasons:
   // 1. The webrtc spec says that source stats are updated using a queued task;
   //    libwebrtc's internal representation of these stats is updated without
@@ -255,8 +264,13 @@ class MediaSessionConduit {
     uint32_t mLibwebrtcTimestamp;
     uint32_t mSrc;
   };
-  std::map<SourceKey, dom::RTCRtpSourceEntry, std::greater<SourceKey>>
+  mutable std::map<SourceKey, dom::RTCRtpSourceEntry, std::greater<SourceKey>>
       mSourcesCache;
+  // Accessed only on main thread. A flag saying whether mSourcesCache needs
+  // updating. Ensures that get*Sources() appear stable from javascript
+  // throughout a main thread task, even though we don't follow the spec to the
+  // letter (dispatch a task to update the sources).
+  mutable bool mSourcesUpdateNeeded = true;
 };
 
 // Abstract base classes for external encoder/decoder.
@@ -391,8 +405,6 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   virtual bool AddFrameHistory(
       dom::Sequence<dom::RTCVideoFrameHistoryInternal>* outHistories) const = 0;
-
-  virtual void OnFrameDelivered() = 0;
 
  protected:
   /* RTCP feedback settings, for unit testing purposes */

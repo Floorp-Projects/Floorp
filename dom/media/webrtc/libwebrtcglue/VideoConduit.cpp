@@ -1564,23 +1564,6 @@ DOMHighResTimeStamp WebrtcVideoConduit::GetNow() const {
   return mCall->GetNow();
 }
 
-void WebrtcVideoConduit::OnFrameDelivered() {
-  // Spec says to "queue a task" to update contributing/synchronization source
-  // stats; that's what we're doing here.
-  mCallThread->Dispatch(NS_NewRunnableFunction(
-      __func__, [this, self = RefPtr<WebrtcVideoConduit>(this)] {
-        std::vector<webrtc::RtpSource> sources;
-        if (mRecvStream) {
-          sources = mRecvStream->GetSources();
-        }
-        NS_DispatchToMainThread(NS_NewRunnableFunction(
-            "WebrtcVideoConduit::OnFrameDelivered (call thread)",
-            [this, self = std::move(self), sources = std::move(sources)] {
-              UpdateRtpSources(sources);
-            }));
-      }));
-}
-
 MediaConduitErrorCode WebrtcVideoConduit::StopTransmittingLocked() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
@@ -1851,6 +1834,19 @@ void WebrtcVideoConduit::CollectTelemetryData() {
 void WebrtcVideoConduit::OnRtcpBye() { mRtcpByeEvent.Notify(); }
 
 void WebrtcVideoConduit::OnRtcpTimeout() { mRtcpTimeoutEvent.Notify(); }
+
+std::vector<webrtc::RtpSource> WebrtcVideoConduit::GetUpstreamRtpSources()
+    const {
+  MOZ_ASSERT(NS_IsMainThread());
+  std::vector<webrtc::RtpSource> sources;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mRecvStream) {
+      sources = mRecvStream->GetSources();
+    }
+  }
+  return sources;
+}
 
 bool WebrtcVideoConduit::HasCodecPluginID(uint64_t aPluginID) const {
   MOZ_ASSERT(NS_IsMainThread());
