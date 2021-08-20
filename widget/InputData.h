@@ -255,8 +255,8 @@ class MultiTouchInput : public InputData {
   ExternalPoint mScreenOffset;
   bool mHandledByAPZ;
   // These button fields match to the corresponding fields in
-  // WidgetMouseEventBase, except mButton defaults to -1 to follow PointerEvent.
-  int16_t mButton = eNotPressed;
+  // WidgetMouseEventBase.
+  int16_t mButton = 0;
   int16_t mButtons = 0;
 };
 
