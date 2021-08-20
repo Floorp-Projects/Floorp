@@ -22,7 +22,6 @@
 #include <stdint.h>  // for uint32_t, uint64_t, uintptr_t
 #include <utility>   // for std::move
 
-#include "jsapi.h"             // JS_DefineDebuggerObject
 #include "jstypes.h"           // for JS_GC_ZEAL
 #include "NamespaceImports.h"  // for Value, HandleObject
 
@@ -35,6 +34,7 @@
 #include "gc/Tracer.h"              // for TraceNullableEdge, TraceEdge
 #include "gc/WeakMap.h"             // for WeakMap
 #include "gc/ZoneAllocator.h"       // for ZoneAllocPolicy
+#include "js/Debug.h"               // JS_DefineDebuggerObject
 #include "js/GCAPI.h"               // for GarbageCollectionEvent
 #include "js/Proxy.h"               // for PropertyDescriptor
 #include "js/RootingAPI.h"          // for Handle
