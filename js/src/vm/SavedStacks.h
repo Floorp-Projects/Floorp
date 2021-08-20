@@ -12,6 +12,7 @@
 #include "mozilla/Maybe.h"
 
 #include "js/HashTable.h"
+#include "js/Stack.h"
 #include "js/Wrapper.h"
 #include "vm/JSContext.h"
 #include "vm/SavedFrame.h"

@@ -11,6 +11,7 @@
 #include "js/AllocPolicy.h"
 #include "js/Initialization.h"
 #include "js/RootingAPI.h"
+#include "js/Stack.h"
 #include "vm/JSContext.h"
 
 #ifdef LIBFUZZER

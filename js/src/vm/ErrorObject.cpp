@@ -35,6 +35,7 @@
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
+#include "js/Stack.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "js/Value.h"
