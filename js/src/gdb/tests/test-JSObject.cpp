@@ -1,5 +1,6 @@
 #include "gdb-tests.h"
 #include "jsapi.h"
+#include "js/GlobalObject.h"
 #include "js/Object.h"  // JS::GetClass
 
 FRAGMENT(JSObject, simple) {
