@@ -222,6 +222,7 @@ EXPORTS.js += [
     "../public/Value.h",
     "../public/ValueArray.h",
     "../public/Vector.h",
+    "../public/WaitCallbacks.h",
     "../public/Warnings.h",
     "../public/WasmFeatures.h",
     "../public/WasmModule.h",
