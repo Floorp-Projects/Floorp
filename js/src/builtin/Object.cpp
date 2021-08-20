@@ -13,6 +13,8 @@
 
 #include <algorithm>
 
+#include "jsapi.h"
+
 #include "builtin/BigInt.h"
 #include "builtin/Eval.h"
 #include "builtin/SelfHostingDefines.h"

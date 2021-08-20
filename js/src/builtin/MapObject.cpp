@@ -6,6 +6,8 @@
 
 #include "builtin/MapObject.h"
 
+#include "jsapi.h"
+
 #include "ds/OrderedHashTable.h"
 #include "gc/FreeOp.h"
 #include "jit/InlinableNatives.h"
