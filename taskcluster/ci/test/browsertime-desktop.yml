@@ -369,6 +369,9 @@ browsertime-youtube-playback:
             youtube-playback-av1-sfr:
                 - windows10-64-ref-hw-2017-qr/opt
                 - macosx1015-64-shippable-qr/opt
+            # Bug 1718630
+            youtube-playback.*widevine.*:
+                - (linux|macos).*/opt
             default: []
     max-run-time:
         by-subtest:
