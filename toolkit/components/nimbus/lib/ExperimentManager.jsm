@@ -208,6 +208,7 @@ class _ExperimentManager {
       experimentType = TELEMETRY_DEFAULT_EXPERIMENT_TYPE,
       userFacingName,
       userFacingDescription,
+      featureIds,
     },
     branch,
     source,
@@ -224,6 +225,7 @@ class _ExperimentManager {
       userFacingName,
       userFacingDescription,
       lastSeen: new Date().toJSON(),
+      featureIds,
     };
 
     // Tag this as a forced enrollment. This prevents all unenrolling unless

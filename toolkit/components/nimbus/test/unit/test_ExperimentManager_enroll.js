@@ -318,3 +318,24 @@ add_task(async function test_forceEnroll_cleanup() {
 
   sandbox.restore();
 });
+
+add_task(async function test_featureIds_is_stored() {
+  Services.prefs.setStringPref("messaging-system.log", "all");
+  const recipe = ExperimentFakes.recipe("featureIds");
+  // Ensure we get enrolled
+  recipe.bucketConfig.count = recipe.bucketConfig.total;
+  const manager = ExperimentFakes.manager();
+
+  await manager.onStartup();
+
+  await manager.enroll(recipe, "test_featureIds_is_stored");
+
+  Assert.ok(manager.store.addExperiment.calledOnce, "experiment is stored");
+  let [enrollment] = manager.store.addExperiment.firstCall.args;
+  Assert.ok("featureIds" in enrollment, "featureIds is stored");
+  Assert.deepEqual(
+    enrollment.featureIds,
+    ["test-feature"],
+    "Has expected value"
+  );
+});
