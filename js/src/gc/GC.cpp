@@ -2145,6 +2145,12 @@ bool js::gc::IsCurrentlyAnimating(const TimeStamp& lastAnimationTime,
          currentTime < (lastAnimationTime + oneSecond);
 }
 
+static bool DiscardedCodeRecently(Zone* zone, const TimeStamp& currentTime) {
+  static const auto thirtySeconds = TimeDuration::FromSeconds(30);
+  return !zone->lastDiscardedCodeTime().IsNull() &&
+         currentTime < (zone->lastDiscardedCodeTime() + thirtySeconds);
+}
+
 bool GCRuntime::shouldCompact() {
   // Compact on shrinking GC if enabled.  Skip compacting in incremental GCs
   // if we are currently animating, unless the user is inactive or we're
@@ -4143,7 +4149,8 @@ bool GCRuntime::shouldPreserveJITCode(Realm* realm,
   if (realm->preserveJitCode()) {
     return true;
   }
-  if (IsCurrentlyAnimating(realm->lastAnimationTime, currentTime)) {
+  if (IsCurrentlyAnimating(realm->lastAnimationTime, currentTime) &&
+      DiscardedCodeRecently(realm->zone(), currentTime)) {
     return true;
   }
   if (reason == JS::GCReason::DEBUG_GC) {
