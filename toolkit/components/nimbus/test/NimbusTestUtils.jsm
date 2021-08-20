@@ -289,6 +289,7 @@ const ExperimentFakes = {
       },
       userFacingName: "Nimbus recipe",
       userFacingDescription: "NimbusTestUtils recipe",
+      featureIds: ["test-feature"],
       ...props,
     };
   },
