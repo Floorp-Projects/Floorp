@@ -14,7 +14,6 @@
 
 #include <utility>
 
-#include "jsapi.h"
 #include "jsexn.h"
 #include "jsnum.h"
 #include "jspubtd.h"

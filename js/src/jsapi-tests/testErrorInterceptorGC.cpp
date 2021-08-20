@@ -1,5 +1,3 @@
-#include "jsapi.h"
-
 #include "js/ErrorInterceptor.h"
 #include "jsapi-tests/tests.h"
 
