@@ -1182,29 +1182,6 @@ interface WEBGL_explicit_present {
     void present();
 };
 
-// https://www.khronos.org/registry/webgl/extensions/OES_draw_buffers_indexed/
-[Exposed=(Window,Worker), LegacyNoInterfaceObject]
-interface OES_draw_buffers_indexed {
-  void enableiOES(GLenum target, GLuint index);
-
-  void disableiOES(GLenum target, GLuint index);
-
-  void blendEquationiOES(GLuint buf, GLenum mode);
-
-  void blendEquationSeparateiOES(GLuint buf,
-                                 GLenum modeRGB, GLenum modeAlpha);
-
-  void blendFunciOES(GLuint buf,
-                     GLenum src, GLenum dst);
-
-  void blendFuncSeparateiOES(GLuint buf,
-                             GLenum srcRGB, GLenum dstRGB,
-                             GLenum srcAlpha, GLenum dstAlpha);
-
-  void colorMaskiOES(GLuint buf,
-                     GLboolean r, GLboolean g, GLboolean b, GLboolean a);
-};
-
 // https://immersive-web.github.io/webxr/#dom-webglcontextattributes-xrcompatible
 partial dictionary WebGLContextAttributes {
     [Pref="dom.vr.webxr.enabled"]
