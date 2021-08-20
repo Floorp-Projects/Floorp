@@ -39,18 +39,29 @@ async function verifyResult(aTestName) {
   ok(innerHTML.includes(errorPageL10nId), "the error page should be shown for " + aTestName);
 }
 
+async function verifyTest4Result() {
+  let pathname = content.document.location.pathname;
+  ok(
+    pathname === "/tests/dom/security/test/https-only/file_user_gesture.html",
+     "the http:// page should be loaded"
+  );
+}
+
 async function runTests() {
   await SpecialPowers.pushPrefEnv({ set: [
     ["dom.security.https_only_mode", true],
     ["dom.security.https_only_mode_break_upgrade_downgrade_endless_loop", true],
+    ["dom.security.https_only_check_path_upgrade_downgrade_endless_loop", true],
   ]});
 
   // Test 1: Meta Refresh Redirect
   let winTest1 = window.open(REQUEST_URL + "?test1a", "_blank");
   // Test 2: JS win.location Redirect
   let winTest2 = window.open(REQUEST_URL + "?test2a", "_blank");
-  // Test 3: 302 Redirect 
+  // Test 3: 302 Redirect
   let winTest3 = window.open(REQUEST_URL + "?test3a", "_blank");
+  // Test 4: 302 Redirect with a different path
+  let winTest4 = window.open(REQUEST_URL + "?test4a", "_blank");
 
   // provide enough time for:
   // the redirects to occur, and the error page to be displayed
@@ -64,6 +75,9 @@ async function runTests() {
 
   await SpecialPowers.spawn(winTest3, ["test3"], verifyResult);
   winTest3.close();
+
+  await SpecialPowers.spawn(winTest4, ["test4"], verifyTest4Result);
+  winTest4.close();
 
   SimpleTest.finish();
 }
