@@ -268,15 +268,3 @@ async function openCaptivePortalLoginTab(
 
   return portalTab;
 }
-
-// XXX This likely wants to move to TestUtils, mostly borrowed from
-// browser_doorhanger_form_password_edit.js
-async function waitForPromiseWithTimeout(promise, timeoutMs = 5000) {
-  let timedOut = new Promise((resolve, reject) => {
-    /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
-    setTimeout(() => {
-      reject(new Error(`Timed out in ${timeoutMs} ms.`));
-    }, timeoutMs);
-  });
-  await Promise.race([promise, timedOut]);
-}

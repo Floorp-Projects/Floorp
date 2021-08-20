@@ -72,21 +72,13 @@ add_task(async function test_captivePortalLogin() {
 
   captivePortalTrigger.init(stub);
 
-  Services.obs.notifyObservers(
-    this,
-    "captive-portal-login-success-after-button-pressed",
-    {}
-  );
+  Services.obs.notifyObservers(this, "captive-portal-login-success", {});
 
-  Assert.ok(stub.called, "Called after button press and login");
+  Assert.ok(stub.called, "Called after login event");
 
   captivePortalTrigger.uninit();
 
-  Services.obs.notifyObservers(
-    this,
-    "captive-portal-login-success-after-button-pressed",
-    {}
-  );
+  Services.obs.notifyObservers(this, "captive-portal-login-success", {});
 
   Assert.equal(stub.callCount, 1, "Not called after uninit");
 });
