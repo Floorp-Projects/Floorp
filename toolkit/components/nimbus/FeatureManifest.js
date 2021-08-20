@@ -211,6 +211,7 @@ const FeatureManifest = {
         type: "string",
         description:
           "Sets the position of the promo section. Possible values are: top, bottom. Default bottom.",
+        enum: ["top", "bottom"],
       },
       promoTitle: {
         type: "string",
@@ -236,6 +237,7 @@ const FeatureManifest = {
         type: "string",
         description:
           "Type of promo link type. Possible values: link, button. Default is button.",
+        enum: ["link", "button"],
       },
     },
   },
