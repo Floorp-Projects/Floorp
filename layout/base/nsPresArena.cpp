@@ -13,7 +13,6 @@
 #include "nsDebug.h"
 #include "nsDisplayList.h"
 #include "nsPrintfCString.h"
-#include "FrameLayerBuilder.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"

@@ -8,7 +8,7 @@
 #define NSDISPLAYLISTINVALIDATION_H_
 
 #include "mozilla/Attributes.h"
-#include "FrameLayerBuilder.h"
+#include "mozilla/layers/WebRenderUserData.h"
 #include "ImgDrawResult.h"
 #include "nsRect.h"
 #include "nsColor.h"
@@ -84,6 +84,8 @@ class nsDisplayItemGenericGeometry : public nsDisplayItemGeometry {
 
 bool ShouldSyncDecodeImages(nsDisplayListBuilder* aBuilder);
 
+nsDisplayItemGeometry* GetPreviousGeometry(nsDisplayItem*);
+
 /**
  * nsImageGeometryMixin is a mixin for geometry items that draw images.
  * Geometry items that include this mixin can track drawing results and use
@@ -100,9 +102,7 @@ class nsImageGeometryMixin {
       : mLastDrawResult(mozilla::image::ImgDrawResult::NOT_READY),
         mWaitingForPaint(false) {
     // Transfer state from the previous version of this geometry item.
-    auto lastGeometry = static_cast<T*>(
-        mozilla::FrameLayerBuilder::GetMostRecentGeometry(aItem));
-    if (lastGeometry) {
+    if (auto lastGeometry = static_cast<T*>(GetPreviousGeometry(aItem))) {
       mLastDrawResult = lastGeometry->mLastDrawResult;
       mWaitingForPaint = lastGeometry->mWaitingForPaint;
     }
@@ -121,9 +121,7 @@ class nsImageGeometryMixin {
     MOZ_ASSERT(aResult != mozilla::image::ImgDrawResult::NOT_SUPPORTED,
                "ImgDrawResult::NOT_SUPPORTED should be handled already!");
 
-    auto lastGeometry = static_cast<T*>(
-        mozilla::FrameLayerBuilder::GetMostRecentGeometry(aItem));
-    if (lastGeometry) {
+    if (auto lastGeometry = static_cast<T*>(GetPreviousGeometry(aItem))) {
       lastGeometry->mLastDrawResult = aResult;
       lastGeometry->mWaitingForPaint = false;
     }
