@@ -11,7 +11,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
@@ -219,9 +218,7 @@ class SearchConfigTest {
     if (TEST_DEBUG) {
       return ["be", "en-US", "kk", "tr", "ru", "zh-CN", "ach", "unknown"];
     }
-    const data = await OS.File.read(do_get_file("all-locales").path, {
-      encoding: "utf-8",
-    });
+    const data = await IOUtils.readUTF8(do_get_file("all-locales").path);
     // "en-US" is not in all-locales as it is the default locale
     // add it manually to ensure it is tested.
     let locales = [...data.split("\n").filter(e => e != ""), "en-US"];
