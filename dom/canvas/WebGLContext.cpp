@@ -6,6 +6,7 @@
 #include "WebGLContext.h"
 
 #include <algorithm>
+#include <bitset>
 #include <queue>
 #include <regex>
 
@@ -1246,11 +1247,14 @@ bool WebGLContext::BindDefaultFBForRead() {
 }
 
 void WebGLContext::DoColorMask(const uint8_t bitmask) const {
-  if (mDriverColorMask != bitmask) {
-    mDriverColorMask = bitmask;
-    gl->fColorMask(
-        bool(mDriverColorMask & (1 << 0)), bool(mDriverColorMask & (1 << 1)),
-        bool(mDriverColorMask & (1 << 2)), bool(mDriverColorMask & (1 << 3)));
+  if (mDriverColorMask0 != bitmask) {
+    mDriverColorMask0 = bitmask;
+    const auto bs = std::bitset<4>(bitmask);
+    if (gl->IsSupported(gl::GLFeature::draw_buffers_indexed)) {
+      gl->fColorMaski(0, bs[0], bs[1], bs[2], bs[3]);
+    } else {
+      gl->fColorMask(bs[0], bs[1], bs[2], bs[3]);
+    }
   }
 }
 
@@ -1258,16 +1262,16 @@ void WebGLContext::DoColorMask(const uint8_t bitmask) const {
 
 ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
     : mWebGL(webgl) {
-  uint8_t driverColorMask = mWebGL.mColorWriteMask;
+  uint8_t driverColorMask0 = mWebGL.mColorWriteMask0;
   bool driverDepthTest = mWebGL.mDepthTestEnabled;
   bool driverStencilTest = mWebGL.mStencilTestEnabled;
   const auto& fb = mWebGL.mBoundDrawFramebuffer;
   if (!fb) {
     if (mWebGL.mDefaultFB_DrawBuffer0 == LOCAL_GL_NONE) {
-      driverColorMask = 0;  // Is this well-optimized enough for depth-first
+      driverColorMask0 = 0;  // Is this well-optimized enough for depth-first
                             // rendering?
     } else {
-      driverColorMask &= ~(uint8_t(mWebGL.mNeedsFakeNoAlpha) << 3);
+      driverColorMask0 &= ~(uint8_t(mWebGL.mNeedsFakeNoAlpha) << 3);
     }
     driverDepthTest &= !mWebGL.mNeedsFakeNoDepth;
     driverStencilTest &= !mWebGL.mNeedsFakeNoStencil;
@@ -1280,7 +1284,7 @@ ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
   }
 
   const auto& gl = mWebGL.gl;
-  mWebGL.DoColorMask(driverColorMask);
+  mWebGL.DoColorMask(driverColorMask0);
   if (mWebGL.mDriverDepthTest != driverDepthTest) {
     // "When disabled, the depth comparison and subsequent possible updates to
     // the

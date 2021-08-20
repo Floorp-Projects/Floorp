@@ -6,6 +6,7 @@
 #ifndef WEBGL_PROGRAM_H_
 #define WEBGL_PROGRAM_H_
 
+#include <bitset>
 #include <map>
 #include <set>
 #include <vector>
@@ -100,6 +101,7 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
   WebGLProgram* const prog;
   const GLenum transformFeedbackBufferMode;
 
+  std::bitset<kMaxDrawBuffers> hasOutput = 0;
   std::unordered_map<uint8_t, const FragOutputInfo> fragOutputs;
   uint8_t zLayerCount = 1;
 
