@@ -5,6 +5,7 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "js/CompilationAndEvaluation.h"  // JS::CompileFunction, JS::Evaluate
+#include "js/GlobalObject.h"              // JS_NewGlobalObject
 #include "js/MemoryFunctions.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"

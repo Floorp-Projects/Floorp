@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/CallAndConstruct.h"
+#include "js/GlobalObject.h"        // JS_NewGlobalObject
 #include "js/PropertyAndElement.h"  // JS_SetProperty
 #include "jsapi-tests/tests.h"
 #include "vm/JSContext.h"

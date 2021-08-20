@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "js/AllocPolicy.h"
+#include "js/GlobalObject.h"
 #include "js/Initialization.h"
 #include "js/RootingAPI.h"
 #include "js/Stack.h"

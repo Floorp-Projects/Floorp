@@ -48,6 +48,7 @@
 #include "js/ErrorInterceptor.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
+#include "js/GlobalObject.h"
 #include "js/Initialization.h"
 #include "js/Interrupt.h"
 #include "js/JSON.h"

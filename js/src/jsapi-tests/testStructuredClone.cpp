@@ -4,6 +4,7 @@
 
 #include "builtin/TestingFunctions.h"
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,GetArrayBufferLengthAndData,NewExternalArrayBuffer}
+#include "js/GlobalObject.h"        // JS_NewGlobalObject
 #include "js/PropertyAndElement.h"  // JS_GetProperty, JS_SetProperty
 #include "js/StructuredClone.h"
 
