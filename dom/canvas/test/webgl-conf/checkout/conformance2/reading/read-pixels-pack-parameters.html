@@ -322,6 +322,7 @@ function testPackParameters(usePixelPackBuffer)
     runTestIteration(0, 0, 2, 3, {alignment:8, skipPixels:2}, usePixelPackBuffer, false);
     runTestIteration(0, 0, 2, 3, {alignment:8, skipPixels:1, skipRows:3}, usePixelPackBuffer, false);
     runTestIteration(0, 0, 2, 3, {alignment:8, skipRows:3}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 2, 3, {skipPixels:1, rowLength:4}, usePixelPackBuffer, true);
 }
 
 debug("");
