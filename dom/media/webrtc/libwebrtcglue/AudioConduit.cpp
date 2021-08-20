@@ -470,21 +470,6 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
     return kMediaConduitPlayoutError;
   }
 
-  // Spec says to "queue a task" to update contributing/synchronization source
-  // stats; that's what we're doing here.
-  mCallThread->Dispatch(NS_NewRunnableFunction(
-      __func__, [this, self = RefPtr<WebrtcAudioConduit>(this)] {
-        std::vector<webrtc::RtpSource> sources;
-        if (mRecvStream) {
-          sources = mRecvStream->GetSources();
-        }
-        NS_DispatchToMainThread(NS_NewRunnableFunction(
-            "WebrtcAudioConduit::GetAudioFrame (call thread)",
-            [this, self = std::move(self), sources = std::move(sources)] {
-              UpdateRtpSources(sources);
-            }));
-      }));
-
   CSFLogDebug(LOGTAG, "%s Got %zu channels of %zu samples", __FUNCTION__,
               frame->num_channels(), frame->samples_per_channel());
   return kMediaConduitNoError;
@@ -710,6 +695,19 @@ bool WebrtcAudioConduit::CodecConfigToWebRTCCodec(
  */
 bool WebrtcAudioConduit::IsSamplingFreqSupported(int freq) const {
   return GetNum10msSamplesForFrequency(freq) != 0;
+}
+
+std::vector<webrtc::RtpSource> WebrtcAudioConduit::GetUpstreamRtpSources()
+    const {
+  MOZ_ASSERT(NS_IsMainThread());
+  std::vector<webrtc::RtpSource> sources;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mRecvStream) {
+      sources = mRecvStream->GetSources();
+    }
+  }
+  return sources;
 }
 
 /* Return block-length of 10 ms audio frame in number of samples */
