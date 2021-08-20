@@ -51,18 +51,10 @@ let testcases = [
     let button = notification.buttonContainer.querySelector(
       "button.notification-button"
     );
-    async function clickButtonAndExpectNewPortalTabAndNotification() {
-      let newTabCreation = BrowserTestUtils.waitForNewTab(
-        win.gBrowser,
-        CANONICAL_URL
-      );
-      let buttonPressedEvent = TestUtils.topicObserved(
-        "captive-portal-login-button-pressed"
-      );
-
+    async function clickButtonAndExpectNewPortalTab() {
+      let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
       button.click();
-
-      const [tab] = await Promise.all([newTabCreation, buttonPressedEvent]);
+      let tab = await p;
       is(
         win.gBrowser.selectedTab,
         tab,
@@ -73,7 +65,7 @@ let testcases = [
 
     // Simulate clicking the button. The portal tab should be opened and
     // selected and the button should hide.
-    let tab = await clickButtonAndExpectNewPortalTabAndNotification();
+    let tab = await clickButtonAndExpectNewPortalTab();
     testPortalTabSelectedAndButtonNotVisible();
 
     // Close the tab. The button should become visible.
@@ -83,7 +75,7 @@ let testcases = [
 
     // When the button is clicked, a new portal tab should be opened and
     // selected.
-    tab = await clickButtonAndExpectNewPortalTabAndNotification();
+    tab = await clickButtonAndExpectNewPortalTab();
 
     // Open another arbitrary tab. The button should become visible. When it's clicked,
     // the portal tab should be selected.
@@ -101,74 +93,13 @@ let testcases = [
     BrowserTestUtils.removeTab(tab);
     win.gBrowser.selectedTab = anotherTab;
     testShowLoginPageButtonVisibility(notification, "visible");
-    tab = await clickButtonAndExpectNewPortalTabAndNotification();
+    tab = await clickButtonAndExpectNewPortalTab();
 
     BrowserTestUtils.removeTab(anotherTab);
     await freePortal(true);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
     await closeWindowAndWaitForWindowActivate(win);
-  },
-  async function testLoginSuccessAfterButtonPress() {
-    // test that button not clicked generates no notification
-    let loginSuccessAfterButtonPress = TestUtils.topicObserved(
-      "captive-portal-login-success-after-button-pressed"
-    );
-    window.CaptivePortalWatcher.observe(null, "captive-portal-login-success");
-
-    let exception = undefined;
-    try {
-      await waitForPromiseWithTimeout(loginSuccessAfterButtonPress);
-    } catch (ex) {
-      exception = ex;
-    }
-    isnot(
-      exception,
-      undefined,
-      "captive-portal-login-success-after-button-pressed should not have" +
-        " been sent, because button was not pressed"
-    );
-
-    // test that button clicked does generate a notification
-    loginSuccessAfterButtonPress = TestUtils.topicObserved(
-      "captive-portal-login-success-after-button-pressed"
-    );
-
-    window.CaptivePortalWatcher.observe(
-      null,
-      "captive-portal-login-button-pressed"
-    );
-    window.CaptivePortalWatcher.observe(null, "captive-portal-login-success");
-
-    await loginSuccessAfterButtonPress;
-
-    // test that subsequent captive-portal-login-success without a click
-    // does not send a notification
-
-    // Normally, we would stub Cu.now() and make it move the clock forward.
-    // Unfortunately, since it's in C++, we can't do that here, so instead
-    // we move the time stamp into the past so that things will have expired.
-    window.CaptivePortalWatcher._loginButtonPressedTimeStamp -=
-      window.CaptivePortalWatcher._LOGIN_BUTTON_PRESSED_TIMEOUT;
-
-    loginSuccessAfterButtonPress = TestUtils.topicObserved(
-      "captive-portal-login-success-after-button-pressed"
-    );
-
-    window.CaptivePortalWatcher.observe(null, "captive-portal-login-success");
-    exception = undefined;
-    try {
-      await waitForPromiseWithTimeout(loginSuccessAfterButtonPress);
-    } catch (ex) {
-      exception = ex;
-    }
-
-    isnot(
-      exception,
-      undefined,
-      "captive-portal-login-success-after-button-pressed should not have" +
-        " been sent, button was not pressed again"
-    );
   },
 ];
 
