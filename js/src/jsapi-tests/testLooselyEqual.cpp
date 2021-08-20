@@ -6,6 +6,7 @@
 #include <math.h>
 
 #include "js/Equality.h"  // JS::LooselyEqual
+#include "js/GlobalObject.h"
 #include "jsapi-tests/tests.h"
 
 using namespace std;

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/CallAndConstruct.h"
+#include "js/GlobalObject.h"
 #include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot
 #include "jsapi-tests/tests.h"
 

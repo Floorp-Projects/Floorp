@@ -7,6 +7,8 @@
 #ifndef vm_GlobalObject_h
 #define vm_GlobalObject_h
 
+#include "js/GlobalObject.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/EnumeratedArray.h"
 

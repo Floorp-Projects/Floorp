@@ -6,6 +6,7 @@
 #include "js/CallArgs.h"                  // JS::CallArgs, JS::CallArgsFromVp
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/CompileOptions.h"            // JS::CompileOptions
+#include "js/GlobalObject.h"              // JS::CurrentGlobalOrNull
 #include "js/PropertyAndElement.h"        // JS_DefineProperty
 #include "js/RootingAPI.h"                // JS::Rooted
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}

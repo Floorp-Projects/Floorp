@@ -13,6 +13,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#include "js/GlobalObject.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty, JS_GetPropertyById
 #include "util/StringBuffer.h"
 

@@ -7,6 +7,7 @@
 
 #include "jsapi.h"
 
+#include "js/GlobalObject.h"  // JS_NewGlobalObject
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty, JS_SetProperty
 #include "js/RootingAPI.h"
 #include "js/SliceBudget.h"

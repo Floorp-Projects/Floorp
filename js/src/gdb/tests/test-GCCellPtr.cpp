@@ -4,6 +4,7 @@
 
 #include "js/CompileOptions.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/GlobalObject.h"
 #include "js/HeapAPI.h"
 #include "js/RegExpFlags.h"
 #include "js/SourceText.h"

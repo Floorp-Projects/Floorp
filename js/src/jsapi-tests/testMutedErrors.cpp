@@ -5,6 +5,7 @@
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Exception.h"
+#include "js/GlobalObject.h"
 #include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 

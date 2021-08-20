@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/friend/WindowProxy.h"  // js::SetWindowProxyClass
+#include "js/GlobalObject.h"        // JS_NewGlobalObject
 #include "js/Wrapper.h"
 #include "js/WrapperCallbacks.h"
 #include "jsapi-tests/tests.h"
