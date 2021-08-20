@@ -19,6 +19,7 @@
 #include "jit/Ion.h"
 #include "jit/JitZone.h"
 #include "vm/Runtime.h"
+#include "vm/Time.h"
 #include "wasm/WasmInstance.h"
 
 #include "debugger/DebugAPI-inl.h"
@@ -400,6 +401,10 @@ void Zone::discardJitCode(JSFreeOp* fop, const DiscardOptions& options) {
 
   if (isPreservingCode()) {
     return;
+  }
+
+  if (options.discardJitScripts && options.discardBaselineCode) {
+    lastDiscardedCodeTime_ = ReallyNow();
   }
 
   if (options.discardBaselineCode || options.discardJitScripts) {
