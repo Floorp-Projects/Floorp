@@ -163,6 +163,7 @@ EXPORTS.js += [
     "../public/HelperThreadAPI.h",
     "../public/Id.h",
     "../public/Initialization.h",
+    "../public/Interrupt.h",
     "../public/JSON.h",
     "../public/LocaleSensitive.h",
     "../public/MapAndSet.h",

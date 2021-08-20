@@ -130,6 +130,7 @@
 #include "js/GCAPI.h"               // JS::AutoCheckCannotGC
 #include "js/GCVector.h"
 #include "js/Initialization.h"
+#include "js/Interrupt.h"
 #include "js/JSON.h"
 #include "js/MemoryCallbacks.h"
 #include "js/MemoryFunctions.h"
