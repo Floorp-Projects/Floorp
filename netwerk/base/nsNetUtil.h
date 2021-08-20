@@ -103,6 +103,21 @@ nsresult NS_NewFileURI(
     nsIIOService* ioService =
         nullptr);  // pass in nsIIOService to optimize callers
 
+// Functions for adding additional encoding to a URL for compatibility with
+// Apple's NSURL class URLWithString method.
+//
+// @param aResult
+//        Out parameter for the encoded URL spec
+// @param aSpec
+//        The spec for the URL to be encoded
+nsresult NS_GetSpecWithNSURLEncoding(nsACString& aResult,
+                                     const nsACString& aSpec);
+// @param aResult
+//        Out parameter for the encoded URI
+// @param aSpec
+//        The spec for the URL to be encoded
+nsresult NS_NewURIWithNSURLEncoding(nsIURI** aResult, const nsACString& aSpec);
+
 // These methods will only mutate the URI if the ref of aInput doesn't already
 // match the ref we are trying to set.
 // If aInput has no ref, and we are calling NS_GetURIWithoutRef, or
