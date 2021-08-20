@@ -785,24 +785,22 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
   auto* disp = StyleDisplay();
   if (MOZ_UNLIKELY(disp->mOverflowClipBoxInline ==
                    StyleOverflowClipBox::ContentBox)) {
-    // If the scrolled frame can be scrolled in the inline axis, inflate its
-    // scrollable overflow areas with its inline-end padding to prevent its
-    // content from being clipped at scroll container's inline-end padding
-    // edge.
-    //
-    // Note: Inflating scrolled frame's overflow areas is generally wrong if the
-    // scrolled frame's children themselves has any scrollable overflow areas.
-    // However, we can only be here in production for <textarea> and <input>.
-    // Both elements can only have text children, which shouldn't have
-    // scrollable overflow areas themselves, so its fine.
+    // The scrolled frame is scrollable in the inline axis with
+    // `overflow-clip-box:content-box`. To prevent its content from being
+    // clipped at the scroll container's padding edges, we inflate its
+    // children's scrollable overflow area with its inline padding, and union
+    // its scrollable overflow area with its children's inflated scrollable
+    // overflow area.
+    OverflowAreas childOverflow;
+    mHelper.mScrolledFrame->UnionChildOverflow(childOverflow);
+    nsRect childScrollableOverflow = childOverflow.ScrollableOverflow();
+
+    const LogicalMargin inlinePadding =
+        padding.ApplySkipSides(LogicalSides(wm, eLogicalSideBitsBBoth));
+    childScrollableOverflow.Inflate(inlinePadding.GetPhysicalMargin(wm));
+
     nsRect& so = aMetrics->ScrollableOverflow();
-    const nscoord soInlineSize = wm.IsVertical() ? so.Height() : so.Width();
-    if (soInlineSize > availISize) {
-      const LogicalMargin inlinePaddingEnd =
-          padding.ApplySkipSides(LogicalSides(wm, eLogicalSideBitsBBoth) |
-                                 LogicalSides(wm, eLogicalSideBitsIStart));
-      so.Inflate(inlinePaddingEnd.GetPhysicalMargin(wm));
-    }
+    so = so.UnionEdges(childScrollableOverflow);
   }
 
   aState->mContentsOverflowAreas = aMetrics->mOverflowAreas;
