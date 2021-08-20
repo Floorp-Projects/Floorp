@@ -22,8 +22,6 @@
 
 #include <algorithm>
 
-#include "jsapi.h"
-
 #include "builtin/AtomicsObject.h"
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/SharedIntlData.h"

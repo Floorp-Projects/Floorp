@@ -12,6 +12,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "jsapi.h"
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "ds/TraceableFifo.h"
