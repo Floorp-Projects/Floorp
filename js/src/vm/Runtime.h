@@ -51,6 +51,7 @@
 #include "js/ScriptPrivate.h"
 #include "js/Stack.h"
 #include "js/Stream.h"  // JS::AbortSignalIsAborted
+#include "js/StreamConsumer.h"
 #include "js/Symbol.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"

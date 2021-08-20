@@ -199,6 +199,7 @@ EXPORTS.js += [
     "../public/StableStringChars.h",
     "../public/Stack.h",
     "../public/Stream.h",
+    "../public/StreamConsumer.h",
     "../public/String.h",
     "../public/StructuredClone.h",
     "../public/SweepingAPI.h",

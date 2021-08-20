@@ -22,6 +22,10 @@
 #include "vm/Runtime.h"
 #include "wasm/WasmModule.h"
 
+namespace JS {
+class OptimizedEncodingListener;
+}
+
 namespace js {
 namespace wasm {
 
