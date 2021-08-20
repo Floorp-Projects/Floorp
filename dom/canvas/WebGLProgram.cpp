@@ -348,7 +348,6 @@ RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(WebGLProgram* prog,
     const auto version = compileResults->mShaderVersion;
 
     const auto fnAddInfo = [&](const webgl::FragOutputInfo& x) {
-      info->hasOutput[x.loc] = true;
       info->fragOutputs.insert({x.loc, x});
     };
 
