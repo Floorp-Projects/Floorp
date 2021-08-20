@@ -25,6 +25,7 @@
 #include "js/HelperThreadAPI.h"
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadToken, JS::OffThreadCompileCallback
 #include "js/SourceText.h"
+#include "js/Stack.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/CpuCount.h"

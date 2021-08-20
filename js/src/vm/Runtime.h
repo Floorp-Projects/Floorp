@@ -47,6 +47,7 @@
 #ifdef DEBUG
 #  include "js/Proxy.h"  // For AutoEnterPolicy
 #endif
+#include "js/Stack.h"
 #include "js/Stream.h"  // JS::AbortSignalIsAborted
 #include "js/Symbol.h"
 #include "js/UniquePtr.h"
