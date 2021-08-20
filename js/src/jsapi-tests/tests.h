@@ -16,6 +16,8 @@
 #include <string.h>
 #include <type_traits>
 
+#include "jsapi.h"
+
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"
 #include "js/CharacterEncoding.h"
