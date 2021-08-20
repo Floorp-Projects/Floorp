@@ -2018,6 +2018,16 @@ var gBrowserInit = {
       PanicButtonNotifier.init();
     });
 
+    gBrowser.tabContainer.addEventListener("TabSelect", function() {
+      for (let panel of document.querySelectorAll(
+        "panel[tabspecific='true']"
+      )) {
+        if (panel.state == "open") {
+          panel.hidePopup();
+        }
+      }
+    });
+
     if (BrowserHandler.kiosk) {
       // We don't modify popup windows for kiosk mode
       if (!gURLBar.readOnly) {
@@ -5410,25 +5420,6 @@ var XULBrowserWindow = {
         false,
         false
       );
-    }
-
-    let closeOpenPanels = selector => {
-      for (let panel of document.querySelectorAll(selector)) {
-        if (panel.state == "open") {
-          panel.hidePopup();
-        }
-      }
-    };
-
-    // If the location is changed due to switching tabs,
-    // ensure we close any open tabspecific panels.
-    if (aIsSimulated) {
-      closeOpenPanels("panel[tabspecific='true']");
-    }
-
-    // Ensure we close any remaining open locationspecific panels
-    if (!isSameDocument) {
-      closeOpenPanels("panel[locationspecific='true']");
     }
 
     // About pages other than about:reader are not currently supported by
