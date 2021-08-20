@@ -58,6 +58,7 @@
 #include "js/Stack.h"
 #include "js/StreamConsumer.h"
 #include "js/String.h"
+#include "js/TelemetryTimers.h"
 #include "js/TracingAPI.h"
 #include "js/Transcoding.h"
 #include "js/UniquePtr.h"
@@ -139,20 +140,6 @@ extern JS_PUBLIC_API JSType JS_TypeOfValue(JSContext* cx,
 namespace JS {
 
 extern JS_PUBLIC_API const char* InformalValueTypeName(const JS::Value& v);
-
-/** Timing information for telemetry purposes **/
-struct JSTimers {
-  mozilla::TimeDuration executionTime;       // Total time spent executing
-  mozilla::TimeDuration delazificationTime;  // Total time spent delazifying
-  mozilla::TimeDuration xdrEncodingTime;     // Total time spent XDR encoding
-  mozilla::TimeDuration gcTime;              // Total time spent in GC
-  mozilla::TimeDuration
-      protectTime;  // Total time spent protecting JIT executable memory
-  mozilla::TimeDuration
-      baselineCompileTime;  // Total time spent in baseline compiler
-};
-
-extern JS_PUBLIC_API JSTimers GetJSTimers(JSContext* cx);
 
 } /* namespace JS */
 

@@ -63,6 +63,7 @@
 #include "js/StreamConsumer.h"
 #include "js/String.h"  // JS::MaxStringLength
 #include "js/Symbol.h"
+#include "js/TelemetryTimers.h"
 #include "js/Utility.h"
 #include "js/WaitCallbacks.h"
 #include "js/WasmModule.h"
