@@ -14,7 +14,6 @@
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
 #include "TextDrawTarget.h"
-#include "LayerUserData.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

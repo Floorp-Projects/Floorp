@@ -8,7 +8,6 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsDisplayList.h"
 #include "nsIFrame.h"
-#include "mozilla/layers/ScrollableLayerGuid.h"
 
 namespace mozilla {
 
@@ -45,7 +44,7 @@ ViewID HitTestInfo::GetViewId(wr::DisplayListBuilder& aBuilder,
     return aASR->GetViewId();
   }
 
-  return layers::ScrollableLayerGuid::NULL_SCROLL_ID;
+  return ScrollableLayerGuid::NULL_SCROLL_ID;
 }
 
 void HitTestInfo::Initialize(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {

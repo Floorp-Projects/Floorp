@@ -9,6 +9,7 @@
 #include "nsAttrValue.h"
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
+#include "FrameLayerBuilder.h"
 #include "nsPrintfCString.h"
 
 #include <stdio.h>
@@ -133,6 +134,15 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
     aStream << "</a>";
   }
 #endif
+  DisplayItemData* data = mozilla::FrameLayerBuilder::GetOldDataFor(aItem);
+  if (data && data->GetLayer()) {
+    if (aDumpHtml) {
+      aStream << nsPrintfCString(" <a href=\"#%p\">layer=%p</a>",
+                                 data->GetLayer(), data->GetLayer());
+    } else {
+      aStream << nsPrintfCString(" layer=0x%p", data->GetLayer());
+    }
+  }
 #ifdef MOZ_DUMP_PAINTING
   if (aItem->GetType() == DisplayItemType::TYPE_MASK) {
     nsCString str;

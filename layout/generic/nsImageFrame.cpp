@@ -63,6 +63,7 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsIContent.h"
+#include "FrameLayerBuilder.h"
 #include "mozilla/dom/Selection.h"
 #include "nsIURIMutator.h"
 
@@ -2054,6 +2055,62 @@ nsRect nsDisplayImage::GetDestRect() const {
   return imageFrame->PredictedDestRect(frameContentBox);
 }
 
+LayerState nsDisplayImage::GetLayerState(
+    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+    const ContainerLayerParameters& aParameters) {
+  if (!nsDisplayItem::ForceActiveLayers()) {
+    bool animated = false;
+    if (!StaticPrefs::layout_animated_image_layers_enabled() ||
+        mImage->GetType() != imgIContainer::TYPE_RASTER ||
+        NS_FAILED(mImage->GetAnimated(&animated)) || !animated) {
+      if (!aManager->IsCompositingCheap() ||
+          !nsLayoutUtils::GPUImageScalingEnabled()) {
+        return LayerState::LAYER_NONE;
+      }
+    }
+
+    if (!animated) {
+      int32_t imageWidth;
+      int32_t imageHeight;
+      mImage->GetWidth(&imageWidth);
+      mImage->GetHeight(&imageHeight);
+
+      NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
+
+      const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+      const LayoutDeviceRect destRect =
+          LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
+      const LayerRect destLayerRect = destRect * aParameters.Scale();
+
+      // Calculate the scaling factor for the frame.
+      const gfxSize scale = gfxSize(destLayerRect.width / imageWidth,
+                                    destLayerRect.height / imageHeight);
+
+      // If we are not scaling at all, no point in separating this into a layer.
+      if (scale.width == 1.0f && scale.height == 1.0f) {
+        return LayerState::LAYER_NONE;
+      }
+
+      // If the target size is pretty small, no point in using a layer.
+      if (destLayerRect.width * destLayerRect.height < 64 * 64) {
+        return LayerState::LAYER_NONE;
+      }
+    }
+  }
+
+  if (!CanOptimizeToImageLayer(aManager, aBuilder)) {
+    return LayerState::LAYER_NONE;
+  }
+
+  // Image layer doesn't support draw focus ring for image map.
+  nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
+  if (f->HasImageMap()) {
+    return LayerState::LAYER_NONE;
+  }
+
+  return LayerState::LAYER_ACTIVE;
+}
+
 nsRegion nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                          bool* aSnap) const {
   *aSnap = false;
@@ -2062,6 +2119,30 @@ nsRegion nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
     return GetDestRect().Intersect(frameContentBox);
   }
   return nsRegion();
+}
+
+already_AddRefed<Layer> nsDisplayImage::BuildLayer(
+    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+    const ContainerLayerParameters& aParameters) {
+  uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
+  if (aBuilder->ShouldSyncDecodeImages()) {
+    flags |= imgIContainer::FLAG_SYNC_DECODE;
+  }
+
+  RefPtr<ImageContainer> container = mImage->GetImageContainer(aManager, flags);
+  if (!container || !container->HasCurrentImage()) {
+    return nullptr;
+  }
+
+  RefPtr<ImageLayer> layer = static_cast<ImageLayer*>(
+      aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateImageLayer();
+    if (!layer) return nullptr;
+  }
+  layer->SetContainer(container);
+  ConfigureLayer(layer, aParameters);
+  return layer.forget();
 }
 
 bool nsDisplayImage::CreateWebRenderCommands(

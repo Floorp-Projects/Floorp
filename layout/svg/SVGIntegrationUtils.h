@@ -177,6 +177,11 @@ class SVGIntegrationUtils final {
           imgParams(aImgParams) {}
   };
 
+  /**
+   * Paint non-SVG frame with mask, clipPath and opacity effect.
+   */
+  static void PaintMaskAndClipPath(const PaintFramesParams& aParams);
+
   // This should use FunctionRef instead of std::function because we don't need
   // to take ownership of the function. See bug 1490781.
   static void PaintMaskAndClipPath(const PaintFramesParams& aParams,

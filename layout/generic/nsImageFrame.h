@@ -475,6 +475,9 @@ class nsDisplayImage final : public nsDisplayImageContainer {
   void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) final {
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, aResult);
   }
+
+  LayerState GetLayerState(nsDisplayListBuilder*, LayerManager*,
+                           const ContainerLayerParameters&) final;
   nsRect GetBounds(bool* aSnap) const {
     *aSnap = true;
 
@@ -488,6 +491,8 @@ class nsDisplayImage final : public nsDisplayImageContainer {
 
   nsRegion GetOpaqueRegion(nsDisplayListBuilder*, bool* aSnap) const final;
 
+  already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder*, LayerManager*,
+                                     const ContainerLayerParameters&) final;
   bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder&,
                                mozilla::wr::IpcResourceUpdateQueue&,
                                const StackingContextHelper&,

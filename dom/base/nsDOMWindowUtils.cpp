@@ -101,6 +101,7 @@
 #include "nsViewportInfo.h"
 #include "nsIFormControl.h"
 //#include "nsWidgetsCID.h"
+#include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "nsROCSSPrimitiveValue.h"
 #include "nsIBaseWindow.h"
@@ -182,6 +183,37 @@ class OldWindowSize : public LinkedListElement<OldWindowSize> {
   nsWeakPtr mWindowRef;
   nsSize mSize;
 };
+
+/**
+ * Return the layer that all display items of aFrame were assigned to in the
+ * last paint, or nullptr if there was no single layer assigned to all of the
+ * frame's display items (i.e. zero, or more than one).
+ * This function is for testing purposes and not performance sensitive.
+ */
+template <class T>
+T* mozilla::FrameLayerBuilder::GetDebugSingleOldLayerForFrame(
+    nsIFrame* aFrame) {
+  SmallPointerArray<DisplayItemData>* array = aFrame->DisplayItemData();
+
+  if (!array) {
+    return nullptr;
+  }
+
+  Layer* layer = nullptr;
+  for (DisplayItemData* data : *array) {
+    DisplayItemData::AssertDisplayItemData(data);
+    if (data->mLayer->GetType() != T::Type()) {
+      continue;
+    }
+    if (layer && layer != data->mLayer) {
+      // More than one layer assigned, bail.
+      return nullptr;
+    }
+    layer = data->mLayer;
+  }
+
+  return static_cast<T*>(layer);
+}
 
 namespace {
 
@@ -3319,13 +3351,45 @@ nsDOMWindowUtils::IsPartOfOpaqueLayer(Element* aElement, bool* aResult) {
     return NS_ERROR_FAILURE;
   }
 
+  ColorLayer* colorLayer =
+      FrameLayerBuilder::GetDebugSingleOldLayerForFrame<ColorLayer>(frame);
+  if (colorLayer) {
+    auto color = colorLayer->GetColor();
+    *aResult = color.a == 1.0f;
+    return NS_OK;
+  }
+
+  PaintedLayer* paintedLayer =
+      FrameLayerBuilder::GetDebugSingleOldLayerForFrame<PaintedLayer>(frame);
+  if (paintedLayer) {
+    *aResult = paintedLayer->IsOpaque();
+    return NS_OK;
+  }
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::NumberOfAssignedPaintedLayers(
     const nsTArray<RefPtr<Element>>& aElements, uint32_t* aResult) {
-  return NS_ERROR_FAILURE;
+  nsTHashSet<PaintedLayer*> layers;
+  for (Element* element : aElements) {
+    nsIFrame* frame = element->GetPrimaryFrame();
+    if (!frame) {
+      return NS_ERROR_FAILURE;
+    }
+
+    PaintedLayer* layer =
+        FrameLayerBuilder::GetDebugSingleOldLayerForFrame<PaintedLayer>(frame);
+    if (!layer) {
+      return NS_ERROR_FAILURE;
+    }
+
+    layers.Insert(layer);
+  }
+
+  *aResult = layers.Count();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3939,7 +4003,14 @@ static OMTAValue GetOMTAValue(nsIFrame* aFrame, DisplayItemType aDisplayItemKey,
                               WebRenderBridgeChild* aWebRenderBridgeChild) {
   OMTAValue value = mozilla::null_t();
 
-  if (aWebRenderBridgeChild) {
+  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(aFrame, aDisplayItemKey);
+  if (layer) {
+    ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
+    if (forwarder && forwarder->HasShadowManager()) {
+      forwarder->GetShadowManager()->SendGetAnimationValue(
+          layer->GetCompositorAnimationsId(), &value);
+    }
+  } else if (aWebRenderBridgeChild) {
     RefPtr<WebRenderAnimationData> animationData =
         GetWebRenderUserData<WebRenderAnimationData>(aFrame,
                                                      (uint32_t)aDisplayItemKey);
@@ -4039,7 +4110,35 @@ nsDOMWindowUtils::GetOMTCTransform(Element* aElement,
     itemType = DisplayItemType::TYPE_OPACITY;
   }
 
-  return NS_OK;
+  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(frame, itemType);
+  if (!layer) {
+    return NS_OK;
+  }
+
+  ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
+  if (!forwarder || !forwarder->HasShadowManager()) {
+    return NS_OK;
+  }
+
+  Maybe<Matrix4x4> transform;
+  forwarder->GetShadowManager()->SendGetTransform(
+      layer->AsShadowableLayer()->GetShadow(), &transform);
+  if (transform.isNothing()) {
+    return NS_OK;
+  }
+
+  Matrix4x4 matrix = transform.value();
+  RefPtr<nsROCSSPrimitiveValue> cssValue =
+      nsComputedDOMStyle::MatrixToCSSValue(matrix);
+  if (!cssValue) {
+    return NS_OK;
+  }
+
+  nsAutoString text;
+  ErrorResult rv;
+  cssValue->GetCssText(text, rv);
+  aResult.Assign(text);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
