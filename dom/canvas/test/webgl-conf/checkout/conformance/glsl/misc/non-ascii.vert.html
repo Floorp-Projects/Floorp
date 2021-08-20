@@ -18,35 +18,18 @@ found in the LICENSE.txt file.
 <body>
 <div id="description"></div>
 <div id="console"></div>
-<script id="vertexShader" type="text/plain">
-Loading...
-</script>
-<script>
-"use strict";
-
-// Via `[].map.call(str, x => x.codePointAt(0));`
-let a = [12371,12428,12399,65313,65331,65315,65321,65321,12391,12399,12394,12356,12391,12377,12290];
-let b = [65332,65352,65353,65363,12288,65321,65363,12288,65326,65359,65364,12288,65313,65331,65315,65321,65321];
-let c = [65326,65359,65364,65313,65331,65315,65321,65321];
-a = String.fromCodePoint(...a);
-b = String.fromCodePoint(...b);
-c = String.fromCodePoint(...c);
-
-// -
-
-vertexShader.textContent = `
+<script id="vertexShader" type="text/something-not-javascript">
 // Non ascii data in source should fail
 // See GLSL ES Spec 1.0.17 section 3.1 and 3.2
-// ${a}
-// ${b}
-uniform mat4 ${c};
+// ‚±‚ê‚Í‚`‚r‚b‚h‚h‚Å‚Í‚È‚¢‚Å‚·B
+// ‚s‚ˆ‚‰‚“@‚h‚“@‚m‚‚”@‚`‚r‚b‚h‚h
+uniform mat4 ‚m‚‚”‚`‚r‚b‚h‚h;
 void main() {
   gl_Position = vec4(1,1,1,1);
 }
-`;
-
-// -
-
+</script>
+<script>
+"use strict";
 GLSLConformanceTester.runTest();
 var successfullyParsed = true;
 </script>
