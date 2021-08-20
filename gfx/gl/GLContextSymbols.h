@@ -448,13 +448,6 @@ struct GLContextSymbols final {
                                                  GLuint texture, GLint level,
                                                  GLint baseViewIndex,
                                                  GLsizei numViews);
-
-  // draw_buffers_indexed
-  void(GLAPIENTRY* fBlendEquationSeparatei)(GLuint, GLenum, GLenum);
-  void(GLAPIENTRY* fBlendFuncSeparatei)(GLuint, GLenum, GLenum, GLenum, GLenum);
-  void(GLAPIENTRY* fColorMaski)(GLuint, realGLboolean, realGLboolean, realGLboolean, realGLboolean);
-  void(GLAPIENTRY* fDisablei)(GLenum, GLuint);
-  void(GLAPIENTRY* fEnablei)(GLenum, GLuint);
 };
 
 }  // namespace gl

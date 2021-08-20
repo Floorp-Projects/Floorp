@@ -505,6 +505,7 @@ WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl,
   CompletenessInfo info;
   info.width = mOpaque->mSize.width;
   info.height = mOpaque->mSize.height;
+  info.hasFloat32 = false;
   info.zLayerCount = 1;
   info.isMultiview = false;
 
@@ -540,7 +541,7 @@ Maybe<WebGLFBAttachPoint*> WebGLFramebuffer::GetColorAttachPoint(
 
   const size_t colorId = attachPoint - LOCAL_GL_COLOR_ATTACHMENT0;
 
-  MOZ_ASSERT(mContext->Limits().maxColorDrawBuffers <= webgl::kMaxDrawBuffers);
+  MOZ_ASSERT(mContext->Limits().maxColorDrawBuffers <= kMaxColorAttachments);
   if (colorId >= mContext->MaxValidDrawBuffers()) return Nothing();
 
   return Some(&mColorAttachments[colorId]);
@@ -1012,7 +1013,7 @@ FBStatus WebGLFramebuffer::CheckFramebufferStatus() const {
     ResolveAttachmentData();
 
     // Sweet, let's cache that.
-    auto info = CompletenessInfo{this};
+    auto info = CompletenessInfo{this, UINT32_MAX, UINT32_MAX};
     mCompletenessInfo.ResetInvalidators({});
     mCompletenessInfo.AddInvalidator(*this);
 
@@ -1034,20 +1035,12 @@ FBStatus WebGLFramebuffer::CheckFramebufferStatus() const {
       }
       const auto& imageInfo = cur->GetImageInfo();
       MOZ_ASSERT(imageInfo);
-
-      const auto maybeColorId = cur->ColorAttachmentId();
-      if (maybeColorId) {
-        const auto id = *maybeColorId;
-        info.hasAttachment[id] = true;
-        info.isAttachmentF32[id] = fnIsFloat32(*imageInfo->mFormat->format);
-      }
-
-      info.width = imageInfo->mWidth;
-      info.height = imageInfo->mHeight;
+      info.width = std::min(info.width, imageInfo->mWidth);
+      info.height = std::min(info.height, imageInfo->mHeight);
+      info.hasFloat32 |= fnIsFloat32(*imageInfo->mFormat->format);
       info.zLayerCount = cur->ZLayerCount();
       info.isMultiview = cur->IsMultiview();
     }
-    MOZ_ASSERT(info.width && info.height);
     mCompletenessInfo = Some(std::move(info));
     info.fb = nullptr;  // Don't trigger the invalidation warning.
     return LOCAL_GL_FRAMEBUFFER_COMPLETE;
@@ -1115,7 +1108,6 @@ void WebGLFramebuffer::DrawBuffers(const std::vector<GLenum>& buffers) {
   std::vector<const WebGLFBAttachPoint*> newColorDrawBuffers;
   newColorDrawBuffers.reserve(buffers.size());
 
-  mDrawBufferEnabled.reset();
   for (const auto i : IntegerRange(buffers.size())) {
     // "If the GL is bound to a draw framebuffer object, the `i`th buffer listed
     // in bufs must be COLOR_ATTACHMENTi or NONE. Specifying a buffer out of
@@ -1132,7 +1124,6 @@ void WebGLFramebuffer::DrawBuffers(const std::vector<GLenum>& buffers) {
     if (cur == LOCAL_GL_COLOR_ATTACHMENT0 + i) {
       const auto& attach = mColorAttachments[i];
       newColorDrawBuffers.push_back(&attach);
-      mDrawBufferEnabled[i] = true;
     } else if (cur != LOCAL_GL_NONE) {
       const bool isColorEnum = (cur >= LOCAL_GL_COLOR_ATTACHMENT0 &&
                                 cur < mContext->LastColorAttachmentEnum());
@@ -1152,6 +1143,16 @@ void WebGLFramebuffer::DrawBuffers(const std::vector<GLenum>& buffers) {
 
   mColorDrawBuffers = std::move(newColorDrawBuffers);
   RefreshDrawBuffers();  // Calls glDrawBuffers.
+}
+
+bool WebGLFramebuffer::IsDrawBufferEnabled(const uint32_t slotId) const {
+  const auto attachEnum = LOCAL_GL_COLOR_ATTACHMENT0 + slotId;
+  for (const auto& cur : mColorDrawBuffers) {
+    if (cur->mAttachmentPoint == attachEnum) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void WebGLFramebuffer::ReadBuffer(GLenum attachPoint) {
