@@ -42,7 +42,7 @@ On Linux/Mac click on the properties of the file and you can find the path. In c
 
 Get comfortable. Grab a coffee (or your favorite tasty beverage). Maybe a nap. This unbundling process is going to take quite a lot of time.
 
-3. Add the following lines to the repository's config file (``.hg/hgrc``) so that Mercurial will automatically know where to pull changes from future updates. You can open the template config file in your editor by running ``hg config --edit`` or ``EDITOR=<editor-of-your-choice> hg config --edit``
+3. Create the repository's config file ``.hg/hgrc``, and add the following lines, so that Mercurial will automatically know where to pull changes from future updates. You can open the template config file in your editor by running ``hg config --local --edit`` or ``EDITOR=<editor-of-your-choice> hg config --local --edit``
 
 .. code-block:: shell
 
