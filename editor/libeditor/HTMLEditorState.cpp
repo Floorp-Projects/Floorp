@@ -286,22 +286,23 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     editTargetContent = arrayOfContents[0];
   }
 
-  RefPtr<dom::Element> blockElementAtEditTarget =
-      HTMLEditUtils::GetInclusiveAncestorBlockElement(*editTargetContent);
-  if (NS_WARN_IF(!blockElementAtEditTarget)) {
+  const RefPtr<dom::Element> maybeNonEditableBlockElement =
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *editTargetContent, HTMLEditUtils::ClosestBlockElement);
+  if (NS_WARN_IF(!maybeNonEditableBlockElement)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   if (aHTMLEditor.IsCSSEnabled() &&
-      CSSEditUtils::IsCSSEditableProperty(blockElementAtEditTarget, nullptr,
+      CSSEditUtils::IsCSSEditableProperty(maybeNonEditableBlockElement, nullptr,
                                           nsGkAtoms::align)) {
     // We are in CSS mode and we know how to align this element with CSS
     nsAutoString value;
     // Let's get the value(s) of text-align or margin-left/margin-right
     DebugOnly<nsresult> rvIgnored =
         CSSEditUtils::GetComputedCSSEquivalentToHTMLInlineStyleSet(
-            *blockElementAtEditTarget, nullptr, nsGkAtoms::align, value);
+            *maybeNonEditableBlockElement, nullptr, nsGkAtoms::align, value);
     if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
       aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
       return;
