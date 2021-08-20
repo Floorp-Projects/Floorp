@@ -24,6 +24,11 @@ let gResourceCommand = null;
 let gRootNodeResolve = null;
 let gCommands = null;
 
+// TODO: With server side target switching (devtools.target-switching.server.enabled),
+// this test is most likely irrelevant.
+// APIs that might survive a reload should be moved to commands instead of
+// target scoped fronts, because targets no longer survive a reload.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1726597
 async function reloadTarget() {
   const rootNodePromise = new Promise(r => (gRootNodeResolve = r));
   gDoc.defaultView.location.reload();
