@@ -143,7 +143,7 @@ class HTMLEditUtils final {
   static bool IsTableCell(const nsINode* aNode);
   static bool IsTableCellOrCaption(nsINode& aNode);
   static bool IsAnyListElement(nsINode* aNode);
-  static bool IsPre(nsINode* aNode);
+  static bool IsPre(const nsINode* aNode);
   static bool IsImage(nsINode* aNode);
   static bool IsLink(nsINode* aNode);
   static bool IsNamedAnchor(const nsINode* aNode);
