@@ -1041,12 +1041,15 @@ void TransceiverImpl::Stop() {
     mDtmf->StopPlayout();
   }
 
-  mCallWrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
-      __func__, [conduit = std::move(mConduit)]() mutable {
-        if (conduit) {
-          conduit->Shutdown();
-        }
-      }));
+  if (mCallWrapper) {
+    mCallWrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
+        __func__, [conduit = std::move(mConduit)]() mutable {
+          if (conduit) {
+            conduit->Shutdown();
+          }
+        }));
+    mCallWrapper = nullptr;
+  }
 }
 
 bool TransceiverImpl::IsVideo() const {
