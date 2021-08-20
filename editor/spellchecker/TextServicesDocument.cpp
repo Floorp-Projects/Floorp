@@ -1618,19 +1618,24 @@ void TextServicesDocument::ClearDidSkip(
 // static
 bool TextServicesDocument::HasSameBlockNodeParent(Text& aTextNode1,
                                                   Text& aTextNode2) {
-  nsIContent* container1 = aTextNode1.GetParent();
-  nsIContent* container2 = aTextNode2.GetParent();
-
-  if (container1 == container2) {
+  // XXX How about the case that both text nodes are orphan nodes?
+  if (aTextNode1.GetParent() == aTextNode2.GetParent()) {
     return true;
   }
-  Element* parentBlockElement1 =
-      container1 ? HTMLEditUtils::GetInclusiveAncestorBlockElement(*container1)
-                 : nullptr;
-  Element* parentBlockElement2 =
-      container2 ? HTMLEditUtils::GetInclusiveAncestorBlockElement(*container2)
-                 : nullptr;
-  return parentBlockElement1 == parentBlockElement2;
+
+  // I think that spellcheck should be available only in editable nodes.
+  // So, we also need to check whether they are in same editing host.
+  const Element* editableBlockElementOrInlineEditingHost1 =
+      HTMLEditUtils::GetAncestorElement(
+          aTextNode1,
+          HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost);
+  const Element* editableBlockElementOrInlineEditingHost2 =
+      HTMLEditUtils::GetAncestorElement(
+          aTextNode2,
+          HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost);
+  return editableBlockElementOrInlineEditingHost1 &&
+         editableBlockElementOrInlineEditingHost1 ==
+             editableBlockElementOrInlineEditingHost2;
 }
 
 Result<EditorRawDOMRangeInTexts, nsresult>
