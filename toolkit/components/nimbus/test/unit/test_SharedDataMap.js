@@ -245,3 +245,16 @@ with_sharedDataMap(async function test_set_notify({ instance, sandbox }) {
 
   Assert.ok(instance.hasRemoteDefaultsReady(), "Has 1 entry");
 });
+
+with_sharedDataMap(async function test_updateStoreData({ instance, sandbox }) {
+  await instance.init();
+
+  Assert.ok(!instance.get("foo"), "No value initially");
+
+  instance.set("foo", "foo");
+  instance.set("bar", "bar");
+  instance._removeEntriesByKeys(["bar"]);
+
+  Assert.ok(instance.get("foo"), "We keep one of the values");
+  Assert.ok(!instance.get("bar"), "The other value is removed");
+});
