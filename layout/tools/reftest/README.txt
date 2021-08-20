@@ -274,6 +274,10 @@ must be one of the following:
       on request/response in handleRequest, see the nsIHttpRe(quest|sponse)
       definitions in <netwerk/test/httpserver/nsIHttpServer.idl>.
 
+      HTTP tests can also make use of example.org URIs in order to test cross
+      site behaviour. "example.org/filename" will access filename in the same
+      directly as the current reftest. (Not currently implemented for android.)
+
    d. <type> is one of the following:
 
       ==     The test passes if the images of the two renderings are the

@@ -22,9 +22,7 @@
 #include <iterator>
 
 #include "jit/ABIArgGenerator.h"
-#include "jit/ABIFunctions.h"
 #include "jit/JitFrames.h"
-#include "jit/JitScript.h"
 #include "jit/RegisterAllocator.h"
 #include "js/Printf.h"
 #include "util/Memory.h"
@@ -32,7 +30,6 @@
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
 
-#include "jit/ABIFunctionList-inl.h"
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;

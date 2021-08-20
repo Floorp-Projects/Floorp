@@ -15,6 +15,7 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "WebGLFormats.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLTypes.h"
@@ -1012,12 +1013,43 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void DoReadPixels(const webgl::ReadPixelsDesc&, Range<uint8_t>) const;
   uvec2 DrawingBufferSize();
 
+  // -
+
+  bool mAutoFlushPending = false;
+
+  void AutoEnqueueFlush() {
+    if (MOZ_LIKELY(mAutoFlushPending)) return;
+    mAutoFlushPending = true;
+
+    const auto weak = WeakPtr<ClientWebGLContext>(this);
+    const auto DeferredFlush = [weak]() {
+      const auto strong = RefPtr<ClientWebGLContext>(weak);
+      if (!strong) return;
+      if (!strong->mAutoFlushPending) return;
+      strong->mAutoFlushPending = false;
+
+      if (!StaticPrefs::webgl_auto_flush()) return;
+      const bool flushGl = StaticPrefs::webgl_auto_flush_gl();
+      strong->Flush(flushGl);
+    };
+
+    already_AddRefed<mozilla::Runnable> runnable = NS_NewRunnableFunction(
+        "enqueue Event_webglcontextrestored", DeferredFlush);
+    NS_DispatchToCurrentThread(std::move(runnable));
+  }
+
+  void CancelAutoFlush() { mAutoFlushPending = false; }
+
+  // -
+
   void AfterDrawCall() {
     if (!mNotLost) return;
     const auto& state = State();
     if (!state.mBoundDrawFb) {
       MarkCanvasDirty();
     }
+
+    AutoEnqueueFlush();
   }
 
   // -------------------------------------------------------------------------
@@ -1251,7 +1283,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void DepthRange(GLclampf zNear, GLclampf zFar);
 
-  void Flush();
+  void Flush(bool flushGl = true);
 
   void Finish();
 

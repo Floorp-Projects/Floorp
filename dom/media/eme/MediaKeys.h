@@ -20,6 +20,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
 #include "nsRefPtrHashtable.h"
+#include "nsTHashMap.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
