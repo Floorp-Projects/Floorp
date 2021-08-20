@@ -24,6 +24,7 @@ import org.mozilla.focus.GleanMetrics.Browser
 import org.mozilla.focus.GleanMetrics.GleanBuildInfo
 import org.mozilla.focus.GleanMetrics.LegacyIds
 import org.mozilla.focus.GleanMetrics.Pings
+import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper.isTelemetryEnabled
 import org.mozilla.focus.utils.Settings
@@ -90,6 +91,8 @@ class GleanMetricsService(context: Context) : MetricsService {
     ) = CoroutineScope(IO).async {
         Browser.isDefault.set(settings.isDefaultBrowser())
         Browser.localeOverride.set(components.store.state.locale?.displayName ?: "none")
+        val shortcutsOnHomeNumber = components.appStore.state.topSites.size.toLong()
+        Shortcuts.shortcutsOnHomeNumber.set(shortcutsOnHomeNumber)
     }
 
     private fun getDefaultSearchEngineIdentifierForTelemetry(context: Context): String {

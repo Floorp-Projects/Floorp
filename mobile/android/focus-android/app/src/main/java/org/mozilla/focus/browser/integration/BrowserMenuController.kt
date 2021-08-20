@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.ToolbarMenu
 import org.mozilla.focus.state.AppAction
@@ -50,6 +51,8 @@ class BrowserMenuController(
             is ToolbarMenu.Item.Share -> shareCallback()
             is ToolbarMenu.Item.FindInPage -> showFindInPageCallback()
             is ToolbarMenu.Item.AddToShortcuts -> {
+                Shortcuts.shortcutAddedCounter.add()
+
                 ioScope.launch {
                     currentTab?.let { state ->
                         topSitesUseCases.addPinnedSites(
@@ -60,6 +63,8 @@ class BrowserMenuController(
                 }
             }
             is ToolbarMenu.Item.RemoveFromShortcuts -> {
+                Shortcuts.shortcutRemovedCounter["removed_from_browser_menu"].add()
+
                 ioScope.launch {
                     currentTab?.let { state ->
                         appStore.state.topSites.find { it.url == state.content.url }

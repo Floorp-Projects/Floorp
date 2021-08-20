@@ -45,6 +45,7 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.ThreadUtils
+import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
@@ -304,6 +305,8 @@ class UrlInputFragment :
                     TopSiteMenuItem(
                         title = stringResource(R.string.remove_top_site),
                         onClick = { topSite ->
+                            Shortcuts.shortcutRemovedCounter["removed_from_home_screen"].add()
+
                             viewLifecycleOwner.lifecycleScope.launch(IO) {
                                 requireComponents.topSitesUseCases.removeTopSites(topSite)
                             }
@@ -311,6 +314,8 @@ class UrlInputFragment :
                     )
                 ),
                 onTopSiteClick = { topSite ->
+                    Shortcuts.shortcutOpenedCounter.add()
+
                     requireComponents.tabsUseCases.addTab(
                         url = topSite.url,
                         source = SessionState.Source.Internal.HomeScreen,
