@@ -16,16 +16,17 @@
 
 #include "ClearKeyStorage.h"
 
-#include "ClearKeyUtils.h"
-
+#include <assert.h>
 // This include is required in order for content_decryption_module to work
 // on Unix systems.
-#include "stddef.h"
+#include <stddef.h>
+
+#include <vector>
+
 #include "content_decryption_module.h"
 
-#include <assert.h>
 #include "ArrayUtils.h"
-#include <vector>
+#include "ClearKeyUtils.h"
 
 using namespace cdm;
 

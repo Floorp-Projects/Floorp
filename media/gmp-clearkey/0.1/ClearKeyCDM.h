@@ -7,16 +7,17 @@
 #ifndef ClearKeyCDM_h_
 #define ClearKeyCDM_h_
 
-#include "ClearKeySessionManager.h"
-
 // This include is required in order for content_decryption_module to work
 // on Unix systems.
-#include "stddef.h"
+#include <stddef.h>
+
 #include "content_decryption_module.h"
 
+#include "ClearKeySessionManager.h"
+
 #ifdef ENABLE_WMF
-#  include "WMFUtils.h"
 #  include "VideoDecoder.h"
+#  include "WMFUtils.h"
 #endif
 
 class ClearKeyCDM : public cdm::ContentDecryptionModule_10 {

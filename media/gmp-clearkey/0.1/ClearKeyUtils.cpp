@@ -20,9 +20,6 @@
 #include <ctype.h>
 #include <memory.h>
 #include <stdarg.h>
-// This include is required in order for content_decryption_module to work // on
-// Unix systems.
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,14 +30,15 @@
 #include <sstream>
 #include <vector>
 
+#include "pk11pub.h"
+#include "prerror.h"
+#include "secmodt.h"
+
 #include "ArrayUtils.h"
 #include "BigEndian.h"
 #include "ClearKeyBase64.h"
 #include "mozilla/Sprintf.h"
-#include "pk11pub.h"
-#include "prerror.h"
 #include "psshparser/PsshParser.h"
-#include "secmodt.h"
 
 using namespace cdm;
 using std::string;

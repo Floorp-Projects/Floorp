@@ -15,20 +15,22 @@
  */
 
 #include <assert.h>
+// This include is required in order for content_decryption_module to work
+// on Unix systems.
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <vector>
+
 #include <string>
+#include <vector>
+
+#include "content_decryption_module.h"
+#include "content_decryption_module_ext.h"
+#include "nss.h"
 
 #include "ClearKeyCDM.h"
 #include "ClearKeySessionManager.h"
 #include "mozilla/dom/KeySystemNames.h"
-// This include is required in order for content_decryption_module to work
-// on Unix systems.
-#include "stddef.h"
-#include "content_decryption_module.h"
-#include "content_decryption_module_ext.h"
-#include "nss.h"
 
 #ifndef XP_WIN
 #  include <sys/types.h>

@@ -28,12 +28,13 @@
 #include <set>
 #include <string>
 
+#include "content_decryption_module.h"
+
 #include "ClearKeyDecryptionManager.h"
 #include "ClearKeyPersistence.h"
 #include "ClearKeySession.h"
 #include "ClearKeyUtils.h"
 #include "RefCounted.h"
-#include "content_decryption_module.h"
 #include "mozilla/TimeStamp.h"
 
 class ClearKeySessionManager final : public RefCounted {

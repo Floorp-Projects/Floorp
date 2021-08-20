@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+#include <assert.h>
+#include <string.h>
+
 #include "BigEndian.h"
 #include "ClearKeyDecryptionManager.h"
 #include "ClearKeySession.h"
-#include "ClearKeyUtils.h"
 #include "ClearKeyStorage.h"
+#include "ClearKeyUtils.h"
 #include "psshparser/PsshParser.h"
-
-#include <assert.h>
-#include <string.h>
 
 using namespace mozilla;
 using namespace cdm;

@@ -15,8 +15,10 @@
  */
 
 #include "WMFH264Decoder.h"
-#include <algorithm>
+
 #include <codecapi.h>
+
+#include <algorithm>
 
 namespace wmf {
 
