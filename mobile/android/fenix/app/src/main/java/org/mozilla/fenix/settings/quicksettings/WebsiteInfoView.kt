@@ -8,9 +8,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.icons.BrowserIcons
-import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.databinding.QuicksettingsWebsiteInfoBinding
 import org.mozilla.fenix.ext.components
@@ -50,13 +48,9 @@ class WebsiteInfoView(
     }
 
     private fun bindSecurityInfo(uiValues: WebsiteSecurityUiValues) {
-        val tint = getColor(provideContext(), uiValues.iconTintRes)
         binding.securityInfo.setText(uiValues.securityInfoRes)
         bindConnectionDetailsListener()
-
-        binding.securityInfoIcon.setImageDrawable(
-            provideContext().getDrawableWithTint(uiValues.iconRes, tint)
-        )
+        binding.securityInfoIcon.setImageResource(uiValues.iconRes)
     }
 
     @VisibleForTesting

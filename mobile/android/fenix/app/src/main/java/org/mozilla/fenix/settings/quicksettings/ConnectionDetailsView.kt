@@ -8,10 +8,8 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.ContextCompat.getColor
 import androidx.core.view.isVisible
 import mozilla.components.browser.icons.BrowserIcons
-import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ConnectionDetailsWebsiteInfoBinding
 import org.mozilla.fenix.ext.loadIntoView
@@ -53,11 +51,8 @@ class ConnectionDetailsView(
     }
 
     private fun bindSecurityInfo(uiValues: WebsiteSecurityUiValues) {
-        val tint = getColor(provideContext(), uiValues.iconTintRes)
         binding.securityInfo.setText(uiValues.securityInfoRes)
-        binding.securityInfoIcon.setImageDrawable(
-            provideContext().getDrawableWithTint(uiValues.iconRes, tint)
-        )
+        binding.securityInfoIcon.setImageResource(uiValues.iconRes)
     }
 
     @VisibleForTesting

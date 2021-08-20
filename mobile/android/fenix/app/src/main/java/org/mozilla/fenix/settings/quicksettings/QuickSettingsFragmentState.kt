@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings.quicksettings
 
 import android.content.Context
-import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import mozilla.components.concept.engine.permission.SitePermissions
@@ -69,18 +68,15 @@ data class WebsiteInfoState(
 
 enum class WebsiteSecurityUiValues(
     @StringRes val securityInfoRes: Int,
-    @DrawableRes val iconRes: Int,
-    @ColorRes val iconTintRes: Int
+    @DrawableRes val iconRes: Int
 ) {
     SECURE(
         R.string.quick_settings_sheet_secure_connection,
-        R.drawable.mozac_ic_lock,
-        R.color.photonGreen50
+        R.drawable.ic_lock
     ),
     INSECURE(
         R.string.quick_settings_sheet_insecure_connection,
-        R.drawable.mozac_ic_broken_lock,
-        R.color.photonRed50
+        R.drawable.ic_broken_lock
     )
 }
 
