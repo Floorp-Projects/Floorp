@@ -26,7 +26,6 @@ window.webglTestHarness = {
   },
 
   notifyFinished(testPath) {
-    console.error('webglTestHarness.notifyFinished');
     if (parent) {
       parent.SimpleTest.finish();
     } else {
@@ -55,7 +54,7 @@ if (parent) {
       parent.SimpleTest.requestLongerTimeout(timeoutLengthMultiplier);
     }
   } catch (e) {
-    console.error('Warning: No SpecialPowers.');
+    console.log('Warning: No SpecialPowers.');
   }
 };
 

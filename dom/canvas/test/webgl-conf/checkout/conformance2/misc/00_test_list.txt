@@ -1,7 +1,6 @@
 expando-loss-2.html
 getextension-while-pbo-bound-stability.html
 instanceof-test.html
---min-version 2.0.1 null-object-behaviour-2.html
 object-deletion-behaviour-2.html
 uninitialized-test-2.html
 views-with-offsets.html

@@ -89,17 +89,7 @@ function nonKhronosFrameworkNotifyDone() {
   }
 }
 
-const RESULTS = {
-  pass: 0,
-  fail: 0,
-};
-
 function reportTestResultsToHarness(success, msg) {
-  if (success) {
-    RESULTS.pass += 1;
-  } else {
-    RESULTS.fail += 1;
-  }
   if (window.parent.webglTestHarness) {
     window.parent.webglTestHarness.reportResults(window.location.pathname, success, msg);
   }
@@ -112,11 +102,6 @@ function reportSkippedTestResultsToHarness(success, msg) {
 }
 
 function notifyFinishedToHarness() {
-  if (window._didNotifyFinishedToHarness) {
-    testFailed("Duplicate notifyFinishedToHarness()");
-  }
-  window._didNotifyFinishedToHarness = true;
-
   if (window.parent.webglTestHarness) {
     window.parent.webglTestHarness.notifyFinished(window.location.pathname);
   }
@@ -649,17 +634,6 @@ function shouldThrow(_a, _e)
     testFailed(_a + " should throw " + (typeof _e == "undefined" ? "an exception" : _ev) + ". Was " + _av + ".");
 }
 
-function shouldNotThrow(evalStr, desc) {
-  desc = desc || `\`${evalStr}\``;
-  try {
-    eval(evalStr);
-    testPassed(`${desc} should not throw.`);
-  } catch (e) {
-    testFailed(`${desc} should not throw, but threw exception ${e}.`);
-  }
-}
-
-
 function shouldBeType(_a, _type) {
     var exception;
     var _av;
@@ -749,14 +723,6 @@ function webglHarnessCollectGarbage() {
 
     if (window.CollectGarbage) {
         CollectGarbage();
-        return;
-    }
-
-    // WebKit's MiniBrowser with the following environment variables set:
-    //   export JSC_useDollarVM=1
-    //   export __XPC_JSC_useDollarVM=1
-    if (window.$vm) {
-        window.$vm.gc();
         return;
     }
 
