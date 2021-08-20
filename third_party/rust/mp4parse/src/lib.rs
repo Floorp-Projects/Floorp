@@ -932,14 +932,35 @@ pub struct AvifContext {
 }
 
 impl AvifContext {
-    pub fn primary_item(&self) -> &[u8] {
+    pub fn primary_item_coded_data(&self) -> &[u8] {
         self.item_as_slice(&self.primary_item)
     }
 
-    pub fn alpha_item(&self) -> Option<&[u8]> {
+    pub fn primary_item_bits_per_channel(&self) -> Result<&[u8]> {
+        self.image_bits_per_channel(self.primary_item.id)
+    }
+
+    pub fn alpha_item_coded_data(&self) -> &[u8] {
         self.alpha_item
             .as_ref()
-            .map(|item| self.item_as_slice(item))
+            .map_or(&[], |item| self.item_as_slice(item))
+    }
+
+    pub fn alpha_item_bits_per_channel(&self) -> Result<&[u8]> {
+        self.alpha_item
+            .as_ref()
+            .map_or(Ok(&[]), |item| self.image_bits_per_channel(item.id))
+    }
+
+    fn image_bits_per_channel(&self, item_id: ItemId) -> Result<&[u8]> {
+        match self
+            .item_properties
+            .get(item_id, BoxType::PixelInformationBox)?
+        {
+            Some(ItemProperty::Channels(pixi)) => Ok(pixi.bits_per_channel.as_slice()),
+            Some(other_property) => panic!("property key mismatch: {:?}", other_property),
+            None => Ok(&[]),
+        }
     }
 
     pub fn spatial_extents_ptr(&self) -> Result<*const ImageSpatialExtentsProperty> {
@@ -2258,7 +2279,7 @@ fn read_iprp<T: Read>(
 pub enum ItemProperty {
     AuxiliaryType(AuxiliaryTypeProperty),
     AV1Config(AV1ConfigBox),
-    Channels(TryVec<u8>),
+    Channels(PixelInformation),
     Colour(ColourInformation),
     ImageSpatialExtents(ImageSpatialExtentsProperty),
     Mirroring(ImageMirror),
@@ -2716,24 +2737,29 @@ fn read_ispe<T: Read>(src: &mut BMFFBox<T>) -> Result<ImageSpatialExtentsPropert
     })
 }
 
+#[derive(Debug)]
+pub struct PixelInformation {
+    bits_per_channel: TryVec<u8>,
+}
+
 /// Parse pixel information
 /// See HEIF (ISO 23008-12:2017) § 6.5.6
-fn read_pixi<T: Read>(src: &mut BMFFBox<T>) -> Result<TryVec<u8>> {
+fn read_pixi<T: Read>(src: &mut BMFFBox<T>) -> Result<PixelInformation> {
     let version = read_fullbox_version_no_flags(src)?;
     if version != 0 {
         return Err(Error::Unsupported("pixi version"));
     }
 
-    let num_channels = src.read_u8()?.into();
-    let mut channels = TryVec::with_capacity(num_channels)?;
-    let num_channels_read = src.try_read_to_end(&mut channels)?;
+    let num_channels = src.read_u8()?;
+    let mut bits_per_channel = TryVec::with_capacity(num_channels.to_usize())?;
+    let num_channels_read = src.try_read_to_end(&mut bits_per_channel)?;
 
-    if num_channels_read != num_channels {
+    if u8::try_from(num_channels_read)? != num_channels {
         return Err(Error::InvalidData("invalid num_channels"));
     }
 
     check_parser_state!(src.content);
-    Ok(channels)
+    Ok(PixelInformation { bits_per_channel })
 }
 
 /// Despite [Rec. ITU-T H.273] (12/2016) defining the CICP fields as having a
