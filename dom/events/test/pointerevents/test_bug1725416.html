@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1725416</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+
+<style>
+  #container {
+    width: 100px;
+    height: 100px;
+    touch-action: none;
+  }
+</style>
+
+<div id="container"></div>
+
+<script>
+  /**
+   * @template {keyof HTMLElementEventMap} K
+   * @param {HTMLElemnt} target
+   * @param {K} eventName
+   * @return {HTMLElementEventMap[K]}
+   */
+  function waitForEvent(target, eventName) {
+    return new Promise(resolve => {
+      target.addEventListener(eventName, resolve, { once: true });
+    });
+  }
+
+  add_task(async function testTouch() {
+    await waitUntilApzStable();
+    const container = document.getElementById("container");
+    const pointerDownPromise = waitForEvent(container, "pointerdown");
+    synthesizeNativeTap(container, 50, 50);
+
+    const pointerDown = await pointerDownPromise;
+    is(pointerDown.pointerType, "touch", ".pointerType");
+    is(pointerDown.button, 0, ".button");
+    is(pointerDown.buttons, 1, ".buttons");
+  });
+</script>
