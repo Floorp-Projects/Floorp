@@ -42,7 +42,7 @@ rm -rf node_modules
 rm package-lock.json
 
 echo "Installing modules for eslint-plugin-mozilla..."
-npm install
+../../../../mach npm install
 
 echo "Creating eslint-plugin-mozilla.tar.gz..."
 tar cvz -f eslint-plugin-mozilla.tar.gz node_modules
