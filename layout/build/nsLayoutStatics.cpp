@@ -59,7 +59,6 @@
 #include "DisplayItemClip.h"
 #include "HitTestInfo.h"
 #include "ActiveLayerTracker.h"
-#include "FrameLayerBuilder.h"
 #include "AnimationCommon.h"
 #include "LayerAnimationInfo.h"
 #include "mozilla/TimelineConsumers.h"
@@ -357,7 +356,6 @@ void nsLayoutStatics::Shutdown() {
   nsGlobalWindowInner::ShutDown();
   nsGlobalWindowOuter::ShutDown();
   nsListControlFrame::Shutdown();
-  FrameLayerBuilder::Shutdown();
 
   CubebUtils::ShutdownLibrary();
   WebAudioUtils::Shutdown();

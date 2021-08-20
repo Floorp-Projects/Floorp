@@ -31,6 +31,15 @@ bool ShouldSyncDecodeImages(nsDisplayListBuilder* aBuilder) {
   return aBuilder->ShouldSyncDecodeImages();
 }
 
+nsDisplayItemGeometry* GetPreviousGeometry(nsDisplayItem* aItem) {
+  if (RefPtr<layers::WebRenderFallbackData> data =
+          layers::GetWebRenderUserData<layers::WebRenderFallbackData>(
+              aItem->Frame(), aItem->GetPerFrameKey())) {
+    return data->GetGeometry();
+  }
+  return nullptr;
+}
+
 void nsDisplayItemGenericGeometry::MoveBy(const nsPoint& aOffset) {
   nsDisplayItemGeometry::MoveBy(aOffset);
   mBorderRect.MoveBy(aOffset);

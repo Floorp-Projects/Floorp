@@ -20,7 +20,6 @@
 #include "nsCanvasFrame.h"
 #include "nsDisplayList.h"
 #include "nsIFrameInlines.h"
-#include "FrameLayerBuilder.h"
 #include "imgIContainer.h"
 #include "imgINotificationObserver.h"
 #include "Image.h"
@@ -524,25 +523,6 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
   }
 
   bool invalidateFrame = aForcePaint;
-  if (auto* array = aFrame->DisplayItemData()) {
-    for (auto* did : *array) {
-      DisplayItemData* data = DisplayItemData::AssertDisplayItemData(did);
-      uint32_t displayItemKey = data->GetDisplayItemKey();
-
-      if (displayItemKey != 0 && !IsRenderNoImages(displayItemKey)) {
-        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-          DisplayItemType type = GetDisplayItemTypeFromKey(displayItemKey);
-          printf_stderr(
-              "Invalidating display item(type=%d) based on frame %p \
-                         because it might contain an invalidated image\n",
-              static_cast<uint32_t>(type), aFrame);
-        }
-
-        data->Invalidate();
-        invalidateFrame = true;
-      }
-    }
-  }
 
   if (auto userDataTable =
           aFrame->GetProperty(layers::WebRenderUserDataProperty::Key())) {

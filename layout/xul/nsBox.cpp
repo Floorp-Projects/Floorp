@@ -20,7 +20,6 @@
 #include "nsITheme.h"
 #include "nsBoxLayout.h"
 #include "nsLayoutUtils.h"
-#include "FrameLayerBuilder.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
 #include <algorithm>
