@@ -134,13 +134,13 @@ mochitest-browser-chrome:
             linux.*64(-shippable)?-qr/opt: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-a11y-checks', 'webrender-sw-wayland']
             linux.*64(-asan|-ccov|-devedition|-tsan)-qr/opt: ['webrender-sw', 'webrender-sw-fission']
             linux.*64-qr/debug: ['webrender-sw', 'webrender-sw-fission', 'webrender-sw-wayland']
-            windows10-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
-                    (windows10-64|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
+                    (windows10-64-2004|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
                     default: []
             webrender-sw:
                 by-test-platform:
