@@ -1152,9 +1152,10 @@ MinidumpGenerator::WriteExceptionStream(MDRawDirectory *exception_stream) {
   exception_ptr->exception_record.exception_code = exception_type_;
 
   uint32_t exception_flags = 0;
-  if (exception_type_ == EXC_RESOURCE) {
-    // For EXC_RESOURCE crashes Crashpad records the uppermost 32 bits of
-    // the exception code in the exception flags, let's do the same here.
+  if (exception_type_ == EXC_RESOURCE || exception_type_ == EXC_GUARD) {
+    // For EXC_RESOURCE and EXC_GUARD crashes Crashpad records the uppermost
+    // 32 bits of the exception code in the exception flags, let's do the same
+    // here.
     uint64_t unsigned_exception_code = exception_code_;
     exception_flags = unsigned_exception_code >> 32;
   } else {
