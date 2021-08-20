@@ -65,6 +65,7 @@
 #include "js/ValueArray.h"
 #include "js/Vector.h"
 #include "js/WeakMap.h"
+#include "js/WrapperCallbacks.h"
 #include "js/Zone.h"
 
 /************************************************************************/
@@ -101,34 +102,6 @@ using StringVector = JS::GCVector<JSString*>;
 /************************************************************************/
 
 using JSInterruptCallback = bool (*)(JSContext*);
-
-/**
- * Callback used to ask the embedding for the cross compartment wrapper handler
- * that implements the desired prolicy for this kind of object in the
- * destination compartment. |obj| is the object to be wrapped. If |existing| is
- * non-nullptr, it will point to an existing wrapper object that should be
- * re-used if possible. |existing| is guaranteed to be a cross-compartment
- * wrapper with a lazily-defined prototype and the correct global. It is
- * guaranteed not to wrap a function.
- */
-using JSWrapObjectCallback = JSObject* (*)(JSContext*, JS::HandleObject,
-                                           JS::HandleObject);
-
-/**
- * Callback used by the wrap hook to ask the embedding to prepare an object
- * for wrapping in a context. This might include unwrapping other wrappers
- * or even finding a more suitable object for the new compartment. If |origObj|
- * is non-null, then it is the original object we are going to swap into during
- * a transplant.
- */
-using JSPreWrapCallback = void (*)(JSContext*, JS::HandleObject,
-                                   JS::HandleObject, JS::HandleObject,
-                                   JS::HandleObject, JS::MutableHandleObject);
-
-struct JSWrapObjectCallbacks {
-  JSWrapObjectCallback wrap;
-  JSPreWrapCallback preWrap;
-};
 
 /************************************************************************/
 

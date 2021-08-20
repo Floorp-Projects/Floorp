@@ -58,6 +58,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "js/Warnings.h"  // JS::WarningReporter
+#include "js/WrapperCallbacks.h"
 #include "js/Zone.h"
 #include "threading/Thread.h"
 #include "vm/Caches.h"

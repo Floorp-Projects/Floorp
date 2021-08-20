@@ -228,6 +228,7 @@ EXPORTS.js += [
     "../public/WeakMap.h",
     "../public/WeakMapPtr.h",
     "../public/Wrapper.h",
+    "../public/WrapperCallbacks.h",
     "../public/Zone.h",
 ]
 
