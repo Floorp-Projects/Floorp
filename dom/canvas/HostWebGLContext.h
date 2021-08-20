@@ -241,9 +241,9 @@ class HostWebGLContext final : public SupportsWeakPtr {
   // ------------------------- GL State -------------------------
   bool IsContextLost() const { return mContext->IsContextLost(); }
 
-  void Disable(GLenum cap) const { mContext->Disable(cap); }
-
-  void Enable(GLenum cap) const { mContext->Enable(cap); }
+  void SetEnabled(GLenum cap, Maybe<GLuint> i, bool val) const {
+    mContext->SetEnabled(cap, i, val);
+  }
 
   bool IsEnabled(GLenum cap) const { return mContext->IsEnabled(cap); }
 
@@ -277,13 +277,13 @@ class HostWebGLContext final : public SupportsWeakPtr {
     mContext->BlendColor(r, g, b, a);
   }
 
-  void BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha) const {
-    mContext->BlendEquationSeparate(modeRGB, modeAlpha);
+  void BlendEquationSeparate(Maybe<GLuint> i, GLenum modeRGB, GLenum modeAlpha) const {
+    mContext->BlendEquationSeparate(i, modeRGB, modeAlpha);
   }
 
-  void BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha,
+  void BlendFuncSeparate(Maybe<GLuint> i, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha,
                          GLenum dstAlpha) const {
-    mContext->BlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+    mContext->BlendFuncSeparate(i, srcRGB, dstRGB, srcAlpha, dstAlpha);
   }
 
   GLenum CheckFramebufferStatus(GLenum target) const {
@@ -300,9 +300,8 @@ class HostWebGLContext final : public SupportsWeakPtr {
 
   void ClearStencil(GLint v) const { mContext->ClearStencil(v); }
 
-  void ColorMask(WebGLboolean r, WebGLboolean g, WebGLboolean b,
-                 WebGLboolean a) const {
-    mContext->ColorMask(r, g, b, a);
+  void ColorMask(Maybe<GLuint> i, uint8_t mask) const {
+    mContext->ColorMask(i, mask);
   }
 
   void CompileShader(const ObjectId id) const {
