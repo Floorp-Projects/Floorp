@@ -51,6 +51,7 @@
 #include "js/RealmOptions.h"
 #include "js/RefCounted.h"
 #include "js/RootingAPI.h"
+#include "js/ScriptPrivate.h"
 #include "js/Stack.h"
 #include "js/String.h"
 #include "js/TracingAPI.h"
@@ -798,43 +799,6 @@ extern JS_PUBLIC_API JSString* JS_DecompileScript(JSContext* cx,
 
 extern JS_PUBLIC_API JSString* JS_DecompileFunction(
     JSContext* cx, JS::Handle<JSFunction*> fun);
-
-namespace JS {
-
-/**
- * Set a private value associated with a script. Note that this value is shared
- * by all nested scripts compiled from a single source file.
- */
-extern JS_PUBLIC_API void SetScriptPrivate(JSScript* script,
-                                           const JS::Value& value);
-
-/**
- * Get the private value associated with a script. Note that this value is
- * shared by all nested scripts compiled from a single source file.
- */
-extern JS_PUBLIC_API JS::Value GetScriptPrivate(JSScript* script);
-
-/*
- * Return the private value associated with currently executing script or
- * module, or undefined if there is no such script.
- */
-extern JS_PUBLIC_API JS::Value GetScriptedCallerPrivate(JSContext* cx);
-
-/**
- * Hooks called when references to a script private value are created or
- * destroyed. This allows use of a reference counted object as the
- * script private.
- */
-using ScriptPrivateReferenceHook = void (*)(const JS::Value&);
-
-/**
- * Set the script private finalize hook for the runtime to the given function.
- */
-extern JS_PUBLIC_API void SetScriptPrivateReferenceHooks(
-    JSRuntime* rt, ScriptPrivateReferenceHook addRefHook,
-    ScriptPrivateReferenceHook releaseHook);
-
-} /* namespace JS */
 
 extern JS_PUBLIC_API bool JS_CheckForInterrupt(JSContext* cx);
 
