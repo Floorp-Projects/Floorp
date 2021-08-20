@@ -147,6 +147,7 @@ EXPORTS.js += [
     "../public/Date.h",
     "../public/Debug.h",
     "../public/Equality.h",
+    "../public/ErrorInterceptor.h",
     "../public/ErrorReport.h",
     "../public/Exception.h",
     "../public/ForOfIterator.h",
