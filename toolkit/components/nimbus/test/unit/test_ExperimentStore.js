@@ -682,3 +682,66 @@ add_task(async function test_storeValuePerPref_returnsSameValue_allTypes() {
   Assert.deepEqual(branch.getChildList(""), [], "Variables are also removed");
   delete FeatureManifest.purple;
 });
+
+add_task(async function test_cleanupOldRecipes() {
+  let store = ExperimentFakes.store();
+  let sandbox = sinon.createSandbox();
+  let stub = sandbox.stub(store, "_removeEntriesByKeys");
+  const experiment1 = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+  const experiment2 = ExperimentFakes.experiment("bar", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+  const experiment3 = ExperimentFakes.experiment("baz", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+  const experiment4 = ExperimentFakes.experiment("faz", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+  // Exp 2 is kept because it's recent (even though it's not active)
+  // Exp 4 is kept because it's active
+  experiment2.lastSeen = new Date().toISOString();
+  experiment2.active = false;
+  experiment1.lastSeen = new Date("2020-01-01").toISOString();
+  experiment1.active = false;
+  experiment3.active = false;
+  delete experiment3.lastSeen;
+  store._data = {
+    foo: experiment1,
+    bar: experiment2,
+    baz: experiment3,
+    faz: experiment4,
+  };
+
+  store._cleanupOldRecipes();
+
+  Assert.ok(stub.calledOnce, "Recipe cleanup called");
+  Assert.equal(
+    stub.firstCall.args[0].length,
+    2,
+    "We call to remove enrollments"
+  );
+  Assert.equal(
+    stub.firstCall.args[0][0],
+    experiment1.slug,
+    "Should remove expired enrollment"
+  );
+  Assert.equal(
+    stub.firstCall.args[0][1],
+    experiment3.slug,
+    "Should remove invalid enrollment"
+  );
+});
