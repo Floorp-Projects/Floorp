@@ -56,8 +56,10 @@ struct PreferenceSheet {
 
   static void Refresh() {
     sInitialized = false;
-    EnsureInitialized();
+    Initialize();
   }
+
+  static bool AffectedByPref(const nsACString&);
 
   static Prefs& ContentPrefs() {
     MOZ_ASSERT(sInitialized);

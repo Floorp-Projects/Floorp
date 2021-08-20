@@ -649,6 +649,25 @@ void GlobalStyleSheetCache::BuildPreferenceSheet(
 #undef NS_GET_R_G_B
 }
 
+bool GlobalStyleSheetCache::AffectedByPref(const nsACString& aPref) {
+  const char* prefs[] = {
+      StaticPrefs::GetPrefName_browser_display_show_focus_rings(),
+      StaticPrefs::GetPrefName_browser_display_focus_ring_style(),
+      StaticPrefs::GetPrefName_browser_display_focus_ring_width(),
+      StaticPrefs::GetPrefName_browser_display_focus_ring_on_anything(),
+      StaticPrefs::GetPrefName_browser_display_use_focus_colors(),
+      StaticPrefs::GetPrefName_browser_underline_anchors(),
+  };
+
+  for (const char* pref : prefs) {
+    if (aPref.Equals(pref)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 /* static */ void GlobalStyleSheetCache::SetSharedMemory(
     const base::SharedMemoryHandle& aHandle, uintptr_t aAddress) {
   MOZ_ASSERT(!XRE_IsParentProcess());

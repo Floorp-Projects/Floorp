@@ -1550,7 +1550,7 @@ void PresShell::UpdatePreferenceStyles() {
   }
 
   // Documents in chrome shells do not have any preference style rules applied.
-  if (nsContentUtils::IsInChromeDocshell(mDocument)) {
+  if (mDocument->IsInChromeDocShell()) {
     return;
   }
 
@@ -4168,6 +4168,9 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
 
     mDocument->UpdateSVGUseElementShadowTrees();
+
+    // Ensure our preference sheets are up-to-date.
+    UpdatePreferenceStyles();
 
     // Process pending restyles, since any flush of the presshell wants
     // up-to-date style data.
