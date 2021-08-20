@@ -595,10 +595,7 @@ this.ASRouterTriggerListeners = new Map([
 
       init(triggerHandler) {
         if (!this._initialized) {
-          Services.obs.addObserver(
-            this,
-            "captive-portal-login-success-after-button-pressed"
-          );
+          Services.obs.addObserver(this, "captive-portal-login-success");
           this._initialized = true;
         }
         this._triggerHandler = triggerHandler;
@@ -606,7 +603,7 @@ this.ASRouterTriggerListeners = new Map([
 
       observe(aSubject, aTopic, aData) {
         switch (aTopic) {
-          case "captive-portal-login-success-after-button-pressed":
+          case "captive-portal-login-success":
             const browser = Services.wm.getMostRecentBrowserWindow();
             if (browser) {
               this._triggerHandler(browser.gBrowser.selectedBrowser, {
@@ -621,10 +618,7 @@ this.ASRouterTriggerListeners = new Map([
         if (this._initialized) {
           this._triggerHandler = null;
           this._initialized = false;
-          Services.obs.removeObserver(
-            this,
-            "captive-portal-login-success-after-button-pressed"
-          );
+          Services.obs.removeObserver(this, "captive-portal-login-success");
         }
       },
     },
