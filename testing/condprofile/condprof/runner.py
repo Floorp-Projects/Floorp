@@ -8,14 +8,12 @@ import os
 import shutil
 import asyncio
 
-import mozversion
-
 from condprof.creator import ProfileCreator
 from condprof.desktop import DesktopEnv
 from condprof.android import AndroidEnv
 from condprof.changelog import Changelog
 from condprof.scenarii import scenarii
-from condprof.util import logger, get_current_platform, extract_from_dmg
+from condprof.util import logger, get_version, get_current_platform, extract_from_dmg
 from condprof.customization import get_customizations, find_customization
 from condprof.client import read_changelog, ProfileNotFoundError
 
@@ -81,7 +79,8 @@ class Runner:
             if not os.path.exists(self.firefox):
                 raise IOError("Cannot find %s" % self.firefox)
 
-            mozversion.get_version(self.firefox)
+            version = get_version(self.firefox)
+            logger.info("Working with Firefox %s" % version)
 
         logger.info(os.environ)
         if self.archive:
