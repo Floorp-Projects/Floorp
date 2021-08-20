@@ -18,20 +18,35 @@ found in the LICENSE.txt file.
 <body>
 <div id="description"></div>
 <div id="console"></div>
-<script id="vertexShader" type="text/something-not-javascript">
-// Non ascii comments in source should succeed
-// ‚±‚ê‚Í‚`‚r‚b‚h‚h‚Å‚Í‚È‚¢‚Å‚·B
-// ‚s‚ˆ‚‰‚“@‚h‚“@‚m‚‚”@‚`‚r‚b‚h‚h
-/*
- * ‚s‚ˆ‚‰‚“@‚h‚“@‚m‚‚”@‚`‚r‚b‚h‚h
- */
-#define TEST 1 // ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½hï¿½ï¿½ï¿½@ï¿½mï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½`ï¿½rï¿½bï¿½hï¿½h
-void main() {
-  gl_Position = vec4(1,1,1,1); // ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½hï¿½ï¿½ï¿½@ï¿½mï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½`ï¿½rï¿½bï¿½hï¿½h
-} // ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½hï¿½ï¿½ï¿½@ï¿½mï¿½ï¿½ï¿½ï¿½ï¿½@ï¿½`ï¿½rï¿½bï¿½hï¿½h
+<script id="vertexShader" type="text/plain">
+Loading...
 </script>
 <script>
 "use strict";
+
+// Via `[].map.call(str, x => x.codePointAt(0));`
+let a = [12371,12428,12399,65313,65331,65315,65321,65321,12391,12399,12394,12356,12391,12377,12290];
+let b = [65332,65352,65353,65363,12288,65321,65363,12288,65326,65359,65364,12288,65313,65331,65315,65321,65321];
+a = String.fromCodePoint(...a);
+b = String.fromCodePoint(...b);
+
+// -
+
+vertexShader.textContent = `
+// Non ascii comments in source should succeed
+// ${a}
+// ${b}
+/*
+ * ${b}
+ */
+#define TEST 1 // ${b}
+void main() {
+  gl_Position = vec4(1,1,1,1); // ${b}
+} // ${b}
+`;
+
+// -
+
 GLSLConformanceTester.runTest();
 var successfullyParsed = true;
 </script>

@@ -4,13 +4,15 @@ Use of this source code is governed by an MIT-style license that can be
 found in the LICENSE.txt file.
 */
 
+"use strict";
+
 function generateTest(internalFormat, pixelFormat, pixelType, prologue, resourcePath, defaultContextVersion) {
     var wtu = WebGLTestUtils;
     var tiu = TexImageUtils;
     var gl = null;
     var successfullyParsed = false;
-    var redColor = [255, 0, 0];
-    var greenColor = [0, 255, 0];
+    var redColor = [255, 0, 0, 255];
+    var greenColor = [0, 255, 0, 255];
     var repeatCount;
 
     function shouldRepeatTestForTextureFormat(internalFormat, pixelFormat, pixelType)
@@ -28,7 +30,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                 (internalFormat == 'RGB' && pixelFormat == 'RGB' && pixelType == 'UNSIGNED_BYTE'));
     }
 
-    function init()
+    async function init()
     {
         description('Verify texImage2D and texSubImage2D code paths taking webgl canvas elements (' + internalFormat + '/' + pixelFormat + '/' + pixelType + ')');
 
@@ -37,7 +39,6 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         gl = wtu.create3DContext("example");
 
         if (!prologue(gl)) {
-            finishTest();
             return;
         }
 
@@ -64,10 +65,10 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         gl.clearColor(0,0,0,1);
         gl.clearDepth(1);
 
-        runTest();
+        await runTest();
     }
 
-    function setCanvasToRedGreen(ctx) {
+    function setCanvasToRedGreen(ctx, hasAlpha) {
       var width = ctx.canvas.width;
       var height = ctx.canvas.height;
       var halfHeight = Math.floor(height / 2);
@@ -76,21 +77,33 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
 
       ctx.enable(ctx.SCISSOR_TEST);
       ctx.scissor(0, 0, width, halfHeight);
-      ctx.clearColor(1.0, 0, 0, 1.0);
+      if (hasAlpha) {
+        ctx.clearColor(1.0, 0, 0, 1.0);
+      } else {
+        // The WebGL implementation is responsible for making all
+        // alpha values appear as though they were 1.0.
+        ctx.clearColor(1.0, 0, 0, 0.0);
+      }
       ctx.clear(ctx.COLOR_BUFFER_BIT);
       ctx.scissor(0, halfHeight, width, height - halfHeight);
-      ctx.clearColor(0.0, 1.0, 0, 1.0);
+      if (hasAlpha) {
+        ctx.clearColor(0.0, 1.0, 0, 1.0);
+      } else {
+        // The WebGL implementation is responsible for making all
+        // alpha values appear as though they were 1.0.
+        ctx.clearColor(0.0, 1.0, 0, 0.0);
+      }
       ctx.clear(ctx.COLOR_BUFFER_BIT);
       ctx.disable(ctx.SCISSOR_TEST);
     }
 
-    function setCanvasTo257x257(ctx, bindingTarget) {
+    function setCanvasTo257x257(ctx, bindingTarget, hasAlpha) {
       ctx.canvas.width = 257;
       ctx.canvas.height = 257;
-      setCanvasToRedGreen(ctx);
+      setCanvasToRedGreen(ctx, hasAlpha);
     }
 
-    function setCanvasToMin(ctx, bindingTarget) {
+    function setCanvasToMin(ctx, bindingTarget, hasAlpha) {
       if (bindingTarget == gl.TEXTURE_CUBE_MAP) {
         // cube map texture must be square.
         ctx.canvas.width = 2;
@@ -98,18 +111,18 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         ctx.canvas.width = 1;
       }
       ctx.canvas.height = 2;
-      setCanvasToRedGreen(ctx);
+      setCanvasToRedGreen(ctx, hasAlpha);
     }
 
-    function runOneIteration(canvas, useTexSubImage2D, flipY, program, bindingTarget, opt_texture)
+    function runOneIteration(canvas, useTexSubImage2D, alpha, flipY, program, bindingTarget, opt_texture)
     {
         var objType = 'canvas';
         if (canvas.transferToImageBitmap)
             objType = 'OffscreenCanvas';
         else if (canvas.parentNode)
             objType = 'canvas attached to DOM';
-        debug('Testing ' + (useTexSubImage2D ? 'texSubImage2D' : 'texImage2D') + ' with flipY=' +
-              flipY + ' source object: ' + objType +
+        debug('Testing ' + (useTexSubImage2D ? 'texSubImage2D' : 'texImage2D') + ' with alpha=' +
+              alpha + ' flipY=' + flipY + ' source object: ' + objType +
               ' bindingTarget=' + (bindingTarget == gl.TEXTURE_2D ? 'TEXTURE_2D' : 'TEXTURE_CUBE_MAP') +
               ' canvas size: ' + canvas.width + 'x' + canvas.height + ' with red-green');
 
@@ -127,9 +140,13 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
             var texture = opt_texture;
         }
         // Set up pixel store parameters
+        wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors before pixelStorei setup");
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+        wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors after setting UNPACK_FLIP_Y_WEBGL");
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-        wtu.failIfGLError(gl, 'gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);');
+        wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors after setting UNPACK_PREMULTIPLY_ALPHA_WEBGL");
+        gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+        wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors after setting UNPACK_COLORSPACE_CONVERSION_WEBGL");
         var targets = [gl.TEXTURE_2D];
         if (bindingTarget == gl.TEXTURE_CUBE_MAP) {
             targets = [gl.TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -191,93 +208,91 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         return texture;
     }
 
-    function runTest()
+    async function runTest()
     {
-        var ctx = wtu.create3DContext();
-        var canvas = ctx.canvas;
-        // Note: We use preserveDrawingBuffer:true to prevent canvas
-        // visibility from interfering with the tests.
-        var visibleCtx = wtu.create3DContext(null, { preserveDrawingBuffer:true });
-        if (!visibleCtx) {
-            testFailed("context does not exist");
-            finishTest();
-            return;
-        }
-        var visibleCanvas = visibleCtx.canvas;
-        var descriptionNode = document.getElementById("description");
-        document.body.insertBefore(visibleCanvas, descriptionNode);
+        for (let alpha of [ true, false ]) {
+            let ctx = wtu.create3DContext(null, { alpha:alpha });
+            let canvas = ctx.canvas;
+            // Note: We use preserveDrawingBuffer:true to prevent canvas
+            // visibility from interfering with the tests.
+            let visibleCtx = wtu.create3DContext(null, { preserveDrawingBuffer:true, alpha:alpha });
+            if (!visibleCtx) {
+                testFailed("context does not exist");
+                return;
+            }
+            let visibleCanvas = visibleCtx.canvas;
+            let descriptionNode = document.getElementById("description");
+            document.body.insertBefore(visibleCanvas, descriptionNode);
 
-        var cases = [
-            { sub: false, flipY: true,  ctx: ctx, init: setCanvasToMin },
-            { sub: false, flipY: false, ctx: ctx },
-            { sub: true,  flipY: true,  ctx: ctx },
-            { sub: true,  flipY: false, ctx: ctx },
-            { sub: false, flipY: true,  ctx: ctx, init: setCanvasTo257x257 },
-            { sub: false, flipY: false, ctx: ctx },
-            { sub: true,  flipY: true,  ctx: ctx },
-            { sub: true,  flipY: false, ctx: ctx },
-            { sub: false, flipY: true,  ctx: visibleCtx, init: setCanvasToMin },
-            { sub: false, flipY: false, ctx: visibleCtx },
-            { sub: true,  flipY: true,  ctx: visibleCtx },
-            { sub: true,  flipY: false, ctx: visibleCtx },
-        ];
+            let cases = [
+                { sub: false, flipY: true,  ctx: ctx, init: setCanvasToMin },
+                { sub: false, flipY: false, ctx: ctx },
+                { sub: true,  flipY: true,  ctx: ctx },
+                { sub: true,  flipY: false, ctx: ctx },
+                { sub: false, flipY: true,  ctx: ctx, init: setCanvasTo257x257 },
+                { sub: false, flipY: false, ctx: ctx },
+                { sub: true,  flipY: true,  ctx: ctx },
+                { sub: true,  flipY: false, ctx: ctx },
+                { sub: false, flipY: true,  ctx: visibleCtx, init: setCanvasToMin },
+                { sub: false, flipY: false, ctx: visibleCtx },
+                { sub: true,  flipY: true,  ctx: visibleCtx },
+                { sub: true,  flipY: false, ctx: visibleCtx },
+            ];
 
-        if (window.OffscreenCanvas) {
-            var offscreen = new OffscreenCanvas(1, 1);
-            var offscreenCtx = wtu.create3DContext(offscreen);
-            cases = cases.concat([
-                { sub: false, flipY: true,  ctx: offscreenCtx, init: setCanvasToMin },
-                { sub: false, flipY: false, ctx: offscreenCtx },
-                { sub: true,  flipY: true,  ctx: offscreenCtx },
-                { sub: true,  flipY: false, ctx: offscreenCtx },
-            ]);
-        }
-
-        function runTexImageTest(bindingTarget) {
-            var program;
-            if (bindingTarget == gl.TEXTURE_2D) {
-                program = tiu.setupTexturedQuad(gl, internalFormat);
-            } else {
-                program = tiu.setupTexturedQuadWithCubeMap(gl, internalFormat);
+            if (window.OffscreenCanvas) {
+                let offscreen = new OffscreenCanvas(1, 1);
+                let offscreenCtx = wtu.create3DContext(offscreen, { alpha:alpha });
+                cases = cases.concat([
+                    { sub: false, flipY: true,  ctx: offscreenCtx, init: setCanvasToMin },
+                    { sub: false, flipY: false, ctx: offscreenCtx },
+                    { sub: true,  flipY: true,  ctx: offscreenCtx },
+                    { sub: true,  flipY: false, ctx: offscreenCtx },
+                ]);
             }
 
-            return new Promise(function(resolve, reject) {
-                var count = repeatCount;
-                var caseNdx = 0;
-                var texture = undefined;
-                function runNextTest() {
-                    var c = cases[caseNdx];
+            async function runTexImageTest(bindingTarget) {
+                let program;
+                if (bindingTarget == gl.TEXTURE_2D) {
+                    program = tiu.setupTexturedQuad(gl, internalFormat);
+                } else {
+                    program = tiu.setupTexturedQuadWithCubeMap(gl, internalFormat);
+                }
+
+                let count = repeatCount;
+                let caseNdx = 0;
+                let texture = undefined;
+                while (true) {
+                    let c = cases[caseNdx];
                     if (c.init) {
-                      c.init(c.ctx, bindingTarget);
+                        c.init(c.ctx, bindingTarget, alpha);
                     }
-                    texture = runOneIteration(c.ctx.canvas, c.sub, c.flipY, program, bindingTarget, texture);
+                    texture = runOneIteration(c.ctx.canvas, c.sub, alpha, c.flipY, program, bindingTarget, texture);
                     // for the first 2 iterations always make a new texture.
                     if (count < 2) {
-                      gl.deleteTexture(texture);
-                      texture = undefined;
+                        gl.deleteTexture(texture);
+                        texture = undefined;
                     }
                     ++caseNdx;
                     if (caseNdx == cases.length) {
                         caseNdx = 0;
                         --count;
-                        if (!count) {
-                            resolve("SUCCESS");
+                        if (!count)
                             return;
-                        }
                     }
-                    wtu.dispatchPromise(runNextTest);
+                    await wtu.dispatchPromise(function() {});
                 }
-                runNextTest();
-            });
+            }
+
+            await runTexImageTest(gl.TEXTURE_2D);
+            await runTexImageTest(gl.TEXTURE_CUBE_MAP);
         }
 
-        runTexImageTest(gl.TEXTURE_2D).then(function(val) {
-            runTexImageTest(gl.TEXTURE_CUBE_MAP).then(function(val) {
-                wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
-                finishTest();
-            });
-        });
+        wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
     }
 
-    return init;
+    return function() {
+        init().then(function(val) {
+            finishTest();
+        });
+    };
 }
