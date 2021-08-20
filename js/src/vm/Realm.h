@@ -18,8 +18,6 @@
 
 #include <stddef.h>
 
-#include "jsapi.h"
-
 #include "builtin/Array.h"
 #include "gc/Barrier.h"
 #include "js/GCVariant.h"
