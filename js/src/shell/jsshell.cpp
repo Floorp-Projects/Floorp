@@ -10,7 +10,6 @@
 
 #include "mozilla/Sprintf.h"
 
-#include "jsapi.h"
 #include "jsfriendapi.h"
 
 #include "js/GlobalObject.h"
