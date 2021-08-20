@@ -1736,6 +1736,56 @@ static nsresult NewStandardURI(const nsACString& aSpec, const char* aCharset,
       .Finalize(aURI);
 }
 
+nsresult NS_GetSpecWithNSURLEncoding(nsACString& aResult,
+                                     const nsACString& aSpec) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURIWithNSURLEncoding(getter_AddRefs(uri), aSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return uri->GetAsciiSpec(aResult);
+}
+
+nsresult NS_NewURIWithNSURLEncoding(nsIURI** aResult, const nsACString& aSpec) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Escape the ref portion of the URL. An unescaped '#' to indicate
+  // the beginning of the ref component is accepted by NSURL, but '#'
+  // characters in the ref must be escaped. The ref returned from
+  // GetRef() does not include the leading '#'.
+  nsAutoCString ref, escapedRef;
+  if (NS_SUCCEEDED(uri->GetRef(ref)) && !ref.IsEmpty()) {
+    if (!NS_Escape(ref, escapedRef, url_AppleExtra)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    rv = NS_MutateURI(uri).SetRef(escapedRef).Finalize(uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Escape the file path
+  nsAutoCString filePath, escapedFilePath;
+  if (NS_SUCCEEDED(uri->GetFilePath(filePath)) && !filePath.IsEmpty()) {
+    if (!NS_Escape(filePath, escapedFilePath, url_AppleExtra)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    rv = NS_MutateURI(uri).SetFilePath(escapedFilePath).Finalize(uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Escape the query
+  nsAutoCString query, escapedQuery;
+  if (NS_SUCCEEDED(uri->GetQuery(query)) && !query.IsEmpty()) {
+    if (!NS_Escape(query, escapedQuery, url_AppleExtra)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    rv = NS_MutateURI(uri).SetQuery(escapedQuery).Finalize(uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  uri.forget(aResult);
+  return NS_OK;
+}
+
 extern MOZ_THREAD_LOCAL(uint32_t) gTlsURLRecursionCount;
 
 template <typename T>
