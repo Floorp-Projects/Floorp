@@ -222,6 +222,7 @@ jobs:
             max-run-time: 5400
             env:
                 TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/vs2017-15.8.manifest'
+                NODE_OPTIONS: '--max_old_space_size=4096'
         fetches:
             toolchain:
                 - win64-rust
