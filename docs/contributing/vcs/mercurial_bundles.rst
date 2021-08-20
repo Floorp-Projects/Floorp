@@ -31,8 +31,6 @@ Once you have downloaded the repository bundle, follow the steps below to recrea
 
 2. Un-bundle the bundle file to that repository:
 
-To use the below command in Windows, export the ``\path\to\hg`` and invoke the command from command prompt.
-
 On Linux/Mac click on the properties of the file and you can find the path. In case the name of the file is not bundle.hg rename it.
 
 .. code-block:: shell
