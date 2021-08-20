@@ -65,6 +65,7 @@
 #include "js/Utility.h"
 #include "js/WasmModule.h"
 #include "js/Wrapper.h"
+#include "js/WrapperCallbacks.h"
 #include "proxy/DOMProxy.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"

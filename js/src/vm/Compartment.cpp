@@ -23,6 +23,7 @@
 #include "js/RootingAPI.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
+#include "js/WrapperCallbacks.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/DOMProxy.h"
 #include "vm/Iteration.h"

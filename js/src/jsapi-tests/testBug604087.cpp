@@ -9,6 +9,7 @@
 
 #include "js/friend/WindowProxy.h"  // js::SetWindowProxyClass
 #include "js/Wrapper.h"
+#include "js/WrapperCallbacks.h"
 #include "jsapi-tests/tests.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
