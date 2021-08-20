@@ -211,6 +211,7 @@
 #  include <unistd.h>
 #endif
 
+#include "jsapi.h"
 #include "jstypes.h"
 
 #include "builtin/FinalizationRegistryObject.h"
