@@ -27,8 +27,8 @@ class HTMLLegendElement final : public nsGenericHTMLElement {
                      const mozilla::dom::CallerType aCallerType,
                      ErrorResult& aError) override;
 
-  virtual bool PerformAccesskey(bool aKeyCausesActivation,
-                                bool aIsTrustedEvent) override;
+  virtual Result<bool, nsresult> PerformAccesskey(
+      bool aKeyCausesActivation, bool aIsTrustedEvent) override;
 
   // nsIContent
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;

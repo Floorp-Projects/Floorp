@@ -376,7 +376,8 @@ class nsXULElement : public nsStyledElement {
   MOZ_CAN_RUN_SCRIPT bool HasMenu();
   MOZ_CAN_RUN_SCRIPT void OpenMenu(bool aOpenFlag);
 
-  MOZ_CAN_RUN_SCRIPT virtual bool PerformAccesskey(
+  MOZ_CAN_RUN_SCRIPT
+  virtual mozilla::Result<bool, nsresult> PerformAccesskey(
       bool aKeyCausesActivation, bool aIsTrustedEvent) override;
   void ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
 
