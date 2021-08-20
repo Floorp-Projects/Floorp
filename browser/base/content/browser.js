@@ -1113,17 +1113,19 @@ var gPopupBlockerObserver = {
       ) {
         // Offer an item to block popups for this site, if an allow-list entry exists
         // already for it.
-        let blockString = gNavigatorBundle.getFormattedString("popupBlock", [
-          uriHost,
-        ]);
-        blockedPopupAllowSite.setAttribute("label", blockString);
+        document.l10n.setAttributes(
+          blockedPopupAllowSite,
+          "popups-infobar-block",
+          { uriHost }
+        );
         blockedPopupAllowSite.setAttribute("block", "true");
       } else {
         // Offer an item to allow popups for this site
-        let allowString = gNavigatorBundle.getFormattedString("popupAllow", [
-          uriHost,
-        ]);
-        blockedPopupAllowSite.setAttribute("label", allowString);
+        document.l10n.setAttributes(
+          blockedPopupAllowSite,
+          "popups-infobar-allow",
+          { uriHost }
+        );
         blockedPopupAllowSite.removeAttribute("block");
       }
     } catch (e) {
@@ -1137,10 +1139,6 @@ var gPopupBlockerObserver = {
       "privacy.popups.showBrowserMessage"
     );
     blockedPopupDontShowMessage.setAttribute("checked", !showMessage);
-    blockedPopupDontShowMessage.setAttribute(
-      "label",
-      gNavigatorBundle.getString("popupWarningDontShowFromMessage")
-    );
 
     let blockedPopupsSeparator = document.getElementById(
       "blockedPopupsSeparator"

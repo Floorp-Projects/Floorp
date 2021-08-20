@@ -1835,13 +1835,25 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         nsDisplayTransform* deferred = aSc.GetDeferredTransformItem();
         ScrollableLayerGuid::ViewID deferredId =
             ScrollableLayerGuid::NULL_SCROLL_ID;
+        bool transformShouldGetOwnLayer = false;
         if (deferred) {
           if (const auto* asr = deferred->GetActiveScrolledRoot()) {
             deferredId = asr->GetViewId();
           }
+
+          if (deferred->GetActiveScrolledRoot() !=
+              item->GetActiveScrolledRoot()) {
+            transformShouldGetOwnLayer = true;
+          } else if (item->GetType() ==
+                     DisplayItemType::TYPE_SCROLL_INFO_LAYER) {
+            // A scroll info layer has its own scroll id that's not reflected
+            // in item->GetActiveScrolledRoot(), but will be added to the
+            // WebRenderLayerScrollData node, so it needs to be treated as
+            // having a distinct ASR from the deferred transform item.
+            transformShouldGetOwnLayer = true;
+          }
         }
-        if (deferred && deferred->GetActiveScrolledRoot() !=
-                            item->GetActiveScrolledRoot()) {
+        if (transformShouldGetOwnLayer) {
           // This creates the child WebRenderLayerScrollData for |item|, but
           // omits the transform (hence the Nothing() as the last argument to
           // Initialize(...)). We also need to make sure that the ASR from

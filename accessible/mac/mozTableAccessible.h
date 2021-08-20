@@ -175,6 +175,9 @@
 - (NSString*)moxLabel;
 
 // override
+- (id)moxValue;
+
+// override
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled;
 
 @end

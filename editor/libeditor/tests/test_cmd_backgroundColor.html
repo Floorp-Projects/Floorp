@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing "cmd_backgroundColor" behavior</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div contenteditable></div>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  document.execCommand("styleWithCSS", false, "true");
+  const commandManager =
+    SpecialPowers.wrap(window).
+      docShell.
+      QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+      getInterface(SpecialPowers.Ci.nsICommandManager);
+  const editor = document.querySelector("div[contenteditable]");
+  editor.style.backgroundColor = "#ff0000";
+
+  editor.innerHTML = "<p>abc</p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("p").firstChild, 1);
+  let params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(255, 0, 0)",
+    "cmd_backgroundColor should return the editing host's background color (should ignore the transparent paragraph)"
+  );
+
+  editor.innerHTML = "<p style=\"background-color: #00ff00\">abc</p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("p").firstChild, 1);
+  params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(0, 255, 0)",
+    "cmd_backgroundColor should return the paragraph's background color"
+  );
+
+  editor.innerHTML = "<span style=\"background-color: #00ff00\">abc</span>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("span").firstChild, 1);
+  params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(255, 0, 0)",
+    "cmd_backgroundColor shouldn't return the span's background color due to inline element"
+  );
+
+  editor.innerHTML = "<p style=\"background-color: #00ff00\" contenteditable=\"false\">a<span style=\"background-color: #0000ff\" contenteditable=\"true\">b</span>c</p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("span[contenteditable=true]").firstChild, 1);
+  params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(0, 255, 0)",
+    "cmd_backgroundColor should return non-editable block element's background color"
+  );
+
+  editor.innerHTML = "<p contenteditable=\"false\">a<span style=\"background-color: #0000ff\" contenteditable=\"true\">b</span>c</p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("span[contenteditable=true]").firstChild, 1);
+  params = SpecialPowers.Cu.createCommandParams();
+  commandManager.getCommandState("cmd_backgroundColor", window, params);
+  is(
+    params.getCStringValue("state_attribute"),
+    "rgb(255, 0, 0)",
+    "cmd_backgroundColor should return the parent editing host's background color (should ignore the transparent non-editable paragraph)"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<div><p><span>abc</span></p></div>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.querySelector("span").firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p></div></div>",
+    "cmd_backgroundColor should set background of the closest block element from the caret in a text node"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "abc";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(0, 255, 0);\" contenteditable=\"\">abc</div>",
+    "cmd_backgroundColor should set background of the editing host which is direct block parent from the caret in a text node"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<div contenteditable=\"false\"><span contenteditable=\"true\">abc</span></div>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().collapse(editor.firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div contenteditable=\"false\"><span contenteditable=\"true\">abc</span></div></div>",
+    "cmd_backgroundColor should not set background color of inline editing host nor its non-editable parent block"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<div><p><span>ab<br>c</span></p></div>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().setBaseAndExtent(editor.querySelector("span"), 1, editor.querySelector("span"), 2);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>ab<br>c</span></p></div></div>",
+    "cmd_backgroundColor should set background of the closest block element when selection a leaf element"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<div><p><span>abc</span></p></div>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().setBaseAndExtent(editor.firstChild, 0, editor.firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p></div></div>",
+    "cmd_backgroundColor should set background of the selected block element"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<div><p><span>abc</span></p><p><span>def</span></p><p><span>ghi</span></p></div>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().setBaseAndExtent(editor.querySelector("span").firstChild, 1, editor.querySelector("p + p + p > span").firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span>def</span></p>" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div></div>",
+    "cmd_backgroundColor should set background of the paragraph elements in the selection range"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<div><p><span>abc</span></p><p><span contenteditable=\"false\">def</span></p><p><span>ghi</span></p></div>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().setBaseAndExtent(editor.querySelector("span").firstChild, 1, editor.querySelector("p + p + p > span").firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span contenteditable=\"false\">def</span></p>" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div></div>",
+    "cmd_backgroundColor should set background of the paragraph elements in the selection range even if a paragraph has only non-editable content"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<div><p><span>abc</span></p><p contenteditable=\"false\"><span>def</span></p><p><span>ghi</span></p></div>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().setBaseAndExtent(editor.querySelector("span").firstChild, 1, editor.querySelector("p + p + p > span").firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
+      "<p contenteditable=\"false\"><span>def</span></p>" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div></div>",
+    "cmd_backgroundColor should set background of the paragraph elements in the selection range except the non-editable paragraph"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<div><p><span>abc</span></p><span>def</span><p><span>ghi</span></p></div>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().setBaseAndExtent(editor.querySelector("span").firstChild, 1, editor.querySelector("p + span + p > span").firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div style=\"background-color: rgb(0, 255, 0);\">" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
+      "<span>def</span>" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div></div>",
+    "cmd_backgroundColor should set background of the paragraph elements in the selection range and the container <div> which has inline child"
+  );
+
+  editor.style.backgroundColor = "#ff0000";
+  editor.innerHTML = "<p><span>abc</span></p><span>def</span><p><span>ghi</span></p>";
+  editor.getBoundingClientRect();
+  editor.focus();
+  getSelection().setBaseAndExtent(editor.querySelector("span").firstChild, 1, editor.querySelector("p + span + p > span").firstChild, 1);
+  SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
+  is(
+    editor.outerHTML,
+    "<div style=\"background-color: rgb(0, 255, 0);\" contenteditable=\"\">" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
+      "<span>def</span>" +
+      "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div>",
+    "cmd_backgroundColor should set background of the paragraph elements in the selection range and the editing host which has inline child"
+  );
+
+  // TODO: Add testcase for HTML styling mode.
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

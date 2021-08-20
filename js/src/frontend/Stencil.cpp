@@ -1565,7 +1565,6 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   // !! Must be infallible from here forward !!
 
   // Phase 6: Update lazy scripts.
-  MOZ_ASSERT(stencil.canLazilyParse == CanLazilyParse(input.options));
   if (stencil.canLazilyParse) {
     UpdateEmittedInnerFunctions(cx, input.atomCache, stencil, gcOutput);
 

@@ -26,7 +26,7 @@ uint64_t NativeState() const;
  * Set aName to the name of the proxied accessible.
  * Return the ENameValueFlag passed from Accessible::Name
  */
-uint32_t Name(nsString& aName) const;
+ENameValueFlag Name(nsString& aName) const override;
 
 /*
  * Set aValue to the value of the proxied accessible.

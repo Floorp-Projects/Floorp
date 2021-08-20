@@ -17,7 +17,6 @@
 #include "debugger/Debugger.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
-#include "jit/JitOptions.h"
 #include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable

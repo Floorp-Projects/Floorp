@@ -164,6 +164,17 @@ Derived* RemoteAccessibleBase<Derived>::RemoteParent() const {
   return parentDoc->GetAccessible(mParent);
 }
 
+template <class Derived>
+ENameValueFlag RemoteAccessibleBase<Derived>::Name(nsString& aName) const {
+  if (mCachedFields && mCachedFields->GetAttribute(nsGkAtoms::name, aName)) {
+    auto nameFlag =
+        mCachedFields->GetAttribute<int32_t>(nsGkAtoms::explicit_name);
+    return nameFlag ? static_cast<ENameValueFlag>(*nameFlag) : eNameOK;
+  }
+
+  return eNameOK;
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y

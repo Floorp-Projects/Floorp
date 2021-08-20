@@ -66,34 +66,6 @@ void TreeSize(const char* aTitle, const char* aMsgText, LocalAccessible* aRoot);
 #endif
 
 /**
- * Name type flags.
- */
-enum ENameValueFlag {
-  /**
-   * Name either
-   *  a) present (not empty): !name.IsEmpty()
-   *  b) no name (was missed): name.IsVoid()
-   */
-  eNameOK,
-
-  /**
-   * Name was left empty by the author on purpose:
-   * name.IsEmpty() && !name.IsVoid().
-   */
-  eNoNameOnPurpose,
-
-  /**
-   * Name was computed from the subtree.
-   */
-  eNameFromSubtree,
-
-  /**
-   * Tooltip was used as a name.
-   */
-  eNameFromTooltip
-};
-
-/**
  * Group position (level, position in set and set size).
  */
 struct GroupPos {
@@ -205,7 +177,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    * Note: aName.IsVoid() when name was left empty by the author on purpose.
    * aName.IsEmpty() when the author missed name, AT can try to repair a name.
    */
-  virtual ENameValueFlag Name(nsString& aName) const;
+  virtual ENameValueFlag Name(nsString& aName) const override;
 
   /**
    * Maps ARIA state attributes to state of accessible. Note the given state

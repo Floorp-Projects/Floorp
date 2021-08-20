@@ -515,11 +515,8 @@ void finalizeCB(GObject* aObj) {
 
 const gchar* getNameCB(AtkObject* aAtkObj) {
   nsAutoString name;
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap) {
-    accWrap->Name(name);
-  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
-    proxy->Name(name);
+  if (Accessible* acc = GetInternalObj(aAtkObj)) {
+    acc->Name(name);
   } else {
     return nullptr;
   }

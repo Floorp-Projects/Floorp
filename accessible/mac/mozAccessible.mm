@@ -111,7 +111,7 @@ using namespace mozilla::a11y;
 static const uint64_t kCachedStates =
     states::CHECKED | states::PRESSED | states::MIXED | states::EXPANDED |
     states::CURRENT | states::SELECTED | states::TRAVERSED | states::LINKED |
-    states::HASPOPUP | states::BUSY | states::MULTI_LINE;
+    states::HASPOPUP | states::BUSY | states::MULTI_LINE | states::CHECKABLE;
 static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
 - (uint64_t)state {
@@ -569,8 +569,6 @@ struct RoleDescrComparator {
     return nil;
   }
 
-  LocalAccessible* acc = mGeckoAccessible->AsLocal();
-  RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
   nsAutoString name;
 
   /* If our accessible is:
@@ -579,16 +577,9 @@ struct RoleDescrComparator {
    * 3. Is a special role defined in providesLabelNotTitle
    *   ... return its name as a label (AXDescription).
    */
-  if (acc) {
-    ENameValueFlag flag = acc->Name(name);
-    if (flag == eNameFromSubtree) {
-      return nil;
-    }
-  } else if (proxy) {
-    uint32_t flag = proxy->Name(name);
-    if (flag == eNameFromSubtree) {
-      return nil;
-    }
+  ENameValueFlag flag = mGeckoAccessible->Name(name);
+  if (flag == eNameFromSubtree) {
+    return nil;
   }
 
   if (![self providesLabelNotTitle]) {
@@ -610,11 +601,7 @@ struct RoleDescrComparator {
   }
 
   nsAutoString title;
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    acc->Name(title);
-  } else {
-    mGeckoAccessible->AsRemote()->Name(title);
-  }
+  mGeckoAccessible->Name(title);
 
   return nsCocoaUtils::ToNSString(title);
 

@@ -49,7 +49,7 @@ echo "Installing eslint and external plugins..."
 # The in-tree eslint-plugin-mozilla is kept out of this tooltool archive on
 # purpose so that it can be changed by any developer without requiring tooltool
 # access to make changes.
-npm install
+./mach npm install
 
 echo "Creating eslint.tar.gz..."
 tar cvz --exclude=eslint-plugin-mozilla --exclude=eslint-plugin-spidermonkey-js -f eslint.tar.gz node_modules
