@@ -22,6 +22,7 @@
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/Exception.h"
 #include "js/GCVector.h"
+#include "js/Interrupt.h"
 #include "js/Promise.h"
 #include "js/Result.h"
 #include "js/Utility.h"
