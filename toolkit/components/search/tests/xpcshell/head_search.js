@@ -66,15 +66,14 @@ SearchSettings.SETTNGS_INVALIDATION_DELAY = 250;
 
 async function promiseSettingsData() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME);
-  let bytes = await OS.File.read(path, { compression: "lz4" });
-  return JSON.parse(new TextDecoder().decode(bytes));
+  return JSON.parse(await IOUtils.readUTF8(path, { decompress: true }));
 }
 
 function promiseSaveSettingsData(data) {
-  return OS.File.writeAtomic(
+  return IOUtils.write(
     OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME),
     new TextEncoder().encode(JSON.stringify(data)),
-    { compression: "lz4" }
+    { compress: true }
   );
 }
 
@@ -197,8 +196,7 @@ async function promiseSetLocale(locale) {
  *   false otherwise.
  */
 async function readJSONFile(file) {
-  let bytes = await OS.File.read(file.path);
-  return JSON.parse(new TextDecoder().decode(bytes));
+  return JSON.parse(await IOUtils.readUTF8(file.path));
 }
 
 /**
