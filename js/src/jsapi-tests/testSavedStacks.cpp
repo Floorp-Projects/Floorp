@@ -11,6 +11,7 @@
 #include "js/Exception.h"
 #include "js/SavedFrameAPI.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
+#include "js/Stack.h"
 #include "jsapi-tests/tests.h"
 #include "util/Text.h"
 #include "vm/ArrayObject.h"

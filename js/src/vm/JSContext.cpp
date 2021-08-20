@@ -46,6 +46,7 @@
 #include "js/friend/StackLimits.h"    // js::ReportOverRecursed
 #include "js/Printf.h"
 #include "js/PropertyAndElement.h"  // JS_GetProperty
+#include "js/Stack.h"
 #include "util/DiagnosticAssertions.h"
 #include "util/DifferentialTesting.h"
 #include "util/DoubleToString.h"

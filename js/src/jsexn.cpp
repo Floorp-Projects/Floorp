@@ -36,6 +36,7 @@
 #include "js/Object.h"                // JS::GetBuiltinClass
 #include "js/PropertyAndElement.h"    // JS_GetProperty, JS_HasProperty
 #include "js/SavedFrameAPI.h"
+#include "js/Stack.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"
 #include "js/Warnings.h"  // JS::{,Set}WarningReporter

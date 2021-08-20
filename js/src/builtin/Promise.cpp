@@ -20,6 +20,7 @@
 #include "js/ForOfIterator.h"         // JS::ForOfIterator
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
+#include "js/Stack.h"
 #include "vm/ArrayObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"

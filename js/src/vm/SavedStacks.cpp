@@ -27,6 +27,7 @@
 #include "js/PropertyAndElement.h"    // JS_DefineProperty, JS_GetProperty
 #include "js/PropertySpec.h"
 #include "js/SavedFrameAPI.h"
+#include "js/Stack.h"
 #include "js/Vector.h"
 #include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"

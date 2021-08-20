@@ -55,6 +55,7 @@
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "js/StableStringChars.h"
+#include "js/Stack.h"
 #include "js/String.h"  // JS::MaxStringLength
 #include "js/Symbol.h"
 #include "js/Utility.h"
