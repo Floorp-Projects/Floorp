@@ -26,6 +26,7 @@
 #include "nsIAppWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsMenuUtilsX.h"
+#include "nsNetUtil.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -516,6 +517,20 @@ NSString* nsCocoaUtils::ToNSString(const nsACString& aCString) {
   return [[[NSString alloc] initWithBytes:aCString.BeginReading()
                                    length:aCString.Length()
                                  encoding:NSUTF8StringEncoding] autorelease];
+}
+
+// static
+NSURL* nsCocoaUtils::ToNSURL(const nsAString& aURLString) {
+  nsAutoCString encodedURLString;
+  nsresult rv = NS_GetSpecWithNSURLEncoding(encodedURLString, NS_ConvertUTF16toUTF8(aURLString));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  NSString* encodedURLNSString = ToNSString(encodedURLString);
+  if (!encodedURLNSString) {
+    return nullptr;
+  }
+
+  return [NSURL URLWithString:encodedURLNSString];
 }
 
 // static
