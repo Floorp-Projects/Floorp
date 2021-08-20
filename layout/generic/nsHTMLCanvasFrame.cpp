@@ -101,13 +101,6 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
     return f->GetInnerArea() + ToReferenceFrame();
   }
 
-  virtual already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override {
-    return static_cast<nsHTMLCanvasFrame*>(mFrame)->BuildLayer(
-        aBuilder, aManager, this, aContainerParameters);
-  }
-
   virtual bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       wr::IpcResourceUpdateQueue& aResources, const StackingContextHelper& aSc,
@@ -276,21 +269,6 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         MOZ_ASSERT_UNREACHABLE("unknown canvas context type");
     }
     return true;
-  }
-
-  virtual LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override {
-    if (HTMLCanvasElement::FromNode(mFrame->GetContent())
-            ->ShouldForceInactiveLayer(aManager))
-      return LayerState::LAYER_INACTIVE;
-
-    // If compositing is cheap, just do that
-    if (aManager->IsCompositingCheap() ||
-        ActiveLayerTracker::IsContentActive(mFrame))
-      return mozilla::LayerState::LAYER_ACTIVE;
-
-    return LayerState::LAYER_INACTIVE;
   }
 
   // FirstContentfulPaint is supposed to ignore "white" canvases.  We use
@@ -557,57 +535,6 @@ nsRect nsHTMLCanvasFrame::GetInnerArea() const {
   r.width = mRect.width - bp.left - bp.right;
   r.height = mRect.height - bp.top - bp.bottom;
   return r;
-}
-
-already_AddRefed<Layer> nsHTMLCanvasFrame::BuildLayer(
-    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-    nsDisplayItem* aItem,
-    const ContainerLayerParameters& aContainerParameters) {
-  nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
-  HTMLCanvasElement* element = static_cast<HTMLCanvasElement*>(GetContent());
-  nsIntSize canvasSizeInPx = GetCanvasSize();
-
-  nsPresContext* presContext = PresContext();
-  element->HandlePrintCallback(presContext);
-
-  if (canvasSizeInPx.width <= 0 || canvasSizeInPx.height <= 0 || area.IsEmpty())
-    return nullptr;
-
-  Layer* oldLayer =
-      aManager->GetLayerBuilder()
-          ? aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem)
-          : nullptr;
-  RefPtr<Layer> layer = element->GetCanvasLayer(aBuilder, oldLayer, aManager);
-  if (!layer) return nullptr;
-
-  IntrinsicSize intrinsicSize = IntrinsicSizeFromCanvasSize(canvasSizeInPx);
-  AspectRatio intrinsicRatio = IntrinsicRatioFromCanvasSize(canvasSizeInPx);
-
-  nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-      area, intrinsicSize, intrinsicRatio, StylePosition());
-
-  gfxRect destGFXRect = presContext->AppUnitsToGfxUnits(dest);
-
-  // Transform the canvas into the right place
-  gfxPoint p = destGFXRect.TopLeft() + aContainerParameters.mOffset;
-  Matrix transform = Matrix::Translation(p.x, p.y);
-  transform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
-                     destGFXRect.Height() / canvasSizeInPx.height);
-  layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
-  if (layer->GetType() == layers::Layer::TYPE_CANVAS) {
-    RefPtr<CanvasLayer> canvasLayer = static_cast<CanvasLayer*>(layer.get());
-    canvasLayer->SetSamplingFilter(
-        nsLayoutUtils::GetSamplingFilterForFrame(this));
-    nsIntRect bounds;
-    bounds.SetRect(0, 0, canvasSizeInPx.width, canvasSizeInPx.height);
-    canvasLayer->SetBounds(bounds);
-  } else if (layer->GetType() == layers::Layer::TYPE_IMAGE) {
-    RefPtr<ImageLayer> imageLayer = static_cast<ImageLayer*>(layer.get());
-    imageLayer->SetSamplingFilter(
-        nsLayoutUtils::GetSamplingFilterForFrame(this));
-  }
-
-  return layer.forget();
 }
 
 bool nsHTMLCanvasFrame::UpdateWebRenderCanvasData(

@@ -81,12 +81,10 @@ static void MarkFramesWithItemsAndImagesModified(nsDisplayList* aList) {
       // If we have existing cached geometry for this item, then check that for
       // whether we need to invalidate for a sync decode. If we don't, then
       // use the item's flags.
-      DisplayItemData* data = FrameLayerBuilder::GetOldDataFor(i);
-      // XXX: handle webrender case
+      // XXX: handle webrender case by looking up retained data for the item
+      // and checking InvalidateForSyncDecodeImages
       bool invalidate = false;
-      if (data && data->GetGeometry()) {
-        invalidate = data->GetGeometry()->InvalidateForSyncDecodeImages();
-      } else if (!(i->GetFlags() & TYPE_RENDERS_NO_IMAGES)) {
+      if (!(i->GetFlags() & TYPE_RENDERS_NO_IMAGES)) {
         invalidate = true;
       }
 

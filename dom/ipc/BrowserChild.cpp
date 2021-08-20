@@ -19,7 +19,6 @@
 #include "ContentChild.h"
 #include "DocumentInlines.h"
 #include "EventStateManager.h"
-#include "FrameLayerBuilder.h"
 #include "Layers.h"
 #include "MMPrinter.h"
 #include "PermissionMessageUtils.h"
@@ -2724,8 +2723,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
   }
 
   if (nsIFrame* root = presShell->GetRootFrame()) {
-    FrameLayerBuilder::InvalidateAllLayersForFrame(
-        nsLayoutUtils::GetDisplayRootFrame(root));
     root->SchedulePaint();
   }
 
@@ -3181,14 +3178,7 @@ void BrowserChild::ClearCachedResources() {
   }
 }
 
-void BrowserChild::InvalidateLayers() {
-  MOZ_ASSERT(mPuppetWidget);
-  RefPtr<LayerManager> lm =
-      mPuppetWidget->GetWindowRenderer()->AsLayerManager();
-  if (lm) {
-    FrameLayerBuilder::InvalidateAllLayers(lm);
-  }
-}
+void BrowserChild::InvalidateLayers() { MOZ_ASSERT(mPuppetWidget); }
 
 void BrowserChild::SchedulePaint() {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());

@@ -275,7 +275,7 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
 
   Maybe<ScrollMetadata> metadata =
       aASR->mScrollableFrame->ComputeScrollMetadata(
-          mManager, aItem->ReferenceFrame(), Nothing(), nullptr);
+          mManager, aItem->ReferenceFrame(), nullptr);
   if (!metadata) {
     MOZ_ASSERT_UNREACHABLE("Expected scroll metadata to be available!");
     return ancestorSpace;
