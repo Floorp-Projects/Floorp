@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace ipc {
 
-nsCString GetSandboxedRLBoxPath() {
+PathString GetSandboxedRLBoxPath() {
   nsCOMPtr<nsIFile> libFile;
   nsresult rv = mozilla::BinaryPath::GetFile(getter_AddRefs(libFile));
   if (NS_FAILED(rv)) {
@@ -24,12 +24,7 @@ nsCString GetSandboxedRLBoxPath() {
     MOZ_CRASH("Library preload failure: Failed to get library file\n");
   }
 
-  PathString fullPath = libFile->NativePath();
-#ifdef XP_WIN
-  return NS_ConvertUTF16toUTF8(fullPath);
-#else
-  return fullPath;
-#endif
+  return libFile->NativePath();
 }
 
 PRLibrary* PreloadLibrary(const nsCString& path) {
