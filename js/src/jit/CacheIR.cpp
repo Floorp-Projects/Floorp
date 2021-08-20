@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 
+#include "jsapi.h"
 #include "jsmath.h"
 
 #include "builtin/DataViewObject.h"

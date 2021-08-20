@@ -32,6 +32,7 @@
 #endif
 #include <type_traits>
 
+#include "jsapi.h"
 #include "jsexn.h"
 #include "jsnum.h"
 

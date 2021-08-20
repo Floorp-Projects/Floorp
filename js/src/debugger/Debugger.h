@@ -22,6 +22,7 @@
 #include <stdint.h>  // for uint32_t, uint64_t, uintptr_t
 #include <utility>   // for std::move
 
+#include "jsapi.h"             // JS_DefineDebuggerObject
 #include "jstypes.h"           // for JS_GC_ZEAL
 #include "NamespaceImports.h"  // for Value, HandleObject
 

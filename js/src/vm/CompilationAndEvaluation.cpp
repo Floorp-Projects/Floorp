@@ -14,6 +14,7 @@
 
 #include <utility>  // std::move
 
+#include "jsapi.h"    // JS_WrapValue
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript

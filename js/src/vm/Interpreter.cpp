@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include "jsapi.h"
 #include "jslibmath.h"
 #include "jsmath.h"
 #include "jsnum.h"
