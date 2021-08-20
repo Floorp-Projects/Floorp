@@ -96,11 +96,6 @@ using StringVector = JS::GCVector<JSString*>;
 
 /************************************************************************/
 
-// Callback for the embedding to map from a ScriptSourceObject private-value to
-// an object that is exposed as the source "element" in debugger API.  This hook
-// must be infallible, but can return nullptr if no such element exists.
-using JSSourceElementCallback = JSObject* (*)(JSContext*, JS::HandleValue);
-
 using JSInterruptCallback = bool (*)(JSContext*);
 
 /**
