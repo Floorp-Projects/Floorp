@@ -758,7 +758,7 @@ fn public_avif_primary_item() {
     let input = &mut File::open(IMAGE_AVIF).expect("Unknown file");
     let context = mp4::read_avif(input, ParseStrictness::Normal).expect("read_avif failed");
     assert_eq!(
-        context.primary_item(),
+        context.primary_item_coded_data(),
         [
             0x12, 0x00, 0x0A, 0x07, 0x38, 0x00, 0x06, 0x90, 0x20, 0x20, 0x69, 0x32, 0x0C, 0x16,
             0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x79, 0x4C, 0xD2, 0x02
@@ -770,7 +770,7 @@ fn public_avif_primary_item() {
 fn public_avif_primary_item_split_extents() {
     let input = &mut File::open(IMAGE_AVIF_EXTENTS).expect("Unknown file");
     let context = mp4::read_avif(input, ParseStrictness::Normal).expect("read_avif failed");
-    assert_eq!(context.primary_item().len(), 52);
+    assert_eq!(context.primary_item_coded_data().len(), 52);
 }
 
 #[test]
@@ -783,7 +783,7 @@ fn public_avif_alpha_item() {
 fn public_avif_alpha_non_premultiplied() {
     let input = &mut File::open(IMAGE_AVIF_ALPHA).expect("Unknown file");
     let context = mp4::read_avif(input, ParseStrictness::Normal).expect("read_avif failed");
-    assert!(context.alpha_item().is_some());
+    assert!(!context.alpha_item_coded_data().is_empty());
     assert!(!context.premultiplied_alpha);
 }
 
@@ -791,7 +791,7 @@ fn public_avif_alpha_non_premultiplied() {
 fn public_avif_alpha_premultiplied() {
     let input = &mut File::open(IMAGE_AVIF_ALPHA_PREMULTIPLIED).expect("Unknown file");
     let context = mp4::read_avif(input, ParseStrictness::Normal).expect("read_avif failed");
-    assert!(context.alpha_item().is_some());
+    assert!(!context.alpha_item_coded_data().is_empty());
     assert!(context.premultiplied_alpha);
     assert_avif_valid(input);
 }
