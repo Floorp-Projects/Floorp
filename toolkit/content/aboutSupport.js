@@ -687,8 +687,6 @@ var snapshotFormatters = {
       ["desktopEnvironment", "graphics-desktop-environment"],
       "usesTiling",
       "contentUsesTiling",
-      "offMainThreadPaintEnabled",
-      "offMainThreadPaintWorkerCount",
       "targetFrameRate",
     ];
     for (let feature of featureKeys) {

@@ -223,31 +223,8 @@ void ClientSingleTiledLayerBuffer::PaintThebes(
               DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);
   }
 
-  if (asyncPaint) {
-    if (!backBuffer->mCapture->IsEmpty()) {
-      UniquePtr<PaintTask> task(new PaintTask());
-      task->mCapture = backBuffer->mCapture;
-      task->mTarget = backBuffer->mBackBuffer;
-      task->mClients = std::move(backBuffer->mTextureClients);
-      if (discardedFrontBuffer) {
-        task->mClients.AppendElement(discardedFrontBuffer);
-      }
-      if (discardedFrontBufferOnWhite) {
-        task->mClients.AppendElement(discardedFrontBufferOnWhite);
-      }
-
-      // The target is an alias for the capture, and the paint thread expects
-      // to be the only one with a reference to the capture
-      backBuffer->mTarget = nullptr;
-      backBuffer->mCapture = nullptr;
-
-      PaintThread::Get()->QueuePaintTask(std::move(task));
-      mManager->SetQueuedAsyncPaints();
-    }
-  } else {
-    MOZ_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
-    MOZ_ASSERT(!backBuffer->mCapture);
-  }
+  MOZ_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
+  MOZ_ASSERT(!backBuffer->mCapture);
 
   // The new buffer is now validated, remove the dirty region from it.
   mTile.mInvalidBack.SubOut(tileDirtyRegion);

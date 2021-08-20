@@ -623,12 +623,6 @@ const SNAPSHOT_SCHEMA = {
         contentUsesTiling: {
           type: "boolean",
         },
-        offMainThreadPaintEnabled: {
-          type: "boolean",
-        },
-        offMainThreadPaintWorkerCount: {
-          type: "number",
-        },
         clearTypeParameters: {
           type: "string",
         },

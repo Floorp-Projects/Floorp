@@ -1012,7 +1012,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   void InitCompositorAccelerationPrefs();
   void InitGPUProcessPrefs();
   virtual void InitPlatformGPUProcessPrefs() {}
-  void InitOMTPConfig();
 
   // Gather telemetry data about the Gfx Platform and send it
   static void ReportTelemetry();

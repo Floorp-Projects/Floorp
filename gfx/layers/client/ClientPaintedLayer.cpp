@@ -25,7 +25,6 @@
 #include "nsCOMPtr.h"         // for already_AddRefed
 #include "nsISupportsImpl.h"  // for Layer::AddRef, etc
 #include "nsRect.h"           // for mozilla::gfx::IntRect
-#include "PaintThread.h"
 #include "ReadbackProcessor.h"
 #include "RotatedBuffer.h"
 
@@ -87,10 +86,6 @@ bool ClientPaintedLayer::UpdatePaintRegion(PaintState& aState) {
 }
 
 void ClientPaintedLayer::FinishPaintState(PaintState& aState) {
-  if (aState.mAsyncTask && !aState.mAsyncTask->mCapture->IsEmpty()) {
-    ClientManager()->SetQueuedAsyncPaints();
-    PaintThread::Get()->QueuePaintTask(std::move(aState.mAsyncTask));
-  }
 }
 
 uint32_t ClientPaintedLayer::GetPaintFlags(ReadbackProcessor* aReadback) {
@@ -105,9 +100,6 @@ uint32_t ClientPaintedLayer::GetPaintFlags(ReadbackProcessor* aReadback) {
     }
   }
 #endif
-  if ((!aReadback || !UsedForReadback()) && PaintThread::Get()) {
-    flags |= ContentClient::PAINT_ASYNC;
-  }
   return flags;
 }
 

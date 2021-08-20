@@ -153,14 +153,6 @@ class MockGfxInfo final : public nsIGfxInfo {
   NS_IMETHOD GetContentUsesTiling(bool* aUsesTiling) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  NS_IMETHOD GetOffMainThreadPaintEnabled(
-      bool* aOffMainThreadPaintEnabled) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD GetOffMainThreadPaintWorkerCount(
-      int32_t* aOffMainThreadPaintWorkerCount) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   NS_IMETHOD GetTargetFrameRate(uint32_t* aTargetFrameRate) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

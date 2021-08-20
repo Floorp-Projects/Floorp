@@ -144,7 +144,6 @@ void ClientMultiTiledLayerBuffer::MaybeSyncTextures(
     // texture IDs that we need to ensure are unused by the GPU before we
     // continue.
     if (!aPaintRegion.IsEmpty()) {
-      MOZ_ASSERT(mPaintTasks.IsEmpty());
       for (size_t i = 0; i < mRetainedTiles.Length(); ++i) {
         const TileCoordIntPoint tileCoord = aNewTiles.TileCoord(i);
 
@@ -215,7 +214,6 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   MaybeSyncTextures(paintRegion, newTiles, scaledTileSize);
 
   if (!paintRegion.IsEmpty()) {
-    MOZ_ASSERT(mPaintTasks.IsEmpty());
 
     for (size_t i = 0; i < newTileCount; ++i) {
       const TileCoordIntPoint tileCoord = newTiles.TileCoord(i);
@@ -276,25 +274,6 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       mPaintTiles.Clear();
       mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
                                std::numeric_limits<int32_t>::max());
-    }
-
-    // Dispatch to the paint thread
-    if (aFlags & TilePaintFlags::Async) {
-      bool queuedTask = false;
-
-      while (!mPaintTasks.IsEmpty()) {
-        UniquePtr<PaintTask> task = mPaintTasks.PopLastElement();
-        if (!task->mCapture->IsEmpty()) {
-          PaintThread::Get()->QueuePaintTask(std::move(task));
-          queuedTask = true;
-        }
-      }
-
-      if (queuedTask) {
-        mManager->SetQueuedAsyncPaints();
-      }
-
-      mPaintTasks.Clear();
     }
 
     for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
@@ -383,16 +362,8 @@ bool ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   paintTile.mDrawTarget = backBuffer->mTarget;
   mPaintTiles.AppendElement(paintTile);
 
-  if (aFlags & TilePaintFlags::Async) {
-    UniquePtr<PaintTask> task(new PaintTask());
-    task->mCapture = backBuffer->mCapture;
-    task->mTarget = backBuffer->mBackBuffer;
-    task->mClients = std::move(backBuffer->mTextureClients);
-    mPaintTasks.AppendElement(std::move(task));
-  } else {
-    MOZ_RELEASE_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
-    MOZ_RELEASE_ASSERT(backBuffer->mCapture == nullptr);
-  }
+  MOZ_RELEASE_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
+  MOZ_RELEASE_ASSERT(backBuffer->mCapture == nullptr);
 
   mTilingOrigin.x = std::min(mTilingOrigin.x, paintTile.mTileOrigin.x);
   mTilingOrigin.y = std::min(mTilingOrigin.y, paintTile.mTileOrigin.y);
