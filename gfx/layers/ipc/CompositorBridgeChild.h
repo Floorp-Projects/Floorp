@@ -14,7 +14,6 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorBridgeChild.h"
 #include "mozilla/layers/TextureForwarder.h"  // for TextureForwarder
-#include "mozilla/layers/PaintThread.h"       // for PaintThread
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsClassHashtable.h"  // for nsClassHashtable
 #include "nsCOMPtr.h"          // for nsCOMPtr
@@ -217,19 +216,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   wr::PipelineId GetNextPipelineId();
 
-  // Must only be called from the main thread. Ensures that any paints from
-  // previous frames have been flushed. The main thread blocks until the
-  // operation completes.
-  void FlushAsyncPaints();
-
-  // Must only be called from the main thread. Notifies the CompositorBridge
-  // that the paint thread is going to begin painting asynchronously.
-  void NotifyBeginAsyncPaint(PaintTask* aTask);
-
-  // Must only be called from the paint thread. Notifies the CompositorBridge
-  // that the paint thread has finished an asynchronous paint request.
-  bool NotifyFinishedAsyncWorkerPaint(PaintTask* aTask);
-
   // Must only be called from the main thread. Notifies the CompositorBridge
   // that all work has been submitted to the paint thread or paint worker
   // threads, and returns whether all paints are completed. If this returns
@@ -242,11 +228,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // that the paint thread has finished all async paints and and may do the
   // requested texture sync and resume sending messages.
   void NotifyFinishedAsyncEndLayerTransaction();
-
-  // Must only be called from the main thread. Notifies the CompoistorBridge
-  // that a transaction is about to be sent, and if the paint thread is
-  // currently painting, to begin delaying IPC messages.
-  void PostponeMessagesIfAsyncPainting();
 
  private:
   // Private destructor, to discourage deletion outside of Release():

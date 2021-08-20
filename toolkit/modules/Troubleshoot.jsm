@@ -609,8 +609,6 @@ var dataProviders = {
       cleartypeParameters: "clearTypeParameters",
       UsesTiling: "usesTiling",
       ContentUsesTiling: "contentUsesTiling",
-      OffMainThreadPaintEnabled: "offMainThreadPaintEnabled",
-      OffMainThreadPaintWorkerCount: "offMainThreadPaintWorkerCount",
       TargetFrameRate: "targetFrameRate",
       windowProtocol: null,
       desktopEnvironment: null,

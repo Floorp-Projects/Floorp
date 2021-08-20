@@ -33,7 +33,6 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/PTextureChild.h"
-#include "mozilla/layers/PaintThread.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
@@ -1767,17 +1766,6 @@ void TextureClient::EnableBlockingReadLock() {
   if (!mReadLock) {
     mReadLock = new CrossProcessSemaphoreReadLock();
   }
-}
-
-void TextureClient::AddPaintThreadRef() {
-  MOZ_ASSERT(NS_IsMainThread());
-  mPaintThreadRefs += 1;
-}
-
-void TextureClient::DropPaintThreadRef() {
-  MOZ_RELEASE_ASSERT(PaintThread::Get()->IsOnPaintWorkerThread());
-  MOZ_RELEASE_ASSERT(mPaintThreadRefs >= 1);
-  mPaintThreadRefs -= 1;
 }
 
 bool UpdateYCbCrTextureClient(TextureClient* aTexture,
