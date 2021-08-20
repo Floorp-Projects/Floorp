@@ -22,40 +22,16 @@
 
 namespace mozilla {
 
-void WebGLContext::SetEnabled(const GLenum cap, const Maybe<GLuint> i,
+void WebGLContext::SetEnabled(const char* const funcName, const GLenum cap,
                               const bool enabled) {
-  const FuncScope funcScope(*this, "enable(i)/disable(i)");
+  const FuncScope funcScope(*this, funcName);
   if (IsContextLost()) return;
 
   if (!ValidateCapabilityEnum(cap)) return;
 
-  if (i) {
-    if (cap != LOCAL_GL_BLEND) {
-      ErrorInvalidEnumArg("cap", cap);
-      return;
-    }
-
-    const auto limit = MaxValidDrawBuffers();
-    if (*i >= limit) {
-      ErrorInvalidValue("`index` (%u) must be < %s (%u)", *i,
-                        "MAX_DRAW_BUFFERS", limit);
-      return;
-    }
-  }
-
-  const auto slot = GetStateTrackingSlot(cap, i ? *i : 0);
+  const auto& slot = GetStateTrackingSlot(cap);
   if (slot) {
     *slot = enabled;
-  } else if (cap == LOCAL_GL_BLEND) {
-    if (i) {
-      mBlendEnabled[*i] = enabled;
-    } else {
-      if (enabled) {
-        mBlendEnabled.set();
-      } else {
-        mBlendEnabled.reset();
-      }
-    }
   }
 
   switch (cap) {
@@ -65,15 +41,7 @@ void WebGLContext::SetEnabled(const GLenum cap, const Maybe<GLuint> i,
 
     default:
       // Non-lazy caps.
-      if (i) {
-        if (enabled) {
-          gl->fEnablei(cap, *i);
-        } else {
-          gl->fDisablei(cap, *i);
-        }
-      } else {
-        gl->SetEnabled(cap, enabled);
-      }
+      gl->SetEnabled(cap, enabled);
       break;
   }
 }
@@ -120,8 +88,7 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
         }
       } else {
         const auto& fb = *mBoundDrawFramebuffer;
-        const auto& bs = fb.DrawBufferEnabled();
-        if (bs[slotId]) {
+        if (fb.IsDrawBufferEnabled(slotId)) {
           ret = LOCAL_GL_COLOR_ATTACHMENT0 + slotId;
         }
       }
@@ -388,9 +355,6 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
     case LOCAL_GL_STENCIL_WRITEMASK:
       return Some(mStencilWriteMaskFront);
 
-    case LOCAL_GL_COLOR_WRITEMASK:
-      return Some(mColorWriteMask0);
-
     // float
     case LOCAL_GL_LINE_WIDTH:
       return Some((double)mLineWidth);
@@ -438,7 +402,7 @@ bool WebGLContext::IsEnabled(GLenum cap) {
 
   if (!ValidateCapabilityEnum(cap)) return false;
 
-  const auto& slot = GetStateTrackingSlot(cap, 0);
+  const auto& slot = GetStateTrackingSlot(cap);
   if (slot) return *slot;
 
   return gl->fIsEnabled(cap);
@@ -464,7 +428,7 @@ bool WebGLContext::ValidateCapabilityEnum(GLenum cap) {
   }
 }
 
-bool* WebGLContext::GetStateTrackingSlot(GLenum cap, GLuint i) {
+realGLboolean* WebGLContext::GetStateTrackingSlot(GLenum cap) {
   switch (cap) {
     case LOCAL_GL_DEPTH_TEST:
       return &mDepthTestEnabled;
@@ -476,6 +440,8 @@ bool* WebGLContext::GetStateTrackingSlot(GLenum cap, GLuint i) {
       return &mScissorTestEnabled;
     case LOCAL_GL_STENCIL_TEST:
       return &mStencilTestEnabled;
+    case LOCAL_GL_BLEND:
+      return &mBlendEnabled;
   }
 
   return nullptr;

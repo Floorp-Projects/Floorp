@@ -79,7 +79,6 @@ enum class GLFeature {
   copy_buffer,
   depth_texture,
   draw_buffers,
-  draw_buffers_indexed,
   draw_instanced,
   element_index_uint,
   ES2_compatibility,
@@ -474,7 +473,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     OES_depth24,
     OES_depth32,
     OES_depth_texture,
-    OES_draw_buffers_indexed,
     OES_element_index_uint,
     OES_fbo_render_mipmap,
     OES_framebuffer_object,
@@ -3310,43 +3308,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     ASSERT_SYMBOL_PRESENT(fFramebufferTextureMultiview);
     mSymbols.fFramebufferTextureMultiview(target, attachment, texture, level,
                                           baseViewIndex, numViews);
-    AFTER_GL_CALL;
-  }
-
-  // -
-  // draw_buffers_indexed
-
-  void fBlendEquationSeparatei(GLuint i, GLenum modeRGB,
-                               GLenum modeAlpha) const {
-    BEFORE_GL_CALL;
-    mSymbols.fBlendEquationSeparatei(i, modeRGB, modeAlpha);
-    AFTER_GL_CALL;
-  }
-
-  void fBlendFuncSeparatei(GLuint i, GLenum sfactorRGB, GLenum dfactorRGB,
-                           GLenum sfactorAlpha, GLenum dfactorAlpha) const {
-    BEFORE_GL_CALL;
-    mSymbols.fBlendFuncSeparatei(i, sfactorRGB, dfactorRGB, sfactorAlpha,
-                                 dfactorAlpha);
-    AFTER_GL_CALL;
-  }
-
-  void fColorMaski(GLuint i, realGLboolean red, realGLboolean green,
-                   realGLboolean blue, realGLboolean alpha) const {
-    BEFORE_GL_CALL;
-    mSymbols.fColorMaski(i, red, green, blue, alpha);
-    AFTER_GL_CALL;
-  }
-
-  void fDisablei(GLenum capability, GLuint i) const {
-    BEFORE_GL_CALL;
-    mSymbols.fDisablei(capability, i);
-    AFTER_GL_CALL;
-  }
-
-  void fEnablei(GLenum capability, GLuint i) const {
-    BEFORE_GL_CALL;
-    mSymbols.fEnablei(capability, i);
     AFTER_GL_CALL;
   }
 

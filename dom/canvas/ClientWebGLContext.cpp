@@ -5,8 +5,6 @@
 
 #include "ClientWebGLContext.h"
 
-#include <bitset>
-
 #include "ClientWebGLExtensions.h"
 #include "Layers.h"
 #include "gfxCrashReporterUtils.h"
@@ -1624,10 +1622,9 @@ bool ClientWebGLContext::IsVertexArray(
 
 // ------------------------- GL State -------------------------
 
-void ClientWebGLContext::SetEnabledI(GLenum cap, Maybe<GLuint> i,
-                                     bool val) const {
-  Run<RPROC(SetEnabled)>(cap, i, val);
-}
+void ClientWebGLContext::Disable(GLenum cap) const { Run<RPROC(Disable)>(cap); }
+
+void ClientWebGLContext::Enable(GLenum cap) const { Run<RPROC(Enable)>(cap); }
 
 bool ClientWebGLContext::IsEnabled(GLenum cap) const {
   const FuncScope funcScope(*this, "isEnabled");
@@ -1898,6 +1895,17 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_VIEWPORT:
       retval.set(Create<dom::Int32Array>(cx, this, state.mViewport, rv));
       return;
+
+    // 4 bools
+    case LOCAL_GL_COLOR_WRITEMASK: {
+      JS::Rooted<JS::Value> arr(cx);
+      const auto& src = state.mColorWriteMask;
+      if (!dom::ToJSValue(cx, src.data(), src.size(), &arr)) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+      retval.set(arr);
+      return;
+    }
 
     // any
     case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS:
@@ -2178,19 +2186,6 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
           retval.set(JS::BooleanValue(*maybe));
           break;
 
-        // 4 bools
-        case LOCAL_GL_COLOR_WRITEMASK: {
-          const auto mask = uint8_t(*maybe);
-          const auto bs = std::bitset<4>(mask);
-          const auto src = std::array<bool, 4>{bs[0], bs[1], bs[2], bs[3]};
-          JS::Rooted<JS::Value> arr(cx);
-          if (!dom::ToJSValue(cx, src.data(), src.size(), &arr)) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-          }
-          retval.set(arr);
-          return;
-        }
-
         default:
           retval.set(JS::NumberValue(*maybe));
           break;
@@ -2358,7 +2353,6 @@ void ClientWebGLContext::GetIndexedParameter(
   retval.set(JS::NullValue());
   const FuncScope funcScope(*this, "getIndexedParameter");
   if (IsContextLost()) return;
-  auto keepalive = mNotLost;
 
   const auto& state = State();
 
@@ -2401,22 +2395,7 @@ void ClientWebGLContext::GetIndexedParameter(
     return ret;
   }();
   if (maybe) {
-    switch (target) {
-      case LOCAL_GL_COLOR_WRITEMASK: {
-        const auto bs = std::bitset<4>(*maybe);
-        const auto src = std::array<bool, 4>{bs[0], bs[1], bs[2], bs[3]};
-        JS::Rooted<JS::Value> arr(cx);
-        if (!dom::ToJSValue(cx, src.data(), src.size(), &arr)) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-        retval.set(arr);
-        return;
-      }
-
-      default:
-        retval.set(JS::NumberValue(*maybe));
-        return;
-    }
+    retval.set(JS::NumberValue(*maybe));
   }
 }
 
@@ -2591,15 +2570,14 @@ void ClientWebGLContext::BlendColor(GLclampf r, GLclampf g, GLclampf b,
   Run<RPROC(BlendColor)>(r, g, b, a);
 }
 
-void ClientWebGLContext::BlendEquationSeparateI(Maybe<GLuint> i, GLenum modeRGB,
-                                                GLenum modeAlpha) {
-  Run<RPROC(BlendEquationSeparate)>(i, modeRGB, modeAlpha);
+void ClientWebGLContext::BlendEquationSeparate(GLenum modeRGB,
+                                               GLenum modeAlpha) {
+  Run<RPROC(BlendEquationSeparate)>(modeRGB, modeAlpha);
 }
 
-void ClientWebGLContext::BlendFuncSeparateI(Maybe<GLuint> i, GLenum srcRGB,
-                                            GLenum dstRGB, GLenum srcAlpha,
-                                            GLenum dstAlpha) {
-  Run<RPROC(BlendFuncSeparate)>(i, srcRGB, dstRGB, srcAlpha, dstAlpha);
+void ClientWebGLContext::BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
+                                           GLenum srcAlpha, GLenum dstAlpha) {
+  Run<RPROC(BlendFuncSeparate)>(srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
 
 GLenum ClientWebGLContext::CheckFramebufferStatus(GLenum target) {
@@ -2700,13 +2678,15 @@ void ClientWebGLContext::ClearDepth(GLclampf v) { Run<RPROC(ClearDepth)>(v); }
 
 void ClientWebGLContext::ClearStencil(GLint v) { Run<RPROC(ClearStencil)>(v); }
 
-void ClientWebGLContext::ColorMaskI(Maybe<GLuint> i, bool r, bool g,
-                                   bool b, bool a) const {
+void ClientWebGLContext::ColorMask(WebGLboolean r, WebGLboolean g,
+                                   WebGLboolean b, WebGLboolean a) {
   const FuncScope funcScope(*this, "colorMask");
   if (IsContextLost()) return;
+  auto& state = State();
 
-  const uint8_t mask = uint8_t(r << 0) | uint8_t(g << 1) | uint8_t(b << 2) | uint8_t(a << 3);
-  Run<RPROC(ColorMask)>(i, mask);
+  state.mColorWriteMask = {r, g, b, a};
+
+  Run<RPROC(ColorMask)>(r, g, b, a);
 }
 
 void ClientWebGLContext::CullFace(GLenum face) { Run<RPROC(CullFace)>(face); }
