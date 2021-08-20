@@ -319,6 +319,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   js::ZoneOrGCTaskData<js::jit::JitZone*> jitZone_;
 
+  // Last time at which JIT code was discarded for this zone. This is only set
+  // when JitScripts and Baseline code are discarded as well.
+  js::MainThreadData<mozilla::TimeStamp> lastDiscardedCodeTime_;
+
   js::MainThreadData<bool> gcScheduled_;
   js::MainThreadData<bool> gcScheduledSaved_;
   js::MainThreadData<bool> gcPreserveCode_;
@@ -427,6 +431,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void setPreservingCode(bool preserving) { gcPreserveCode_ = preserving; }
   bool isPreservingCode() const { return gcPreserveCode_; }
+
+  mozilla::TimeStamp lastDiscardedCodeTime() const {
+    return lastDiscardedCodeTime_;
+  }
 
   // Whether this zone can currently be collected.
   bool canCollect();
