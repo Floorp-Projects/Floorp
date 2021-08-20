@@ -19,7 +19,9 @@
 
 #if defined(_WIN32)
 // Ensure the min/max macro in the header doesn't collide with functions in std::
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <Windows.h>
 #else
 #include <dlfcn.h>
@@ -384,20 +386,34 @@ __attribute__((weak))
 
   inline void* symbol_lookup(std::string prefixed_name) {
     #if defined(_WIN32)
-      void* ret = GetProcAddress((HMODULE) library, prefixed_name.c_str());
+      void* ret = (void*) GetProcAddress((HMODULE) library, prefixed_name.c_str());
     #else
       void* ret = dlsym(library, prefixed_name.c_str());
     #endif
+    if (ret == nullptr) {
+      // Some lookups such as globals are not exposed as shared library symbols
+      uint32_t* heap_index_pointer = (uint32_t*) sandbox_info.lookup_wasm2c_nonfunc_export(sandbox, prefixed_name.c_str());
+      if (heap_index_pointer != nullptr) {
+        uint32_t heap_index = *heap_index_pointer;
+        ret = &(reinterpret_cast<char*>(heap_base)[heap_index]);
+      }
+    }
     return ret;
   }
 
 protected:
-  inline void impl_create_sandbox(const char* wasm2c_module_path, const char* wasm_module_name = "")
+  #if defined(_WIN32)
+  using path_buf = const LPCWSTR;
+  #else
+  using path_buf = const char*;
+  #endif
+
+  inline void impl_create_sandbox(path_buf wasm2c_module_path, const char* wasm_module_name = "")
   {
     detail::dynamic_check(sandbox == nullptr, "Sandbox already initialized");
 
     #if defined(_WIN32)
-    library = (void*) LoadLibraryA(wasm2c_module_path);
+    library = (void*) LoadLibraryW(wasm2c_module_path);
     #else
     library = dlopen(wasm2c_module_path, RTLD_LAZY);
     #endif
@@ -503,7 +519,7 @@ protected:
 
         auto func_type_idx = get_wasm2c_func_index(static_cast<T>(nullptr));
         slot_number =
-          sandbox_info.add_wasm2c_callback(sandbox, func_type_idx, const_cast<void*>(p));
+          sandbox_info.add_wasm2c_callback(sandbox, func_type_idx, const_cast<void*>(p), WASM_RT_INTERNAL_FUNCTION);
         internal_callbacks[p] = slot_number;
         slot_assignments[slot_number] = p;
       }
@@ -768,7 +784,7 @@ protected:
 
     auto func_type_idx = get_wasm2c_func_index<T_Ret, T_Args...>();
     uint32_t slot_number =
-      sandbox_info.add_wasm2c_callback(sandbox, func_type_idx, chosen_interceptor);
+      sandbox_info.add_wasm2c_callback(sandbox, func_type_idx, chosen_interceptor, WASM_RT_EXTERNAL_FUNCTION);
 
     callback_unique_keys[found_loc] = key;
     callbacks[found_loc] = callback;
