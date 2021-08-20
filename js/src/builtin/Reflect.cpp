@@ -6,6 +6,8 @@
 
 #include "builtin/Reflect.h"
 
+#include "jsapi.h"
+
 #include "builtin/Array.h"
 
 #include "jit/InlinableNatives.h"

@@ -8,6 +8,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include "jsapi.h"
+
 #include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags

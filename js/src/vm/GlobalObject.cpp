@@ -6,6 +6,7 @@
 
 #include "vm/GlobalObject.h"
 
+#include "jsapi.h"
 #include "jsdate.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"

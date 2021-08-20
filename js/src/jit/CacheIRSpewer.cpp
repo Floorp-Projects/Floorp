@@ -13,6 +13,7 @@
 #  include <algorithm>
 #  include <stdarg.h>
 
+#  include "jsapi.h"
 #  include "jsmath.h"
 
 #  include "js/ScalarType.h"  // js::Scalar::Type
