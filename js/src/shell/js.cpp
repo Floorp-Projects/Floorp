@@ -140,6 +140,7 @@
 #include "js/PropertySpec.h"
 #include "js/Realm.h"
 #include "js/RegExp.h"  // JS::ObjectIsRegExp
+#include "js/ScriptPrivate.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/Stack.h"
