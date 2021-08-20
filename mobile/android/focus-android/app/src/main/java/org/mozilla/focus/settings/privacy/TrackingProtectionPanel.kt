@@ -90,9 +90,9 @@ class TrackingProtectionPanel(
         }
 
         val icon = if (isTrackingProtectionOn) {
-            R.drawable.mozac_ic_tracking_protection_on_trackers_blocked
+            R.drawable.mozac_ic_shield
         } else {
-            R.drawable.mozac_ic_tracking_protection_off_for_a_site
+            R.drawable.mozac_ic_shield_disabled
         }
 
         binding.enhancedTracking.apply {

@@ -30,7 +30,7 @@ class SwitchWithDescription @JvmOverloads constructor(
         context.withStyledAttributes(attrs, R.styleable.SwitchWithDescription, defStyleAttr, 0) {
             val icon = getResourceId(
                 R.styleable.SwitchWithDescription_switchIcon,
-                R.drawable.mozac_ic_tracking_protection_on_trackers_blocked
+                R.drawable.mozac_ic_shield
             )
             updateIcon(icon)
 

@@ -49,7 +49,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         iconView.setImageBitmap(iconBitmap)
 
         val blockIcon = dialogView.findViewById<ImageView>(R.id.homescreen_dialog_block_icon)
-        blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled2)
+        blockIcon.setImageResource(R.drawable.mozac_ic_shield_disabled)
         val warning = dialogView.findViewById<ConstraintLayout>(R.id.homescreen_dialog_warning_layout)
         warning.visibility = if (blockingEnabled) View.GONE else View.VISIBLE
 

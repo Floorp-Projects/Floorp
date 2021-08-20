@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.browser.integration
 
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -63,6 +64,21 @@ class BrowserToolbarIntegration(
             }
 
             setOnUrlLongClickListener { onUrlLongClicked() }
+
+            icons = icons.copy(
+                trackingProtectionTrackersBlocked = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_shield
+                )!!,
+                trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_shield
+                )!!,
+                trackingProtectionException = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_shield_disabled
+                )!!
+            )
         }
 
         toolbar.display.setOnTrackingProtectionClickedListener {
