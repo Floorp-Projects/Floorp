@@ -21,7 +21,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"  // for LayerMetricsWrapper
 #include "mozilla/layers/LayersMessages.h"
-#include "mozilla/layers/PaintThread.h"
 #include "mozilla/mozalloc.h"  // for operator delete, etc
 #include "nsISupportsImpl.h"   // for MOZ_COUNT_CTOR, etc
 #include "mozilla/layers/MultiTiledContentClient.h"
@@ -348,8 +347,7 @@ bool ClientTiledPaintedLayer::RenderHighPrecision(
   TILING_LOG("TILING %p: Non-progressive paint new valid region %s\n", this,
              ToString(GetValidRegion()).c_str());
 
-  TilePaintFlags flags =
-      PaintThread::Get() ? TilePaintFlags::Async : TilePaintFlags::None;
+  TilePaintFlags flags = TilePaintFlags::None;
 
   mContentClient->GetTiledBuffer()->SetFrameResolution(mPaintData.mResolution);
   mContentClient->GetTiledBuffer()->PaintThebes(

@@ -18,7 +18,6 @@
 #include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/LayerTransactionChild.h"
-#include "mozilla/layers/PaintThread.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "mozilla/layers/TextureClient.h"      // for TextureClient
@@ -164,9 +163,6 @@ void CompositorBridgeChild::Destroy() {
     mLayerManager->Destroy();
     mLayerManager = nullptr;
   }
-
-  // Flush async paints before we destroy texture data.
-  FlushAsyncPaints();
 
   if (!mCanSend) {
     // We may have already called destroy but still have lingering references
@@ -918,83 +914,6 @@ wr::PipelineId CompositorBridgeChild::GetNextPipelineId() {
   return wr::AsPipelineId(GetNextResourceId());
 }
 
-void CompositorBridgeChild::FlushAsyncPaints() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  Maybe<TimeStamp> start;
-  if (XRE_IsContentProcess() && gfx::gfxVars::UseOMTP()) {
-    start = Some(TimeStamp::Now());
-  }
-
-  {
-    MonitorAutoLock lock(mPaintLock);
-    while (mOutstandingAsyncPaints > 0 || mOutstandingAsyncEndTransaction) {
-      lock.Wait();
-    }
-
-    // It's now safe to free any TextureClients that were used during painting.
-    mTextureClientsForAsyncPaint.Clear();
-  }
-
-  if (start) {
-    float ms = (TimeStamp::Now() - start.value()).ToMilliseconds();
-
-    // Anything above 200us gets recorded.
-    if (ms >= 0.2) {
-      mSlowFlushCount++;
-      Telemetry::Accumulate(Telemetry::GFX_OMTP_PAINT_WAIT_TIME, int32_t(ms));
-    }
-    mTotalFlushCount++;
-
-    double ratio = double(mSlowFlushCount) / double(mTotalFlushCount);
-    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_OMTP_PAINT_WAIT_RATIO,
-                         uint32_t(ratio * 100 * 100));
-  }
-}
-
-void CompositorBridgeChild::NotifyBeginAsyncPaint(PaintTask* aTask) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MonitorAutoLock lock(mPaintLock);
-
-  if (mTotalAsyncPaints == 0) {
-    mAsyncTransactionBegin = TimeStamp::Now();
-  }
-  mTotalAsyncPaints += 1;
-
-  // We must not be waiting for paints or buffer copying to complete yet. This
-  // would imply we started a new paint without waiting for a previous one,
-  // which could lead to incorrect rendering or IPDL deadlocks.
-  MOZ_ASSERT(!mIsDelayingForAsyncPaints);
-
-  mOutstandingAsyncPaints++;
-
-  // Mark texture clients that they are being used for async painting, and
-  // make sure we hold them alive on the main thread.
-  for (auto& client : aTask->mClients) {
-    client->AddPaintThreadRef();
-    mTextureClientsForAsyncPaint.AppendElement(client);
-  };
-}
-
-// Must only be called from the paint thread. Notifies the CompositorBridge
-// that the paint thread has finished an asynchronous paint request.
-bool CompositorBridgeChild::NotifyFinishedAsyncWorkerPaint(PaintTask* aTask) {
-  MOZ_ASSERT(PaintThread::Get()->IsOnPaintWorkerThread());
-
-  MonitorAutoLock lock(mPaintLock);
-  mOutstandingAsyncPaints--;
-
-  for (auto& client : aTask->mClients) {
-    client->DropPaintThreadRef();
-  };
-  aTask->DropTextureClients();
-
-  // If the main thread has completed queuing work and this was the
-  // last paint, then it is time to end the layer transaction and sync
-  return mOutstandingAsyncEndTransaction && mOutstandingAsyncPaints == 0;
-}
-
 bool CompositorBridgeChild::NotifyBeginAsyncEndLayerTransaction(
     SyncObjectClient* aSyncObject) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1004,77 +923,6 @@ bool CompositorBridgeChild::NotifyBeginAsyncEndLayerTransaction(
   mOutstandingAsyncEndTransaction = true;
   mOutstandingAsyncSyncObject = aSyncObject;
   return mOutstandingAsyncPaints == 0;
-}
-
-void CompositorBridgeChild::NotifyFinishedAsyncEndLayerTransaction() {
-  MOZ_ASSERT(PaintThread::Get()->IsOnPaintWorkerThread());
-
-  if (mOutstandingAsyncSyncObject) {
-    mOutstandingAsyncSyncObject->Synchronize();
-    mOutstandingAsyncSyncObject = nullptr;
-  }
-
-  MonitorAutoLock lock(mPaintLock);
-
-  if (mTotalAsyncPaints > 0) {
-    float tenthMs =
-        (TimeStamp::Now() - mAsyncTransactionBegin).ToMilliseconds() * 10;
-    Telemetry::Accumulate(Telemetry::GFX_OMTP_PAINT_TASK_COUNT,
-                          int32_t(mTotalAsyncPaints));
-    Telemetry::Accumulate(Telemetry::GFX_OMTP_PAINT_TIME, int32_t(tenthMs));
-    mTotalAsyncPaints = 0;
-  }
-
-  // Since this should happen after ALL paints are done and
-  // at the end of a transaction, this should always be true.
-  MOZ_RELEASE_ASSERT(mOutstandingAsyncPaints == 0);
-  MOZ_ASSERT(mOutstandingAsyncEndTransaction);
-
-  mOutstandingAsyncEndTransaction = false;
-
-  // It's possible that we painted so fast that the main thread never reached
-  // the code that starts delaying messages. If so, mIsDelayingForAsyncPaints
-  // will be false, and we can safely return.
-  if (mIsDelayingForAsyncPaints) {
-    ResumeIPCAfterAsyncPaint();
-  }
-
-  // Notify the main thread in case it's blocking. We do this unconditionally
-  // to avoid deadlocking.
-  lock.Notify();
-}
-
-void CompositorBridgeChild::ResumeIPCAfterAsyncPaint() {
-  // Note: the caller is responsible for holding the lock.
-  mPaintLock.AssertCurrentThreadOwns();
-  MOZ_ASSERT(PaintThread::Get()->IsOnPaintWorkerThread());
-  MOZ_ASSERT(mOutstandingAsyncPaints == 0);
-  MOZ_ASSERT(!mOutstandingAsyncEndTransaction);
-  MOZ_ASSERT(mIsDelayingForAsyncPaints);
-
-  mIsDelayingForAsyncPaints = false;
-
-  // It's also possible that the channel has shut down already.
-  if (!mCanSend || mActorDestroyed) {
-    return;
-  }
-
-  GetIPCChannel()->StopPostponingSends();
-}
-
-void CompositorBridgeChild::PostponeMessagesIfAsyncPainting() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MonitorAutoLock lock(mPaintLock);
-
-  MOZ_ASSERT(!mIsDelayingForAsyncPaints);
-
-  // We need to wait for async paints and the async end transaction as
-  // it will do texture synchronization
-  if (mOutstandingAsyncPaints > 0 || mOutstandingAsyncEndTransaction) {
-    mIsDelayingForAsyncPaints = true;
-    GetIPCChannel()->BeginPostponingSends();
-  }
 }
 
 }  // namespace layers

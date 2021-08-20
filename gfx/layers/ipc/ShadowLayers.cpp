@@ -695,10 +695,6 @@ bool ShadowLayerForwarder::EndTransaction(
     startTime = Some(TimeStamp::Now());
   }
 
-  // We delay at the last possible minute, to give the paint thread a chance to
-  // finish. If it does we don't have to delay messages at all.
-  GetCompositorBridgeChild()->PostponeMessagesIfAsyncPainting();
-
   MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
   RenderTraceScope rendertrace3("Forward Transaction", "000093");
   if (!mShadowManager->SendUpdate(info)) {

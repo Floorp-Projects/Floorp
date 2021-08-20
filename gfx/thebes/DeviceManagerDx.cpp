@@ -21,7 +21,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
-#include "mozilla/layers/PaintThread.h"
 #include "mozilla/Preferences.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
@@ -934,16 +933,6 @@ RefPtr<ID3D11Device> DeviceManagerDx::CreateDecoderDevice() {
 }
 
 void DeviceManagerDx::ResetDevices() {
-  // Flush the paint thread before revoking all these singletons. This
-  // should ensure that the paint thread doesn't start mixing and matching
-  // old and new objects together.
-  if (PaintThread::Get()) {
-    CompositorBridgeChild* cbc = CompositorBridgeChild::Get();
-    if (cbc) {
-      cbc->FlushAsyncPaints();
-    }
-  }
-
   MutexAutoLock lock(mDeviceLock);
 
   mAdapter = nullptr;

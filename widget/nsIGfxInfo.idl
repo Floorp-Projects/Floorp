@@ -38,8 +38,6 @@ interface nsIGfxInfo : nsISupports
   readonly attribute boolean isHeadless;
   readonly attribute boolean UsesTiling;
   readonly attribute boolean ContentUsesTiling;
-  readonly attribute boolean OffMainThreadPaintEnabled;
-  readonly attribute long OffMainThreadPaintWorkerCount;
   readonly attribute unsigned long TargetFrameRate;
 
   // XXX: Switch to a list of devices, rather than explicitly numbering them.

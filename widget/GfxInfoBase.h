@@ -73,10 +73,6 @@ class GfxInfoBase : public nsIGfxInfo,
   NS_IMETHOD GetIsHeadless(bool* aIsHeadless) override;
   NS_IMETHOD GetUsesTiling(bool* aUsesTiling) override;
   NS_IMETHOD GetContentUsesTiling(bool* aUsesTiling) override;
-  NS_IMETHOD GetOffMainThreadPaintEnabled(
-      bool* aOffMainThreadPaintEnabled) override;
-  NS_IMETHOD GetOffMainThreadPaintWorkerCount(
-      int32_t* aOffMainThreadPaintWorkerCount) override;
   NS_IMETHOD GetTargetFrameRate(uint32_t* aTargetFrameRate) override;
 
   // Non-XPCOM method to get IPC data:

@@ -34,7 +34,6 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/layers/PaintThread.h"
 
 #include "gfxPlatform.h"
 #include "gfxConfig.h"
@@ -1805,24 +1804,6 @@ GfxInfoBase::GetUsesTiling(bool* aUsesTiling) {
 NS_IMETHODIMP
 GfxInfoBase::GetContentUsesTiling(bool* aUsesTiling) {
   *aUsesTiling = gfxPlatform::GetPlatform()->ContentUsesTiling();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfoBase::GetOffMainThreadPaintEnabled(bool* aOffMainThreadPaintEnabled) {
-  *aOffMainThreadPaintEnabled = gfxConfig::IsEnabled(gfx::Feature::OMTP);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfoBase::GetOffMainThreadPaintWorkerCount(
-    int32_t* aOffMainThreadPaintWorkerCount) {
-  if (gfxConfig::IsEnabled(gfx::Feature::OMTP)) {
-    *aOffMainThreadPaintWorkerCount =
-        layers::PaintThread::CalculatePaintWorkerCount();
-  } else {
-    *aOffMainThreadPaintWorkerCount = 0;
-  }
   return NS_OK;
 }
 
