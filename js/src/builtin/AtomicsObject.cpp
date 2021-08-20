@@ -19,7 +19,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 
-#include "jsapi.h"
 #include "jsnum.h"
 
 #include "jit/AtomicOperations.h"
