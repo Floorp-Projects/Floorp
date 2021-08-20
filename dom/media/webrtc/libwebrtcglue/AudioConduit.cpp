@@ -463,12 +463,12 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
   auto info = static_cast<webrtc::internal::AudioReceiveStream*>(mRecvStream)
                   ->GetAudioFrameWithInfo(samplingFreqHz, frame);
 
+  mMutex.Unlock();
+
   if (info == webrtc::AudioMixer::Source::AudioFrameInfo::kError) {
     CSFLogError(LOGTAG, "%s Getting audio frame failed", __FUNCTION__);
     return kMediaConduitPlayoutError;
   }
-
-  mMutex.Unlock();
 
   // Spec says to "queue a task" to update contributing/synchronization source
   // stats; that's what we're doing here.
