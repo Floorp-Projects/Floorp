@@ -48,10 +48,10 @@ def guess_mozinfo_from_task(task):
         "ccov": "ccov" in task["build-attributes"]["build_platform"],
         "debug": task["build-attributes"]["build_type"] == "debug",
         "e10s": task["attributes"]["e10s"],
-        "fission": task["attributes"].get("unittest_variant") == "fission",
+        "fission": "fission" in task["attributes"].get("unittest_variant"),
         "headless": "-headless" in task["test-name"],
         "tsan": "tsan" in task["build-attributes"]["build_platform"],
-        "webrender": task.get("webrender", False),
+        "webrender": task.get("webrender", True),
     }
     for platform in ("android", "linux", "mac", "win"):
         if platform in task["build-attributes"]["build_platform"]:
