@@ -17,7 +17,7 @@
 static const char hexCharsUpper[] = "0123456789ABCDEF";
 static const char hexCharsUpperLower[] = "0123456789ABCDEFabcdef";
 
-static const int netCharType[256] =
+static const unsigned char netCharType[256] =
     // clang-format off
 /*  Bit 0       xalpha      -- the alphas
 **  Bit 1       xpalpha     -- as xalpha but
@@ -56,7 +56,7 @@ static const int netCharType[256] =
      ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
 // clang-format on
 
-#define IS_OK(C) (netCharType[((unsigned int)(C))] & (aFlags))
+#define IS_OK(C) (netCharType[((unsigned char)(C))] & (aFlags))
 #define HEX_ESCAPE '%'
 
 static const uint32_t ENCODE_MAX_LEN = 6;  // %uABCD
