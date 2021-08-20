@@ -215,3 +215,5 @@ fails-if(layerChecksEnabled) != reftest-assigned-layer-fail-4.html about:blank
 pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == reftest-resolution.html reftest-resolution-ref.html
 
 == reftest-no-flush.html reftest-no-flush-ref.html
+
+skip-if(Android) HTTP == exampleorg-1.html exampleorg-1-ref.html

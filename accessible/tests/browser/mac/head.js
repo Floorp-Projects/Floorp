@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent,
+/* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent, waitForStateChange,
    NSRange, NSDictionary, stringForRange, AXTextStateChangeTypeEdit,
    AXTextEditTypeDelete, AXTextEditTypeTyping, AXTextStateChangeTypeSelectionMove,
    AXTextStateChangeTypeSelectionExtend, AXTextSelectionDirectionUnknown,
@@ -126,4 +126,16 @@ function stringForRange(macDoc, range) {
   );
 
   return str;
+}
+
+function waitForStateChange(id, state, isEnabled) {
+  return waitForEvent(EVENT_STATE_CHANGE, e => {
+    e.QueryInterface(nsIAccessibleStateChangeEvent);
+    return (
+      e.state == state &&
+      !e.isExtraState &&
+      isEnabled == e.isEnabled &&
+      id == getAccessibleDOMNodeID(e.accessible)
+    );
+  });
 }

@@ -884,8 +884,9 @@ void PrintProcessState(const ProcessState& process_state,
     const CallStack* requesting_thread_callstack =
       process_state.threads()->at(requesting_thread);
     printf("\n"
-           "Thread %d (%s)",
+           "Thread %d tid %u (%s)",
            requesting_thread,
+           requesting_thread_callstack->tid(),
            process_state.crashed() ? "crashed" :
                                      "requested dump, did not crash");
     if (!requesting_thread_callstack->name().empty()) {
@@ -904,7 +905,7 @@ void PrintProcessState(const ProcessState& process_state,
       // Don't print the crash thread again, it was already printed.
       const CallStack* callstack = process_state.threads()->at(thread_index);
       printf("\n"
-             "Thread %d", thread_index);
+             "Thread %d tid %u", thread_index, callstack->tid());
       if (!callstack->name().empty()) {
         printf(" - %s", callstack->name().c_str());
       }

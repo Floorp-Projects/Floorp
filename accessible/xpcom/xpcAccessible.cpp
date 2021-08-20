@@ -244,11 +244,7 @@ xpcAccessible::GetName(nsAString& aName) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
   nsAutoString name;
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-    proxy->Name(name);
-  } else {
-    Intl()->Name(name);
-  }
+  IntlGeneric()->Name(name);
 
   aName.Assign(name);
 

@@ -979,14 +979,19 @@
   value: "#FFFFFF"
   mirror: never
 
-# 0 = always, except in high contrast mode
-# 1 = always
-# 2 = never
+# This preference is a bit confusing because we use the opposite
+# string value in the colors dialog to indicate to users how FF HCM
+# will behave.
+# With resect to document colors, these values mean:
+# 0 = "default" = always, except in high contrast mode
+# 1 = "always"
+# 2 = "never"
 #
-# Default to 0 on windows and mac, 1 elsewhere.
+# On windows, we set this to 0, which means FF HCM will mirror OS HCM.
+# Everywhere else, we set this to 1, disabling FF HCM.
 - name: browser.display.document_color_use
   type: RelaxedAtomicUint32
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN)
   value: 0
 #else
   value: 1
@@ -11422,6 +11427,16 @@
   mirror: always
 
 - name: webgl.angle.force-warp
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: webgl.auto-flush
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: webgl.auto-flush.gl
   type: RelaxedAtomicBool
   value: false
   mirror: always

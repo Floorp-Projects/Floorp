@@ -58,6 +58,7 @@ class nsAppStartup final : public nsIAppStartup,
   bool mIsSafeModeNecessary;        // Whether safe mode is necessary
   bool mStartupCrashTrackingEnded;  // Whether startup crash tracking has
                                     // already ended
+  bool mWasSilentlyRestarted;       // Was this startup a silent restart?
 
 #if defined(XP_WIN)
   // Interaction with OS-provided profiling probes

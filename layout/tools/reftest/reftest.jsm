@@ -28,6 +28,13 @@ XPCOMUtils.defineLazyGetter(this, "OS", function() {
     return OS;
 });
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  proxyService: [
+    "@mozilla.org/network/protocol-proxy-service;1",
+    "nsIProtocolProxyService",
+  ],
+});
+
 function HasUnexpectedResult()
 {
     return g.testResults.Exception > 0 ||
@@ -313,6 +320,33 @@ function StartHTTPServer()
 {
     g.server.registerContentType("sjs", "sjs");
     g.server.start(-1);
+
+    g.server.identity.add("http", "example.org", "80");
+    g.server.identity.add("https", "example.org", "443");
+
+    const proxyFilter = {
+        proxyInfo: proxyService.newProxyInfo(
+            "http", // type of proxy
+            "localhost", //proxy host
+            g.server.identity.primaryPort, // proxy host port
+            "", // auth header
+            "", // isolation key
+            0, // flags
+            4096, // timeout
+            null // failover proxy
+        ),
+
+        applyFilter(channel, defaultProxyInfo, callback) {
+            if (channel.URI.host == "example.org") {
+                callback.onProxyFilterResult(this.proxyInfo);
+            } else {
+                callback.onProxyFilterResult(defaultProxyInfo);
+            }
+        },
+    };
+
+    proxyService.registerChannelFilter(proxyFilter, 0);
+
     g.httpServerPort = g.server.identity.primaryPort;
 }
 

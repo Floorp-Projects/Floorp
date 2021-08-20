@@ -6,6 +6,7 @@
 
 #include "DecoderDoctorDiagnostics.h"
 #include "MediaKeySystemAccessPermissionRequest.h"
+#include "VideoUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/DetailedPromise.h"

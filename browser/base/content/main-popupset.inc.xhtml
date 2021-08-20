@@ -236,7 +236,7 @@
           <hbox id="UITourTooltipTitleContainer">
             <label id="UITourTooltipTitle" flex="1"/>
             <toolbarbutton id="UITourTooltipClose" class="close-icon"
-                           tooltiptext="&uiTour.infoPanel.close;"/>
+                           data-l10n-id="ui-tour-info-panel-close"/>
           </hbox>
           <description id="UITourTooltipDescription" flex="1"/>
         </vbox>
@@ -378,7 +378,6 @@
              onpopupshowing="gPopupBlockerObserver.fillPopupList(event);"
              onpopuphiding="gPopupBlockerObserver.onPopupHiding(event);">
     <menuitem id="blockedPopupAllowSite"
-              accesskey="&allowPopups.accesskey;"
               oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
     <menuitem
 #ifdef XP_WIN
@@ -389,7 +388,7 @@
               accesskey="&editPopupSettings.accesskey;"
               oncommand="gPopupBlockerObserver.editPopupSettings();"/>
     <menuitem id="blockedPopupDontShowMessage"
-              accesskey="&dontShowMessage.accesskey;"
+              data-l10n-id="popups-infobar-dont-show-message"
               type="checkbox"
               oncommand="gPopupBlockerObserver.dontShowMessage();"/>
     <menuseparator id="blockedPopupsSeparator"/>
@@ -420,8 +419,7 @@
   </menupopup>
 
   <menupopup id="pictureInPictureToggleContextMenu">
-    <menuitem label="&pictureInPictureHideToggle.label;"
-              accesskey="&pictureInPictureHideToggle.accesskey;"
+    <menuitem data-l10n-id="picture-in-picture-hide-toggle"
               oncommand="PictureInPicture.hideToggle();" />
   </menupopup>
 

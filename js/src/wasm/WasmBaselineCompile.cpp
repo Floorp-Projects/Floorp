@@ -124,7 +124,6 @@
 #include "jit/IonTypes.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/Label.h"
-#include "jit/MIR.h"
 #include "jit/RegisterAllocator.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"

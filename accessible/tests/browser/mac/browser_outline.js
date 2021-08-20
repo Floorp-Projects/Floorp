@@ -4,6 +4,9 @@
 
 "use strict";
 
+/* import-globals-from ../../mochitest/states.js */
+loadScripts({ name: "states.js", dir: MOCHITESTS_DIR });
+
 /**
  * Test outline, outline rows with computed properties
  */
@@ -455,5 +458,109 @@ addAccessibleTask(
     // verify they're unchanged
     is(treeItems[0].getAttributeValue("AXDisclosing"), 0);
     is(treeItems[1].getAttributeValue("AXDisclosing"), 1);
+  }
+);
+
+// Test outline rows correctly expose checkable, checked/unchecked/mixed status
+addAccessibleTask(
+  `
+  <div role="tree" id="tree">
+    <div role="treeitem" aria-checked="false" id="l1">
+      Leaf 1
+    </div>
+    <div role="treeitem" aria-checked="true" id="l2">
+      Leaf 2
+    </div>
+    <div role="treeitem" id="l3">
+      Leaf 3
+    </div>
+    <div role="treeitem" aria-checked="mixed" id="l4">
+      Leaf 4
+    </div>
+  </div>
+
+  `,
+  async (browser, accDoc) => {
+    const tree = getNativeInterface(accDoc, "tree");
+    const treeItems = tree.getAttributeValue("AXChildren");
+
+    is(treeItems.length, 4, "Outline has four direct children");
+    is(
+      treeItems[0].getAttributeValue("AXValue"),
+      0,
+      "Child one is not checked"
+    );
+    is(treeItems[1].getAttributeValue("AXValue"), 1, "Child two is checked");
+    is(
+      treeItems[2].getAttributeValue("AXValue"),
+      null,
+      "Child three is not checkable and has no val"
+    );
+    is(treeItems[3].getAttributeValue("AXValue"), 2, "Child four is mixed");
+
+    let stateChanged = Promise.all([
+      waitForMacEvent("AXValueChanged", "l1"),
+      waitForStateChange("l1", STATE_CHECKED, true),
+    ]);
+    // We should get a state change event for checked.
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("l1")
+        .setAttribute("aria-checked", "true");
+    });
+    await stateChanged;
+    is(treeItems[0].getAttributeValue("AXValue"), 1, "Child one is checked");
+
+    stateChanged = Promise.all([
+      waitForMacEvent("AXValueChanged", "l2"),
+      waitForMacEvent("AXValueChanged", "l2"),
+      waitForStateChange("l2", STATE_CHECKED, false),
+      waitForStateChange("l2", STATE_CHECKABLE, false),
+    ]);
+    // We should get a state change event for both checked and checkable,
+    // and value changes for both.
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("l2").removeAttribute("aria-checked");
+    });
+    await stateChanged;
+    is(
+      treeItems[1].getAttributeValue("AXValue"),
+      null,
+      "Child two is not checkable and has no val"
+    );
+
+    stateChanged = Promise.all([
+      waitForMacEvent("AXValueChanged", "l3"),
+      waitForMacEvent("AXValueChanged", "l3"),
+      waitForStateChange("l3", STATE_CHECKED, true),
+      waitForStateChange("l3", STATE_CHECKABLE, true),
+    ]);
+    // We should get a state change event for both checked and checkable,
+    // and value changes for each.
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("l3")
+        .setAttribute("aria-checked", "true");
+    });
+    await stateChanged;
+    is(treeItems[2].getAttributeValue("AXValue"), 1, "Child three is checked");
+
+    stateChanged = Promise.all([
+      waitForMacEvent("AXValueChanged", "l4"),
+      waitForMacEvent("AXValueChanged", "l4"),
+      waitForStateChange("l4", STATE_MIXED, false),
+      waitForStateChange("l4", STATE_CHECKABLE, false),
+    ]);
+    // We should get a state change event for both mixed and checkable,
+    // and value changes for each.
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("l4").removeAttribute("aria-checked");
+    });
+    await stateChanged;
+    is(
+      treeItems[3].getAttributeValue("AXValue"),
+      null,
+      "Child four is not checkable and has no value"
+    );
   }
 );

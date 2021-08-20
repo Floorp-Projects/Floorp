@@ -713,6 +713,8 @@ function ServeTestBase(aURL, depth) {
     g.count++;
     var path = "/" + Date.now() + "/" + g.count;
     g.server.registerDirectory(path + "/", directory);
+    // this one is needed so tests can use example.org urls for cross origin testing
+    g.server.registerDirectory("/", directory);
 
     var secMan = Cc[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
                      .getService(Ci.nsIScriptSecurityManager);

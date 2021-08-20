@@ -1167,6 +1167,8 @@ class HTMLEditUtils final {
           AncestorType::ClosestBlockElement,
           AncestorType::MostDistantInlineElementInBlock,
           AncestorType::EditableElement};
+  constexpr static AncestorTypes ClosestBlockElement = {
+      AncestorType::ClosestBlockElement};
   constexpr static AncestorTypes ClosestEditableBlockElement = {
       AncestorType::ClosestBlockElement, AncestorType::EditableElement};
   constexpr static AncestorTypes ClosestEditableBlockElementExceptHRElement = {

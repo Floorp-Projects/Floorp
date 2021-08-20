@@ -24,6 +24,8 @@
 
 #include <algorithm>
 
+#include "jit/Assembler.h"
+#include "jit/JitOptions.h"
 #include "util/Memory.h"
 #include "util/Text.h"
 #include "vm/HelperThreads.h"
@@ -36,8 +38,6 @@
 #include "wasm/WasmGC.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmStubs.h"
-
-#include "jit/MacroAssembler-inl.h"
 
 using namespace js;
 using namespace js::jit;

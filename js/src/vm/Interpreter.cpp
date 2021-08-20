@@ -29,8 +29,6 @@
 #include "builtin/Promise.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
-#include "jit/Ion.h"
-#include "jit/IonAnalysis.h"
 #include "jit/Jit.h"
 #include "jit/JitRuntime.h"
 #include "js/CallAndConstruct.h"  // JS::Construct, JS::IsCallable, JS::IsConstructor

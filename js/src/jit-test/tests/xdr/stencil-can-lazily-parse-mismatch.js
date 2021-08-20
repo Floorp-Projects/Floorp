@@ -30,10 +30,9 @@ function testXDR(sourceIsLazy1, sourceIsLazy2,
                  forceFullParse1, forceFullParse2) {
   const xdr = compileToStencilXDR(code, { sourceIsLazy: sourceIsLazy1,
                                           forceFullParse: forceFullParse1 });
-  assertThrowsInstanceOf(() => {
-    evalStencilXDR(xdr, { sourceIsLazy: sourceIsLazy2,
-                          forceFullParse: forceFullParse2 });
-  }, Error);
+  // The compile options are ignored when decoding, and no error is thrown.
+  evalStencilXDR(xdr, { sourceIsLazy: sourceIsLazy2,
+                        forceFullParse: forceFullParse2 });
 }
 
 function testOffThreadXDR(sourceIsLazy1, sourceIsLazy2,
@@ -44,9 +43,8 @@ function testOffThreadXDR(sourceIsLazy1, sourceIsLazy2,
                 saveIncrementalBytecode: true });
   offThreadDecodeScript(t, { sourceIsLazy: sourceIsLazy2,
                              forceFullParse: forceFullParse2 });
-  assertThrowsInstanceOf(() => {
-    runOffThreadDecodedScript();
-  }, Error);
+  // The compile options are ignored when decoding, and no error is thrown.
+  runOffThreadDecodedScript();
 }
 
 const optionsList = [
