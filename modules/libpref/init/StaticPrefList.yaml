@@ -1132,6 +1132,14 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+#if defined(XP_MACOSX)
+# Whether pressing Esc will exit fullscreen.
+- name: browser.fullscreen.exit_on_escape
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 # The max url length we'll store in history.
 #
 # The default value is mostly a guess based on various facts:
