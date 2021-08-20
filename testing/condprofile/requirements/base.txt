@@ -2,3 +2,4 @@ aiohttp==3.5.4
 https://pypi.pub.build.mozilla.org/pub/arsenic-19.1-py3-none-any.whl
 requests==2.22.0
 pyyaml==5.1.2
+mozversion>=1.0
