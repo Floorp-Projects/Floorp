@@ -1031,7 +1031,8 @@ class ModalPrompter {
     if (
       domWin &&
       (!modalType || modalType == MODAL_TYPE_WINDOW) &&
-      !this.browsingContext?.isContent
+      !this.browsingContext?.isContent &&
+      this.browsingContext?.associatedWindow?.gDialogBox
     ) {
       modalType = MODAL_TYPE_INTERNAL_WINDOW;
     }
