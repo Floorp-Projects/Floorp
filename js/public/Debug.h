@@ -25,6 +25,10 @@ namespace js {
 class Debugger;
 }  // namespace js
 
+/* Defined in vm/Debugger.cpp. */
+extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
+                                                  JS::HandleObject obj);
+
 namespace JS {
 namespace dbg {
 
