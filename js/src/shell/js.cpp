@@ -144,6 +144,7 @@
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/Stack.h"
+#include "js/StreamConsumer.h"
 #include "js/StructuredClone.h"
 #include "js/SweepingAPI.h"
 #include "js/Transcoding.h"  // JS::TranscodeBuffer, JS::TranscodeRange
