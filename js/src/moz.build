@@ -206,6 +206,7 @@ EXPORTS.js += [
     "../public/StructuredClone.h",
     "../public/SweepingAPI.h",
     "../public/Symbol.h",
+    "../public/TelemetryTimers.h",
     "../public/TraceKind.h",
     "../public/TraceLoggerAPI.h",
     "../public/TracingAPI.h",
