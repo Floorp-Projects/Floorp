@@ -1608,8 +1608,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
       [&aScrollData](ScrollableLayerGuid::ViewID aScrollId) -> bool {
     return aScrollData.HasMetadataFor(aScrollId).isSome();
   };
-  Maybe<ScrollMetadata> rootMetadata =
-      nsLayoutUtils::GetRootMetadata(aDisplayListBuilder, mManager, callback);
+  Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
+      aDisplayListBuilder, mManager, ContainerLayerParameters(), callback);
   if (rootMetadata) {
     // Put the fallback root metadata on the rootmost layer that is
     // a matching async zoom container, or the root layer that we just

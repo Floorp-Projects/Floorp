@@ -8,7 +8,6 @@
 #include "nsIFrame.h"
 #include "PointerEvent.h"
 #include "PointerLockManager.h"
-#include "nsRFPService.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BrowserChild.h"

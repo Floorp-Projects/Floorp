@@ -17,6 +17,7 @@
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
 PRES_ARENA_OBJECT(nsLineBox)
+PRES_ARENA_OBJECT(DisplayItemData)
 PRES_ARENA_OBJECT(nsFrameList)
 PRES_ARENA_OBJECT(CustomCounterStyle)
 PRES_ARENA_OBJECT(DependentBuiltinCounterStyle)
