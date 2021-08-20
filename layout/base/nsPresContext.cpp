@@ -140,16 +140,6 @@ bool nsPresContext::IsDOMPaintEventPending() {
 }
 
 void nsPresContext::ForceReflowForFontInfoUpdate() {
-  // Flush the font cache, so that we won't risk getting
-  // stale nsFontMetrics objects from it.
-  FlushFontCache();
-
-  // If there's a user font set, discard any src:local() faces it may have
-  // loaded because their font entries may no longer be valid.
-  if (Document()->GetFonts()) {
-    Document()->GetFonts()->GetUserFontSet()->ForgetLocalFaces();
-  }
-
   // We can trigger reflow by pretending a font.* preference has changed;
   // this is the same mechanism as gfxPlatform::ForceGlobalReflow() uses
   // if new fonts are installed during the session, for example.
@@ -180,7 +170,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mElementsRestyled(0),
       mFramesConstructed(0),
       mFramesReflowed(0),
-      mChangeHintForPrefChange(nsChangeHint(0)),
       mInterruptChecksToSkip(0),
       mNextFrameRateMultiplier(0),
       mViewportScrollStyles(StyleOverflow::Auto, StyleOverflow::Auto),
@@ -206,7 +195,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPendingThemeChanged(false),
       mPendingThemeChangeKind(0),
       mPendingUIResolutionChanged(false),
-      mPostedPrefChangedRunnable(false),
       mIsGlyph(false),
       mUsesExChUnits(false),
       mCounterStylesDirty(true),
@@ -403,7 +391,6 @@ static void HandleGlobalThemeChange() {
   }
 }
 
-
 void nsPresContext::GetUserPreferences() {
   if (!GetPresShell()) {
     // No presshell means nothing to do here.  We'll do this when we
@@ -451,7 +438,7 @@ void nsPresContext::GetUserPreferences() {
   SET_BIDI_OPTION_NUMERAL(bidiOptions, prefInt);
 
   // We don't need to force reflow: either we are initializing a new
-  // prescontext or we are being called from UpdateAfterPreferencesChanged()
+  // prescontext or we are being called from PreferenceChanged()
   // which triggers a reflow anyway.
   SetBidi(bidiOptions);
 }
@@ -555,6 +542,8 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     }
   }
 
+  auto changeHint = nsChangeHint{0};
+  auto restyleHint = RestyleHint{0};
   // Changing any of these potentially changes the value of @media
   // (prefers-contrast).
   if (prefName.EqualsLiteral("layout.css.prefers-contrast.enabled") ||
@@ -570,7 +559,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
       if (!mMissingFonts) {
         mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
         // trigger reflow to detect missing fonts on the current page
-        mChangeHintForPrefChange |= NS_STYLE_HINT_REFLOW;
+        changeHint |= NS_STYLE_HINT_REFLOW;
       }
     } else {
       if (mMissingFonts) {
@@ -581,6 +570,12 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   }
   if (prefName.EqualsLiteral("font.internaluseonly.changed") &&
       !IsPrintingOrPrintPreview()) {
+    // If there's a user font set, discard any src:local() faces it may have
+    // loaded because their font entries may no longer be valid.
+    if (auto* fonts = Document()->GetFonts()) {
+      fonts->GetUserFontSet()->ForgetLocalFaces();
+    }
+
     // If there's a change to the font list, we generally need to reconstruct
     // frames, as the existing frames may be referring to fonts that are no
     // longer available. But in the case of a static-clone document used for
@@ -598,7 +593,12 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     // print documents in response to pref changes. We could be in the middle
     // of printing the document, and reflowing all the frames might cause some
     // kind of unwanted mid-document discontinuity.
-    mChangeHintForPrefChange |= nsChangeHint_ReconstructFrame;
+    changeHint |= nsChangeHint_ReconstructFrame;
+    // We also need to trigger restyling for ex/ch units changes to take effect,
+    // if needed.
+    if (UsesExChUnits()) {
+      restyleHint |= RestyleHint::RecascadeSubtree();
+    }
   } else if (StringBeginsWith(prefName, "font."_ns) ||
              // Changes to font family preferences don't change anything in the
              // computed style data, so the style system won't generate a reflow
@@ -608,27 +608,51 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
              StringBeginsWith(prefName, "bidi."_ns) ||
              // Changes to font_rendering prefs need to trigger a reflow
              StringBeginsWith(prefName, "gfx.font_rendering."_ns)) {
-    mChangeHintForPrefChange |= NS_STYLE_HINT_REFLOW;
+    changeHint |= NS_STYLE_HINT_REFLOW;
+    if (UsesExChUnits()) {
+      restyleHint |= RestyleHint::RecascadeSubtree();
+    }
   }
-
-  // We will end up calling InvalidatePreferenceSheets one from each pres
-  // context, but all it's doing is clearing its cached sheet pointers, so it
-  // won't be wastefully recreating the sheet multiple times.
-  //
-  // The first pres context that has its pref changed runnable called will
-  // be the one to cause the reconstruction of the pref style sheet.
-  GlobalStyleSheetCache::InvalidatePreferenceSheets();
-  PreferenceSheet::Refresh();
-  // Same, this just frees a bunch of memory.
-  StaticPresData::Get()->InvalidateFontPrefs();
-  Document()->SetMayNeedFontPrefsUpdate();
-  DispatchPrefChangedRunnableIfNeeded();
 
   if (prefName.EqualsLiteral("nglayout.debug.paint_flashing") ||
       prefName.EqualsLiteral("nglayout.debug.paint_flashing_chrome")) {
     mPaintFlashingInitialized = false;
     return;
   }
+
+  // We will end up calling InvalidatePreferenceSheets one from each pres
+  // context, but all it's doing is clearing its cached sheet pointers, so it
+  // won't be wastefully recreating the sheet multiple times.
+  //
+  // The first pres context that flushes will be the one to cause the
+  // reconstruction of the pref style sheet via the UpdatePreferenceStyles call
+  // in FlushPendingNotifications.
+  if (GlobalStyleSheetCache::AffectedByPref(prefName)) {
+    restyleHint |= RestyleHint::RestyleSubtree();
+    GlobalStyleSheetCache::InvalidatePreferenceSheets();
+  }
+
+  if (PreferenceSheet::AffectedByPref(prefName)) {
+    restyleHint |= RestyleHint::RestyleSubtree();
+    PreferenceSheet::Refresh();
+  }
+
+  // Same, this just frees a bunch of memory.
+  StaticPresData::Get()->InvalidateFontPrefs();
+  Document()->SetMayNeedFontPrefsUpdate();
+
+  // Initialize our state from the user preferences.
+  GetUserPreferences();
+
+  FlushFontCache();
+
+  // Preferences require rerunning selector matching because we rebuild
+  // the pref style sheet for some preference changes.
+  if (changeHint || restyleHint) {
+    RebuildAllStyleData(changeHint, restyleHint);
+  }
+
+  InvalidatePaintedLayers();
 }
 
 struct WeakRunnableMethod : Runnable {
@@ -648,45 +672,6 @@ struct WeakRunnableMethod : Runnable {
   WeakPtr<nsPresContext> mPresContext;
   Method mMethod;
 };
-
-void nsPresContext::DispatchPrefChangedRunnableIfNeeded() {
-  if (mPostedPrefChangedRunnable) {
-    return;
-  }
-
-  nsCOMPtr<nsIRunnable> runnable = new WeakRunnableMethod(
-      "nsPresContext::UpdateAfterPreferencesChanged", this,
-      &nsPresContext::UpdateAfterPreferencesChanged);
-  RefreshDriver()->AddEarlyRunner(runnable);
-  mPostedPrefChangedRunnable = true;
-}
-
-void nsPresContext::UpdateAfterPreferencesChanged() {
-  mPostedPrefChangedRunnable = false;
-  if (!mPresShell) {
-    return;
-  }
-
-  if (mDocument->IsInChromeDocShell()) {
-    // FIXME(emilio): Do really all these prefs not affect chrome docs? I
-    // suspect we should move this check somewhere else.
-    return;
-  }
-
-  // Initialize our state from the user preferences
-  GetUserPreferences();
-
-  // update the presShell: tell it to set the preference style rules up
-  mPresShell->UpdatePreferenceStyles();
-
-  InvalidatePaintedLayers();
-  FlushFontCache();
-
-  // Preferences require rerunning selector matching because we rebuild
-  // the pref style sheet for some preference changes.
-  RebuildAllStyleData(mChangeHintForPrefChange, RestyleHint::RestyleSubtree());
-  mChangeHintForPrefChange = nsChangeHint(0);
-}
 
 nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
   NS_ASSERTION(!mInitialized, "attempt to reinit pres context");

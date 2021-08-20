@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_devtools.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/ServoBindings.h"
@@ -193,6 +194,29 @@ void PreferenceSheet::Initialize() {
 
   Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_BACKPLATE,
                        StaticPrefs::browser_display_permit_backplate());
+}
+
+bool PreferenceSheet::AffectedByPref(const nsACString& aPref) {
+  const char* prefNames[] = {
+      StaticPrefs::GetPrefName_devtools_toolbox_force_chrome_prefs(),
+      StaticPrefs::GetPrefName_privacy_resistFingerprinting(),
+      StaticPrefs::GetPrefName_ui_use_standins_for_native_colors(),
+      "browser.anchor_color",
+      "browser.active_color",
+      "browser.visited_color",
+  };
+
+  if (StringBeginsWith(aPref, "browser.display."_ns)) {
+    return true;
+  }
+
+  for (const char* pref : prefNames) {
+    if (aPref.Equals(pref)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 }  // namespace mozilla

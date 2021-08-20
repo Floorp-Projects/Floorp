@@ -52,6 +52,7 @@ class GlobalStyleSheetCache final : public nsIObserver,
   StyleSheet* ContentPreferenceSheet();
 
   static void InvalidatePreferenceSheets();
+  static bool AffectedByPref(const nsACString&);
 
   static void Shutdown();
 
