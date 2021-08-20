@@ -72,6 +72,11 @@
         "force": {
           "type": "boolean",
           "description": "(debug) If the enrollment happened naturally or through devtools"
+        },
+        "featureIds": {
+          "type": "array",
+          "items": [{ "type": "string" }],
+          "description": "Array of strings corresponding to the branch features in the enrollment."
         }
       },
       "required": [
