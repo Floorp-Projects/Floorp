@@ -1470,10 +1470,6 @@ impl Device {
         // [3] https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_storage.txt
         // [4] http://http.download.nvidia.com/developer/Papers/2005/Fast_Texture_Transfers/Fast_Texture_Transfers.pdf
 
-        // To support BGRA8 with glTexStorage* we specifically need
-        // GL_EXT_texture_storage and GL_EXT_texture_format_BGRA8888.
-        let supports_gles_bgra = supports_extension(&extensions, "GL_EXT_texture_format_BGRA8888");
-
         // On the android emulator glTexImage fails to create textures larger than 3379.
         // So we must use glTexStorage instead. See bug 1591436.
         let is_emulator = renderer_name.starts_with("Android Emulator");
@@ -1491,6 +1487,20 @@ impl Device {
                 gl::GlType::Gl => supports_extension(&extensions, "GL_ARB_texture_storage"),
                 gl::GlType::Gles => true,
             };
+
+        // The GL_EXT_texture_format_BGRA8888 extension allows us to use BGRA as an internal format
+        // with glTexImage on GLES. However, we can only use BGRA8 as an internal format for
+        // glTexStorage when GL_EXT_texture_storage is also explicitly supported. This is because
+        // glTexStorage was added in GLES 3, but GL_EXT_texture_format_BGRA8888 was written against
+        // GLES 2 and GL_EXT_texture_storage.
+        // To complicate things even further, Intel BayTrail devices claim to support
+        // both extensions but in practice do not allow BGRA to be used with glTexStorage.
+        let is_intel_baytrail = renderer_name.starts_with("Intel(R) HD Graphics for BayTrail");
+        let supports_gles_bgra = supports_extension(&extensions, "GL_EXT_texture_format_BGRA8888");
+        let supports_texture_storage_with_gles_bgra = supports_gles_bgra
+            && supports_extension(&extensions, "GL_EXT_texture_storage")
+            && !is_intel_baytrail;
+
         let supports_texture_swizzle = allow_texture_swizzling &&
             match gl.get_type() {
                 // see https://www.g-truc.net/post-0734.html
@@ -1519,9 +1529,7 @@ impl Device {
             // glTexStorage is always supported in GLES 3, but because the GL_EXT_texture_storage
             // extension is supported we can use glTexStorage with BGRA8 as the internal format.
             // Prefer BGRA textures over RGBA.
-            gl::GlType::Gles if supports_gles_bgra
-                && supports_extension(&extensions, "GL_EXT_texture_storage") =>
-            (
+            gl::GlType::Gles if supports_texture_storage_with_gles_bgra => (
                 TextureFormatPair::from(ImageFormat::BGRA8),
                 TextureFormatPair { internal: gl::BGRA8_EXT, external: gl::BGRA_EXT },
                 gl::UNSIGNED_BYTE,
