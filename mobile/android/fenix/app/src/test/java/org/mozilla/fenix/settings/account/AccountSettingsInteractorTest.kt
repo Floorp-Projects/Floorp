@@ -37,7 +37,8 @@ class AccountSettingsInteractorTest {
     @Test
     fun onChangeDeviceName() {
         val store: AccountSettingsFragmentStore = mockk(relaxed = true)
-        val invalidNameResponse = mockk<() -> Unit>(relaxed = true)
+        var invalidResponseInvoked = false
+        val invalidNameResponse = { invalidResponseInvoked = true }
 
         val interactor = AccountSettingsInteractor(
             mockk(),
@@ -49,13 +50,14 @@ class AccountSettingsInteractorTest {
         assertTrue(interactor.onChangeDeviceName("New Name", invalidNameResponse))
 
         verify { store.dispatch(AccountSettingsFragmentAction.UpdateDeviceName("New Name")) }
-        verify { invalidNameResponse wasNot Called }
+        assertFalse(invalidResponseInvoked)
     }
 
     @Test
     fun onChangeDeviceNameSyncFalse() {
         val store: AccountSettingsFragmentStore = mockk(relaxed = true)
-        val invalidNameResponse = mockk<() -> Unit>(relaxed = true)
+        var invalidResponseInvoked = false
+        val invalidNameResponse = { invalidResponseInvoked = true }
 
         val interactor = AccountSettingsInteractor(
             mockk(),
@@ -67,7 +69,7 @@ class AccountSettingsInteractorTest {
         assertFalse(interactor.onChangeDeviceName("New Name", invalidNameResponse))
 
         verify { store wasNot Called }
-        verify { invalidNameResponse() }
+        assertTrue(invalidResponseInvoked)
     }
 
     @Test
