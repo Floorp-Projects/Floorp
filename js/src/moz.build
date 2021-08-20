@@ -166,6 +166,7 @@ EXPORTS.js += [
     "../public/JSON.h",
     "../public/LocaleSensitive.h",
     "../public/MapAndSet.h",
+    "../public/MemoryCallbacks.h",
     "../public/MemoryFunctions.h",
     "../public/MemoryMetrics.h",
     "../public/Modules.h",
