@@ -1048,6 +1048,13 @@ interface nsIDOMWindowUtils : nsISupports {
                                  in float aWidth, in float aHeight);
 
   /**
+   * Transform a rectangle given in coordinates relative to this document
+   * to the screen.
+   */
+  DOMRect toScreenRect(in float aX, in float aY,
+                       in float aWidth, in float aHeight);
+
+  /**
    * Sets the maximum height of the dynamic toolbar in Screen pixel units.
    */
   [can_run_script]

@@ -12,6 +12,7 @@
 #include "nsIDOMWindowUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/Result.h"
 
 class nsGlobalWindowOuter;
 class nsIDocShell;
@@ -107,6 +108,10 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
   void ReportErrorMessageForWindow(const nsAString& aErrorMessage,
                                    const char* aClassification,
                                    bool aFromChrome);
+
+ private:
+  mozilla::Result<mozilla::ScreenRect, nsresult> ConvertToScreenRect(
+      float aX, float aY, float aWidth, float aHeight);
 };
 
 #endif
