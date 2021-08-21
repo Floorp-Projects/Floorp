@@ -2158,18 +2158,7 @@ void GLContext::fCopyTexImage2D(GLenum target, GLint level,
   AfterGLReadCall();
 }
 
-void GLContext::fGetIntegerv(const GLenum pname, GLint* const params) const {
-  const auto AssertBinding = [&](const char* const name, const GLenum binding,
-                                 const GLuint expected) {
-    if (MOZ_LIKELY(!mDebugFlags)) return;
-    GLuint actual = 0;
-    raw_fGetIntegerv(binding, (GLint*)&actual);
-    if (actual != expected) {
-      gfxCriticalError() << "Misprediction: " << name << " expected "
-                         << expected << ", was " << actual;
-    }
-  };
-
+void GLContext::fGetIntegerv(GLenum pname, GLint* params) const {
   switch (pname) {
     case LOCAL_GL_MAX_TEXTURE_SIZE:
       MOZ_ASSERT(mMaxTextureSize > 0);
@@ -2196,22 +2185,6 @@ void GLContext::fGetIntegerv(const GLenum pname, GLint* const params) const {
       for (size_t i = 0; i < 4; i++) {
         params[i] = mScissorRect[i];
       }
-      break;
-
-    case LOCAL_GL_DRAW_FRAMEBUFFER_BINDING:
-      static_assert(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING ==
-                    LOCAL_GL_FRAMEBUFFER_BINDING);
-      AssertBinding("GL_DRAW_FRAMEBUFFER_BINDING",
-                    LOCAL_GL_DRAW_FRAMEBUFFER_BINDING, mCachedDrawFb);
-      *params = mCachedDrawFb;
-      break;
-
-    case LOCAL_GL_READ_FRAMEBUFFER_BINDING:
-      if (IsSupported(GLFeature::framebuffer_blit)) {
-        AssertBinding("GL_READ_FRAMEBUFFER_BINDING",
-                      LOCAL_GL_READ_FRAMEBUFFER_BINDING, mCachedReadFb);
-      }
-      *params = mCachedReadFb;
       break;
 
     default:
