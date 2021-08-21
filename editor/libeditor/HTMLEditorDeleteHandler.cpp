@@ -966,11 +966,9 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
      *
      * @param aHTMLEditor         The HTMLEditor.
      * @param aStartContent       Start content to look for empty ancestors.
-     * @param aEditingHostElement Current editing host.
      */
     [[nodiscard]] Element* ScanEmptyBlockInclusiveAncestor(
-        const HTMLEditor& aHTMLEditor, nsIContent& aStartContent,
-        Element& aEditingHostElement);
+        const HTMLEditor& aHTMLEditor, nsIContent& aStartContent);
 
     /**
      * ComputeTargetRanges() computes "target ranges" for deleting
@@ -1184,7 +1182,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
     if (startPoint.GetContainerAsContent()) {
       AutoEmptyBlockAncestorDeleter deleter;
       if (deleter.ScanEmptyBlockInclusiveAncestor(
-              aHTMLEditor, *startPoint.GetContainerAsContent(), *editingHost)) {
+              aHTMLEditor, *startPoint.GetContainerAsContent())) {
         nsresult rv = deleter.ComputeTargetRanges(
             aHTMLEditor, aDirectionAndAmount, *editingHost, aRangesToDelete);
         NS_WARNING_ASSERTION(
@@ -1432,7 +1430,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
 #endif  // #ifdef DEBUG
       AutoEmptyBlockAncestorDeleter deleter;
       if (deleter.ScanEmptyBlockInclusiveAncestor(
-              aHTMLEditor, *startPoint.GetContainerAsContent(), *editingHost)) {
+              aHTMLEditor, *startPoint.GetContainerAsContent())) {
         EditActionResult result = deleter.Run(aHTMLEditor, aDirectionAndAmount);
         if (result.Failed() || result.Handled()) {
           NS_WARNING_ASSERTION(result.Succeeded(),
@@ -5029,28 +5027,29 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
 
 Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
     ScanEmptyBlockInclusiveAncestor(const HTMLEditor& aHTMLEditor,
-                                    nsIContent& aStartContent,
-                                    Element& aEditingHostElement) {
+                                    nsIContent& aStartContent) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
 
-  // If the editing host is an inline element, bail out early.
-  if (HTMLEditUtils::IsInlineElement(aEditingHostElement)) {
+  // If we are inside an empty block, delete it.
+  // Note: do NOT delete table elements this way.
+  // Note: do NOT delete non-editable block element.
+  Element* editableBlockElement = HTMLEditUtils::GetInclusiveAncestorElement(
+      aStartContent, HTMLEditUtils::ClosestEditableBlockElement);
+  if (!editableBlockElement) {
     return nullptr;
   }
-
-  // If we are inside an empty block, delete it.  Note: do NOT delete table
-  // elements this way.
-  Element* blockElement =
-      HTMLEditUtils::GetInclusiveAncestorBlockElement(aStartContent);
-  if (!blockElement) {
-    return nullptr;
-  }
-  while (blockElement && blockElement != &aEditingHostElement &&
-         !HTMLEditUtils::IsAnyTableElement(blockElement) &&
-         HTMLEditUtils::IsEmptyNode(*blockElement)) {
-    mEmptyInclusiveAncestorBlockElement = blockElement;
-    blockElement = HTMLEditUtils::GetAncestorBlockElement(
-        *mEmptyInclusiveAncestorBlockElement);
+  // XXX Perhaps, this is slow loop.  If empty blocks are nested, then,
+  //     each block checks whether it's empty or not.  However, descendant
+  //     blocks are checked again and again by IsEmptyNode().  Perhaps, it
+  //     should be able to take "known empty element" for avoiding same checks.
+  while (editableBlockElement &&
+         HTMLEditUtils::IsRemovableFromParentNode(*editableBlockElement) &&
+         !HTMLEditUtils::IsAnyTableElement(editableBlockElement) &&
+         HTMLEditUtils::IsEmptyNode(*editableBlockElement)) {
+    mEmptyInclusiveAncestorBlockElement = editableBlockElement;
+    editableBlockElement = HTMLEditUtils::GetAncestorElement(
+        *mEmptyInclusiveAncestorBlockElement,
+        HTMLEditUtils::ClosestEditableBlockElement);
   }
   if (!mEmptyInclusiveAncestorBlockElement) {
     return nullptr;
