@@ -4573,9 +4573,10 @@ Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
   if (nsIContent* childContent = oneLineRange->GetChildAtStartOffset()) {
     if (childContent->IsHTMLElement(nsGkAtoms::br) &&
         childContent->GetParent()) {
-      if (Element* blockElement =
-              HTMLEditUtils::GetInclusiveAncestorBlockElement(
-                  *childContent->GetParent())) {
+      if (const Element* blockElement =
+              HTMLEditUtils::GetInclusiveAncestorElement(
+                  *childContent->GetParent(),
+                  HTMLEditUtils::ClosestBlockElement)) {
         if (HTMLEditUtils::IsEmptyNode(*blockElement)) {
           return false;
         }
