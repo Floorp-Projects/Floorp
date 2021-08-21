@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<style>
+html,body {
+  margin: 0;
+  padding: 0;
+}
+#target {
+  position: absolute;
+  top: 150px;
+  left: 150px;
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+}
+</style>
+<div id="target"></div>
+<script>
+const isfuzzy = opener.isfuzzy.bind(opener);
+const add_task = opener.add_task.bind(opener);
+const original_finish = opener.SimpleTest.finish;
+const SimpleTest = opener.SimpleTest;
+SimpleTest.finish = function finish() {
+  self.close();
+  original_finish();
+};
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({'set': [['layout.css.devPixelsPerPx', 1.5]]});
+  SpecialPowers.setFullZoom(window, 2.0);
+
+  const rect = target.getBoundingClientRect();
+  const screenPixelsPerCSSPixel =
+    SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixel;
+  const screenPixelsPerCSSPixelNoOverride =
+    SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixelNoOverride;
+
+  let rectOnScreen =
+    SpecialPowers.DOMWindowUtils.toScreenRect(rect.x, rect.y, rect.width, rect.height);
+  isfuzzy(rectOnScreen.x,
+     rect.x * screenPixelsPerCSSPixel +
+     window.mozInnerScreenX * screenPixelsPerCSSPixelNoOverride , 0.01, "x");
+  isfuzzy(rectOnScreen.y,
+     rect.y * screenPixelsPerCSSPixel +
+     window.mozInnerScreenY * screenPixelsPerCSSPixelNoOverride, 0.01, "y");
+
+  isfuzzy(rectOnScreen.width, rect.width * screenPixelsPerCSSPixel, 0.01, "width");
+  isfuzzy(rectOnScreen.height, rect.height * screenPixelsPerCSSPixel, 0.01, "height");
+});
+</script>

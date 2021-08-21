@@ -1838,17 +1838,22 @@ nsDOMWindowUtils::TransformRectLayoutToVisual(float aX, float aY, float aWidth,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::ToScreenRectInCSSUnits(float aX, float aY, float aWidth,
-                                         float aHeight, DOMRect** aResult) {
+Result<mozilla::ScreenRect, nsresult> nsDOMWindowUtils::ConvertToScreenRect(
+    float aX, float aY, float aWidth, float aHeight) {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
+  if (!window) {
+    return Err(NS_ERROR_NOT_AVAILABLE);
+  }
 
   PresShell* presShell = GetPresShell();
-  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
+  if (!presShell) {
+    return Err(NS_ERROR_NOT_AVAILABLE);
+  }
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  NS_ENSURE_TRUE(widget, NS_ERROR_NOT_AVAILABLE);
+  if (!widget) {
+    return Err(NS_ERROR_NOT_AVAILABLE);
+  }
 
   // Note that if the document is NOT in OOP iframes, i.e. it's in the top level
   // content subtree in the same process,
@@ -1874,12 +1879,39 @@ nsDOMWindowUtils::ToScreenRectInCSSUnits(float aX, float aY, float aWidth,
       widget->WidgetToTopLevelWidgetTransform().TransformBounds(devPixelsRect) +
       widget->TopLevelWidgetToScreenOffset();
 
-  appUnitsRect = LayoutDeviceRect::ToAppUnits(
-      devPixelsRect,
-      presContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
-  rect = CSSRect::FromAppUnits(appUnitsRect);
+  return ViewAs<ScreenPixel>(
+      devPixelsRect, PixelCastJustification::ScreenIsParentLayerForRoot);
+}
 
-  RefPtr<DOMRect> outRect = new DOMRect(window);
+NS_IMETHODIMP
+nsDOMWindowUtils::ToScreenRectInCSSUnits(float aX, float aY, float aWidth,
+                                         float aHeight, DOMRect** aResult) {
+  ScreenRect rect;
+  MOZ_TRY_VAR(rect, ConvertToScreenRect(aX, aY, aWidth, aHeight));
+
+  nsPresContext* presContext = GetPresContext();
+  MOZ_ASSERT(presContext);
+
+  nsRect appUnitsRect = LayoutDeviceRect::ToAppUnits(
+      ViewAs<LayoutDevicePixel>(
+          rect, PixelCastJustification::ScreenIsParentLayerForRoot),
+      presContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+  CSSRect cssUnitsRect = CSSRect::FromAppUnits(appUnitsRect);
+
+  RefPtr<DOMRect> outRect = new DOMRect(mWindow);
+  outRect->SetRect(cssUnitsRect.x, cssUnitsRect.y, cssUnitsRect.width,
+                   cssUnitsRect.height);
+  outRect.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ToScreenRect(float aX, float aY, float aWidth, float aHeight,
+                               DOMRect** aResult) {
+  ScreenRect rect;
+  MOZ_TRY_VAR(rect, ConvertToScreenRect(aX, aY, aWidth, aHeight));
+
+  RefPtr<DOMRect> outRect = new DOMRect(mWindow);
   outRect->SetRect(rect.x, rect.y, rect.width, rect.height);
   outRect.forget(aResult);
   return NS_OK;
