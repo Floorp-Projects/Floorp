@@ -133,14 +133,23 @@ Tests.testTexImage2DNonSOP = function(gl) {
 Tests.endUnit = function(gl) {
 };
 
-(async function() {
+async function setupNonSOPImage() {
     const img = document.getElementById('i2');
+    const url = wtu.chooseUrlForCrossOriginImage(defaultImgUrl, localImgUrl);
+    img.src = url;
+    await img.decode();
+}
+
+async function throwOnTimeout(ms) {
+    await wtu.awaitTimeout(ms);
+    throw 'timeout';
+}
+
+(async function() {
     try {
-        await wtu.awaitOrTimeout(wtu.loadCrossOriginImage(img, defaultImgUrl, localImgUrl));
+        await Promise.race([setupNonSOPImage(), throwOnTimeout(1000)]);
     } catch (e) {
-        testFailed(`Image setup failed (${e}).`);
-        finishTest();
-        return;
+        console.log(`Image setup failed (${e}), running tests anyway.`);
     }
     initTests();
 })();

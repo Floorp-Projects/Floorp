@@ -6,10 +6,10 @@ found in the LICENSE.txt file.
 
 "use strict";
 
-let CompressedTextureUtils = (function() {
+var CompressedTextureUtils = (function() {
 
-let formatToString = function(ext, format) {
-    for (let p in ext) {
+var formatToString = function(ext, format) {
+    for (var p in ext) {
         if (ext[p] == format) {
             return p;
         }
@@ -26,15 +26,15 @@ let formatToString = function(ext, format) {
  * @param {boolean} alpha True if alpha data should be taken from data. Otherwise alpha channel is set to 255.
  * @return {HTMLImageElement} The image element.
  */
-let makeScaledImage = function(imageWidth, imageHeight, dataWidth, data, alpha, opt_scale) {
-    let scale = opt_scale ? opt_scale : 8;
-    let c = document.createElement("canvas");
+var makeScaledImage = function(imageWidth, imageHeight, dataWidth, data, alpha, opt_scale) {
+    var scale = opt_scale ? opt_scale : 8;
+    var c = document.createElement("canvas");
     c.width = imageWidth * scale;
     c.height = imageHeight * scale;
-    let ctx = c.getContext("2d");
-    for (let yy = 0; yy < imageHeight; ++yy) {
-        for (let xx = 0; xx < imageWidth; ++xx) {
-            let offset = (yy * dataWidth + xx) * 4;
+    var ctx = c.getContext("2d");
+    for (var yy = 0; yy < imageHeight; ++yy) {
+        for (var xx = 0; xx < imageWidth; ++xx) {
+            var offset = (yy * dataWidth + xx) * 4;
             ctx.fillStyle = "rgba(" +
                     data[offset + 0] + "," +
                     data[offset + 1] + "," +
@@ -46,10 +46,10 @@ let makeScaledImage = function(imageWidth, imageHeight, dataWidth, data, alpha, 
     return wtu.makeImageFromCanvas(c);
 };
 
-let insertCaptionedImg = function(parent, caption, img) {
-    let div = document.createElement("div");
+var insertCaptionedImg = function(parent, caption, img) {
+    var div = document.createElement("div");
     div.appendChild(img);
-    let label = document.createElement("div");
+    var label = document.createElement("div");
     label.appendChild(document.createTextNode(caption));
     div.appendChild(label);
     parent.appendChild(div);
@@ -60,10 +60,10 @@ let insertCaptionedImg = function(parent, caption, img) {
  * @param {Object} compressedFormats Mapping from format names to format enum values.
  * @param expectedByteLength A function that takes in width, height and format and returns the expected buffer size in bytes.
  */
-let testCompressedFormatsUnavailableWhenExtensionDisabled = function(gl, compressedFormats, expectedByteLength, testSize) {
-    let tex = gl.createTexture();
+var testCompressedFormatsUnavailableWhenExtensionDisabled = function(gl, compressedFormats, expectedByteLength, testSize) {
+    var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    for (let name in compressedFormats) {
+    for (var name in compressedFormats) {
         if (compressedFormats.hasOwnProperty(name)) {
             gl.compressedTexImage2D(gl.TEXTURE_2D, 0, compressedFormats[name], testSize, testSize, 0, new Uint8Array(expectedByteLength(testSize, testSize, compressedFormats[name])));
             wtu.glErrorShouldBe(gl, gl.INVALID_ENUM, "Trying to use format " + name + " with extension disabled.");
@@ -77,20 +77,20 @@ let testCompressedFormatsUnavailableWhenExtensionDisabled = function(gl, compres
  * @param {WebGLRenderingContextBase} gl
  * @param {Object} expectedFormats Mapping from format names to format enum values.
  */
-let testCompressedFormatsListed = function(gl, expectedFormats) {
+var testCompressedFormatsListed = function(gl, expectedFormats) {
     debug("");
     debug("Testing that every format is listed by the compressed texture formats query");
 
-    let supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
+    var supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
 
-    let failed;
-    let count = 0;
-    for (let name in expectedFormats) {
+    var failed;
+    var count = 0;
+    for (var name in expectedFormats) {
         if (expectedFormats.hasOwnProperty(name)) {
             ++count;
-            let format = expectedFormats[name];
+            var format = expectedFormats[name];
             failed = true;
-            for (let ii = 0; ii < supportedFormats.length; ++ii) {
+            for (var ii = 0; ii < supportedFormats.length; ++ii) {
                 if (format == supportedFormats[ii]) {
                     testPassed("supported format " + name + " exists");
                     failed = false;
@@ -111,7 +111,7 @@ let testCompressedFormatsListed = function(gl, expectedFormats) {
  * @param {Object} ext Compressed texture extension object.
  * @param {Object} expectedFormats Mapping from format names to format enum values.
  */
-let testCorrectEnumValuesInExt = function(ext, expectedFormats) {
+var testCorrectEnumValuesInExt = function(ext, expectedFormats) {
     debug("");
     debug("Testing that format enum values in the extension object are correct");
 
@@ -132,18 +132,18 @@ let testCorrectEnumValuesInExt = function(ext, expectedFormats) {
  * @param expectedByteLength A function that takes in width, height and format and returns the expected buffer size in bytes.
  * @param getBlockDimensions A function that takes in a format and returns block size in pixels.
  */
-let testFormatRestrictionsOnBufferSize = function(gl, validFormats, expectedByteLength, getBlockDimensions) {
+var testFormatRestrictionsOnBufferSize = function(gl, validFormats, expectedByteLength, getBlockDimensions) {
     debug("");
     debug("Testing format restrictions on texture upload buffer size");
 
-    let tex = gl.createTexture();
+    var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    for (let formatId in validFormats) {
+    for (var formatId in validFormats) {
         if (validFormats.hasOwnProperty(formatId)) {
-            let format = validFormats[formatId];
-            let blockSize = getBlockDimensions(format);
-            let expectedSize = expectedByteLength(blockSize.width * 4, blockSize.height * 4, format);
-            let data = new Uint8Array(expectedSize);
+            var format = validFormats[formatId];
+            var blockSize = getBlockDimensions(format);
+            var expectedSize = expectedByteLength(blockSize.width * 4, blockSize.height * 4, format);
+            var data = new Uint8Array(expectedSize);
             gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, blockSize.width * 3, blockSize.height * 4, 0, data);
             wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, formatId + " data size does not match dimensions (too small width)");
             gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, blockSize.width * 5, blockSize.height * 4, 0, data);
@@ -165,24 +165,23 @@ let testFormatRestrictionsOnBufferSize = function(gl, validFormats, expectedByte
  * @param {number} height Height of the image in pixels.
  * @param {Object} subImageConfigs configs for compressedTexSubImage calls
  */
-let testTexSubImageDimensions = function(gl, ext, validFormats, expectedByteLength, getBlockDimensions, width, height, subImageConfigs) {
-    let tex = gl.createTexture();
+var testTexSubImageDimensions = function(gl, validFormats, expectedByteLength, getBlockDimensions, width, height, subImageConfigs) {
+    var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
 
-    for (let formatId in validFormats) {
+    for (var formatId in validFormats) {
         if (validFormats.hasOwnProperty(formatId)) {
-            let format = validFormats[formatId];
-            let blockSize = getBlockDimensions(format);
-            debug("testing " + ctu.formatToString(ext, format));
-            let expectedSize = expectedByteLength(width, height, format);
-            let data = new Uint8Array(expectedSize);
+            var format = validFormats[formatId];
+            var blockSize = getBlockDimensions(format);
+            var expectedSize = expectedByteLength(width, height, format);
+            var data = new Uint8Array(expectedSize);
 
             gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height, 0, data);
             wtu.glErrorShouldBe(gl, gl.NO_ERROR, "setting up compressed texture");
 
             for (let i = 0, len = subImageConfigs.length; i < len; ++i) {
                 let c = subImageConfigs[i];
-                let subData = new Uint8Array(expectedByteLength(c.width, c.height, format));
+                var subData = new Uint8Array(expectedByteLength(c.width, c.height, format));
                 gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, c.xoffset, c.yoffset, c.width, c.height, format, subData);
                 wtu.glErrorShouldBe(gl, c.expectation, c.message);
             }
@@ -193,55 +192,6 @@ let testTexSubImageDimensions = function(gl, ext, validFormats, expectedByteLeng
     gl.deleteTexture(tex);
 };
 
-let testTexImageLevelDimensions = function(gl, ext, validFormats, expectedByteLength, getBlockDimensions, imageConfigs) {
-    let tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-
-    for (let formatId in validFormats) {
-        if (validFormats.hasOwnProperty(formatId)) {
-            let format = validFormats[formatId];
-            let blockSize = getBlockDimensions(format);
-            debug("testing " + ctu.formatToString(ext, format));
-
-            for (let i = 0, len = imageConfigs.length; i < len; ++i) {
-                let c = imageConfigs[i];
-                let data = new Uint8Array(expectedByteLength(c.width, c.height, format));
-                gl.compressedTexImage2D(gl.TEXTURE_2D, c.level, format, c.width, c.height, 0, data);
-                wtu.glErrorShouldBe(gl, c.expectation, c.message);
-            }
-        }
-    }
-
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.deleteTexture(tex);
-}
-
-let testTexStorageLevelDimensions = function(gl, ext, validFormats, expectedByteLength, getBlockDimensions, imageConfigs) {
-    for (let formatId in validFormats) {
-        let tex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-
-        if (validFormats.hasOwnProperty(formatId)) {
-            let format = validFormats[formatId];
-            let blockSize = getBlockDimensions(format);
-            debug("testing " + ctu.formatToString(ext, format));
-
-            for (let i = 0, len = imageConfigs.length; i < len; ++i) {
-                let c = imageConfigs[i];
-                let data = new Uint8Array(expectedByteLength(c.width, c.height, format));
-                if (i == 0) {
-                    gl.texStorage2D(gl.TEXTURE_2D, imageConfigs.length, format, c.width, c.height);
-                    wtu.glErrorShouldBe(gl, c.expectation, c.message);
-                }
-                gl.compressedTexSubImage2D(gl.TEXTURE_2D, i, 0, 0, c.width, c.height, format, data);
-                wtu.glErrorShouldBe(gl, c.expectation, c.message);
-            }
-        }
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        gl.deleteTexture(tex);
-    }
-}
-
 return {
     formatToString: formatToString,
     insertCaptionedImg: insertCaptionedImg,
@@ -251,8 +201,6 @@ return {
     testCorrectEnumValuesInExt: testCorrectEnumValuesInExt,
     testFormatRestrictionsOnBufferSize: testFormatRestrictionsOnBufferSize,
     testTexSubImageDimensions: testTexSubImageDimensions,
-    testTexImageLevelDimensions: testTexImageLevelDimensions,
-    testTexStorageLevelDimensions: testTexStorageLevelDimensions,
 };
 
 })();
