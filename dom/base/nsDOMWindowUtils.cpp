@@ -1839,8 +1839,8 @@ nsDOMWindowUtils::TransformRectLayoutToVisual(float aX, float aY, float aWidth,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::ToScreenRect(float aX, float aY, float aWidth, float aHeight,
-                               DOMRect** aResult) {
+nsDOMWindowUtils::ToScreenRectInCSSUnits(float aX, float aY, float aWidth,
+                                         float aHeight, DOMRect** aResult) {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 

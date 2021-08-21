@@ -39,7 +39,7 @@ var LayoutUtils = {
       parentFrame = win.frameElement;
     }
 
-    return aElement.ownerGlobal.windowUtils.toScreenRect(
+    return aElement.ownerGlobal.windowUtils.toScreenRectInCSSUnits(
       x,
       y,
       rect.width,
