@@ -19,36 +19,19 @@ found in the LICENSE.txt file.
 <div id="description"></div>
 <div id="console"></div>
 <script id="fragmentShader" type="text/something-not-javascript">
-// A matrix constructor with two writes and reads to the same variable inside it in different parameters must succeed "mat2(index++, vec4(index++))"
-// ESSL 1.00 spec section 5.4 Constructors: "Arguments are evaluated from left to right."
+// fragment shader that uses line continuation macro should fail
+#define foo this \
+  is a test
 precision mediump float;
-bool equal(mat2 m1, mat2 m2)
-{
-    float EPSILON = 0.00001;
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            if (abs(m1[i][j] - m2[i][j]) > EPSILON)
-                return false;
-        }
-    }
-    return true;
-}
 void main()
 {
-    int i = 0;
-    mat2 m = mat2(i++, vec4(i++));
-    if (equal(m, mat2(0, 1, 1, 1)))
-        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-    else
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 }
 </script>
-
 <script>
 "use strict";
-GLSLConformanceTester.runRenderTest();
+GLSLConformanceTester.runTest();
 var successfullyParsed = true;
 </script>
-<script src="../../../js/js-test-post.js"></script>
 </body>
 </html>

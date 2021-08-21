@@ -23,7 +23,7 @@ description("This test verifies the functionality of the EXT_texture_norm16 exte
 debug("");
 
 var wtu = WebGLTestUtils;
-var gl = wtu.create3DContext(null, null, 2);
+var gl = wtu.create3DContext();
 var ext;
 
 var formats = null;
@@ -138,38 +138,6 @@ function testNorm16Render(interalFormat, format, type, tolerance) {
   gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
-function testSnorm16Unrenderable(internalFormat, format, type) {
-  gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 1, 1, 0, format, type, null);
-
-  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texture definition succeeded");
-
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fbos[0]);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures[1], 0);
-
-  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "fbo binding succeeded");
-
-  wtu.framebufferStatusShouldBe(gl, gl.FRAMEBUFFER, [ gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT, gl.FRAMEBUFFER_UNSUPPORTED ],
-                                "framebuffer should not be complete with SNORM16 texture attached");
-}
-
-function runInternalFormatQueryTest()
-{
-    debug("");
-    debug("testing the internal format query");
-
-    var maxSamples = gl.getParameter(gl.MAX_SAMPLES);
-    const formats = [ext.R16_EXT, ext.RG16_EXT, ext.RGBA16_EXT];
-    for (const format of formats) {
-        var samples = gl.getInternalformatParameter(gl.RENDERBUFFER, format, gl.SAMPLES);
-        if (samples == null || samples.length == 0 || samples[0] < maxSamples) {
-            testFailed("the maximum value in SAMPLES should be at least " + maxSamples);
-            return;
-        }
-    }
-    testPassed("Internal format query succeeded");
-}
-
 function runTestExtension() {
   textures = [gl.createTexture(), gl.createTexture()];
   fbos = [gl.createFramebuffer(), gl.createFramebuffer()];
@@ -206,11 +174,6 @@ function runTestExtension() {
   testNorm16Render(ext.R16_EXT, gl.RED, gl.UNSIGNED_SHORT, 0);
   testNorm16Render(ext.RG16_EXT, gl.RG, gl.UNSIGNED_SHORT, 0);
   testNorm16Render(ext.RGBA16_EXT, gl.RGBA, gl.UNSIGNED_SHORT, 0);
-
-  testSnorm16Unrenderable(ext.R16_SNORM_EXT, gl.RED, gl.SHORT);
-  testSnorm16Unrenderable(ext.RG16_SNORM_EXT, gl.RG, gl.SHORT);
-  testSnorm16Unrenderable(ext.RGB16_SNORM_EXT, gl.RGB, gl.SHORT);
-  testSnorm16Unrenderable(ext.RGBA16_SNORM_EXT, gl.RGBA, gl.SHORT);
 };
 
 function runTest() {
@@ -224,7 +187,6 @@ function runTest() {
     wtu.runExtensionSupportedTest(gl, "EXT_texture_norm16", ext !== null);
 
     if (ext !== null) {
-      runInternalFormatQueryTest();
       runTestExtension();
     } else {
       testPassed("No EXT_texture_norm16 support -- this is legal");
