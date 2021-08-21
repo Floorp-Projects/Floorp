@@ -3089,10 +3089,12 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
 
-  mLeftContent = HTMLEditUtils::GetInclusiveAncestorBlockElement(
-      *aRangesToDelete.FirstRangeRef()->GetStartContainer()->AsContent());
-  mRightContent = HTMLEditUtils::GetInclusiveAncestorBlockElement(
-      *aRangesToDelete.FirstRangeRef()->GetEndContainer()->AsContent());
+  mLeftContent = HTMLEditUtils::GetInclusiveAncestorElement(
+      *aRangesToDelete.FirstRangeRef()->GetStartContainer()->AsContent(),
+      HTMLEditUtils::ClosestEditableBlockElement);
+  mRightContent = HTMLEditUtils::GetInclusiveAncestorElement(
+      *aRangesToDelete.FirstRangeRef()->GetEndContainer()->AsContent(),
+      HTMLEditUtils::ClosestEditableBlockElement);
   if (NS_WARN_IF(!mLeftContent) || NS_WARN_IF(!mRightContent)) {
     return false;
   }
@@ -3100,6 +3102,9 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     mMode = Mode::DeleteContentInRanges;
     return true;
   }
+  NS_ASSERTION(
+      mLeftContent->GetEditingHost() == mRightContent->GetEditingHost(),
+      "Trying to delete across editing host boundaries");
 
   // If left block and right block are adjuscent siblings and they are same
   // type of elements, we can merge them after deleting the selected contents.
