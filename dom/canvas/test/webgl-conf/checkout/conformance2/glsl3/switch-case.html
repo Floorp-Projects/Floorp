@@ -36,59 +36,6 @@ void main()
     }
 }
 </script>
-<script id="fshaderDeclarationInsideSwitchDefault" type="x-shader/x-fragment">#version 300 es
-
-precision highp float;
-out vec4 my_FragColor;
-
-uniform int u_zero;
-
-void main()
-{
-    my_FragColor = vec4(1, 0, 0, 1);
-    switch (u_zero)
-    {
-        default:
-            ivec2 i;
-            i = ivec2(1, 0);
-            my_FragColor = vec4(0, i[0], 0, 1);
-    }
-}
-</script>
-<script id="fshaderDeclarationInsideSwitchLiteral" type="x-shader/x-fragment">#version 300 es
-
-precision highp float;
-out vec4 my_FragColor;
-
-void main()
-{
-    my_FragColor = vec4(1, 0, 0, 1);
-    switch (0)
-    {
-        case 0:
-            ivec2 i;
-            i = ivec2(1, 0);
-            my_FragColor = vec4(0, i[0], 0, 1);
-    }
-}
-</script>
-<script id="fshaderDeclarationInsideSwitchLiteralDefault" type="x-shader/x-fragment">#version 300 es
-
-precision highp float;
-out vec4 my_FragColor;
-
-void main()
-{
-    my_FragColor = vec4(1, 0, 0, 1);
-    switch (0)
-    {
-        default:
-            ivec2 i;
-            i = ivec2(1, 0);
-            my_FragColor = vec4(0, i[0], 0, 1);
-    }
-}
-</script>
 <script id="fshaderDeclarationInsideSwitchScope" type="x-shader/x-fragment">#version 300 es
 
 precision highp float;
@@ -272,27 +219,6 @@ GLSLConformanceTester.runTests([
   fShaderSuccess: true,
   linkSuccess: true,
   passMsg: 'Declaration inside switch should work.',
-  render: true
-},
-{
-  fShaderId: 'fshaderDeclarationInsideSwitchDefault',
-  fShaderSuccess: true,
-  linkSuccess: true,
-  passMsg: 'Declaration inside switch default case should work.',
-  render: true
-},
-{
-  fShaderId: 'fshaderDeclarationInsideSwitchLiteral',
-  fShaderSuccess: true,
-  linkSuccess: true,
-  passMsg: 'Declaration inside switch with literal value should work.',
-  render: true
-},
-{
-  fShaderId: 'fshaderDeclarationInsideSwitchLiteralDefault',
-  fShaderSuccess: true,
-  linkSuccess: true,
-  passMsg: 'Declaration inside switch with literal value and default case should work.',
   render: true
 },
 {

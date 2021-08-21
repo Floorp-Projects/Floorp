@@ -78,7 +78,7 @@ function testTexLinear(gl, extensionName, internalFormatWebgl2, pixelType) {
     {
         const format = gl.RGBA;
         let internalFormat = format;
-        if (wtu.isWebGL2(gl)) {
+        if (gl instanceof WebGL2RenderingContext) {
             internalFormat = gl[internalFormatWebgl2];
         }
         var numberOfChannels = 4;
