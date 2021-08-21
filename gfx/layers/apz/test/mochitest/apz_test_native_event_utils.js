@@ -326,7 +326,7 @@ async function coordinatesRelativeToScreen(aParams) {
   const rect = _getTargetRect(target);
 
   const utils = SpecialPowers.getDOMWindowUtils(getInProcessRootWindow(window));
-  const positionInScreenCoords = utils.toScreenRectInCSSUnits(
+  const positionInScreenCoords = utils.toScreenRect(
     rect.left + (atCenter ? rect.width / 2 : offsetX),
     rect.top + (atCenter ? rect.height / 2 : offsetY),
     0,
