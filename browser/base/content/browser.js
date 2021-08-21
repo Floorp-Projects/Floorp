@@ -8264,6 +8264,7 @@ function undoCloseTab(aIndex) {
       }
     }
   }
+  SessionStore.setLastClosedTabCount(window, 1);
 
   return tab;
 }
