@@ -27,7 +27,6 @@
 #  define MOZ_GL_DEBUG 1
 #endif
 
-#include "mozilla/IntegerRange.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ThreadLocal.h"
@@ -2020,43 +2019,10 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     AFTER_GL_CALL;
   }
 
-  mutable GLuint mCachedDrawFb = 0;
-  mutable GLuint mCachedReadFb = 0;
-
-  void fBindFramebuffer(const GLenum target, const GLuint fb) const {
-    MOZ_ASSERT(mCachedDrawFb ==
-               GetIntAs<GLuint>(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING));
-    MOZ_ASSERT(mCachedReadFb ==
-               GetIntAs<GLuint>(LOCAL_GL_READ_FRAMEBUFFER_BINDING));
-
-    switch (target) {
-      case LOCAL_GL_FRAMEBUFFER:
-        if (mCachedDrawFb == fb && mCachedReadFb == fb) return;
-        break;
-      case LOCAL_GL_DRAW_FRAMEBUFFER:
-        if (mCachedDrawFb == fb) return;
-        break;
-      case LOCAL_GL_READ_FRAMEBUFFER:
-        if (mCachedReadFb == fb) return;
-        break;
-    }
-
+  void fBindFramebuffer(GLenum target, GLuint framebuffer) {
     BEFORE_GL_CALL;
-    mSymbols.fBindFramebuffer(target, fb);
+    mSymbols.fBindFramebuffer(target, framebuffer);
     AFTER_GL_CALL;
-
-    switch (target) {
-      case LOCAL_GL_FRAMEBUFFER:
-        mCachedDrawFb = fb;
-        mCachedReadFb = fb;
-        break;
-      case LOCAL_GL_DRAW_FRAMEBUFFER:
-        mCachedDrawFb = fb;
-        break;
-      case LOCAL_GL_READ_FRAMEBUFFER:
-        mCachedReadFb = fb;
-        break;
-    }
   }
 
   void fBindRenderbuffer(GLenum target, GLuint renderbuffer) {
@@ -2320,16 +2286,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     BEFORE_GL_CALL;
     mSymbols.fDeleteFramebuffers(n, names);
     AFTER_GL_CALL;
-
-    for (const auto i : IntegerRange(n)) {
-      const auto fb = names[i];
-      if (mCachedDrawFb == fb) {
-        mCachedDrawFb = 0;
-      }
-      if (mCachedReadFb == fb) {
-        mCachedReadFb = 0;
-      }
-    }
   }
 
   void raw_fDeleteRenderbuffers(GLsizei n, const GLuint* names) {
