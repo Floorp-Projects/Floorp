@@ -2181,10 +2181,16 @@ bool AsyncPanZoomController::CanScroll(const InputData& aEvent) const {
 ScrollDirections AsyncPanZoomController::GetAllowedHandoffDirections() const {
   ScrollDirections result;
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  if (mX.OverscrollBehaviorAllowsHandoff()) {
+
+  // In Fission there can be non-scrollable APZCs. It's unclear whether
+  // overscroll-behavior should be respected for these
+  // (see https://github.com/w3c/csswg-drafts/issues/6523) but
+  // we currently don't, to match existing practice.
+  const bool isScrollable = mX.CanScroll() || mY.CanScroll();
+  if (!isScrollable || mX.OverscrollBehaviorAllowsHandoff()) {
     result += ScrollDirection::eHorizontal;
   }
-  if (mY.OverscrollBehaviorAllowsHandoff()) {
+  if (!isScrollable || mY.OverscrollBehaviorAllowsHandoff()) {
     result += ScrollDirection::eVertical;
   }
   return result;
@@ -3653,13 +3659,14 @@ Maybe<CSSPoint> AsyncPanZoomController::GetCurrentAnimationDestination(
 ParentLayerPoint
 AsyncPanZoomController::AdjustHandoffVelocityForOverscrollBehavior(
     ParentLayerPoint& aHandoffVelocity) const {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
+
   ParentLayerPoint residualVelocity;
-  if (!mX.OverscrollBehaviorAllowsHandoff()) {
+  ScrollDirections handoffDirections = GetAllowedHandoffDirections();
+  if (!handoffDirections.contains(ScrollDirection::eHorizontal)) {
     residualVelocity.x = aHandoffVelocity.x;
     aHandoffVelocity.x = 0;
   }
-  if (!mY.OverscrollBehaviorAllowsHandoff()) {
+  if (!handoffDirections.contains(ScrollDirection::eVertical)) {
     residualVelocity.y = aHandoffVelocity.y;
     aHandoffVelocity.y = 0;
   }
@@ -3667,9 +3674,8 @@ AsyncPanZoomController::AdjustHandoffVelocityForOverscrollBehavior(
 }
 
 bool AsyncPanZoomController::OverscrollBehaviorAllowsSwipe() const {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
   // Swipe navigation is a "non-local" overscroll behavior like handoff.
-  return mX.OverscrollBehaviorAllowsHandoff();
+  return GetAllowedHandoffDirections().contains(ScrollDirection::eHorizontal);
 }
 
 void AsyncPanZoomController::HandleFlingOverscroll(
@@ -3793,11 +3799,11 @@ bool AsyncPanZoomController::CallDispatchScroll(
   // Obey overscroll-behavior.
   ParentLayerPoint endPoint = aEndPoint;
   if (aOverscrollHandoffState.mChainIndex > 0) {
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    if (!mX.OverscrollBehaviorAllowsHandoff()) {
+    ScrollDirections handoffDirections = GetAllowedHandoffDirections();
+    if (!handoffDirections.contains(ScrollDirection::eHorizontal)) {
       endPoint.x = aStartPoint.x;
     }
-    if (!mY.OverscrollBehaviorAllowsHandoff()) {
+    if (!handoffDirections.contains(ScrollDirection::eVertical)) {
       endPoint.y = aStartPoint.y;
     }
     if (aStartPoint == endPoint) {
