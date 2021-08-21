@@ -1453,46 +1453,47 @@ already_AddRefed<Promise> SessionStoreUtils::RestoreDocShellState(
   MOZ_RELEASE_ASSERT(mozilla::SessionHistoryInParent());
   MOZ_RELEASE_ASSERT(aContext.IsTop());
 
-  if (WindowGlobalParent* wgp = aContext.GetCurrentWindowGlobal()) {
-    nsCOMPtr<nsIGlobalObject> global =
-        do_QueryInterface(aGlobal.GetAsSupports());
-    MOZ_DIAGNOSTIC_ASSERT(global);
-
-    RefPtr<Promise> promise = Promise::Create(global, aError);
-    if (aError.Failed()) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    if (!aURL.IsEmpty()) {
-      if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aURL))) {
-        aError.Throw(NS_ERROR_FAILURE);
-        return nullptr;
-      }
-    }
-
-    bool allowJavascript = true;
-    for (const nsACString& token :
-         nsCCharSeparatedTokenizer(aDocShellCaps, ',').ToRange()) {
-      if (token.EqualsLiteral("Javascript")) {
-        allowJavascript = false;
-      }
-    }
-
-    Unused << aContext.SetAllowJavascript(allowJavascript);
-
-    DocShellRestoreState state = {uri, aDocShellCaps};
-
-    // TODO (anny): Investigate removing this roundtrip.
-    wgp->SendRestoreDocShellState(state)->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [promise](void) { promise->MaybeResolveWithUndefined(); },
-        [promise](void) { promise->MaybeRejectWithUndefined(); });
-
-    return promise.forget();
+  WindowGlobalParent* wgp = aContext.GetCurrentWindowGlobal();
+  if (!wgp) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_DIAGNOSTIC_ASSERT(global);
+
+  RefPtr<Promise> promise = Promise::Create(global, aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  if (!aURL.IsEmpty()) {
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aURL))) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+  }
+
+  bool allowJavascript = true;
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(aDocShellCaps, ',').ToRange()) {
+    if (token.EqualsLiteral("Javascript")) {
+      allowJavascript = false;
+    }
+  }
+
+  Unused << aContext.SetAllowJavascript(allowJavascript);
+
+  DocShellRestoreState state = {uri, aDocShellCaps};
+
+  // TODO (anny): Investigate removing this roundtrip.
+  wgp->SendRestoreDocShellState(state)->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [promise](void) { promise->MaybeResolveWithUndefined(); },
+      [promise](void) { promise->MaybeRejectWithUndefined(); });
+
+  return promise.forget();
 }
 
 /* static */
