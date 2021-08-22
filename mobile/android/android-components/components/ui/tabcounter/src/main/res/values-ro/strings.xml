@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Browser menu button to close tab. Closes the current session when pressed. -->
+    <string name="mozac_close_tab">Închide fila</string>
+    </resources>

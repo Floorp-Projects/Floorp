@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="mozac_browser_menu_new_tab">Uus kaart</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="mozac_browser_menu_new_private_tab">Uus privaatne kaart</string>
+    </resources>

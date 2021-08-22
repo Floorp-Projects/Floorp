@@ -94,12 +94,12 @@
     <string name="mozac_feature_addons_permissions_dialog_cancel">Loobu</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">Paigalda lisa</string>
-    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
-    <string name="mozac_feature_addons_user_rating_count">Kasutajaid: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Lisad</string>
+    <!-- Label for add-ons sub menu item for add-ons manager-->
+    <string name="mozac_feature_addons_addons_manager">Lisade haldur</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Luba</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -172,4 +172,4 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Viimane katse:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">Olek:</string>
-</resources>
+    </resources>

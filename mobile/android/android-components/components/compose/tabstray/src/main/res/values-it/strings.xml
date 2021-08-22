@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="mozac_tab_counter_open_tab_tray_single">Aperta 1 scheda. Tocca per passare alla scheda.</string>
+    </resources>
