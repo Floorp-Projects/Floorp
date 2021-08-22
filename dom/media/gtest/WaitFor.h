@@ -7,6 +7,7 @@
 
 #include "MediaEventSource.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Result.h"
 #include "mozilla/SpinEventLoopUntil.h"
 
@@ -37,14 +38,7 @@ T WaitFor(MediaEventSource<T>& aEvent) {
 /**
  * Specialization of WaitFor<T> for void.
  */
-void WaitFor(MediaEventSource<void>& aEvent) {
-  bool done = false;
-  MediaEventListener listener =
-      aEvent.Connect(AbstractThread::GetCurrent(), [&] { done = true; });
-  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      [&] { return done; });
-  listener.Disconnect();
-}
+void WaitFor(MediaEventSource<void>& aEvent);
 
 /**
  * Variant of WaitFor that blocks the caller until a MozPromise has either been
