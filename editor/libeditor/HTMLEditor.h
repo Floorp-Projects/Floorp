@@ -1023,7 +1023,7 @@ class HTMLEditor final : public EditorBase,
   EditActionResult CanHandleHTMLEditSubAction() const;
 
   /**
-   * EnsureCaretNotAfterPaddingBRElement() makes sure that caret is NOT after
+   * EnsureCaretNotAfterInvisibleBRElement() makes sure that caret is NOT after
    * padding `<br>` element for preventing insertion after padding `<br>`
    * element at empty last line.
    * NOTE: This method should be called only when `Selection` is collapsed
@@ -1032,7 +1032,7 @@ class HTMLEditor final : public EditorBase,
    *       ignore those types of selections.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  EnsureCaretNotAfterPaddingBRElement();
+  EnsureCaretNotAfterInvisibleBRElement();
 
   /**
    * MaybeCreatePaddingBRElementForEmptyEditor() creates padding <br> element
