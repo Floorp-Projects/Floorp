@@ -21,7 +21,9 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_media.h"
 
-extern mozilla::LazyLogModule gMediaDecoderLog;
+namespace mozilla {
+extern LazyLogModule gMediaDecoderLog;
+}
 
 #undef FMT
 
