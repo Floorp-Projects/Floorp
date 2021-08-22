@@ -94,11 +94,6 @@ static const char* kRedPayloadName = "red";
 // 32 bytes is what WebRTC CodecInst expects
 const unsigned int WebrtcVideoConduit::CODEC_PLNAME_SIZE = 32;
 
-template <typename T>
-T MinIgnoreZero(const T& a, const T& b) {
-  return std::min(a ? a : b, b ? b : a);
-}
-
 template <class t>
 static void ConstrainPreservingAspectRatioExact(uint32_t max_fs, t* width,
                                                 t* height) {

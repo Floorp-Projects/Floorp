@@ -26,6 +26,10 @@ class nsIEventTarget;
 namespace mozilla {
 class ErrorResult;
 
+namespace ipc {
+class PrincipalInfo;
+}  // namespace ipc
+
 namespace dom {
 
 class BlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
@@ -256,6 +260,50 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 };
 
+class EmptyBody final : public FetchBody<EmptyBody> {
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(EmptyBody,
+                                                         FetchBody<EmptyBody>)
+
+ public:
+  static already_AddRefed<EmptyBody> Create(
+      nsIGlobalObject* aGlobal, mozilla::ipc::PrincipalInfo* aPrincipalInfo,
+      AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
+      ErrorResult& aRv);
+
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
+
+  AbortSignalImpl* GetSignalImpl() const override { return mAbortSignalImpl; }
+
+  const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
+    return mPrincipalInfo;
+  }
+
+  void GetMimeType(nsACString& aMimeType) { aMimeType = mMimeType; }
+
+  void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr);
+
+  using FetchBody::BodyBlobURISpec;
+
+  const nsACString& BodyBlobURISpec() const { return EmptyCString(); }
+
+  using FetchBody::BodyLocalPath;
+
+  const nsAString& BodyLocalPath() const { return EmptyString(); }
+
+ private:
+  EmptyBody(nsIGlobalObject* aGlobal,
+            mozilla::ipc::PrincipalInfo* aPrincipalInfo,
+            AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
+            already_AddRefed<nsIInputStream> aBodyStream);
+
+  ~EmptyBody();
+
+  UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
+  RefPtr<AbortSignalImpl> mAbortSignalImpl;
+  nsCString mMimeType;
+  nsCOMPtr<nsIInputStream> mBodyStream;
+};
 }  // namespace dom
 }  // namespace mozilla
 

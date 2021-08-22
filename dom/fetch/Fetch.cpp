@@ -7,6 +7,7 @@
 #include "Fetch.h"
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIGlobalObject.h"
 
 #include "nsDOMString.h"
@@ -36,7 +37,6 @@
 #include "mozilla/net/CookieJarSettings.h"
 
 #include "BodyExtractor.h"
-#include "EmptyBody.h"
 #include "FetchObserver.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
@@ -312,7 +312,7 @@ class WorkerFetchResolver final : public FetchDriverObserver {
 
   void OnResponseAvailableInternal(InternalResponse* aResponse) override;
 
-  void OnResponseEnd(FetchDriverObserver::EndReason eReason) override;
+  void OnResponseEnd(FetchDriverObserver::EndReason aReason) override;
 
   bool NeedOnDataAvailable() override;
 
@@ -1546,5 +1546,75 @@ void FetchBody<Derived>::RunAbortAlgorithm() {
 template void FetchBody<Request>::RunAbortAlgorithm();
 
 template void FetchBody<Response>::RunAbortAlgorithm();
+
+NS_IMPL_ADDREF_INHERITED(EmptyBody, FetchBody<EmptyBody>)
+NS_IMPL_RELEASE_INHERITED(EmptyBody, FetchBody<EmptyBody>)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(EmptyBody)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EmptyBody, FetchBody<EmptyBody>)
+  AbortFollower::Unlink(static_cast<AbortFollower*>(tmp));
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAbortSignalImpl)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EmptyBody,
+                                                  FetchBody<EmptyBody>)
+  AbortFollower::Traverse(static_cast<AbortFollower*>(tmp), cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbortSignalImpl)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(EmptyBody, FetchBody<EmptyBody>)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EmptyBody)
+NS_INTERFACE_MAP_END_INHERITING(FetchBody<EmptyBody>)
+
+EmptyBody::EmptyBody(nsIGlobalObject* aGlobal,
+                     mozilla::ipc::PrincipalInfo* aPrincipalInfo,
+                     AbortSignalImpl* aAbortSignalImpl,
+                     const nsACString& aMimeType,
+                     already_AddRefed<nsIInputStream> aBodyStream)
+    : FetchBody<EmptyBody>(aGlobal),
+      mAbortSignalImpl(aAbortSignalImpl),
+      mMimeType(aMimeType),
+      mBodyStream(std::move(aBodyStream)) {
+  if (aPrincipalInfo) {
+    mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(*aPrincipalInfo);
+  }
+}
+
+EmptyBody::~EmptyBody() = default;
+
+/* static */
+already_AddRefed<EmptyBody> EmptyBody::Create(
+    nsIGlobalObject* aGlobal, mozilla::ipc::PrincipalInfo* aPrincipalInfo,
+    AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsIInputStream> bodyStream;
+  aRv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), ""_ns);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<EmptyBody> emptyBody =
+      new EmptyBody(aGlobal, aPrincipalInfo, aAbortSignalImpl, aMimeType,
+                    bodyStream.forget());
+  return emptyBody.forget();
+}
+
+void EmptyBody::GetBody(nsIInputStream** aStream, int64_t* aBodyLength) {
+  MOZ_ASSERT(aStream);
+
+  if (aBodyLength) {
+    *aBodyLength = 0;
+  }
+
+  nsCOMPtr<nsIInputStream> bodyStream = mBodyStream;
+  bodyStream.forget(aStream);
+}
 
 }  // namespace mozilla::dom

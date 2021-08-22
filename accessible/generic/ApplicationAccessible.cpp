@@ -8,6 +8,7 @@
 #include "ApplicationAccessible.h"
 
 #include "AccAttributes.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "Relation.h"

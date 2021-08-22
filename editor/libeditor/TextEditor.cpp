@@ -12,6 +12,7 @@
 #include "InternetCiter.h"
 #include "PlaceholderTransaction.h"
 #include "gfxFontUtils.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditAction.h"

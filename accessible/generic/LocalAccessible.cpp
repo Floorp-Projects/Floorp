@@ -9,6 +9,7 @@
 #include "AccAttributes.h"
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
+#include "DocAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsAccessibilityService.h"
 #include "ApplicationAccessible.h"

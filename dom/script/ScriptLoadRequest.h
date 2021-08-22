@@ -383,11 +383,20 @@ class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {
   }
 };
 
-void ImplCycleCollectionUnlink(ScriptLoadRequestList& aField);
+inline void ImplCycleCollectionUnlink(ScriptLoadRequestList& aField) {
+  while (!aField.isEmpty()) {
+    RefPtr<ScriptLoadRequest> first = aField.StealFirst();
+  }
+}
 
-void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                                 ScriptLoadRequestList& aField,
-                                 const char* aName, uint32_t aFlags);
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    ScriptLoadRequestList& aField, const char* aName, uint32_t aFlags) {
+  for (ScriptLoadRequest* request = aField.getFirst(); request;
+       request = request->getNext()) {
+    CycleCollectionNoteChild(aCallback, request, aName, aFlags);
+  }
+}
 
 }  // namespace dom
 }  // namespace mozilla

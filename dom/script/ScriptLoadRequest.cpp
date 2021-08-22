@@ -190,7 +190,7 @@ void ScriptLoadRequest::DropBytecodeCacheReferences() {
   DropJSObjects(this);
 }
 
-inline ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
+ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
   MOZ_ASSERT(IsModuleRequest());
   return static_cast<ModuleLoadRequest*>(this);
 }
@@ -297,21 +297,6 @@ bool ScriptLoadRequestList::Contains(ScriptLoadRequest* aElem) const {
   return false;
 }
 #endif  // DEBUG
-
-inline void ImplCycleCollectionUnlink(ScriptLoadRequestList& aField) {
-  while (!aField.isEmpty()) {
-    RefPtr<ScriptLoadRequest> first = aField.StealFirst();
-  }
-}
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    ScriptLoadRequestList& aField, const char* aName, uint32_t aFlags) {
-  for (ScriptLoadRequest* request = aField.getFirst(); request;
-       request = request->getNext()) {
-    CycleCollectionNoteChild(aCallback, request, aName, aFlags);
-  }
-}
 
 }  // namespace dom
 }  // namespace mozilla
