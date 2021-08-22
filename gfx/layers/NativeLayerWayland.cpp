@@ -200,6 +200,8 @@ bool NativeLayerRootWayland::CommitToScreen(const MutexAutoLock& aProofOfLock) {
 
       auto transform2DInversed = transform2D.Inverse();
       Rect bufferClip = transform2DInversed.TransformBounds(surfaceRectClipped);
+      // avoid floating point issues - we always expect integer values here
+      bufferClip.Round();
       layer->SetViewportSourceRect(bufferClip);
 
       layer->Commit();
