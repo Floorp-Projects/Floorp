@@ -17,6 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/RemoteWorkerController.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
@@ -225,6 +226,8 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
   RefPtr<ServiceWorkerPrivate> mOuter;
 
   RemoteWorkerData mRemoteWorkerData;
+
+  TimeStamp mServiceWorkerLaunchTimeStart;
 };
 
 }  // namespace dom

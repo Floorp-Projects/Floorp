@@ -12919,17 +12919,17 @@
     "alert_emails": ["tihuang@mozilla.com", "aedelstein@mozilla.com", "jhofmann@mozilla.com", "pbz@mozilla.com", "seceng-telemetry@mozilla.com"],
     "bug_numbers": [1706616]
   },
-  "SERVICE_WORKER_LAUNCH_TIME": {
+  "SERVICE_WORKER_LAUNCH_TIME_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
-    "bug_numbers": [1328398],
+    "bug_numbers": [1328398, 1693074],
     "kind": "exponential",
-    "high": 5000,
+    "high": 30000,
     "n_buckets": 25,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["sw-telemetry@mozilla.com", "ttung@mozilla.com"],
-    "description": "Time (ms) for a service worker to start up."
+    "alert_emails": ["sw-telemetry@mozilla.com", "echuang@mozilla.com"],
+    "description": "Time (ms) for spawning a service worker in the remote content process."
   },
   "SERVICE_WORKER_REGISTRATION_LOADING": {
     "record_in_processes": ["main", "content"],
