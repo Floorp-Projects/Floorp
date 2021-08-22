@@ -63,6 +63,12 @@ class InterceptedChannelBase : public nsIInterceptedChannel {
       nsIConsoleReportCollector** aCollectorOut) override;
   NS_IMETHOD SetReleaseHandle(nsISupports* aHandle) override;
 
+  NS_IMETHODIMP
+  SetFetchHandlerStart(TimeStamp aTimeStamp) override { return NS_OK; }
+
+  NS_IMETHODIMP
+  SetFetchHandlerFinish(TimeStamp aTimeStamp) override { return NS_OK; }
+
   static already_AddRefed<nsIURI> SecureUpgradeChannelURI(nsIChannel* aChannel);
 };
 

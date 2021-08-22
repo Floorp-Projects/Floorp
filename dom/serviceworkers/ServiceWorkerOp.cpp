@@ -1065,8 +1065,12 @@ class MOZ_STACK_CLASS FetchEventOp::AutoCancel {
 
       MOZ_ASSERT(!mOwner->mRespondWithPromiseHolder.IsEmpty());
       mOwner->mHandled->MaybeRejectWithNetworkError("AutoCancel"_ns);
-      mOwner->mRespondWithPromiseHolder.Reject(NS_ERROR_INTERCEPTION_FAILED,
-                                               __func__);
+      mOwner->mRespondWithPromiseHolder.Reject(
+          CancelInterceptionArgs(
+              NS_ERROR_INTERCEPTION_FAILED,
+              FetchEventTimeStamps(mOwner->mFetchHandlerStart,
+                                   mOwner->mFetchHandlerFinish)),
+          __func__);
     }
   }
 
@@ -1196,7 +1200,11 @@ void FetchEventOp::ReportCanceled(const nsCString& aPreventDefaultScriptSpec,
 }
 
 FetchEventOp::~FetchEventOp() {
-  mRespondWithPromiseHolder.RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
+  mRespondWithPromiseHolder.RejectIfExists(
+      CancelInterceptionArgs(
+          NS_ERROR_DOM_ABORT_ERR,
+          FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish)),
+      __func__);
 
   if (mActor) {
     NS_ProxyRelease("FetchEventOp::mActor", RemoteWorkerService::Thread(),
@@ -1208,7 +1216,18 @@ void FetchEventOp::RejectAll(nsresult aStatus) {
   MOZ_ASSERT(!mRespondWithPromiseHolder.IsEmpty());
   MOZ_ASSERT(!mPromiseHolder.IsEmpty());
 
-  mRespondWithPromiseHolder.Reject(aStatus, __func__);
+  if (mFetchHandlerStart.IsNull()) {
+    mFetchHandlerStart = TimeStamp::Now();
+  }
+  if (mFetchHandlerFinish.IsNull()) {
+    mFetchHandlerFinish = TimeStamp::Now();
+  }
+
+  mRespondWithPromiseHolder.Reject(
+      CancelInterceptionArgs(
+          aStatus,
+          FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish)),
+      __func__);
   mPromiseHolder.Reject(aStatus, __func__);
 }
 
@@ -1317,6 +1336,8 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
   MOZ_ASSERT(mRespondWithClosure);
   MOZ_ASSERT(!mRespondWithPromiseHolder.IsEmpty());
   MOZ_ASSERT(!mPromiseHolder.IsEmpty());
+
+  mFetchHandlerFinish = TimeStamp::Now();
 
   nsAutoString requestURL;
   GetRequestURL(requestURL);
@@ -1484,8 +1505,9 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
   // where it's going.
   mHandled->MaybeResolveWithUndefined();
   mRespondWithPromiseHolder.Resolve(
-      FetchEventRespondWithResult(
-          SynthesizeResponseArgs(ir, mRespondWithClosure.ref())),
+      FetchEventRespondWithResult(MakeTuple(
+          ir, mRespondWithClosure.ref(),
+          FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish))),
       __func__);
 }
 
@@ -1495,6 +1517,8 @@ void FetchEventOp::RejectedCallback(JSContext* aCx,
   MOZ_ASSERT(mRespondWithClosure);
   MOZ_ASSERT(!mRespondWithPromiseHolder.IsEmpty());
   MOZ_ASSERT(!mPromiseHolder.IsEmpty());
+
+  mFetchHandlerFinish = TimeStamp::Now();
 
   FetchEventRespondWithClosure& closure = mRespondWithClosure.ref();
 
@@ -1518,8 +1542,9 @@ void FetchEventOp::RejectedCallback(JSContext* aCx,
   mHandled->MaybeRejectWithNetworkError(
       "FetchEvent.respondWith() Promise rejected"_ns);
   mRespondWithPromiseHolder.Resolve(
-      FetchEventRespondWithResult(
-          CancelInterceptionArgs(NS_ERROR_INTERCEPTION_FAILED)),
+      FetchEventRespondWithResult(CancelInterceptionArgs(
+          NS_ERROR_INTERCEPTION_FAILED,
+          FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish))),
       __func__);
 }
 
@@ -1628,6 +1653,8 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
   fetchEvent->PostInit(args.workerScriptSpec(), this);
   mHandled = fetchEvent->Handled();
 
+  mFetchHandlerStart = TimeStamp::Now();
+
   /**
    * Step 5: Dispatch the FetchEvent to the worker's global object
    */
@@ -1675,6 +1702,8 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
     MOZ_ASSERT(!aWorkerPrivate->UsesSystemPrincipal(),
                "We don't support system-principal serviceworkers");
 
+    mFetchHandlerFinish = TimeStamp::Now();
+
     if (fetchEvent->DefaultPrevented(CallerType::NonSystem)) {
       // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
       // Step 24.1.1: If eventHandled is not null, then reject eventHandled with
@@ -1682,15 +1711,18 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
       mHandled->MaybeRejectWithNetworkError(
           "FetchEvent.preventDefault() called"_ns);
       mRespondWithPromiseHolder.Resolve(
-          FetchEventRespondWithResult(
-              CancelInterceptionArgs(NS_ERROR_INTERCEPTION_FAILED)),
+          FetchEventRespondWithResult(CancelInterceptionArgs(
+              NS_ERROR_INTERCEPTION_FAILED,
+              FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish))),
           __func__);
     } else {
       // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
       // Step 24.2: If eventHandled is not null, then resolve eventHandled.
       mHandled->MaybeResolveWithUndefined();
       mRespondWithPromiseHolder.Resolve(
-          FetchEventRespondWithResult(ResetInterceptionArgs()), __func__);
+          FetchEventRespondWithResult(ResetInterceptionArgs(
+              FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish))),
+          __func__);
     }
   } else {
     MOZ_ASSERT(mRespondWithClosure);

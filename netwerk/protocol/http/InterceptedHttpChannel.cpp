@@ -126,6 +126,11 @@ void InterceptedHttpChannel::AsyncOpenInternal() {
       }
     });
 
+    // The fetch event will not be dispatched, record current time for
+    // FetchHandlerStart and FetchHandlerFinish.
+    SetFetchHandlerStart(TimeStamp::Now());
+    SetFetchHandlerFinish(TimeStamp::Now());
+
     if (ShouldRedirect()) {
       rv = FollowSyntheticRedirect();
       return;
@@ -889,6 +894,18 @@ InterceptedHttpChannel::GetConsoleReportCollector(
 }
 
 NS_IMETHODIMP
+InterceptedHttpChannel::SetFetchHandlerStart(TimeStamp aTimeStamp) {
+  mTimeStamps.RecordTime(std::move(aTimeStamp));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::SetFetchHandlerFinish(TimeStamp aTimeStamp) {
+  mTimeStamps.RecordTime(std::move(aTimeStamp));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 InterceptedHttpChannel::SetReleaseHandle(nsISupports* aHandle) {
   mReleaseHandle = aHandle;
   return NS_OK;
@@ -1324,17 +1341,39 @@ void InterceptedHttpChannel::InterceptionTimeStamps::RecordTime(
 
 void InterceptedHttpChannel::InterceptionTimeStamps::RecordTime(
     TimeStamp&& aTimeStamp) {
-  MOZ_ASSERT(mStatus == Initialized);
+  MOZ_ASSERT(mStatus == Initialized || mStatus == Canceled);
+  if (mStatus == Canceled) {
+    return;
+  }
   RecordTimeInternal(std::move(aTimeStamp));
 }
 
 void InterceptedHttpChannel::InterceptionTimeStamps::RecordTimeInternal(
     TimeStamp&& aTimeStamp) {
   MOZ_ASSERT(mStatus != Created);
+
+  if (mStatus == Canceled && mStage != InterceptionFinish) {
+    mFetchHandlerStart = aTimeStamp;
+    mFetchHandlerFinish = aTimeStamp;
+    mStage = InterceptionFinish;
+  }
+
   switch (mStage) {
     case InterceptionStart: {
       MOZ_ASSERT(mInterceptionStart.IsNull());
       mInterceptionStart = aTimeStamp;
+      mStage = FetchHandlerStart;
+      break;
+    }
+    case (FetchHandlerStart): {
+      MOZ_ASSERT(mFetchHandlerStart.IsNull());
+      mFetchHandlerStart = aTimeStamp;
+      mStage = FetchHandlerFinish;
+      break;
+    }
+    case (FetchHandlerFinish): {
+      MOZ_ASSERT(mFetchHandlerFinish.IsNull());
+      mFetchHandlerFinish = aTimeStamp;
       mStage = InterceptionFinish;
       break;
     }
@@ -1388,21 +1427,52 @@ void InterceptedHttpChannel::InterceptionTimeStamps::GenKeysWithStatus(
 void InterceptedHttpChannel::InterceptionTimeStamps::SaveTimeStamps() {
   MOZ_ASSERT(mStatus != Initialized && mStatus != Created);
 
+  if (mStatus == Synthesized || mStatus == Reset) {
+    Telemetry::HistogramID id =
+        Telemetry::SERVICE_WORKER_FETCH_EVENT_FINISH_SYNTHESIZED_RESPONSE_MS_2;
+    if (mStatus == Reset) {
+      id = Telemetry::SERVICE_WORKER_FETCH_EVENT_CHANNEL_RESET_MS_2;
+    }
+
+    Telemetry::Accumulate(
+        id, mKey,
+        static_cast<uint32_t>(
+            (mInterceptionFinish - mFetchHandlerFinish).ToMilliseconds()));
+    if (!mIsNonSubresourceRequest && !mSubresourceKey.IsEmpty()) {
+      Telemetry::Accumulate(
+          id, mSubresourceKey,
+          static_cast<uint32_t>(
+              (mInterceptionFinish - mFetchHandlerFinish).ToMilliseconds()));
+    }
+  }
+
+  if (!mFetchHandlerStart.IsNull()) {
+    Telemetry::Accumulate(
+        Telemetry::SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS_2, mKey,
+        static_cast<uint32_t>(
+            (mFetchHandlerStart - mInterceptionStart).ToMilliseconds()));
+
+    if (!mIsNonSubresourceRequest && !mSubresourceKey.IsEmpty()) {
+      Telemetry::Accumulate(
+          Telemetry::SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS_2, mSubresourceKey,
+          static_cast<uint32_t>(
+              (mFetchHandlerStart - mInterceptionStart).ToMilliseconds()));
+    }
+  }
+
   nsAutoCString key, subresourceKey;
   GenKeysWithStatus(key, subresourceKey);
 
-  if (!mInterceptionFinish.IsNull()) {
+  Telemetry::Accumulate(
+      Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS_2, key,
+      static_cast<uint32_t>(
+          (mInterceptionFinish - mInterceptionStart).ToMilliseconds()));
+  if (!mIsNonSubresourceRequest && !mSubresourceKey.IsEmpty()) {
     Telemetry::Accumulate(
-        Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS_2, key,
+        Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS_2,
+        subresourceKey,
         static_cast<uint32_t>(
             (mInterceptionFinish - mInterceptionStart).ToMilliseconds()));
-    if (!mIsNonSubresourceRequest && !mSubresourceKey.IsEmpty()) {
-      Telemetry::Accumulate(
-          Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS_2,
-          subresourceKey,
-          static_cast<uint32_t>(
-              (mInterceptionFinish - mInterceptionStart).ToMilliseconds()));
-    }
   }
 }
 

@@ -151,8 +151,21 @@ class InterceptedHttpChannel final
     // The time stamp which the interception finishes.
     TimeStamp mInterceptionFinish;
 
+    // The time stamp which the fetch event starts to be handled by fetch event
+    // handler.
+    TimeStamp mFetchHandlerStart;
+
+    // The time stamp which the fetch event handling finishes. It would the time
+    // which remote worker sends result back.
+    TimeStamp mFetchHandlerFinish;
+
     // The stage of interception.
-    enum Stage { InterceptionStart, InterceptionFinish } mStage;
+    enum Stage {
+      InterceptionStart,
+      FetchHandlerStart,
+      FetchHandlerFinish,
+      InterceptionFinish
+    } mStage;
 
     // The final status of the interception.
     Status mStatus;
