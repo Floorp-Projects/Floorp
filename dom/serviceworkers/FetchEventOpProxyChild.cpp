@@ -37,16 +37,22 @@ nsresult GetIPCSynthesizeResponseArgs(
     UniquePtr<AutoIPCStream>& aAutoAlternativeBodyStream) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
+  RefPtr<InternalResponse> internalResponse;
+  FetchEventRespondWithClosure closure;
+  FetchEventTimeStamps timeStamps;
+  Tie(internalResponse, closure, timeStamps) = aArgs;
+
+  aIPCArgs->closure() = std::move(closure);
+  aIPCArgs->timeStamps() = std::move(timeStamps);
+
   PBackgroundChild* bgChild = BackgroundChild::GetOrCreateForCurrentThread();
 
   if (NS_WARN_IF(!bgChild)) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  aArgs.first->ToIPC(&aIPCArgs->internalResponse(), bgChild, aAutoBodyStream,
-                     aAutoAlternativeBodyStream);
-  aIPCArgs->closure() = std::move(aArgs.second);
-
+  internalResponse->ToIPC(&aIPCArgs->internalResponse(), bgChild,
+                          aAutoBodyStream, aAutoAlternativeBodyStream);
   return NS_OK;
 }
 
@@ -95,10 +101,9 @@ void FetchEventOpProxyChild::Initialize(
                self->mRespondWithPromiseRequestHolder.Complete();
 
                if (NS_WARN_IF(aResult.IsReject())) {
-                 MOZ_ASSERT(NS_FAILED(aResult.RejectValue()));
+                 MOZ_ASSERT(NS_FAILED(aResult.RejectValue().status()));
 
-                 Unused << self->SendRespondWith(
-                     CancelInterceptionArgs(aResult.RejectValue()));
+                 Unused << self->SendRespondWith(aResult.RejectValue());
                  return;
                }
 
@@ -115,7 +120,8 @@ void FetchEventOpProxyChild::Initialize(
                      autoBodyStream, autoAlternativeBodyStream);
 
                  if (NS_WARN_IF(NS_FAILED(rv))) {
-                   Unused << self->SendRespondWith(CancelInterceptionArgs(rv));
+                   Unused << self->SendRespondWith(
+                       CancelInterceptionArgs(rv, ipcArgs.timeStamps()));
                    return;
                  }
 
