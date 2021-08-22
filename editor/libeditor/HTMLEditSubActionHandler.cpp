@@ -729,7 +729,7 @@ MOZ_CAN_RUN_SCRIPT static nsStaticAtom& MarginPropertyAtomForIndent(
                                         : *nsGkAtoms::marginLeft;
 }
 
-nsresult HTMLEditor::EnsureCaretNotAfterPaddingBRElement() {
+nsresult HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(SelectionRef().IsCollapsed());
 
@@ -746,35 +746,38 @@ nsresult HTMLEditor::EnsureCaretNotAfterPaddingBRElement() {
   }
   MOZ_ASSERT(atSelectionStart.IsSetAndValid());
 
-  Element* editingHost = GetActiveEditingHost();
-  if (!editingHost) {
-    NS_WARNING(
-        "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() did nothing because "
-        "of no editing host");
-    return NS_OK;
-  }
-
-  nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
-      atSelectionStart, {WalkTreeOption::IgnoreNonEditableNode}, editingHost);
-  if (!previousEditableContent ||
-      !EditorUtils::IsPaddingBRElementForEmptyLastLine(
-          *previousEditableContent)) {
-    return NS_OK;
-  }
-
   if (!atSelectionStart.IsInContentNode()) {
     return NS_OK;
   }
 
-  RefPtr<Element> blockElementAtSelectionStart =
-      HTMLEditUtils::GetInclusiveAncestorBlockElement(
-          *atSelectionStart.ContainerAsContent());
-  RefPtr<Element> parentBlockElementOfPreviousEditableContent =
-      HTMLEditUtils::GetAncestorBlockElement(*previousEditableContent);
+  Element* editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    NS_WARNING(
+        "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() did nothing "
+        "because of no editing host");
+    return NS_OK;
+  }
+
+  nsIContent* previousBRElement =
+      HTMLEditUtils::GetPreviousContent(atSelectionStart, {}, editingHost);
+  if (!previousBRElement || !previousBRElement->IsHTMLElement(nsGkAtoms::br) ||
+      !previousBRElement->GetParent() ||
+      !EditorUtils::IsEditableContent(*previousBRElement->GetParent(),
+                                      EditorType::HTML) ||
+      !HTMLEditUtils::IsInvisibleBRElement(*previousBRElement, editingHost)) {
+    return NS_OK;
+  }
+
+  const RefPtr<const Element> blockElementAtSelectionStart =
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *atSelectionStart.ContainerAsContent(),
+          HTMLEditUtils::ClosestBlockElement);
+  const RefPtr<const Element> parentBlockElementOfBRElement =
+      HTMLEditUtils::GetAncestorElement(*previousBRElement,
+                                        HTMLEditUtils::ClosestBlockElement);
 
   if (!blockElementAtSelectionStart ||
-      blockElementAtSelectionStart !=
-          parentBlockElementOfPreviousEditableContent) {
+      blockElementAtSelectionStart != parentBlockElementOfBRElement) {
     return NS_OK;
   }
 
@@ -782,8 +785,8 @@ nsresult HTMLEditor::EnsureCaretNotAfterPaddingBRElement() {
   // element for empty last line that is in the same block as the
   // selection.  We need to move the selection start to be before the
   // padding <br> element.
-  EditorRawDOMPoint atPreviousEditableContent(previousEditableContent);
-  nsresult rv = CollapseSelectionTo(atPreviousEditableContent);
+  EditorRawDOMPoint atInvisibleBRElement(previousBRElement);
+  nsresult rv = CollapseSelectionTo(atInvisibleBRElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionTo() failed");
   return rv;
@@ -987,12 +990,12 @@ EditActionResult HTMLEditor::HandleInsertText(
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -1354,12 +1357,12 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -2544,12 +2547,12 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -3577,12 +3580,12 @@ EditActionResult HTMLEditor::HandleIndentAtSelection() {
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -4928,12 +4931,12 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
   }
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -9201,12 +9204,12 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction() {
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -9605,12 +9608,12 @@ EditActionResult HTMLEditor::SetSelectionToStaticAsSubAction() {
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -9686,12 +9689,12 @@ EditActionResult HTMLEditor::AddZIndexAsSubAction(int32_t aChange) {
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();

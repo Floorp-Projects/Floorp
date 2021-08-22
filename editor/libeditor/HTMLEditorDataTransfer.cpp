@@ -656,12 +656,12 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
 
   if (NS_SUCCEEDED(rv) && mHTMLEditor.SelectionRef().IsCollapsed()) {
     nsresult rv =
-        MOZ_KnownLive(mHTMLEditor).EnsureCaretNotAfterPaddingBRElement();
+        MOZ_KnownLive(mHTMLEditor).EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = MOZ_KnownLive(mHTMLEditor).PrepareInlineStylesForCaret();
@@ -2442,12 +2442,12 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -2609,12 +2609,12 @@ nsresult HTMLEditor::InsertWithQuotationsAsSubAction(
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -2844,12 +2844,12 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
@@ -3104,12 +3104,12 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
                        "failed, but ignored");
 
   if (NS_SUCCEEDED(rv) && SelectionRef().IsCollapsed()) {
-    nsresult rv = EnsureCaretNotAfterPaddingBRElement();
+    nsresult rv = EnsureCaretNotAfterInvisibleBRElement();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::EnsureCaretNotAfterPaddingBRElement() "
+                         "HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() "
                          "failed, but ignored");
     if (NS_SUCCEEDED(rv)) {
       nsresult rv = PrepareInlineStylesForCaret();
