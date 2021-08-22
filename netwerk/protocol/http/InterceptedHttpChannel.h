@@ -91,7 +91,7 @@ class InterceptedHttpChannel final
   uint64_t mResumeStartPos;
   nsCString mResumeEntityId;
   nsString mStatusHost;
-  enum { Invalid = 0, Synthesized, Reset } mSynthesizedOrReset;
+  // enum { Invalid = 0, Synthesized, Reset } mSynthesizedOrReset;
   Atomic<bool> mCallingStatusAndProgress;
 
   InterceptedHttpChannel(PRTime aCreationTime,
