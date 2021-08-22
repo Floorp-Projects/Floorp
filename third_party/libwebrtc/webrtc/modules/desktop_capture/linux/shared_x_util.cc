@@ -9,6 +9,7 @@
  */
 
 #include "modules/desktop_capture/linux/shared_x_util.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
