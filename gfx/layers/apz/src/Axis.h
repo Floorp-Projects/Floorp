@@ -368,8 +368,6 @@ class Axis {
   const FrameMetrics& GetFrameMetrics() const;
   const ScrollMetadata& GetScrollMetadata() const;
 
-  // Do not use this function directly, use
-  // AsyncPanZoomController::GetAllowedHandoffDirections instead.
   virtual OverscrollBehavior GetOverscrollBehavior() const = 0;
 
   // Adjust a requested overscroll amount for resistance, yielding a smaller
