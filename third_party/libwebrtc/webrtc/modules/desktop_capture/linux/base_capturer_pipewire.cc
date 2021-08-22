@@ -20,6 +20,7 @@
 #include <sys/ioctl.h>
 #include <sys/syscall.h>
 
+#include <cstring>
 #include <memory>
 #include <utility>
 
@@ -112,7 +113,9 @@ void BaseCapturerPipeWire::OnStreamParamChanged(void *data, uint32_t id,
 
   auto width = that->spa_video_format_.size.width;
   auto height = that->spa_video_format_.size.height;
-  auto stride = SPA_ROUND_UP_N(width * kBytesPerPixel, 4);
+  // In order to be able to build in the non unified environment kBytesPerPixel
+  // must be fully qualified, see Bug 1725145
+  auto stride = SPA_ROUND_UP_N(width * BasicDesktopFrame::kBytesPerPixel, 4);
   auto size = height * stride;
 
   that->desktop_size_ = DesktopSize(width, height);
@@ -408,10 +411,10 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
   if (!current_frame_ || !video_size_.equals(video_size_prev)) {
     current_frame_ =
       std::make_unique<uint8_t[]>
-        (video_size_.width() * video_size_.height() * kBytesPerPixel);
+        (video_size_.width() * video_size_.height() * BasicDesktopFrame::kBytesPerPixel);
   }
 
-  const int32_t dstStride = video_size_.width() * kBytesPerPixel;
+  const int32_t dstStride = video_size_.width() * BasicDesktopFrame::kBytesPerPixel;
   const int32_t srcStride = spaBuffer->datas[0].chunk->stride;
 
   // Adjust source content based on metadata video position
@@ -422,7 +425,7 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
   const int xOffset =
       video_metadata_use_ &&
         (video_metadata->region.position.x + video_size_.width() <= desktop_size_.width())
-          ? video_metadata->region.position.x * kBytesPerPixel
+          ? video_metadata->region.position.x * BasicDesktopFrame::kBytesPerPixel
           : 0;
 
   uint8_t* dst = current_frame_.get();
@@ -893,7 +896,7 @@ void BaseCapturerPipeWire::CaptureFrame() {
 
   std::unique_ptr<DesktopFrame> result(new BasicDesktopFrame(frame_size));
   result->CopyPixelsFrom(
-      current_frame_.get(), (frame_size.width() * kBytesPerPixel),
+      current_frame_.get(), (frame_size.width() * BasicDesktopFrame::kBytesPerPixel),
       DesktopRect::MakeWH(frame_size.width(), frame_size.height()));
   if (!result) {
     callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
