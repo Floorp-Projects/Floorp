@@ -12,6 +12,7 @@
 #include "mozilla/dom/UDPMessageEvent.h"
 #include "mozilla/dom/UDPSocketBinding.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/net/DNS.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"

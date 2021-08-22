@@ -54,6 +54,7 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsIContentInlines.h"
 #include "nsISimpleEnumerator.h"
 #include "nsRange.h"
 #include "nsIScriptError.h"

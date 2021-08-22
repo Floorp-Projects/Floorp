@@ -4,6 +4,8 @@
 
 #include "xpcAccessibilityService.h"
 
+#include "mozilla/dom/Document.h"
+
 #include "nsAccessiblePivot.h"
 #include "nsAccessibilityService.h"
 #include "Platform.h"

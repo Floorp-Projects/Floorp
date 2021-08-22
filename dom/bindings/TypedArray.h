@@ -20,6 +20,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/SpiderMonkeyInterface.h"
 #include "nsWrapperCache.h"
+#include "nsWrapperCacheInlines.h"
 
 namespace mozilla {
 namespace dom {

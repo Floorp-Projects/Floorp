@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PointerEventHandler.h"
+#include "nsIContentInlines.h"
 #include "nsIFrame.h"
 #include "PointerEvent.h"
 #include "PointerLockManager.h"

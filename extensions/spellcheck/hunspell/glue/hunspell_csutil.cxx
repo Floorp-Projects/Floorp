@@ -71,6 +71,10 @@
  */
 #include "hunspell_csutil.hxx"
 #include "mozilla/Encoding.h"
+#include "mozilla/Span.h"
+#include "mozilla/Tuple.h"
+
+#include "nsUnicharUtils.h"
 
 /* This is a copy of get_current_cs from the hunspell csutil.cxx file.
  */
@@ -84,7 +88,7 @@ struct cs_info* hunspell_get_current_cs(const std::string& es) {
     ccs[i].cupper = i;
   }
 
-  auto encoding = Encoding::ForLabelNoReplacement(es);
+  auto encoding = mozilla::Encoding::ForLabelNoReplacement(es);
   if (!encoding) {
     return ccs;
   }
@@ -104,32 +108,32 @@ struct cs_info* hunspell_get_current_cs(const std::string& es) {
       char16_t uni[2];
       char16_t uniCased;
       uint8_t destination[4];
-      auto src1 = Span(&source, 1);
-      auto dst1 = Span(uni);
-      auto src2 = Span(&uniCased, 1);
-      auto dst2 = Span(destination);
+      auto src1 = mozilla::Span(&source, 1);
+      auto dst1 = mozilla::Span(uni);
+      auto src2 = mozilla::Span(&uniCased, 1);
+      auto dst2 = mozilla::Span(destination);
 
       uint32_t result;
       size_t read;
       size_t written;
-      Tie(result, read, written) =
+      mozilla::Tie(result, read, written) =
           decoder->DecodeToUTF16WithoutReplacement(src1, dst1, true);
-      if (result != kInputEmpty || read != 1 || written != 1) {
+      if (result != mozilla::kInputEmpty || read != 1 || written != 1) {
         break;
       }
 
       uniCased = ToLowerCase(uni[0]);
-      Tie(result, read, written) =
+      mozilla::Tie(result, read, written) =
           encoder->EncodeFromUTF16WithoutReplacement(src2, dst2, true);
-      if (result != kInputEmpty || read != 1 || written != 1) {
+      if (result != mozilla::kInputEmpty || read != 1 || written != 1) {
         break;
       }
       lower = destination[0];
 
       uniCased = ToUpperCase(uni[0]);
-      Tie(result, read, written) =
+      mozilla::Tie(result, read, written) =
           encoder->EncodeFromUTF16WithoutReplacement(src2, dst2, true);
-      if (result != kInputEmpty || read != 1 || written != 1) {
+      if (result != mozilla::kInputEmpty || read != 1 || written != 1) {
         break;
       }
       upper = destination[0];

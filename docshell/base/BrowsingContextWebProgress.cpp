@@ -4,6 +4,7 @@
 
 #include "BrowsingContextWebProgress.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "nsCOMPtr.h"
 #include "nsIWebProgressListener.h"

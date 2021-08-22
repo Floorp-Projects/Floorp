@@ -9,6 +9,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
+#include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/HTMLTableElementBinding.h"
