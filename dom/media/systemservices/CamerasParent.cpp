@@ -10,6 +10,7 @@
 #include "VideoFrameUtils.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Services.h"
 #include "mozilla/Logging.h"

@@ -21,6 +21,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"  // RTCStatsCollection
+#include "mozilla/dom/ToJSValue.h"
 
 namespace mozilla {
 namespace dom {

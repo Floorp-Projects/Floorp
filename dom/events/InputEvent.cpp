@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/InputEvent.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "prtime.h"
 
 namespace mozilla::dom {

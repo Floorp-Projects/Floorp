@@ -8,6 +8,7 @@
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/net/MozURL.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 #include "nsIEventTarget.h"
 #include "nsIInputStream.h"

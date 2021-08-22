@@ -16,6 +16,7 @@
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/PMessagePort.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/WorkerCommon.h"

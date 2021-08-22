@@ -73,6 +73,7 @@
 #include "nsLayoutUtils.h"
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "HTMLFieldSetElement.h"
 #include "nsTextNode.h"

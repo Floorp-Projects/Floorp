@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_HTMLAllCollection_h
 #define mozilla_dom_HTMLAllCollection_h
 
-#include "js/RootingAPI.h"
+#include "mozilla/dom/Document.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 #include "nsRefPtrHashtable.h"

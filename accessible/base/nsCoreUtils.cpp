@@ -31,7 +31,9 @@
 #include "nsComponentManagerUtils.h"
 
 #include "XULTreeElement.h"
+#include "nsIContentInlines.h"
 #include "nsTreeColumns.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/MouseEventBinding.h"

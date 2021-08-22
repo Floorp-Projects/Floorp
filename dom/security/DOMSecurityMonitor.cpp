@@ -13,6 +13,7 @@
 #include "nsIURI.h"
 #include "nsJSUtils.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
 
 /* static */

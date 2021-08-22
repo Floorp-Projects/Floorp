@@ -15,6 +15,8 @@
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/DocGroup.h"
 
+#include "mozilla/BasePrincipal.h"
+
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsError.h"

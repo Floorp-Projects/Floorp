@@ -14,6 +14,7 @@
 #include "gfxQuad.h"
 #include "imgIEncoder.h"
 #include "mozilla/Base64.h"
+#include "mozilla/StyleColorInlines.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/ImageEncoder.h"
 #include "mozilla/dom/WorkerPrivate.h"
