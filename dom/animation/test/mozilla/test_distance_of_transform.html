@@ -192,7 +192,7 @@ test(function(t) {
   var dist = getDistance(target, 'transform',
                          'perspective(128px)',
                          'none');
-  assert_equals(dist, 128, 'distance of perspective');
+  assert_equals(dist, Infinity, 'distance of perspective');
 }, 'Test distance of perspective function and none');
 
 test(function(t) {
