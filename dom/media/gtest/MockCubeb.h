@@ -383,8 +383,6 @@ class MockCubeb {
   MediaEventProducer<void> mStreamDestroyEvent;
 };
 
-void cubeb_mock_destroy(cubeb* context) { delete MockCubeb::AsMock(context); }
-
 int cubeb_mock_enumerate_devices(cubeb* context, cubeb_device_type type,
                                  cubeb_device_collection* out) {
   return MockCubeb::AsMock(context)->EnumerateDevices(type, out);
@@ -462,131 +460,18 @@ int cubeb_mock_get_max_channel_count(cubeb* context, uint32_t* max_channels) {
   return CUBEB_OK;
 }
 
-void PrintDevice(cubeb_device_info aInfo) {
-  printf(
-      "id: %zu\n"
-      "device_id: %s\n"
-      "friendly_name: %s\n"
-      "group_id: %s\n"
-      "vendor_name: %s\n"
-      "type: %d\n"
-      "state: %d\n"
-      "preferred: %d\n"
-      "format: %d\n"
-      "default_format: %d\n"
-      "max_channels: %d\n"
-      "default_rate: %d\n"
-      "max_rate: %d\n"
-      "min_rate: %d\n"
-      "latency_lo: %d\n"
-      "latency_hi: %d\n",
-      reinterpret_cast<uintptr_t>(aInfo.devid), aInfo.device_id,
-      aInfo.friendly_name, aInfo.group_id, aInfo.vendor_name, aInfo.type,
-      aInfo.state, aInfo.preferred, aInfo.format, aInfo.default_format,
-      aInfo.max_channels, aInfo.default_rate, aInfo.max_rate, aInfo.min_rate,
-      aInfo.latency_lo, aInfo.latency_hi);
-}
+void PrintDevice(cubeb_device_info aInfo);
 
-void PrintDevice(AudioDeviceInfo* aInfo) {
-  cubeb_devid id;
-  nsString name;
-  nsString groupid;
-  nsString vendor;
-  uint16_t type;
-  uint16_t state;
-  uint16_t preferred;
-  uint16_t supportedFormat;
-  uint16_t defaultFormat;
-  uint32_t maxChannels;
-  uint32_t defaultRate;
-  uint32_t maxRate;
-  uint32_t minRate;
-  uint32_t maxLatency;
-  uint32_t minLatency;
-
-  id = aInfo->DeviceID();
-  aInfo->GetName(name);
-  aInfo->GetGroupId(groupid);
-  aInfo->GetVendor(vendor);
-  aInfo->GetType(&type);
-  aInfo->GetState(&state);
-  aInfo->GetPreferred(&preferred);
-  aInfo->GetSupportedFormat(&supportedFormat);
-  aInfo->GetDefaultFormat(&defaultFormat);
-  aInfo->GetMaxChannels(&maxChannels);
-  aInfo->GetDefaultRate(&defaultRate);
-  aInfo->GetMaxRate(&maxRate);
-  aInfo->GetMinRate(&minRate);
-  aInfo->GetMinLatency(&minLatency);
-  aInfo->GetMaxLatency(&maxLatency);
-
-  printf(
-      "device id: %zu\n"
-      "friendly_name: %s\n"
-      "group_id: %s\n"
-      "vendor_name: %s\n"
-      "type: %d\n"
-      "state: %d\n"
-      "preferred: %d\n"
-      "format: %d\n"
-      "default_format: %d\n"
-      "max_channels: %d\n"
-      "default_rate: %d\n"
-      "max_rate: %d\n"
-      "min_rate: %d\n"
-      "latency_lo: %d\n"
-      "latency_hi: %d\n",
-      reinterpret_cast<uintptr_t>(id), NS_LossyConvertUTF16toASCII(name).get(),
-      NS_LossyConvertUTF16toASCII(groupid).get(),
-      NS_LossyConvertUTF16toASCII(vendor).get(), type, state, preferred,
-      supportedFormat, defaultFormat, maxChannels, defaultRate, maxRate,
-      minRate, minLatency, maxLatency);
-}
+void PrintDevice(AudioDeviceInfo* aInfo);
 
 cubeb_device_info DeviceTemplate(cubeb_devid aId, cubeb_device_type aType,
-                                 const char* name) {
-  // A fake input device
-  cubeb_device_info device;
-  device.devid = aId;
-  device.device_id = "nice name";
-  device.friendly_name = name;
-  device.group_id = "the physical device";
-  device.vendor_name = "mozilla";
-  device.type = aType;
-  device.state = CUBEB_DEVICE_STATE_ENABLED;
-  device.preferred = CUBEB_DEVICE_PREF_NONE;
-  device.format = CUBEB_DEVICE_FMT_F32NE;
-  device.default_format = CUBEB_DEVICE_FMT_F32NE;
-  device.max_channels = 2;
-  device.default_rate = 44100;
-  device.max_rate = 44100;
-  device.min_rate = 16000;
-  device.latency_lo = 256;
-  device.latency_hi = 1024;
+                                 const char* name);
 
-  return device;
-}
-
-cubeb_device_info DeviceTemplate(cubeb_devid aId, cubeb_device_type aType) {
-  return DeviceTemplate(aId, aType, "nice name");
-}
+cubeb_device_info DeviceTemplate(cubeb_devid aId, cubeb_device_type aType);
 
 void AddDevices(MockCubeb* mock, uint32_t device_count,
-                cubeb_device_type deviceType) {
-  mock->ClearDevices(deviceType);
-  // Add a few input devices (almost all the same but it does not really
-  // matter as long as they have distinct IDs and only one is the default
-  // devices)
-  for (uintptr_t i = 0; i < device_count; i++) {
-    cubeb_device_info device =
-        DeviceTemplate(reinterpret_cast<void*>(i + 1), deviceType);
-    // Make it so that the last device is the default input device.
-    if (i == device_count - 1) {
-      device.preferred = CUBEB_DEVICE_PREF_ALL;
-    }
-    mock->AddDevice(device);
-  }
-}
+                cubeb_device_type deviceType);
+
 }  // namespace mozilla
 
 #endif  // MOCKCUBEB_H_
