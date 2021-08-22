@@ -103,16 +103,21 @@ class EditorDOMPointBase final {
                      uint32_t aOffset)
       : EditorDOMPointBase(aContainer.get(), aOffset) {}
 
+  template <typename ContainerType, template <typename> typename StrongPtr>
+  EditorDOMPointBase(const StrongPtr<const ContainerType>& aContainer,
+                     uint32_t aOffset)
+      : EditorDOMPointBase(aContainer.get(), aOffset) {}
+
   /**
    * Different from RangeBoundary, aPointedNode should be a child node
    * which you want to refer.
    */
-  explicit EditorDOMPointBase(nsINode* aPointedNode)
+  explicit EditorDOMPointBase(const nsINode* aPointedNode)
       : mParent(aPointedNode && aPointedNode->IsContent()
                     ? aPointedNode->GetParentNode()
                     : nullptr),
         mChild(aPointedNode && aPointedNode->IsContent()
-                   ? aPointedNode->AsContent()
+                   ? const_cast<nsIContent*>(aPointedNode->AsContent())
                    : nullptr),
         mIsChildInitialized(false) {
     mIsChildInitialized = aPointedNode && mChild;
