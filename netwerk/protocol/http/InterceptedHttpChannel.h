@@ -78,8 +78,6 @@ class InterceptedHttpChannel final
   nsCOMPtr<nsIInterceptedBodyCallback> mBodyCallback;
   nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   RefPtr<nsInputStreamPump> mPump;
-  TimeStamp mFinishResponseStart;
-  TimeStamp mFinishResponseEnd;
   TimeStamp mInterceptedChannelCreationTimestamp;
 
   // For the profiler markers
@@ -91,8 +89,89 @@ class InterceptedHttpChannel final
   uint64_t mResumeStartPos;
   nsCString mResumeEntityId;
   nsString mStatusHost;
-  // enum { Invalid = 0, Synthesized, Reset } mSynthesizedOrReset;
   Atomic<bool> mCallingStatusAndProgress;
+
+  /**
+   *  InterceptionTimeStamps is used to record the time stamps of the
+   *  interception.
+   *  The general usage:
+   *  Step 1. Initialize the InterceptionTimeStamps;
+   *    InterceptionTimeStamps::Init(channel);
+   *  Step 2. Record time for each stage
+   *    InterceptionTimeStamps::RecordTime(); or
+   *    InterceptionTimeStamps::RecordTime(timeStamp);
+   *  Step 3. Record time for the last stage with the final status
+   *    InterceptionTimeStamps::RecordTime(InterceptionTimeStamps::Synthesized);
+   */
+  class InterceptionTimeStamps final {
+   public:
+    // The possible status of the interception.
+    enum Status {
+      Created,
+      Initialized,
+      Synthesized,
+      Reset,
+      Redirected,
+      Canceled,
+      CanceledAfterSynthesized,
+      CanceledAfterReset,
+      CanceledAfterRedirected
+    };
+
+    InterceptionTimeStamps();
+    ~InterceptionTimeStamps() = default;
+
+    /**
+     * Initialize with the given channel.
+     * This method should be called before any RecordTime().
+     */
+    void Init(nsIChannel* aChannel);
+
+    /**
+     * Record the given time stamp for current stage. If there is no given time
+     * stamp, TimeStamp::Now() will be recorded.
+     * The current stage is auto moved to the next one.
+     */
+    void RecordTime(TimeStamp&& aTimeStamp = TimeStamp::Now());
+
+    /**
+     * Record the given time stamp for the last stage(InterceptionFinish) and
+     * set the final status to the given status.
+     * If these is no given time stamp, TimeStamp::Now() will be recorded.
+     * Notice that this method is for the last stage, it calls SaveTimeStamps()
+     * to write data into telemetries.
+     */
+    void RecordTime(Status&& aStatus,
+                    TimeStamp&& aTimeStamp = TimeStamp::Now());
+
+   private:
+    // The time stamp which the intercepted channel is created and async opend.
+    TimeStamp mInterceptionStart;
+
+    // The time stamp which the interception finishes.
+    TimeStamp mInterceptionFinish;
+
+    // The stage of interception.
+    enum Stage { InterceptionStart, InterceptionFinish } mStage;
+
+    // The final status of the interception.
+    Status mStatus;
+
+    bool mIsNonSubresourceRequest;
+    // The keys used for telemetries.
+    nsCString mKey;
+    nsCString mSubresourceKey;
+
+    void RecordTimeInternal(TimeStamp&& aTimeStamp);
+
+    // Generate the record keys with final status.
+    void GenKeysWithStatus(nsCString& aKey, nsCString& aSubresourceKey);
+
+    // Save the time stamps into telemetries.
+    void SaveTimeStamps();
+  };
+
+  InterceptionTimeStamps mTimeStamps;
 
   InterceptedHttpChannel(PRTime aCreationTime,
                          const TimeStamp& aCreationTimestamp,
