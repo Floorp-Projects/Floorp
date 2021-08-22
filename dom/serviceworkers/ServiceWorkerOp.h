@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
@@ -172,6 +173,9 @@ class FetchEventOp final : public ExtendableEventOp,
   // Must be set to `nullptr` on the worker thread because `Promise`'s
   // destructor must be called on the worker thread.
   RefPtr<Promise> mHandled;
+
+  TimeStamp mFetchHandlerStart;
+  TimeStamp mFetchHandlerFinish;
 };
 
 }  // namespace dom

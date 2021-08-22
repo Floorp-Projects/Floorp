@@ -11,6 +11,7 @@
 
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 
 namespace mozilla {
@@ -19,14 +20,15 @@ namespace dom {
 class InternalResponse;
 
 using SynthesizeResponseArgs =
-    std::pair<RefPtr<InternalResponse>, FetchEventRespondWithClosure>;
+    Tuple<RefPtr<InternalResponse>, FetchEventRespondWithClosure,
+          FetchEventTimeStamps>;
 
 using FetchEventRespondWithResult =
     Variant<SynthesizeResponseArgs, ResetInterceptionArgs,
             CancelInterceptionArgs>;
 
 using FetchEventRespondWithPromise =
-    MozPromise<FetchEventRespondWithResult, nsresult, true>;
+    MozPromise<FetchEventRespondWithResult, CancelInterceptionArgs, true>;
 
 using ServiceWorkerOpPromise =
     MozPromise<ServiceWorkerOpResult, nsresult, true>;

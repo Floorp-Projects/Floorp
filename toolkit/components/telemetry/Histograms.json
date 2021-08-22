@@ -12953,45 +12953,45 @@
     "alert_emails": ["sw-telemetry@mozilla.com"],
     "description": "Time delta (ms) between when a network request is intercepted in the parent process and the service worker provides a response."
   },
-  "SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS": {
-    "expires_in_version": "68",
+  "SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS_2": {
+    "expires_in_version": "never",
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "bug_numbers": [1359610, 1433916],
+    "bug_numbers": [1359610, 1433916, 1693074],
     "kind": "exponential",
-    "high": 2000,
+    "high": 5000,
     "n_buckets": 25,
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["sw-telemetry@mozilla.com"],
-    "description": "Time (in ms) measured between when the fetch event is dispatched by the Service Worker and before we execute the event listeners. This effectively measures the SW backlong, in the future this should also cover the IPC steps required to dispatch events to the SW."
+    "alert_emails": ["sw-telemetry@mozilla.com", "echuang@mozilla.com"],
+    "description": "Time (in ms) measured between when the fetch event is dispatched by the Service Worker and before we execute the event listeners."
   },
 
-  "SERVICE_WORKER_FETCH_EVENT_FINISH_SYNTHESIZED_RESPONSE_MS": {
-    "expires_in_version": "68",
+  "SERVICE_WORKER_FETCH_EVENT_FINISH_SYNTHESIZED_RESPONSE_MS_2": {
+    "expires_in_version": "never",
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "bug_numbers": [1359610, 1433916],
+    "bug_numbers": [1359610, 1433916, 1693074],
     "kind": "exponential",
-    "high": 2000,
+    "high": 5000,
     "n_buckets": 25,
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["sw-telemetry@mozilla.com"],
-    "description": "Time (in ms) measured between when the respondWith promise resolves and when we provide the response through the intercepted channel (FinishSynthesizedResponse)."
+    "alert_emails": ["sw-telemetry@mozilla.com", "echuang@mozilla.com"],
+    "description": "Time (in ms) measured between when the respondWith promise resolves and when we provide the response through the intercepted channel."
   },
 
-  "SERVICE_WORKER_FETCH_EVENT_CHANNEL_RESET_MS": {
-    "expires_in_version": "68",
+  "SERVICE_WORKER_FETCH_EVENT_CHANNEL_RESET_MS_2": {
+    "expires_in_version": "never",
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "bug_numbers": [1359610, 1433916],
+    "bug_numbers": [1359610, 1433916, 1693074],
     "kind": "exponential",
-    "high": 2000,
+    "high": 5000,
     "n_buckets": 25,
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["sw-telemetry@mozilla.com"],
+    "alert_emails": ["sw-telemetry@mozilla.com", "echuang@mozilla.com"],
     "description": "Time (in ms) measured between when the fetch handler finished executing and when we reset the network channel."
   },
 

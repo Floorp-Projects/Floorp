@@ -138,6 +138,12 @@ interface nsIInterceptedChannel : nsISupports
     [noscript]
     readonly attribute nsIConsoleReportCollector consoleReportCollector;
 
+    [noscript]
+    void SetFetchHandlerStart(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetFetchHandlerFinish(in TimeStamp aTimeStamp);
+
 %{C++
     already_AddRefed<nsIConsoleReportCollector>
     GetConsoleReportCollector()

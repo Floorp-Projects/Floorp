@@ -10,6 +10,7 @@ include FetchTypes;
 include "mozilla/dom/ServiceWorkerIPCUtils.h";
 
 using ServiceWorkerState from "mozilla/dom/ServiceWorkerBinding.h";
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 
 namespace mozilla {
 namespace dom {
@@ -98,15 +99,24 @@ struct FetchEventRespondWithClosure {
   uint32_t respondWithColumnNumber;
 };
 
+struct FetchEventTimeStamps {
+  TimeStamp fetchHandlerStart;
+  TimeStamp fetchHandlerFinish;
+};
+
 struct IPCSynthesizeResponseArgs {
   IPCInternalResponse internalResponse;
   FetchEventRespondWithClosure closure;
+  FetchEventTimeStamps timeStamps;
 };
 
-struct ResetInterceptionArgs {};
+struct ResetInterceptionArgs {
+  FetchEventTimeStamps timeStamps;
+};
 
 struct CancelInterceptionArgs {
   nsresult status;
+  FetchEventTimeStamps timeStamps;
 };
 
 union IPCFetchEventRespondWithResult {

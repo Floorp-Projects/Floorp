@@ -238,12 +238,34 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
 
   switch (aResult.type()) {
     case IPCFetchEventRespondWithResult::TIPCSynthesizeResponseArgs:
+      mInterceptedChannel->SetFetchHandlerStart(
+          aResult.get_IPCSynthesizeResponseArgs()
+              .timeStamps()
+              .fetchHandlerStart());
+      mInterceptedChannel->SetFetchHandlerFinish(
+          aResult.get_IPCSynthesizeResponseArgs()
+              .timeStamps()
+              .fetchHandlerFinish());
       SynthesizeResponse(std::move(aResult.get_IPCSynthesizeResponseArgs()));
       break;
     case IPCFetchEventRespondWithResult::TResetInterceptionArgs:
+      mInterceptedChannel->SetFetchHandlerStart(
+          aResult.get_ResetInterceptionArgs().timeStamps().fetchHandlerStart());
+      mInterceptedChannel->SetFetchHandlerFinish(
+          aResult.get_ResetInterceptionArgs()
+              .timeStamps()
+              .fetchHandlerFinish());
       ResetInterception(false);
       break;
     case IPCFetchEventRespondWithResult::TCancelInterceptionArgs:
+      mInterceptedChannel->SetFetchHandlerStart(
+          aResult.get_CancelInterceptionArgs()
+              .timeStamps()
+              .fetchHandlerStart());
+      mInterceptedChannel->SetFetchHandlerFinish(
+          aResult.get_CancelInterceptionArgs()
+              .timeStamps()
+              .fetchHandlerFinish());
       CancelInterception(aResult.get_CancelInterceptionArgs().status());
       break;
     default:
