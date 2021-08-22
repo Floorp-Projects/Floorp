@@ -138,50 +138,6 @@ interface nsIInterceptedChannel : nsISupports
     [noscript]
     readonly attribute nsIConsoleReportCollector consoleReportCollector;
 
-    /**
-     * Save the timestamps of various service worker interception phases.
-     */
-    [noscript]
-    void SetLaunchServiceWorkerStart(in TimeStamp aTimeStamp);
-
-    // A hack to get sw launch start time for telemetry.
-    [noscript]
-    void GetLaunchServiceWorkerStart(out TimeStamp aTimeStamp);
-
-    [noscript]
-    void SetLaunchServiceWorkerEnd(in TimeStamp aTimeStamp);
-
-    // A hack to get sw launch end time for telemetry.
-    [noscript]
-    void GetLaunchServiceWorkerEnd(out TimeStamp aTimeStamp);
-
-    [noscript]
-    void SetDispatchFetchEventStart(in TimeStamp aTimeStamp);
-
-    [noscript]
-    void SetDispatchFetchEventEnd(in TimeStamp aTimeStamp);
-
-    [noscript]
-    void SetHandleFetchEventStart(in TimeStamp aTimeStamp);
-
-    [noscript]
-    void SetHandleFetchEventEnd(in TimeStamp aTimeStamp);
-
-    // Depending on the outcome we measure the time difference between
-    // |FinishResponseStart| and either |FinishSynthesizedResponseEnd| or
-    // |ChannelResetEnd|.
-    [noscript]
-    void SetFinishResponseStart(in TimeStamp aTimeStamp);
-
-    [noscript]
-    void SetFinishSynthesizedResponseEnd(in TimeStamp aTimeStamp);
-
-    [noscript]
-    void SetChannelResetEnd(in TimeStamp aTimeStamp);
-
-    [noscript]
-    void SaveTimeStamps();
-
 %{C++
     already_AddRefed<nsIConsoleReportCollector>
     GetConsoleReportCollector()
