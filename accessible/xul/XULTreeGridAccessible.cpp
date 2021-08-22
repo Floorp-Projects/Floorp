@@ -6,6 +6,7 @@
 #include "XULTreeGridAccessibleWrap.h"
 
 #include "AccAttributes.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccCache.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"

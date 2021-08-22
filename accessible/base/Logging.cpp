@@ -9,6 +9,7 @@
 #include "LocalAccessible-inl.h"
 #include "AccEvent.h"
 #include "DocAccessible.h"
+#include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 #include "OuterDocAccessible.h"

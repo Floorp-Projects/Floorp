@@ -10,6 +10,7 @@
 #include "NotificationController.h"
 #include "nsEventShell.h"
 #include "DocAccessible.h"
+#include "DocAccessible-inl.h"
 #ifdef A11Y_LOG
 #  include "Logging.h"
 #endif

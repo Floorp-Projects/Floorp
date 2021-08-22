@@ -5,6 +5,7 @@
 #include "AccIterator.h"
 
 #include "AccGroupInfo.h"
+#include "DocAccessible-inl.h"
 #ifdef MOZ_XUL
 #  include "XULTreeAccessible.h"
 #endif

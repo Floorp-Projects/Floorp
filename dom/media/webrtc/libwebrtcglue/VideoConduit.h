@@ -50,7 +50,9 @@ const unsigned int kVideoMtu = 1200;
 const int kQpMax = 56;
 
 template <typename T>
-T MinIgnoreZero(const T& a, const T& b);
+T MinIgnoreZero(const T& a, const T& b) {
+  return std::min(a ? a : b, b ? b : a);
+}
 
 class VideoStreamFactory;
 class WebrtcAudioConduit;

@@ -27,7 +27,6 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "BodyExtractor.cpp",
     "ChannelInfo.cpp",
-    "EmptyBody.cpp",
     "Fetch.cpp",
     "FetchDriver.cpp",
     "FetchObserver.cpp",
