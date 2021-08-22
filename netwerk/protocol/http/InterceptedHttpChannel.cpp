@@ -34,8 +34,8 @@ InterceptedHttpChannel::InterceptedHttpChannel(
       mProgressReported(0),
       mSynthesizedStreamLength(-1),
       mResumeStartPos(0),
-      // mSynthesizedOrReset(Invalid),
-      mCallingStatusAndProgress(false) {
+      mCallingStatusAndProgress(false),
+      mTimeStamps() {
   // Pre-set the creation and AsyncOpen times based on the original channel
   // we are intercepting.  We don't want our extra internal redirect to mask
   // any time spent processing the channel.
@@ -92,6 +92,10 @@ void InterceptedHttpChannel::AsyncOpenInternal() {
   // invoked in some way.  We either Cancel() or ResetInterception below
   // depending on which path we take.
   nsresult rv = NS_OK;
+
+  // Start the interception, record the start time.
+  mTimeStamps.Init(this);
+  mTimeStamps.RecordTime();
 
   // We should have pre-set the AsyncOpen time based on the original channel if
   // timings are enabled.
@@ -216,6 +220,9 @@ nsresult InterceptedHttpChannel::FollowSyntheticRedirect() {
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     OnRedirectVerifyCallback(rv);
+  } else {
+    // Redirect success, record the finish time and the final status.
+    mTimeStamps.RecordTime(InterceptionTimeStamps::Redirected);
   }
 
   return rv;
@@ -472,6 +479,11 @@ InterceptedHttpChannel::Cancel(nsresult aStatus) {
   if (mCanceled) {
     return NS_OK;
   }
+
+  // The interception is canceled, record the finish time stamp and the final
+  // status
+  mTimeStamps.RecordTime(InterceptionTimeStamps::Canceled);
+
   mCanceled = true;
 
   MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aStatus));
@@ -691,6 +703,10 @@ InterceptedHttpChannel::ResetInterception(bool aBypass) {
 
   if (NS_FAILED(rv)) {
     OnRedirectVerifyCallback(rv);
+  } else {
+    // ResetInterception success, record the finish time stamps and the final
+    // status.
+    mTimeStamps.RecordTime(InterceptionTimeStamps::Reset);
   }
 
   return rv;
@@ -825,9 +841,6 @@ InterceptedHttpChannel::FinishSynthesizedResponse() {
     // if it was cancelled before this point.
     return NS_OK;
   }
-
-  // TODO: Remove this API after interception moves to the parent process in
-  //       e10s mode.
 
   return NS_OK;
 }
@@ -977,6 +990,8 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   }
 
   MaybeCallBodyCallback();
+
+  mTimeStamps.RecordTime(InterceptionTimeStamps::Synthesized);
 
   // Its possible that we have any async runnable queued to report some
   // progress when OnStopRequest() is triggered.  Report any left over
@@ -1245,6 +1260,150 @@ InterceptedHttpChannel::SetCacheKey(uint32_t key) {
     return mSynthesizedCacheInfo->SetCacheKey(key);
   }
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+// InterceptionTimeStamps implementation
+InterceptedHttpChannel::InterceptionTimeStamps::InterceptionTimeStamps()
+    : mStage(InterceptedHttpChannel::InterceptionTimeStamps::InterceptionStart),
+      mStatus(InterceptedHttpChannel::InterceptionTimeStamps::Created) {}
+
+void InterceptedHttpChannel::InterceptionTimeStamps::Init(
+    nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(mStatus == Created);
+
+  mStatus = Initialized;
+
+  mIsNonSubresourceRequest = nsContentUtils::IsNonSubresourceRequest(aChannel);
+  mKey = mIsNonSubresourceRequest ? "navigation"_ns : "subresource"_ns;
+  nsCOMPtr<nsIInterceptedChannel> interceptedChannel =
+      do_QueryInterface(aChannel);
+  // It must be a InterceptedHttpChannel
+  MOZ_ASSERT(interceptedChannel);
+  if (!mIsNonSubresourceRequest) {
+    interceptedChannel->GetSubresourceTimeStampKey(aChannel, mSubresourceKey);
+  }
+}
+
+void InterceptedHttpChannel::InterceptionTimeStamps::RecordTime(
+    InterceptedHttpChannel::InterceptionTimeStamps::Status&& aStatus,
+    TimeStamp&& aTimeStamp) {
+  // Only allow passing Synthesized, Reset, Redirected, and Canceled in this
+  // method.
+  MOZ_ASSERT(aStatus == Synthesized || aStatus == Reset ||
+             aStatus == Canceled || aStatus == Redirected);
+  if (mStatus == Canceled) {
+    return;
+  }
+
+  // If current status is not Initialized, only Canceled can be recorded.
+  // That means it is canceled after other operation is done, ex. synthesized.
+  MOZ_ASSERT(mStatus == Initialized || aStatus == Canceled);
+
+  if (mStatus == Initialized) {
+    mStatus = aStatus;
+  } else {
+    switch (mStatus) {
+      case Synthesized:
+        mStatus = CanceledAfterSynthesized;
+        break;
+      case Reset:
+        mStatus = CanceledAfterReset;
+        break;
+      case Redirected:
+        mStatus = CanceledAfterRedirected;
+        break;
+      default:
+        MOZ_ASSERT(false);
+        break;
+    }
+  }
+
+  RecordTimeInternal(std::move(aTimeStamp));
+}
+
+void InterceptedHttpChannel::InterceptionTimeStamps::RecordTime(
+    TimeStamp&& aTimeStamp) {
+  MOZ_ASSERT(mStatus == Initialized);
+  RecordTimeInternal(std::move(aTimeStamp));
+}
+
+void InterceptedHttpChannel::InterceptionTimeStamps::RecordTimeInternal(
+    TimeStamp&& aTimeStamp) {
+  MOZ_ASSERT(mStatus != Created);
+  switch (mStage) {
+    case InterceptionStart: {
+      MOZ_ASSERT(mInterceptionStart.IsNull());
+      mInterceptionStart = aTimeStamp;
+      mStage = InterceptionFinish;
+      break;
+    }
+    case InterceptionFinish: {
+      mInterceptionFinish = aTimeStamp;
+      SaveTimeStamps();
+      return;
+    }
+    default: {
+      return;
+    }
+  }
+}
+
+void InterceptedHttpChannel::InterceptionTimeStamps::GenKeysWithStatus(
+    nsCString& aKey, nsCString& aSubresourceKey) {
+  nsAutoCString statusString;
+  switch (mStatus) {
+    case Synthesized:
+      statusString = "synthesized"_ns;
+      break;
+    case Reset:
+      statusString = "reset"_ns;
+      break;
+    case Redirected:
+      statusString = "redirected"_ns;
+      break;
+    case Canceled:
+      statusString = "canceled"_ns;
+      break;
+    case CanceledAfterSynthesized:
+      statusString = "canceled-after-synthesized"_ns;
+      break;
+    case CanceledAfterReset:
+      statusString = "canceled-after-reset"_ns;
+      break;
+    case CanceledAfterRedirected:
+      statusString = "canceled-after-redirected"_ns;
+      break;
+    default:
+      return;
+  }
+  aKey = mKey;
+  aSubresourceKey = mSubresourceKey;
+  aKey.AppendLiteral("_");
+  aSubresourceKey.AppendLiteral("_");
+  aKey.Append(statusString);
+  aSubresourceKey.Append(statusString);
+}
+
+void InterceptedHttpChannel::InterceptionTimeStamps::SaveTimeStamps() {
+  MOZ_ASSERT(mStatus != Initialized && mStatus != Created);
+
+  nsAutoCString key, subresourceKey;
+  GenKeysWithStatus(key, subresourceKey);
+
+  if (!mInterceptionFinish.IsNull()) {
+    Telemetry::Accumulate(
+        Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS_2, key,
+        static_cast<uint32_t>(
+            (mInterceptionFinish - mInterceptionStart).ToMilliseconds()));
+    if (!mIsNonSubresourceRequest && !mSubresourceKey.IsEmpty()) {
+      Telemetry::Accumulate(
+          Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS_2,
+          subresourceKey,
+          static_cast<uint32_t>(
+              (mInterceptionFinish - mInterceptionStart).ToMilliseconds()));
+    }
+  }
 }
 
 }  // namespace net

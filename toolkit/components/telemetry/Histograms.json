@@ -12940,18 +12940,18 @@
     "n_buckets": 20,
     "description": "Tracking how ServiceWorkerRegistrar loads data before the first content is shown. File bugs in Core::DOM in case of a Telemetry regression."
   },
-  "SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS": {
-    "expires_in_version": "68",
+  "SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS_2": {
+    "expires_in_version": "never",
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "kind": "exponential",
-    "bug_numbers": [1359610, 1433916],
-    "high": 6000,
+    "bug_numbers": [1359610, 1433916, 1693074],
+    "high": 60000,
     "keyed": true,
     "n_buckets": 25,
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["sw-telemetry@mozilla.com"],
-    "description": "Time delta (ms) between when a network request is intercepted and the service worker provides a response. This includes: possible SW startup, worker thread dispatch, time until the respondWith() promise resolves, time to synthesize the response (including the body), worker thread to main thread dispatch. In the future this should include the IPC roundtrips involved in fetch interception."
+    "description": "Time delta (ms) between when a network request is intercepted in the parent process and the service worker provides a response."
   },
   "SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS": {
     "expires_in_version": "68",
