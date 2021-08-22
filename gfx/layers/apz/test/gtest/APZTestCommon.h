@@ -941,14 +941,6 @@ void APZCTesterBase::PinchWithPinchInputAndCheckStatus(
   EXPECT_EQ(expectedStatus, statuses[1]);
 }
 
-AsyncPanZoomController* TestAPZCTreeManager::NewAPZCInstance(
-    LayersId aLayersId, GeckoContentController* aController) {
-  MockContentControllerDelayed* mcc =
-      static_cast<MockContentControllerDelayed*>(aController);
-  return new TestAsyncPanZoomController(
-      aLayersId, mcc, this, AsyncPanZoomController::USE_GESTURE_DETECTOR);
-}
-
 inline FrameMetrics TestFrameMetrics() {
   FrameMetrics fm;
 
