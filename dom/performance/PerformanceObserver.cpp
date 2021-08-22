@@ -12,6 +12,7 @@
 #include "mozilla/dom/PerformanceObserverBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsIScriptError.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"

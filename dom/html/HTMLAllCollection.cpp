@@ -9,7 +9,6 @@
 #include "jsfriendapi.h"
 #include "mozilla/dom/HTMLAllCollectionBinding.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentList.h"
 #include "nsGenericHTMLElement.h"

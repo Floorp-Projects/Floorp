@@ -16,6 +16,7 @@
 #include "nsXULPopupManager.h"
 #include "nsIScriptContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsServiceManagerUtils.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/ReflowInput.h"

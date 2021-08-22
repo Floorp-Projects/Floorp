@@ -19,6 +19,8 @@
 #include "libyuv/scale_row.h"
 #include "libyuv/video_common.h"
 
+#include "mozilla/gfx/Types.h"
+
 #ifdef __cplusplus
 namespace libyuv {
 extern "C" {

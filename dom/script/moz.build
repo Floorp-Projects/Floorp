@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     "ScriptLoadHandler.cpp",
     "ScriptLoadRequest.cpp",
     "ScriptSettings.cpp",
-    "ScriptTrace.cpp",
 ]
 
 LOCAL_INCLUDES += [

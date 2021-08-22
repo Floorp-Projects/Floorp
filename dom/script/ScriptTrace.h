@@ -9,6 +9,9 @@
 
 #include "ScriptLoader.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/StaticPrefs_dom.h"
+
 namespace mozilla {
 namespace dom {
 namespace script {
@@ -38,8 +41,20 @@ namespace script {
   PR_END_MACRO
 
 static nsresult TestingDispatchEvent(nsIScriptElement* aScriptElement,
-                                     const nsAString& aEventType);
+                                     const nsAString& aEventType) {
+  if (!StaticPrefs::dom_expose_test_interfaces()) {
+    return NS_OK;
+  }
 
+  nsCOMPtr<nsINode> target(do_QueryInterface(aScriptElement));
+  if (!target) {
+    return NS_OK;
+  }
+
+  RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
+      target, aEventType, CanBubble::eYes, ChromeOnlyDispatch::eNo);
+  return dispatcher->PostDOMEvent();
+}
 }  // namespace script
 }  // namespace dom
 }  // namespace mozilla

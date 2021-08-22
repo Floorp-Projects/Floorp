@@ -10,6 +10,7 @@
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/HTMLButtonElementBinding.h"
 #include "nsAttrValueInlines.h"
+#include "nsIContentInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
