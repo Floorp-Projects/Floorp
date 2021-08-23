@@ -226,7 +226,6 @@ windows32-tests:
     - test-verify-wpt
 
 windows-tests:
-    - cppunit
     - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
@@ -252,6 +251,7 @@ windows10-tests:
     - mochitest-webgl1-core
 
 windows10-2004-tests:
+    - cppunit
     - mochitest-browser-chrome
     - mochitest-chrome-gpu
     - mochitest-devtools-chrome
