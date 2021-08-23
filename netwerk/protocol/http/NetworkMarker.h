@@ -15,7 +15,12 @@ namespace net {
 struct TimingStruct;
 enum CacheDisposition : uint8_t;
 
-enum class NetworkLoadType { LOAD_START, LOAD_STOP, LOAD_REDIRECT };
+enum class NetworkLoadType {
+  LOAD_START,
+  LOAD_STOP,
+  LOAD_REDIRECT,
+  LOAD_CANCEL
+};
 
 void profiler_add_network_marker(
     nsIURI* aURI, const nsACString& aRequestMethod, int32_t aPriority,

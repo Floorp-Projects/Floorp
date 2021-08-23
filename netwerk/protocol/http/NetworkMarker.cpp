@@ -122,6 +122,8 @@ void profiler_add_network_marker(
           return MakeStringSpan("STATUS_STOP");
         case NetworkLoadType::LOAD_REDIRECT:
           return MakeStringSpan("STATUS_REDIRECT");
+        case NetworkLoadType::LOAD_CANCEL:
+          return MakeStringSpan("STATUS_CANCEL");
         default:
           MOZ_ASSERT(false, "Unexpected NetworkLoadType enum value.");
           return MakeStringSpan("");
