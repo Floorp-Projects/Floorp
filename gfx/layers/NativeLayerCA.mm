@@ -10,8 +10,11 @@
 #import <OpenGL/gl.h>
 #import <QuartzCore/QuartzCore.h>
 
-#include <utility>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <utility>
 
 #include "gfxUtils.h"
 #include "GLBlitHelper.h"
@@ -21,8 +24,10 @@
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/ScreenshotGrabber.h"
 #include "mozilla/layers/SurfacePoolCA.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderMacIOSurfaceTextureHost.h"
 #include "ScopedGLHelpers.h"
+#include "gfxUtils.h"
 
 @interface CALayer (PrivateSetContentsOpaque)
 - (void)setContentsOpaque:(BOOL)opaque;
@@ -222,16 +227,36 @@ bool NativeLayerRootCA::AreOffMainThreadCommitsSuspended() {
 }
 
 bool NativeLayerRootCA::CommitToScreen() {
-  MutexAutoLock lock(mMutex);
+  {
+    MutexAutoLock lock(mMutex);
 
-  if (!NS_IsMainThread() && mOffMainThreadCommitsSuspended) {
-    mCommitPending = true;
-    return false;
+    if (!NS_IsMainThread() && mOffMainThreadCommitsSuspended) {
+      mCommitPending = true;
+      return false;
+    }
+
+    mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers);
+
+    mCommitPending = false;
   }
 
-  mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers);
+  if (StaticPrefs::gfx_webrender_debug_dump_native_layer_tree_to_file()) {
+    static uint32_t sFrameID = 0;
+    uint32_t frameID = sFrameID++;
 
-  mCommitPending = false;
+    NSString* dirPath =
+        [NSString stringWithFormat:@"%@/Desktop/nativelayerdumps-%d", NSHomeDirectory(), getpid()];
+    if ([NSFileManager.defaultManager createDirectoryAtPath:dirPath
+                                withIntermediateDirectories:YES
+                                                 attributes:nil
+                                                      error:nullptr]) {
+      NSString* filename = [NSString stringWithFormat:@"frame-%d.html", frameID];
+      NSString* filePath = [dirPath stringByAppendingPathComponent:filename];
+      DumpLayerTreeToFile([filePath UTF8String]);
+    } else {
+      NSLog(@"Failed to create directory %@", dirPath);
+    }
+  }
 
   return true;
 }
@@ -332,6 +357,25 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
 
   return UniquePtr<NativeLayerRootSnapshotterCA>(
       new NativeLayerRootSnapshotterCA(aLayerRoot, std::move(gl), aRootCALayer));
+}
+
+void NativeLayerRootCA::DumpLayerTreeToFile(const char* aPath) {
+  MutexAutoLock lock(mMutex);
+  NSLog(@"Dumping NativeLayer contents to %s", aPath);
+  std::ofstream fileOutput(aPath);
+  if (fileOutput.fail()) {
+    NSLog(@"Opening %s for writing failed.", aPath);
+  }
+
+  // Make sure floating point values use a period for the decimal separator.
+  fileOutput.imbue(std::locale("C"));
+
+  fileOutput << "<html>\n";
+  for (const auto& layer : mSublayers) {
+    layer->DumpLayer(fileOutput);
+  }
+  fileOutput << "</html>\n";
+  fileOutput.close();
 }
 
 NativeLayerRootSnapshotterCA::NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot,
@@ -598,6 +642,104 @@ void NativeLayerCA::SetClipRect(const Maybe<gfx::IntRect>& aClipRect) {
 Maybe<gfx::IntRect> NativeLayerCA::ClipRect() {
   MutexAutoLock lock(mMutex);
   return mClipRect;
+}
+
+void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
+  MutexAutoLock lock(mMutex);
+
+  auto size = gfx::Size(mSize) / mBackingScale;
+
+  Maybe<IntRect> clipFromDisplayRect;
+  if (!mDisplayRect.IsEqualInterior(IntRect({}, mSize))) {
+    // When the display rect is a subset of the layer, then we want to guarantee that no
+    // pixels outside that rect are sampled, since they might be uninitialized.
+    // Transforming the display rect into a post-transform clip only maintains this if
+    // it's an integer translation, which is all we support for this case currently.
+    MOZ_ASSERT(mTransform.Is2DIntegerTranslation());
+    clipFromDisplayRect =
+        Some(RoundedToInt(mTransform.TransformBounds(IntRectToRect(mDisplayRect + mPosition))));
+  }
+
+  auto effectiveClip = IntersectMaybeRects(mClipRect, clipFromDisplayRect);
+  auto globalClipOrigin = effectiveClip ? effectiveClip->TopLeft() : IntPoint();
+  auto clipToLayerOffset = -globalClipOrigin;
+
+  auto wrappingDivPosition = gfx::Point(globalClipOrigin) / mBackingScale;
+
+  aOutputStream << "<div style=\"";
+  aOutputStream << "position: absolute; ";
+  aOutputStream << "left: " << wrappingDivPosition.x << "px; ";
+  aOutputStream << "top: " << wrappingDivPosition.y << "px; ";
+
+  if (effectiveClip) {
+    auto wrappingDivSize = gfx::Size(effectiveClip->Size()) / mBackingScale;
+    aOutputStream << "overflow: hidden; ";
+    aOutputStream << "width: " << wrappingDivSize.width << "px; ";
+    aOutputStream << "height: " << wrappingDivSize.height << "px; ";
+  }
+
+  Matrix4x4 transform = mTransform;
+  transform.PreTranslate(mPosition.x, mPosition.y, 0);
+  transform.PostTranslate(clipToLayerOffset.x, clipToLayerOffset.y, 0);
+
+  if (mSurfaceIsFlipped) {
+    transform.PreTranslate(0, mSize.height, 0).PreScale(1, -1, 1);
+  }
+
+  aOutputStream << "\">";
+  aOutputStream << "<img style=\"";
+  aOutputStream << "width: " << size.width << "px; ";
+  aOutputStream << "height: " << size.height << "px; ";
+
+  if (mSamplingFilter == gfx::SamplingFilter::POINT) {
+    aOutputStream << "image-rendering: crisp-edges; ";
+  }
+
+  if (!transform.IsIdentity()) {
+    const auto& m = transform;
+    aOutputStream << "transform-origin: top left; ";
+    aOutputStream << "transform: matrix3d(";
+    aOutputStream << m._11 << ", " << m._12 << ", " << m._13 << ", " << m._14 << ", ";
+    aOutputStream << m._21 << ", " << m._22 << ", " << m._23 << ", " << m._24 << ", ";
+    aOutputStream << m._31 << ", " << m._32 << ", " << m._33 << ", " << m._34 << ", ";
+    aOutputStream << m._41 / mBackingScale << ", " << m._42 / mBackingScale << ", " << m._43 << ", "
+                  << m._44;
+    aOutputStream << "); ";
+  }
+  aOutputStream << "\" ";
+
+  CFTypeRefPtr<IOSurfaceRef> surface;
+  if (mFrontSurface) {
+    surface = mFrontSurface->mSurface;
+    aOutputStream << "alt=\"regular surface 0x" << std::hex << int(IOSurfaceGetID(surface.get()))
+                  << "\" ";
+  } else if (mTextureHost) {
+    surface = mTextureHost->GetSurface()->GetIOSurfaceRef();
+    aOutputStream << "alt=\"TextureHost surface 0x" << std::hex
+                  << int(IOSurfaceGetID(surface.get())) << "\" ";
+  } else {
+    aOutputStream << "alt=\"no surface 0x\" ";
+  }
+
+  aOutputStream << "src=\"";
+
+  if (surface) {
+    RefPtr<MacIOSurface> surf = new MacIOSurface(surface);
+    surf->Lock(true);
+    {
+      RefPtr<gfx::DrawTarget> dt = surf->GetAsDrawTargetLocked(gfx::BackendType::SKIA);
+      if (dt) {
+        RefPtr<gfx::SourceSurface> sourceSurf = dt->Snapshot();
+        nsCString dataUrl;
+        gfxUtils::EncodeSourceSurface(sourceSurf, ImageType::PNG, u""_ns, gfxUtils::eDataURIEncode,
+                                      nullptr, &dataUrl);
+        aOutputStream << dataUrl.get();
+      }
+    }
+    surf->Unlock(true);
+  }
+
+  aOutputStream << "\"/></div>\n";
 }
 
 gfx::IntRect NativeLayerCA::CurrentSurfaceDisplayRect() {

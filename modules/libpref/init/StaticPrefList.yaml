@@ -5270,6 +5270,14 @@
     mirror: always
 #endif
 
+#ifdef XP_MACOSX
+  # Files show up in $HOME/Desktop/nativelayerdumps-PID/frame-123.html
+-   name: gfx.webrender.debug.dump-native-layer-tree-to-file
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+#endif
+
 - name: gfx.webrender.enable-low-priority-pool
   type: RelaxedAtomicBool
 #if defined(ANDROID)
