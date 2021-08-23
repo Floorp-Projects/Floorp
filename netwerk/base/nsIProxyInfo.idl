@@ -74,6 +74,12 @@ interface nsIProxyInfo : nsISupports
   attribute nsIProxyInfo failoverProxy;
 
   /**
+   * Specifies an ID related to the source of this proxy configuration.  If
+   * it is created in response to an extension API, it will be the extension ID.
+   */
+  attribute ACString sourceId;
+
+  /**
    * Any non-empty value will be passed directly as Proxy-Authorization header
    * value for the CONNECT request attempt.  However, this header set on the
    * resource request itself takes precedence.

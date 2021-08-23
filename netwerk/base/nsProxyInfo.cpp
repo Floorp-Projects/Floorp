@@ -132,6 +132,18 @@ nsProxyInfo::SetFailoverProxy(nsIProxyInfo* proxy) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsProxyInfo::GetSourceId(nsACString& result) {
+  result = mSourceId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProxyInfo::SetSourceId(const nsACString& sourceId) {
+  mSourceId = sourceId;
+  return NS_OK;
+}
+
 bool nsProxyInfo::IsDirect() {
   if (!mType) return true;
   return mType == kProxyType_DIRECT;
