@@ -3248,16 +3248,17 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
         return NS_ERROR_FAILURE;
       }
       // We are removing blocks (going to "body text")
-      RefPtr<Element> blockElement =
-          HTMLEditUtils::GetInclusiveAncestorBlockElement(
-              *pointToInsertBlock.ContainerAsContent());
-      if (!blockElement) {
+      const RefPtr<Element> editableBlockElement =
+          HTMLEditUtils::GetInclusiveAncestorElement(
+              *pointToInsertBlock.ContainerAsContent(),
+              HTMLEditUtils::ClosestEditableBlockElement);
+      if (!editableBlockElement) {
         NS_WARNING(
             "HTMLEditor::FormatBlockContainerWithTransaction() couldn't find "
             "block parent");
         return NS_ERROR_FAILURE;
       }
-      if (!HTMLEditUtils::IsFormatNode(blockElement)) {
+      if (!HTMLEditUtils::IsFormatNode(editableBlockElement)) {
         return NS_OK;
       }
 
@@ -3284,7 +3285,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
       }
       // Do the splits!
       SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
-          *blockElement, pointToInsertBlock,
+          *editableBlockElement, pointToInsertBlock,
           SplitAtEdges::eDoNotCreateEmptyContainer);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;

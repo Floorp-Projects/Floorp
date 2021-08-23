@@ -132,7 +132,7 @@ class HTMLEditUtils final {
    * styles.
    */
   static bool IsRemovableInlineStyleElement(dom::Element& aElement);
-  static bool IsFormatNode(nsINode* aNode);
+  static bool IsFormatNode(const nsINode* aNode);
   static bool IsNodeThatCanOutdent(nsINode* aNode);
   static bool IsHeader(nsINode& aNode);
   static bool IsListItem(const nsINode* aNode);
