@@ -297,7 +297,7 @@ class DebugTargetInfo extends PureComponent {
 
     const items = [];
 
-    if (this.props.toolbox.target.traits.navigation) {
+    if (this.props.toolbox.target.getTrait("navigation")) {
       items.push(
         this.renderNavigationButton({
           className: "qa-back-button",

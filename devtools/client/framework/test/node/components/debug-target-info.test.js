@@ -35,8 +35,13 @@ const TEST_TOOLBOX = {
   target: {
     name: "Test Tab Name",
     url: "http://some.target/url",
-    traits: {
-      navigation: true,
+    targetForm: {
+      traits: {
+        navigation: true,
+      },
+    },
+    getTrait: trait => {
+      return TEST_TOOLBOX.target.targetForm.traits[trait];
     },
   },
   doc: {},
@@ -45,8 +50,13 @@ const TEST_TOOLBOX = {
 const TEST_TOOLBOX_NO_NAME = {
   target: {
     url: "http://some.target/without/a/name",
-    traits: {
-      navigation: true,
+    targetForm: {
+      traits: {
+        navigation: true,
+      },
+    },
+    getTrait: trait => {
+      return TEST_TOOLBOX.target.targetForm.traits[trait];
     },
   },
   doc: {},

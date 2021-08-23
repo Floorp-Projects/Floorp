@@ -1895,7 +1895,7 @@ Toolbox.prototype = {
       id: "command-button-frames",
       description: L10N.getStr("toolbox.frames.tooltip"),
       isTargetSupported: target => {
-        return target.traits.frames;
+        return target.getTrait("frames");
       },
       isCurrentlyVisible: () => {
         const hasFrames = this.frameMap.size > 1;
@@ -2038,7 +2038,7 @@ Toolbox.prototype = {
       onClick: this._onPickerClick,
       isInStartContainer: true,
       isTargetSupported: target => {
-        return target.traits.frames;
+        return target.getTrait("frames");
       },
     });
 
@@ -3126,7 +3126,7 @@ Toolbox.prototype = {
   },
 
   _listFrames: async function(event) {
-    if (!this.target.traits.frames) {
+    if (!this.target.getTrait("frames")) {
       // We are not targetting a regular BrowsingContextTargetActor
       // it can be either an addon or browser toolbox actor
       return promise.resolve();

@@ -265,12 +265,19 @@ function TargetMixin(parentClass) {
     }
 
     /**
-     * Returns a trait from the root actor.
+     * Returns a trait from the target actor if it exists,
+     * if not it will fallback to that on the root actor.
      *
      * @param {String} traitName
      * @return {Mixed}
      */
     getTrait(traitName) {
+      // @backward-compat { version 93 } All traits should be on the `targetForm`, remove
+      // this backward compatibility code.
+      if (this.traits && this.traits[traitName]) {
+        return this.traits[traitName];
+      }
+
       // If the targeted actor exposes traits and has a defined value for this
       // traits, override the root actor traits
       if (this.targetForm.traits && traitName in this.targetForm.traits) {
@@ -738,7 +745,7 @@ function TargetMixin(parentClass) {
      * @returns {Promise}
      */
     logErrorInPage(text, category) {
-      if (this.traits.logInPage) {
+      if (this.getTrait("logInPage")) {
         const errorFlag = 0;
         return this.logInPage({ text, category, flags: errorFlag });
       }
@@ -755,7 +762,7 @@ function TargetMixin(parentClass) {
      * @returns {Promise}
      */
     logWarningInPage(text, category) {
-      if (this.traits.logInPage) {
+      if (this.getTrait("logInPage")) {
         const warningFlag = 1;
         return this.logInPage({ text, category, flags: warningFlag });
       }
