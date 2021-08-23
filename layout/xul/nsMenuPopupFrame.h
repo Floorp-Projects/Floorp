@@ -145,7 +145,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // as popups are opened asynchronously, the popup pending state is used to
   // prevent multiple requests from attempting to open the same popup twice
   nsPopupState PopupState() { return mPopupState; }
-  void SetPopupState(nsPopupState aPopupState) { mPopupState = aPopupState; }
+  void SetPopupState(nsPopupState);
 
   NS_IMETHOD SetActive(bool aActiveFlag) override {
     // We don't care.
