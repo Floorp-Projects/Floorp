@@ -79,10 +79,7 @@ add_task(async function() {
     await commands.targetCommand.reloadTopLevelTarget();
     ok(false, "reloadToLevelTarget() should have thrown for the main process");
   } catch (e) {
-    is(
-      e.message,
-      "The top level target isn't a BrowsingContext and doesn't support being reloaded"
-    );
+    is(e.message, "The top level target doesn't support being reloaded");
   }
   await commands.destroy();
 });
