@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray.browser
 
 import android.view.View
 import androidx.annotation.StringRes
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.tabstray.Tab
@@ -17,6 +18,7 @@ import org.mozilla.fenix.databinding.InactiveTabListItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.toShortUrl
+import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.dpToPx
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.Manual
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneDay
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneMonth
@@ -42,6 +44,11 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
                     it.isActivated = newState
                     binding.chevron.rotation = ROTATION_DEGREE
+
+                    // When the header is collapsed we use its bottom border instead of the footer's
+                    binding.inactiveHeaderBorder.updatePadding(
+                        bottom = binding.root.context.dpToPx(if (it.isActivated) 0f else 1f)
+                    )
                 }
             }
         }

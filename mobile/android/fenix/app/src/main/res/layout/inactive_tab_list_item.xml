@@ -1,14 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<mozilla.components.ui.widgets.WidgetSiteItemView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/site_list_item"
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:background="?above"
-    android:foreground="?android:attr/selectableItemBackground"
-    android:minHeight="@dimen/mozac_widget_site_item_height" />
+    android:background="@color/photonLightGrey30"
+    android:importantForAccessibility="no"
+    android:paddingStart="1dp"
+    android:paddingEnd="1dp">
+
+    <mozilla.components.ui.widgets.WidgetSiteItemView
+        android:id="@+id/site_list_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?above"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:minHeight="@dimen/mozac_widget_site_item_height" />
+</FrameLayout>
