@@ -130,8 +130,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       // @backward-compat { version 86 } ThreadActor.attach no longer pauses the thread,
       //                                 so that we no longer have to resume.
       noPauseOnThreadActorAttach: true,
-      // @backward-compat { version 87 } ThreadActor supports isAttached request
-      supportsThreadActorIsAttached: true,
     };
   },
 
