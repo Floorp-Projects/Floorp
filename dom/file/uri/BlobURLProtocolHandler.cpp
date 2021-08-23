@@ -28,6 +28,7 @@
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsIAsyncShutdown.h"
+#include "nsIDUtils.h"
 #include "nsIException.h"  // for nsIStackFrame
 #include "nsIMemoryReporter.h"
 #include "nsIPrincipal.h"
@@ -712,9 +713,6 @@ nsresult BlobURLProtocolHandler::GenerateURIString(nsIPrincipal* aPrincipal,
   rv = uuidgen->GenerateUUIDInPlace(&id);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char chars[NSID_LENGTH];
-  id.ToProvidedString(chars);
-
   aUri.AssignLiteral(BLOBURI_SCHEME);
   aUri.Append(':');
 
@@ -729,7 +727,7 @@ nsresult BlobURLProtocolHandler::GenerateURIString(nsIPrincipal* aPrincipal,
     aUri.Append('/');
   }
 
-  aUri += Substring(chars + 1, chars + NSID_LENGTH - 2);
+  aUri += NSID_TrimBracketsASCII(id);
 
   return NS_OK;
 }

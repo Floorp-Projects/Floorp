@@ -148,6 +148,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsEmbedCID.h"
+#include "nsIDUtils.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsXPCOM.h"
@@ -2798,9 +2799,6 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   rv = uuidGen->GenerateUUIDInPlace(&uuid);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  char strid[NSID_LENGTH];
-  uuid.ToProvidedString(strid);
-
   nsCString arch("null");
   nsCOMPtr<nsIPropertyBag2> sysInfo =
       do_GetService("@mozilla.org/system-info;1");
@@ -2812,9 +2810,7 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   char date[sizeof "YYYY-MM-DDThh:mm:ss.000Z"];
   strftime(date, sizeof date, "%FT%T.000Z", gmtime(&now));
 
-  // NSID_LENGTH includes the trailing \0 and we also want to strip off the
-  // surrounding braces so the length becomes NSID_LENGTH - 3.
-  nsDependentCSubstring pingId(strid + 1, NSID_LENGTH - 3);
+  NSID_TrimBracketsASCII pingId(uuid);
   constexpr auto pingType = "downgrade"_ns;
 
   int32_t pos = aLastVersion.Find("_");
