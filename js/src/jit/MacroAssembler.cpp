@@ -1714,7 +1714,7 @@ void MacroAssembler::isCallableOrConstructor(bool isCallable, Register obj,
     static_assert(mozilla::IsPowerOfTwo(uint32_t(FunctionFlags::CONSTRUCTOR)),
                   "FunctionFlags::CONSTRUCTOR has only one bit set");
 
-    load16ZeroExtend(Address(obj, JSFunction::offsetOfFlags()), output);
+    load32(Address(obj, JSFunction::offsetOfFlagsAndArgCount()), output);
     rshift32(Imm32(mozilla::FloorLog2(uint32_t(FunctionFlags::CONSTRUCTOR))),
              output);
     and32(Imm32(1), output);
@@ -3550,7 +3550,8 @@ void MacroAssembler::branchIfNotRegExpInstanceOptimizable(Register regexp,
 // ===============================================================
 // Branch functions
 
-void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
+void MacroAssembler::loadFunctionLength(Register func,
+                                        Register funFlagsAndArgCount,
                                         Register output, Label* slowPath) {
 #ifdef DEBUG
   {
@@ -3558,23 +3559,25 @@ void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
     Label ok;
     uint32_t FlagsToCheck =
         FunctionFlags::SELFHOSTLAZY | FunctionFlags::RESOLVED_LENGTH;
-    branchTest32(Assembler::Zero, funFlags, Imm32(FlagsToCheck), &ok);
+    branchTest32(Assembler::Zero, funFlagsAndArgCount, Imm32(FlagsToCheck),
+                 &ok);
     assumeUnreachable("The function flags should already have been checked.");
     bind(&ok);
   }
 #endif  // DEBUG
 
-  // NOTE: `funFlags` and `output` must be allowed to alias.
+  // NOTE: `funFlagsAndArgCount` and `output` must be allowed to alias.
 
   // Load the target function's length.
   Label isInterpreted, isBound, lengthLoaded;
-  branchTest32(Assembler::NonZero, funFlags, Imm32(FunctionFlags::BOUND_FUN),
-               &isBound);
-  branchTest32(Assembler::NonZero, funFlags, Imm32(FunctionFlags::BASESCRIPT),
-               &isInterpreted);
+  branchTest32(Assembler::NonZero, funFlagsAndArgCount,
+               Imm32(FunctionFlags::BOUND_FUN), &isBound);
+  branchTest32(Assembler::NonZero, funFlagsAndArgCount,
+               Imm32(FunctionFlags::BASESCRIPT), &isInterpreted);
   {
-    // Load the length property of a native function.
-    load16ZeroExtend(Address(func, JSFunction::offsetOfNargs()), output);
+    // The length property of a native function stored with the flags.
+    move32(funFlagsAndArgCount, output);
+    rshift32(Imm32(JSFunction::ArgCountShift), output);
     jump(&lengthLoaded);
   }
   bind(&isBound);
@@ -3603,7 +3606,7 @@ void MacroAssembler::loadFunctionName(Register func, Register output,
   MOZ_ASSERT(func != output);
 
   // Get the JSFunction flags.
-  load16ZeroExtend(Address(func, JSFunction::offsetOfFlags()), output);
+  load32(Address(func, JSFunction::offsetOfFlagsAndArgCount()), output);
 
   // If the name was previously resolved, the name property may be shadowed.
   branchTest32(Assembler::NonZero, output, Imm32(FunctionFlags::RESOLVED_NAME),

@@ -4238,7 +4238,8 @@ void BaselineCompilerCodeGen::loadNumFormalArguments(Register dest) {
 template <>
 void BaselineInterpreterCodeGen::loadNumFormalArguments(Register dest) {
   masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), dest);
-  masm.load16ZeroExtend(Address(dest, JSFunction::offsetOfNargs()), dest);
+  masm.load32(Address(dest, JSFunction::offsetOfFlagsAndArgCount()), dest);
+  masm.rshift32(Imm32(JSFunction::ArgCountShift), dest);
 }
 
 template <typename Handler>
@@ -5912,7 +5913,9 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   // Push |undefined| for all formals.
   Register scratch2 = regs.takeAny();
   Label loop, loopDone;
-  masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch2);
+  masm.load32(Address(callee, JSFunction::offsetOfFlagsAndArgCount()),
+              scratch2);
+  masm.rshift32(Imm32(JSFunction::ArgCountShift), scratch2);
 
   static_assert(sizeof(Value) == 8);
   static_assert(JitStackAlignment == 16 || JitStackAlignment == 8);
