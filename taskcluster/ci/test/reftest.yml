@@ -47,8 +47,8 @@ crashtest:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland']
             linux1804-64(-tsan|-asan)-qr/opt: ['webrender-sw', 'fission', 'wayland']
-            windows10-64-qr/debug: ['webrender-sw', 'fission']
-            windows10-64-asan-qr/opt: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-asan-qr/opt: ['webrender-sw', 'fission']
             windows10-aarch64-qr/.*: []
             macosx101.*64-qr/debug: ['webrender-sw', 'fission']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
@@ -105,7 +105,7 @@ crashtest-qr:
     tier: 2
     virtualization:
         by-test-platform:
-            windows10-64.*: hardware
+            windows10-64-2004.*: virtual-with-gpu
             default: virtual
 
 jsreftest:
