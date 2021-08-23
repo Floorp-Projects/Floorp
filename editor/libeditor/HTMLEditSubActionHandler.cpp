@@ -3668,10 +3668,13 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
       return NS_ERROR_FAILURE;
     }
     MOZ_ASSERT(atCaret.IsInContentNode());
-    Element* blockElement = HTMLEditUtils::GetInclusiveAncestorBlockElement(
-        *atCaret.ContainerAsContent());
-    if (blockElement && HTMLEditUtils::IsListItem(blockElement)) {
-      arrayOfContents.AppendElement(*blockElement);
+    Element* const editableBlockElement =
+        HTMLEditUtils::GetInclusiveAncestorElement(
+            *atCaret.ContainerAsContent(),
+            HTMLEditUtils::ClosestEditableBlockElement);
+    if (editableBlockElement &&
+        HTMLEditUtils::IsListItem(editableBlockElement)) {
+      arrayOfContents.AppendElement(*editableBlockElement);
     }
   }
 
