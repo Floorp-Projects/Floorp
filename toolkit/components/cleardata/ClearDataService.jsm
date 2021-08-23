@@ -1304,12 +1304,21 @@ const AboutHomeStartupCacheCleaner = {
 };
 
 const PreflightCacheCleaner = {
-  deleteByPrincipal(aPrincipal) {
-    return this.deleteAll();
+  // TODO: Bug 1727141: We should call the cache to clear by principal, rather
+  // than over-clearing for user requests or bailing out for programmatic calls.
+  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    return this.deleteAll();
+  // TODO: Bug 1727141 (see deleteByPrincipal).
+  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
   async deleteAll() {
