@@ -2564,7 +2564,7 @@ void CanvasRenderingContext2D::FillRect(double aX, double aY, double aW,
       // Decal tiling mode rather than trying to generate a path. Until then,
       // just punt to relying on the default Clamp mode.
       gfx::Rect patternBounds(style->mSurface->GetRect());
-        patternBounds = style->mTransform.TransformBounds(patternBounds);
+      patternBounds = style->mTransform.TransformBounds(patternBounds);
       gfx::Rect bounds(aX, aY, aW, aH);
       // We always need to execute painting for non-over operators, even if
       // we end up with w/h = 0.

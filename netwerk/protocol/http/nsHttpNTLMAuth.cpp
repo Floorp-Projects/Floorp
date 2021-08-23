@@ -284,8 +284,7 @@ nsHttpNTLMAuth::GenerateCredentials(
   Maybe<nsTArray<uint8_t>> certArray;
 
   // initial challenge
-  if (aChallenge.Equals("NTLM"_ns,
-                       nsCaseInsensitiveCStringComparator)) {
+  if (aChallenge.Equals("NTLM"_ns, nsCaseInsensitiveCStringComparator)) {
     // NTLM service name format is 'HTTP@host' for both http and https
     nsCOMPtr<nsIURI> uri;
     rv = authChannel->GetURI(getter_AddRefs(uri));

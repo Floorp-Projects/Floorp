@@ -94,7 +94,8 @@ NS_IMETHODIMP nsColorPicker::Open(
       GTK_WINDOW(mParentWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));
 
 #if defined(ACTIVATE_GTK3_COLOR_PICKER)
-  GtkWidget* color_chooser = gtk_color_chooser_dialog_new(title.get(), parent_window);
+  GtkWidget* color_chooser =
+      gtk_color_chooser_dialog_new(title.get(), parent_window);
 
   if (parent_window) {
     GtkWindow* window = GTK_WINDOW(color_chooser);

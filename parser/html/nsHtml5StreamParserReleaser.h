@@ -22,4 +22,4 @@ class nsHtml5StreamParserReleaser : public mozilla::Runnable {
   }
 };
 
-#endif // nsHtml5StreamParserReleaser_h
+#endif  // nsHtml5StreamParserReleaser_h

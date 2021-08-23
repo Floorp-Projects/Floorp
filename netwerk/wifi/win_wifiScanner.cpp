@@ -100,25 +100,20 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
   InterfaceScanCallbackData cbData(interface_list->dwNumberOfItems);
 
   DWORD wlanNotifySource;
-  if (ERROR_SUCCESS !=
-      (*mWlanLibrary
-            ->GetWlanRegisterNotificationPtr())(mWlanLibrary->GetWLANHandle(),
-                                                WLAN_NOTIFICATION_SOURCE_ACM,
-                                                TRUE,
-                                                (WLAN_NOTIFICATION_CALLBACK)
-                                                    OnScanComplete,
-                                                &cbData, NULL,
-                                                &wlanNotifySource)) {
+  if (ERROR_SUCCESS != (*mWlanLibrary->GetWlanRegisterNotificationPtr())(
+                           mWlanLibrary->GetWLANHandle(),
+                           WLAN_NOTIFICATION_SOURCE_ACM, TRUE,
+                           (WLAN_NOTIFICATION_CALLBACK)OnScanComplete, &cbData,
+                           NULL, &wlanNotifySource)) {
     return NS_ERROR_FAILURE;
   }
 
   // Go through the list of interfaces and call `WlanScan` on each
   for (unsigned int i = 0; i < interface_list->dwNumberOfItems; ++i) {
-    if (ERROR_SUCCESS !=
-        (*mWlanLibrary->GetWlanScanPtr())(mWlanLibrary->GetWLANHandle(),
-                                          &interface_list->InterfaceInfo[i]
-                                               .InterfaceGuid,
-                                          NULL, NULL, NULL)) {
+    if (ERROR_SUCCESS != (*mWlanLibrary->GetWlanScanPtr())(
+                             mWlanLibrary->GetWLANHandle(),
+                             &interface_list->InterfaceInfo[i].InterfaceGuid,
+                             NULL, NULL, NULL)) {
       cbData.OnInterfaceScanComplete();
     }
   }
@@ -138,17 +133,15 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
   // Go through the list of interfaces and get the data for each.
   for (uint32_t i = 0; i < interface_list->dwNumberOfItems; ++i) {
     WLAN_BSS_LIST* bss_list;
-    if (ERROR_SUCCESS !=
-        (*mWlanLibrary
-              ->GetWlanGetNetworkBssListPtr())(mWlanLibrary->GetWLANHandle(),
-                                               &interface_list->InterfaceInfo[i]
-                                                    .InterfaceGuid,
-                                               nullptr,  // Use all SSIDs.
-                                               DOT11_BSS_TYPE_UNUSED,
-                                               false,    // bSecurityEnabled -
-                                                         // unused
-                                               nullptr,  // reserved
-                                               &bss_list)) {
+    if (ERROR_SUCCESS != (*mWlanLibrary->GetWlanGetNetworkBssListPtr())(
+                             mWlanLibrary->GetWLANHandle(),
+                             &interface_list->InterfaceInfo[i].InterfaceGuid,
+                             nullptr,  // Use all SSIDs.
+                             DOT11_BSS_TYPE_UNUSED,
+                             false,    // bSecurityEnabled -
+                                       // unused
+                             nullptr,  // reserved
+                             &bss_list)) {
       continue;
     }
 

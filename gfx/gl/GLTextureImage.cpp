@@ -112,8 +112,9 @@ bool BasicTextureImage::DirectUpdate(
   bool needInit = mTextureState == Created;
   size_t uploadSize;
 
-  mTextureFormat = UploadSurfaceToTexture(mGLContext, aSurf, region, mTexture,
-                                          mSize, &uploadSize, needInit, aSrcOffset, aDstOffset);
+  mTextureFormat =
+      UploadSurfaceToTexture(mGLContext, aSurf, region, mTexture, mSize,
+                             &uploadSize, needInit, aSrcOffset, aDstOffset);
   if (mTextureFormat == SurfaceFormat::UNKNOWN) {
     return false;
   }

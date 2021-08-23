@@ -34,8 +34,8 @@
 #include "js/CharacterEncoding.h"
 #include "js/experimental/CodeCoverage.h"
 #include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
-#include "js/friend/DumpFunctions.h"  // js::DumpPC, js::DumpScript
-#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/friend/DumpFunctions.h"           // js::DumpPC, js::DumpScript
+#include "js/friend/ErrorMessages.h"           // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"
 #include "js/Symbol.h"
 #include "util/DifferentialTesting.h"
