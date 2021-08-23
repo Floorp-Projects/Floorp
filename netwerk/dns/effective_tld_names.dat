@@ -6714,9 +6714,10 @@ mil.vc
 edu.vc
 
 // ve : https://registro.nic.ve/
-// Submitted by registry
+// Submitted by registry nic@nic.ve and nicve@conatel.gob.ve
 ve
 arts.ve
+bib.ve
 co.ve
 com.ve
 e12.ve
@@ -6728,7 +6729,9 @@ info.ve
 int.ve
 mil.ve
 net.ve
+nom.ve
 org.ve
+rar.ve
 rec.ve
 store.ve
 tec.ve
@@ -7125,7 +7128,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-08-05T15:14:20Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-08-19T15:13:52Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8716,6 +8719,9 @@ kfh
 
 // kia : 2015-07-09 KIA MOTORS CORPORATION
 kia
+
+// kids : 2021-08-13 DotKids Foundation Limited
+kids
 
 // kim : 2013-09-23 Afilias Limited
 kim
@@ -10848,6 +10854,10 @@ onavstack.net
 *.awdev.ca
 *.advisor.ws
 
+// AZ.pl sp. z.o.o: https://az.pl
+// Submited by Krzysztof Wolski <krzysztof.wolski@home.eu>
+ecommerce-shop.pl
+
 // b-data GmbH : https://www.b-data.io
 // Submitted by Olivier Benz <olivier.benz@b-data.ch>
 b-data.io
@@ -11037,6 +11047,8 @@ cleverapps.io
 
 // Clerk : https://www.clerk.dev
 // Submitted by Colin Sidoti <systems@clerk.dev>
+clerk.app
+clerkstage.app
 *.lcl.dev
 *.lclstage.dev
 *.stg.dev
@@ -11626,6 +11638,12 @@ blogsite.xyz
 // Submitted by Dominik Menke <dom@digineo.de>
 dynv6.net
 
+// Ellucian : https://ellucian.com
+// Submitted by Josue Colon <CloudOps-Network@ellucian.com>
+elluciancrmadvance.com
+elluciancrmadvise.com
+elluciancrmrecruit.com
+
 // E4YOU spol. s.r.o. : https://e4you.cz/
 // Submitted by Vladimir Dudr <info@e4you.cz>
 e4.cz
@@ -12187,6 +12205,10 @@ ravendb.community
 ravendb.me
 development.run
 ravendb.run
+
+// home.pl S.A.: https://home.pl
+// Submited by Krzysztof Wolski <krzysztof.wolski@home.eu>
+homesklep.pl
 
 // Hong Kong Productivity Council: https://www.hkpc.org/
 // Submitted by SECaaS Team <summchan@hkpc.org>
