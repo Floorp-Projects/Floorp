@@ -78,7 +78,7 @@ inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
   fun->initFlagsAndArgCount();
   fun->nativeFuncOrInterpretedEnv_.init(JS::UndefinedValue());
   fun->nativeJitInfoOrInterpretedScript_.init(JS::PrivateValue(nullptr));
-  fun->atom_.init(nullptr);
+  fun->atom_.init(JS::UndefinedValue());
 
   if (kind == js::gc::AllocKind::FUNCTION_EXTENDED) {
     fun->setFlags(FunctionFlags::EXTENDED);
