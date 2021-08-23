@@ -6298,15 +6298,16 @@ nsTransparencyMode nsWindow::GetTransparencyMode() {
 }
 
 void nsWindow::SetWindowMouseTransparent(bool aIsTransparent) {
-  if (!mGdkWindow) {
+  GdkWindow* window =
+      mDrawToContainer ? gtk_widget_get_window(mShell) : mGdkWindow;
+  if (!window) {
     return;
   }
 
   cairo_rectangle_int_t emptyRect = {0, 0, 0, 0};
   cairo_region_t* region =
       aIsTransparent ? cairo_region_create_rectangle(&emptyRect) : nullptr;
-
-  gdk_window_input_shape_combine_region(mGdkWindow, region, 0, 0);
+  gdk_window_input_shape_combine_region(window, region, 0, 0);
   if (region) {
     cairo_region_destroy(region);
   }
