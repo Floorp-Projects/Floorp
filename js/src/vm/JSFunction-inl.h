@@ -76,21 +76,14 @@ inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
   nobj->initEmptyDynamicSlots();
   nobj->setEmptyElements();
 
-  MOZ_ASSERT(shape->slotSpan() == 0);
-
   JSFunction* fun = static_cast<JSFunction*>(nobj);
+  fun->initializeSlotRange(0, shape->slotSpan());
   fun->initFlagsAndArgCount();
-  fun->nativeFuncOrInterpretedEnv_.init(JS::UndefinedValue());
-  fun->nativeJitInfoOrInterpretedScript_.init(JS::PrivateValue(nullptr));
-  fun->atom_.init(JS::UndefinedValue());
+  fun->initFixedSlot(NativeJitInfoOrInterpretedScriptSlot,
+                     JS::PrivateValue(nullptr));
 
   if (kind == js::gc::AllocKind::FUNCTION_EXTENDED) {
     fun->setFlags(FunctionFlags::EXTENDED);
-    for (js::GCPtrValue& extendedSlot : fun->toExtended()->extendedSlots) {
-      extendedSlot.init(JS::UndefinedValue());
-    }
-  } else {
-    fun->setFlags(0);
   }
 
   MOZ_ASSERT(!clasp->shouldDelayMetadataBuilder(),

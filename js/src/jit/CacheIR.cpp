@@ -4647,8 +4647,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   }
 
   uint32_t slot = prop->slot();
-
-  MOZ_ASSERT(fun->numFixedSlots() == 0, "Stub code relies on this");
+  MOZ_ASSERT(slot >= fun->numFixedSlots(), "Stub code relies on this");
   if (!fun->getSlot(slot).isObject()) {
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
@@ -4675,7 +4674,8 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   // Load prototypeObject into the cache -- consumed twice in the IC
   ObjOperandId protoId = writer.loadObject(prototypeObject);
   // Ensure that rhs[slot] == prototypeObject.
-  writer.guardDynamicSlotIsSpecificObject(rhsId, protoId, slot);
+  writer.guardDynamicSlotIsSpecificObject(rhsId, protoId,
+                                          slot - fun->numFixedSlots());
 
   // Needn't guard LHS is object, because the actual stub can handle that
   // and correctly return false.
@@ -9408,8 +9408,9 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
       JSFunction* newTarget = &newTarget_.toObject().as<JSFunction>();
       Maybe<PropertyInfo> prop = newTarget->lookupPure(cx_->names().prototype);
       MOZ_ASSERT(prop.isSome());
-      MOZ_ASSERT(newTarget->numFixedSlots() == 0, "Stub code relies on this");
       uint32_t slot = prop->slot();
+      MOZ_ASSERT(slot >= newTarget->numFixedSlots(),
+                 "Stub code relies on this");
       JSObject* prototypeObject = &newTarget->getSlot(slot).toObject();
 
       ValOperandId newTargetValId = writer.loadArgumentDynamicSlot(
@@ -9417,7 +9418,8 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
       ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
       writer.guardShape(newTargetObjId, newTarget->shape());
       ObjOperandId protoId = writer.loadObject(prototypeObject);
-      writer.guardDynamicSlotIsSpecificObject(newTargetObjId, protoId, slot);
+      writer.guardDynamicSlotIsSpecificObject(
+          newTargetObjId, protoId, slot - newTarget->numFixedSlots());
 
       // Call metaScriptedTemplateObject before emitting the call, so that Warp
       // can use this template object before transpiling the call.
