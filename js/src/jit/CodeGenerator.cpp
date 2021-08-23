@@ -3523,21 +3523,10 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
 
 void CodeGenerator::emitLambdaInit(Register output, Register envChain,
                                    const LambdaFunctionInfo& info) {
-  // Initialize nargs and flags. We do this with a single uint32 to avoid
-  // 16-bit writes.
-  union {
-    struct S {
-      uint16_t nargs;
-      uint16_t flags;
-    } s;
-    uint32_t word;
-  } u;
-  u.s.nargs = info.nargs;
-  u.s.flags = info.flags.toRaw();
-
-  static_assert(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2,
-                "the code below needs to be adapted");
-  masm.store32(Imm32(u.word), Address(output, JSFunction::offsetOfNargs()));
+  uint32_t flagsAndArgs =
+      info.flags.toRaw() | (info.nargs << JSFunction::ArgCountShift);
+  masm.store32(Imm32(flagsAndArgs),
+               Address(output, JSFunction::offsetOfFlagsAndArgCount()));
   masm.storePtr(ImmGCPtr(info.baseScript),
                 Address(output, JSFunction::offsetOfBaseScript()));
   masm.storePtr(envChain, Address(output, JSFunction::offsetOfEnvironment()));
@@ -5414,8 +5403,9 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
   DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
   MOZ_ASSERT(call->numActualArgs() ==
              call->mir()->numStackArgs() - numNonArgsOnStack);
-  masm.load16ZeroExtend(Address(calleereg, JSFunction::offsetOfNargs()),
-                        nargsreg);
+  masm.load32(Address(calleereg, JSFunction::offsetOfFlagsAndArgCount()),
+              nargsreg);
+  masm.rshift32(Imm32(JSFunction::ArgCountShift), nargsreg);
   masm.branch32(Assembler::Above, nargsreg, Imm32(call->numActualArgs()),
                 &thunk);
   masm.jump(&makeCall);
@@ -5988,8 +5978,9 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     // Check whether the provided arguments satisfy target argc.
     if (!apply->hasSingleTarget()) {
       Register nformals = extraStackSpace;
-      masm.load16ZeroExtend(Address(calleereg, JSFunction::offsetOfNargs()),
-                            nformals);
+      masm.load32(Address(calleereg, JSFunction::offsetOfFlagsAndArgCount()),
+                  nformals);
+      masm.rshift32(Imm32(JSFunction::ArgCountShift), nformals);
       masm.branch32(Assembler::Below, argcreg, nformals, &underflow);
     } else {
       masm.branch32(Assembler::Below, argcreg,
@@ -7643,7 +7634,8 @@ void CodeGenerator::visitFunctionLength(LFunctionLength* lir) {
   Label bail;
 
   // Get the JSFunction flags.
-  masm.load16ZeroExtend(Address(function, JSFunction::offsetOfFlags()), output);
+  masm.load32(Address(function, JSFunction::offsetOfFlagsAndArgCount()),
+              output);
 
   // Functions with a SelfHostedLazyScript must be compiled with the slow-path
   // before the function length is known. If the length was previously resolved,
@@ -14765,9 +14757,10 @@ void CodeGenerator::visitNaNToZero(LNaNToZero* lir) {
 }
 
 static void BoundFunctionLength(MacroAssembler& masm, Register target,
-                                Register targetFlags, Register argCount,
-                                Register output, Label* slowPath) {
-  masm.loadFunctionLength(target, targetFlags, output, slowPath);
+                                Register targetFlagsAndArgCount,
+                                Register argCount, Register output,
+                                Label* slowPath) {
+  masm.loadFunctionLength(target, targetFlagsAndArgCount, output, slowPath);
 
   // Compute the bound function length: Max(0, target.length - argCount).
   Label nonNegative;
@@ -14815,12 +14808,13 @@ static void BoundFunctionName(MacroAssembler& masm, Register target,
   masm.bind(&hasName);
 }
 
-static void BoundFunctionFlags(MacroAssembler& masm, Register targetFlags,
-                               Register bound, Register output) {
+static void BoundFunctionFlagsAndArgCount(MacroAssembler& masm,
+                                          Register targetFlags, Register bound,
+                                          Register output) {
   // Set the BOUND_FN flag and, if the target is a constructor, the
   // CONSTRUCTOR flag.
   Label isConstructor, boundFlagsComputed;
-  masm.load16ZeroExtend(Address(bound, JSFunction::offsetOfFlags()), output);
+  masm.load32(Address(bound, JSFunction::offsetOfFlagsAndArgCount()), output);
   masm.branchTest32(Assembler::NonZero, targetFlags,
                     Imm32(FunctionFlags::CONSTRUCTOR), &isConstructor);
   {
@@ -14861,8 +14855,8 @@ void CodeGenerator::visitFinishBoundFunctionInit(
   masm.loadObjProto(target, temp1);
   masm.branchPtr(Assembler::NotEqual, temp0, temp1, slowPath);
 
-  // Get the function flags.
-  masm.load16ZeroExtend(Address(target, JSFunction::offsetOfFlags()), temp0);
+  // Get the function flags and arg count.
+  masm.load32(Address(target, JSFunction::offsetOfFlagsAndArgCount()), temp0);
 
   // Functions with a SelfHostedLazyScript must be compiled with the slow-path
   // before the function length is known. If the length or name property is
@@ -14883,8 +14877,8 @@ void CodeGenerator::visitFinishBoundFunctionInit(
   masm.storePtr(temp1, Address(bound, JSFunction::offsetOfAtom()));
 
   // Update the bound function's flags.
-  BoundFunctionFlags(masm, temp0, bound, temp1);
-  masm.store16(temp1, Address(bound, JSFunction::offsetOfFlags()));
+  BoundFunctionFlagsAndArgCount(masm, temp0, bound, temp1);
+  masm.store32(temp1, Address(bound, JSFunction::offsetOfFlagsAndArgCount()));
 
   masm.bind(ool->rejoin());
 }
