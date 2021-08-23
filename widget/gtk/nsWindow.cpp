@@ -1282,11 +1282,7 @@ bool nsWindow::IsPopup() {
 bool nsWindow::IsWaylandPopup() { return GdkIsWaylandDisplay() && IsPopup(); }
 
 static nsMenuPopupFrame* GetMenuPopupFrame(nsIFrame* aFrame) {
-  if (aFrame) {
-    nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(aFrame);
-    return menuPopupFrame;
-  }
-  return nullptr;
+  return do_QueryFrame(aFrame);
 }
 
 void nsWindow::AppendPopupToHierarchyList(nsWindow* aToplevelWindow) {
@@ -5403,7 +5399,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       mDrawToContainer = GdkIsWaylandDisplay() ||
                          (mGtkWindowDecoration == GTK_DECORATION_CLIENT) ||
                          gtk_style_context_has_class(style, "csd");
-      eventWidget = (mDrawToContainer) ? container : mShell;
+      eventWidget = mDrawToContainer ? container : mShell;
 
       // Prevent GtkWindow from painting a background to avoid flickering.
       gtk_widget_set_app_paintable(eventWidget, TRUE);
@@ -6346,7 +6342,7 @@ void nsWindow::UpdateTopLevelOpaqueRegion(void) {
   }
 
   GdkWindow* window =
-      (mDrawToContainer) ? gtk_widget_get_window(mShell) : mGdkWindow;
+      mDrawToContainer ? gtk_widget_get_window(mShell) : mGdkWindow;
   if (!window) {
     return;
   }
