@@ -25,10 +25,18 @@ UNIFIED_SOURCES += [
     "nsUnicodeProperties.cpp",
 ]
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
 GeneratedFile(
     "BaseChars.h",
     script="base_chars.py",
     inputs=["../../icu/source/data/translit/Latin_ASCII.txt"],
+)
+
+GeneratedFile(
+    "IsCombiningDiacritic.h",
+    script="is_combining_diacritic.py",
+    force=True
 )
 
 FINAL_LIBRARY = "xul"

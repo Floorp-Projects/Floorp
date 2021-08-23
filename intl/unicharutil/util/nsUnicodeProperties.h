@@ -249,14 +249,13 @@ uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
 //   3099;COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK;Mn;8;NSM
 //   309A;COMBINING KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK;Mn;8;NSM
 // which users report should not be ignored (bug 1624244).
-// Keep this function in sync with is_combining_diacritic in base_chars.py.
-inline bool IsCombiningDiacritic(uint32_t aCh) {
-  uint8_t cc = u_getCombiningClass(aCh);
-  return cc != HB_UNICODE_COMBINING_CLASS_NOT_REORDERED &&
-         cc != HB_UNICODE_COMBINING_CLASS_KANA_VOICING &&
-         cc != HB_UNICODE_COMBINING_CLASS_VIRAMA && cc != 91 && cc != 129 &&
-         cc != 130 && cc != 132;
-}
+// See is_combining_diacritic in base_chars.py and is_combining_diacritic.py.
+//
+// TODO: once ICU4X is integrated (replacing ICU4C) as the source of Unicode
+// properties, re-evaluate whether building the static bitset is worthwhile
+// or if we can revert to simply getting the combining class and comparing
+// to the values we care about at runtime.
+bool IsCombiningDiacritic(uint32_t aCh);
 
 // Keep this function in sync with is_math_symbol in base_chars.py.
 inline bool IsMathOrMusicSymbol(uint32_t aCh) {
