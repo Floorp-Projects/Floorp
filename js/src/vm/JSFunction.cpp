@@ -768,7 +768,7 @@ inline void JSFunction::trace(JSTracer* trc) {
                (GCPtrValue*)toExtended()->extendedSlots, "nativeReserved");
   }
 
-  TraceNullableEdge(trc, &atom_, "atom");
+  TraceEdge(trc, &atom_, "atom");
 
   // Functions can be be marked as interpreted despite having no script yet at
   // some points when parsing, and can be lazy with no lazy script for

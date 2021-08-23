@@ -3632,19 +3632,24 @@ void MacroAssembler::loadFunctionName(Register func, Register output,
   }
   bind(&notBoundTarget);
 
-  Label guessed, hasName;
+  Label noName, done;
   branchTest32(Assembler::NonZero, output,
-               Imm32(FunctionFlags::HAS_GUESSED_ATOM), &guessed);
+               Imm32(FunctionFlags::HAS_GUESSED_ATOM), &noName);
+
   bind(&loadName);
-  loadPtr(Address(func, JSFunction::offsetOfAtom()), output);
-  branchTestPtr(Assembler::NonZero, output, output, &hasName);
+  Address atomAddr(func, JSFunction::offsetOfAtom());
+  branchTestUndefined(Assembler::Equal, atomAddr, &noName);
+  unboxString(atomAddr, output);
+  jump(&done);
+
   {
-    bind(&guessed);
+    bind(&noName);
 
     // An absent name property defaults to the empty string.
     movePtr(emptyString, output);
   }
-  bind(&hasName);
+
+  bind(&done);
 }
 
 void MacroAssembler::branchTestType(Condition cond, Register tag,
