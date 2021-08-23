@@ -226,14 +226,6 @@ class ExtensionBaseContextChild extends BaseContext {
     return this.contentWindow.document.nodePrincipal;
   }
 
-  get windowId() {
-    if (["tab", "popup", "sidebar"].includes(this.viewType)) {
-      let frameData = getFrameData(this.messageManager);
-      return frameData ? frameData.windowId : -1;
-    }
-    return -1;
-  }
-
   get tabId() {
     // Will be overwritten in the constructor if necessary.
     return -1;

@@ -40,11 +40,15 @@ this.extension = class extends ExtensionAPI {
               continue;
             }
 
-            if (
-              fetchProperties.windowId !== null &&
-              view.windowId != fetchProperties.windowId
-            ) {
-              continue;
+            if (fetchProperties.windowId !== null) {
+              let bc = view.contentWindow?.docShell?.browserChild;
+              let windowId =
+                view.viewType !== "background"
+                  ? bc?.chromeOuterWindowID ?? -1
+                  : -1;
+              if (windowId !== fetchProperties.windowId) {
+                continue;
+              }
             }
 
             if (
