@@ -118,7 +118,7 @@ add_task(async function test_experiment_fluent() {
     );
     is(
       promoLink.textContent,
-      "Need more privacy?",
+      "Stay private with Mozilla VPN",
       "should render promoLinkText with fluent"
     );
   });
