@@ -20,7 +20,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -110,23 +109,6 @@ class NavigationToolbarRobot {
                         withResourceName("download_button")
                     )
                 ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-            }
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
-        fun openTrackingProtectionTestPage(
-            url: Uri,
-            etpEnabled: Boolean,
-            interact: BrowserRobot.() -> Unit
-        ): BrowserRobot.Transition {
-            openEditURLView()
-
-            awesomeBar().perform(replaceText(url.toString()), pressImeActionButton())
-
-            if (!etpEnabled) {
-                onView(withResourceName("browserLayout")).check(matches(isDisplayed()))
             }
 
             BrowserRobot().interact()

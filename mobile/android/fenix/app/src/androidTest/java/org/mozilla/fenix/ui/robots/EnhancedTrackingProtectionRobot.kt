@@ -7,7 +7,6 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -18,6 +17,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.containsString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -45,21 +45,41 @@ class EnhancedTrackingProtectionRobot {
 
     fun verifyCryptominersBlocked() = assertCryptominersBlocked()
 
-    fun verifyBasicLevelTrackingContentBlocked() = assertBasicLevelTrackingContentBlocked()
+    fun verifyTrackingContentBlocked() = assertTrackingContentBlocked()
+
+    fun viewTrackingContentBlockList() {
+        trackingContentBlockListButton()
+            .check(matches(isDisplayed()))
+            .click()
+        onView(withId(R.id.blocking_text_list))
+            .check(
+                matches(
+                    withText(
+                        containsString(
+                            "social-track-digest256.dummytracker.org\n" +
+                                "ads-track-digest256.dummytracker.org\n" +
+                                "analytics-track-digest256.dummytracker.org"
+                        )
+                    )
+                )
+            )
+    }
 
     class Transition {
         fun openEnhancedTrackingProtectionSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
+            openEnhancedTrackingProtectionSheet().waitForExists(waitingTime)
             openEnhancedTrackingProtectionSheet().click()
+
             EnhancedTrackingProtectionRobot().interact()
             return Transition()
         }
 
-        fun closeEnhancedTrackingProtectionSheet(interact: BrowserRobot.() -> Unit): Transition {
+        fun closeEnhancedTrackingProtectionSheet(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             // Back out of the Enhanced Tracking Protection sheet
             mDevice.pressBack()
 
             BrowserRobot().interact()
-            return Transition()
+            return BrowserRobot.Transition()
         }
 
         fun disableEnhancedTrackingProtectionFromSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
@@ -70,14 +90,16 @@ class EnhancedTrackingProtectionRobot {
         }
 
         fun openProtectionSettings(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): Transition {
-            onView(withId(R.id.trackingProtectionDetails)).click()
-            openEnhancedTrackingProtectionSettings().click()
+            openEnhancedTrackingProtectionDetails().waitForExists(waitingTime)
+            openEnhancedTrackingProtectionDetails().click()
+            trackingProtectionSettingsButton().click()
 
             SettingsSubMenuEnhancedTrackingProtectionRobot().interact()
             return Transition()
         }
 
         fun openDetails(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
+            openEnhancedTrackingProtectionDetails().waitForExists(waitingTime)
             openEnhancedTrackingProtectionDetails().click()
 
             EnhancedTrackingProtectionRobot().interact()
@@ -91,16 +113,10 @@ fun enhancedTrackingProtection(interact: EnhancedTrackingProtectionRobot.() -> U
     return EnhancedTrackingProtectionRobot.Transition()
 }
 
-private fun assertEnhancedTrackingProtectionShield() {
-    mDevice.waitNotNull(
-        Until.findObjects(By.descContains("Tracking Protection has blocked trackers"))
-    )
-}
-
 private fun assertEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) {
     mDevice.waitNotNull(Until.findObjects(By.textContains(status)))
     onView(ViewMatchers.withResourceName("switch_widget")).check(
-        ViewAssertions.matches(
+        matches(
             isChecked(
                 state
             )
@@ -113,22 +129,22 @@ private fun assertEnhancedTrackingProtectionDetailsStatus(status: String) {
 }
 
 private fun openEnhancedTrackingProtectionSheet() =
-    onView(withId(R.id.mozac_browser_toolbar_security_indicator))
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_security_indicator"))
 
 private fun disableEnhancedTrackingProtection() =
     onView(ViewMatchers.withResourceName("switch_widget"))
 
-private fun openEnhancedTrackingProtectionSettings() =
-    onView(ViewMatchers.withId(R.id.protection_settings))
+private fun trackingProtectionSettingsButton() =
+    onView(withId(R.id.protection_settings))
 
 private fun openEnhancedTrackingProtectionDetails() =
-    onView(ViewMatchers.withId(R.id.trackingProtectionDetails))
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/trackingProtectionDetails"))
 
 private fun assertTrackingCookiesBlocked() {
     mDevice.findObject(UiSelector().resourceId("$packageName:id/cross_site_tracking"))
         .waitForExists(waitingTime)
     onView(withId(R.id.blocking_header)).check(matches(isDisplayed()))
-    onView(withId(R.id.cross_site_tracking)).check(matches(isDisplayed()))
+    onView(withId(R.id.tracking_content)).check(matches(isDisplayed()))
 }
 
 private fun assertFingerprintersBlocked() {
@@ -145,23 +161,11 @@ private fun assertCryptominersBlocked() {
     onView(withId(R.id.cryptominers)).check(matches(isDisplayed()))
 }
 
-private fun assertBasicLevelTrackingContentBlocked() {
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/tracking_content"))
-        .waitForExists(waitingTime)
-
-    onView(withId(R.id.tracking_content))
-        .check(matches(isDisplayed()))
-        .click()
-    onView(withId(R.id.blocking_text_list))
-        .check(
-            matches(
-                withText(
-                    containsString(
-                        "social-track-digest256.dummytracker.org\n" +
-                            "ads-track-digest256.dummytracker.org\n" +
-                            "analytics-track-digest256.dummytracker.org"
-                    )
-                )
-            )
-        )
+private fun assertTrackingContentBlocked() {
+    assertTrue(
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/tracking_content"))
+            .waitForExists(waitingTime)
+    )
 }
+
+private fun trackingContentBlockListButton() = onView(withId(R.id.tracking_content))
