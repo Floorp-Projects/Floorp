@@ -4398,6 +4398,7 @@ class nsContinuingTextFrame final : public nsTextFrame {
                    PostDestroyData& aPostDestroyData) final;
 
   nsTextFrame* GetPrevContinuation() const final { return mPrevContinuation; }
+
   void SetPrevContinuation(nsIFrame* aPrevContinuation) final {
     NS_ASSERTION(!aPrevContinuation || Type() == aPrevContinuation->Type(),
                  "setting a prev continuation with incorrect type!");
@@ -4406,11 +4407,26 @@ class nsContinuingTextFrame final : public nsTextFrame {
         "creating a loop in continuation chain!");
     mPrevContinuation = static_cast<nsTextFrame*>(aPrevContinuation);
     RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+    nsTextFrame* prevFirst = mFirstContinuation;
+    if (mPrevContinuation) {
+      mFirstContinuation = mPrevContinuation->FirstContinuation();
+    } else {
+      mFirstContinuation = nullptr;
+    }
+    if (mFirstContinuation != prevFirst) {
+      auto* f = static_cast<nsContinuingTextFrame*>(mNextContinuation);
+      while (f) {
+        f->mFirstContinuation = mFirstContinuation;
+        f = static_cast<nsContinuingTextFrame*>(f->mNextContinuation);
+      }
+    }
   }
+
   nsTextFrame* GetPrevInFlow() const final {
     return HasAnyStateBits(NS_FRAME_IS_FLUID_CONTINUATION) ? mPrevContinuation
                                                            : nullptr;
   }
+
   void SetPrevInFlow(nsIFrame* aPrevInFlow) final {
     NS_ASSERTION(!aPrevInFlow || Type() == aPrevInFlow->Type(),
                  "setting a prev in flow with incorrect type!");
@@ -4419,9 +4435,23 @@ class nsContinuingTextFrame final : public nsTextFrame {
         "creating a loop in continuation chain!");
     mPrevContinuation = static_cast<nsTextFrame*>(aPrevInFlow);
     AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+    nsTextFrame* prevFirst = mFirstContinuation;
+    if (mPrevContinuation) {
+      mFirstContinuation = mPrevContinuation->FirstContinuation();
+    } else {
+      mFirstContinuation = nullptr;
+    }
+    if (mFirstContinuation != prevFirst) {
+      auto* f = static_cast<nsContinuingTextFrame*>(mNextContinuation);
+      while (f) {
+        f->mFirstContinuation = mFirstContinuation;
+        f = static_cast<nsContinuingTextFrame*>(f->mNextContinuation);
+      }
+    }
   }
+
   nsIFrame* FirstInFlow() const final;
-  nsIFrame* FirstContinuation() const final;
+  nsTextFrame* FirstContinuation() const final { return mFirstContinuation; };
 
   void AddInlineMinISize(gfxContext* aRenderingContext,
                          InlineMinISizeData* aData) final;
@@ -4434,6 +4464,7 @@ class nsContinuingTextFrame final : public nsTextFrame {
       : nsTextFrame(aStyle, aPresContext, kClassID) {}
 
   nsTextFrame* mPrevContinuation;
+  nsTextFrame* mFirstContinuation = nullptr;
 };
 
 void nsContinuingTextFrame::Init(nsIContent* aContent,
@@ -4534,23 +4565,6 @@ nsIFrame* nsContinuingTextFrame::FirstInFlow() const {
   } while (previous);
   MOZ_ASSERT(firstInFlow, "post-condition failed");
   return firstInFlow;
-}
-
-nsIFrame* nsContinuingTextFrame::FirstContinuation() const {
-  // Can't cast to |nsContinuingTextFrame*| because the first one isn't.
-  nsIFrame *firstContinuation,
-      *previous = const_cast<nsIFrame*>(
-          static_cast<const nsIFrame*>(mPrevContinuation));
-
-  NS_ASSERTION(previous,
-               "How can an nsContinuingTextFrame be the first continuation?");
-
-  do {
-    firstContinuation = previous;
-    previous = firstContinuation->GetPrevContinuation();
-  } while (previous);
-  MOZ_ASSERT(firstContinuation, "post-condition failed");
-  return firstContinuation;
 }
 
 // XXX Do we want to do all the work for the first-in-flow or do the
