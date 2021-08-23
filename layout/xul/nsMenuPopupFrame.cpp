@@ -486,10 +486,7 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
 
   bool newMouseTransparent =
       StyleUI()->GetEffectivePointerEvents(this) == StylePointerEvents::None;
-  bool oldMouseTransparent = aOldStyle->StyleUI()->GetEffectivePointerEvents(
-                                 this) == StylePointerEvents::None;
-
-  if (newMouseTransparent != oldMouseTransparent) {
+  if (newMouseTransparent != mMouseTransparent) {
     if (nsIWidget* widget = GetWidget()) {
       widget->SetWindowMouseTransparent(newMouseTransparent);
       mMouseTransparent = newMouseTransparent;
