@@ -10,4 +10,4 @@
 # You should not add pings here until probably about January of 2021.
 
 ---
-$schema: moz://mozilla.org/schemas/glean/pings/1-0-0
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
