@@ -185,7 +185,6 @@ windows10-64-qr/debug:
 windows10-64-qr/opt:
     build-platform: win64/opt
     test-sets:
-        - desktop-screenshot-capture
         - windows-talos
         - windows-tests
         - windows10-tests
@@ -208,7 +207,6 @@ windows10-64-ref-hw-2017-qr/opt:
 windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
-        - desktop-screenshot-capture
         - windows-talos
         - windows-tests
         - windows10-tests
@@ -220,7 +218,6 @@ windows10-64-shippable-qr/opt:
 windows10-64-devedition-qr/opt:
     build-platform: win64-devedition/opt
     test-sets:
-        - desktop-screenshot-capture
         - windows-tests
         - windows10-tests
         - mochitest-webgpu
@@ -264,6 +261,7 @@ windows10-64-2004-qr/opt:
     build-platform: win64/opt
     test-sets:
         - awsy
+        - desktop-screenshot-capture
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
@@ -273,6 +271,7 @@ windows10-64-2004-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
         - awsy
+        - desktop-screenshot-capture
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
@@ -281,6 +280,7 @@ windows10-64-2004-shippable-qr/opt:
 windows10-64-2004-devedition-qr/opt:
     build-platform: win64-devedition/opt
     test-sets:
+        - desktop-screenshot-capture
         - web-platform-tests
         - windows10-2004-tests
 
