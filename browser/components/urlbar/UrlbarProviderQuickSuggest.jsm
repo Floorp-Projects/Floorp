@@ -26,10 +26,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // These prefs are relative to the `browser.urlbar` branch.
 const SUGGEST_PREF = "suggest.quicksuggest";
 
-const FEATURE_NAME = "Firefox Suggest";
-const NONSPONSORED_ACTION_TEXT = FEATURE_NAME;
-const HELP_TITLE = `Learn more about ${FEATURE_NAME}`;
-
 const TELEMETRY_SCALAR_IMPRESSION =
   "contextual.services.quicksuggest.impression";
 const TELEMETRY_SCALAR_CLICK = "contextual.services.quicksuggest.click";
@@ -62,14 +58,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.NETWORK;
-  }
-
-  /**
-   * @returns {string} The name of the Firefox Suggest feature, suitable for
-   *   display to the user. en-US only for now.
-   */
-  get featureName() {
-    return FEATURE_NAME;
   }
 
   /**
@@ -143,11 +131,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
       sponsoredAdvertiser: suggestion.advertiser,
       isSponsored: true,
       helpUrl: this.helpUrl,
-      helpTitle: HELP_TITLE,
+      helpL10nId: "firefox-suggest-urlbar-learn-more",
     };
 
     if (!suggestion.isSponsored) {
-      payload.sponsoredText = NONSPONSORED_ACTION_TEXT;
+      payload.sponsoredL10nId = "firefox-suggest-urlbar-nonsponsored-action";
     }
 
     let result = new UrlbarResult(
