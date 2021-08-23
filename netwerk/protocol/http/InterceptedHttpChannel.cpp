@@ -88,6 +88,19 @@ nsresult InterceptedHttpChannel::SetupReplacementChannel(
 }
 
 void InterceptedHttpChannel::AsyncOpenInternal() {
+  // We save this timestamp from outside of the if block in case we enable the
+  // profiler after AsyncOpen().
+  mLastStatusReported = TimeStamp::Now();
+  if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
+    profiler_add_network_marker(
+        mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
+        mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
+        mLoadInfo->GetInnerWindowID());
+  }
+
   // If an error occurs in this file we must ensure mListener callbacks are
   // invoked in some way.  We either Cancel() or ResetInterception below
   // depending on which path we take.
@@ -491,8 +504,10 @@ InterceptedHttpChannel::Cancel(nsresult aStatus) {
 
   mCanceled = true;
 
-  if (profiler_can_accept_markers()) {
+  if (mLastStatusReported && profiler_can_accept_markers()) {
     // These do allocations/frees/etc; avoid if not active
+    // mLastStatusReported can be null if Cancel is called before we added the
+    // start marker.
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -549,19 +564,6 @@ InterceptedHttpChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
 NS_IMETHODIMP
 InterceptedHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   nsCOMPtr<nsIStreamListener> listener(aListener);
-
-  // This is outside of the if block in case we enable the profiler after
-  // AsyncOpen().
-  mLastStatusReported = TimeStamp::Now();
-  if (profiler_can_accept_markers()) {
-    nsAutoCString requestMethod;
-    GetRequestMethod(requestMethod);
-
-    profiler_add_network_marker(
-        mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
-        mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
-        mLoadInfo->GetInnerWindowID());
-  }
 
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
