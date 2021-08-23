@@ -132,9 +132,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       noPauseOnThreadActorAttach: true,
       // @backward-compat { version 87 } ThreadActor supports isAttached request
       supportsThreadActorIsAttached: true,
-      // @backward-compat { version 91 } Most thread options are now been passed through the thread
-      //                                 configuration actor.
-      supportsThreadConfigurationOptions: true,
     };
   },
 

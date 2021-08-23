@@ -575,25 +575,12 @@ function TargetMixin(parentClass) {
       const isAttached =
         this.getTrait("supportsThreadActorIsAttached") &&
         (await this.threadFront.isAttached());
-      if (isAttached) {
-        // If the Thread actor has already been attached from the server side
-        // by the Watcher Actor, we still have to pass options that aren't yet managed via
-        // the Watcher actor's addWatcherDataEntry codepath (bug 1687261).
 
-        // @backward-compat { version 91 } Thread configuration actor now supports most thread options
-        if (!this.getTrait("supportsThreadConfigurationOptions")) {
-          await this.threadFront.reconfigure(options);
-        }
-        return this.threadFront;
+      const isDestroyed =
+        this.isDestroyedOrBeingDestroyed() || this.threadFront.isDestroyed();
+      if (!isAttached && !isDestroyed) {
+        await this.threadFront.attach(options);
       }
-      if (
-        this.isDestroyedOrBeingDestroyed() ||
-        this.threadFront.isDestroyed()
-      ) {
-        return this.threadFront;
-      }
-
-      await this.threadFront.attach(options);
 
       return this.threadFront;
     }
