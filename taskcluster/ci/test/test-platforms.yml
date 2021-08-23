@@ -266,6 +266,7 @@ windows10-64-2004-qr/opt:
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - windows10-2004-tests
+        - windows10-64-2004-failure-tests
 
 windows10-64-2004-shippable-qr/opt:
     build-platform: win64-shippable/opt
@@ -276,6 +277,7 @@ windows10-64-2004-shippable-qr/opt:
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - windows10-2004-tests
+        - windows10-64-2004-failure-tests
 
 windows10-64-2004-devedition-qr/opt:
     build-platform: win64-devedition/opt
