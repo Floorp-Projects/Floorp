@@ -1107,57 +1107,6 @@ class HTMLEditUtils final {
       TableBoundary aHowToTreatTableBoundary);
 
   /**
-   * GetAncestorBlockElement() returns parent or nearest ancestor of aContent
-   * which is a block element.  If aAncestorLimiter is not nullptr,
-   * this stops looking for the result when it meets the limiter.
-   */
-  static Element* GetAncestorBlockElement(
-      const nsIContent& aContent, const nsINode* aAncestorLimiter = nullptr) {
-    MOZ_ASSERT(
-        !aAncestorLimiter || aContent.IsInclusiveDescendantOf(aAncestorLimiter),
-        "aContent isn't in aAncestorLimiter");
-
-    // The caller has already reached the limiter.
-    if (&aContent == aAncestorLimiter) {
-      return nullptr;
-    }
-
-    for (Element* element : aContent.AncestorsOfType<Element>()) {
-      if (HTMLEditUtils::IsBlockElement(*element)) {
-        return element;
-      }
-      // Now, we have reached the limiter, there is no block in its ancestors.
-      if (element == aAncestorLimiter) {
-        return nullptr;
-      }
-    }
-
-    return nullptr;
-  }
-
-  /**
-   * GetInclusiveAncestorBlockElement() returns aContent itself, or parent or
-   * nearest ancestor of aContent which is a block element.  If aAncestorLimiter
-   * is not nullptr, this stops looking for the result when it meets the
-   * limiter.
-   */
-  static Element* GetInclusiveAncestorBlockElement(
-      const nsIContent& aContent, const nsINode* aAncestorLimiter = nullptr) {
-    MOZ_ASSERT(
-        !aAncestorLimiter || aContent.IsInclusiveDescendantOf(aAncestorLimiter),
-        "aContent isn't in aAncestorLimiter");
-
-    if (!aContent.IsContent()) {
-      return nullptr;
-    }
-
-    if (HTMLEditUtils::IsBlockElement(aContent)) {
-      return const_cast<Element*>(aContent.AsElement());
-    }
-    return GetAncestorBlockElement(aContent, aAncestorLimiter);
-  }
-
-  /**
    * GetAncestorElement() and GetInclusiveAncestorElement() return
    * (inclusive) block ancestor element of aContent whose time matches
    * aAncestorTypes.
