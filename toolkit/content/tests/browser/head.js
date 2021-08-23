@@ -210,6 +210,23 @@ class DateTimeTestHelper {
     });
   }
 
+  promiseChange(selector = "input") {
+    return SpecialPowers.spawn(
+      this.tab.linkedBrowser,
+      [selector],
+      async selector => {
+        let input = content.document.querySelector(selector);
+        await ContentTaskUtils.waitForEvent(input, "change", false, e => {
+          ok(
+            content.window.windowUtils.isHandlingUserInput,
+            "isHandlingUserInput should be true"
+          );
+          return true;
+        });
+      }
+    );
+  }
+
   async waitForPickerReady() {
     let readyPromise;
     let loadPromise = new Promise(resolve => {
