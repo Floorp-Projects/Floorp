@@ -867,7 +867,10 @@ impl Device {
     }
 }
 
-pub(crate) fn append_components(base: &UnixPath, tail: &Path) -> std::result::Result<UnixPathBuf, io::Error> {
+pub(crate) fn append_components(
+    base: &UnixPath,
+    tail: &Path,
+) -> std::result::Result<UnixPathBuf, io::Error> {
     let mut buf = base.to_path_buf();
 
     for component in tail.components() {

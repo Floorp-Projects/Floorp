@@ -809,11 +809,7 @@ mod tests {
         let mut caps = Capabilities::new();
         caps.insert("moz:firefoxOptions".into(), Value::Object(firefox_opts));
 
-        FirefoxOptions::from_capabilities(
-            None,
-            &marionette_settings.unwrap_or_default(),
-            &mut caps
-        )
+        FirefoxOptions::from_capabilities(None, &marionette_settings.unwrap_or_default(), &mut caps)
     }
 
     #[test]
@@ -833,11 +829,8 @@ mod tests {
         let mut caps = Capabilities::new();
 
         let marionette_settings = Default::default();
-        let opts = FirefoxOptions::from_capabilities(
-            None,
-            &marionette_settings,
-            &mut caps
-        ).expect("valid firefox options");
+        let opts = FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
+            .expect("valid firefox options");
         assert_eq!(opts.android, None);
         assert_eq!(opts.args, None);
         assert_eq!(opts.binary, None);
@@ -903,7 +896,10 @@ mod tests {
         let mut caps = Capabilities::new();
         caps.insert("webSocketUrl".into(), json!(true));
 
-        let settings = MarionetteSettings { websocket_port: 1234, ..Default::default() };
+        let settings = MarionetteSettings {
+            websocket_port: 1234,
+            ..Default::default()
+        };
         let opts = FirefoxOptions::from_capabilities(None, &settings, &mut caps)
             .expect("Valid Firefox options");
 
@@ -946,7 +942,10 @@ mod tests {
         let mut caps = Capabilities::new();
         caps.insert("moz:debuggerAddress".into(), json!(true));
 
-        let settings = MarionetteSettings { websocket_port: 1234, ..Default::default() };
+        let settings = MarionetteSettings {
+            websocket_port: 1234,
+            ..Default::default()
+        };
         let opts = FirefoxOptions::from_capabilities(None, &settings, &mut caps)
             .expect("Valid Firefox options");
 
