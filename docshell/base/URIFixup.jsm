@@ -1072,14 +1072,17 @@ function fixupViewSource(uriString, fixupFlags) {
  */
 function fixupConsecutiveDotsHost(fixupInfo) {
   const uri = fixupInfo.fixedURI;
-  if (!uri || !uri.asciiHost.includes("..")) {
+
+  try {
+    if (!uri?.host.includes("..")) {
+      return;
+    }
+  } catch (e) {
     return;
   }
 
   try {
-    const isPreferredEqualsToFixed = fixupInfo.preferredURI?.equals(
-      fixupInfo.fixedURI
-    );
+    const isPreferredEqualsToFixed = fixupInfo.preferredURI?.equals(uri);
 
     fixupInfo.fixedURI = uri
       .mutate()
