@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FontTableURIProtocolHandler.h"
-#include "nsIDUtils.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetUtil.h"
 #include "nsSimpleURI.h"
@@ -24,10 +23,13 @@ nsresult FontTableURIProtocolHandler::GenerateURIString(nsACString& aUri) {
   rv = uuidgen->GenerateUUIDInPlace(&id);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  char chars[NSID_LENGTH];
+  id.ToProvidedString(chars);
+
   aUri = FONTTABLEURI_SCHEME;
   aUri.Append(':');
 
-  aUri += NSID_TrimBracketsASCII(id);
+  aUri += Substring(chars + 1, chars + NSID_LENGTH - 2);
 
   return NS_OK;
 }
