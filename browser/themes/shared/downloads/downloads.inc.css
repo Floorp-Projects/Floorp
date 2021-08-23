@@ -17,7 +17,7 @@
   background: transparent;
   color: inherit;
   appearance: none;
-  margin: 0;
+  margin: 0.31em 0 0.93em;
 }
 
 #emptyDownloads {
@@ -28,8 +28,8 @@
 
 @item@ {
   height: 3.1em;
-  padding: 8px 0.31em;
-  margin: 0 0 8px;
+  padding: 0.31em;
+  margin: 0.31em 0;
   border-radius: 4px;
 }
 
@@ -163,7 +163,7 @@ button.downloadButton {
 }
 
 @item@:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .downloadTypeIcon {
@@ -284,11 +284,6 @@ button.downloadButton {
   font-size: calc(100% * var(--downloads-item-font-size-factor));
   margin-bottom: 16px;
   opacity: var(--downloads-item-details-opacity);
-}
-
-/*** Toolbarseparator ***/
-#downloadsFooterButtons > toolbarseparator {
-  margin-inline: 0;
 }
 
 /*** Progressmeter ***/
