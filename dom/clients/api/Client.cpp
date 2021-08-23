@@ -16,7 +16,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
-#include "nsIDUtils.h"
 #include "nsIGlobalObject.h"
 
 namespace mozilla::dom {
@@ -75,7 +74,12 @@ void Client::GetUrl(nsAString& aUrlOut) const {
 }
 
 void Client::GetId(nsAString& aIdOut) const {
-  aIdOut = NSID_TrimBracketsUTF16(mData->info().id());
+  char buf[NSID_LENGTH];
+  mData->info().id().ToProvidedString(buf);
+  NS_ConvertASCIItoUTF16 uuid(buf);
+
+  // Remove {} and the null terminator
+  aIdOut.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
 }
 
 ClientType Client::Type() const { return mData->info().type(); }
