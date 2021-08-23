@@ -171,14 +171,12 @@ windows10-64-ccov-qr/opt:
         - windows-ccov-tests
         - windows10-tests
         - ccov-code-coverage-tests
-        - mochitest-webgpu
         - windows10-2004-tests  # For Bug 1723531
         - web-platform-tests  # For Bug 1723531
 
 windows10-64-qr/debug:
     build-platform: win64/debug
     test-sets:
-        - mochitest-webgpu
         - windows-tests
         - windows10-tests
 
@@ -190,7 +188,6 @@ windows10-64-qr/opt:
         - windows10-tests
         - raptor-firefox
         - browsertime
-        - mochitest-webgpu
 
 windows10-aarch64-qr/opt:
     build-platform: win64-aarch64-shippable/opt
@@ -213,21 +210,18 @@ windows10-64-shippable-qr/opt:
         - raptor-chrome
         - raptor-firefox
         - browsertime
-        - mochitest-webgpu
 
 windows10-64-devedition-qr/opt:
     build-platform: win64-devedition/opt
     test-sets:
         - windows-tests
         - windows10-tests
-        - mochitest-webgpu
 
 windows10-64-asan-qr/opt:
     build-platform: win64-asan/opt
     test-sets:
         - windows-tests
         - windows10-tests
-        - mochitest-webgpu
 
 windows10-64-mingwclang-qr/debug:
     build-platform: win64-mingwclang/debug
