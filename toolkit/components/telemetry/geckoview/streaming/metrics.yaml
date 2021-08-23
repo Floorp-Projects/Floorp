@@ -7,7 +7,7 @@
 # `glean_parser` PyPI package.
 
 ---
-$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
 geckoview:
   version:
