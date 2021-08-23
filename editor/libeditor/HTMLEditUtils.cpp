@@ -188,7 +188,7 @@ bool HTMLEditUtils::IsRemovableInlineStyleElement(Element& aElement) {
 /**
  * IsFormatNode() returns true if aNode is a format node.
  */
-bool HTMLEditUtils::IsFormatNode(nsINode* aNode) {
+bool HTMLEditUtils::IsFormatNode(const nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsAnyOfHTMLElements(
       nsGkAtoms::p, nsGkAtoms::pre, nsGkAtoms::h1, nsGkAtoms::h2, nsGkAtoms::h3,
