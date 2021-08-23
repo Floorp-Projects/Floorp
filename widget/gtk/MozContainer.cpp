@@ -11,6 +11,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <stdio.h>
+#include "mozilla/WidgetUtilsGtk.h"
 
 #ifdef ACCESSIBILITY
 #  include <atk/atk.h>
@@ -79,7 +80,7 @@ GType moz_container_get_type(void) {
     };
 
 #ifdef MOZ_WAYLAND
-    if (GdkIsWaylandDisplay()) {
+    if (mozilla::widget::GdkIsWaylandDisplay()) {
       moz_container_info.class_init =
           (GClassInitFunc)moz_container_wayland_class_init;
     }
@@ -150,7 +151,7 @@ void moz_container_init(MozContainer* container) {
   gtk_container_set_resize_mode(GTK_CONTAINER(container), GTK_RESIZE_IMMEDIATE);
   gtk_widget_set_redraw_on_allocate(GTK_WIDGET(container), FALSE);
 #ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay()) {
+  if (mozilla::widget::GdkIsWaylandDisplay()) {
     moz_container_wayland_init(&container->wl_container);
   }
 #endif
