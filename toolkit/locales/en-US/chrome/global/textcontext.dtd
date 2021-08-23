@@ -2,14 +2,4 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY spellAddToDictionary.label "Add to Dictionary">
-<!ENTITY spellAddToDictionary.accesskey "o">
-<!ENTITY spellUndoAddToDictionary.label "Undo Add To Dictionary">
-<!ENTITY spellUndoAddToDictionary.accesskey "n">
-<!ENTITY spellCheckToggle.label "Check Spelling">
-<!ENTITY spellCheckToggle.accesskey "g">
-<!ENTITY spellNoSuggestions.label "(No Spelling Suggestions)">
-<!ENTITY spellDictionaries.label "Languages">
-<!ENTITY spellDictionaries.accesskey "l">
-
 <!ENTITY searchTextBox.clear.label "Clear">
