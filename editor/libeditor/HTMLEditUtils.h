@@ -242,11 +242,18 @@ class HTMLEditUtils final {
    * IsSplittableNode() returns true if aContent can split.
    */
   static bool IsSplittableNode(const nsIContent& aContent) {
+    if (!EditorUtils::IsEditableContent(aContent,
+                                        EditorUtils::EditorType::HTML) ||
+        !HTMLEditUtils::IsRemovableFromParentNode(aContent)) {
+      return false;
+    }
     if (aContent.IsElement()) {
       // XXX Perhaps, instead of using container, we should have "splittable"
       //     information in the DB.  E.g., `<template>`, `<script>` elements
       //     can have children, but shouldn't be split.
-      return HTMLEditUtils::IsContainerNode(aContent);
+      return HTMLEditUtils::IsContainerNode(aContent) &&
+             !aContent.IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::head,
+                                           nsGkAtoms::html);
     }
     return aContent.IsText() && aContent.Length() > 0;
   }
