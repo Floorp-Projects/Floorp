@@ -63,16 +63,16 @@
         <checkbox id="showSearchSuggestionsFirstCheckbox"
                   data-l10n-id="search-show-suggestions-above-history-option"
                   preference="browser.urlbar.showSearchSuggestionsFirst"/>
-        <!-- This box is visible only for users enrolled in the en-US Quick Suggest experiment. -->
+        <!-- #showQuickSuggestContainer is visible only for users enrolled in Firefox Suggest experiments. -->
         <hbox id="showQuickSuggestContainer" data-subcategory="quickSuggest" align="center" hidden="true">
           <checkbox id="showQuickSuggest"
                     class="tail-with-learn-more"
-                    label="Show Firefox Suggest in the address bar (suggested and sponsored results)"
+                    data-l10n-id="firefox-suggest-preferences-enable-urlbar-results"
                     preference="browser.urlbar.suggest.quicksuggest"/>
           <label id="showQuickSuggestLearnMore"
                  class="learnMore"
                  is="text-link"
-                 value="Learn more about Firefox Suggest"/>
+                 data-l10n-id="firefox-suggest-preferences-enable-urlbar-results-learn-more"/>
         </hbox>
         <checkbox id="showSearchSuggestionsPrivateWindows"
                   data-l10n-id="search-show-suggestions-private-windows"/>

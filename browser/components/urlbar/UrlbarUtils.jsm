@@ -1277,9 +1277,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       helpL10nId: {
         type: "string",
       },
-      helpTitle: {
-        type: "string",
-      },
       helpUrl: {
         type: "string",
       },
@@ -1310,7 +1307,7 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       sponsoredImpressionUrl: {
         type: "string",
       },
-      sponsoredText: {
+      sponsoredL10nId: {
         type: "string",
       },
       sponsoredTileId: {

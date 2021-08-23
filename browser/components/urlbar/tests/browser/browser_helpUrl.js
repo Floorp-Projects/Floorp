@@ -48,32 +48,6 @@ add_task(async function title_helpL10nId() {
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
-// Sets `helpTitle` on the result payload and makes sure the help button ends up
-// with a corresponding title attribute.
-add_task(async function title_helpTitle() {
-  let helpTitle = "Example help title";
-  let provider = registerTestProvider(1, { helpTitle });
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    value: "example",
-    window,
-  });
-
-  await assertIsTestResult(1);
-
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let helpButton = result.element.row._elements.get("helpButton");
-  Assert.ok(helpButton, "Sanity check: help button should exist");
-
-  Assert.deepEqual(
-    helpButton.getAttribute("title"),
-    helpTitle,
-    "The title attribute was correctly set"
-  );
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarProvidersManager.unregisterProvider(provider);
-});
-
 // Arrows up and down through a result with a help button.  The result is the
 // second result and has other results after it.
 add_task(async function keyboardSelection_secondResult() {

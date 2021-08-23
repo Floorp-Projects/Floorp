@@ -1152,12 +1152,6 @@ class UrlbarView {
       if (result.payload.helpL10nId) {
         helpButton.setAttribute("data-l10n-id", result.payload.helpL10nId);
       }
-      if (result.payload.helpTitle) {
-        // Allow the payload to specify the title text directly.  Normally
-        // `helpL10nId` should be used instead, but `helpTitle` is useful for
-        // experiments with hardcoded user-facing strings.
-        helpButton.setAttribute("title", result.payload.helpTitle);
-      }
       item.appendChild(helpButton);
       item._elements.set("helpButton", helpButton);
       item._content.setAttribute("selectable", "true");
@@ -1458,10 +1452,13 @@ class UrlbarView {
       result.type != UrlbarUtils.RESULT_TYPE.TAB_SWITCH
     ) {
       item.toggleAttribute("sponsored", true);
-      if (result.payload.sponsoredText) {
-        action.removeAttribute("data-l10n-id");
-        actionSetter = () =>
-          (action.textContent = result.payload.sponsoredText);
+      if (result.payload.sponsoredL10nId) {
+        actionSetter = () => {
+          this.document.l10n.setAttributes(
+            action,
+            result.payload.sponsoredL10nId
+          );
+        };
       } else {
         actionSetter = () => {
           this.document.l10n.setAttributes(
