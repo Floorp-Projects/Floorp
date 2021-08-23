@@ -2648,32 +2648,8 @@ static nsresult GetPartialTextRect(RectCallback* aCallback,
     nsIFrame* relativeTo =
         nsLayoutUtils::GetContainingBlockForClientRect(textFrame);
 
-    // Try to binary-search the list of continuations for the starting point.
-    // (GetContinuations is fallible; if it returns nullptr, we'll just start
-    // from the beginning.)
-    nsTArray<nsTextFrame*>* continuations = textFrame->GetContinuations();
-    nsTextFrame* f = textFrame;
-    if (continuations) {
-      size_t index;
-      if (BinarySearchIf(
-              *continuations, 0, continuations->Length(),
-              [=](nsTextFrame* aFrame) -> int {
-                if (aStartOffset < aFrame->GetContentOffset()) {
-                  return -1;
-                }
-                if (aStartOffset > aFrame->GetContentOffset()) {
-                  return 1;
-                }
-                return 0;
-              },
-              &index)) {
-        f = (*continuations)[index];
-      } else {
-        f = (*continuations)[index ? index - 1 : 0];
-      }
-    }
-
-    for (; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
+    for (nsTextFrame* f = textFrame->FindContinuationForOffset(aStartOffset); f;
+         f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
       int32_t fstart = f->GetContentOffset(), fend = f->GetContentEnd();
       if (fend <= aStartOffset) {
         continue;
