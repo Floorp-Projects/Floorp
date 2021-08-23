@@ -705,20 +705,8 @@ add_task(async function test_datepicker_abs_min() {
 add_task(async function test_datepicker_handling_user_input() {
   await helper.openPicker(`data:text/html, <input type="date">`);
 
-  let changeEventPromise = SpecialPowers.spawn(
-    helper.tab.linkedBrowser,
-    [],
-    async () => {
-      let input = content.document.querySelector("input");
-      await ContentTaskUtils.waitForEvent(input, "change", false, e => {
-        ok(
-          content.window.windowUtils.isHandlingUserInput,
-          "isHandlingUserInput should be true"
-        );
-        return true;
-      });
-    }
-  );
+  let changeEventPromise = helper.promiseChange();
+
   // Click the first item (top-left corner) of the calendar
   helper.click(helper.getElement(DAYS_VIEW).children[0]);
   await changeEventPromise;
@@ -820,6 +808,116 @@ add_task(async function test_datetime_focus_to_input() {
   });
 
   ok(isFocused, "<input> should still be focused");
+
+  await helper.tearDown();
+});
+
+// Bug 1726546
+add_task(async function test_datetime_local_min() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.forms.datetime-local", true],
+      ["dom.forms.datetime-local.widget", true],
+    ],
+  });
+
+  const inputValue = "2016-12-15T04:00";
+  const inputMin = "2016-12-05T12:22";
+  const inputMax = "2016-12-25T12:22";
+
+  await helper.openPicker(
+    `data:text/html,<input type="datetime-local" value="${inputValue}" min="${inputMin}" max="${inputMax}">`
+  );
+
+  Assert.deepEqual(
+    getCalendarClassList(),
+    mergeArrays(calendarClasslist_201612, [
+      // R denotes out-of-range
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+      [R],
+    ]),
+    "2016-12 with min & max"
+  );
+
+  await helper.tearDown();
+});
+
+// Bug 1726546
+add_task(async function test_datetime_local_min_select_invalid() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.forms.datetime-local", true],
+      ["dom.forms.datetime-local.widget", true],
+    ],
+  });
+
+  const inputValue = "2016-12-15T05:00";
+  const inputMin = "2016-12-05T12:22";
+  const inputMax = "2016-12-25T12:22";
+
+  await helper.openPicker(
+    `data:text/html,<input type="datetime-local" value="${inputValue}" min="${inputMin}" max="${inputMax}">`
+  );
+
+  let changePromise = helper.promiseChange();
+
+  // Select the minimum day (the 5th, which is the 9th child).
+  // The date becomes invalid (we select 2016-12-05T05:00).
+  helper.click(helper.getElement(DAYS_VIEW).children[8]);
+
+  await changePromise;
+
+  let [value, invalid] = await SpecialPowers.spawn(
+    helper.tab.linkedBrowser,
+    [],
+    async () => {
+      let input = content.document.querySelector("input");
+      return [input.value, input.matches(":invalid")];
+    }
+  );
+
+  is(value, "2016-12-05T05:00", "Value should've changed");
+  ok(invalid, "input should be now invalid");
 
   await helper.tearDown();
 });
