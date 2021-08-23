@@ -72,6 +72,7 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -241,6 +242,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         components.core.bookmarksStorage.warmUp()
                         components.core.passwordsStorage.warmUp()
                         components.core.autofillStorage.warmUp()
+
+                        // This service uses `historyStorage`, and so we can only touch it when we know
+                        // it's safe to touch `historyStorage. By 'safe', we mainly mean that underlying
+                        // places library will be able to load, which requires first running Megazord.init().
+                        // The visual completeness tasks are scheduled after the Megazord.init() call.
+                        components.core.historyMetadataService.cleanup(
+                            System.currentTimeMillis() - Core.HISTORY_METADATA_MAX_AGE_IN_MS
+                        )
                     }
 
                     SecurePrefsTelemetry(this@FenixApplication, components.analytics.experiments).startTests()

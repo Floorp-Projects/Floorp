@@ -254,9 +254,7 @@ class Core(
      * The [HistoryMetadataService] is used to record history metadata.
      */
     val historyMetadataService: HistoryMetadataService by lazyMonitored {
-        DefaultHistoryMetadataService(storage = historyStorage).apply {
-            cleanup(System.currentTimeMillis() - HISTORY_METADATA_MAX_AGE_IN_MS)
-        }
+        DefaultHistoryMetadataService(storage = historyStorage)
     }
 
     /**
@@ -454,6 +452,6 @@ class Core(
         private const val KEY_STORAGE_NAME = "core_prefs"
         private const val PASSWORDS_KEY = "passwords"
         private const val RECENTLY_CLOSED_MAX = 10
-        private const val HISTORY_METADATA_MAX_AGE_IN_MS = 14 * 24 * 60 * 60 * 1000 // 14 days
+        const val HISTORY_METADATA_MAX_AGE_IN_MS = 14 * 24 * 60 * 60 * 1000 // 14 days
     }
 }
