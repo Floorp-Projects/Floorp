@@ -82,7 +82,9 @@ class HTMLEditUtils final {
    * if aContent isn't editable.
    */
   static bool IsRemovableNode(const nsIContent& aContent) {
-    return aContent.GetParentNode() && aContent.GetParentNode()->IsEditable();
+    return aContent.GetParentNode() && aContent.GetParentNode()->IsEditable() &&
+           &aContent != aContent.OwnerDoc()->GetBody() &&
+           &aContent != aContent.OwnerDoc()->GetDocumentElement();
   }
 
   /**
@@ -91,7 +93,9 @@ class HTMLEditUtils final {
    */
   static bool IsRemovableFromParentNode(const nsIContent& aContent) {
     return aContent.IsEditable() && aContent.GetParentNode() &&
-           aContent.GetParentNode()->IsEditable();
+           aContent.GetParentNode()->IsEditable() &&
+           &aContent != aContent.OwnerDoc()->GetBody() &&
+           &aContent != aContent.OwnerDoc()->GetDocumentElement();
   }
 
   /**
