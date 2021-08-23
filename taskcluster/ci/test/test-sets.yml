@@ -264,6 +264,9 @@ windows10-2004-tests:
     - reftest
     - xpcshell
 
+windows10-64-2004-failure-tests:
+    - mochitest-browser-chrome-failures
+
 mingwclang-tests-debug:
     - cppunit
     - firefox-ui-functional-local

@@ -229,6 +229,10 @@ mochitest-browser-chrome-failures:
                     - --run-failures=apple_catalina
                     - --timeout-as-pass
                     - --crash-as-pass
+                windows10-64-2004-*.*:
+                    - --run-failures=win10_2004
+                    - --timeout-as-pass
+                    - --crash-as-pass
 
 browser-screenshots:
     description: "Browser Screenshots"
