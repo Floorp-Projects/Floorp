@@ -7,6 +7,8 @@ import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate
 import org.mozilla.geckoview.GeckoSession.PromptDelegate
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthPrompt
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 
@@ -17,6 +19,7 @@ import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.Autocomplete
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -101,6 +104,88 @@ class PromptDelegateTest : BaseSessionTest() {
                 return GeckoResult.fromValue(prompt.dismiss())
             }
         })
+    }
+
+    // This test checks that saved logins are returned to the app when calling onAuthPrompt
+    @Test fun loginStorageHttpAuthWithPassword() {
+        mainSession.loadTestPath("/basic-auth/foo/bar")
+        sessionRule.delegateDuringNextWait(object : Autocomplete.StorageDelegate {
+            @AssertCalled
+            override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
+                return GeckoResult.fromValue(arrayOf(
+                    Autocomplete.LoginEntry.Builder()
+                        .origin(GeckoSessionTestRule.TEST_ENDPOINT)
+                        .formActionOrigin(GeckoSessionTestRule.TEST_ENDPOINT)
+                        .httpRealm("Fake Realm")
+                        .username("test-username")
+                        .password("test-password")
+                        .formActionOrigin(null)
+                        .guid("test-guid")
+                        .build()
+                ));
+            }
+        })
+        sessionRule.waitUntilCalled(object : PromptDelegate, Autocomplete.StorageDelegate {
+            @AssertCalled
+            override fun onAuthPrompt(session: GeckoSession, prompt: AuthPrompt): GeckoResult<PromptResponse>? {
+                assertThat("Saved login should appear here",
+                    prompt.authOptions.username, equalTo("test-username"))
+                assertThat("Saved login should appear here",
+                    prompt.authOptions.password, equalTo("test-password"))
+                return null
+            }
+        })
+    }
+
+    // This test checks that we store login information submitted through HTTP basic auth
+    // This also tests that the login save prompt gets automatically dismissed if
+    // the login information is incorrect.
+    @Test fun loginStorageHttpAuth() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+            "signon.rememberSignons" to true))
+        val result = GeckoResult<PromptDelegate.BasePrompt>()
+        val promptInstanceDelegate = object : PromptDelegate.PromptInstanceDelegate {
+            var prompt: PromptDelegate.BasePrompt? = null
+            override fun onPromptDismiss(prompt: PromptDelegate.BasePrompt) {
+                result.complete(prompt)
+            }
+        }
+
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate, Autocomplete.StorageDelegate {
+            @AssertCalled
+            override fun onAuthPrompt(session: GeckoSession, prompt: AuthPrompt): GeckoResult<PromptResponse>? {
+                return GeckoResult.fromValue(prompt.confirm("foo", "bar"));
+            }
+
+            @AssertCalled
+            override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
+                return GeckoResult.fromValue(arrayOf());
+            }
+
+            @AssertCalled
+            override fun onLoginSave(
+                session: GeckoSession,
+                request: PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>
+            ): GeckoResult<PromptResponse>? {
+                val authInfo = request.options[0].value
+                assertThat("auth matches", authInfo.formActionOrigin, isEmptyOrNullString())
+                assertThat("auth matches", authInfo.httpRealm, equalTo("Fake Realm"))
+                assertThat("auth matches", authInfo.origin, equalTo(GeckoSessionTestRule.TEST_ENDPOINT))
+                assertThat("auth matches", authInfo.username, equalTo("foo"))
+                assertThat("auth matches", authInfo.password, equalTo("bar"))
+                promptInstanceDelegate.prompt = request
+                request.setDelegate(promptInstanceDelegate)
+                return GeckoResult()
+            }
+        })
+
+        mainSession.loadTestPath("/basic-auth/foo/bar")
+
+        // The server we try to hit will always reject the login so we should
+        // get a request to reauth which should dismiss the prompt
+        val actualPrompt = sessionRule.waitForResult(result)
+
+        assertThat("Prompt object should match", actualPrompt, equalTo(promptInstanceDelegate.prompt))
     }
 
     @Test fun dismissAuthTest() {
