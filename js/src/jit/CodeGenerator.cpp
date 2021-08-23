@@ -3529,7 +3529,9 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
                   Address(output, JSFunction::offsetOfFlagsAndArgCount()));
   masm.storePtr(ImmGCPtr(info.baseScript),
                 Address(output, JSFunction::offsetOfBaseScript()));
-  masm.storePtr(envChain, Address(output, JSFunction::offsetOfEnvironment()));
+
+  masm.storeValue(JSVAL_TYPE_OBJECT, envChain,
+                  Address(output, JSFunction::offsetOfEnvironment()));
   // No post barrier needed because output is guaranteed to be allocated in
   // the nursery.
   masm.storePtr(ImmGCPtr(info.funUnsafe()->displayAtom()),
@@ -3953,7 +3955,7 @@ void CodeGenerator::visitElements(LElements* lir) {
 void CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment* lir) {
   Address environment(ToRegister(lir->function()),
                       JSFunction::offsetOfEnvironment());
-  masm.loadPtr(environment, ToRegister(lir->output()));
+  masm.unboxObject(environment, ToRegister(lir->output()));
 }
 
 void CodeGenerator::visitHomeObject(LHomeObject* lir) {
