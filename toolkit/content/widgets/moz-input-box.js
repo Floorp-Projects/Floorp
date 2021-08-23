@@ -40,14 +40,14 @@
       this.spellcheck = MozXULElement.parseXULToFragment(
         `
       <menupopup class="textbox-contextmenu">
-        <menuitem data-l10n-id="text-action-spell-no-suggestions" anonid="spell-no-suggestions" disabled="true"></menuitem>
-        <menuitem data-l10n-id="text-action-spell-add-to-dictionary" anonid="spell-add-to-dictionary" oncommand="this.parentNode.parentNode.spellCheckerUI.addToDictionary();"></menuitem>
-        <menuitem data-l10n-id="text-action-spell-undo-add-to-dictionary" anonid="spell-undo-add-to-dictionary" oncommand="this.parentNode.parentNode.spellCheckerUI.undoAddToDictionary();"></menuitem>
+        <menuitem label="&spellNoSuggestions.label;" anonid="spell-no-suggestions" disabled="true"></menuitem>
+        <menuitem label="&spellAddToDictionary.label;" accesskey="&spellAddToDictionary.accesskey;" anonid="spell-add-to-dictionary" oncommand="this.parentNode.parentNode.spellCheckerUI.addToDictionary();"></menuitem>
+        <menuitem label="&spellUndoAddToDictionary.label;" accesskey="&spellUndoAddToDictionary.accesskey;" anonid="spell-undo-add-to-dictionary" oncommand="this.parentNode.parentNode.spellCheckerUI.undoAddToDictionary();"></menuitem>
         <menuseparator anonid="spell-suggestions-separator"></menuseparator>
         ${this.editMenuItems}
         <menuseparator anonid="spell-check-separator"></menuseparator>
-        <menuitem data-l10n-id="text-action-spell-check-toggle" type="checkbox" anonid="spell-check-enabled" oncommand="this.parentNode.parentNode.spellCheckerUI.toggleEnabled();"></menuitem>
-        <menu data-l10n-id="text-action-spell-dictionaries" anonid="spell-dictionaries">
+        <menuitem label="&spellCheckToggle.label;" type="checkbox" accesskey="&spellCheckToggle.accesskey;" anonid="spell-check-enabled" oncommand="this.parentNode.parentNode.spellCheckerUI.toggleEnabled();"></menuitem>
+        <menu label="&spellDictionaries.label;" accesskey="&spellDictionaries.accesskey;" anonid="spell-dictionaries">
           <menupopup anonid="spell-dictionaries-menu" onpopupshowing="event.stopPropagation();" onpopuphiding="event.stopPropagation();"></menupopup>
         </menu>
       </menupopup>

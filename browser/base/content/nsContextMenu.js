@@ -394,13 +394,11 @@ class nsContextMenu {
       var label = ContextualIdentityService.getUserContextLabel(
         this.contentData.userContextId
       );
-
-      document.l10n.setAttributes(
-        item,
-        "main-context-menu-open-link-in-container-tab",
-        {
-          containerName: label,
-        }
+      item.setAttribute(
+        "label",
+        gBrowserBundle.formatStringFromName("userContextOpenLink.label", [
+          label,
+        ])
       );
     }
 

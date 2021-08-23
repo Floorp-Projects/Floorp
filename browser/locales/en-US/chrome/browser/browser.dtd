@@ -97,6 +97,8 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY searchInput.placeholder      "Search">
 <!ENTITY searchIcon.tooltip           "Search">
 
+<!ENTITY openLinkCmdInTab.accesskey   "T">
+
 <!ENTITY fullZoom.label                 "Zoom">
 
 <!ENTITY sidebarCloseButton.tooltip     "Close sidebar">
@@ -107,6 +109,9 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY editPopupSettingsUnix.label "Edit Pop-up Blocker Preferences…">
 <!ENTITY editPopupSettings.label "Edit Pop-up Blocker Options…">
 <!ENTITY editPopupSettings.accesskey "E">
+
+<!ENTITY spellAddDictionaries.label "Add Dictionaries…">
+<!ENTITY spellAddDictionaries.accesskey "A">
 
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
