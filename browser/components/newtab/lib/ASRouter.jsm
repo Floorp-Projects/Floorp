@@ -130,21 +130,6 @@ const MessageLoaderUtils = {
     return provider.messages;
   },
 
-  async _localJsonLoader(provider) {
-    let payload;
-    try {
-      payload = await (
-        await fetch(provider.location, {
-          credentials: "omit",
-        })
-      ).json();
-    } catch (e) {
-      return [];
-    }
-
-    return payload.messages;
-  },
-
   async _remoteLoaderCache(storage) {
     let allCached;
     try {
@@ -417,8 +402,6 @@ const MessageLoaderUtils = {
         return this._remoteLoader;
       case "remote-settings":
         return this._remoteSettingsLoader;
-      case "json":
-        return this._localJsonLoader;
       case "remote-experiments":
         return this._experimentsAPILoader;
       case "local":

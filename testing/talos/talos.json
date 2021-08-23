@@ -4,7 +4,7 @@
             "tests": ["basic_compositor_video"]
         },
         "chromez": {
-            "tests": ["about_preferences_basic", "tresize", "about_newtab_with_snippets"]
+            "tests": ["about_preferences_basic", "tresize"]
         },
         "dromaeojs": {
             "tests": ["dromaeo_css", "kraken"]

@@ -168,7 +168,6 @@ _OPT\.OBJ/
 ^testing/talos/talos/tests/devtools/damp.manifest.develop
 ^testing/talos/talos/startup_test/startup_about_home_paint/startup_about_home_paint.manifest.develop
 ^testing/talos/talos/webextensions/
-^testing/talos/talos/tests/about-newtab/about_newtab.manifest.develop
 ^talos-venv
 ^py3venv
 ^testing/talos/talos/mitmproxy/mitmdump

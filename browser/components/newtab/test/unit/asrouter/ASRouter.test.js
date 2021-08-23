@@ -2728,25 +2728,6 @@ describe("ASRouter", () => {
         group: "cfr",
       });
     });
-    it("should fetch json from url", async () => {
-      let result = await MessageLoaderUtils.loadMessagesForProvider({
-        location: "http://fake.com/endpoint",
-        type: "json",
-      });
-
-      assert.property(result, "messages");
-      assert.lengthOf(result.messages, FAKE_REMOTE_MESSAGES.length);
-    });
-    it("should catch errors", async () => {
-      fetchStub.throws();
-      let result = await MessageLoaderUtils.loadMessagesForProvider({
-        location: "http://fake.com/endpoint",
-        type: "json",
-      });
-
-      assert.property(result, "messages");
-      assert.lengthOf(result.messages, 0);
-    });
   });
   describe("#_remoteSettingsLoader", () => {
     let provider;
