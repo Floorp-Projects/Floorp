@@ -13,6 +13,16 @@ import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoSession.ContentDelegate;
+import org.mozilla.geckoview.GeckoSession.HistoryDelegate;
+import org.mozilla.geckoview.GeckoSession.MediaDelegate;
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate;
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate;
+import org.mozilla.geckoview.GeckoSession.ProgressDelegate;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate;
+import org.mozilla.geckoview.GeckoSession.ScrollDelegate;
+import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate;
+import org.mozilla.geckoview.GeckoSession.TextInputDelegate;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.MediaSession;
 import org.mozilla.geckoview.RuntimeTelemetry;
@@ -23,7 +33,6 @@ import org.mozilla.geckoview.test.util.TestServer;
 import org.mozilla.geckoview.test.util.RuntimeCreator;
 import org.mozilla.geckoview.test.util.Environment;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
-import org.mozilla.geckoview.test.util.Callbacks;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -729,29 +738,40 @@ public class GeckoSessionTestRule implements TestRule {
         }
     }
 
-    private static void addCallbackClasses(final List<Class<?>> list, final Class<?> ifce) {
-        if (!Callbacks.class.equals(ifce.getDeclaringClass())) {
-            list.add(ifce);
-            return;
-        }
-        final Class<?>[] superIfces = ifce.getInterfaces();
-        for (final Class<?> superIfce : superIfces) {
-            addCallbackClasses(list, superIfce);
-        }
+    private static final Set<Class<?>> DEFAULT_DELEGATES = new HashSet<>();
+    static {
+        DEFAULT_DELEGATES.add(Autofill.Delegate.class);
+        DEFAULT_DELEGATES.add(ContentBlocking.Delegate.class);
+        DEFAULT_DELEGATES.add(ContentDelegate.class);
+        DEFAULT_DELEGATES.add(HistoryDelegate.class);
+        DEFAULT_DELEGATES.add(MediaDelegate.class);
+        DEFAULT_DELEGATES.add(MediaSession.Delegate.class);
+        DEFAULT_DELEGATES.add(NavigationDelegate.class);
+        DEFAULT_DELEGATES.add(PermissionDelegate.class);
+        DEFAULT_DELEGATES.add(ProgressDelegate.class);
+        DEFAULT_DELEGATES.add(PromptDelegate.class);
+        DEFAULT_DELEGATES.add(ScrollDelegate.class);
+        DEFAULT_DELEGATES.add(SelectionActionDelegate.class);
+        DEFAULT_DELEGATES.add(TextInputDelegate.class);
     }
 
-    private static Set<Class<?>> getDefaultDelegates() {
-        final Class<?>[] ifces = Callbacks.class.getDeclaredClasses();
-        final List<Class<?>> list = new ArrayList<>(ifces.length);
+    private static class DefaultImpl implements
+            Autofill.Delegate,
+            ContentBlocking.Delegate,
+            ContentDelegate,
+            HistoryDelegate,
+            MediaDelegate,
+            MediaSession.Delegate,
+            NavigationDelegate,
+            PermissionDelegate,
+            ProgressDelegate,
+            PromptDelegate,
+            ScrollDelegate,
+            SelectionActionDelegate,
+            TextInputDelegate
+    {}
 
-        for (final Class<?> ifce : ifces) {
-            addCallbackClasses(list, ifce);
-        }
-
-        return new HashSet<>(list);
-    }
-
-    private static final Set<Class<?>> DEFAULT_DELEGATES = getDefaultDelegates();
+    private static final DefaultImpl DEFAULT_IMPL = new DefaultImpl();
 
     public final Environment env = new Environment();
 
@@ -953,15 +973,9 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     private void addNullDelegate(final Class<?> delegate) {
-        if (!Callbacks.class.equals(delegate.getDeclaringClass())) {
-            assertThat("Null-delegate must be valid interface class",
-                       delegate, isIn(DEFAULT_DELEGATES));
-            mNullDelegates.add(delegate);
-            return;
-        }
-        for (final Class<?> ifce : delegate.getInterfaces()) {
-            addNullDelegate(ifce);
-        }
+        assertThat("Null-delegate must be valid interface class",
+                   delegate, isIn(DEFAULT_DELEGATES));
+        mNullDelegates.add(delegate);
     }
 
     protected void applyAnnotations(final Collection<Annotation> annotations,
@@ -1088,8 +1102,11 @@ public class GeckoSessionTestRule implements TestRule {
                 Object returnValue = null;
                 try {
                     mCurrentMethodCall = call;
-                    returnValue = method.invoke((call != null) ? call.target
-                                                        : Callbacks.Default.INSTANCE, args);
+                    if (call != null && call.target != null) {
+                        returnValue = method.invoke(call.target, args);
+                    } else {
+                        returnValue = method.invoke(DEFAULT_IMPL, args);
+                    }
                 } catch (final IllegalAccessException | InvocationTargetException e) {
                     throw unwrapRuntimeException(e);
                 } finally {

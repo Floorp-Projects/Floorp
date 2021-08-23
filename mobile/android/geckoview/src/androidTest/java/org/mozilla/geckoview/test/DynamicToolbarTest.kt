@@ -11,12 +11,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.util.Base64
 import java.io.ByteArrayOutputStream
 import org.hamcrest.Matchers.*
-import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.test.util.Callbacks
+import org.mozilla.geckoview.GeckoSession.ContentDelegate
+import org.mozilla.geckoview.GeckoSession.ScrollDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.hamcrest.Matchers.closeTo
@@ -326,7 +326,7 @@ class DynamicToolbarTest : BaseSessionTest() {
         mainSession.loadTestPath(SHOW_DYNAMIC_TOOLBAR_HTML_PATH)
         mainSession.waitForPageStop()
         mainSession.evaluateJS("window.scrollTo(0, " + dynamicToolbarMaxHeight + ")")
-        mainSession.waitUntilCalled(object : Callbacks.ScrollDelegate {
+        mainSession.waitUntilCalled(object : ScrollDelegate {
             @AssertCalled(count = 1)
             override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
             }
@@ -337,7 +337,7 @@ class DynamicToolbarTest : BaseSessionTest() {
 
         mainSession.synthesizeTap(5, 25)
 
-        mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
+        mainSession.waitUntilCalled(object : ContentDelegate {
             @AssertCalled(count = 1)
             override fun onShowDynamicToolbar(session: GeckoSession) {
             }

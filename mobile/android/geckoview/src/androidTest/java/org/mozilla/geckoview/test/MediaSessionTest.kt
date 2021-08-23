@@ -14,7 +14,6 @@ import org.junit.runner.RunWith
 import org.junit.Assume.assumeThat
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.util.Callbacks
 
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
@@ -164,7 +163,7 @@ class MediaSessionTest : BaseSessionTest() {
         // 1.
         session1.loadTestPath(path)
 
-        session1.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
+        session1.delegateUntilTestEnd(object : MediaSession.Delegate {
             @AssertCalled(count = 1, order = [1])
             override fun onActivated(
                     session: GeckoSession,
@@ -355,7 +354,7 @@ class MediaSessionTest : BaseSessionTest() {
         // 1.
         session1.loadTestPath(path)
 
-        session1.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
+        session1.delegateUntilTestEnd(object : MediaSession.Delegate {
             @AssertCalled(count = 1, order = [1])
             override fun onActivated(
                     session: GeckoSession,
@@ -490,7 +489,7 @@ class MediaSessionTest : BaseSessionTest() {
         var mediaSession1 : MediaSession? = null
         var mediaSession2 : MediaSession? = null
 
-        session1.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
+        session1.delegateUntilTestEnd(object : MediaSession.Delegate {
             @AssertCalled(count = 1)
             override fun onActivated(
                     session: GeckoSession,
@@ -596,7 +595,7 @@ class MediaSessionTest : BaseSessionTest() {
             }
         })
 
-        session2.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
+        session2.delegateUntilTestEnd(object : MediaSession.Delegate {
             @AssertCalled(count = 1)
             override fun onActivated(
                     session: GeckoSession,
@@ -725,7 +724,7 @@ class MediaSessionTest : BaseSessionTest() {
         val path = VIDEO_WEBM_PATH
         val session1 = sessionRule.createOpenSession()
 
-        session1.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
+        session1.delegateUntilTestEnd(object : MediaSession.Delegate {
             @AssertCalled(count = 1, order = [1])
             override fun onActivated(
                     session: GeckoSession,
