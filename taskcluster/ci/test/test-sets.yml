@@ -226,7 +226,6 @@ windows32-tests:
     - test-verify-wpt
 
 windows-tests:
-    - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     # - jittest  # See comment in windows-ccov-tests set.
@@ -251,6 +250,7 @@ windows10-tests:
 
 windows10-2004-tests:
     - cppunit
+    - crashtest
     - gtest
     - mochitest-browser-chrome
     - mochitest-chrome-gpu
