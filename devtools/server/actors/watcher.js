@@ -168,9 +168,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.SERVER_SENT_EVENT]: hasBrowserElement,
           [Resources.TYPES.WEBSOCKET]: hasBrowserElement,
         },
-        // @backward-compat { version 91 } DOCUMENT_EVENT's will-navigate start being notified,
-        //                                 to replace target actor's will-navigate event
-        supportsDocumentEventWillNavigate: true,
       },
     };
   },

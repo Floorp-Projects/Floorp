@@ -473,15 +473,11 @@ class ResourceCommand {
       );
     }
 
-    // @backward-compat { version 91 } DOCUMENT_EVENT's will-navigate start being notified,
-    //                                 to replace target actor's will-navigate event
-    // In the meantime fake a DOCUMENT_EVENT's will-navigate out of target actor's will-navigate.
-    // We should keep this code until we support the watcher actor for all descriptors (bug 1675763).
-    if (
-      !this.targetCommand.hasTargetWatcherSupport(
-        "supportsDocumentEventWillNavigate"
-      )
-    ) {
+    // DOCUMENT_EVENT's will-navigate should replace target actor's will-navigate event,
+    // but only for targets provided by the watcher actor.
+    // Emit a fake DOCUMENT_EVENT's "will-navigate" out of target actor's will-navigate
+    // until watcher actor is supported by all descriptors (bug 1675763).
+    if (!this.targetCommand.hasTargetWatcherSupport()) {
       const offWillNavigate = targetFront.on(
         "will-navigate",
         ({ url, isFrameSwitching }) => {
