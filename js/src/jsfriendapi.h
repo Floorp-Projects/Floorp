@@ -550,7 +550,8 @@ static MOZ_ALWAYS_INLINE const JSJitInfo* FUNCTION_VALUE_TO_JITINFO(
   MOZ_ASSERT(JS::GetClass(obj) == js::FunctionClassPtr);
 
   auto* fun = reinterpret_cast<JS::shadow::Function*>(obj);
-  MOZ_ASSERT(!(fun->flagsAndArgCount & js::JS_FUNCTION_INTERPRETED_BITS),
+  MOZ_ASSERT(!(fun->flagsAndArgCount.toPrivateUint32() &
+               js::JS_FUNCTION_INTERPRETED_BITS),
              "Unexpected non-native function");
 
   return fun->jitinfo;
@@ -559,7 +560,8 @@ static MOZ_ALWAYS_INLINE const JSJitInfo* FUNCTION_VALUE_TO_JITINFO(
 static MOZ_ALWAYS_INLINE void SET_JITINFO(JSFunction* func,
                                           const JSJitInfo* info) {
   auto* fun = reinterpret_cast<JS::shadow::Function*>(func);
-  MOZ_ASSERT(!(fun->flagsAndArgCount & js::JS_FUNCTION_INTERPRETED_BITS));
+  MOZ_ASSERT(!(fun->flagsAndArgCount.toPrivateUint32() &
+               js::JS_FUNCTION_INTERPRETED_BITS));
   fun->jitinfo = info;
 }
 
