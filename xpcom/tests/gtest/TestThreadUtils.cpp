@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "nsComponentManagerUtils.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "mozilla/IdleTaskRunner.h"
 #include "mozilla/RefCounted.h"

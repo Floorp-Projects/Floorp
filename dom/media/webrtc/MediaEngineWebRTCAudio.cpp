@@ -15,6 +15,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorNames.h"
 #include "nsContentUtils.h"
+#include "nsIDUtils.h"
 #include "transport/runnable_utils.h"
 #include "Tracing.h"
 
@@ -1307,8 +1308,6 @@ nsString MediaEngineWebRTCAudioCaptureSource::GetName() const {
 
 nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
   nsID uuid;
-  char uuidBuffer[NSID_LENGTH];
-  nsCString asciiString;
   ErrorResult rv;
 
   rv = nsContentUtils::GenerateUUIDInPlace(uuid);
@@ -1316,11 +1315,7 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
     return ""_ns;
   }
 
-  uuid.ToProvidedString(uuidBuffer);
-  asciiString.AssignASCII(uuidBuffer);
-
-  // Remove {} and the null terminator
-  return nsCString(Substring(asciiString, 1, NSID_LENGTH - 3));
+  return NSID_TrimBracketsASCII(uuid);
 }
 
 nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {
