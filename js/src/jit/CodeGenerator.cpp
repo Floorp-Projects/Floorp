@@ -14033,6 +14033,23 @@ void CodeGenerator::visitGuardToClass(LGuardToClass* ins) {
   bailoutFrom(&notEqual, ins->snapshot());
 }
 
+void CodeGenerator::visitGuardToFunction(LGuardToFunction* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  Register temp = ToRegister(ins->temp0());
+
+  // branchTestObjClass may zero the object register on speculative paths
+  // (we should have a defineReuseInput allocation in this case).
+  Register spectreRegToZero = lhs;
+
+  Label notEqual;
+
+  masm.branchTestObjIsFunction(Assembler::NotEqual, lhs, temp, spectreRegToZero,
+                               &notEqual);
+
+  // Can't return null-return here, so bail.
+  bailoutFrom(&notEqual, ins->snapshot());
+}
+
 void CodeGenerator::visitObjectClassToString(LObjectClassToString* lir) {
   Register obj = ToRegister(lir->lhs());
   Register temp = ToRegister(lir->temp0());
@@ -14209,8 +14226,14 @@ void CodeGenerator::visitAssertClass(LAssertClass* ins) {
   Register temp = ToRegister(ins->getTemp(0));
 
   Label success;
-  masm.branchTestObjClassNoSpectreMitigations(
-      Assembler::Equal, obj, ins->mir()->getClass(), temp, &success);
+  if (ins->mir()->getClass() == &JSFunction::class_) {
+    // Allow both possible function classes here.
+    masm.branchTestObjIsFunctionNoSpectreMitigations(Assembler::Equal, obj,
+                                                     temp, &success);
+  } else {
+    masm.branchTestObjClassNoSpectreMitigations(
+        Assembler::Equal, obj, ins->mir()->getClass(), temp, &success);
+  }
   masm.assumeUnreachable("Wrong KnownClass during run-time");
   masm.bind(&success);
 }

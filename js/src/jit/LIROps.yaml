@@ -2480,6 +2480,13 @@
   num_temps: 1
   mir_op: true
 
+- name: GuardToFunction
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+  num_temps: 1
+  mir_op: true
+
 - name: ObjectClassToString
   result_type: WordSized
   operands:
