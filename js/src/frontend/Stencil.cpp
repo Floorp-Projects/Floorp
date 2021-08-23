@@ -989,6 +989,10 @@ static JSFunction* CreateFunctionFast(JSContext* cx,
     fun->initAtom(atom);
   }
 
+  if (flags.isExtended()) {
+    fun->initializeExtended();
+  }
+
   return fun;
 }
 
@@ -1102,13 +1106,6 @@ static bool InstantiateModuleObject(JSContext* cx,
   return stencil.moduleMetadata->initModule(cx, atomCache, module);
 }
 
-static Shape* GetFunctionShape(JSContext* cx, const JSClass* clasp,
-                               HandleObject proto, gc::AllocKind kind) {
-  size_t nfixed = GetGCKindSlots(kind);
-  return SharedShape::getInitialShape(
-      cx, clasp, cx->realm(), TaggedProto(proto), nfixed, ObjectFlags());
-}
-
 // Instantiate JSFunctions for each FunctionBox.
 static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
                                  const CompilationStencil& stencil,
@@ -1128,17 +1125,11 @@ static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
   if (!proto) {
     return false;
   }
-
-  RootedShape functionShape(
-      cx, GetFunctionShape(cx, &FunctionClass, proto, gc::AllocKind::FUNCTION));
-  if (!functionShape) {
-    return false;
-  }
-
-  RootedShape extendedShape(cx,
-                            GetFunctionShape(cx, &ExtendedFunctionClass, proto,
-                                             gc::AllocKind::FUNCTION_EXTENDED));
-  if (!extendedShape) {
+  RootedShape shape(
+      cx, SharedShape::getInitialShape(cx, &JSFunction::class_, cx->realm(),
+                                       TaggedProto(proto),
+                                       /* nfixed = */ 0, ObjectFlags()));
+  if (!shape) {
     return false;
   }
 
@@ -1156,18 +1147,11 @@ static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
         !scriptExtra.immutableFlags.hasFlag(ImmutableFlags::IsGenerator) &&
         !scriptStencil.functionFlags.isAsmJSNative();
 
-    JSFunction* fun;
-    if (useFastPath) {
-      HandleShape shape = scriptStencil.functionFlags.isExtended()
-                              ? extendedShape
-                              : functionShape;
-      fun =
-          CreateFunctionFast(cx, atomCache, shape, scriptStencil, scriptExtra);
-    } else {
-      fun = CreateFunction(cx, atomCache, stencil, scriptStencil, scriptExtra,
-                           index);
-    }
-
+    JSFunction* fun = useFastPath
+                          ? CreateFunctionFast(cx, atomCache, shape,
+                                               scriptStencil, scriptExtra)
+                          : CreateFunction(cx, atomCache, stencil,
+                                           scriptStencil, scriptExtra, index);
     if (!fun) {
       return false;
     }

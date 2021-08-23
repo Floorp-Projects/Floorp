@@ -43,7 +43,7 @@
 #define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL)                     \
   IMAGINARY(Null, dummy)                                                      \
   REAL(Object, OCLASP(Plain))                                                 \
-  REAL(Function, &FunctionClass)                                              \
+  REAL(Function, &JSFunction::class_)                                         \
   REAL(Array, OCLASP(Array))                                                  \
   REAL(Boolean, OCLASP(Boolean))                                              \
   REAL(JSON, CLASP(JSON))                                                     \

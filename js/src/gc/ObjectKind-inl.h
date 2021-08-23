@@ -32,9 +32,12 @@ static inline AllocKind GetGCObjectKind(size_t numSlots) {
 }
 
 static inline AllocKind GetGCObjectKind(const JSClass* clasp) {
+  if (clasp == FunctionClassPtr) {
+    return AllocKind::FUNCTION;
+  }
+
   MOZ_ASSERT(!clasp->isProxyObject(),
              "Proxies should use GetProxyGCObjectKind");
-  MOZ_ASSERT(!clasp->isJSFunction());
 
   uint32_t nslots = JSCLASS_RESERVED_SLOTS(clasp);
   return GetGCObjectKind(nslots);
@@ -88,18 +91,17 @@ static inline size_t GetGCKindSlots(AllocKind thingKind) {
   // Using a switch in hopes that thingKind will usually be a compile-time
   // constant.
   switch (thingKind) {
+    case AllocKind::FUNCTION:
     case AllocKind::OBJECT0:
     case AllocKind::OBJECT0_BACKGROUND:
       return 0;
+    case AllocKind::FUNCTION_EXTENDED:
     case AllocKind::OBJECT2:
     case AllocKind::OBJECT2_BACKGROUND:
       return 2;
-    case AllocKind::FUNCTION:
     case AllocKind::OBJECT4:
     case AllocKind::OBJECT4_BACKGROUND:
       return 4;
-    case AllocKind::FUNCTION_EXTENDED:
-      return 6;
     case AllocKind::OBJECT8:
     case AllocKind::OBJECT8_BACKGROUND:
       return 8;
@@ -112,6 +114,18 @@ static inline size_t GetGCKindSlots(AllocKind thingKind) {
     default:
       MOZ_CRASH("Bad object alloc kind");
   }
+}
+
+static inline size_t GetGCKindSlots(AllocKind thingKind, const JSClass* clasp) {
+  /*
+   * Functions have a larger alloc kind than AllocKind::OBJECT to reserve
+   * space for the extra fields in JSFunction, but have no fixed slots.
+   */
+  if (clasp == FunctionClassPtr) {
+    return 0;
+  }
+
+  return GetGCKindSlots(thingKind);
 }
 
 static inline size_t GetGCKindBytes(AllocKind thingKind) {

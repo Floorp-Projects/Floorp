@@ -573,8 +573,7 @@ bool js::Call(JSContext* cx, HandleValue fval, HandleValue thisv,
 static bool InternalConstruct(JSContext* cx, const AnyConstructArgs& args) {
   MOZ_ASSERT(args.array() + args.length() + 1 == args.end(),
              "must pass constructing arguments to a construction attempt");
-  MOZ_ASSERT(!FunctionClass.getConstruct());
-  MOZ_ASSERT(!ExtendedFunctionClass.getConstruct());
+  MOZ_ASSERT(!JSFunction::class_.getConstruct());
 
   // Callers are responsible for enforcing these preconditions.
   MOZ_ASSERT(IsConstructor(args.calleev()),
