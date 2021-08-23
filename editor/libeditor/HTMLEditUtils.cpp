@@ -1405,6 +1405,8 @@ Element* HTMLEditUtils::GetAncestorElement(
     return nullptr;
   }
 
+  const Element* theBodyElement = aContent.OwnerDoc()->GetBody();
+  const Element* theDocumentElement = aContent.OwnerDoc()->GetDocumentElement();
   Element* lastAncestorElement = nullptr;
   const bool editableElementOnly =
       aAncestorTypes.contains(AncestorType::EditableElement);
@@ -1449,7 +1451,8 @@ Element* HTMLEditUtils::GetAncestorElement(
                     HTMLEditUtils::IsInlineElement(*lastAncestorElement));
       return lastAncestorElement;  // the last inline element which we found
     }
-    if (element == aAncestorLimiter) {
+    if (element == aAncestorLimiter || element == theBodyElement ||
+        element == theDocumentElement) {
       break;
     }
     lastAncestorElement = element;
@@ -1467,6 +1470,8 @@ Element* HTMLEditUtils::GetInclusiveAncestorElement(
       aAncestorTypes.contains(AncestorType::ClosestBlockElement) ||
       aAncestorTypes.contains(AncestorType::MostDistantInlineElementInBlock));
 
+  const Element* theBodyElement = aContent.OwnerDoc()->GetBody();
+  const Element* theDocumentElement = aContent.OwnerDoc()->GetDocumentElement();
   const bool editableElementOnly =
       aAncestorTypes.contains(AncestorType::EditableElement);
   const bool lookingForClosesetBlockElement =
@@ -1489,6 +1494,15 @@ Element* HTMLEditUtils::GetInclusiveAncestorElement(
            (lookingForMostDistantInlineElementInBlock &&
             HTMLEditUtils::IsInlineElement(aContent));
   };
+
+  // If aContent is the body element or the document element, we shouldn't climb
+  // up to its parent.
+  if (editableElementOnly &&
+      (&aContent == theBodyElement || &aContent == theDocumentElement)) {
+    return isSerachingElementType(aContent)
+               ? const_cast<Element*>(aContent.AsElement())
+               : nullptr;
+  }
 
   // If aContent is a block element, we don't need to climb up the tree.
   // Consider the result right now.
