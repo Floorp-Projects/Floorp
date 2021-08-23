@@ -15,6 +15,7 @@
 
 #include "js/CallArgs.h"       // JSNative
 #include "js/shadow/Object.h"  // JS::shadow::Object
+#include "js/Value.h"          // JS::Value
 
 class JS_PUBLIC_API JSFunction;
 class JSJitInfo;
@@ -25,7 +26,7 @@ namespace shadow {
 
 struct Function {
   shadow::Object base;
-  uint32_t flagsAndArgCount;
+  JS::Value flagsAndArgCount;
   /* Used only for natives */
   JSNative native;
   const JSJitInfo* jitinfo;
