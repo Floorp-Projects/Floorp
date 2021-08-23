@@ -332,7 +332,8 @@ bool BaselineCacheIRCompiler::emitGuardFunctionScript(
   }
 
   Address addr(stubAddress(expectedOffset));
-  masm.loadPtr(Address(fun, JSFunction::offsetOfBaseScript()), scratch);
+  masm.loadPrivate(Address(fun, JSFunction::offsetOfJitInfoOrScript()),
+                   scratch);
   masm.branchPtr(Assembler::NotEqual, addr, scratch, failure->label());
   return true;
 }
@@ -2568,8 +2569,9 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(
       masm.callWithABI(redirectedAddr);
 #else
       if (*ignoresReturnValue) {
-        masm.loadPtr(Address(calleeReg, JSFunction::offsetOfJitInfo()),
-                     calleeReg);
+        masm.loadPrivate(
+            Address(calleeReg, JSFunction::offsetOfJitInfoOrScript()),
+            calleeReg);
         masm.callWithABI(
             Address(calleeReg, JSJitInfo::offsetOfIgnoresReturnValueNative()));
       } else {
