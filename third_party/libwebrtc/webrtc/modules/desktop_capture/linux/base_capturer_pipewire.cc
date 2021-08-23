@@ -259,7 +259,7 @@ void BaseCapturerPipeWire::InitPipeWire() {
     return;
   }
 
-  pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
+  pw_core_ = pw_context_connect_fd(pw_context_, pw_fd_, nullptr, 0);
   if (!pw_core_) {
     RTC_LOG(LS_ERROR) << "Failed to connect PipeWire context";
     return;
