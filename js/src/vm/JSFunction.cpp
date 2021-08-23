@@ -1071,7 +1071,7 @@ bool js::fun_call(JSContext* cx, unsigned argc, Value* vp) {
   // |Function.prototype.call| and would conclude, "Function.prototype.call
   // is not a function".  Grotesque.)
   if (!IsCallable(func)) {
-    ReportIncompatibleMethod(cx, args, &JSFunction::class_);
+    ReportIncompatibleMethod(cx, args, &FunctionClass);
     return false;
   }
 
@@ -1103,7 +1103,7 @@ bool js::fun_apply(JSContext* cx, unsigned argc, Value* vp) {
   // have side effects or throw an exception.
   HandleValue fval = args.thisv();
   if (!IsCallable(fval)) {
-    ReportIncompatibleMethod(cx, args, &JSFunction::class_);
+    ReportIncompatibleMethod(cx, args, &FunctionClass);
     return false;
   }
 
@@ -1172,16 +1172,16 @@ static const ClassSpec JSFunctionClassSpec = {
     CreateFunctionConstructor, CreateFunctionPrototype, nullptr, nullptr,
     function_methods,          function_properties};
 
-const JSClass JSFunction::class_ = {js_Function_str,
-                                    JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
-                                    &JSFunctionClassOps, &JSFunctionClassSpec};
+const JSClass js::FunctionClass = {js_Function_str,
+                                   JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
+                                   &JSFunctionClassOps, &JSFunctionClassSpec};
 
-const JSClass FunctionExtended::class_ = {
+const JSClass js::ExtendedFunctionClass = {
     js_Function_str, JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     &JSFunctionClassOps, &JSFunctionClassSpec};
 
-const JSClass* const js::FunctionClassPtr = &JSFunction::class_;
-const JSClass* const js::FunctionExtendedClassPtr = &FunctionExtended::class_;
+const JSClass* const js::FunctionClassPtr = &FunctionClass;
+const JSClass* const js::FunctionExtendedClassPtr = &ExtendedFunctionClass;
 
 bool JSFunction::isDerivedClassConstructor() const {
   bool derived = hasBaseScript() && baseScript()->isDerivedClassConstructor();
