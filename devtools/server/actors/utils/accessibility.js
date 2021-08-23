@@ -17,7 +17,7 @@ loader.lazyRequireGetter(
 // when calculating colour contrast.
 const HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
 * {
-  transition: none !important;
+  transition: initial !important;
 }
 
 :-moz-devtools-highlighted {
