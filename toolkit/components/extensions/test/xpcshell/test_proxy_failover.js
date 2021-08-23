@@ -31,6 +31,14 @@ nonProxiedServer.registerPathHandler("/", (request, response) => {
 });
 const { primaryHost, primaryPort } = nonProxiedServer.identity;
 
+function getProxyData(channel) {
+  if (!(channel instanceof Ci.nsIProxiedChannel)) {
+    return;
+  }
+  let { type, host, port, sourceId } = channel.proxyInfo;
+  return { type, host, port, sourceId };
+}
+
 // Get a free port with no listener to use in the proxyinfo.
 function getBadProxyPort() {
   let server = new HttpServer();
@@ -45,10 +53,10 @@ function xhr(url) {
     let req = new XMLHttpRequest({ mozSystem: true });
     req.open("GET", `${url}?t=${Math.random()}`);
     req.onload = () => {
-      resolve(req.responseText);
+      resolve({ text: req.responseText, proxy: getProxyData(req.channel) });
     };
     req.onerror = () => {
-      reject(req.status);
+      reject({ status: req.status, proxy: getProxyData(req.channel) });
     };
     req.send();
   });
@@ -158,10 +166,11 @@ add_task(
     let extension = await getProxyExtension(proxyDetails);
 
     await xhr(`http://${primaryHost}:${primaryPort}/`)
-      .then(text => {
-        equal(text, "ok!", "xhr completed");
+      .then(req => {
+        equal(req.proxy.type, "direct", "proxy failover to direct");
+        equal(req.text, "ok!", "xhr completed");
       })
-      .catch(() => {
+      .catch(req => {
         ok(false, "xhr failed");
       });
 
@@ -212,8 +221,9 @@ add_task(
     );
 
     await xhr(`http://${primaryHost}:${primaryPort}/`)
-      .then(text => {
-        equal(text, "ok!", "xhr completed");
+      .then(req => {
+        equal(req.proxy.type, "direct", "proxy failover to direct");
+        equal(req.text, "ok!", "xhr completed");
       })
       .catch(() => {
         ok(false, "xhr failed");
@@ -234,11 +244,13 @@ add_task(async function test_failover_system_off() {
   let extension = await getProxyExtension(proxyDetails);
 
   await xhr(`http://${primaryHost}:${primaryPort}/`)
-    .then(text => {
+    .then(req => {
+      equal(req.proxy.sourceId, extension.id, "extension matches");
       ok(false, "xhr completed");
     })
-    .catch(status => {
-      equal(status, 0, "xhr failed");
+    .catch(req => {
+      equal(req.proxy.sourceId, extension.id, "extension matches");
+      equal(req.status, 0, "xhr failed");
     });
 
   await extension.unload();
