@@ -38,7 +38,8 @@
 
   --arrowpanel-menuitem-margin: 0 8px;
   --arrowpanel-menuitem-padding-block: 8px;
-  --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block);
+  --arrowpanel-menuitem-padding-inline: 8px;
+  --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block) var(--arrowpanel-menuitem-padding-inline);
   --arrowpanel-menuitem-border-radius: 4px;
   --panel-separator-margin-vertical: 4px;
   --panel-separator-margin-horizontal: 8px;
@@ -48,7 +49,7 @@
 
 :root[uidensity=compact] {
   --arrowpanel-menuitem-margin: 0 4px;
-  --arrowpanel-menuitem-padding-block: 6px;
+  --arrowpanel-menuitem-padding-block: 0;
 }
 
 #PanelUI-menu-button[badge-status] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
