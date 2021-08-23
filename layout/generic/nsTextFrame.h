@@ -214,6 +214,9 @@ class nsTextFrame : public nsIFrame {
   // nsQueryFrame
   NS_DECL_QUERYFRAME
 
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContinuationsProperty,
+                                      nsTArray<nsTextFrame*>)
+
   // nsIFrame
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) final;
@@ -781,6 +784,11 @@ class nsTextFrame : public nsIFrame {
 
   nsRect WebRenderBounds();
 
+  // Return pointer to an array of all frames in the continuation chain, or
+  // null if we're too short of memory. (This is only meant to be called on the
+  // first text frame in the chain; continuations will always return null.)
+  virtual nsTArray<nsTextFrame*>* GetContinuations();
+
  protected:
   virtual ~nsTextFrame();
 
@@ -814,6 +822,9 @@ class nsTextFrame : public nsIFrame {
     NotSelected,
   };
   mutable SelectionState mIsSelected;
+
+  // Whether a cached continuations array is present.
+  bool mHasContinuationsProperty = false;
 
   /**
    * Return true if the frame is part of a Selection.
@@ -999,6 +1010,16 @@ class nsTextFrame : public nsIFrame {
 
   void ClearMetrics(ReflowOutput& aMetrics);
 
+  // Clear any cached continuations array; this should be called whenever the
+  // chain is modified.
+  void ClearCachedContinuations() {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mHasContinuationsProperty) {
+      RemoveProperty(ContinuationsProperty());
+      mHasContinuationsProperty = false;
+    }
+  }
+
   /**
    * UpdateIteratorFromOffset() updates the iterator from a given offset.
    * Also, aInOffset may be updated to cluster start if aInOffset isn't
@@ -1010,8 +1031,6 @@ class nsTextFrame : public nsIFrame {
 
   nsPoint GetPointFromIterator(const gfxSkipCharsIterator& aIter,
                                PropertyProvider& aProperties);
-
- public:
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrame::TrimmedOffsetFlags)

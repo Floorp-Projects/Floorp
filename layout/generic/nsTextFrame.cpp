@@ -4384,6 +4384,35 @@ void nsTextFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
+nsTArray<nsTextFrame*>* nsTextFrame::GetContinuations() {
+  MOZ_ASSERT(NS_IsMainThread());
+  // Only for use on the primary frame, which has no prev-continuation.
+  MOZ_ASSERT(!GetPrevContinuation());
+  if (!mNextContinuation) {
+    return nullptr;
+  }
+  if (mHasContinuationsProperty) {
+    return GetProperty(ContinuationsProperty());
+  }
+  size_t count = 0;
+  for (nsIFrame* f = this; f; f = f->GetNextContinuation()) {
+    ++count;
+  }
+  auto* continuations = new nsTArray<nsTextFrame*>;
+  if (continuations->SetCapacity(count, fallible)) {
+    for (nsTextFrame* f = this; f;
+         f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
+      continuations->AppendElement(f);
+    }
+  } else {
+    delete continuations;
+    continuations = nullptr;
+  }
+  AddProperty(ContinuationsProperty(), continuations);
+  mHasContinuationsProperty = true;
+  return continuations;
+}
+
 class nsContinuingTextFrame final : public nsTextFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsContinuingTextFrame)
@@ -4410,10 +4439,16 @@ class nsContinuingTextFrame final : public nsTextFrame {
     nsTextFrame* prevFirst = mFirstContinuation;
     if (mPrevContinuation) {
       mFirstContinuation = mPrevContinuation->FirstContinuation();
+      if (mFirstContinuation) {
+        mFirstContinuation->ClearCachedContinuations();
+      }
     } else {
       mFirstContinuation = nullptr;
     }
     if (mFirstContinuation != prevFirst) {
+      if (prevFirst) {
+        prevFirst->ClearCachedContinuations();
+      }
       auto* f = static_cast<nsContinuingTextFrame*>(mNextContinuation);
       while (f) {
         f->mFirstContinuation = mFirstContinuation;
@@ -4438,10 +4473,16 @@ class nsContinuingTextFrame final : public nsTextFrame {
     nsTextFrame* prevFirst = mFirstContinuation;
     if (mPrevContinuation) {
       mFirstContinuation = mPrevContinuation->FirstContinuation();
+      if (mFirstContinuation) {
+        mFirstContinuation->ClearCachedContinuations();
+      }
     } else {
       mFirstContinuation = nullptr;
     }
     if (mFirstContinuation != prevFirst) {
+      if (prevFirst) {
+        prevFirst->ClearCachedContinuations();
+      }
       auto* f = static_cast<nsContinuingTextFrame*>(mNextContinuation);
       while (f) {
         f->mFirstContinuation = mFirstContinuation;
@@ -4452,6 +4493,8 @@ class nsContinuingTextFrame final : public nsTextFrame {
 
   nsIFrame* FirstInFlow() const final;
   nsTextFrame* FirstContinuation() const final { return mFirstContinuation; };
+
+  nsTArray<nsTextFrame*>* GetContinuations() final { return nullptr; }
 
   void AddInlineMinISize(gfxContext* aRenderingContext,
                          InlineMinISizeData* aData) final;
@@ -9112,6 +9155,12 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   RemoveStateBits(TEXT_REFLOW_FLAGS | TEXT_WHITESPACE_FLAGS);
   mReflowRequestedForCharDataChange = false;
   RemoveProperty(WebRenderTextBounds());
+
+  // Discard cached continuations array that will be invalidated by the reflow.
+  if (nsTextFrame* first = FirstContinuation()) {
+    first->ClearCachedContinuations();
+  }
+
   // Temporarily map all possible content while we construct our new textrun.
   // so that when doing reflow our styles prevail over any part of the
   // textrun we look at. Note that next-in-flows may be mapping the same
