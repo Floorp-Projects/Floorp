@@ -1652,6 +1652,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                                      const Shape* shape,
                                                      Label* label);
 
+  inline void branchTestClassIsFunction(Condition cond, Register clasp,
+                                        Label* label);
+  inline void branchTestObjIsFunction(Condition cond, Register obj,
+                                      Register scratch,
+                                      Register spectreRegToZero, Label* label);
+
   inline void branchTestObjShape(Condition cond, Register obj, Register shape,
                                  Register scratch, Register spectreRegToZero,
                                  Label* label);

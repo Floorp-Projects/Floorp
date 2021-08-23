@@ -579,6 +579,30 @@ void MacroAssembler::branchTestObjClass(Condition cond, Register obj,
   }
 }
 
+void MacroAssembler::branchTestClassIsFunction(Condition cond, Register clasp,
+                                               Label* label) {
+  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+  branchPtr(cond, clasp, ImmPtr(&JSFunction::class_), label);
+}
+
+void MacroAssembler::branchTestObjIsFunction(Condition cond, Register obj,
+                                             Register scratch,
+                                             Register spectreRegToZero,
+                                             Label* label) {
+  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+  MOZ_ASSERT(obj != scratch);
+  MOZ_ASSERT(scratch != spectreRegToZero);
+
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  branchPtr(cond, Address(scratch, BaseShape::offsetOfClasp()),
+            ImmPtr(&JSFunction::class_), label);
+
+  if (JitOptions.spectreObjectMitigations) {
+    spectreZeroRegister(cond, scratch, spectreRegToZero);
+  }
+}
+
 void MacroAssembler::branchTestObjShape(Condition cond, Register obj,
                                         const Shape* shape, Register scratch,
                                         Register spectreRegToZero,

@@ -1676,7 +1676,7 @@ void MacroAssembler::typeOfObject(Register obj, Register scratch, Label* slow,
   branchTestClassIsProxy(true, scratch, slow);
 
   // JSFunctions are always callable.
-  branchPtr(Assembler::Equal, scratch, ImmPtr(&JSFunction::class_), isCallable);
+  branchTestClassIsFunction(Assembler::Equal, scratch, isCallable);
 
   // Objects that emulate undefined.
   Address flags(scratch, JSClass::offsetOfFlags());
@@ -1706,8 +1706,7 @@ void MacroAssembler::isCallableOrConstructor(bool isCallable, Register obj,
   // An object is constructor iff:
   //  ((is<JSFunction>() && as<JSFunction>().isConstructor) ||
   //   (getClass()->cOps && getClass()->cOps->construct)).
-  branchPtr(Assembler::NotEqual, output, ImmPtr(&JSFunction::class_),
-            &notFunction);
+  branchTestClassIsFunction(Assembler::NotEqual, output, &notFunction);
   if (isCallable) {
     move32(Imm32(1), output);
   } else {
@@ -1814,8 +1813,7 @@ void MacroAssembler::setIsCrossRealmArrayConstructor(Register obj,
             &isFalse);
 
   // The object must be a function.
-  branchTestObjClass(Assembler::NotEqual, obj, &JSFunction::class_, output, obj,
-                     &isFalse);
+  branchTestObjIsFunction(Assembler::NotEqual, obj, output, obj, &isFalse);
 
   // The function must be the ArrayConstructor native.
   branchPtr(Assembler::NotEqual,
@@ -1836,8 +1834,7 @@ void MacroAssembler::setIsDefinitelyTypedArrayConstructor(Register obj,
   Label isFalse, isTrue, done;
 
   // The object must be a function. (Wrappers are not supported.)
-  branchTestObjClass(Assembler::NotEqual, obj, &JSFunction::class_, output, obj,
-                     &isFalse);
+  branchTestObjIsFunction(Assembler::NotEqual, obj, output, obj, &isFalse);
 
   // Load the native into |output|.
   loadPtr(Address(obj, JSFunction::offsetOfNativeOrEnv()), output);
