@@ -62,8 +62,8 @@ gtest:
     tier:
         by-test-platform:
             windows7-32-shippable.*: 3
-            windows10-64-shippable.*: 3
-            windows10-64-asan.*: 3
+            windows10-64-2004-shippable.*: 3
+            windows10-64-2004-asan.*: 3
             default: default
 
 jittest:
