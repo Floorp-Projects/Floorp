@@ -635,6 +635,7 @@ void WebGLContext::FinishInit() {
   // Initial setup.
 
   gl->mImplicitMakeCurrent = true;
+  gl->mElideDuplicateBindFramebuffers = true;
 
   const auto& size = mDefaultFB->mSize;
 
