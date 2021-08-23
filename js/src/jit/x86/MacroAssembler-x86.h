@@ -183,10 +183,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     store32(Imm32(0), ToType(dest));
     store32(src, ToPayload(dest));
   }
-  void storePrivateValue(ImmGCPtr imm, const Address& dest) {
-    store32(Imm32(0), ToType(dest));
-    movl(imm, Operand(ToPayload(dest)));
-  }
   void loadValue(Operand src, ValueOperand val) {
     Operand payload = ToPayload(src);
     Operand type = ToType(src);

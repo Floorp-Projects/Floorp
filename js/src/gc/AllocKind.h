@@ -54,8 +54,8 @@ namespace gc {
 // clang-format off
 #define FOR_EACH_OBJECT_ALLOCKIND(D) \
  /* AllocKind              TraceKind     TypeName           SizedType          BGFinal Nursery Compact */ \
-    D(FUNCTION,            Object,       JSObject,          JSObject_Slots4,   true,   true,   true) \
-    D(FUNCTION_EXTENDED,   Object,       JSObject,          JSObject_Slots6,   true,   true,   true) \
+    D(FUNCTION,            Object,       JSObject,          JSFunction,        true,   true,   true) \
+    D(FUNCTION_EXTENDED,   Object,       JSObject,          FunctionExtended,  true,   true,   true) \
     D(OBJECT0,             Object,       JSObject,          JSObject_Slots0,   false,  false,  true) \
     D(OBJECT0_BACKGROUND,  Object,       JSObject,          JSObject_Slots0,   true,   true,   true) \
     D(OBJECT2,             Object,       JSObject,          JSObject_Slots2,   false,  false,  true) \

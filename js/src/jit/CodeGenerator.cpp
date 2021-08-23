@@ -3523,22 +3523,28 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
 
 void CodeGenerator::emitLambdaInit(Register output, Register envChain,
                                    const LambdaFunctionInfo& info) {
-  uint32_t flagsAndArgs =
-      info.flags.toRaw() | (info.nargs << JSFunction::ArgCountShift);
-  masm.storeValue(JS::PrivateUint32Value(flagsAndArgs),
-                  Address(output, JSFunction::offsetOfFlagsAndArgCount()));
-  masm.storePrivateValue(
-      ImmGCPtr(info.baseScript),
-      Address(output, JSFunction::offsetOfJitInfoOrScript()));
+  // Initialize nargs and flags. We do this with a single uint32 to avoid
+  // 16-bit writes.
+  union {
+    struct S {
+      uint16_t nargs;
+      uint16_t flags;
+    } s;
+    uint32_t word;
+  } u;
+  u.s.nargs = info.nargs;
+  u.s.flags = info.flags.toRaw();
 
-  masm.storeValue(JSVAL_TYPE_OBJECT, envChain,
-                  Address(output, JSFunction::offsetOfEnvironment()));
+  static_assert(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2,
+                "the code below needs to be adapted");
+  masm.store32(Imm32(u.word), Address(output, JSFunction::offsetOfNargs()));
+  masm.storePtr(ImmGCPtr(info.baseScript),
+                Address(output, JSFunction::offsetOfBaseScript()));
+  masm.storePtr(envChain, Address(output, JSFunction::offsetOfEnvironment()));
   // No post barrier needed because output is guaranteed to be allocated in
   // the nursery.
-
-  JSAtom* atom = info.funUnsafe()->displayAtom();
-  JS::Value atomValue = atom ? JS::StringValue(atom) : JS::UndefinedValue();
-  masm.storeValue(atomValue, Address(output, JSFunction::offsetOfAtom()));
+  masm.storePtr(ImmGCPtr(info.funUnsafe()->displayAtom()),
+                Address(output, JSFunction::offsetOfAtom()));
 }
 
 void CodeGenerator::visitFunctionWithProto(LFunctionWithProto* lir) {
@@ -3958,7 +3964,7 @@ void CodeGenerator::visitElements(LElements* lir) {
 void CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment* lir) {
   Address environment(ToRegister(lir->function()),
                       JSFunction::offsetOfEnvironment());
-  masm.unboxObject(environment, ToRegister(lir->output()));
+  masm.loadPtr(environment, ToRegister(lir->output()));
 }
 
 void CodeGenerator::visitHomeObject(LHomeObject* lir) {
@@ -4720,7 +4726,7 @@ void CodeGenerator::visitGuardFunctionScript(LGuardFunctionScript* lir) {
   Register function = ToRegister(lir->function());
 
   Label bail;
-  Address scriptAddr(function, JSFunction::offsetOfJitInfoOrScript());
+  Address scriptAddr(function, JSFunction::offsetOfBaseScript());
   masm.branchPtr(Assembler::NotEqual, scriptAddr,
                  ImmGCPtr(lir->mir()->expected()), &bail);
   bailoutFrom(&bail, lir->snapshot());
@@ -5351,8 +5357,8 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
 
   // Guard that calleereg is actually a function object.
   if (call->mir()->needsClassCheck()) {
-    masm.branchTestObjIsFunction(Assembler::NotEqual, calleereg, nargsreg,
-                                 calleereg, &invoke);
+    masm.branchTestObjClass(Assembler::NotEqual, calleereg, &JSFunction::class_,
+                            nargsreg, calleereg, &invoke);
   }
 
   // Guard that callee allows the [[Call]] or [[Construct]] operation required.
@@ -5408,9 +5414,8 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
   DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
   MOZ_ASSERT(call->numActualArgs() ==
              call->mir()->numStackArgs() - numNonArgsOnStack);
-  masm.load32(Address(calleereg, JSFunction::offsetOfFlagsAndArgCount()),
-              nargsreg);
-  masm.rshift32(Imm32(JSFunction::ArgCountShift), nargsreg);
+  masm.load16ZeroExtend(Address(calleereg, JSFunction::offsetOfNargs()),
+                        nargsreg);
   masm.branch32(Assembler::Above, nargsreg, Imm32(call->numActualArgs()),
                 &thunk);
   masm.jump(&makeCall);
@@ -5936,8 +5941,8 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
 
   // Unless already known, guard that calleereg is actually a function object.
   if (!apply->hasSingleTarget()) {
-    masm.branchTestObjIsFunction(Assembler::NotEqual, calleereg, objreg,
-                                 calleereg, &invoke);
+    masm.branchTestObjClass(Assembler::NotEqual, calleereg, &JSFunction::class_,
+                            objreg, calleereg, &invoke);
   }
 
   // Guard that calleereg is an interpreted function with a JSScript.
@@ -5983,9 +5988,8 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     // Check whether the provided arguments satisfy target argc.
     if (!apply->hasSingleTarget()) {
       Register nformals = extraStackSpace;
-      masm.load32(Address(calleereg, JSFunction::offsetOfFlagsAndArgCount()),
-                  nformals);
-      masm.rshift32(Imm32(JSFunction::ArgCountShift), nformals);
+      masm.load16ZeroExtend(Address(calleereg, JSFunction::offsetOfNargs()),
+                            nformals);
       masm.branch32(Assembler::Below, argcreg, nformals, &underflow);
     } else {
       masm.branch32(Assembler::Below, argcreg,
@@ -7639,8 +7643,7 @@ void CodeGenerator::visitFunctionLength(LFunctionLength* lir) {
   Label bail;
 
   // Get the JSFunction flags.
-  masm.load32(Address(function, JSFunction::offsetOfFlagsAndArgCount()),
-              output);
+  masm.load16ZeroExtend(Address(function, JSFunction::offsetOfFlags()), output);
 
   // Functions with a SelfHostedLazyScript must be compiled with the slow-path
   // before the function length is known. If the length was previously resolved,
@@ -14033,23 +14036,6 @@ void CodeGenerator::visitGuardToClass(LGuardToClass* ins) {
   bailoutFrom(&notEqual, ins->snapshot());
 }
 
-void CodeGenerator::visitGuardToFunction(LGuardToFunction* ins) {
-  Register lhs = ToRegister(ins->lhs());
-  Register temp = ToRegister(ins->temp0());
-
-  // branchTestObjClass may zero the object register on speculative paths
-  // (we should have a defineReuseInput allocation in this case).
-  Register spectreRegToZero = lhs;
-
-  Label notEqual;
-
-  masm.branchTestObjIsFunction(Assembler::NotEqual, lhs, temp, spectreRegToZero,
-                               &notEqual);
-
-  // Can't return null-return here, so bail.
-  bailoutFrom(&notEqual, ins->snapshot());
-}
-
 void CodeGenerator::visitObjectClassToString(LObjectClassToString* lir) {
   Register obj = ToRegister(lir->lhs());
   Register temp = ToRegister(lir->temp0());
@@ -14226,14 +14212,8 @@ void CodeGenerator::visitAssertClass(LAssertClass* ins) {
   Register temp = ToRegister(ins->getTemp(0));
 
   Label success;
-  if (ins->mir()->getClass() == &FunctionClass) {
-    // Allow both possible function classes here.
-    masm.branchTestObjIsFunctionNoSpectreMitigations(Assembler::Equal, obj,
-                                                     temp, &success);
-  } else {
-    masm.branchTestObjClassNoSpectreMitigations(
-        Assembler::Equal, obj, ins->mir()->getClass(), temp, &success);
-  }
+  masm.branchTestObjClassNoSpectreMitigations(
+      Assembler::Equal, obj, ins->mir()->getClass(), temp, &success);
   masm.assumeUnreachable("Wrong KnownClass during run-time");
   masm.bind(&success);
 }
@@ -14785,10 +14765,9 @@ void CodeGenerator::visitNaNToZero(LNaNToZero* lir) {
 }
 
 static void BoundFunctionLength(MacroAssembler& masm, Register target,
-                                Register targetFlagsAndArgCount,
-                                Register argCount, Register output,
-                                Label* slowPath) {
-  masm.loadFunctionLength(target, targetFlagsAndArgCount, output, slowPath);
+                                Register targetFlags, Register argCount,
+                                Register output, Label* slowPath) {
+  masm.loadFunctionLength(target, targetFlags, output, slowPath);
 
   // Compute the bound function length: Max(0, target.length - argCount).
   Label nonNegative;
@@ -14825,7 +14804,7 @@ static void BoundFunctionName(MacroAssembler& masm, Register target,
   masm.branchTest32(Assembler::NonZero, targetFlags,
                     Imm32(FunctionFlags::HAS_GUESSED_ATOM), &guessed);
   masm.bind(&loadName);
-  masm.unboxString(Address(target, JSFunction::offsetOfAtom()), output);
+  masm.loadPtr(Address(target, JSFunction::offsetOfAtom()), output);
   masm.branchTestPtr(Assembler::NonZero, output, output, &hasName);
   {
     masm.bind(&guessed);
@@ -14836,13 +14815,12 @@ static void BoundFunctionName(MacroAssembler& masm, Register target,
   masm.bind(&hasName);
 }
 
-static void BoundFunctionFlagsAndArgCount(MacroAssembler& masm,
-                                          Register targetFlags, Register bound,
-                                          Register output) {
+static void BoundFunctionFlags(MacroAssembler& masm, Register targetFlags,
+                               Register bound, Register output) {
   // Set the BOUND_FN flag and, if the target is a constructor, the
   // CONSTRUCTOR flag.
   Label isConstructor, boundFlagsComputed;
-  masm.load32(Address(bound, JSFunction::offsetOfFlagsAndArgCount()), output);
+  masm.load16ZeroExtend(Address(bound, JSFunction::offsetOfFlags()), output);
   masm.branchTest32(Assembler::NonZero, targetFlags,
                     Imm32(FunctionFlags::CONSTRUCTOR), &isConstructor);
   {
@@ -14875,16 +14853,16 @@ void CodeGenerator::visitFinishBoundFunctionInit(
       FunctionExtended::offsetOfBoundFunctionLengthSlot();
 
   // Take the slow path if the target is not a JSFunction.
-  masm.branchTestObjIsFunction(Assembler::NotEqual, target, temp0, target,
-                               slowPath);
+  masm.branchTestObjClass(Assembler::NotEqual, target, &JSFunction::class_,
+                          temp0, target, slowPath);
 
   // Take the slow path if we'd need to adjust the [[Prototype]].
   masm.loadObjProto(bound, temp0);
   masm.loadObjProto(target, temp1);
   masm.branchPtr(Assembler::NotEqual, temp0, temp1, slowPath);
 
-  // Get the function flags and arg count.
-  masm.load32(Address(target, JSFunction::offsetOfFlagsAndArgCount()), temp0);
+  // Get the function flags.
+  masm.load16ZeroExtend(Address(target, JSFunction::offsetOfFlags()), temp0);
 
   // Functions with a SelfHostedLazyScript must be compiled with the slow-path
   // before the function length is known. If the length or name property is
@@ -14902,12 +14880,11 @@ void CodeGenerator::visitFinishBoundFunctionInit(
   // Store the target's name atom in the bound function as is.
   BoundFunctionName(masm, target, temp0, temp1, gen->runtime->names(),
                     slowPath);
-  masm.storeValue(JSVAL_TYPE_STRING, temp1,
-                  Address(bound, JSFunction::offsetOfAtom()));
+  masm.storePtr(temp1, Address(bound, JSFunction::offsetOfAtom()));
 
   // Update the bound function's flags.
-  BoundFunctionFlagsAndArgCount(masm, temp0, bound, temp1);
-  masm.store32(temp1, Address(bound, JSFunction::offsetOfFlagsAndArgCount()));
+  BoundFunctionFlags(masm, temp0, bound, temp1);
+  masm.store16(temp1, Address(bound, JSFunction::offsetOfFlags()));
 
   masm.bind(ool->rejoin());
 }
@@ -14996,8 +14973,8 @@ void CodeGenerator::visitSuperFunction(LSuperFunction* lir) {
 
 #ifdef DEBUG
   Label classCheckDone;
-  masm.branchTestObjIsFunction(Assembler::Equal, callee, temp, callee,
-                               &classCheckDone);
+  masm.branchTestObjClass(Assembler::Equal, callee, &JSFunction::class_, temp,
+                          callee, &classCheckDone);
   masm.assumeUnreachable("Unexpected non-JSFunction callee in JSOp::SuperFun");
   masm.bind(&classCheckDone);
 #endif
