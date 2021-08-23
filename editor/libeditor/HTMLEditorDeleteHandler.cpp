@@ -5029,6 +5029,7 @@ Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
     ScanEmptyBlockInclusiveAncestor(const HTMLEditor& aHTMLEditor,
                                     nsIContent& aStartContent) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(!mEmptyInclusiveAncestorBlockElement);
 
   // If we are inside an empty block, delete it.
   // Note: do NOT delete table elements this way.
