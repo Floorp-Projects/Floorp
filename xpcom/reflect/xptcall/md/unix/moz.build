@@ -263,6 +263,14 @@ if CONFIG["OS_ARCH"] == "Linux":
                 "-fno-integrated-as",
             ]
 
+if CONFIG["OS_ARCH"] == "Linux" and CONFIG["CPU_ARCH"] == "riscv64":
+    SOURCES += [
+        "xptcinvoke_asm_riscv64.S",
+        "xptcinvoke_riscv64.cpp",
+        "xptcstubs_asm_riscv64.S",
+        "xptcstubs_riscv64.cpp",
+    ]
+
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
