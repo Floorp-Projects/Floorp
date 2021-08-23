@@ -67,10 +67,10 @@ if (!gl) {
     gl.vertexAttribPointer(0, 1, gl.UNSIGNED_INT, 0, 0, 0);
     wtu.glErrorShouldBe(gl, gl.INVALID_ENUM,
             "vertexAttribPointer should not support UNSIGNED_INT");
-    gl.vertexAttribPointer(0, 1, gl.FIXED, 0, 0, 0);
-    wtu.glErrorShouldBe(gl, gl.INVALID_ENUM,
-            "vertexAttribPointer should not support FIXED");
   }
+  gl.vertexAttribPointer(0, 1, gl.FIXED, 0, 0, 0);
+  wtu.glErrorShouldBe(gl, gl.INVALID_ENUM,
+          "vertexAttribPointer should not support FIXED");
 
   var checkVertexAttribPointer = function(
       gl, err, reason, size, type, normalize, stride, offset) {
@@ -100,6 +100,16 @@ if (!gl) {
     { type:gl.FLOAT,          bytesPerComponent: 4 },
   ];
 
+  if (wtu.getDefault3DContextVersion() >= 2) {
+    types.push(...[
+        { type:gl.INT,                         bytesPerComponent: 4 },
+        { type:gl.UNSIGNED_INT,                bytesPerComponent: 4 },
+        { type:gl.HALF_FLOAT,                  bytesPerComponent: 2 },
+        { type:gl.INT_2_10_10_10_REV,          bytesPerComponent: 4, minSize: 4 },
+        { type:gl.UNSIGNED_INT_2_10_10_10_REV, bytesPerComponent: 4, minSize: 4 },
+      ]);
+  }
+
   for (var ii = 0; ii < types.length; ++ii) {
     var info = types[ii];
     debug("");
@@ -128,6 +138,10 @@ if (!gl) {
             reason = "because stride is bad";
             err = gl.INVALID_OPERATION;
           }
+          if (size < info.minSize) {
+            reason = "because size < minSize";
+            err = gl.INVALID_OPERATION;
+          }
           checkVertexAttribPointer(
               gl, err, reason, size, info.type, false, stride, offset);
         }
@@ -135,10 +149,10 @@ if (!gl) {
 
         if (offset == 0) {
           checkVertexAttribPointer(
-              gl, gl.NO_ERROR, "at stride limit",
+              gl, size < info.minSize ? gl.INVALID_OPERATION : gl.NO_ERROR, "at stride limit",
               size, info.type, false, stride, offset);
           checkVertexAttribPointer(
-              gl, gl.INVALID_VALUE, "over stride limit",
+              gl, size < info.minSize ? [gl.INVALID_OPERATION, gl.INVALID_VALUE] : gl.INVALID_VALUE, "over stride limit",
               size, info.type, false,
               stride + info.bytesPerComponent, offset);
         }
