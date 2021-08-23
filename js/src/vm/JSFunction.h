@@ -38,12 +38,14 @@ static constexpr uint32_t BoundFunctionEnvArgsSlot = 4;
 static const char FunctionConstructorMedialSigils[] = ") {\n";
 static const char FunctionConstructorFinalBrace[] = "\n}";
 
+// JSFunctions can have one of two classes:
+extern const JSClass FunctionClass;
+extern const JSClass ExtendedFunctionClass;
+
 }  // namespace js
 
 class JSFunction : public js::NativeObject {
  public:
-  static const JSClass class_;
-
   static_assert(sizeof(js::FunctionFlags) == sizeof(uint16_t));
   static constexpr size_t ArgCountShift = 16;
   static constexpr size_t FlagsMask = js::BitMask(ArgCountShift);
@@ -774,8 +776,6 @@ extern void ThrowTypeErrorBehavior(JSContext* cx);
  */
 class FunctionExtended : public JSFunction {
  public:
-  static const JSClass class_;
-
   static const unsigned NUM_EXTENDED_SLOTS = 2;
 
   // Arrow functions store their lexical new.target in the first extended

@@ -1106,9 +1106,8 @@ static bool InstantiateModuleObject(JSContext* cx,
   return stencil.moduleMetadata->initModule(cx, atomCache, module);
 }
 
-template <typename Class>
-static Shape* GetFunctionShape(JSContext* cx, HandleObject proto) {
-  const JSClass* clasp = &Class::class_;
+static Shape* GetFunctionShape(JSContext* cx, const JSClass* clasp,
+                               HandleObject proto) {
   return SharedShape::getInitialShape(cx, clasp, cx->realm(),
                                       TaggedProto(proto), /* nfixed = */ 0,
                                       ObjectFlags());
@@ -1134,12 +1133,13 @@ static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
     return false;
   }
 
-  RootedShape functionShape(cx, GetFunctionShape<JSFunction>(cx, proto));
+  RootedShape functionShape(cx, GetFunctionShape(cx, &FunctionClass, proto));
   if (!functionShape) {
     return false;
   }
 
-  RootedShape extendedShape(cx, GetFunctionShape<FunctionExtended>(cx, proto));
+  RootedShape extendedShape(
+      cx, GetFunctionShape(cx, &ExtendedFunctionClass, proto));
   if (!extendedShape) {
     return false;
   }
