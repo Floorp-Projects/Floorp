@@ -65,8 +65,10 @@
         <image anonid="find-status-icon" class="find-status-icon" />
         <description anonid="find-status" control="findbar-textbox" class="findbar-label findbar-find-status" />
       </hbox>
-      <toolbarbutton anonid="find-closebutton" class="findbar-closebutton tabbable close-icon"
-          data-l10n-id="findbar-find-button-close" oncommand="close();" />
+      <div id="findbar-close-container">
+        <toolbarbutton anonid="find-closebutton" class="findbar-closebutton tabbable close-icon"
+            data-l10n-id="findbar-find-button-close" oncommand="close();" />
+      </div>
       `;
     }
 
