@@ -280,12 +280,14 @@ menupopup::part(drop-indicator) {
 
 /* Find bar */
 
+.browserContainer > findbar > #findbar-close-container,
 .browserContainer > findbar {
   background-color: var(--toolbar-non-lwt-bgcolor);
   color: var(--toolbar-non-lwt-textcolor);
   text-shadow: none;
 }
 
+:root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme > #findbar-close-container,
 :root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme {
   background-color: var(--lwt-accent-color);
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
@@ -293,6 +295,7 @@ menupopup::part(drop-indicator) {
   color: var(--toolbar-color);
 }
 
+:root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme:-moz-window-inactive > #findbar-close-container,
 :root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme:-moz-window-inactive {
   background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
 }
