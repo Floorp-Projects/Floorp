@@ -8,6 +8,7 @@
 #include "FileSystemRootDirectoryEntry.h"
 #include "mozilla/dom/FileSystemBinding.h"
 #include "nsContentUtils.h"
+#include "nsIDUtils.h"
 
 namespace mozilla::dom {
 
@@ -33,15 +34,9 @@ already_AddRefed<FileSystem> FileSystem::Create(nsIGlobalObject* aGlobalObject)
     return nullptr;
   }
 
-  char chars[NSID_LENGTH];
-  id.ToProvidedString(chars);
+  NSID_TrimBracketsUTF16 name(id);
 
-  // Any fileSystem has an unique ID. We use UUID, but our generator produces
-  // UUID in this format '{' + UUID + '}'. We remove them with these +1 and -2.
-  nsAutoCString name(Substring(chars + 1, chars + NSID_LENGTH - 2));
-
-  RefPtr<FileSystem> fs =
-      new FileSystem(aGlobalObject, NS_ConvertUTF8toUTF16(name));
+  RefPtr<FileSystem> fs = new FileSystem(aGlobalObject, name);
 
   return fs.forget();
 }

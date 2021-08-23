@@ -14,6 +14,7 @@
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "nsIRunnable.h"
+#include "nsIDUtils.h"
 
 namespace mozilla::dom {
 
@@ -66,16 +67,8 @@ static bool HasStorageAccess(nsIGlobalObject* aGlobal) {
   return access > StorageAccess::eDeny;
 }
 
-// XXX: This is copied from ServiceWorkerManager and should go to nsID.
 static nsString GetClientId(nsIGlobalObject* aGlobal) {
-  nsString id;
-  char buf[NSID_LENGTH];
-  aGlobal->GetClientInfo()->Id().ToProvidedString(buf);
-  NS_ConvertASCIItoUTF16 uuid(buf);
-
-  // Remove {} and the null terminator
-  id.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
-  return id;
+  return NSID_TrimBracketsUTF16(aGlobal->GetClientInfo()->Id());
 }
 
 static bool ValidateRequestArguments(const nsAString& name,

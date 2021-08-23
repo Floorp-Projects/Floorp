@@ -76,6 +76,7 @@ EXPORTS += [
     "nsGZFileWriter.h",
     "nsIClassInfoImpl.h",
     "nsID.h",
+    "nsIDUtils.h",
     "nsIInterfaceRequestorUtils.h",
     "nsINIParser.h",
     "nsInterfaceRequestorAgg.h",
