@@ -229,7 +229,6 @@ windows-tests:
     - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
-    - gtest
     # - jittest  # See comment in windows-ccov-tests set.
     - jsreftest
     - marionette
@@ -252,6 +251,7 @@ windows10-tests:
 
 windows10-2004-tests:
     - cppunit
+    - gtest
     - mochitest-browser-chrome
     - mochitest-chrome-gpu
     - mochitest-devtools-chrome
