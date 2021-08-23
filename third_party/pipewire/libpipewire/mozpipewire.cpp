@@ -49,6 +49,10 @@ g_unix_fd_list_get(struct GUnixFDList *list,
 static struct pw_core * (*pw_context_connect_fn)(struct pw_context *context,
                                               struct pw_properties *properties,
                                               size_t user_data_size);
+static struct pw_core * (*pw_context_connect_fd_fn)(struct pw_context *context,
+                                                    int fd,
+                                                    struct pw_properties *properties,
+                                                    size_t user_data_size);
 static void (*pw_context_destroy_fn)(struct pw_context *context);
 struct pw_context * (*pw_context_new_fn)(struct pw_loop *main_loop,
                                       struct pw_properties *props,
@@ -85,6 +89,7 @@ static void (*pw_thread_loop_stop_fn)(struct pw_thread_loop *loop);
 bool IsPwLibraryLoaded() {
   static bool isLoaded =
          (IS_FUNC_LOADED(pw_context_connect_fn) &&
+          IS_FUNC_LOADED(pw_context_connect_fd_fn) &&
           IS_FUNC_LOADED(pw_context_destroy_fn) &&
           IS_FUNC_LOADED(pw_context_new_fn) &&
           IS_FUNC_LOADED(pw_core_disconnect_fn) &&
@@ -118,6 +123,7 @@ bool LoadPWLibrary() {
     }
 
     GET_FUNC(pw_context_connect, pwLib);
+    GET_FUNC(pw_context_connect_fd, pwLib);
     GET_FUNC(pw_context_destroy, pwLib);
     GET_FUNC(pw_context_new, pwLib);
     GET_FUNC(pw_core_disconnect, pwLib);
@@ -148,6 +154,18 @@ pw_context_connect(struct pw_context *context,
     return nullptr;
   }
   return pw_context_connect_fn(context, properties, user_data_size);
+}
+
+struct pw_core *
+pw_context_connect_fd(struct pw_context *context,
+                      int fd,
+                      struct pw_properties *properties,
+                      size_t user_data_size)
+{
+  if (!LoadPWLibrary()) {
+    return nullptr;
+  }
+  return pw_context_connect_fd_fn(context, fd, properties, user_data_size);
 }
 
 void
