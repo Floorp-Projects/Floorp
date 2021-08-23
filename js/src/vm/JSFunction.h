@@ -38,109 +38,97 @@ static constexpr uint32_t BoundFunctionEnvArgsSlot = 4;
 static const char FunctionConstructorMedialSigils[] = ") {\n";
 static const char FunctionConstructorFinalBrace[] = "\n}";
 
-// JSFunctions can have one of two classes:
-extern const JSClass FunctionClass;
-extern const JSClass ExtendedFunctionClass;
-
 }  // namespace js
 
 class JSFunction : public js::NativeObject {
  public:
-  static_assert(sizeof(js::FunctionFlags) == sizeof(uint16_t));
-  static constexpr size_t ArgCountShift = 16;
-  static constexpr size_t FlagsMask = js::BitMask(ArgCountShift);
-  static constexpr size_t ArgCountMask = js::BitMask(16) << ArgCountShift;
-
-  enum {
-    /*
-     * Bitfield composed of FunctionFlags and argument count, stored as a
-     * PrivateUint32Value.
-     *
-     * If any of these flags needs to be accessed in off-thread JIT compilation,
-     * copy it to js::jit::WrappedFunction.
-     */
-    FlagsAndArgCountSlot,
-
-    /*
-     * For native functions, the native method pointer stored as a private
-     * value, or undefined.
-     *
-     * For interpreted functions, the environment object for new activations or
-     * null.
-     */
-    NativeFuncOrInterpretedEnvSlot,
-
-    /*
-     * For native functions this is one of:
-     *
-     *  - JSJitInfo* to be used by the JIT, only used if isBuiltinNative() for
-     *    builtin natives
-     *
-     *  - wasm function index for wasm/asm.js without a jit entry. Always has
-     *    the low bit set to ensure it's never identical to a BaseScript*
-     *    pointer
-     *
-     *  - a wasm JIT entry
-     *
-     * The JIT depends on none of the above being a valid BaseScript pointer.
-     *
-     * For interpreted functions this is either a BaseScript or the
-     * SelfHostedLazyScript pointer.
-     *
-     * These are all stored as private values, because the JIT assumes that it
-     * can access the SelfHostedLazyScript and BaseScript pointer in the same
-     * way.
-     */
-    NativeJitInfoOrInterpretedScriptSlot,
-
-    // The `atom_` field can have different meanings depending on the function
-    // type and flags. It is used for diagnostics, decompiling, and
-    //
-    // 1. If the function is not a bound function:
-    //   a. If HAS_GUESSED_ATOM is not set, to store the initial value of the
-    //      "name" property of functions. But also see RESOLVED_NAME.
-    //   b. If HAS_GUESSED_ATOM is set, `atom_` is only used for diagnostics,
-    //      but must not be used for the "name" property.
-    //   c. If HAS_INFERRED_NAME is set, the function wasn't given an explicit
-    //      name in the source text, e.g. `function fn(){}`, but instead it
-    //      was inferred based on how the function was defined in the source
-    //      text. The exact name inference rules are defined in the ECMAScript
-    //      specification.
-    //      Name inference can happen at compile-time, for example in
-    //      `var fn = function(){}`, or it can happen at runtime, for example
-    //      in `var o = {[Symbol.iterator]: function(){}}`. When it happens at
-    //      compile-time, the HAS_INFERRED_NAME is set directly in the
-    //      bytecode emitter, when it happens at runtime, the flag is set when
-    //      evaluating the JSOp::SetFunName bytecode.
-    //   d. HAS_GUESSED_ATOM and HAS_INFERRED_NAME cannot both be set.
-    //   e. `atom_` can be null if neither an explicit, nor inferred, nor a
-    //      guessed name was set.
-    //
-    // 2. If the function is a bound function:
-    //   a. To store the initial value of the "name" property.
-    //   b. If HAS_BOUND_FUNCTION_NAME_PREFIX is not set, `atom_` doesn't
-    //      contain the "bound " prefix which is prepended to the "name"
-    //      property of bound functions per ECMAScript.
-    //   c. Bound functions can never have an inferred or guessed name.
-    //   d. `atom_` is never null for bound functions.
-    //
-    // Self-hosted functions have two names. For example, Array.prototype.sort
-    // has the standard name "sort", but the implementation in Array.js is named
-    // "ArraySort".
-    //
-    // -   In the self-hosting realm, these functions have `_atom` set to the
-    //     implementation name.
-    //
-    // -   When we clone these functions into normal realms, we set `_atom` to
-    //     the standard name. (The self-hosted name is also stored on the clone,
-    //     in another slot; see GetClonedSelfHostedFunctionName().)
-    AtomSlot,
-
-    SlotCount
-  };
+  static const JSClass class_;
 
  private:
+  /*
+   * number of formal arguments
+   * (including defaults and the rest parameter unlike f.length)
+   */
+  uint16_t nargs_;
+
+  /*
+   * Bitfield composed of the above Flags enum, as well as the kind.
+   *
+   * If any of these flags needs to be accessed in off-thread JIT
+   * compilation, copy it to js::jit::WrappedFunction.
+   */
   using FunctionFlags = js::FunctionFlags;
+  FunctionFlags flags_;
+
+  union U {
+    class {
+      friend class JSFunction;
+      js::Native func_; /* native method pointer or null */
+      // Warning: this |extra| union MUST NOT store a value that could be a
+      // valid BaseScript* pointer! JIT guards depend on this.
+      union {
+        // Information about this function to be used by the JIT, only
+        // used if isBuiltinNative(); use the accessor!
+        const JSJitInfo* jitInfo_;
+        // For wasm/asm.js without a jit entry. Always has the low bit set to
+        // ensure it's never identical to a BaseScript* pointer. See warning
+        // above.
+        uintptr_t taggedWasmFuncIndex_;
+        // for wasm that has been given a jit entry
+        void** wasmJitEntry_;
+      } extra;
+    } native;
+    struct {
+      JSObject* env_; /* environment for new activations */
+      union {
+        js::BaseScript* script_;
+        js::SelfHostedLazyScript* selfHostedLazy_;
+      } s;
+    } scripted;
+  } u;
+
+  // The `atom_` field can have different meanings depending on the function
+  // type and flags. It is used for diagnostics, decompiling, and
+  //
+  // 1. If the function is not a bound function:
+  //   a. If HAS_GUESSED_ATOM is not set, to store the initial value of the
+  //      "name" property of functions. But also see RESOLVED_NAME.
+  //   b. If HAS_GUESSED_ATOM is set, `atom_` is only used for diagnostics,
+  //      but must not be used for the "name" property.
+  //   c. If HAS_INFERRED_NAME is set, the function wasn't given an explicit
+  //      name in the source text, e.g. `function fn(){}`, but instead it
+  //      was inferred based on how the function was defined in the source
+  //      text. The exact name inference rules are defined in the ECMAScript
+  //      specification.
+  //      Name inference can happen at compile-time, for example in
+  //      `var fn = function(){}`, or it can happen at runtime, for example
+  //      in `var o = {[Symbol.iterator]: function(){}}`. When it happens at
+  //      compile-time, the HAS_INFERRED_NAME is set directly in the
+  //      bytecode emitter, when it happens at runtime, the flag is set when
+  //      evaluating the JSOp::SetFunName bytecode.
+  //   d. HAS_GUESSED_ATOM and HAS_INFERRED_NAME cannot both be set.
+  //   e. `atom_` can be null if neither an explicit, nor inferred, nor a
+  //      guessed name was set.
+  //
+  // 2. If the function is a bound function:
+  //   a. To store the initial value of the "name" property.
+  //   b. If HAS_BOUND_FUNCTION_NAME_PREFIX is not set, `atom_` doesn't
+  //      contain the "bound " prefix which is prepended to the "name"
+  //      property of bound functions per ECMAScript.
+  //   c. Bound functions can never have an inferred or guessed name.
+  //   d. `atom_` is never null for bound functions.
+  //
+  // Self-hosted functions have two names. For example, Array.prototype.sort
+  // has the standard name "sort", but the implementation in Array.js is named
+  // "ArraySort".
+  //
+  // -   In the self-hosting realm, these functions have `_atom` set to the
+  //     implementation name.
+  //
+  // -   When we clone these functions into normal realms, we set `_atom` to
+  //     the standard name. (The self-hosted name is also stored on the clone,
+  //     in another slot; see GetClonedSelfHostedFunctionName().)
+  js::GCPtrAtom atom_;
 
  public:
   static inline JSFunction* create(JSContext* cx, js::gc::AllocKind kind,
@@ -163,91 +151,81 @@ class JSFunction : public js::NativeObject {
     return needsFunctionEnvironmentObjects() || needsExtraBodyVarEnvironment();
   }
 
-  uint32_t flagsAndArgCountRaw() const {
-    return getFixedSlot(FlagsAndArgCountSlot).toPrivateUint32();
-  }
+  static constexpr size_t NArgsBits = sizeof(nargs_) * CHAR_BIT;
+  size_t nargs() const { return nargs_; }
 
-  void initFlagsAndArgCount() {
-    initFixedSlot(FlagsAndArgCountSlot, JS::PrivateUint32Value(0));
-  }
+  FunctionFlags flags() { return flags_; }
 
-  size_t nargs() const { return flagsAndArgCountRaw() >> ArgCountShift; }
-
-  FunctionFlags flags() const {
-    return FunctionFlags(uint16_t(flagsAndArgCountRaw() & FlagsMask));
-  }
-
-  FunctionFlags::FunctionKind kind() const { return flags().kind(); }
+  FunctionFlags::FunctionKind kind() const { return flags_.kind(); }
 
   /* A function can be classified as either native (C++) or interpreted (JS): */
-  bool isInterpreted() const { return flags().isInterpreted(); }
-  bool isNativeFun() const { return flags().isNativeFun(); }
+  bool isInterpreted() const { return flags_.isInterpreted(); }
+  bool isNativeFun() const { return flags_.isNativeFun(); }
 
-  bool isConstructor() const { return flags().isConstructor(); }
+  bool isConstructor() const { return flags_.isConstructor(); }
 
   bool isNonBuiltinConstructor() const {
-    return flags().isNonBuiltinConstructor();
+    return flags_.isNonBuiltinConstructor();
   }
 
   /* Possible attributes of a native function: */
-  bool isAsmJSNative() const { return flags().isAsmJSNative(); }
+  bool isAsmJSNative() const { return flags_.isAsmJSNative(); }
 
-  bool isWasm() const { return flags().isWasm(); }
-  bool isWasmWithJitEntry() const { return flags().isWasmWithJitEntry(); }
+  bool isWasm() const { return flags_.isWasm(); }
+  bool isWasmWithJitEntry() const { return flags_.isWasmWithJitEntry(); }
   bool isNativeWithoutJitEntry() const {
-    return flags().isNativeWithoutJitEntry();
+    return flags_.isNativeWithoutJitEntry();
   }
-  bool isBuiltinNative() const { return flags().isBuiltinNative(); }
+  bool isBuiltinNative() const { return flags_.isBuiltinNative(); }
 
-  bool hasJitEntry() const { return flags().hasJitEntry(); }
+  bool hasJitEntry() const { return flags_.hasJitEntry(); }
 
   /* Possible attributes of an interpreted function: */
-  bool isBoundFunction() const { return flags().isBoundFunction(); }
-  bool hasInferredName() const { return flags().hasInferredName(); }
-  bool hasGuessedAtom() const { return flags().hasGuessedAtom(); }
+  bool isBoundFunction() const { return flags_.isBoundFunction(); }
+  bool hasInferredName() const { return flags_.hasInferredName(); }
+  bool hasGuessedAtom() const { return flags_.hasGuessedAtom(); }
   bool hasBoundFunctionNamePrefix() const {
-    return flags().hasBoundFunctionNamePrefix();
+    return flags_.hasBoundFunctionNamePrefix();
   }
 
-  bool isLambda() const { return flags().isLambda(); }
+  bool isLambda() const { return flags_.isLambda(); }
 
-  // These methods determine which kind of script we hold.
-  //
-  // For live JSFunctions the pointer values will always be non-null, but due to
-  // partial initialization the GC (and other features that scan the heap
+  // These methods determine which of the u.scripted.s union arms are active.
+  // For live JSFunctions the pointer values will always be non-null, but due
+  // to partial initialization the GC (and other features that scan the heap
   // directly) may still return a null pointer.
   bool hasSelfHostedLazyScript() const {
-    return flags().hasSelfHostedLazyScript();
+    return flags_.hasSelfHostedLazyScript();
   }
-  bool hasBaseScript() const { return flags().hasBaseScript(); }
+  bool hasBaseScript() const { return flags_.hasBaseScript(); }
 
   bool hasBytecode() const {
     MOZ_ASSERT(!isIncomplete());
     return hasBaseScript() && baseScript()->hasBytecode();
   }
 
-  bool isGhost() const { return flags().isGhost(); }
+  bool isGhost() const { return flags_.isGhost(); }
 
   // Arrow functions store their lexical new.target in the first extended slot.
-  bool isArrow() const { return flags().isArrow(); }
+  bool isArrow() const { return flags_.isArrow(); }
   // Every class-constructor is also a method.
-  bool isMethod() const { return flags().isMethod(); }
-  bool isClassConstructor() const { return flags().isClassConstructor(); }
+  bool isMethod() const { return flags_.isMethod(); }
+  bool isClassConstructor() const { return flags_.isClassConstructor(); }
 
-  bool isGetter() const { return flags().isGetter(); }
-  bool isSetter() const { return flags().isSetter(); }
+  bool isGetter() const { return flags_.isGetter(); }
+  bool isSetter() const { return flags_.isSetter(); }
 
-  bool allowSuperProperty() const { return flags().allowSuperProperty(); }
+  bool allowSuperProperty() const { return flags_.allowSuperProperty(); }
 
-  bool hasResolvedLength() const { return flags().hasResolvedLength(); }
-  bool hasResolvedName() const { return flags().hasResolvedName(); }
+  bool hasResolvedLength() const { return flags_.hasResolvedLength(); }
+  bool hasResolvedName() const { return flags_.hasResolvedName(); }
 
   bool isSelfHostedOrIntrinsic() const {
-    return flags().isSelfHostedOrIntrinsic();
+    return flags_.isSelfHostedOrIntrinsic();
   }
-  bool isSelfHostedBuiltin() const { return flags().isSelfHostedBuiltin(); }
+  bool isSelfHostedBuiltin() const { return flags_.isSelfHostedBuiltin(); }
 
-  bool isIntrinsic() const { return flags().isIntrinsic(); }
+  bool isIntrinsic() const { return flags_.isIntrinsic(); }
 
   bool hasJitScript() const {
     if (!hasBaseScript()) {
@@ -261,7 +239,7 @@ class JSFunction : public js::NativeObject {
   bool isBuiltin() const { return isBuiltinNative() || isSelfHostedBuiltin(); }
 
   bool isNamedLambda() const {
-    return flags().isNamedLambda(displayAtom() != nullptr);
+    return flags_.isNamedLambda(displayAtom() != nullptr);
   }
 
   bool hasLexicalThis() const { return isArrow(); }
@@ -286,33 +264,21 @@ class JSFunction : public js::NativeObject {
   /* Returns the strictness of this function, which must be interpreted. */
   bool strict() const { return baseScript()->strict(); }
 
-  void setFlags(FunctionFlags flags) { setFlags(flags.toRaw()); }
-  void setFlags(uint16_t flags) {
-    uint32_t flagsAndArgCount = flagsAndArgCountRaw();
-    flagsAndArgCount &= ~FlagsMask;
-    flagsAndArgCount |= flags;
-    js::HeapSlot& slot = getFixedSlotRef(FlagsAndArgCountSlot);
-    slot.unbarrieredSet(JS::PrivateUint32Value(flagsAndArgCount));
-  }
+  void setFlags(uint16_t flags) { flags_ = FunctionFlags(flags); }
+  void setFlags(FunctionFlags flags) { flags_ = flags; }
 
   // Make the function constructible.
-  void setIsConstructor() { setFlags(flags().setIsConstructor()); }
+  void setIsConstructor() { flags_.setIsConstructor(); }
 
   // Can be called multiple times by the parser.
-  void setArgCount(uint16_t nargs) {
-    uint32_t flagsAndArgCount = flagsAndArgCountRaw();
-    flagsAndArgCount &= ~ArgCountMask;
-    flagsAndArgCount |= nargs << ArgCountShift;
-    js::HeapSlot& slot = getFixedSlotRef(FlagsAndArgCountSlot);
-    slot.unbarrieredSet(JS::PrivateUint32Value(flagsAndArgCount));
-  }
+  void setArgCount(uint16_t nargs) { this->nargs_ = nargs; }
 
-  void setIsBoundFunction() { setFlags(flags().setIsBoundFunction()); }
-  void setIsSelfHostedBuiltin() { setFlags(flags().setIsSelfHostedBuiltin()); }
-  void setIsIntrinsic() { setFlags(flags().setIsIntrinsic()); }
+  void setIsBoundFunction() { flags_.setIsBoundFunction(); }
+  void setIsSelfHostedBuiltin() { flags_.setIsSelfHostedBuiltin(); }
+  void setIsIntrinsic() { flags_.setIsIntrinsic(); }
 
-  void setResolvedLength() { setFlags(flags().setResolvedLength()); }
-  void setResolvedName() { setFlags(flags().setResolvedName()); }
+  void setResolvedLength() { flags_.setResolvedLength(); }
+  void setResolvedName() { flags_.setResolvedName(); }
 
   static bool getUnresolvedLength(JSContext* cx, js::HandleFunction fun,
                                   js::MutableHandleValue v);
@@ -326,59 +292,52 @@ class JSFunction : public js::NativeObject {
                                               js::HandleFunction fun);
 
   JSAtom* explicitName() const {
-    return (hasInferredName() || hasGuessedAtom()) ? nullptr : rawAtom();
+    return (hasInferredName() || hasGuessedAtom()) ? nullptr : atom_.get();
   }
 
   JSAtom* explicitOrInferredName() const {
-    return hasGuessedAtom() ? nullptr : rawAtom();
+    return hasGuessedAtom() ? nullptr : atom_.get();
   }
 
   void initAtom(JSAtom* atom) {
     MOZ_ASSERT_IF(atom, js::AtomIsMarked(zone(), atom));
-    if (atom) {
-      initFixedSlot(AtomSlot, JS::StringValue(atom));
-    }
+    atom_.init(atom);
   }
 
   void setAtom(JSAtom* atom) {
     MOZ_ASSERT_IF(atom, js::AtomIsMarked(zone(), atom));
-    setFixedSlot(AtomSlot, atom ? JS::StringValue(atom) : JS::UndefinedValue());
+    atom_ = atom;
   }
 
-  JSAtom* displayAtom() const { return rawAtom(); }
-
-  JSAtom* rawAtom() const {
-    JS::Value value = getFixedSlot(AtomSlot);
-    return value.isUndefined() ? nullptr : &value.toString()->asAtom();
-  }
+  JSAtom* displayAtom() const { return atom_; }
 
   void setInferredName(JSAtom* atom) {
-    MOZ_ASSERT(!rawAtom());
+    MOZ_ASSERT(!atom_);
     MOZ_ASSERT(atom);
     MOZ_ASSERT(!hasGuessedAtom());
     setAtom(atom);
-    setFlags(flags().setInferredName());
+    flags_.setInferredName();
   }
   JSAtom* inferredName() const {
     MOZ_ASSERT(hasInferredName());
-    MOZ_ASSERT(rawAtom());
-    return rawAtom();
+    MOZ_ASSERT(atom_);
+    return atom_;
   }
 
   void setGuessedAtom(JSAtom* atom) {
-    MOZ_ASSERT(!rawAtom());
+    MOZ_ASSERT(!atom_);
     MOZ_ASSERT(atom);
     MOZ_ASSERT(!hasInferredName());
     MOZ_ASSERT(!hasGuessedAtom());
     MOZ_ASSERT(!isBoundFunction());
     setAtom(atom);
-    setFlags(flags().setGuessedAtom());
+    flags_.setGuessedAtom();
   }
 
   void setPrefixedBoundFunctionName(JSAtom* atom) {
     MOZ_ASSERT(!hasBoundFunctionNamePrefix());
     MOZ_ASSERT(atom);
-    setFlags(flags().setPrefixedBoundFunctionName());
+    flags_.setPrefixedBoundFunctionName();
     setAtom(atom);
   }
 
@@ -391,20 +350,25 @@ class JSFunction : public js::NativeObject {
    */
   JSObject* environment() const {
     MOZ_ASSERT(isInterpreted());
-    return getFixedSlot(NativeFuncOrInterpretedEnvSlot).toObjectOrNull();
+    return u.scripted.env_;
   }
 
   void initEnvironment(JSObject* obj) {
     MOZ_ASSERT(isInterpreted());
-    initFixedSlot(NativeFuncOrInterpretedEnvSlot, JS::ObjectOrNullValue(obj));
+    reinterpret_cast<js::GCPtrObject*>(&u.scripted.env_)->init(obj);
   }
 
  public:
-  static constexpr size_t offsetOfFlagsAndArgCount() {
-    return getFixedSlotOffset(FlagsAndArgCountSlot);
+  static constexpr size_t offsetOfNargs() {
+    return offsetof(JSFunction, nargs_);
   }
-  static size_t offsetOfEnvironment() { return offsetOfNativeOrEnv(); }
-  static size_t offsetOfAtom() { return getFixedSlotOffset(AtomSlot); }
+  static constexpr size_t offsetOfFlags() {
+    return offsetof(JSFunction, flags_);
+  }
+  static size_t offsetOfEnvironment() {
+    return offsetof(JSFunction, u.scripted.env_);
+  }
+  static size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
   static bool delazifyLazilyInterpretedFunction(JSContext* cx,
                                                 js::HandleFunction fun);
@@ -458,42 +422,31 @@ class JSFunction : public js::NativeObject {
     return nullptr;
   }
 
- private:
-  void* nativeJitInfoOrInterpretedScript() const {
-    return getFixedSlot(NativeJitInfoOrInterpretedScriptSlot).toPrivate();
-  }
-  void setNativeJitInfoOrInterpretedScript(void* ptr) {
-    // This always stores a PrivateValue and so doesn't require a barrier.
-    js::HeapSlot& slot = getFixedSlotRef(NativeJitInfoOrInterpretedScriptSlot);
-    slot.unbarrieredSet(JS::PrivateValue(ptr));
-  }
-
- public:
   // The default state of a JSFunction that is not ready for execution. If
   // observed outside initialization, this is the result of failure during
   // bytecode compilation.
   //
   // A BaseScript is fully initialized before u.script.s.script_ is initialized
   // with a reference to it.
-  bool isIncomplete() const {
-    return isInterpreted() && !nativeJitInfoOrInterpretedScript();
-  }
+  bool isIncomplete() const { return isInterpreted() && !u.scripted.s.script_; }
 
   JSScript* nonLazyScript() const {
     MOZ_ASSERT(hasBytecode());
-    return static_cast<JSScript*>(baseScript());
+    MOZ_ASSERT(u.scripted.s.script_);
+    return static_cast<JSScript*>(u.scripted.s.script_);
   }
 
   js::SelfHostedLazyScript* selfHostedLazyScript() const {
     MOZ_ASSERT(hasSelfHostedLazyScript());
-    return static_cast<js::SelfHostedLazyScript*>(
-        nativeJitInfoOrInterpretedScript());
+    MOZ_ASSERT(u.scripted.s.selfHostedLazy_);
+    return u.scripted.s.selfHostedLazy_;
   }
 
   // Access fields defined on both lazy and non-lazy scripts.
   js::BaseScript* baseScript() const {
     MOZ_ASSERT(hasBaseScript());
-    return static_cast<JSScript*>(nativeJitInfoOrInterpretedScript());
+    MOZ_ASSERT(u.scripted.s.script_);
+    return u.scripted.s.script_;
   }
 
   static bool getLength(JSContext* cx, js::HandleFunction fun,
@@ -537,45 +490,34 @@ class JSFunction : public js::NativeObject {
   void initScript(js::BaseScript* script) {
     MOZ_ASSERT_IF(script, realm() == script->realm());
     MOZ_ASSERT(isInterpreted());
-    MOZ_ASSERT_IF(hasBaseScript(),
-                  !baseScript());  // No write barrier required.
-    setNativeJitInfoOrInterpretedScript(script);
+    u.scripted.s.script_ = script;
   }
 
   void initSelfHostedLazyScript(js::SelfHostedLazyScript* lazy) {
     MOZ_ASSERT(isSelfHostedBuiltin());
     MOZ_ASSERT(isInterpreted());
-    if (hasBaseScript()) {
-      js::gc::PreWriteBarrier(baseScript());
-    }
-    FunctionFlags f = flags();
-    f.clearBaseScript();
-    f.setSelfHostedLazy();
-    setFlags(f);
-    setNativeJitInfoOrInterpretedScript(lazy);
+    flags_.clearBaseScript();
+    flags_.setSelfHostedLazy();
+    u.scripted.s.selfHostedLazy_ = lazy;
     MOZ_ASSERT(hasSelfHostedLazyScript());
   }
 
   void clearSelfHostedLazyScript() {
-    MOZ_ASSERT(isSelfHostedBuiltin());
-    MOZ_ASSERT(isInterpreted());
-    MOZ_ASSERT(!hasBaseScript());  // No write barrier required.
-    FunctionFlags f = flags();
-    f.clearSelfHostedLazy();
-    f.setBaseScript();
-    setFlags(f);
-    setNativeJitInfoOrInterpretedScript(nullptr);
+    // Note: The selfHostedLazy_ field is not a GC-thing pointer so we don't
+    // need to trigger barriers.
+    flags_.clearSelfHostedLazy();
+    flags_.setBaseScript();
+    u.scripted.s.script_ = nullptr;
     MOZ_ASSERT(isIncomplete());
   }
 
   JSNative native() const {
     MOZ_ASSERT(isNativeFun());
-    return nativeUnchecked();
+    return u.native.func_;
   }
   JSNative nativeUnchecked() const {
-    // Can be called by Ion off-main thread.
-    JS::Value value = getFixedSlot(NativeFuncOrInterpretedEnvSlot);
-    return reinterpret_cast<JSNative>(value.toPrivate());
+    // Called by Ion off-main thread.
+    return u.native.func_;
   }
 
   JSNative maybeNative() const { return isInterpreted() ? nullptr : native(); }
@@ -584,23 +526,23 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(isNativeFun());
     MOZ_ASSERT_IF(jitInfo, isBuiltinNative());
     MOZ_ASSERT(native);
-    initFixedSlot(NativeFuncOrInterpretedEnvSlot,
-                  JS::PrivateValue(reinterpret_cast<void*>(native)));
-    setNativeJitInfoOrInterpretedScript(const_cast<JSJitInfo*>(jitInfo));
+    u.native.func_ = native;
+    u.native.extra.jitInfo_ = jitInfo;
   }
-  bool hasJitInfo() const { return isBuiltinNative() && jitInfoUnchecked(); }
+  bool hasJitInfo() const {
+    return isBuiltinNative() && u.native.extra.jitInfo_;
+  }
   const JSJitInfo* jitInfo() const {
     MOZ_ASSERT(hasJitInfo());
-    return jitInfoUnchecked();
+    return u.native.extra.jitInfo_;
   }
   const JSJitInfo* jitInfoUnchecked() const {
-    // Can be called by Ion off-main thread.
-    return static_cast<const JSJitInfo*>(nativeJitInfoOrInterpretedScript());
+    // Called by Ion off-main thread.
+    return u.native.extra.jitInfo_;
   }
   void setJitInfo(const JSJitInfo* data) {
     MOZ_ASSERT(isBuiltinNative());
-    MOZ_ASSERT(data);
-    setNativeJitInfoOrInterpretedScript(const_cast<JSJitInfo*>(data));
+    u.native.extra.jitInfo_ = data;
   }
 
   // wasm functions are always natives and either:
@@ -612,39 +554,55 @@ class JSFunction : public js::NativeObject {
   void setWasmFuncIndex(uint32_t funcIndex) {
     MOZ_ASSERT(isWasm() || isAsmJSNative());
     MOZ_ASSERT(!isWasmWithJitEntry());
-    MOZ_ASSERT(!nativeJitInfoOrInterpretedScript());
+    MOZ_ASSERT(!u.native.extra.taggedWasmFuncIndex_);
     // See wasmFuncIndex_ comment for why we set the low bit.
-    uintptr_t tagged = (uintptr_t(funcIndex) << 1) | 1;
-    setNativeJitInfoOrInterpretedScript(reinterpret_cast<void*>(tagged));
+    u.native.extra.taggedWasmFuncIndex_ = (uintptr_t(funcIndex) << 1) | 1;
   }
   uint32_t wasmFuncIndex() const {
     MOZ_ASSERT(isWasm() || isAsmJSNative());
     MOZ_ASSERT(!isWasmWithJitEntry());
-    uintptr_t tagged = uintptr_t(nativeJitInfoOrInterpretedScript());
-    MOZ_ASSERT(tagged & 1);
-    return tagged >> 1;
+    MOZ_ASSERT(u.native.extra.taggedWasmFuncIndex_ & 1);
+    return u.native.extra.taggedWasmFuncIndex_ >> 1;
   }
   void setWasmJitEntry(void** entry) {
     MOZ_ASSERT(*entry);
     MOZ_ASSERT(isWasm());
     MOZ_ASSERT(!isWasmWithJitEntry());
-    setFlags(flags().setWasmJitEntry());
-    setNativeJitInfoOrInterpretedScript(entry);
+    flags_.setWasmJitEntry();
+    u.native.extra.wasmJitEntry_ = entry;
     MOZ_ASSERT(isWasmWithJitEntry());
   }
   void** wasmJitEntry() const {
     MOZ_ASSERT(isWasmWithJitEntry());
-    return static_cast<void**>(nativeJitInfoOrInterpretedScript());
+    MOZ_ASSERT(u.native.extra.wasmJitEntry_);
+    return u.native.extra.wasmJitEntry_;
   }
 
   bool isDerivedClassConstructor() const;
   bool isSyntheticFunction() const;
 
-  static unsigned offsetOfNativeOrEnv() {
-    return getFixedSlotOffset(NativeFuncOrInterpretedEnvSlot);
+  static unsigned offsetOfNative() {
+    return offsetof(JSFunction, u.native.func_);
   }
-  static unsigned offsetOfJitInfoOrScript() {
-    return getFixedSlotOffset(NativeJitInfoOrInterpretedScriptSlot);
+  static unsigned offsetOfScript() {
+    static_assert(offsetof(U, scripted.s.script_) ==
+                      offsetof(U, native.extra.wasmJitEntry_),
+                  "scripted.s.script_ must be at the same offset as "
+                  "native.extra.wasmJitEntry_");
+    return offsetof(JSFunction, u.scripted.s.script_);
+  }
+  static unsigned offsetOfNativeOrEnv() {
+    static_assert(
+        offsetof(U, native.func_) == offsetof(U, scripted.env_),
+        "U.native.func_ must be at the same offset as U.scripted.env_");
+    return offsetOfNative();
+  }
+  static unsigned offsetOfBaseScript() {
+    return offsetof(JSFunction, u.scripted.s.script_);
+  }
+
+  static unsigned offsetOfJitInfo() {
+    return offsetof(JSFunction, u.native.extra.jitInfo_);
   }
 
   inline void trace(JSTracer* trc);
@@ -664,9 +622,13 @@ class JSFunction : public js::NativeObject {
                                       js::HandleObject targetObj,
                                       int32_t argCount);
 
+ private:
+  inline js::FunctionExtended* toExtended();
+  inline const js::FunctionExtended* toExtended() const;
+
  public:
   inline bool isExtended() const {
-    bool extended = flags().isExtended();
+    bool extended = flags_.isExtended();
     MOZ_ASSERT_IF(isTenured(),
                   extended == (asTenured().getAllocKind() ==
                                js::gc::AllocKind::FUNCTION_EXTENDED));
@@ -674,12 +636,28 @@ class JSFunction : public js::NativeObject {
   }
 
   /*
-   * Accessors for data stored in extended functions. Use setExtendedSlot if the
-   * function has already been initialized. Otherwise use initExtendedSlot.
+   * Accessors for data stored in extended functions. Use setExtendedSlot if
+   * the function has already been initialized. Otherwise use
+   * initExtendedSlot.
    */
-  inline void initExtendedSlot(uint32_t slot, const js::Value& val);
-  inline void setExtendedSlot(uint32_t slot, const js::Value& val);
-  inline const js::Value& getExtendedSlot(uint32_t slot) const;
+  inline void initializeExtended();
+  inline void initExtendedSlot(size_t which, const js::Value& val);
+  inline void setExtendedSlot(size_t which, const js::Value& val);
+  inline const js::Value& getExtendedSlot(size_t which) const;
+
+  /*
+   * Same as `toExtended` and `getExtendedSlot`, but `this` is guaranteed to be
+   * an extended function.
+   *
+   * This function is supposed to be used off-thread, especially the JIT
+   * compilation thread, that cannot access JSFunction.flags_, because of
+   * a race condition.
+   *
+   * See Also: WrappedFunction.isExtended_
+   */
+  inline js::FunctionExtended* toExtendedOffMainThread();
+  inline const js::FunctionExtended* toExtendedOffMainThread() const;
+  inline const js::Value& getExtendedSlotOffMainThread(size_t which) const;
 
   /* GC support. */
   js::gc::AllocKind getAllocKind() const {
@@ -699,16 +677,6 @@ class JSFunction : public js::NativeObject {
 
 static_assert(sizeof(JSFunction) == sizeof(JS::shadow::Function),
               "shadow interface must match actual interface");
-
-static_assert(unsigned(JSFunction::FlagsAndArgCountSlot) ==
-              unsigned(JS::shadow::Function::FlagsAndArgCountSlot));
-static_assert(unsigned(JSFunction::NativeFuncOrInterpretedEnvSlot) ==
-              unsigned(JS::shadow::Function::NativeFuncOrInterpretedEnvSlot));
-static_assert(
-    unsigned(JSFunction::NativeJitInfoOrInterpretedScriptSlot) ==
-    unsigned(JS::shadow::Function::NativeJitInfoOrInterpretedScriptSlot));
-static_assert(unsigned(JSFunction::AtomSlot) ==
-              unsigned(JS::shadow::Function::AtomSlot));
 
 extern JSString* fun_toStringHelper(JSContext* cx, js::HandleObject obj,
                                     bool isToSource);
@@ -793,42 +761,36 @@ extern void ThrowTypeErrorBehavior(JSContext* cx);
  */
 class FunctionExtended : public JSFunction {
  public:
-  enum {
-    FirstExtendedSlot = JSFunction::SlotCount,
-    SecondExtendedSlot,
-
-    SlotCount
-  };
-
-  static const uint32_t NUM_EXTENDED_SLOTS = 2;
+  static const unsigned NUM_EXTENDED_SLOTS = 2;
 
   // Arrow functions store their lexical new.target in the first extended
   // slot.
-  static const uint32_t ARROW_NEWTARGET_SLOT = 0;
+  static const unsigned ARROW_NEWTARGET_SLOT = 0;
 
-  static const uint32_t METHOD_HOMEOBJECT_SLOT = 0;
+  static const unsigned METHOD_HOMEOBJECT_SLOT = 0;
 
   // Stores the length for bound functions, so the .length property doesn't need
   // to be resolved eagerly.
-  static const uint32_t BOUND_FUNCTION_LENGTH_SLOT = 1;
+  static const unsigned BOUND_FUNCTION_LENGTH_SLOT = 1;
 
   // Exported asm.js/wasm functions store their WasmInstanceObject in the
   // first slot.
-  static const uint32_t WASM_INSTANCE_SLOT = 0;
+  static const unsigned WASM_INSTANCE_SLOT = 0;
 
   // wasm/asm.js exported functions store the wasm::TlsData pointer of their
   // instance.
-  static const uint32_t WASM_TLSDATA_SLOT = 1;
+  static const unsigned WASM_TLSDATA_SLOT = 1;
 
   // asm.js module functions store their WasmModuleObject in the first slot.
-  static const uint32_t ASMJS_MODULE_SLOT = 0;
+  static const unsigned ASMJS_MODULE_SLOT = 0;
 
   // Async module callback handlers store their ModuleObject in the first slot.
-  static const uint32_t MODULE_SLOT = 0;
+  static const unsigned MODULE_SLOT = 0;
 
-  static inline size_t offsetOfExtendedSlot(uint32_t which) {
+  static inline size_t offsetOfExtendedSlot(unsigned which) {
     MOZ_ASSERT(which < NUM_EXTENDED_SLOTS);
-    return getFixedSlotOffset(FirstExtendedSlot + which);
+    return offsetof(FunctionExtended, extendedSlots) +
+           which * sizeof(GCPtrValue);
   }
   static inline size_t offsetOfArrowNewTargetSlot() {
     return offsetOfExtendedSlot(ARROW_NEWTARGET_SLOT);
@@ -842,6 +804,9 @@ class FunctionExtended : public JSFunction {
 
  private:
   friend class JSFunction;
+
+  /* Reserved slots available for storage by particular native functions. */
+  GCPtrValue extendedSlots[NUM_EXTENDED_SLOTS];
 };
 
 extern bool CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
@@ -856,29 +821,53 @@ extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
 
 }  // namespace js
 
-template <>
-inline bool JSObject::is<JSFunction>() const {
-  return getClass()->isJSFunction();
+inline js::FunctionExtended* JSFunction::toExtended() {
+  MOZ_ASSERT(isExtended());
+  return static_cast<js::FunctionExtended*>(this);
 }
 
-inline void JSFunction::initExtendedSlot(uint32_t which, const js::Value& val) {
+inline const js::FunctionExtended* JSFunction::toExtended() const {
   MOZ_ASSERT(isExtended());
-  MOZ_ASSERT(which < js::FunctionExtended::NUM_EXTENDED_SLOTS);
+  return static_cast<const js::FunctionExtended*>(this);
+}
+
+inline js::FunctionExtended* JSFunction::toExtendedOffMainThread() {
+  return static_cast<js::FunctionExtended*>(this);
+}
+
+inline const js::FunctionExtended* JSFunction::toExtendedOffMainThread() const {
+  return static_cast<const js::FunctionExtended*>(this);
+}
+
+inline void JSFunction::initializeExtended() {
+  MOZ_ASSERT(isExtended());
+
+  MOZ_ASSERT(std::size(toExtended()->extendedSlots) == 2);
+  toExtended()->extendedSlots[0].init(js::UndefinedValue());
+  toExtended()->extendedSlots[1].init(js::UndefinedValue());
+}
+
+inline void JSFunction::initExtendedSlot(size_t which, const js::Value& val) {
+  MOZ_ASSERT(which < std::size(toExtended()->extendedSlots));
   MOZ_ASSERT(js::IsObjectValueInCompartment(val, compartment()));
-  initFixedSlot(js::FunctionExtended::FirstExtendedSlot + which, val);
+  toExtended()->extendedSlots[which].init(val);
 }
 
-inline void JSFunction::setExtendedSlot(uint32_t which, const js::Value& val) {
-  MOZ_ASSERT(isExtended());
-  MOZ_ASSERT(which < js::FunctionExtended::NUM_EXTENDED_SLOTS);
+inline void JSFunction::setExtendedSlot(size_t which, const js::Value& val) {
+  MOZ_ASSERT(which < std::size(toExtended()->extendedSlots));
   MOZ_ASSERT(js::IsObjectValueInCompartment(val, compartment()));
-  setFixedSlot(js::FunctionExtended::FirstExtendedSlot + which, val);
+  toExtended()->extendedSlots[which] = val;
 }
 
-inline const js::Value& JSFunction::getExtendedSlot(uint32_t which) const {
-  MOZ_ASSERT(isExtended());
-  MOZ_ASSERT(which < js::FunctionExtended::NUM_EXTENDED_SLOTS);
-  return getFixedSlot(js::FunctionExtended::FirstExtendedSlot + which);
+inline const js::Value& JSFunction::getExtendedSlot(size_t which) const {
+  MOZ_ASSERT(which < std::size(toExtended()->extendedSlots));
+  return toExtended()->extendedSlots[which];
+}
+
+inline const js::Value& JSFunction::getExtendedSlotOffMainThread(
+    size_t which) const {
+  MOZ_ASSERT(which < std::size(toExtendedOffMainThread()->extendedSlots));
+  return toExtendedOffMainThread()->extendedSlots[which];
 }
 
 namespace js {

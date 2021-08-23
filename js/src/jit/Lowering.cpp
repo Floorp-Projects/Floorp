@@ -4684,15 +4684,6 @@ void LIRGenerator::visitGuardToClass(MGuardToClass* ins) {
   defineReuseInput(lir, ins, 0);
 }
 
-void LIRGenerator::visitGuardToFunction(MGuardToFunction* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->type() == MIRType::Object);
-  LGuardToFunction* lir =
-      new (alloc()) LGuardToFunction(useRegisterAtStart(ins->object()), temp());
-  assignSnapshot(lir, ins->bailoutKind());
-  defineReuseInput(lir, ins, 0);
-}
-
 void LIRGenerator::visitObjectClassToString(MObjectClassToString* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::String);

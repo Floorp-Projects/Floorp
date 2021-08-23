@@ -88,7 +88,7 @@ const JSClass* jit::GetObjectKnownJSClass(const MDefinition* def) {
     case KnownClass::Array:
       return &ArrayObject::class_;
     case KnownClass::Function:
-      return &FunctionClass;
+      return &JSFunction::class_;
     case KnownClass::RegExp:
       return &RegExpObject::class_;
     case KnownClass::ArrayIterator:
