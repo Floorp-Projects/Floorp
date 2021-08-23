@@ -34,7 +34,6 @@ class nsPresContext;
 class nsIContent;
 
 namespace mozilla {
-struct ContainerLayerParameters;
 class DisplayItemClip;
 class nsDisplayListBuilder;
 
@@ -56,7 +55,6 @@ class ScrollAnchorContainer;
 class nsIScrollableFrame : public nsIScrollbarMediator {
  public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
-  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
   typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
   typedef mozilla::ScrollMode ScrollMode;
@@ -484,14 +482,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       mozilla::layers::LayerManager* aLayerManager,
       const nsIFrame* aContainerReferenceFrame,
-      const mozilla::Maybe<ContainerLayerParameters>& aParameters,
       const mozilla::DisplayItemClip* aClip) const = 0;
-  /**
-   * Ensure's aLayer is clipped to the display port.
-   */
-  virtual void ClipLayerToDisplayPort(
-      mozilla::layers::Layer* aLayer, const mozilla::DisplayItemClip* aClip,
-      const ContainerLayerParameters& aParameters) const = 0;
 
   /**
    * Mark the scrollbar frames for reflow.

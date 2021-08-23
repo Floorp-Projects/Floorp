@@ -14,7 +14,6 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
-#include "FrameLayerBuilder.h"
 
 namespace mozilla {
 namespace layers {
@@ -36,7 +35,6 @@ class nsVideoFrame final : public nsContainerFrame,
 
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
-  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
   explicit nsVideoFrame(ComputedStyle*, nsPresContext*);
 
@@ -98,11 +96,6 @@ class nsVideoFrame final : public nsContainerFrame,
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
-
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      nsDisplayItem* aItem,
-      const ContainerLayerParameters& aContainerParameters);
 
  protected:
   // Returns true if we're rendering for a video element. We still create

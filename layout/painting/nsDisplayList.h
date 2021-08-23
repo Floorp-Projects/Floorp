@@ -79,7 +79,6 @@ namespace mozilla {
 enum class nsDisplayOwnLayerFlags;
 class nsDisplayCompositorHitTestInfo;
 class nsDisplayScrollInfoLayer;
-class FrameLayerBuilder;
 class PresShell;
 class StickyScrollContainer;
 
@@ -2703,35 +2702,6 @@ class nsDisplayItem : public nsDisplayItemLink {
    */
   static bool ForceActiveLayers();
 
-  /**
-   * @return LAYER_NONE if BuildLayer will return null. In this case
-   * there is no layer for the item, and Paint should be called instead
-   * to paint the content using Thebes.
-   * Return LAYER_INACTIVE if there is a layer --- BuildLayer will
-   * not return null (unless there's an error) --- but the layer contents
-   * are not changing frequently. In this case it makes sense to composite
-   * the layer into a PaintedLayer with other content, so we don't have to
-   * recomposite it every time we paint.
-   * Note: GetLayerState is only allowed to return LAYER_INACTIVE if all
-   * descendant display items returned LAYER_INACTIVE or LAYER_NONE. Also,
-   * all descendant display item frames must have an active scrolled root
-   * that's either the same as this item's frame's active scrolled root, or
-   * a descendant of this item's frame. This ensures that the entire
-   * set of display items can be collapsed onto a single PaintedLayer.
-   * Return LAYER_ACTIVE if the layer is active, that is, its contents are
-   * changing frequently. In this case it makes sense to keep the layer
-   * as a separate buffer in VRAM and composite it into the destination
-   * every time we paint.
-   *
-   * Users of GetLayerState should check ForceActiveLayers() and if it returns
-   * true, change a returned value of LAYER_INACTIVE to LAYER_ACTIVE.
-   */
-  virtual LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) {
-    return LayerState::LAYER_NONE;
-  }
-
 #ifdef MOZ_DUMP_PAINTING
   /**
    * Mark this display item as being painted via
@@ -3126,26 +3096,6 @@ class nsPaintedDisplayItem : public nsDisplayItem {
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
                             const DisplayItemClipChain* aClip) {
     MOZ_ASSERT(CanApplyOpacity(), "ApplyOpacity is not supported on this type");
-  }
-
-  /**
-   * Get the layer drawn by this display item. Call this only if
-   * GetLayerState() returns something other than LAYER_NONE.
-   * If GetLayerState returned LAYER_NONE then Paint will be called
-   * instead.
-   * This is called while aManager is in the construction phase.
-   *
-   * The caller (nsDisplayList) is responsible for setting the visible
-   * region of the layer.
-   *
-   * @param aContainerParameters should be passed to
-   * FrameLayerBuilder::BuildContainerLayerFor if a ContainerLayer is
-   * constructed.
-   */
-  virtual already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) {
-    return nullptr;
   }
 
   /**
@@ -3599,10 +3549,6 @@ class nsDisplayList {
       nsDisplayListBuilder* aBuilder, gfxContext* aCtx, uint32_t aFlags,
       Maybe<double> aDisplayListBuildTime);
 
-  FrameLayerBuilder* BuildLayers(nsDisplayListBuilder* aBuilder,
-                                 layers::LayerManager* aLayerManager,
-                                 uint32_t aFlags, bool aIsWidgetTransaction);
-
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
              int32_t aAppUnitsPerDevPixel);
 
@@ -3957,8 +3903,6 @@ class nsDisplayImageContainer : public nsPaintedDisplayItem {
 
   already_AddRefed<layers::ImageContainer> GetContainer(
       LayerManager* aManager, nsDisplayListBuilder* aBuilder);
-  void ConfigureLayer(layers::ImageLayer* aLayer,
-                      const ContainerLayerParameters& aParameters);
 
   virtual void UpdateDrawResult(image::ImgDrawResult aResult) = 0;
   virtual already_AddRefed<imgIContainer> GetImage() = 0;
@@ -4154,9 +4098,6 @@ class nsDisplayBorder : public nsPaintedDisplayItem {
 
   bool IsInvisibleInRect(const nsRect& aRect) const override;
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
@@ -4309,12 +4250,6 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
   NS_DISPLAY_DECL_NAME("SolidColor", TYPE_SOLID_COLOR)
 
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   void WriteDebugInfo(std::stringstream& aStream) override;
   bool CreateWebRenderCommands(
@@ -4458,12 +4393,6 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
       Maybe<nsDisplayListBuilder::AutoBuildingDisplayList>*
           aAutoBuildingDisplayList = nullptr);
 
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
@@ -4786,15 +4715,9 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
     return mBottomLayerClip == StyleGeometryBox::Text;
   }
 
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   void PaintWithClip(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                      const DisplayItemClip& aClip) override;
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
@@ -5487,12 +5410,6 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                          nsRegion* aVisibleRegion) override;
@@ -5605,9 +5522,6 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
 
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
                                  nsRegion* aInvalidRegion) const override {
@@ -5615,9 +5529,6 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
     // LayerTreeInvalidation
   }
 
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
@@ -5708,12 +5619,6 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
 
   NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
@@ -5862,9 +5767,6 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
 
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
@@ -5872,9 +5774,6 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool UpdateScrollData(layers::WebRenderScrollData* aData,
                         layers::WebRenderLayerScrollData* aLayerData) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     GetChildren()->Paint(aBuilder, aCtx,
                          mFrame->PresContext()->AppUnitsPerDevPixel());
@@ -5944,15 +5843,6 @@ class nsDisplaySubDocument : public nsDisplayOwnLayer {
     mShouldFlatten = aShouldFlatten;
   }
 
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override {
-    if (mShouldFlatten) {
-      return LayerState::LAYER_NONE;
-    }
-    return nsDisplayOwnLayer::GetLayerState(aBuilder, aManager, aParameters);
-  }
-
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
 
@@ -5994,15 +5884,7 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
                     bool aStore) override;
   bool IsClippedToDisplayPort() const { return mClippedToDisplayPort; }
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
   NS_DISPLAY_DECL_NAME("StickyPosition", TYPE_STICKY_POSITION)
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override {
-    return LayerState::LAYER_ACTIVE;
-  }
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     GetChildren()->Paint(aBuilder, aCtx,
                          mFrame->PresContext()->AppUnitsPerDevPixel());
@@ -6074,15 +5956,6 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
 
   NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override {
-    return LayerState::LAYER_ACTIVE_FORCE;
-  }
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     GetChildren()->Paint(aBuilder, aCtx,
                          mFrame->PresContext()->AppUnitsPerDevPixel());
@@ -6171,19 +6044,12 @@ class nsDisplayScrollInfoLayer : public nsDisplayWrapList {
 
   NS_DISPLAY_DECL_NAME("ScrollInfoLayer", TYPE_SCROLL_INFO_LAYER)
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = false;
     return nsRegion();
   }
 
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     return;
   }
@@ -6194,8 +6060,7 @@ class nsDisplayScrollInfoLayer : public nsDisplayWrapList {
 
   void WriteDebugInfo(std::stringstream& aStream) override;
   UniquePtr<layers::ScrollMetadata> ComputeScrollMetadata(
-      nsDisplayListBuilder* aBuilder, LayerManager* aLayerManager,
-      const ContainerLayerParameters& aContainerParameters);
+      nsDisplayListBuilder* aBuilder, LayerManager* aLayerManager);
   bool UpdateScrollData(layers::WebRenderScrollData* aData,
                         layers::WebRenderLayerScrollData* aLayerData) override;
   bool CreateWebRenderCommands(
@@ -6242,12 +6107,6 @@ class nsDisplayZoom : public nsDisplaySubDocument {
                HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
   bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                          nsRegion* aVisibleRegion) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override {
-    return LayerState::LAYER_ACTIVE;
-  }
-
   // Get the app units per dev pixel ratio of the child document.
   int32_t GetChildAppUnitsPerDevPixel() { return mAPD; }
   // Get the app units per dev pixel ratio of the parent document.
@@ -6284,14 +6143,6 @@ class nsDisplayAsyncZoom : public nsDisplayOwnLayer {
 
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override {
-    return LayerState::LAYER_ACTIVE_FORCE;
-  }
   bool UpdateScrollData(layers::WebRenderScrollData* aData,
                         layers::WebRenderLayerScrollData* aLayerData) override;
 
@@ -6400,12 +6251,6 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
         other->mEffectsBounds + other->mFrame->GetOffsetTo(mFrame));
   }
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                          nsRegion* aVisibleRegion) override;
@@ -6423,9 +6268,6 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
 #endif
 
   bool IsValidMask();
-
-  void PaintAsLayer(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
-                    LayerManager* aManager);
 
   void PaintWithContentsPaintCallback(
       nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
@@ -6478,12 +6320,6 @@ class nsDisplayBackdropRootContainer : public nsDisplayWrapList {
 
   NS_DISPLAY_DECL_NAME("BackdropRootContainer", TYPE_BACKDROP_ROOT_CONTAINER)
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
   bool CreateWebRenderCommands(
@@ -6571,12 +6407,6 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
         other->mEffectsBounds + other->mFrame->GetOffsetTo(mFrame));
   }
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
@@ -6598,9 +6428,6 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
 #ifdef MOZ_DUMP_PAINTING
   void PrintEffects(nsACString& aTo);
 #endif
-
-  void PaintAsLayer(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
-                    LayerManager* aManager);
 
   void PaintWithContentsPaintCallback(
       nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
@@ -6710,12 +6537,6 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
              const Maybe<gfx::Polygon>& aPolygon);
@@ -7063,18 +6884,12 @@ class nsDisplayPerspective : public nsPaintedDisplayItem {
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
 
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
       layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
   RetainedDisplayList* GetSameCoordinateSystemChildren() const override {
@@ -7242,12 +7057,6 @@ class nsDisplaySVGWrapper : public nsDisplayWrapList {
 
   NS_DISPLAY_DECL_NAME("SVGWrapper", TYPE_SVG_WRAPPER)
 
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     GetChildren()->Paint(aBuilder, aCtx,
                          mFrame->PresContext()->AppUnitsPerDevPixel());
@@ -7273,12 +7082,6 @@ class nsDisplayForeignObject : public nsDisplayWrapList {
 
   NS_DISPLAY_DECL_NAME("ForeignObject", TYPE_FOREIGN_OBJECT)
 
-  virtual already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
-  virtual LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     GetChildren()->Paint(aBuilder, aCtx,
