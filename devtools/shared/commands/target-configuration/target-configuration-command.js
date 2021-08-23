@@ -68,20 +68,6 @@ class TargetConfigurationCommand {
       return true;
     }
 
-    // @backward-compat { version 91 } Old servers handled javascriptEnabled in
-    //                  the content process.
-    const { targetFront } = this._commands.targetCommand;
-    if (!targetFront.traits.javascriptEnabledHandledInParent) {
-      // If available, read the value in the configuration.
-      if (typeof this.configuration.javascriptEnabled !== "undefined") {
-        return this.configuration.javascriptEnabled;
-      }
-
-      // If the TargetConfigurationActor does not know the value yet, fallback
-      // on the initial value cached by the target front.
-      return targetFront._javascriptEnabled;
-    }
-
     const front = await this.getFront();
     return front.isJavascriptEnabled();
   }
