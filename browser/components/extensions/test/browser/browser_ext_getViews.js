@@ -3,13 +3,7 @@
 "use strict";
 
 function genericChecker() {
-  let kind = "background";
-  let path = window.location.pathname;
-  if (path.includes("popup")) {
-    kind = "popup";
-  } else if (path.includes("tab")) {
-    kind = "tab";
-  }
+  let kind = window.location.search.slice(1) || "background";
   window.kind = kind;
 
   let bcGroupId = SpecialPowers.wrap(window).browsingContext.group.id;
@@ -21,6 +15,7 @@ function genericChecker() {
         tab: 0,
         popup: 0,
         kind: 0,
+        sidebar: 0,
       };
       if (kind !== "background") {
         counts.kind = browser.extension.getViews({ type: kind }).length;
@@ -62,8 +57,9 @@ function genericChecker() {
       let count = browser.extension.getViews(filter).length;
       browser.test.sendMessage("getViews-count", count);
     } else if (msg == kind + "-open-tab") {
+      let url = browser.runtime.getURL("page.html?tab");
       browser.tabs
-        .create({ windowId: args[0], url: browser.runtime.getURL("tab.html") })
+        .create({ windowId: args[0], url })
         .then(tab => browser.test.sendMessage("opened-tab", tab.id));
     } else if (msg == kind + "-close-tab") {
       browser.tabs.query(
@@ -71,7 +67,7 @@ function genericChecker() {
           windowId: args[0],
         },
         tabs => {
-          let tab = tabs.find(tab => tab.url.includes("tab.html"));
+          let tab = tabs.find(tab => tab.url.includes("page.html?tab"));
           browser.tabs.remove(tab.id, () => {
             browser.test.sendMessage("closed");
           });
@@ -125,36 +121,30 @@ add_task(async function() {
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary", // To automatically show sidebar on load.
     manifest: {
       permissions: ["tabs"],
 
       browser_action: {
-        default_popup: "popup.html",
+        default_popup: "page.html?popup",
+      },
+
+      sidebar_action: {
+        default_panel: "page.html?sidebar",
       },
     },
 
     files: {
-      "tab.html": `
+      "page.html": `
       <!DOCTYPE html>
       <html>
       <head><meta charset="utf-8"></head>
       <body>
-      <script src="tab.js"></script>
+      <script src="page.js"></script>
       </body></html>
       `,
 
-      "tab.js": genericChecker,
-
-      "popup.html": `
-      <!DOCTYPE html>
-      <html>
-      <head><meta charset="utf-8"></head>
-      <body>
-      <script src="popup.js"></script>
-      </body></html>
-      `,
-
-      "popup.js": genericChecker,
+      "page.js": genericChecker,
     },
 
     background: genericChecker,
@@ -164,6 +154,10 @@ add_task(async function() {
     extension.startup(),
     extension.awaitMessage("background-ready"),
   ]);
+
+  await extension.awaitMessage("sidebar-ready");
+  await extension.awaitMessage("sidebar-ready");
+  await extension.awaitMessage("sidebar-ready");
 
   info("started");
 
@@ -185,10 +179,16 @@ add_task(async function() {
   async function checkViews(kind, tabCount, popupCount, kindCount) {
     extension.sendMessage(kind + "-check-views");
     let counts = await extension.awaitMessage("counts");
+    if (kind === "sidebar") {
+      // We have 3 sidebars thaat will answer.
+      await extension.awaitMessage("counts");
+      await extension.awaitMessage("counts");
+    }
     is(counts.background, 1, "background count correct");
     is(counts.tab, tabCount, "tab count correct");
     is(counts.popup, popupCount, "popup count correct");
     is(counts.kind, kindCount, "count for type correct");
+    is(counts.sidebar, 3, "sidebar count is constant");
   }
 
   async function checkViewsWithFilter(filter, expectedCount) {
@@ -198,20 +198,25 @@ add_task(async function() {
   }
 
   await checkViews("background", 0, 0, 0);
+  await checkViews("sidebar", 0, 0, 3);
   await checkViewsWithFilter({ windowId: -1 }, 1);
-  await checkViewsWithFilter({ tabId: -1 }, 1);
+  await checkViewsWithFilter({ windowId: 0 }, 0);
+  await checkViewsWithFilter({ tabId: -1 }, 4);
+  await checkViewsWithFilter({ tabId: 0 }, 0);
 
   let tabId1 = await openTab(winId1);
 
   await checkViews("background", 1, 0, 0);
+  await checkViews("sidebar", 1, 0, 3);
   await checkViews("tab", 1, 0, 1);
-  await checkViewsWithFilter({ windowId: winId1 }, 1);
+  await checkViewsWithFilter({ windowId: winId1 }, 2);
   await checkViewsWithFilter({ tabId: tabId1 }, 1);
 
   let tabId2 = await openTab(winId2);
 
   await checkViews("background", 2, 0, 0);
-  await checkViewsWithFilter({ windowId: winId2 }, 1);
+  await checkViews("sidebar", 2, 0, 3);
+  await checkViewsWithFilter({ windowId: winId2 }, 2);
   await checkViewsWithFilter({ tabId: tabId2 }, 1);
 
   async function triggerPopup(win, callback) {
@@ -231,23 +236,26 @@ add_task(async function() {
 
   await triggerPopup(win1, async function() {
     await checkViews("background", 2, 1, 0);
+    await checkViews("sidebar", 2, 1, 3);
     await checkViews("popup", 2, 1, 1);
-    await checkViewsWithFilter({ windowId: winId1 }, 2);
+    await checkViewsWithFilter({ windowId: winId1 }, 3);
     await checkViewsWithFilter({ type: "popup", tabId: -1 }, 1);
   });
 
   await triggerPopup(win2, async function() {
     await checkViews("background", 2, 1, 0);
+    await checkViews("sidebar", 2, 1, 3);
     await checkViews("popup", 2, 1, 1);
-    await checkViewsWithFilter({ windowId: winId2 }, 2);
+    await checkViewsWithFilter({ windowId: winId2 }, 3);
     await checkViewsWithFilter({ type: "popup", tabId: -1 }, 1);
   });
 
   info("checking counts after popups");
 
   await checkViews("background", 2, 0, 0);
-  await checkViewsWithFilter({ windowId: winId1 }, 1);
-  await checkViewsWithFilter({ tabId: -1 }, 1);
+  await checkViews("sidebar", 2, 0, 3);
+  await checkViewsWithFilter({ windowId: winId1 }, 2);
+  await checkViewsWithFilter({ tabId: -1 }, 4);
 
   info("closing one tab");
 
@@ -261,11 +269,13 @@ add_task(async function() {
   info("one tab closed, one remains");
 
   await checkViews("background", 1, 0, 0);
+  await checkViews("sidebar", 1, 0, 3);
 
   info("opening win1 popup");
 
   await triggerPopup(win1, async function() {
     await checkViews("background", 1, 1, 0);
+    await checkViews("sidebar", 1, 1, 3);
     await checkViews("tab", 1, 1, 1);
     await checkViews("popup", 1, 1, 1);
   });
@@ -274,9 +284,12 @@ add_task(async function() {
 
   await triggerPopup(win2, async function() {
     await checkViews("background", 1, 1, 0);
+    await checkViews("sidebar", 1, 1, 3);
     await checkViews("tab", 1, 1, 1);
     await checkViews("popup", 1, 1, 1);
   });
+
+  await checkViews("sidebar", 1, 0, 3);
 
   await extension.unload();
 

@@ -585,15 +585,6 @@ class ExtensionPageContextParent extends ProxyContextParent {
     }
   }
 
-  get windowId() {
-    let { currentWindow } = this;
-    let { windowTracker } = apiManager.global;
-
-    if (currentWindow && windowTracker) {
-      return windowTracker.getId(currentWindow);
-    }
-  }
-
   get tabId() {
     let { tabTracker } = apiManager.global;
     let data = tabTracker.getBrowserData(this.xulBrowser);
