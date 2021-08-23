@@ -5488,8 +5488,10 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
   mCanceled = true;
   mStatus = NS_FAILED(status) ? status : NS_ERROR_ABORT;
 
-  if (!mEndMarkerAdded && profiler_can_accept_markers()) {
+  if (mLastStatusReported && !mEndMarkerAdded && profiler_can_accept_markers()) {
     // These do allocations/frees/etc; avoid if not active
+    // mLastStatusReported can be null if Cancel is called before we added the
+    // start marker.
     mEndMarkerAdded = true;
 
     nsAutoCString requestMethod;
@@ -5707,19 +5709,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
   LogCallingScriptLocation(this);
-
-  mLastStatusReported =
-      TimeStamp::Now();  // in case we enable the profiler after AsyncOpen()
-  if (profiler_can_accept_markers()) {
-    nsAutoCString requestMethod;
-    GetRequestMethod(requestMethod);
-
-    profiler_add_network_marker(
-        mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
-        mChannelCreationTimestamp, mLastStatusReported, 0, mCacheDisposition,
-        mLoadInfo->GetInnerWindowID());
-  }
-
   NS_CompareLoadInfoAndLoadContext(this);
 
 #ifdef DEBUG
@@ -5816,6 +5805,20 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 }
 
 void nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
+  // We save this timestamp from outside of the if block in case we enable the
+  // profiler after AsyncOpen().
+  mLastStatusReported =
+    TimeStamp::Now();
+  if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
+    profiler_add_network_marker(
+        mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
+        mChannelCreationTimestamp, mLastStatusReported, 0, mCacheDisposition,
+        mLoadInfo->GetInnerWindowID());
+  }
+
   // Added due to PauseTask/DelayHttpChannel
   if (mLoadGroup) mLoadGroup->AddRequest(this, nullptr);
 
