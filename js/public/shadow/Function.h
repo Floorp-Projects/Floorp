@@ -24,22 +24,25 @@ namespace JS {
 
 namespace shadow {
 
-struct Function {
-  shadow::Object base;
-  JS::Value flagsAndArgCount;
-  /* Used only for natives */
-  JS::Value native;
-  JS::Value jitinfo;
-  void* _1;
+struct Function : shadow::Object {
+  enum {
+    FlagsAndArgCountSlot,
+    NativeFuncOrInterpretedEnvSlot,
+    NativeJitInfoOrInterpretedScriptSlot,
+    AtomSlot
+  };
+  uint32_t flagsAndArgCount() const {
+    return fixedSlots()[FlagsAndArgCountSlot].toPrivateUint32();
+  }
+
+  void* jitInfoOrScript() const {
+    return fixedSlots()[NativeJitInfoOrInterpretedScriptSlot].toPrivate();
+  }
+
+  void setJitInfoOrScript(void* ptr) {
+    fixedSlots()[NativeJitInfoOrInterpretedScriptSlot] = JS::PrivateValue(ptr);
+  }
 };
-
-inline Function* AsShadowFunction(JSFunction* fun) {
-  return reinterpret_cast<Function*>(fun);
-}
-
-inline const Function* AsShadowFunction(const JSFunction* fun) {
-  return reinterpret_cast<const Function*>(fun);
-}
 
 }  // namespace shadow
 
