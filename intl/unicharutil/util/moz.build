@@ -33,10 +33,6 @@ GeneratedFile(
     inputs=["../../icu/source/data/translit/Latin_ASCII.txt"],
 )
 
-GeneratedFile(
-    "IsCombiningDiacritic.h",
-    script="is_combining_diacritic.py",
-    force=True
-)
+GeneratedFile("IsCombiningDiacritic.h", script="is_combining_diacritic.py", force=True)
 
 FINAL_LIBRARY = "xul"
