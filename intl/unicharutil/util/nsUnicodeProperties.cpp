@@ -12,6 +12,7 @@
 #include "nsCharTraits.h"
 
 #include "BaseChars.h"
+#include "IsCombiningDiacritic.h"
 
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT 0x110000
@@ -324,6 +325,10 @@ uint32_t GetNaked(uint32_t aCh) {
   }
   return (aCh & 0xffff0000) |
          BASE_CHAR_MAPPING_LIST[block.mMappingStartOffset + lo - block.mFirst];
+}
+
+bool IsCombiningDiacritic(uint32_t aCh) {
+  return sCombiningDiacriticsSet->test(aCh);
 }
 
 }  // end namespace unicode
