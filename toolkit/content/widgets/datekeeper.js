@@ -23,7 +23,9 @@ function DateKeeper(props) {
     // http://ecma-international.org/ecma-262/5.1/#sec-15.9.1.1
     MAX_DATE = 8640000000000000,
     MAX_YEAR = 275760,
-    MAX_MONTH = 9;
+    MAX_MONTH = 9,
+    // One day in ms since epoch.
+    ONE_DAY = 86400000;
 
   DateKeeper.prototype = {
     get year() {
@@ -254,8 +256,11 @@ function DateKeeper(props) {
           this.state.selection.year == dateObj.getUTCFullYear() &&
           this.state.selection.month == dateObj.getUTCMonth() &&
           this.state.selection.day == dateObj.getUTCDate();
+        // The date is at 00:00, so if the minimum is that day at e.g. 01:00,
+        // we should arguably still be able to select that date. So we need to
+        // compare the date at the very end of the day for minimum purposes.
         const isOutOfRange =
-          dateObj.getTime() < this.state.min.getTime() ||
+          dateObj.getTime() + ONE_DAY - 1 < this.state.min.getTime() ||
           dateObj.getTime() > this.state.max.getTime();
         const isToday = this.state.today.getTime() == dateObj.getTime();
         const isOffStep = this._checkIsOffStep(
