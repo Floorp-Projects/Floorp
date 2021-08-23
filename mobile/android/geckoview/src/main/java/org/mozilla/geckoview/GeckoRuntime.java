@@ -643,6 +643,17 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     /**
+     * Gets the {@link ServiceWorkerDelegate} to be used for Service Worker requests.
+     *
+     * @return the {@link ServiceWorkerDelegate} instance set by {@link #setServiceWorkerDelegate}
+     */
+    @UiThread
+    @Nullable
+    public ServiceWorkerDelegate getServiceWorkerDelegate() {
+        return mServiceWorkerDelegate;
+    }
+
+    /**
      * Sets the delegate to be used for handling Web Notifications.
      *
      * @param delegate An instance of {@link WebNotificationDelegate}.
