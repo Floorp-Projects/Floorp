@@ -1826,7 +1826,7 @@ JS_PUBLIC_API JSObject* JS_NewObject(JSContext* cx, const JSClass* clasp) {
     clasp = &PlainObject::class_; /* default class is Object */
   }
 
-  MOZ_ASSERT(clasp != &JSFunction::class_);
+  MOZ_ASSERT(!clasp->isJSFunction());
   MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
   return NewBuiltinClassInstance(cx, clasp);
@@ -1844,7 +1844,7 @@ JS_PUBLIC_API JSObject* JS_NewObjectWithGivenProto(JSContext* cx,
     clasp = &PlainObject::class_; /* default class is Object */
   }
 
-  MOZ_ASSERT(clasp != &JSFunction::class_);
+  MOZ_ASSERT(!clasp->isJSFunction());
   MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
   return NewObjectWithGivenProto(cx, clasp, proto);

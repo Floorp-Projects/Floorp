@@ -56,6 +56,10 @@ inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
   const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(clasp->isNativeObject());
   MOZ_ASSERT(clasp->isJSFunction());
+  MOZ_ASSERT_IF(kind == js::gc::AllocKind::FUNCTION,
+                clasp == js::FunctionClassPtr);
+  MOZ_ASSERT_IF(kind == js::gc::AllocKind::FUNCTION_EXTENDED,
+                clasp == js::FunctionExtendedClassPtr);
 
   static constexpr size_t NumDynamicSlots = 0;
   MOZ_ASSERT(calculateDynamicSlots(shape->numFixedSlots(), shape->slotSpan(),
