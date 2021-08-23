@@ -310,7 +310,7 @@ fn make_app<'a, 'b>() -> App<'a, 'b> {
                 .help("Port to use to connect to Gecko [default: system-allocated port]"),
         )
         .arg(
-             Arg::with_name("websocket_port")
+            Arg::with_name("websocket_port")
                 .long("websocket-port")
                 .takes_value(true)
                 .value_name("PORT")

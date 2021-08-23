@@ -133,7 +133,10 @@ impl MarionetteHandler {
         }
 
         let marionette_host = self.settings.host.to_owned();
-        let marionette_port = self.settings.port.unwrap_or(get_free_port(&marionette_host)?);
+        let marionette_port = self
+            .settings
+            .port
+            .unwrap_or(get_free_port(&marionette_host)?);
 
         let websocket_port = match options.use_websocket {
             true => Some(self.settings.websocket_port),
@@ -151,9 +154,17 @@ impl MarionetteHandler {
                     "Cannot connect to an existing Android App yet",
                 ));
             }
-            Browser::Remote(RemoteBrowser::new(options, marionette_port, websocket_port)?)
+            Browser::Remote(RemoteBrowser::new(
+                options,
+                marionette_port,
+                websocket_port,
+            )?)
         } else if !self.settings.connect_existing {
-            Browser::Local(LocalBrowser::new(options, marionette_port, self.settings.jsdebugger)?)
+            Browser::Local(LocalBrowser::new(
+                options,
+                marionette_port,
+                self.settings.jsdebugger,
+            )?)
         } else {
             Browser::Existing
         };

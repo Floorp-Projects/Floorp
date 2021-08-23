@@ -1332,7 +1332,12 @@ impl Compositor for WrCompositor {
         }
     }
 
-    fn start_compositing(&mut self, clear_color: ColorF, dirty_rects: &[DeviceIntRect], opaque_rects: &[DeviceIntRect]) {
+    fn start_compositing(
+        &mut self,
+        clear_color: ColorF,
+        dirty_rects: &[DeviceIntRect],
+        opaque_rects: &[DeviceIntRect],
+    ) {
         unsafe {
             wr_compositor_start_compositing(
                 self.0,
@@ -2357,10 +2362,7 @@ impl WebRenderFrameBuilder {
             dl_builder: DisplayListBuilder::new(root_pipeline_id),
         }
     }
-    pub fn with_capacity(
-        root_pipeline_id: WrPipelineId,
-        capacity: DisplayListCapacity,
-    ) -> WebRenderFrameBuilder {
+    pub fn with_capacity(root_pipeline_id: WrPipelineId, capacity: DisplayListCapacity) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id,
             dl_builder: DisplayListBuilder::with_capacity(root_pipeline_id, capacity),
@@ -2374,10 +2376,7 @@ pub struct WrState {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_state_new(
-    pipeline_id: WrPipelineId,
-    capacity: DisplayListCapacity,
-) -> *mut WrState {
+pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId, capacity: DisplayListCapacity) -> *mut WrState {
     assert!(unsafe { !is_in_render_thread() });
 
     let state = Box::new(WrState {
@@ -2684,11 +2683,7 @@ pub extern "C" fn wr_dp_define_rounded_rect_clip_with_parent_clip_chain(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_define_rect_clip(
-    state: &mut WrState,
-    space: WrSpatialId,
-    clip_rect: LayoutRect,
-) -> WrClipId {
+pub extern "C" fn wr_dp_define_rect_clip(state: &mut WrState, space: WrSpatialId, clip_rect: LayoutRect) -> WrClipId {
     debug_assert!(unsafe { is_in_main_thread() });
 
     let space_and_clip = SpaceAndClipInfo {
@@ -3887,9 +3882,7 @@ impl WrSpatialId {
     }
 
     fn from_webrender(id: SpatialId) -> Self {
-        WrSpatialId {
-            id: id.0,
-        }
+        WrSpatialId { id: id.0 }
     }
 }
 

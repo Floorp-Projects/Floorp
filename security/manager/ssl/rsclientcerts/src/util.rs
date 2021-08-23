@@ -6,8 +6,8 @@
 use byteorder::{BigEndian, NativeEndian, ReadBytesExt, WriteBytesExt};
 use std::convert::TryInto;
 
-use crate::error_here;
 use crate::error::{Error, ErrorType};
+use crate::error_here;
 
 /// Accessing fields of packed structs is unsafe (it may be undefined behavior if the field isn't
 /// aligned). Since we're implementing a PKCS#11 module, we already have to trust the caller not to
