@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/KeyframeEffect.h"
 
-#include "FrameLayerBuilder.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 // For UnrestrictedDoubleOrKeyframeAnimationOptions;

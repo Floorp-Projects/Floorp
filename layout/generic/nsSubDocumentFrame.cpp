@@ -39,7 +39,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsLayoutUtils.h"
-#include "FrameLayerBuilder.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsQueryObject.h"
@@ -989,7 +988,33 @@ nsIDocShell* nsSubDocumentFrame::GetDocShell() const {
 }
 
 static void DestroyDisplayItemDataForFrames(nsIFrame* aFrame) {
-  FrameLayerBuilder::DestroyDisplayItemDataFor(aFrame);
+  if (aFrame->IsSubDocumentFrame()) {
+    const nsSubDocumentFrame* subdoc =
+        static_cast<const nsSubDocumentFrame*>(aFrame);
+    nsFrameLoader* frameLoader = subdoc->FrameLoader();
+    if (frameLoader && frameLoader->GetRemoteBrowser()) {
+      // This is a remote browser that is going away, notify it that it is now
+      // hidden
+      frameLoader->GetRemoteBrowser()->UpdateEffects(
+          mozilla::dom::EffectsInfo::FullyHidden());
+    }
+  }
+
+  // Destroying a WebRenderUserDataTable can cause destruction of other objects
+  // which can remove frame properties in their destructor. If we delete a frame
+  // property it runs the destructor of the stored object in the middle of
+  // updating the frame property table, so if the destruction of that object
+  // causes another update to the frame property table it would leave the frame
+  // property table in an inconsistent state. So we remove it from the table and
+  // then destroy it. (bug 1530657)
+  WebRenderUserDataTable* userDataTable =
+      aFrame->TakeProperty(WebRenderUserDataProperty::Key());
+  if (userDataTable) {
+    for (const auto& data : userDataTable->Values()) {
+      data->RemoveFromTable();
+    }
+    delete userDataTable;
+  }
 
   for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
@@ -1237,11 +1262,6 @@ static nsPoint GetContentRectLayerOffset(nsIFrame* aContainerFrame,
 // used for small software rendering tasks, like drawWindow.  That's
 // currently implemented by a BasicLayerManager without a backing
 // widget, and hence in non-retained mode.
-inline static bool IsTempLayerManager(LayerManager* aManager) {
-  return (LayersBackend::LAYERS_BASIC == aManager->GetBackendType() &&
-          !static_cast<BasicLayerManager*>(aManager)->IsRetained());
-}
-
 nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
                                  nsSubDocumentFrame* aFrame)
     : nsPaintedDisplayItem(aBuilder, aFrame),
@@ -1259,15 +1279,6 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
   mPaintData = aFrame->GetRemotePaintData();
 }
 
-mozilla::LayerState nsDisplayRemote::GetLayerState(
-    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-    const ContainerLayerParameters& aParameters) {
-  if (IsTempLayerManager(aManager)) {
-    return mozilla::LayerState::LAYER_NONE;
-  }
-  return mozilla::LayerState::LAYER_ACTIVE_FORCE;
-}
-
 LayerIntSize GetFrameSize(const nsIFrame* aFrame) {
   LayoutDeviceSize size = LayoutDeviceRect::FromAppUnits(
       aFrame->GetContentRectRelativeToSelf().Size(),
@@ -1276,85 +1287,6 @@ LayerIntSize GetFrameSize(const nsIFrame* aFrame) {
   float cumulativeResolution = aFrame->PresShell()->GetCumulativeResolution();
   return LayerIntSize::Round(size.width * cumulativeResolution,
                              size.height * cumulativeResolution);
-}
-
-already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
-    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-    const ContainerLayerParameters& aContainerParameters) {
-  MOZ_ASSERT(mFrame, "Makes no sense to have a shadow tree without a frame");
-
-  if (IsTempLayerManager(aManager)) {
-    // This can happen if aManager is a "temporary" manager, or if the
-    // widget's layer manager changed out from under us.  We need to
-    // FIXME handle the former case somehow, probably with an API to
-    // draw a manager's subtree.  The latter is bad bad bad, but the the
-    // MOZ_ASSERT() above will flag it.  Returning nullptr here will just
-    // cause the shadow subtree not to be rendered.
-    NS_WARNING("Remote iframe not rendered");
-    return nullptr;
-  }
-
-  if (!mPaintData.mLayersId.IsValid()) {
-    return nullptr;
-  }
-
-  if (RefPtr<RemoteBrowser> remoteBrowser =
-          GetFrameLoader()->GetRemoteBrowser()) {
-    // Adjust mItemVisibleRect, which is relative to the reference frame, to be
-    // relative to this frame
-    nsRect visibleRect;
-    if (aContainerParameters.mItemVisibleRect) {
-      visibleRect = *aContainerParameters.mItemVisibleRect;
-    } else {
-      visibleRect = GetBuildingRect();
-    }
-    visibleRect -= ToReferenceFrame();
-    nsRect contentRect = Frame()->GetContentRectRelativeToSelf();
-    visibleRect.IntersectRect(visibleRect, contentRect);
-    visibleRect -= contentRect.TopLeft();
-
-    // Generate an effects update notifying the browser it is visible
-    aBuilder->AddEffectUpdate(remoteBrowser,
-                              EffectsInfo::VisibleWithinRect(
-                                  visibleRect, aContainerParameters.mXScale,
-                                  aContainerParameters.mYScale));
-    // FrameLayerBuilder will take care of notifying the browser when it is no
-    // longer visible
-  }
-
-  RefPtr<Layer> layer =
-      aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this);
-
-  if (!layer) {
-    layer = aManager->CreateRefLayer();
-  }
-  if (!layer || !layer->AsRefLayer()) {
-    // Probably a temporary layer manager that doesn't know how to
-    // use ref layers.
-    return nullptr;
-  }
-  RefLayer* refLayer = layer->AsRefLayer();
-
-  nsPoint layerOffset = GetContentRectLayerOffset(Frame(), aBuilder);
-  nscoord auPerDevPixel = Frame()->PresContext()->AppUnitsPerDevPixel();
-  LayoutDeviceIntPoint offset =
-      mozilla::LayoutDeviceIntPoint::FromAppUnitsToNearest(layerOffset,
-                                                           auPerDevPixel);
-
-  // We can only have an offset if we're a child of an inactive
-  // container, but our display item is LAYER_ACTIVE_FORCE which
-  // forces all layers above to be active.
-  MOZ_ASSERT(aContainerParameters.mOffset == nsIntPoint());
-  Matrix4x4 m = Matrix4x4::Translation(offset.x, offset.y, 0.0);
-  // Remote content can't be repainted by us, so we multiply down
-  // the resolution that our container expects onto our container.
-  m.PostScale(aContainerParameters.mXScale, aContainerParameters.mYScale, 1.0);
-  refLayer->SetBaseTransform(m);
-  refLayer->SetEventRegionsOverride(mEventRegionsOverride);
-  refLayer->SetReferentId(mPaintData.mLayersId);
-  refLayer->SetRemoteDocumentSize(GetFrameSize(mFrame));
-
-  return layer.forget();
 }
 
 namespace mozilla {

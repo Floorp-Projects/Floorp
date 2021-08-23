@@ -35,7 +35,6 @@
 #include "nsDebug.h"          // for NS_WARNING
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
 #include "nsTArray.h"         // for nsTArray, nsTArray_Impl
-#include "FrameLayerBuilder.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentChild.h"
@@ -335,7 +334,6 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvInvalidateLayers(
     const LayersId& aLayersId) {
   if (mLayerManager) {
     MOZ_ASSERT(!aLayersId.IsValid());
-    FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
   } else if (aLayersId.IsValid()) {
     if (dom::BrowserChild* child = dom::BrowserChild::GetFrom(aLayersId)) {
       child->InvalidateLayers();

@@ -75,7 +75,6 @@ enum class PseudoStyleType : uint8_t;
 class EventListenerManager;
 enum class LayoutFrameType : uint8_t;
 struct IntrinsicSize;
-struct ContainerLayerParameters;
 class ReflowOutput;
 class WritingMode;
 class DisplayItemClip;
@@ -146,7 +145,6 @@ class nsLayoutUtils {
   typedef mozilla::dom::DOMRectList DOMRectList;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
-  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::IntrinsicSize IntrinsicSize;
   typedef mozilla::RelativeTo RelativeTo;
   typedef mozilla::ScrollOrigin ScrollOrigin;
@@ -551,22 +549,6 @@ class nsLayoutUtils {
   static bool IsAncestorFrameCrossDocInProcess(
       const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
       const nsIFrame* aCommonAncestor = nullptr);
-
-  /**
-   * Sets the fixed-pos metadata properties on aLayer.
-   * aAnchorRect is the basic anchor rectangle. If aFixedPosFrame is not a
-   * viewport frame, then we pick a corner of aAnchorRect to as the anchor point
-   * for the fixed-pos layer (i.e. the point to remain stable during zooming),
-   * based on which of the fixed-pos frame's CSS absolute positioning offset
-   * properties (top, left, right, bottom) are auto. aAnchorRect is in the
-   * coordinate space of aLayer's container layer (i.e. relative to the
-   * reference frame of the display item which is building aLayer's container
-   * layer).
-   */
-  static void SetFixedPositionLayerData(
-      Layer* aLayer, const nsIFrame* aViewportFrame, const nsRect& aAnchorRect,
-      const nsIFrame* aFixedPosFrame, nsPresContext* aPresContext,
-      const ContainerLayerParameters& aContainerParameters);
 
   static mozilla::SideBits GetSideBitsAndAdjustAnchorForFixedPositionContent(
       const nsIFrame* aViewportFrame, const nsIFrame* aFixedPosFrame,
@@ -2780,8 +2762,7 @@ class nsLayoutUtils {
       nsIContent* aContent, const nsIFrame* aReferenceFrame,
       mozilla::layers::LayerManager* aLayerManager, ViewID aScrollParentId,
       const nsSize& aScrollPortSize, const mozilla::Maybe<nsRect>& aClipRect,
-      bool aIsRoot,
-      const mozilla::Maybe<ContainerLayerParameters>& aContainerParameters);
+      bool aIsRoot);
 
   /**
    * Returns the metadata to put onto the root layer of a layer tree, if one is
@@ -2791,7 +2772,6 @@ class nsLayoutUtils {
   static mozilla::Maybe<ScrollMetadata> GetRootMetadata(
       nsDisplayListBuilder* aBuilder,
       mozilla::layers::LayerManager* aLayerManager,
-      const ContainerLayerParameters& aContainerParameters,
       const std::function<bool(ViewID& aScrollId)>& aCallback);
 
   /**

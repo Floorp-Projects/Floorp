@@ -198,7 +198,6 @@ namespace mozilla {
  * nsFrameLoader) into its parent frame's layer tree.
  */
 class nsDisplayRemote final : public nsPaintedDisplayItem {
-  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::dom::TabId TabId;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
@@ -212,14 +211,6 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
 
  public:
   nsDisplayRemote(nsDisplayListBuilder* aBuilder, nsSubDocumentFrame* aFrame);
-
-  LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override;
-
-  already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override;
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
