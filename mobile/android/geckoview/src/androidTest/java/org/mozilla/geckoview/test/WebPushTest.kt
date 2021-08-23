@@ -69,10 +69,7 @@ class WebPushTest : BaseSessionTest() {
 
         delegate = TestPushDelegate()
 
-        sessionRule.addExternalDelegateUntilTestEnd(WebPushDelegate::class,
-                { d -> sessionRule.runtime.webPushController.setDelegate(d) },
-                { sessionRule.runtime.webPushController.setDelegate(null) }, delegate!!)
-
+        sessionRule.delegateUntilTestEnd(delegate!!)
 
         mainSession.loadTestPath(PUSH_HTML_PATH)
         mainSession.waitForPageStop()
@@ -167,15 +164,10 @@ class WebPushTest : BaseSessionTest() {
 
     private fun sendNotification() {
         val notificationResult = GeckoResult<Void>()
-        val runtime = sessionRule.runtime
-        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
-        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
-
         val expectedTitle = "The title"
         val expectedBody = "The body"
 
-        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
-                unregister, object : WebNotificationDelegate {
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
             @GeckoSessionTestRule.AssertCalled
             override fun onShowNotification(notification: WebNotification) {
                 assertThat("Title should match", notification.title, equalTo(expectedTitle))
