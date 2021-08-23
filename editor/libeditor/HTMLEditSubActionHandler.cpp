@@ -5916,9 +5916,19 @@ void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
     return;
   }
 
-  Element* blockElement = HTMLEditUtils::GetInclusiveAncestorBlockElement(
-      *aStartRef.Container()->AsContent());
-  if (!blockElement) {
+  // XXX Perhaps, this should be more careful.  This may not select only one
+  //     node because this just check whether the block is empty or not,
+  //     and may not select in non-editable block.  However, for inline
+  //     editing host case, it's right to look for block element without
+  //     editable state check.  Now, this method is used for preparation for
+  //     other things.  So, cannot write test for this method behavior.
+  //     So, perhaps, we should get rid of this method and each caller should
+  //     handle its job better.
+  const Element* const maybeNonEditableBlockElement =
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *aStartRef.Container()->AsContent(),
+          HTMLEditUtils::ClosestBlockElement);
+  if (!maybeNonEditableBlockElement) {
     return;
   }
 
@@ -5928,13 +5938,14 @@ void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
   }
 
   // Make sure we don't go higher than our root element in the content tree
-  if (editingHost->IsInclusiveDescendantOf(blockElement)) {
+  if (editingHost->IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
     return;
   }
 
-  if (HTMLEditUtils::IsEmptyNode(*blockElement)) {
-    aStartRef = {blockElement, 0u};
-    aEndRef = {blockElement, blockElement->Length()};
+  if (HTMLEditUtils::IsEmptyNode(*maybeNonEditableBlockElement)) {
+    aStartRef = {const_cast<Element*>(maybeNonEditableBlockElement), 0u};
+    aEndRef = {const_cast<Element*>(maybeNonEditableBlockElement),
+               maybeNonEditableBlockElement->Length()};
   }
 }
 
