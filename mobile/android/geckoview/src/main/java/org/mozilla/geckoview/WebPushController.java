@@ -44,6 +44,18 @@ public class WebPushController {
     }
 
     /**
+     * Gets the {@link WebPushDelegate} for this instance.
+     *
+     * @return delegate The {@link WebPushDelegate} instance.
+     */
+    @UiThread
+    @Nullable
+    public WebPushDelegate getDelegate() {
+        ThreadUtils.assertOnUiThread();
+        return mDelegate;
+    }
+
+    /**
      * Send a push event for a given subscription.
      *
      * @param scope The Service Worker scope associated with this subscription.
