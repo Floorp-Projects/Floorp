@@ -1116,12 +1116,12 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.AlertPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected AlertPrompt(@Nullable String, @Nullable String);
+    ctor protected AlertPrompt(@NonNull String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     field @Nullable public final String message;
   }
 
   public static class GeckoSession.PromptDelegate.AuthPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected AuthPrompt(@Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.AuthPrompt.AuthOptions);
+    ctor protected AuthPrompt(@NonNull String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.AuthPrompt.AuthOptions, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String, @NonNull String);
     field @NonNull public final GeckoSession.PromptDelegate.AuthPrompt.AuthOptions authOptions;
@@ -1154,25 +1154,27 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.AutocompleteRequest<T extends Autocomplete.Option<?>> extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected AutocompleteRequest(@NonNull T[]);
+    ctor protected AutocompleteRequest(@NonNull String, @NonNull T[], GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull Autocomplete.Option<?>);
     field @NonNull public final T[] options;
   }
 
   public static class GeckoSession.PromptDelegate.BasePrompt {
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse dismiss();
+    method @Nullable @UiThread public GeckoSession.PromptDelegate.PromptInstanceDelegate getDelegate();
     method @UiThread public boolean isComplete();
+    method @UiThread public void setDelegate(@Nullable GeckoSession.PromptDelegate.PromptInstanceDelegate);
     method @NonNull @UiThread protected GeckoSession.PromptDelegate.PromptResponse confirm();
     field @Nullable public final String title;
   }
 
   public static class GeckoSession.PromptDelegate.BeforeUnloadPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected BeforeUnloadPrompt();
+    ctor protected BeforeUnloadPrompt(@NonNull String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@Nullable AllowOrDeny);
   }
 
   public static class GeckoSession.PromptDelegate.ButtonPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected ButtonPrompt(@Nullable String, @Nullable String);
+    ctor protected ButtonPrompt(@NonNull String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(int);
     field @Nullable public final String message;
   }
@@ -1184,7 +1186,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.ChoicePrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected ChoicePrompt(@Nullable String, @Nullable String, int, @NonNull GeckoSession.PromptDelegate.ChoicePrompt.Choice[]);
+    ctor protected ChoicePrompt(@NonNull String, @Nullable String, @Nullable String, int, @NonNull GeckoSession.PromptDelegate.ChoicePrompt.Choice[], @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String[]);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull GeckoSession.PromptDelegate.ChoicePrompt.Choice);
@@ -1213,13 +1215,13 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.ColorPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected ColorPrompt(@Nullable String, @Nullable String);
+    ctor protected ColorPrompt(@NonNull String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
     field @Nullable public final String defaultValue;
   }
 
   public static class GeckoSession.PromptDelegate.DateTimePrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected DateTimePrompt(@Nullable String, int, @Nullable String, @Nullable String, @Nullable String);
+    ctor protected DateTimePrompt(@NonNull String, @Nullable String, int, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
     field @Nullable public final String defaultValue;
     field @Nullable public final String maxValue;
@@ -1237,7 +1239,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.FilePrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected FilePrompt(@Nullable String, int, int, @Nullable String[]);
+    ctor protected FilePrompt(@NonNull String, @Nullable String, int, int, @Nullable String[], @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull Context, @NonNull Uri);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull Context, @NonNull Uri[]);
     field public final int capture;
@@ -1260,21 +1262,25 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.PopupPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected PopupPrompt(@Nullable String);
+    ctor protected PopupPrompt(@NonNull String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull AllowOrDeny);
     field @Nullable public final String targetUri;
+  }
+
+  public static interface GeckoSession.PromptDelegate.PromptInstanceDelegate {
+    method @UiThread default public void onPromptDismiss(@NonNull GeckoSession.PromptDelegate.BasePrompt);
   }
 
   public static class GeckoSession.PromptDelegate.PromptResponse {
   }
 
   public static class GeckoSession.PromptDelegate.RepostConfirmPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected RepostConfirmPrompt();
+    ctor protected RepostConfirmPrompt(@NonNull String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@Nullable AllowOrDeny);
   }
 
   public static class GeckoSession.PromptDelegate.SharePrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected SharePrompt(@Nullable String, @Nullable String, @Nullable String);
+    ctor protected SharePrompt(@NonNull String, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(int);
     field @Nullable public final String text;
     field @Nullable public final String uri;
@@ -1288,7 +1294,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.TextPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected TextPrompt(@Nullable String, @Nullable String, @Nullable String);
+    ctor protected TextPrompt(@NonNull String, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
     field @Nullable public final String defaultValue;
     field @Nullable public final String message;
@@ -2163,6 +2169,10 @@ package org.mozilla.geckoview {
     method @NonNull public WebResponse.Builder isSecure(boolean);
     method @NonNull public WebResponse.Builder redirected(boolean);
     method @NonNull public WebResponse.Builder statusCode(int);
+  }
+
+  protected static interface GeckoSession.PromptDelegate.BasePrompt.Observer {
+    method @AnyThread default public void onPromptCompleted(@NonNull GeckoSession.PromptDelegate.BasePrompt);
   }
 
 }
