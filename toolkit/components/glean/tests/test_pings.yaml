@@ -9,7 +9,7 @@
 # This file is presently for Internal FOG Test Use Only.
 
 ---
-$schema: moz://mozilla.org/schemas/glean/pings/1-0-0
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
 
 one-ping-only:
   description: |
