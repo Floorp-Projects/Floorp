@@ -582,8 +582,15 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Timestamp of the time the channel was suspended.
   mozilla::TimeStamp mSuspendTimestamp;
   mozilla::TimeStamp mOnCacheEntryCheckTimestamp;
-  // For the profiler markers
+
+  // Properties used for the profiler markers
+  // This keeps the timestamp for the start marker, to be reused for the end
+  // marker.
   mozilla::TimeStamp mLastStatusReported;
+  // This is true when one end marker is output, so that we never output more
+  // than one.
+  bool mEndMarkerAdded = false;
+
   // Total time the channel spent suspended. This value is reported to
   // telemetry in nsHttpChannel::OnStartRequest().
   uint32_t mSuspendTotalTime{0};

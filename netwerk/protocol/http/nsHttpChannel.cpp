@@ -4967,7 +4967,9 @@ nsresult nsHttpChannel::SetupReplacementChannel(nsIURI* newURI,
        "[this=%p newChannel=%p preserveMethod=%d]",
        this, newChannel, preserveMethod));
 
-  if (profiler_can_accept_markers()) {
+  if (!mEndMarkerAdded && profiler_can_accept_markers()) {
+    mEndMarkerAdded = true;
+
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -5476,6 +5478,7 @@ void nsHttpChannel::ContinueCancellingByURLClassifier(nsresult aErrorCode) {
 }
 
 nsresult nsHttpChannel::CancelInternal(nsresult status) {
+  LOG(("nsHttpChannel::CancelInternal [this=%p]\n", this));
   bool channelClassifierCancellationPending =
       !!LoadChannelClassifierCancellationPending();
   if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
@@ -5484,6 +5487,27 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
 
   mCanceled = true;
   mStatus = NS_FAILED(status) ? status : NS_ERROR_ABORT;
+
+  if (!mEndMarkerAdded && profiler_can_accept_markers()) {
+    // These do allocations/frees/etc; avoid if not active
+    mEndMarkerAdded = true;
+
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
+    int32_t priority = PRIORITY_NORMAL;
+    GetPriority(&priority);
+
+    uint64_t size = 0;
+    GetEncodedBodySize(&size);
+
+    profiler_add_network_marker(
+        mURI, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_CANCEL,
+        mLastStatusReported, TimeStamp::Now(), size, mCacheDisposition,
+        mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
+        std::move(mSource));
+  }
+
   if (mProxyRequest) mProxyRequest->Cancel(status);
   CancelNetworkRequest(status);
   mCacheInputStream.CloseAndRelease();
@@ -7437,9 +7461,10 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   MaybeFlushConsoleReports();
 
-  if (profiler_can_accept_markers() && !mRedirectURI) {
-    // Don't include this if we already redirected
+  if (!mEndMarkerAdded && profiler_can_accept_markers()) {
     // These do allocations/frees/etc; avoid if not active
+    mEndMarkerAdded = true;
+
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
