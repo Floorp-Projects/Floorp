@@ -570,11 +570,9 @@ function TargetMixin(parentClass) {
       // * targets that aren't yet supported by the Watcher (like web extensions),
       // * workers, which still use a unique codepath for thread actor attach
       // * all targets when connecting to an older server
-      // @backward-compat { version 87 } If all targets are supported by watcher actor, and workers no longer use
-      //                                 its unique attach sequence, we can assume the thread front is always attached.
-      const isAttached =
-        this.getTrait("supportsThreadActorIsAttached") &&
-        (await this.threadFront.isAttached());
+      // If all targets are supported by watcher actor, and workers no longer use
+      // its unique attach sequence, we can assume the thread front is always attached.
+      const isAttached = await this.threadFront.isAttached();
 
       const isDestroyed =
         this.isDestroyedOrBeingDestroyed() || this.threadFront.isDestroyed();
