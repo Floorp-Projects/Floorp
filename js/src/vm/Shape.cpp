@@ -1098,7 +1098,7 @@ Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
                                     JS::Realm* realm, TaggedProto proto,
                                     gc::AllocKind kind,
                                     ObjectFlags objectFlags) {
-  return getInitialShape(cx, clasp, realm, proto, GetGCKindSlots(kind, clasp),
+  return getInitialShape(cx, clasp, realm, proto, GetGCKindSlots(kind),
                          objectFlags);
 }
 

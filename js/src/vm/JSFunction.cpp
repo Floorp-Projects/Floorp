@@ -761,26 +761,18 @@ bool JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v,
 }
 
 inline void JSFunction::trace(JSTracer* trc) {
-  TraceEdge(trc, &nativeFuncOrInterpretedEnv_, "fun_environment");
-
-  if (isExtended()) {
-    TraceRange(trc, std::size(toExtended()->extendedSlots),
-               (GCPtrValue*)toExtended()->extendedSlots, "nativeReserved");
-  }
-
-  TraceEdge(trc, &atom_, "atom");
-
   // Functions can be be marked as interpreted despite having no script yet at
   // some points when parsing, and can be lazy with no lazy script for
   // self-hosted code.
-  MOZ_ASSERT(!nativeJitInfoOrInterpretedScript_.isGCThing());
+  MOZ_ASSERT(!getFixedSlot(NativeJitInfoOrInterpretedScriptSlot).isGCThing());
   if (isInterpreted() && hasBaseScript()) {
     if (BaseScript* script = baseScript()) {
       TraceManuallyBarrieredEdge(trc, &script, "script");
       // Self-hosted scripts are shared with workers but are never
       // relocated. Skip unnecessary writes to prevent the possible data race.
       if (baseScript() != script) {
-        nativeJitInfoOrInterpretedScript_.set(JS::PrivateValue(script));
+        setFixedSlot(NativeJitInfoOrInterpretedScriptSlot,
+                     JS::PrivateValue(script));
       }
     }
   }
@@ -1172,12 +1164,16 @@ static const ClassSpec JSFunctionClassSpec = {
     CreateFunctionConstructor, CreateFunctionPrototype, nullptr, nullptr,
     function_methods,          function_properties};
 
-const JSClass js::FunctionClass = {js_Function_str,
-                                   JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
-                                   &JSFunctionClassOps, &JSFunctionClassSpec};
+const JSClass js::FunctionClass = {
+    js_Function_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Function) |
+        JSCLASS_HAS_RESERVED_SLOTS(JSFunction::SlotCount),
+    &JSFunctionClassOps, &JSFunctionClassSpec};
 
 const JSClass js::ExtendedFunctionClass = {
-    js_Function_str, JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
+    js_Function_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Function) |
+        JSCLASS_HAS_RESERVED_SLOTS(FunctionExtended::SlotCount),
     &JSFunctionClassOps, &JSFunctionClassSpec};
 
 const JSClass* const js::FunctionClassPtr = &FunctionClass;
@@ -1954,9 +1950,6 @@ JSFunction* js::NewFunctionWithProto(
     MOZ_ASSERT(fun->isNativeFun());
     fun->initNative(native, nullptr);
   }
-  if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
-    fun->initializeExtended();
-  }
   fun->initAtom(atom);
 
   return fun;
@@ -2059,8 +2052,6 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
       for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++) {
         clone->initExtendedSlot(i, fun->getExtendedSlot(i));
       }
-    } else {
-      clone->initializeExtended();
     }
   }
 

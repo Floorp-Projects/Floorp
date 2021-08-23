@@ -31,7 +31,7 @@ print(JSON.stringify(findPath(c, c.obj)));
 function f(x) { return function g(y) { return x+y; }; }
 var o = {}
 var gc = f(o);
-Match.Pattern([{node: gc, edge: "fun_environment"},
+Match.Pattern([{node: gc, edge: "**UNKNOWN SLOT 1**"},
                {node: Match.Pattern.ANY, edge: "x"}])
   .assert(findPath(gc, o));
 print(JSON.stringify(findPath(gc, o)));
