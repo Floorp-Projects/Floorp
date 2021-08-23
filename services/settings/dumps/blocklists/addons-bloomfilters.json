@@ -3,6 +3,43 @@
     {
       "stash": {
         "blocked": [
+          "{2ba6a36a-57a0-45d1-85b5-1f163e474f9d}:1.0.0",
+          "{ae1cf653-e8ef-4227-85d3-57aa602cce24}:1.0.1",
+          "{ba479273-ef33-41b4-975d-f0cf3fbf5e9b}:1.1",
+          "{cd8df54b-b0de-4d8f-a62f-9031913bbb1d}:1.0.1",
+          "{801de3a1-d001-4548-b1d5-9948f3eccc9d}:1.0.1",
+          "{949d70b6-9d80-4138-9d49-bc018938a91c}:1.1.0",
+          "{8ca8802d-8ae7-49bd-a221-0579b79502a9}:2.0.0",
+          "{f7239ad1-f1ce-4813-b024-821ebba2eafa}:1.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1629463079978,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1629484508438,
+      "id": "59d2cf53-8f37-4e91-b207-d35cb64a63c4",
+      "last_modified": 1629484666101
+    },
+    {
+      "stash": {
+        "blocked": [
+          "cdays@colordays.net:0.9.0",
+          "{769f9939-a8d8-4e11-add4-f81dee601aea}:1.1.0.2",
+          "{769f9939-a8d8-4e11-add4-f81dee601aea}:1.0.0.1",
+          "{769f9939-a8d8-4e11-add4-f81dee601aea}:1.0.0.0",
+          "{cb860473-1741-42a5-a326-0a99e3f5157f}:1.7"
+        ],
+        "unblocked": []
+      },
+      "schema": 1629247069940,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1629462909439,
+      "id": "b85ee973-6f2b-4f2c-ac4f-280e5797b4a7",
+      "last_modified": 1629463079914
+    },
+    {
+      "stash": {
+        "blocked": [
           "location-seeker@ext:1.0",
           "medianewtab@com:1.1.11",
           "book-enthusiast@ext:1.0",
