@@ -66,7 +66,7 @@ def main(header):
     header.write("/* !GENERATED DATA -- DO NOT EDIT! */\n")
     header.write("/* (see is_combining_diacritic.py) */\n")
     header.write("\n")
-    header.write("#include \"gfxFontUtils.h\"\n")
+    header.write('#include "gfxFontUtils.h"\n')
     header.write("\n")
 
     header.write("typedef struct {\n")
@@ -77,7 +77,9 @@ def main(header):
     header.write("} CombiningDiacriticsBitset_t;\n")
     header.write("\n")
 
-    header.write("static const CombiningDiacriticsBitset_t COMBINING_DIACRITICS_BITSET_DATA = {\n")
+    header.write(
+        "static const CombiningDiacriticsBitset_t COMBINING_DIACRITICS_BITSET_DATA = {\n"
+    )
     header.write("  " + str(len(blockIndex)) + ",\n")
     header.write("  " + str(len(blocks)) + ",\n")
     header.write("  {\n")
@@ -94,5 +96,7 @@ def main(header):
     header.write("};\n")
     header.write("\n")
     header.write("static const SharedBitSet* sCombiningDiacriticsSet =\n")
-    header.write("    reinterpret_cast<const SharedBitSet*>(&COMBINING_DIACRITICS_BITSET_DATA);\n")
+    header.write(
+        "    reinterpret_cast<const SharedBitSet*>(&COMBINING_DIACRITICS_BITSET_DATA);\n"
+    )
     header.write("\n")
