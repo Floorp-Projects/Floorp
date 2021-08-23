@@ -10887,6 +10887,20 @@
   value: false
   mirror: always
 
+# Cancel outgoing requests from SystemPrincipal:
+# but only with scheme http(s) and contentpolicytype subdocument
+- name: security.disallow_privileged_https_subdocuments_loads
+  type: bool
+  value: true
+  mirror: always
+
+# Cancel outgoing requests from SystemPrincipal:
+# but only with scheme data and contentpolicytype subdocument
+- name: security.disallow_privileged_data_subdocuments_loads
+  type: bool
+  value: false
+  mirror: always
+
 # Disable preloaded static key pins by default.
 - name: security.cert_pinning.enforcement_level
   type: ReleaseAcquireAtomicUint32
