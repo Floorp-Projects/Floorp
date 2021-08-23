@@ -1140,7 +1140,8 @@ void BaselineCompilerCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   masm.store32(Imm32(0), frame.addressOfFlags());
   if (handler.function()) {
     masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), scratch);
-    masm.loadPtr(Address(scratch, JSFunction::offsetOfEnvironment()), scratch);
+    masm.unboxObject(Address(scratch, JSFunction::offsetOfEnvironment()),
+                     scratch);
     masm.storePtr(scratch, frame.addressOfEnvironmentChain());
   } else {
     masm.storePtr(nonFunctionEnv, frame.addressOfEnvironmentChain());
@@ -1187,8 +1188,8 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   {
     // CalleeToken_Function or CalleeToken_FunctionConstructing.
     masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
-    masm.loadPtr(Address(scratch1, JSFunction::offsetOfEnvironment()),
-                 scratch2);
+    masm.unboxObject(Address(scratch1, JSFunction::offsetOfEnvironment()),
+                     scratch2);
     masm.storePtr(scratch2, frame.addressOfEnvironmentChain());
     masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
     masm.jump(&done);
