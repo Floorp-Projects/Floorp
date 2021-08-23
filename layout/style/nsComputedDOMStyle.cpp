@@ -68,31 +68,32 @@ using namespace mozilla::dom;
  * returned by the getComputedStyle() function.
  */
 
-static bool StartsWithTwoColons(const nsAString& aPseudoElt) {
-  if (aPseudoElt.Length() < 2) {
-    return false;
+static bool ShouldReturnEmptyStyleForInvalidPseudoElement(
+    const nsAString& aPseudoElt) {
+  // Old behavior is historical. New behavior is as discussed in
+  // https://github.com/w3c/csswg-drafts/issues/6501.
+  if (!StaticPrefs::
+          layout_css_computed_style_new_invalid_pseudo_element_behavior()) {
+    if (aPseudoElt.Length() < 2) {
+      return false;
+    }
+    const char16_t* chars = aPseudoElt.BeginReading();
+    return chars[0] == u':' && chars[1] == u':';
   }
-  const char16_t* chars = aPseudoElt.BeginReading();
-  return chars[0] == u':' && chars[1] == u':';
+  return !aPseudoElt.IsEmpty() && aPseudoElt.First() == u':';
 }
 
 already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
     dom::Element* aElement, const nsAString& aPseudoElt, Document* aDocument,
-    nsComputedDOMStyle::StyleType aStyleType, mozilla::ErrorResult& aRv) {
+    nsComputedDOMStyle::StyleType aStyleType, mozilla::ErrorResult&) {
   Maybe<PseudoStyleType> pseudo = nsCSSPseudoElements::GetPseudoType(
       aPseudoElt, CSSEnabledState::ForAllContent);
   auto returnEmpty = nsComputedDOMStyle::AlwaysReturnEmptyStyle::No;
   if (!pseudo) {
-    if (StaticPrefs::layout_css_computed_style_throw_on_invalid_pseudo()) {
-      aRv.ThrowTypeError(
-          nsPrintfCString("'%s' is not a valid pseudo-element",
-                          NS_ConvertUTF16toUTF8(aPseudoElt).get()));
-      return nullptr;
-    }
-    pseudo.emplace(PseudoStyleType::NotPseudo);
-    if (StartsWithTwoColons(aPseudoElt)) {
+    if (ShouldReturnEmptyStyleForInvalidPseudoElement(aPseudoElt)) {
       returnEmpty = nsComputedDOMStyle::AlwaysReturnEmptyStyle::Yes;
     }
+    pseudo.emplace(PseudoStyleType::NotPseudo);
   }
   RefPtr<nsComputedDOMStyle> computedStyle = new nsComputedDOMStyle(
       aElement, *pseudo, aDocument, aStyleType, returnEmpty);
