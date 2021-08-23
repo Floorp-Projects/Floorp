@@ -8238,13 +8238,16 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
 
   // If caret is in empty block element, we need to insert a `<br>` element
   // because the block should have one-line height.
-  if (RefPtr<Element> blockElement =
-          HTMLEditUtils::GetInclusiveAncestorBlockElement(
-              *point.ContainerAsContent())) {
-    if (blockElement &&
-        EditorUtils::IsEditableContent(*blockElement, EditorType::HTML) &&
+  // XXX Even if only a part of the block is editable, shouldn't we put
+  //     caret if the block element is now empty?
+  if (Element* const editableBlockElement =
+          HTMLEditUtils::GetInclusiveAncestorElement(
+              *point.ContainerAsContent(),
+              HTMLEditUtils::ClosestEditableBlockElement)) {
+    if (editableBlockElement &&
         HTMLEditUtils::IsEmptyNode(
-            *blockElement, {EmptyCheckOption::TreatSingleBRElementAsVisible}) &&
+            *editableBlockElement,
+            {EmptyCheckOption::TreatSingleBRElementAsVisible}) &&
         HTMLEditUtils::CanNodeContain(*point.GetContainer(), *nsGkAtoms::br)) {
       Element* bodyOrDocumentElement = GetRoot();
       if (NS_WARN_IF(!bodyOrDocumentElement)) {
@@ -8289,15 +8292,22 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   if (nsCOMPtr<nsIContent> previousEditableContent =
           HTMLEditUtils::GetPreviousContent(
               point, {WalkTreeOption::IgnoreNonEditableNode}, editingHost)) {
-    RefPtr<Element> blockElementAtCaret =
-        HTMLEditUtils::GetInclusiveAncestorBlockElement(
-            *point.ContainerAsContent());
-    RefPtr<Element> blockElementParentAtPreviousEditableContent =
-        HTMLEditUtils::GetAncestorBlockElement(*previousEditableContent);
+    // If caret and previous editable content are in same block element
+    // (even if it's a non-editable element), we should put a padding <br>
+    // element at end of the block.
+    const Element* const blockElementContainingCaret =
+        HTMLEditUtils::GetInclusiveAncestorElement(
+            *point.ContainerAsContent(), HTMLEditUtils::ClosestBlockElement);
+    const Element* const blockElementContainingPreviousEditableContent =
+        HTMLEditUtils::GetAncestorElement(*previousEditableContent,
+                                          HTMLEditUtils::ClosestBlockElement);
     // If previous editable content of caret is in same block and a `<br>`
     // element, we need to adjust interline position.
-    if (blockElementAtCaret &&
-        blockElementAtCaret == blockElementParentAtPreviousEditableContent &&
+    if (blockElementContainingCaret &&
+        blockElementContainingCaret ==
+            blockElementContainingPreviousEditableContent &&
+        point.ContainerAsContent()->GetEditingHost() ==
+            previousEditableContent->GetEditingHost() &&
         previousEditableContent &&
         previousEditableContent->IsHTMLElement(nsGkAtoms::br)) {
       // If it's an invisible `<br>` element, we need to insert a padding
