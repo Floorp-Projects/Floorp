@@ -733,7 +733,7 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
                                       NewObjectKind newKind,
                                       ObjectFlags objectFlags = {}) {
   MOZ_ASSERT(clasp != &ArrayObject::class_);
-  MOZ_ASSERT_IF(clasp == &JSFunction::class_,
+  MOZ_ASSERT_IF(clasp->isJSFunction(),
                 kind == gc::AllocKind::FUNCTION ||
                     kind == gc::AllocKind::FUNCTION_EXTENDED);
   MOZ_ASSERT(clasp->isNativeObject());

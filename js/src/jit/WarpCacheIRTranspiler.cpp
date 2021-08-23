@@ -193,6 +193,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   // Returns either MConstant or MNurseryIndex. See WarpObjectField.
   MInstruction* objectStubField(uint32_t offset);
 
+  const JSClass* classForGuardClassKind(GuardClassKind kind);
+
   [[nodiscard]] bool emitGuardTo(ValOperandId inputId, MIRType type);
 
   [[nodiscard]] bool emitToString(OperandId inputId, StringOperandId resultId);
@@ -343,48 +345,44 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
                                            GuardClassKind kind) {
   MDefinition* def = getOperand(objId);
 
-  const JSClass* classp = nullptr;
-  switch (kind) {
-    case GuardClassKind::Array:
-      classp = &ArrayObject::class_;
-      break;
-    case GuardClassKind::ArrayBuffer:
-      classp = &ArrayBufferObject::class_;
-      break;
-    case GuardClassKind::SharedArrayBuffer:
-      classp = &SharedArrayBufferObject::class_;
-      break;
-    case GuardClassKind::DataView:
-      classp = &DataViewObject::class_;
-      break;
-    case GuardClassKind::MappedArguments:
-      classp = &MappedArgumentsObject::class_;
-      break;
-    case GuardClassKind::UnmappedArguments:
-      classp = &UnmappedArgumentsObject::class_;
-      break;
-    case GuardClassKind::WindowProxy:
-      classp = mirGen().runtime->maybeWindowProxyClass();
-      break;
-    case GuardClassKind::JSFunction:
-      classp = &JSFunction::class_;
-      break;
-    case GuardClassKind::Set:
-      classp = &SetObject::class_;
-      break;
-    case GuardClassKind::Map:
-      classp = &MapObject::class_;
-      break;
-    default:
-      MOZ_CRASH("not yet supported");
+  MInstruction* ins;
+  if (kind == GuardClassKind::JSFunction) {
+    ins = MGuardToFunction::New(alloc(), def);
+  } else {
+    const JSClass* classp = classForGuardClassKind(kind);
+    ins = MGuardToClass::New(alloc(), def, classp);
   }
-  MOZ_ASSERT(classp);
 
-  auto* ins = MGuardToClass::New(alloc(), def, classp);
   add(ins);
 
   setOperand(objId, ins);
   return true;
+}
+
+const JSClass* WarpCacheIRTranspiler::classForGuardClassKind(
+    GuardClassKind kind) {
+  switch (kind) {
+    case GuardClassKind::Array:
+      return &ArrayObject::class_;
+    case GuardClassKind::ArrayBuffer:
+      return &ArrayBufferObject::class_;
+    case GuardClassKind::SharedArrayBuffer:
+      return &SharedArrayBufferObject::class_;
+    case GuardClassKind::DataView:
+      return &DataViewObject::class_;
+    case GuardClassKind::MappedArguments:
+      return &MappedArgumentsObject::class_;
+    case GuardClassKind::UnmappedArguments:
+      return &UnmappedArgumentsObject::class_;
+    case GuardClassKind::WindowProxy:
+      return mirGen().runtime->maybeWindowProxyClass();
+    case GuardClassKind::Set:
+      return &SetObject::class_;
+    case GuardClassKind::Map:
+      return &MapObject::class_;
+    default:
+      MOZ_CRASH("not yet supported");
+  }
 }
 
 bool WarpCacheIRTranspiler::emitGuardAnyClass(ObjOperandId objId,
