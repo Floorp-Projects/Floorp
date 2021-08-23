@@ -1435,43 +1435,46 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   // Look for the nearest parent block.  However, don't return error even if
   // there is no block parent here because in such case, i.e., editing host
   // is an inline element, we should insert <br> simply.
-  RefPtr<Element> blockElement =
+  RefPtr<Element> editableBlockElement =
       atStartOfSelection.IsInContentNode()
-          ? HTMLEditUtils::GetInclusiveAncestorBlockElement(
-                *atStartOfSelection.ContainerAsContent(), editingHost)
+          ? HTMLEditUtils::GetInclusiveAncestorElement(
+                *atStartOfSelection.ContainerAsContent(),
+                HTMLEditUtils::ClosestEditableBlockElement)
           : nullptr;
 
   ParagraphSeparator separator = GetDefaultParagraphSeparator();
   bool insertBRElement;
   // If there is no block parent in the editing host, i.e., the editing host
   // itself is also a non-block element, we should insert a <br> element.
-  if (!blockElement) {
+  if (!editableBlockElement) {
     // XXX Chromium checks if the CSS box of the editing host is a block.
     insertBRElement = true;
   }
-  // If only the editing host is block, and the default paragraph separator
-  // is <br> or the editing host cannot contain a <p> element, we should
-  // insert a <br> element.
-  else if (editingHost == blockElement) {
-    insertBRElement = separator == ParagraphSeparator::br ||
-                      !HTMLEditUtils::CanElementContainParagraph(*editingHost);
+  // If the editable block element is not splittable, e.g., it's an editing
+  // host, and the default paragraph separator is <br> or the element cannot
+  // contain a <p> element, we should insert a <br> element.
+  else if (!HTMLEditUtils::IsSplittableNode(*editableBlockElement)) {
+    insertBRElement =
+        separator == ParagraphSeparator::br ||
+        !HTMLEditUtils::CanElementContainParagraph(*editableBlockElement);
   }
   // If the nearest block parent is a single-line container declared in
   // the execCommand spec and not the editing host, we should separate the
   // block even if the default paragraph separator is <br> element.
-  else if (HTMLEditUtils::IsSingleLineContainer(*blockElement)) {
+  else if (HTMLEditUtils::IsSingleLineContainer(*editableBlockElement)) {
     insertBRElement = false;
   }
   // Otherwise, unless there is no block ancestor which can contain <p>
   // element, we shouldn't insert a <br> element here.
   else {
     insertBRElement = true;
-    for (Element* blockAncestor = blockElement;
-         blockAncestor && insertBRElement;
-         blockAncestor = HTMLEditUtils::GetAncestorBlockElement(*blockAncestor,
-                                                                editingHost)) {
+    for (const Element* editableBlockAncestor = editableBlockElement;
+         editableBlockAncestor && insertBRElement;
+         editableBlockAncestor = HTMLEditUtils::GetAncestorElement(
+             *editableBlockAncestor,
+             HTMLEditUtils::ClosestEditableBlockElement)) {
       insertBRElement =
-          !HTMLEditUtils::CanElementContainParagraph(*blockAncestor);
+          !HTMLEditUtils::CanElementContainParagraph(*editableBlockAncestor);
     }
   }
 
@@ -1486,7 +1489,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     return EditActionHandled();
   }
 
-  if (editingHost == blockElement && separator != ParagraphSeparator::br) {
+  if (!HTMLEditUtils::IsSplittableNode(*editableBlockElement) &&
+      separator != ParagraphSeparator::br) {
     // Insert a new block first
     MOZ_ASSERT(separator == ParagraphSeparator::div ||
                separator == ParagraphSeparator::p);
@@ -1511,22 +1515,20 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     }
 
     atStartOfSelection = firstRange->StartRef();
-    if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    if (NS_WARN_IF(!atStartOfSelection.IsInContentNode())) {
       return EditActionIgnored(NS_ERROR_FAILURE);
     }
     MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
-    blockElement =
-        atStartOfSelection.IsInContentNode()
-            ? HTMLEditUtils::GetInclusiveAncestorBlockElement(
-                  *atStartOfSelection.ContainerAsContent(), editingHost)
-            : nullptr;
-    if (NS_WARN_IF(!blockElement)) {
+    editableBlockElement = HTMLEditUtils::GetInclusiveAncestorElement(
+        *atStartOfSelection.ContainerAsContent(),
+        HTMLEditUtils::ClosestEditableBlockElement);
+    if (NS_WARN_IF(!editableBlockElement)) {
       return EditActionIgnored(NS_ERROR_UNEXPECTED);
     }
-    if (NS_WARN_IF(blockElement == editingHost)) {
+    if (NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(*editableBlockElement))) {
       // Didn't create a new block for some reason, fall back to <br>
-      rv = InsertBRElement(atStartOfSelection);
+      nsresult rv = InsertBRElement(atStartOfSelection);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::InsertBRElement() failed");
         return EditActionIgnored(rv);
@@ -1540,7 +1542,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     // wrap following inline elements of a <br> element which is next sibling
     // of container of the caret.  So, we need to adjust mNewBlockElement here
     // for avoiding jumping caret to odd position.
-    TopLevelEditSubActionDataRef().mNewBlockElement = blockElement;
+    TopLevelEditSubActionDataRef().mNewBlockElement = editableBlockElement;
   }
 
   // If block is empty, populate with br.  (For example, imagine a div that
@@ -1548,10 +1550,11 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   // "Text" is deleted leaving an empty block.  We want to put in one br to
   // make block have a line.  Then code further below will put in a second br.)
   if (HTMLEditUtils::IsEmptyBlockElement(
-          *blockElement, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
+          *editableBlockElement,
+          {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     EditorDOMPoint endOfBlockParent;
-    endOfBlockParent.SetToEndOf(blockElement);
+    endOfBlockParent.SetToEndOf(editableBlockElement);
     Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
         InsertBRElementWithTransaction(endOfBlockParent);
     if (resultOfInsertingBRElement.isErr()) {
@@ -1561,11 +1564,14 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     MOZ_ASSERT(resultOfInsertingBRElement.inspect());
   }
 
-  RefPtr<Element> listItem = HTMLEditUtils::GetClosestAncestorListItemElement(
-      *blockElement, editingHost);
-  if (listItem && listItem != editingHost) {
+  RefPtr<Element> maybeNonEditableListItem =
+      HTMLEditUtils::GetClosestAncestorListItemElement(*editableBlockElement,
+                                                       editingHost);
+  if (maybeNonEditableListItem &&
+      HTMLEditUtils::IsSplittableNode(*maybeNonEditableListItem)) {
     nsresult rv = HandleInsertParagraphInListItemElement(
-        *listItem, MOZ_KnownLive(*atStartOfSelection.GetContainer()),
+        *maybeNonEditableListItem,
+        MOZ_KnownLive(*atStartOfSelection.GetContainer()),
         atStartOfSelection.Offset());
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
@@ -1576,10 +1582,11 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     return EditActionHandled();
   }
 
-  if (HTMLEditUtils::IsHeader(*blockElement)) {
+  if (HTMLEditUtils::IsHeader(*editableBlockElement)) {
     // Headers: close (or split) header
     nsresult rv = HandleInsertParagraphInHeadingElement(
-        *blockElement, MOZ_KnownLive(*atStartOfSelection.GetContainer()),
+        *editableBlockElement,
+        MOZ_KnownLive(*atStartOfSelection.GetContainer()),
         atStartOfSelection.Offset());
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
@@ -1598,12 +1605,14 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   //     paragraph separator is <br>.  Otherwise, take consistent behavior
   //     between <p> container and <div> container.
   if ((separator == ParagraphSeparator::br &&
-       blockElement->IsHTMLElement(nsGkAtoms::p)) ||
+       editableBlockElement->IsHTMLElement(nsGkAtoms::p)) ||
       (separator != ParagraphSeparator::br &&
-       blockElement->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
+       editableBlockElement->IsAnyOfHTMLElements(nsGkAtoms::p,
+                                                 nsGkAtoms::div))) {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     // Paragraphs: special rules to look for <br>s
-    EditActionResult result = HandleInsertParagraphInParagraph(*blockElement);
+    EditActionResult result =
+        HandleInsertParagraphInParagraph(*editableBlockElement);
     if (result.Failed()) {
       NS_WARNING("HTMLEditor::HandleInsertParagraphInParagraph() failed");
       return result;
