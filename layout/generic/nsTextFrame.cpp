@@ -4494,8 +4494,6 @@ class nsContinuingTextFrame final : public nsTextFrame {
   nsIFrame* FirstInFlow() const final;
   nsTextFrame* FirstContinuation() const final { return mFirstContinuation; };
 
-  nsTArray<nsTextFrame*>* GetContinuations() final { return nullptr; }
-
   void AddInlineMinISize(gfxContext* aRenderingContext,
                          InlineMinISizeData* aData) final;
   void AddInlinePrefISize(gfxContext* aRenderingContext,
@@ -7503,6 +7501,33 @@ bool nsTextFrame::IsFrameSelected() const {
   return mIsSelected == nsTextFrame::SelectionState::Selected;
 }
 
+nsTextFrame* nsTextFrame::FindContinuationForOffset(int32_t aOffset) {
+  // Use a continuations array to accelerate finding the first continuation
+  // of interest, if possible.
+  MOZ_ASSERT(!GetPrevContinuation(), "should be called on the primary frame");
+  auto* continuations = GetContinuations();
+  nsTextFrame* f = this;
+  if (continuations) {
+    size_t index;
+    if (BinarySearchIf(
+            *continuations, 0, continuations->Length(),
+            [=](nsTextFrame* aFrame) -> int {
+              return aOffset - aFrame->GetContentOffset();
+            },
+            &index)) {
+      f = (*continuations)[index];
+    } else {
+      f = (*continuations)[index ? index - 1 : 0];
+    }
+  }
+
+  while (f && f->GetContentEnd() <= aOffset) {
+    f = f->GetNextContinuation();
+  }
+
+  return f;
+}
+
 void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,
                                         bool aSelected,
                                         SelectionType aSelectionType) {
@@ -7513,12 +7538,11 @@ void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,
   InvalidateSelectionState();
 
   // Selection is collapsed, which can't affect text frame rendering
-  if (aStart == aEnd) return;
-
-  nsTextFrame* f = this;
-  while (f && f->GetContentEnd() <= int32_t(aStart)) {
-    f = f->GetNextContinuation();
+  if (aStart == aEnd) {
+    return;
   }
+
+  nsTextFrame* f = FindContinuationForOffset(aStart);
 
   nsPresContext* presContext = PresContext();
   while (f && f->GetContentOffset() < int32_t(aEnd)) {
