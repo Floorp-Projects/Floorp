@@ -34,7 +34,6 @@
 #include "nsTArray.h"     // for AutoTArray
 #include "nsXULAppAPI.h"  // for XRE_GetProcessType, etc
 #include "TiledLayerBuffer.h"
-#include "FrameLayerBuilder.h"  // for FrameLayerbuilder
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"
 #  include "LayerMetricsWrapper.h"
@@ -355,10 +354,6 @@ bool ClientLayerManager::EndTransactionInternal(
 
   NS_ASSERTION(!aCallback || !mTransactionIncomplete,
                "If callback is not null, transaction must be complete");
-
-  if (gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
-    FrameLayerBuilder::InvalidateAllLayers(this);
-  }
 
   if (startTime) {
     PaintTiming& pt = mForwarder->GetPaintTiming();

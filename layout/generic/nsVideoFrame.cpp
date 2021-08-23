@@ -169,76 +169,6 @@ void nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-already_AddRefed<Layer> nsVideoFrame::BuildLayer(
-    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-    nsDisplayItem* aItem,
-    const ContainerLayerParameters& aContainerParameters) {
-  nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
-  HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
-
-  Maybe<CSSIntSize> videoSizeInPx = element->GetVideoSize();
-  if (videoSizeInPx.isNothing() || area.IsEmpty()) {
-    return nullptr;
-  }
-
-  RefPtr<ImageContainer> container = element->GetImageContainer();
-  if (!container) return nullptr;
-
-  // Retrieve the size of the decoded video frame, before being scaled
-  // by pixel aspect ratio.
-  mozilla::gfx::IntSize frameSize = container->GetCurrentSize();
-  if (frameSize.width == 0 || frameSize.height == 0) {
-    // No image, or zero-sized image. No point creating a layer.
-    return nullptr;
-  }
-
-  const auto aspectRatio = AspectRatio::FromSize(*videoSizeInPx);
-  const IntrinsicSize intrinsicSize(CSSPixel::ToAppUnits(*videoSizeInPx));
-  nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-      area, intrinsicSize, aspectRatio, StylePosition());
-
-  gfxRect destGFXRect = PresContext()->AppUnitsToGfxUnits(dest);
-  destGFXRect.Round();
-  if (destGFXRect.IsEmpty()) {
-    return nullptr;
-  }
-
-  VideoInfo::Rotation rotationDeg = element->RotationDegrees();
-  IntSize scaleHint(static_cast<int32_t>(destGFXRect.Width()),
-                    static_cast<int32_t>(destGFXRect.Height()));
-  // scaleHint is set regardless of rotation, so swap w/h if needed.
-  SwapScaleWidthHeightForRotation(scaleHint, rotationDeg);
-  container->SetScaleHint(scaleHint);
-
-  RefPtr<ImageLayer> layer = static_cast<ImageLayer*>(
-      aManager->GetLayerBuilder()
-          ? aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem)
-          : nullptr);
-  if (!layer) {
-    layer = aManager->CreateImageLayer();
-    if (!layer) return nullptr;
-  }
-
-  layer->SetContainer(container);
-  layer->SetSamplingFilter(nsLayoutUtils::GetSamplingFilterForFrame(this));
-  // Set a transform on the layer to draw the video in the right place
-  gfxPoint p = destGFXRect.TopLeft() + aContainerParameters.mOffset;
-
-  Matrix preTransform = ComputeRotationMatrix(
-      destGFXRect.Width(), destGFXRect.Height(), rotationDeg);
-
-  Matrix transform = preTransform * Matrix::Translation(p.x, p.y);
-
-  layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
-  layer->SetScaleToSize(scaleHint, ScaleMode::STRETCH);
-
-  uint32_t flags = element->HasAlpha() ? 0 : Layer::CONTENT_OPAQUE;
-  layer->SetContentFlags(flags);
-
-  RefPtr<Layer> result = std::move(layer);
-  return result.forget();
-}
-
 class DispatchResizeEvent : public Runnable {
  public:
   explicit DispatchResizeEvent(nsIContent* aContent, const nsString& aName)
@@ -665,31 +595,6 @@ class nsDisplayVideo : public nsPaintedDisplayItem {
     *aSnap = true;
     nsIFrame* f = Frame();
     return f->GetContentRectRelativeToSelf() + ToReferenceFrame();
-  }
-
-  virtual already_AddRefed<Layer> BuildLayer(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aContainerParameters) override {
-    return static_cast<nsVideoFrame*>(mFrame)->BuildLayer(
-        aBuilder, aManager, this, aContainerParameters);
-  }
-
-  virtual LayerState GetLayerState(
-      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-      const ContainerLayerParameters& aParameters) override {
-    if (aManager->IsCompositingCheap()) {
-      // Since ImageLayers don't require additional memory of the
-      // video frames we have to have anyway, we can't save much by
-      // making layers inactive. Also, for many accelerated layer
-      // managers calling imageContainer->GetCurrentAsSurface can be
-      // very expensive. So just always be active when compositing is
-      // cheap (i.e. hardware accelerated).
-      return LayerState::LAYER_ACTIVE;
-    }
-    HTMLMediaElement* elem =
-        static_cast<HTMLMediaElement*>(mFrame->GetContent());
-    return elem->IsPotentiallyPlaying() ? LayerState::LAYER_ACTIVE_FORCE
-                                        : LayerState::LAYER_INACTIVE;
   }
 
   // Only report FirstContentfulPaint when the video is set
