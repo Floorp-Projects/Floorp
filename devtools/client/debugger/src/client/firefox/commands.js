@@ -162,14 +162,14 @@ export function toggleJavaScriptEnabled(enabled) {
 }
 
 function addWatchpoint(object, property, label, watchpointType) {
-  if (currentTarget().traits.watchpoints) {
+  if (currentTarget().getTrait("watchpoints")) {
     const objectFront = createObjectFront(object);
     return objectFront.addWatchpoint(property, label, watchpointType);
   }
 }
 
 async function removeWatchpoint(object, property) {
-  if (currentTarget().traits.watchpoints) {
+  if (currentTarget().getTrait("watchpoints")) {
     const objectFront = createObjectFront(object);
     await objectFront.removeWatchpoint(property);
   }
