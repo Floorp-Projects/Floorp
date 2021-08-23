@@ -172,6 +172,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void storePrivateValue(Register src, const Address& dest) {
     storePtr(src, dest);
   }
+  void storePrivateValue(ImmGCPtr imm, const Address& dest) {
+    storePtr(imm, dest);
+  }
   void loadValue(Operand src, ValueOperand val) { movq(src, val.valueReg()); }
   void loadValue(Address src, ValueOperand val) {
     loadValue(Operand(src), val);

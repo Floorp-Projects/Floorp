@@ -1191,7 +1191,8 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
     masm.unboxObject(Address(scratch1, JSFunction::offsetOfEnvironment()),
                      scratch2);
     masm.storePtr(scratch2, frame.addressOfEnvironmentChain());
-    masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
+    masm.loadPrivate(Address(scratch1, JSFunction::offsetOfJitInfoOrScript()),
+                     scratch1);
     masm.jump(&done);
   }
   masm.bind(&notFunction);
@@ -5895,7 +5896,8 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   // script does not have a JitScript.
   Label interpret;
   Register scratch1 = regs.takeAny();
-  masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
+  masm.loadPrivate(Address(callee, JSFunction::offsetOfJitInfoOrScript()),
+                   scratch1);
   masm.branchIfScriptHasNoJitScript(scratch1, &interpret);
 
 #ifdef JS_TRACE_LOGGING
@@ -6079,7 +6081,8 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   // Load script in scratch1.
   masm.unboxObject(
       Address(genObj, AbstractGeneratorObject::offsetOfCalleeSlot()), scratch1);
-  masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
+  masm.loadPrivate(Address(scratch1, JSFunction::offsetOfJitInfoOrScript()),
+                   scratch1);
 
   // Load resume index in scratch2 and mark generator as running.
   Address resumeIndexSlot(genObj,

@@ -2115,14 +2115,14 @@ void MacroAssembler::loadJitCodeRaw(Register func, Register dest) {
                     SelfHostedLazyScript::offsetOfJitCodeRaw(),
                 "SelfHostedLazyScript and BaseScript must use same layout for "
                 "jitCodeRaw_");
-  loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
+  loadPrivate(Address(func, JSFunction::offsetOfJitInfoOrScript()), dest);
   loadPtr(Address(dest, BaseScript::offsetOfJitCodeRaw()), dest);
 }
 
 void MacroAssembler::loadBaselineJitCodeRaw(Register func, Register dest,
                                             Label* failure) {
   // Load JitScript
-  loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
+  loadPrivate(Address(func, JSFunction::offsetOfJitInfoOrScript()), dest);
   if (failure) {
     branchIfScriptHasNoJitScript(dest, failure);
   }
@@ -3591,7 +3591,7 @@ void MacroAssembler::loadFunctionLength(Register func,
   bind(&isInterpreted);
   {
     // Load the length property of an interpreted function.
-    loadPtr(Address(func, JSFunction::offsetOfScript()), output);
+    loadPrivate(Address(func, JSFunction::offsetOfJitInfoOrScript()), output);
     loadPtr(Address(output, JSScript::offsetOfSharedData()), output);
     branchTestPtr(Assembler::Zero, output, output, slowPath);
     loadPtr(Address(output, SharedImmutableScriptData::offsetOfISD()), output);
