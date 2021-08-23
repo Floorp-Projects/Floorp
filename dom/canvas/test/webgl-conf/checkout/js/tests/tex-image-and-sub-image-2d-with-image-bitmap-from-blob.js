@@ -10,7 +10,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
     var gl = null;
     var successfullyParsed = false;
 
-    function init()
+    async function init()
     {
         description('Verify texImage2D and texSubImage2D code paths taking ImageBitmap created from a Blob (' + internalFormat + '/' + pixelFormat + '/' + pixelType + ')');
 
@@ -31,17 +31,18 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         gl.clearColor(0,0,0,1);
         gl.clearDepth(1);
 
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", resourcePath + "red-green-semi-transparent.png");
-        xhr.responseType = 'blob';
-        xhr.onload = function() {
-            var blob = xhr.response;
-            runImageBitmapTest(blob, 0.5, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, false)
-            .then(() => {
-                finishTest();
-            });
-        };
-        xhr.send();
+        debug('*** Running tests against red-green-semi-transparent.png ***');
+        let response = await fetch(resourcePath + "red-green-semi-transparent.png");
+        let blob = await response.blob();
+        await runImageBitmapTest(blob, 0.5, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, false);
+        debug('*** Running tests against red-green-128x128-linear-profile.jpg ***');
+        response = await fetch(resourcePath + "red-green-128x128-linear-profile.jpg");
+        blob = await response.blob();
+        // This test requires a huge tolerance because browsers - at least currently - vary
+        // widely in the colorspace conversion results for this image.
+        let tolerance = 120;
+        await runImageBitmapTest(blob, 1.0, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, false, tolerance);
+        finishTest();
     }
 
     return init;

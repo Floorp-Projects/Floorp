@@ -36,10 +36,6 @@ const SMALL = 2;
 // different results. Sometimes wrong, sometimes correct.
 const LARGE = 1200;
 
-function render() {
-
-}
-
 gl.uniform4fv(colorLocation, [0.0, 1.0, 0.0, 1.0]);
 
 // -
@@ -63,6 +59,19 @@ gl.clear(gl.COLOR_BUFFER_BIT);
 wtu.drawUnitQuad(gl);
 
 wtu.checkCanvasRect(gl, 0, 0, 1, 1, [ 0, 255, 0, 255 ]);
+
+debug('\nCause a GL error, then resize and render.');
+gl.depthFunc(0); // Causes INVALID_ENUM
+gl.canvas.width = gl.canvas.height = LARGE;
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.canvas.width = gl.canvas.height = SMALL;
+
+gl.clear(gl.COLOR_BUFFER_BIT);
+wtu.drawUnitQuad(gl);
+
+wtu.checkCanvasRect(gl, 0, 0, 1, 1, [ 0, 255, 0, 255 ]);
+wtu.glErrorShouldBe(gl, gl.INVALID_ENUM);
+wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
 // -
 
