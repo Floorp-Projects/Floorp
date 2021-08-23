@@ -8462,10 +8462,15 @@ wasm-godot, wasm-godot-baseline, wasm-godot-ion
 webaudio
 --------
 
-* contact: ?
+* contact: padenot
 * type: benchmark
 * browsers: Firefox desktop, Chrome desktop
-* TODO
+* measuring: Rendering speed of various synthetic Web Audio API workloads
+* reporting: The time time it took to render the audio of each test case, and a
+  geometric mean of the full test suite. Lower is better
+* data: Upstream is https://github.com/padenot/webaudio-benchmark/. Those
+  benchmarks are run by other projects. Upstream is vendored in mozilla-central
+  via an simple update script, at `third_party/webkit/PerformanceTests/webaudio`
 
 Scenario Tests
 ==============
