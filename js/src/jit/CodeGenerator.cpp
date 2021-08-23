@@ -3527,8 +3527,9 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
       info.flags.toRaw() | (info.nargs << JSFunction::ArgCountShift);
   masm.storeValue(JS::PrivateUint32Value(flagsAndArgs),
                   Address(output, JSFunction::offsetOfFlagsAndArgCount()));
-  masm.storePtr(ImmGCPtr(info.baseScript),
-                Address(output, JSFunction::offsetOfBaseScript()));
+  masm.storePrivateValue(
+      ImmGCPtr(info.baseScript),
+      Address(output, JSFunction::offsetOfJitInfoOrScript()));
 
   masm.storeValue(JSVAL_TYPE_OBJECT, envChain,
                   Address(output, JSFunction::offsetOfEnvironment()));
@@ -4717,7 +4718,7 @@ void CodeGenerator::visitGuardFunctionScript(LGuardFunctionScript* lir) {
   Register function = ToRegister(lir->function());
 
   Label bail;
-  Address scriptAddr(function, JSFunction::offsetOfBaseScript());
+  Address scriptAddr(function, JSFunction::offsetOfJitInfoOrScript());
   masm.branchPtr(Assembler::NotEqual, scriptAddr,
                  ImmGCPtr(lir->mir()->expected()), &bail);
   bailoutFrom(&bail, lir->snapshot());
