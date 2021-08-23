@@ -106,6 +106,7 @@ jobs:
           path: app/build/reports/lint-results-debug.html
 
   run-ui:
+    if: ${{ false }} # disable for now
     runs-on: macos-11
     if: github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'MickeyMoz'
 
