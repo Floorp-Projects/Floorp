@@ -24,6 +24,7 @@ XPIDL_SOURCES += [
     "nsILoginManagerPrompter.idl",
     "nsILoginManagerStorage.idl",
     "nsILoginMetaInfo.idl",
+    "nsIPromptInstance.idl",
 ]
 
 XPIDL_MODULE = "loginmgr"

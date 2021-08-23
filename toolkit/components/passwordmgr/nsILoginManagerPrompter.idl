@@ -4,6 +4,7 @@
 
 
 #include "nsISupports.idl"
+#include "nsIPromptInstance.idl"
 
 interface nsILoginInfo;
 interface nsIDOMWindow;
@@ -32,12 +33,13 @@ interface nsILoginManagerPrompter : nsISupports {
    *        Contains values from anything that we think, but are not sure, might be 
    *        a username or password.  Has two properties, 'usernames' and 'passwords'.
    */
-  void promptToSavePassword(in Element aBrowser,
-                            in nsILoginInfo aLogin,
-                            [optional] in boolean dismissed,
-                            [optional] in boolean notifySaved,
-                            [optional] in AString autoFilledLoginGuid,
-                            [optional] in jsval possibleValues);
+  nsIPromptInstance promptToSavePassword(
+          in Element aBrowser,
+          in nsILoginInfo aLogin,
+          [optional] in boolean dismissed,
+          [optional] in boolean notifySaved,
+          [optional] in AString autoFilledLoginGuid,
+          [optional] in jsval possibleValues);
 
   /**
    * Ask the user if they want to change a login's password or username.
@@ -61,14 +63,15 @@ interface nsILoginManagerPrompter : nsISupports {
    *        Contains values from anything that we think, but are not sure, might be 
    *        a username or password.  Has two properties, 'usernames' and 'passwords'.
    */
-  void promptToChangePassword(in Element aBrowser,
-                              in nsILoginInfo aOldLogin,
-                              in nsILoginInfo aNewLogin,
-                              [optional] in boolean dismissed,
-                              [optional] in boolean notifySaved,
-                              [optional] in AString autoSavedLoginGuid,
-                              [optional] in AString autoFilledLoginGuid,
-                              [optional] in jsval possibleValues);
+  nsIPromptInstance promptToChangePassword(
+          in Element aBrowser,
+          in nsILoginInfo aOldLogin,
+          in nsILoginInfo aNewLogin,
+          [optional] in boolean dismissed,
+          [optional] in boolean notifySaved,
+          [optional] in AString autoSavedLoginGuid,
+          [optional] in AString autoFilledLoginGuid,
+          [optional] in jsval possibleValues);
 
   /**
    * Ask the user if they want to change the password for one of
@@ -88,7 +91,7 @@ interface nsILoginManagerPrompter : nsISupports {
    *       will be set (using the user's selection) before modifyLogin()
    *       is called.
    */
-  void promptToChangePasswordWithUsernames(
+  nsIPromptInstance promptToChangePasswordWithUsernames(
           in Element aBrowser,
           in Array<nsILoginInfo> logins,
           in nsILoginInfo aNewLogin);
