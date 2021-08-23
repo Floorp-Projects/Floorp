@@ -1198,8 +1198,6 @@ const ResourceTransformers = {
   [ResourceCommand.TYPES
     .CONSOLE_MESSAGE]: require("devtools/shared/commands/resource/transformers/console-messages"),
   [ResourceCommand.TYPES
-    .DOCUMENT_EVENT]: require("devtools/shared/commands/resource/transformers/document-events"),
-  [ResourceCommand.TYPES
     .ERROR_MESSAGE]: require("devtools/shared/commands/resource/transformers/error-messages"),
   [ResourceCommand.TYPES
     .CACHE_STORAGE]: require("devtools/shared/commands/resource/transformers/storage-cache.js"),
