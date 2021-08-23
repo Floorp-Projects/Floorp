@@ -765,6 +765,10 @@ var testcases = [
     protocolChange: true,
     shouldRunTest: () => gSingleWordDNSLookup,
   },
+  {
+    input: "jar:file:///omni.ja!/",
+    fixedURI: "jar:file:///omni.ja!/",
+  },
 ];
 
 if (AppConstants.platform == "win") {
