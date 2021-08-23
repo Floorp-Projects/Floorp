@@ -61,10 +61,18 @@ class JSFunction : public js::NativeObject {
    */
   js::GCPtrValue flagsAndArgCount_;
 
+  /*
+   * For native functions, the native method pointer stored as a private value,
+   * or undefined.
+   *
+   * For interpreted functions, the environment object for new activations or
+   * null.
+   */
+  js::GCPtrValue nativeFuncOrInterpretedEnv_;
+
   union U {
     class {
       friend class JSFunction;
-      js::Native func_; /* native method pointer or null */
       // Warning: this |extra| union MUST NOT store a value that could be a
       // valid BaseScript* pointer! JIT guards depend on this.
       union {
@@ -80,7 +88,6 @@ class JSFunction : public js::NativeObject {
       } extra;
     } native;
     struct {
-      JSObject* env_; /* environment for new activations */
       union {
         js::BaseScript* script_;
         js::SelfHostedLazyScript* selfHostedLazy_;
@@ -370,21 +377,19 @@ class JSFunction : public js::NativeObject {
    */
   JSObject* environment() const {
     MOZ_ASSERT(isInterpreted());
-    return u.scripted.env_;
+    return nativeFuncOrInterpretedEnv_.toObjectOrNull();
   }
 
   void initEnvironment(JSObject* obj) {
     MOZ_ASSERT(isInterpreted());
-    reinterpret_cast<js::GCPtrObject*>(&u.scripted.env_)->init(obj);
+    nativeFuncOrInterpretedEnv_.init(JS::ObjectOrNullValue(obj));
   }
 
  public:
   static constexpr size_t offsetOfFlagsAndArgCount() {
     return offsetof(JSFunction, flagsAndArgCount_);
   }
-  static size_t offsetOfEnvironment() {
-    return offsetof(JSFunction, u.scripted.env_);
-  }
+  static size_t offsetOfEnvironment() { return offsetOfNativeOrEnv(); }
   static size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
   static bool delazifyLazilyInterpretedFunction(JSContext* cx,
@@ -534,11 +539,11 @@ class JSFunction : public js::NativeObject {
 
   JSNative native() const {
     MOZ_ASSERT(isNativeFun());
-    return u.native.func_;
+    return nativeUnchecked();
   }
   JSNative nativeUnchecked() const {
-    // Called by Ion off-main thread.
-    return u.native.func_;
+    // Can be called by Ion off-main thread.
+    return reinterpret_cast<JSNative>(nativeFuncOrInterpretedEnv_.toPrivate());
   }
 
   JSNative maybeNative() const { return isInterpreted() ? nullptr : native(); }
@@ -547,7 +552,8 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(isNativeFun());
     MOZ_ASSERT_IF(jitInfo, isBuiltinNative());
     MOZ_ASSERT(native);
-    u.native.func_ = native;
+    nativeFuncOrInterpretedEnv_.init(
+        JS::PrivateValue(reinterpret_cast<void*>(native)));
     u.native.extra.jitInfo_ = jitInfo;
   }
   bool hasJitInfo() const {
@@ -602,9 +608,6 @@ class JSFunction : public js::NativeObject {
   bool isDerivedClassConstructor() const;
   bool isSyntheticFunction() const;
 
-  static unsigned offsetOfNative() {
-    return offsetof(JSFunction, u.native.func_);
-  }
   static unsigned offsetOfScript() {
     static_assert(offsetof(U, scripted.s.script_) ==
                       offsetof(U, native.extra.wasmJitEntry_),
@@ -613,10 +616,7 @@ class JSFunction : public js::NativeObject {
     return offsetof(JSFunction, u.scripted.s.script_);
   }
   static unsigned offsetOfNativeOrEnv() {
-    static_assert(
-        offsetof(U, native.func_) == offsetof(U, scripted.env_),
-        "U.native.func_ must be at the same offset as U.scripted.env_");
-    return offsetOfNative();
+    return offsetof(JSFunction, nativeFuncOrInterpretedEnv_);
   }
   static unsigned offsetOfBaseScript() {
     return offsetof(JSFunction, u.scripted.s.script_);

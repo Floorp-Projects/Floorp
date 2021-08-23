@@ -2573,7 +2573,9 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(
         masm.callWithABI(
             Address(calleeReg, JSJitInfo::offsetOfIgnoresReturnValueNative()));
       } else {
-        masm.callWithABI(Address(calleeReg, JSFunction::offsetOfNative()));
+        // This depends on the native function pointer being stored unchanged as
+        // a PrivateValue.
+        masm.callWithABI(Address(calleeReg, JSFunction::offsetOfNativeOrEnv()));
       }
 #endif
     } break;
