@@ -339,9 +339,8 @@ mod tests {
         let mut caps = Map::new();
         caps.insert("moz:firefoxOptions".into(), Value::Object(firefox_opts));
 
-        let opts =
-            FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
-                .expect("Valid profile and prefs");
+        let opts = FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
+            .expect("Valid profile and prefs");
 
         let mut profile = opts.profile.expect("valid firefox profile");
 

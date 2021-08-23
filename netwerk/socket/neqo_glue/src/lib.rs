@@ -15,6 +15,7 @@ use neqo_transport::{
 use nserror::*;
 use nsstring::*;
 use qlog::QlogStreamer;
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::fs::OpenOptions;
@@ -25,7 +26,6 @@ use std::rc::Rc;
 use std::slice;
 use std::str;
 use std::time::Instant;
-use std::borrow::Cow;
 use thin_vec::ThinVec;
 use xpcom::{interfaces::nsrefcnt, AtomicRefcnt, RefCounted, RefPtr};
 
@@ -593,7 +593,7 @@ pub enum Http3Event {
 
 fn sanitize_header(mut y: Cow<[u8]>) -> Cow<[u8]> {
     for i in 0..y.len() {
-        if matches!(y[i], b'\n' | b'\r'| b'\0') {
+        if matches!(y[i], b'\n' | b'\r' | b'\0') {
             y.to_mut()[i] = b' ';
         }
     }

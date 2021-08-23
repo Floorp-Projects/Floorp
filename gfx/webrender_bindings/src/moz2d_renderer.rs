@@ -329,7 +329,10 @@ impl<'a> CachedReader<'a> {
 
         let key_to_delete = match self
             .cache
-            .range((Included(CacheKey::new(*bounds, 0u32)), Included(CacheKey::new(*bounds, std::u32::MAX))))
+            .range((
+                Included(CacheKey::new(*bounds, 0u32)),
+                Included(CacheKey::new(*bounds, std::u32::MAX)),
+            ))
             .next()
         {
             Some((&key, _)) => key,
@@ -358,7 +361,8 @@ impl<'a> CachedReader<'a> {
             if old.bounds == *bounds {
                 return old;
             } else if !ignore_rect.contains_box(&old.bounds) {
-                self.cache.insert(CacheKey::new(old.bounds, self.cache_index_counter), old);
+                self.cache
+                    .insert(CacheKey::new(old.bounds, self.cache_index_counter), old);
                 self.cache_index_counter += 1;
             }
         }
