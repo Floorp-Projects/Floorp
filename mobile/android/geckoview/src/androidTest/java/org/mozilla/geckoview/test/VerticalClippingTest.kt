@@ -17,8 +17,8 @@ import android.graphics.Bitmap
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.equalTo
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.util.Callbacks
 
 
 private const val SCREEN_HEIGHT = 800
@@ -67,7 +67,7 @@ class VerticalClippingTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isWebrender, equalTo(false))
         sessionRule.display?.setVerticalClipping(45)
         sessionRule.session.loadTestPath(FIXED_BOTTOM)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+        sessionRule.waitUntilCalled(object : ContentDelegate {
             @AssertCalled(count = 1)
             override fun onFirstContentfulPaint(session: GeckoSession) {
             }

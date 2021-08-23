@@ -14,8 +14,9 @@ import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.gecko.EventDispatcher
 import org.mozilla.geckoview.*
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate
+import org.mozilla.geckoview.GeckoSession.ProgressDelegate
 import org.mozilla.geckoview.WebExtension.*
 import org.mozilla.geckoview.WebExtension.BrowsingDataDelegate.Type.*
 import org.mozilla.geckoview.WebExtensionController.EnableSource
@@ -23,7 +24,6 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
-import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import org.mozilla.geckoview.test.util.UiThreadUtils
 import java.nio.charset.Charset
@@ -1191,7 +1191,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         var savedState : GeckoSession.SessionState? = null
-        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
+        sessionRule.waitUntilCalled(object : ProgressDelegate {
             @AssertCalled(count=1)
             override fun onSessionStateChange(session: GeckoSession, state: GeckoSession.SessionState) {
                 savedState = state
@@ -1635,7 +1635,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         mainSession.loadUri("http://example.com")
 
-        mainSession.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate {
+        mainSession.waitUntilCalled(object : NavigationDelegate, ProgressDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 assertThat("Url should load example.com first",
@@ -1653,7 +1653,7 @@ class WebExtensionTest : BaseSessionTest() {
         var page: String? = null
         val pageStop = GeckoResult<Boolean>()
 
-        mainSession.delegateUntilTestEnd(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate {
+        mainSession.delegateUntilTestEnd(object : NavigationDelegate, ProgressDelegate {
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 page = url
             }
