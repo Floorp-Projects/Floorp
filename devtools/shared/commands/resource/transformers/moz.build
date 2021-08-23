@@ -4,7 +4,6 @@
 
 DevToolsModules(
     "console-messages.js",
-    "document-events.js",
     "error-messages.js",
     "network-events.js",
     "storage-cache.js",
