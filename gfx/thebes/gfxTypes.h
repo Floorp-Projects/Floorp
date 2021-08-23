@@ -10,7 +10,7 @@
 #include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
-enum class StyleGenericFontFamily : uint8_t;
+enum class StyleGenericFontFamily : uint32_t;
 }
 
 typedef struct _cairo_surface cairo_surface_t;
