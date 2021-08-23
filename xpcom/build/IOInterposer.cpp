@@ -228,64 +228,51 @@ class MasterList {
     if (aOp & mozilla::IOInterposeObserver::OpCreateOrOpen) {
       VectorRemove(newLists->mCreateObservers, aObserver);
       if (newLists->mCreateObservers.empty()) {
-        mObservedOperations =
-            (mozilla::IOInterposeObserver::
-                 Operation)(mObservedOperations &
-                            ~mozilla::IOInterposeObserver::OpCreateOrOpen);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations &
+            ~mozilla::IOInterposeObserver::OpCreateOrOpen);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpRead) {
       VectorRemove(newLists->mReadObservers, aObserver);
       if (newLists->mReadObservers.empty()) {
-        mObservedOperations =
-            (mozilla::IOInterposeObserver::
-                 Operation)(mObservedOperations &
-                            ~mozilla::IOInterposeObserver::OpRead);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpRead);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpWrite) {
       VectorRemove(newLists->mWriteObservers, aObserver);
       if (newLists->mWriteObservers.empty()) {
-        mObservedOperations =
-            (mozilla::IOInterposeObserver::
-                 Operation)(mObservedOperations &
-                            ~mozilla::IOInterposeObserver::OpWrite);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpWrite);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpFSync) {
       VectorRemove(newLists->mFSyncObservers, aObserver);
       if (newLists->mFSyncObservers.empty()) {
-        mObservedOperations =
-            (mozilla::IOInterposeObserver::
-                 Operation)(mObservedOperations &
-                            ~mozilla::IOInterposeObserver::OpFSync);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpFSync);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpStat) {
       VectorRemove(newLists->mStatObservers, aObserver);
       if (newLists->mStatObservers.empty()) {
-        mObservedOperations =
-            (mozilla::IOInterposeObserver::
-                 Operation)(mObservedOperations &
-                            ~mozilla::IOInterposeObserver::OpStat);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpStat);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpClose) {
       VectorRemove(newLists->mCloseObservers, aObserver);
       if (newLists->mCloseObservers.empty()) {
-        mObservedOperations =
-            (mozilla::IOInterposeObserver::
-                 Operation)(mObservedOperations &
-                            ~mozilla::IOInterposeObserver::OpClose);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpClose);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpNextStage) {
       VectorRemove(newLists->mStageObservers, aObserver);
       if (newLists->mStageObservers.empty()) {
-        mObservedOperations =
-            (mozilla::IOInterposeObserver::
-                 Operation)(mObservedOperations &
-                            ~mozilla::IOInterposeObserver::OpNextStage);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpNextStage);
       }
     }
     mObserverLists = newLists;

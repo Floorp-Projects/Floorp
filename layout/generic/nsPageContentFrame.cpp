@@ -352,7 +352,7 @@ void nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     visible.ScaleInverseRoundOut(PresContext()->GetPageScale());
 
     nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-       aBuilder, this, visible, visible);
+        aBuilder, this, visible, visible);
     mozilla::ViewportFrame::BuildDisplayList(aBuilder, set);
 
     set.SerializeWithCorrectZOrder(&content, GetContent());

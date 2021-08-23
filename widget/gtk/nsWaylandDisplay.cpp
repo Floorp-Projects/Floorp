@@ -341,7 +341,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       mViewporter(nullptr),
       mDmabuf(nullptr),
       mExplicitSync(false) {
-  wl_registry *registry = wl_display_get_registry(mDisplay);
+  wl_registry* registry = wl_display_get_registry(mDisplay);
   wl_registry_add_listener(registry, &registry_listener, this);
   if (!NS_IsMainThread()) {
     mEventQueue = wl_display_create_queue(mDisplay);

@@ -65,7 +65,7 @@ struct MightBeForwarded {
   static_assert(!std::is_same_v<Cell, T> && !std::is_same_v<TenuredCell, T>);
 
 #define CAN_FORWARD_KIND_OR(_1, _2, Type, _3, _4, _5, canCompact) \
-  std::is_base_of_v<Type, T> ? canCompact :
+  std::is_base_of_v<Type, T> ? canCompact:
 
   // FOR_EACH_ALLOCKIND doesn't cover every possible type: make sure
   // to default to `true` for unknown types.

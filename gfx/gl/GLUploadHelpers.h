@@ -46,11 +46,10 @@ class GLContext;
  */
 gfx::SurfaceFormat UploadImageDataToTexture(
     GLContext* gl, unsigned char* aData, const gfx::IntSize& aDataSize,
-    const gfx::IntPoint& aDstOffset,
-    int32_t aStride, gfx::SurfaceFormat aFormat, const nsIntRegion& aDstRegion,
-    GLuint aTexture, const gfx::IntSize& aSize,
-    size_t* aOutUploadSize = nullptr, bool aNeedInit = false,
-    GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
+    const gfx::IntPoint& aDstOffset, int32_t aStride,
+    gfx::SurfaceFormat aFormat, const nsIntRegion& aDstRegion, GLuint aTexture,
+    const gfx::IntSize& aSize, size_t* aOutUploadSize = nullptr,
+    bool aNeedInit = false, GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
     GLenum aTextureTarget = LOCAL_GL_TEXTURE_2D);
 
 /**

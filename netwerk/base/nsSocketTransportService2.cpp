@@ -1762,7 +1762,7 @@ void nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo>* data,
   PRDescType type = PR_GetDescType(idLayer);
   char host[64] = {0};
   uint16_t port;
-  const char *type_desc;
+  const char* type_desc;
 
   if (type == PR_DESC_SOCKET_TCP) {
     type_desc = "TCP";
@@ -1805,7 +1805,8 @@ void nsSocketTransportService::AnalyzeConnection(nsTArray<SocketInfo>* data,
 
   uint64_t sent = context->mHandler->ByteCountSent();
   uint64_t received = context->mHandler->ByteCountReceived();
-  SocketInfo info = {nsCString(host), sent, received, port, aActive, nsCString(type_desc)};
+  SocketInfo info = {nsCString(host),     sent, received, port, aActive,
+                     nsCString(type_desc)};
 
   data->AppendElement(info);
 }
