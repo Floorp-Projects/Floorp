@@ -84,6 +84,7 @@
 /** @type {string} */ CSSProperties.prototype.MozPaddingStart;
 /** @type {string} */ CSSProperties.prototype.MozPerspective;
 /** @type {string} */ CSSProperties.prototype.MozStackSizing;
+/** @type {string} */ CSSProperties.prototype.MozTabSize;
 /** @type {string} */ CSSProperties.prototype.MozTransform;
 /** @type {string} */ CSSProperties.prototype.MozTransformOrigin;
 /** @type {string} */ CSSProperties.prototype.MozTransition;
