@@ -10,6 +10,7 @@
 
 #include <deque>
 #include <unordered_map>
+#include <ostream>
 
 #include "mozilla/Mutex.h"
 
@@ -97,6 +98,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
   bool UnsuspendOffMainThreadCommits();
 
   bool AreOffMainThreadCommitsSuspended();
+
+  void DumpLayerTreeToFile(const char* aPath);
 
   enum class WhichRepresentation : uint8_t { ONSCREEN, OFFSCREEN };
 
@@ -221,6 +224,8 @@ class NativeLayerCA : public NativeLayer {
   gfx::IntRect CurrentSurfaceDisplayRect() override;
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
+
+  void DumpLayer(std::ostream& aOutputStream);
 
   void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
 
