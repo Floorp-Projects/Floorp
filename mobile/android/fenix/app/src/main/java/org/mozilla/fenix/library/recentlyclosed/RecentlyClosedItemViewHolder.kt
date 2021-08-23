@@ -12,13 +12,11 @@ import org.mozilla.fenix.databinding.HistoryListItemBinding
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.selection.SelectionHolder
-import org.mozilla.fenix.library.history.HistoryItemMenu
-import org.mozilla.fenix.utils.Do
 
 class RecentlyClosedItemViewHolder(
     view: View,
     private val recentlyClosedFragmentInteractor: RecentlyClosedFragmentInteractor,
-    private val selectionHolder: SelectionHolder<RecoverableTab>
+    private val selectionHolder: SelectionHolder<RecoverableTab>,
 ) : RecyclerView.ViewHolder(view) {
 
     private val binding = HistoryListItemBinding.bind(view)
@@ -26,17 +24,23 @@ class RecentlyClosedItemViewHolder(
     private var item: RecoverableTab? = null
 
     init {
-        setupMenu()
+        binding.historyLayout.overflowView.setImageResource(R.drawable.ic_close)
+        binding.historyLayout.overflowView.setOnClickListener {
+            val item = this.item ?: return@setOnClickListener
+            recentlyClosedFragmentInteractor.onDelete(item)
+        }
     }
 
-    fun bind(
-        item: RecoverableTab
-    ) {
+    fun bind(item: RecoverableTab) {
         binding.historyLayout.titleView.text =
             if (item.title.isNotEmpty()) item.title else item.url
         binding.historyLayout.urlView.text = item.url
 
-        binding.historyLayout.setSelectionInteractor(item, selectionHolder, recentlyClosedFragmentInteractor)
+        binding.historyLayout.setSelectionInteractor(
+            item,
+            selectionHolder,
+            recentlyClosedFragmentInteractor
+        )
         binding.historyLayout.changeSelected(item in selectionHolder.selectedItems)
 
         if (this.item?.url != item.url) {
@@ -50,25 +54,6 @@ class RecentlyClosedItemViewHolder(
         }
 
         this.item = item
-    }
-
-    private fun setupMenu() {
-        val historyMenu = HistoryItemMenu(itemView.context) {
-            val item = this.item ?: return@HistoryItemMenu
-            Do exhaustive when (it) {
-                HistoryItemMenu.Item.Copy -> recentlyClosedFragmentInteractor.onCopyPressed(item)
-                HistoryItemMenu.Item.Share -> recentlyClosedFragmentInteractor.onSharePressed(item)
-                HistoryItemMenu.Item.OpenInNewTab -> recentlyClosedFragmentInteractor.onOpenInNormalTab(
-                    item
-                )
-                HistoryItemMenu.Item.OpenInPrivateTab -> recentlyClosedFragmentInteractor.onOpenInPrivateTab(
-                    item
-                )
-                HistoryItemMenu.Item.Delete -> recentlyClosedFragmentInteractor.onDelete(item)
-            }
-        }
-
-        binding.historyLayout.attachMenu(historyMenu.menuController)
     }
 
     companion object {

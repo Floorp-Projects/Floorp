@@ -68,4 +68,9 @@ object FeatureFlags {
      * Identifies and separates the tabs list with a group containing search term tabs.
      */
     val tabGroupFeature = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables showing search groupings in the History.
+     */
+    val showHistorySearchGroups = Config.channel.isNightlyOrDebug
 }

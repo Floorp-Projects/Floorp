@@ -34,6 +34,10 @@
         app:destination="@id/recentlyClosedFragment" />
 
     <action
+        android:id="@+id/action_global_history_metadata_group"
+        app:destination="@id/historyMetadataGroupFragment" />
+
+    <action
         android:id="@+id/action_global_shareFragment"
         app:destination="@id/shareFragment" />
     <action
@@ -235,6 +239,17 @@
         android:name="org.mozilla.fenix.library.history.HistoryFragment"
         android:label="@string/library_history"
         tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/historyMetadataGroupFragment"
+        android:name="org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragment">
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="historyMetadataItems"
+            app:argType="org.mozilla.fenix.library.history.History[]" />
+    </fragment>
 
     <fragment
         android:id="@+id/downloadsFragment"

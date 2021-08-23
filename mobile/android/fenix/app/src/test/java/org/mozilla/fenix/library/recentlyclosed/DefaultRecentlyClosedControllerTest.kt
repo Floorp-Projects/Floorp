@@ -4,16 +4,12 @@
 
 package org.mozilla.fenix.library.recentlyclosed
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.res.Resources
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -30,25 +26,19 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.optionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-// Robolectric needed for `onShareItem()`
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultRecentlyClosedControllerTest {
     private val dispatcher = TestCoroutineDispatcher()
     private val navController: NavController = mockk(relaxed = true)
-    private val resources: Resources = mockk(relaxed = true)
-    private val snackbar: FenixSnackbar = mockk(relaxed = true)
-    private val clipboardManager: ClipboardManager = mockk(relaxed = true)
     private val activity: HomeActivity = mockk(relaxed = true)
     private val browserStore: BrowserStore = mockk(relaxed = true)
     private val recentlyClosedStore: RecentlyClosedFragmentStore = mockk(relaxed = true)
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
-    val mockedTab: RecoverableTab = mockk(relaxed = true)
 
     @Before
     fun setUp() {
@@ -178,42 +168,6 @@ class DefaultRecentlyClosedControllerTest {
     }
 
     @Test
-    fun handleCopyUrl() {
-        val item = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
-
-        val clipdata = slot<ClipData>()
-
-        createController().handleCopyUrl(item)
-
-        verify {
-            clipboardManager.setPrimaryClip(capture(clipdata))
-            snackbar.show()
-        }
-
-        assertEquals(1, clipdata.captured.itemCount)
-        assertEquals("mozilla.org", clipdata.captured.description.label)
-        assertEquals("mozilla.org", clipdata.captured.getItemAt(0).text)
-    }
-
-    @Test
-    @Suppress("UNCHECKED_CAST")
-    fun handleShare() {
-        val item = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
-
-        createController().handleShare(item)
-
-        verify {
-            navController.navigate(
-                directionsEq(
-                    RecentlyClosedFragmentDirections.actionGlobalShareFragment(
-                        data = arrayOf(ShareData(url = item.url, title = item.title))
-                    )
-                )
-            )
-        }
-    }
-
-    @Test
     fun `share multiple tabs`() {
         val tabs = createFakeTabList(2)
 
@@ -232,11 +186,13 @@ class DefaultRecentlyClosedControllerTest {
 
     @Test
     fun handleRestore() {
-        createController().handleRestore(mockedTab)
+        val item: RecoverableTab = mockk(relaxed = true)
+
+        createController().handleRestore(item)
 
         dispatcher.advanceUntilIdle()
 
-        verify { tabsUseCases.restore.invoke(mockedTab, true) }
+        verify { tabsUseCases.restore.invoke(item, true) }
     }
 
     @Test
@@ -256,9 +212,6 @@ class DefaultRecentlyClosedControllerTest {
             browserStore,
             recentlyClosedStore,
             tabsUseCases,
-            resources,
-            snackbar,
-            clipboardManager,
             activity,
             openToBrowser
         )

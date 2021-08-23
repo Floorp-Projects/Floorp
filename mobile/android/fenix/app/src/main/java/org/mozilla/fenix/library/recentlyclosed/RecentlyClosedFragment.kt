@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.library.recentlyclosed
 
-import android.content.ClipboardManager
-import android.content.Context
 import android.os.Bundle
 import android.text.SpannableString
 import android.view.LayoutInflater
@@ -27,10 +25,8 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentRecentlyClosedTabsBinding
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.showToolbar
@@ -116,12 +112,6 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
             recentlyClosedStore = recentlyClosedFragmentStore,
             activity = activity as HomeActivity,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
-            resources = requireContext().resources,
-            snackbar = FenixSnackbar.make(
-                view = requireActivity().getRootView()!!,
-                isDisplayedWithBrowserToolbar = true
-            ),
-            clipboardManager = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager,
             openToBrowser = ::openItem
         )
         recentlyClosedInteractor = RecentlyClosedFragmentInteractor(recentlyClosedController)

@@ -10,10 +10,10 @@ import org.mozilla.fenix.components.history.PagedHistoryProvider
 
 class HistoryDataSourceFactory(
     private val historyProvider: PagedHistoryProvider
-) : DataSource.Factory<Int, HistoryItem>() {
+) : DataSource.Factory<Int, History>() {
     val datasource = MutableLiveData<HistoryDataSource>()
 
-    override fun create(): DataSource<Int, HistoryItem> {
+    override fun create(): DataSource<Int, History> {
         val datasource = HistoryDataSource(historyProvider)
         this.datasource.postValue(datasource)
         return datasource

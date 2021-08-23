@@ -9,10 +9,9 @@ import io.mockk.mockk
 import io.mockk.verifyAll
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 
 class HistoryInteractorTest {
-    private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
+    private val historyItem = History.Regular(0, "title", "url", 0.toLong())
     val controller: HistoryController = mockk(relaxed = true)
     val interactor = DefaultHistoryInteractor(controller)
 
@@ -67,42 +66,6 @@ class HistoryInteractorTest {
     }
 
     @Test
-    fun onCopyPressed() {
-        interactor.onCopyPressed(historyItem)
-
-        verifyAll {
-            controller.handleCopyUrl(historyItem)
-        }
-    }
-
-    @Test
-    fun onSharePressed() {
-        interactor.onSharePressed(historyItem)
-
-        verifyAll {
-            controller.handleShare(historyItem)
-        }
-    }
-
-    @Test
-    fun onOpenInNormalTab() {
-        interactor.onOpenInNormalTab(historyItem)
-
-        verifyAll {
-            controller.handleOpenInNewTab(historyItem, BrowsingMode.Normal)
-        }
-    }
-
-    @Test
-    fun onOpenInPrivateTab() {
-        interactor.onOpenInPrivateTab(historyItem)
-
-        verifyAll {
-            controller.handleOpenInNewTab(historyItem, BrowsingMode.Private)
-        }
-    }
-
-    @Test
     fun onDeleteAll() {
         interactor.onDeleteAll()
 
@@ -116,6 +79,7 @@ class HistoryInteractorTest {
         val items = setOf(historyItem)
 
         interactor.onDeleteSome(items)
+
         verifyAll {
             controller.handleDeleteSome(items)
         }
@@ -124,6 +88,7 @@ class HistoryInteractorTest {
     @Test
     fun onRequestSync() {
         interactor.onRequestSync()
+
         verifyAll {
             controller.handleRequestSync()
         }

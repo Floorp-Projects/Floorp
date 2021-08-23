@@ -4,14 +4,13 @@
 
 package org.mozilla.fenix.library.history
 
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.selection.SelectionInteractor
 
 /**
  * Interface for the HistoryInteractor. This interface is implemented by objects that want
  * to respond to user interaction on the HistoryView
  */
-interface HistoryInteractor : SelectionInteractor<HistoryItem> {
+interface HistoryInteractor : SelectionInteractor<History> {
 
     /**
      * Called on backpressed to exit edit mode
@@ -24,34 +23,6 @@ interface HistoryInteractor : SelectionInteractor<HistoryItem> {
     fun onModeSwitched()
 
     /**
-     * Copies the URL of a history item to the copy-paste buffer.
-     *
-     * @param item the history item to copy the URL from
-     */
-    fun onCopyPressed(item: HistoryItem)
-
-    /**
-     * Opens the share sheet for a history item.
-     *
-     * @param item the history item to share
-     */
-    fun onSharePressed(item: HistoryItem)
-
-    /**
-     * Opens a history item in a new tab.
-     *
-     * @param item the history item to open in a new tab
-     */
-    fun onOpenInNormalTab(item: HistoryItem)
-
-    /**
-     * Opens a history item in a private tab.
-     *
-     * @param item the history item to open in a private tab
-     */
-    fun onOpenInPrivateTab(item: HistoryItem)
-
-    /**
      * Called when delete all is tapped
      */
     fun onDeleteAll()
@@ -60,7 +31,7 @@ interface HistoryInteractor : SelectionInteractor<HistoryItem> {
      * Called when multiple history items are deleted
      * @param items the history items to delete
      */
-    fun onDeleteSome(items: Set<HistoryItem>)
+    fun onDeleteSome(items: Set<History>)
 
     /**
      * Called when the user requests a sync of the history
@@ -81,15 +52,15 @@ interface HistoryInteractor : SelectionInteractor<HistoryItem> {
 class DefaultHistoryInteractor(
     private val historyController: HistoryController
 ) : HistoryInteractor {
-    override fun open(item: HistoryItem) {
+    override fun open(item: History) {
         historyController.handleOpen(item)
     }
 
-    override fun select(item: HistoryItem) {
+    override fun select(item: History) {
         historyController.handleSelect(item)
     }
 
-    override fun deselect(item: HistoryItem) {
+    override fun deselect(item: History) {
         historyController.handleDeselect(item)
     }
 
@@ -101,27 +72,11 @@ class DefaultHistoryInteractor(
         historyController.handleModeSwitched()
     }
 
-    override fun onCopyPressed(item: HistoryItem) {
-        historyController.handleCopyUrl(item)
-    }
-
-    override fun onSharePressed(item: HistoryItem) {
-        historyController.handleShare(item)
-    }
-
-    override fun onOpenInNormalTab(item: HistoryItem) {
-        historyController.handleOpenInNewTab(item, BrowsingMode.Normal)
-    }
-
-    override fun onOpenInPrivateTab(item: HistoryItem) {
-        historyController.handleOpenInNewTab(item, BrowsingMode.Private)
-    }
-
     override fun onDeleteAll() {
         historyController.handleDeleteAll()
     }
 
-    override fun onDeleteSome(items: Set<HistoryItem>) {
+    override fun onDeleteSome(items: Set<History>) {
         historyController.handleDeleteSome(items)
     }
 

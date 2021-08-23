@@ -578,6 +578,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Close</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d site</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d sites</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Recently closed tabs</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -759,15 +766,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Clear</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Copy</string>
+    <string name="history_menu_copy_button" moz:removedIn="94" tools:ignore="UnusedResources">Copy</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Share</string>
+    <string name="history_menu_share_button" moz:removedIn="94" tools:ignore="UnusedResources">Share</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Open in new tab</string>
+    <string name="history_menu_open_in_new_tab_button" moz:removedIn="94" tools:ignore="UnusedResources">Open in new tab</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Open in private tab</string>
+    <string name="history_menu_open_in_private_tab_button" moz:removedIn="94" tools:ignore="UnusedResources">Open in private tab</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Delete</string>
+    <string name="history_delete_item" moz:removedIn="94" tools:ignore="UnusedResources">Delete</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d selected</string>

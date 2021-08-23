@@ -10,8 +10,8 @@ import org.junit.Assert.assertNotSame
 import org.junit.Test
 
 class HistoryFragmentStoreTest {
-    private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
-    private val newHistoryItem = HistoryItem(1, "title", "url", 0.toLong())
+    private val historyItem = History.Regular(0, "title", "url", 0.toLong())
+    private val newHistoryItem = History.Regular(1, "title", "url", 0.toLong())
 
     @Test
     fun exitEditMode() = runBlocking {

@@ -41,44 +41,11 @@ class RecentlyClosedTabsRobot {
 
     fun verifyRecentlyClosedTabsUrl(expectedUrl: Uri) = assertPageUrl(expectedUrl)
 
-    fun openRecentlyClosedTabsThreeDotMenu() = recentlyClosedTabsThreeDotButton().click()
-
-    fun verifyRecentlyClosedTabsMenuCopy() = assertRecentlyClosedTabsMenuCopy()
-
-    fun verifyRecentlyClosedTabsMenuShare() = assertRecentlyClosedTabsMenuShare()
-
-    fun verifyRecentlyClosedTabsMenuNewTab() = assertRecentlyClosedTabsOverlayNewTab()
-
-    fun verifyRecentlyClosedTabsMenuPrivateTab() = assertRecentlyClosedTabsMenuPrivateTab()
-
-    fun verifyRecentlyClosedTabsMenuDelete() = assertRecentlyClosedTabsMenuDelete()
-
-    fun clickCopyRecentlyClosedTabs() = recentlyClosedTabsCopyButton().click()
-
-    fun clickShareRecentlyClosedTabs() = recentlyClosedTabsShareButton().click()
-
-    fun clickDeleteCopyRecentlyClosedTabs() = recentlyClosedTabsDeleteButton().click()
-
-    fun verifyCopyRecentlyClosedTabsSnackBarText() = assertCopySnackBarText()
-
-    fun verifyShareOverlay() = assertRecentlyClosedShareOverlay()
-
-    fun verifyShareTabFavicon() = assertRecentlyClosedShareFavicon()
-
-    fun verifyShareTabTitle(title: String) = assetRecentlyClosedShareTitle(title)
-
-    fun verifyShareTabUrl(expectedUrl: Uri) = assertRecentlyClosedShareUrl(expectedUrl)
+    fun clickDeleteRecentlyClosedTabs() = recentlyClosedTabsDeleteButton().click()
 
     class Transition {
         fun clickOpenInNewTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            recentlyClosedTabsNewTabButton().click()
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
-        fun clickOpenInPrivateTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            recentlyClosedTabsNewPrivateTabButton().click()
+            recentlyClosedTabsPageTitle().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -138,7 +105,7 @@ private fun assertRecentlyClosedTabsPageTitle(title: String) {
         )
 }
 
-private fun recentlyClosedTabsThreeDotButton() =
+private fun recentlyClosedTabsDeleteButton() =
     onView(
         allOf(
             withId(R.id.overflow_menu),
@@ -147,93 +114,3 @@ private fun recentlyClosedTabsThreeDotButton() =
             )
         )
     )
-
-private fun assertRecentlyClosedTabsMenuCopy() =
-    onView(withText("Copy"))
-        .check(
-            matches(
-                withEffectiveVisibility(Visibility.VISIBLE)
-            )
-        )
-
-private fun assertRecentlyClosedTabsMenuShare() =
-    onView(withText("Share"))
-        .check(
-            matches(
-                withEffectiveVisibility(Visibility.VISIBLE)
-            )
-        )
-
-private fun assertRecentlyClosedTabsOverlayNewTab() =
-    onView(withText("Open in new tab"))
-        .check(
-            matches(
-                withEffectiveVisibility(Visibility.VISIBLE)
-            )
-        )
-
-private fun assertRecentlyClosedTabsMenuPrivateTab() =
-    onView(withText("Open in private tab"))
-        .check(
-            matches(
-                withEffectiveVisibility(Visibility.VISIBLE)
-            )
-        )
-
-private fun assertRecentlyClosedTabsMenuDelete() =
-    onView(withText("Delete"))
-        .check(
-            matches(
-                withEffectiveVisibility(Visibility.VISIBLE)
-            )
-        )
-
-private fun recentlyClosedTabsCopyButton() = onView(withText("Copy"))
-
-private fun copySnackBarText() = onView(withId(R.id.snackbar_text))
-
-private fun assertCopySnackBarText() = copySnackBarText()
-    .check(
-        matches
-        (withText("URL copied"))
-    )
-
-private fun recentlyClosedTabsShareButton() = onView(withText("Share"))
-
-private fun assertRecentlyClosedShareOverlay() =
-    onView(withId(R.id.shareWrapper))
-        .check(
-            matches(ViewMatchers.isDisplayed())
-        )
-
-private fun assetRecentlyClosedShareTitle(title: String) =
-    onView(withId(R.id.share_tab_title))
-        .check(
-            matches(ViewMatchers.isDisplayed())
-        )
-        .check(
-            matches(withText(title))
-        )
-
-private fun assertRecentlyClosedShareFavicon() =
-    onView(withId(R.id.share_tab_favicon))
-        .check(
-            matches(ViewMatchers.isDisplayed())
-        )
-
-private fun assertRecentlyClosedShareUrl(expectedUrl: Uri) =
-    onView(
-        allOf(
-            withId(R.id.share_tab_url),
-            withEffectiveVisibility(Visibility.VISIBLE)
-        )
-    )
-        .check(
-            matches(withText(Matchers.containsString(expectedUrl.toString())))
-        )
-
-private fun recentlyClosedTabsNewTabButton() = onView(withText("Open in new tab"))
-
-private fun recentlyClosedTabsNewPrivateTabButton() = onView(withText("Open in private tab"))
-
-private fun recentlyClosedTabsDeleteButton() = onView(withText("Delete"))

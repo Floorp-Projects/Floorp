@@ -30,8 +30,8 @@ enum class HistoryItemTimeGroup {
 
 class HistoryAdapter(
     private val historyInteractor: HistoryInteractor,
-) : PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback),
-    SelectionHolder<HistoryItem> {
+) : PagedListAdapter<History, HistoryListItemViewHolder>(historyDiffCallback),
+    SelectionHolder<History> {
 
     private var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
     override val selectedItems get() = mode.selectedItems
@@ -102,7 +102,7 @@ class HistoryAdapter(
             return calendar.time
         }
 
-        private fun timeGroupForHistoryItem(item: HistoryItem): HistoryItemTimeGroup {
+        private fun timeGroupForHistoryItem(item: History): HistoryItemTimeGroup {
             return when {
                 DateUtils.isToday(item.visitedAt) -> HistoryItemTimeGroup.Today
                 yesterdayRange.contains(item.visitedAt) -> HistoryItemTimeGroup.Yesterday
@@ -112,16 +112,16 @@ class HistoryAdapter(
             }
         }
 
-        private val historyDiffCallback = object : DiffUtil.ItemCallback<HistoryItem>() {
-            override fun areItemsTheSame(oldItem: HistoryItem, newItem: HistoryItem): Boolean {
+        private val historyDiffCallback = object : DiffUtil.ItemCallback<History>() {
+            override fun areItemsTheSame(oldItem: History, newItem: History): Boolean {
                 return oldItem == newItem
             }
 
-            override fun areContentsTheSame(oldItem: HistoryItem, newItem: HistoryItem): Boolean {
+            override fun areContentsTheSame(oldItem: History, newItem: History): Boolean {
                 return oldItem == newItem
             }
 
-            override fun getChangePayload(oldItem: HistoryItem, newItem: HistoryItem): Any? {
+            override fun getChangePayload(oldItem: History, newItem: History): Any? {
                 return newItem
             }
         }

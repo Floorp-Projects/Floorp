@@ -61,19 +61,11 @@ class HistoryRobot {
 
     fun verifyHomeScreen() = HomeScreenRobot().verifyHomeScreen()
 
-    fun openOverflowMenu() {
-        mDevice.waitNotNull(
-            Until.findObject(
-                By.res("org.mozilla.fenix.debug:id/overflow_menu")
-            ),
-            waitingTime
-        )
-        threeDotMenu().click()
+    fun clickDeleteHistoryButton() {
+        deleteButton().click()
     }
 
-    fun clickDeleteHistoryButton() {
-        deleteAllHistoryButton().click()
-    }
+    fun clickDeleteAllHistoryButton() = deleteAllButton().click()
 
     fun confirmDeleteAllHistory() {
         onView(withText("Delete"))
@@ -91,15 +83,6 @@ class HistoryRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
-
-        fun openThreeDotMenu(interact: ThreeDotMenuHistoryItemRobot.() -> Unit):
-            ThreeDotMenuHistoryItemRobot.Transition {
-
-            threeDotMenu().click()
-
-            ThreeDotMenuHistoryItemRobot().interact()
-            return ThreeDotMenuHistoryItemRobot.Transition()
-        }
     }
 }
 
@@ -112,11 +95,11 @@ private fun testPageTitle() = onView(allOf(withId(R.id.title), withText("Test_Pa
 
 private fun pageUrl() = onView(withId(R.id.url))
 
-private fun threeDotMenu() = onView(withId(R.id.overflow_menu))
+private fun deleteButton() = onView(withId(R.id.overflow_menu))
+
+private fun deleteAllButton() = onView(withId(R.id.history_delete_all))
 
 private fun snackBarText() = onView(withId(R.id.snackbar_text))
-
-private fun deleteAllHistoryButton() = onView(withId(R.id.history_delete_all))
 
 private fun assertHistoryMenuView() {
     onView(

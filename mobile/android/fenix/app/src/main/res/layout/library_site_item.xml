@@ -23,9 +23,7 @@
                 android:id="@+id/favicon"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="10dp"
-                android:background="@drawable/favicon_background"
-                android:backgroundTint="?neutral"
+                android:padding="8dp"
                 android:importantForAccessibility="no"
                 tools:src="@drawable/ic_folder_icon" />
         <ImageView

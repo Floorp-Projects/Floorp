@@ -20,6 +20,7 @@ enum class BrowserDirection(@IdRes val fragmentId: Int) {
     FromSettings(R.id.settingsFragment),
     FromBookmarks(R.id.bookmarkFragment),
     FromHistory(R.id.historyFragment),
+    FromHistoryMetadataGroup(R.id.historyMetadataGroupFragment),
     FromTrackingProtectionExceptions(R.id.trackingProtectionExceptionsFragment),
     FromAbout(R.id.aboutFragment),
     FromTrackingProtection(R.id.trackingProtectionFragment),
