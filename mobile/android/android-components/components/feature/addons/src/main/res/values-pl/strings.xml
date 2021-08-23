@@ -103,7 +103,7 @@
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">Wyłączone</string>
     <!-- Displays a page with all the details of an add-on. -->
-    <string name="mozac_feature_addons_details">Szczegóły</string>
+    <string name="mozac_feature_addons_details">Informacje</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Uprawnienia</string>
     <!-- This is button that remove (uninstall an add-on). -->
