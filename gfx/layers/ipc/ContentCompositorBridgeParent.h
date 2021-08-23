@@ -33,8 +33,7 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
  public:
   explicit ContentCompositorBridgeParent(CompositorManagerParent* aManager)
-      : CompositorBridgeParentBase(aManager),
-        mDestroyCalled(false) {}
+      : CompositorBridgeParentBase(aManager), mDestroyCalled(false) {}
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

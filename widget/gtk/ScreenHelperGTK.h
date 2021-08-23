@@ -74,7 +74,7 @@ struct MonitorConfig {
 #ifdef MOZ_WAYLAND
 class ScreenGetterWayland : public ScreenGetter {
  public:
-  ScreenGetterWayland() : mRegistry() {};
+  ScreenGetterWayland() : mRegistry(){};
   ~ScreenGetterWayland();
 
   void Init();

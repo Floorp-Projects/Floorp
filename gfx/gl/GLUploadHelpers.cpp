@@ -327,10 +327,10 @@ static void TexImage2DHelper(GLContext* gl, GLenum target, GLint level,
 
 SurfaceFormat UploadImageDataToTexture(
     GLContext* gl, unsigned char* aData, const gfx::IntSize& aDataSize,
-    const IntPoint& aDstOffset,
-    int32_t aStride, SurfaceFormat aFormat, const nsIntRegion& aDstRegion,
-    GLuint aTexture, const gfx::IntSize& aSize, size_t* aOutUploadSize,
-    bool aNeedInit, GLenum aTextureUnit, GLenum aTextureTarget) {
+    const IntPoint& aDstOffset, int32_t aStride, SurfaceFormat aFormat,
+    const nsIntRegion& aDstRegion, GLuint aTexture, const gfx::IntSize& aSize,
+    size_t* aOutUploadSize, bool aNeedInit, GLenum aTextureUnit,
+    GLenum aTextureTarget) {
   gl->MakeCurrent();
   gl->fActiveTexture(aTextureUnit);
   gl->fBindTexture(aTextureTarget, aTexture);
@@ -445,7 +445,7 @@ SurfaceFormat UploadImageDataToTexture(
   // buffer
   if (aNeedInit || (!ShouldUploadSubTextures(gl) && aDstOffset == IntPoint())) {
     if (!CheckUploadBounds(aSize, aDataSize, IntPoint())) {
-        return SurfaceFormat::UNKNOWN;
+      return SurfaceFormat::UNKNOWN;
     }
     // If the texture needs initialized, or we are unable to
     // upload sub textures, then initialize and upload the entire
@@ -501,9 +501,9 @@ SurfaceFormat UploadSurfaceToTexture(GLContext* gl, DataSourceSurface* aSurface,
   size.width -= aSrcOffset.x;
   size.height -= aSrcOffset.y;
 
-  return UploadImageDataToTexture(gl, data, size, aDstOffset, stride, format, aDstRegion,
-                                  aTexture, aSize, aOutUploadSize, aNeedInit,
-                                  aTextureUnit, aTextureTarget);
+  return UploadImageDataToTexture(gl, data, size, aDstOffset, stride, format,
+                                  aDstRegion, aTexture, aSize, aOutUploadSize,
+                                  aNeedInit, aTextureUnit, aTextureTarget);
 }
 
 bool CanUploadNonPowerOfTwo(GLContext* gl) {

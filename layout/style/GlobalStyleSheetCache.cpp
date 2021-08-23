@@ -597,7 +597,8 @@ void GlobalStyleSheetCache::BuildPreferenceSheet(
 
   // Rules for focus styling.
 
-  const bool focusRingOnAnything = StaticPrefs::browser_display_focus_ring_on_anything();
+  const bool focusRingOnAnything =
+      StaticPrefs::browser_display_focus_ring_on_anything();
   uint8_t focusRingWidth = StaticPrefs::browser_display_focus_ring_width();
   uint8_t focusRingStyle = StaticPrefs::browser_display_focus_ring_style();
 

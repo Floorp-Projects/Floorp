@@ -214,7 +214,8 @@ bool TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
     }
   }
 
-  return mTexImage->UpdateFromDataSource(aSurface, aDestRegion, aSrcOffset, aDstOffset);
+  return mTexImage->UpdateFromDataSource(aSurface, aDestRegion, aSrcOffset,
+                                         aDstOffset);
 }
 
 void TextureImageTextureSourceOGL::EnsureBuffer(const IntSize& aSize,
@@ -451,7 +452,8 @@ bool DirectMapTextureSource::UpdateInternal(gfx::DataSourceSurface* aSurface,
   gfx::IntPoint srcPoint = aSrcOffset ? *aSrcOffset : gfx::IntPoint(0, 0);
   mFormat = gl::UploadSurfaceToTexture(
       gl(), aSurface, destRegion, mTextureHandle, aSurface->GetSize(), nullptr,
-      aInit, srcPoint, gfx::IntPoint(0, 0), LOCAL_GL_TEXTURE0, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+      aInit, srcPoint, gfx::IntPoint(0, 0), LOCAL_GL_TEXTURE0,
+      LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 
   if (mSync) {
     gl()->fDeleteSync(mSync);

@@ -899,7 +899,7 @@ void EditorEventListener::InitializeDragDropCaret() {
   mCaret = new nsCaret();
   DebugOnly<nsresult> rvIgnored = mCaret->Init(presShell);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                        "nsCaret::Init() failed, but ignored");
+                       "nsCaret::Init() failed, but ignored");
   mCaret->SetCaretReadOnly(true);
   // This is to avoid the requirement that the Selection is Collapsed which
   // it can't be when dragging a selection in the same shell.

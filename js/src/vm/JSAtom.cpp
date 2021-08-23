@@ -254,7 +254,7 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
    mozilla::HashStringKnownLength("Symbol." #NAME,              \
                                   sizeof("Symbol." #NAME) - 1), \
    "Symbol." #NAME},
-          JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
+      JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
   };
 
