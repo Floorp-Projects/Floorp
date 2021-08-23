@@ -258,6 +258,7 @@ windows10-2004-tests:
     - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu
+    - mochitest-webgpu
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
