@@ -48,25 +48,17 @@ class ThreadConfigurationCommand {
       "thread"
     );
 
-    // @backward-compat { version 91 } Thread configuration actor now supports most thread options
-    // When `supportsThreadConfigurationOptions` is removed, this condition should no longer required.
-    // The code should run unconditionally.
-    if (
-      this._commands.targetCommand.rootFront.traits
-        .supportsThreadConfigurationOptions
-    ) {
-      // Lets always call reconfigure for all the target types that do not
-      // have target watcher support yet. e.g In the browser, even
-      // though `hasTargetWatcherSupport()` is true, only
-      // FRAME and CONTENT PROCESS targets use watcher actors,
-      // WORKER targets are supported via the legacy listerners.
-      threadFronts = threadFronts.filter(
-        threadFront =>
-          !this._commands.targetCommand.hasTargetWatcherSupport(
-            threadFront.targetFront.targetType
-          )
-      );
-    }
+    // Lets always call reconfigure for all the target types that do not
+    // have target watcher support yet. e.g In the browser, even
+    // though `hasTargetWatcherSupport()` is true, only
+    // FRAME and CONTENT PROCESS targets use watcher actors,
+    // WORKER targets are supported via the legacy listerners.
+    threadFronts = threadFronts.filter(
+      threadFront =>
+        !this._commands.targetCommand.hasTargetWatcherSupport(
+          threadFront.targetFront.targetType
+        )
+    );
 
     await Promise.all(
       threadFronts.map(threadFront => threadFront.reconfigure(configuration))
