@@ -69,8 +69,6 @@ class StoreDebugParamsAndWarnAction(argparse.Action):
 
 @CommandProvider
 class Watch(MachCommandBase):
-    """Interface to watch and re-build the tree."""
-
     @Command(
         "watch",
         category="post-build",
@@ -120,10 +118,9 @@ class Watch(MachCommandBase):
 
 @CommandProvider
 class CargoProvider(MachCommandBase):
-    """Invoke cargo in useful ways."""
-
     @Command("cargo", category="build", description="Invoke cargo in useful ways.")
     def cargo(self, command_context):
+        """Invoke cargo in useful ways."""
         self._sub_mach(["help", "cargo"])
         return 1
 
@@ -200,8 +197,6 @@ class CargoProvider(MachCommandBase):
 
 @CommandProvider
 class Doctor(MachCommandBase):
-    """Provide commands for diagnosing common build environment problems"""
-
     @Command(
         "doctor",
         category="devenv",
@@ -220,6 +215,7 @@ class Doctor(MachCommandBase):
         help="Print verbose information found by checks.",
     )
     def doctor(self, command_context, fix=False, verbose=False):
+        """Diagnose common build environment problems"""
         command_context.activate_virtualenv()
         from mozbuild.doctor import run_doctor
 
@@ -350,7 +346,6 @@ class Clobber(MachCommandBase):
 
 @CommandProvider
 class Logs(MachCommandBase):
-    """Provide commands to read mach logs."""
 
     NO_AUTO_LOG = True
 
@@ -363,6 +358,7 @@ class Logs(MachCommandBase):
         "mach command.",
     )
     def show_log(self, command_context, log_file=None):
+        """Show mach logs."""
         if not log_file:
             path = command_context._get_state_filename("last_log.json")
             log_file = open(path, "rb")
@@ -884,8 +880,6 @@ class GTestCommands(MachCommandBase):
 
 @CommandProvider
 class Package(MachCommandBase):
-    """Package the built product for distribution."""
-
     @Command(
         "package",
         category="post-build",
@@ -898,6 +892,7 @@ class Package(MachCommandBase):
         help="Verbose output for what commands the packaging process is running.",
     )
     def package(self, command_context, verbose=False):
+        """Package the built product for distribution."""
         ret = command_context._run_make(
             directory=".", target="package", silent=not verbose, ensure_exit_code=False
         )
@@ -931,8 +926,6 @@ def setup_install_parser():
 
 @CommandProvider
 class Install(MachCommandBase):
-    """Install a package."""
-
     @Command(
         "install",
         category="post-build",
@@ -941,6 +934,7 @@ class Install(MachCommandBase):
         description="Install the package on the machine (or device in the case of Android).",
     )
     def install(self, command_context, **kwargs):
+        """Install a package."""
         if conditions.is_android(command_context):
             from mozrunner.devices.android_device import (
                 verify_android_device,
@@ -1245,8 +1239,6 @@ def setup_run_parser():
 
 @CommandProvider
 class RunProgram(MachCommandBase):
-    """Run the compiled program."""
-
     @Command(
         "run",
         category="post-build",
@@ -1255,6 +1247,7 @@ class RunProgram(MachCommandBase):
         description="Run the compiled program, possibly under a debugger or DMD.",
     )
     def run(self, command_context, **kwargs):
+        """Run the compiled program."""
         if conditions.is_android(command_context):
             return self._run_android(command_context, **kwargs)
         if conditions.is_jsshell(command_context):
@@ -1872,14 +1865,13 @@ process attach {continue_flag}-p {pid!s}
 
 @CommandProvider
 class Buildsymbols(MachCommandBase):
-    """Produce a package of debug symbols suitable for use with Breakpad."""
-
     @Command(
         "buildsymbols",
         category="post-build",
         description="Produce a package of Breakpad-format symbols.",
     )
     def buildsymbols(self, command_context):
+        """Produce a package of debug symbols suitable for use with Breakpad."""
         return command_context._run_make(
             directory=".", target="buildsymbols", ensure_exit_code=False
         )
@@ -1989,19 +1981,18 @@ class MachDebug(MachCommandBase):
 
 @CommandProvider
 class Repackage(MachCommandBase):
-    """Repackages artifacts into different formats.
-
-    This is generally used after packages are signed by the signing
-    scriptworkers in order to bundle things up into shippable formats, such as a
-    .dmg on OSX or an installer exe on Windows.
-    """
-
     @Command(
         "repackage",
         category="misc",
         description="Repackage artifacts into different formats.",
     )
     def repackage(self, command_context):
+        """Repackages artifacts into different formats.
+
+        This is generally used after packages are signed by the signing
+        scriptworkers in order to bundle things up into shippable formats, such as a
+        .dmg on OSX or an installer exe on Windows.
+        """
         print("Usage: ./mach repackage [dmg|installer|mar] [args...]")
 
     @SubCommand(
@@ -2447,8 +2438,6 @@ class L10NCommands(MachCommandBase):
 
 @CommandProvider
 class CreateMachEnvironment(MachCommandBase):
-    """Create the mach virtualenvs."""
-
     @Command(
         "create-mach-environment",
         category="devenv",
@@ -2461,6 +2450,7 @@ class CreateMachEnvironment(MachCommandBase):
         help=("Force re-creating the virtualenv even if it is already " "up-to-date."),
     )
     def create_mach_environment(self, command_context, force=False):
+        """Create the mach virtualenv."""
         from mozboot.util import get_mach_virtualenv_root
         from mozbuild.virtualenv import VirtualenvManager
 

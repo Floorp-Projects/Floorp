@@ -89,8 +89,6 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    """Mach command provider for Firefox ui tests."""
-
     @Command(
         "firefox-ui-functional",
         category="testing",

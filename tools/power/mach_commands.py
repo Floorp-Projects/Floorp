@@ -23,10 +23,6 @@ def is_osx_10_10_or_greater(cls):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    """
-    Get system power consumption and related measurements.
-    """
-
     @Command(
         "power",
         category="misc",
@@ -43,6 +39,9 @@ class MachCommands(MachCommandBase):
         help="The sample period, measured in milliseconds. Defaults to 30000.",
     )
     def power(self, command_context, interval):
+        """
+        Get system power consumption and related measurements.
+        """
         import os
         import re
         import subprocess
