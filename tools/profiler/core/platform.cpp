@@ -990,36 +990,50 @@ class ActivePS {
     return sInstance->mLiveProfiledThreads;
   }
 
-  // Returns an array containing (RegisteredThread*, ProfiledThreadData*) pairs
-  // for all threads that should be included in a profile, both for threads
-  // that are still registered, and for threads that have been unregistered but
-  // still have data in the buffer.
-  // For threads that have already been unregistered, the RegisteredThread
-  // pointer will be null.
+  struct ProfiledThreadListElement {
+    TimeStamp mRegisterTime;
+    JSContext* mJSContext;  // Null for unregistered threads.
+    ProfiledThreadData* mProfiledThreadData;
+  };
+  using ProfiledThreadList = Vector<ProfiledThreadListElement>;
+
+  // Returns a ProfiledThreadList with all threads that should be included in a
+  // profile, both for threads that are still registered, and for threads that
+  // have been unregistered but still have data in the buffer.
   // The returned array is sorted by thread register time.
-  // Do not hold on to the return value across thread registration or profiler
-  // restarts.
-  static Vector<std::pair<RegisteredThread*, ProfiledThreadData*>>
-  ProfiledThreads(PSLockRef) {
+  // Do not hold on to the return value past LockedRegistry.
+  static ProfiledThreadList ProfiledThreads(
+      ThreadRegistry::LockedRegistry& aLockedRegistry, PSLockRef aLock) {
     MOZ_ASSERT(sInstance);
-    Vector<std::pair<RegisteredThread*, ProfiledThreadData*>> array;
+    ProfiledThreadList array;
     MOZ_RELEASE_ASSERT(
         array.initCapacity(sInstance->mLiveProfiledThreads.length() +
                            sInstance->mDeadProfiledThreads.length()));
-    for (auto& t : sInstance->mLiveProfiledThreads) {
-      MOZ_RELEASE_ASSERT(array.append(
-          std::make_pair(t.mRegisteredThread, t.mProfiledThreadData.get())));
+
+    for (ThreadRegistry::OffThreadRef offThreadRef : aLockedRegistry) {
+      ProfiledThreadData* profiledThreadData =
+          offThreadRef.UnlockedRWForLockedProfilerRef().GetProfiledThreadData(
+              aLock);
+      if (!profiledThreadData) {
+        // This thread was not profiled, continue with the next one.
+        continue;
+      }
+      ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock lockedThreadData =
+          offThreadRef.LockedRWFromAnyThread();
+      MOZ_RELEASE_ASSERT(array.append(ProfiledThreadListElement{
+          profiledThreadData->Info().RegisterTime(),
+          lockedThreadData->GetJSContext(), profiledThreadData}));
     }
+
     for (auto& t : sInstance->mDeadProfiledThreads) {
-      MOZ_RELEASE_ASSERT(
-          array.append(std::make_pair((RegisteredThread*)nullptr, t.get())));
+      MOZ_RELEASE_ASSERT(array.append(ProfiledThreadListElement{
+          t->Info().RegisterTime(), (JSContext*)nullptr, t.get()}));
     }
 
     std::sort(array.begin(), array.end(),
-              [](const std::pair<RegisteredThread*, ProfiledThreadData*>& a,
-                 const std::pair<RegisteredThread*, ProfiledThreadData*>& b) {
-                return a.second->Info().RegisterTime() <
-                       b.second->Info().RegisterTime();
+              [](const ProfiledThreadListElement& a,
+                 const ProfiledThreadListElement& b) {
+                return a.mRegisterTime < b.mRegisterTime;
               });
     return array;
   }
@@ -2971,15 +2985,12 @@ static void locked_profiler_stream_json_for_this_process(
   aWriter.StartArrayProperty("threads");
   {
     ActivePS::DiscardExpiredDeadProfiledThreads(aLock);
-    Vector<std::pair<RegisteredThread*, ProfiledThreadData*>> threads =
-        ActivePS::ProfiledThreads(aLock);
-    for (auto& thread : threads) {
-      RegisteredThread* registeredThread = thread.first;
-      JSContext* cx =
-          registeredThread ? registeredThread->GetJSContext() : nullptr;
-      ProfiledThreadData* profiledThreadData = thread.second;
-      profiledThreadData->StreamJSON(
-          buffer, cx, aWriter, CorePS::ProcessName(aLock),
+    ThreadRegistry::LockedRegistry lockedRegistry;
+    ActivePS::ProfiledThreadList threads =
+        ActivePS::ProfiledThreads(lockedRegistry, aLock);
+    for (ActivePS::ProfiledThreadListElement& thread : threads) {
+      thread.mProfiledThreadData->StreamJSON(
+          buffer, thread.mJSContext, aWriter, CorePS::ProcessName(aLock),
           CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
           ActivePS::FeatureJSTracer(aLock), aService);
     }
