@@ -25,22 +25,23 @@
  *
  * The `ObjLiteral*` family of classes defines an infastructure to handle
  * object literals as they are encountered at parse time and translate them
- * into objects that are attached to the bytecode.
+ * into objects or shapes that are attached to the bytecode.
  *
  * The object-literal "instructions", whose opcodes are defined in
  * `ObjLiteralOpcode` below, each specify one key (atom property name, or
  * numeric index) and one value. An `ObjLiteralWriter` buffers a linear
  * sequence of such instructions, along with a side-table of atom references.
  * The writer stores a compact binary format that is then interpreted by the
- * `ObjLiteralReader` to construct an object according to the instructions.
+ * `ObjLiteralReader` to construct an object or shape according to the
+ * instructions.
  *
  * This may seem like an odd dance: create an intermediate data structure that
- * specifies key/value pairs, then later build the object. Why not just do so
- * directly, as we parse? In fact, we used to do this. However, for several
- * good reasons, we want to avoid allocating or touching GC objects at all
+ * specifies key/value pairs, then later build the object/shape. Why not just do
+ * so directly, as we parse? In fact, we used to do this. However, for several
+ * good reasons, we want to avoid allocating or touching GC things at all
  * *during* the parse. We thus use a sequence of ObjLiteral instructions as an
  * intermediate data structure to carry object literal contents from parse to
- * the time at which we *can* allocate objects.
+ * the time at which we *can* allocate GC things.
  *
  * (The original intent was to allow for ObjLiteral instructions to actually be
  * invoked by a new JS opcode, JSOp::ObjLiteral, thus replacing the more
@@ -59,10 +60,10 @@
  * value restrictions. We cannot represent nested objects. We use ObjLiteral in
  * two different ways:
  *
- * - To build a template object, when we can support the properties but not the
- *   keys.
- * - To build the actual result object, when we support the properties and the
- *   keys and this is a JSOp::Object case (see below).
+ * - To build a template shape, when we can support the property keys but not
+ *   the property values.
+ * - To build the actual result object, when we support the property keys and
+ *   the values and this is a JSOp::Object case (see below).
  *
  * Design and Performance Considerations
  * -------------------------------------
@@ -71,10 +72,9 @@
  *
  * - JSOp::NewInit allocates a new empty `{}` object.
  *
- * - JSOp::NewObject, with an object as an argument (held by the script data
- *   side-tables), allocates a new object with `undefined` property values but
- *   with a defined set of properties. The given object is used as a
- *   *template*.
+ * - JSOp::NewObject, with a shape as an argument (held by the script data
+ *   side-tables), allocates a new object with the given `shape` (property keys)
+ *   and `undefined` property values.
  *
  * - JSOp::Object, with an object as argument, instructs the runtime to
  *   literally return the object argument as the result. This is thus only an
