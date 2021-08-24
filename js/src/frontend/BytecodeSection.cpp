@@ -82,11 +82,20 @@ bool js::frontend::EmitScriptThingsVector(
       case TaggedScriptThingIndex::Kind::ObjLiteral: {
         const ObjLiteralStencil& data =
             stencil.objLiteralData[thing.toObjLiteral()];
-        JSObject* obj = data.create(cx, atomCache);
-        if (!obj) {
-          return false;
+        if (data.flags().hasFlag(ObjLiteralFlag::Singleton) ||
+            data.flags().hasFlag(ObjLiteralFlag::Array)) {
+          JSObject* obj = data.createObject(cx, atomCache);
+          if (!obj) {
+            return false;
+          }
+          output[i] = JS::GCCellPtr(obj);
+        } else {
+          Shape* shape = data.createShape(cx, atomCache);
+          if (!shape) {
+            return false;
+          }
+          output[i] = JS::GCCellPtr(shape);
         }
-        output[i] = JS::GCCellPtr(obj);
         break;
       }
       case TaggedScriptThingIndex::Kind::RegExp: {
