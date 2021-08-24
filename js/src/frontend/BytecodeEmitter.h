@@ -633,8 +633,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitPropertyList(ListNode* obj, PropertyEmitter& pe,
                                       PropListType type);
 
-  [[nodiscard]] bool emitPropertyListObjLiteral(ListNode* obj,
-                                                ObjLiteralFlags flags,
+  [[nodiscard]] bool emitPropertyListObjLiteral(ListNode* obj, JSOp op,
                                                 bool useObjLiteralValues);
 
   [[nodiscard]] bool emitDestructuringRestExclusionSetObjLiteral(
@@ -699,7 +698,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitPrepareIteratorResult();
   [[nodiscard]] bool emitFinishIteratorResult(bool done);
-  [[nodiscard]] bool iteratorResultShape(GCThingIndex* outShape);
 
   // Convert and add `writer` data to stencil.
   // Iff it suceeds, `outIndex` out parameter is initialized to the index of the
@@ -850,7 +848,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitInitializer(ParseNode* initializer,
                                      ParseNode* pattern);
 
-  [[nodiscard]] bool emitCallSiteObjectArray(ListNode* cookedOrRaw,
+  [[nodiscard]] bool emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
                                              GCThingIndex* outArrayIndex);
   [[nodiscard]] bool emitCallSiteObject(CallSiteNode* callSiteObj);
   [[nodiscard]] bool emitTemplateString(ListNode* templateString);
