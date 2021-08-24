@@ -1294,6 +1294,8 @@ bool js::intl::FormattedRelativeTimeToParts(
 static FieldType GetFieldTypeForNumberPartType(
     mozilla::intl::NumberPartType type) {
   switch (type) {
+    case mozilla::intl::NumberPartType::ApproximatelySign:
+      return &JSAtomState::approximatelySign;
     case mozilla::intl::NumberPartType::Compact:
       return &JSAtomState::compact;
     case mozilla::intl::NumberPartType::Currency:
