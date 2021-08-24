@@ -117,13 +117,19 @@ class FileAndPathHelper {
     // This only works if the binary is one of the Gecko binaries and not
     // a system library.
     for (const objdirPath of this._objdirs) {
-      // Binaries are usually expected to exist at objdir/dist/bin/filename.
-      candidatePaths.push(OS.Path.join(objdirPath, "dist", "bin", name));
-      // Also search in the "objdir" directory itself (not just in dist/bin).
-      // If, for some unforeseen reason, the relevant binary is not inside the
-      // objdirs dist/bin/ directory, this provides a way out because it lets the
-      // user specify the actual location.
-      candidatePaths.push(OS.Path.join(objdirPath, name));
+      try {
+        // Binaries are usually expected to exist at objdir/dist/bin/filename.
+        candidatePaths.push(PathUtils.join(objdirPath, "dist", "bin", name));
+
+        // Also search in the "objdir" directory itself (not just in dist/bin).
+        // If, for some unforeseen reason, the relevant binary is not inside the
+        // objdirs dist/bin/ directory, this provides a way out because it lets the
+        // user specify the actual location.
+        candidatePaths.push(PathUtils.join(objdirPath, name));
+      } catch (e) {
+        // PathUtils.join throws if objdirPath is not an absolute path.
+        // Ignore those invalid objdir paths.
+      }
     }
 
     // Check the absolute paths of the library last.
