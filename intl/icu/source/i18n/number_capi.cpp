@@ -117,6 +117,7 @@ unumf_formatInt(const UNumberFormatter* uformatter, int64_t value, UFormattedNum
     if (U_FAILURE(*ec)) { return; }
 
     result->fData.getStringRef().clear();
+    result->fData.quantity.clear();
     result->fData.quantity.setToLong(value);
     formatter->fFormatter.formatImpl(&result->fData, *ec);
 }
@@ -129,6 +130,7 @@ unumf_formatDouble(const UNumberFormatter* uformatter, double value, UFormattedN
     if (U_FAILURE(*ec)) { return; }
 
     result->fData.getStringRef().clear();
+    result->fData.quantity.clear();
     result->fData.quantity.setToDouble(value);
     formatter->fFormatter.formatImpl(&result->fData, *ec);
 }
@@ -141,6 +143,7 @@ unumf_formatDecimal(const UNumberFormatter* uformatter, const char* value, int32
     if (U_FAILURE(*ec)) { return; }
 
     result->fData.getStringRef().clear();
+    result->fData.quantity.clear();
     result->fData.quantity.setToDecNumber({value, valueLen}, *ec);
     if (U_FAILURE(*ec)) { return; }
     formatter->fFormatter.formatImpl(&result->fData, *ec);
