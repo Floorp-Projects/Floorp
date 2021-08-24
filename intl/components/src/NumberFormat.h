@@ -418,10 +418,6 @@ class NumberFormat final {
   [[nodiscard]] bool formatInternal(int64_t number) const;
   [[nodiscard]] bool formatInternal(std::string_view number) const;
 
-  Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
-                                                  Maybe<double> number,
-                                                  bool isNegative) const;
-
   Result<std::u16string_view, NumberFormat::FormatError> formatResult() const;
   Result<std::u16string_view, NumberFormat::FormatError> formatResultToParts(
       const Maybe<double> number, bool isNegative,

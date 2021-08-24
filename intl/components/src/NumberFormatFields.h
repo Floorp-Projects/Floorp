@@ -4,7 +4,10 @@
 #ifndef intl_components_NumberFormatFields_h_
 #define intl_components_NumberFormatFields_h_
 #include "mozilla/intl/NumberFormat.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Vector.h"
+
+#include "unicode/unum.h"
 
 namespace mozilla {
 namespace intl {
@@ -32,6 +35,11 @@ class NumberFormatFields {
   [[nodiscard]] bool toPartsVector(size_t overallLength,
                                    NumberPartVector& parts);
 };
+
+Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
+                                                Maybe<double> number,
+                                                bool isNegative,
+                                                bool formatForUnit);
 
 }  // namespace intl
 }  // namespace mozilla
