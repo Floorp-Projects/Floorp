@@ -491,6 +491,7 @@ if CONFIG["JS_HAS_INTL_API"]:
         "builtin/intl/Collator.cpp",
         "builtin/intl/CommonFunctions.cpp",
         "builtin/intl/DateTimeFormat.cpp",
+        "builtin/intl/DecimalNumber.cpp",
         "builtin/intl/DisplayNames.cpp",
         "builtin/intl/IntlObject.cpp",
         "builtin/intl/LanguageTag.cpp",
