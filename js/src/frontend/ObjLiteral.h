@@ -669,8 +669,10 @@ class ObjLiteralStencil {
         flags_(flags),
         propertyCount_(propertyCount) {}
 
-  JSObject* create(JSContext* cx,
-                   const frontend::CompilationAtomCache& atomCache) const;
+  JSObject* createObject(JSContext* cx,
+                         const frontend::CompilationAtomCache& atomCache) const;
+  Shape* createShape(JSContext* cx,
+                     const frontend::CompilationAtomCache& atomCache) const;
 
   mozilla::Span<const uint8_t> code() const { return code_; }
   ObjLiteralFlags flags() const { return flags_; }
