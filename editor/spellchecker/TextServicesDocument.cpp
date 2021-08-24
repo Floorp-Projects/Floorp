@@ -2285,7 +2285,9 @@ nsresult TextServicesDocument::FirstTextNodeInCurrentBlock(
         aFilteredIter->GetCurrentNode()->IsContent()
             ? aFilteredIter->GetCurrentNode()->AsContent()
             : nullptr;
-    if (lastTextNode && content && HTMLEditUtils::IsBlockElement(*content)) {
+    if (lastTextNode && content &&
+        (HTMLEditUtils::IsBlockElement(*content) ||
+         content->IsHTMLElement(nsGkAtoms::br))) {
       break;
     }
     if (content && content->IsText()) {
@@ -2364,7 +2366,8 @@ nsresult TextServicesDocument::FirstTextNodeInNextBlock(
         }
         previousTextNode = content->AsText();
       } else if (!crossedBlockBoundary &&
-                 HTMLEditUtils::IsBlockElement(*content)) {
+                 (HTMLEditUtils::IsBlockElement(*content) ||
+                  content->IsHTMLElement(nsGkAtoms::br))) {
         crossedBlockBoundary = true;
       }
     }
@@ -2492,7 +2495,8 @@ TextServicesDocument::OffsetEntryArray::Init(
             aFilteredIter.GetCurrentNode()->IsContent()
                 ? aFilteredIter.GetCurrentNode()->AsContent()
                 : nullptr) {
-      if (HTMLEditUtils::IsBlockElement(*content)) {
+      if (HTMLEditUtils::IsBlockElement(*content) ||
+          content->IsHTMLElement(nsGkAtoms::br)) {
         break;
       }
       if (content->IsText()) {
