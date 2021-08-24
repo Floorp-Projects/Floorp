@@ -24,8 +24,6 @@ import tempfile
 
 @CommandProvider
 class CompareLocales(MachCommandBase):
-    """Run compare-locales."""
-
     @Command(
         "compare-locales",
         category="build",
@@ -85,6 +83,7 @@ the output file, pass "-" to serialize to stdout and hide the default output.
         "--return-zero", action="store_true", help="Return 0 regardless of l10n status"
     )
     def compare(self, command_context, **kwargs):
+        """Run compare-locales."""
         from compare_locales.commands import CompareLocales
 
         class ErrorHelper(object):
@@ -123,8 +122,6 @@ HGRC_PATH = Path(user_config_dir("hg")).joinpath("hgrc")
 
 @CommandProvider
 class CrossChannel(MachCommandBase):
-    """Run l10n cross-channel content generation."""
-
     @Command(
         "l10n-cross-channel",
         category="misc",
@@ -177,6 +174,7 @@ class CrossChannel(MachCommandBase):
         ssh_secret,
         **kwargs,
     ):
+        """Run l10n cross-channel content generation."""
         # This can be any path, as long as the name of the directory is en-US.
         # Not entirely sure where this is a requirement; perhaps in l10n
         # string manipulation logic?

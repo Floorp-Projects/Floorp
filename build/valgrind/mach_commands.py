@@ -29,10 +29,6 @@ def is_valgrind_build(cls):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    """
-    Run Valgrind tests.
-    """
-
     @Command(
         "valgrind-test",
         category="testing",
@@ -49,6 +45,9 @@ class MachCommands(MachCommandBase):
         "files.",
     )
     def valgrind_test(self, command_context, suppressions):
+        """
+        Run Valgrind tests.
+        """
 
         from mozfile import TemporaryDirectory
         from mozhttpd import MozHttpd

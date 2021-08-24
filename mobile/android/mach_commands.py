@@ -471,12 +471,6 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""",
 
 @CommandProvider
 class AndroidEmulatorCommands(MachCommandBase):
-    """
-    Run the Android emulator with one of the AVDs used in the Mozilla
-    automated test environment. If necessary, the AVD is fetched from
-    the tooltool server and installed.
-    """
-
     @Command(
         "android-emulator",
         category="devenv",
@@ -511,6 +505,11 @@ class AndroidEmulatorCommands(MachCommandBase):
         gpu=None,
         verbose=False,
     ):
+        """
+        Run the Android emulator with one of the AVDs used in the Mozilla
+        automated test environment. If necessary, the AVD is fetched from
+        the taskcluster server and installed.
+        """
         from mozrunner.devices.android_device import AndroidEmulator
 
         emulator = AndroidEmulator(

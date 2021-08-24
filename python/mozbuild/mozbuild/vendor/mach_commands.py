@@ -15,8 +15,6 @@ from mozbuild.vendor.moz_yaml import load_moz_yaml, MozYamlVerifyError
 
 @CommandProvider
 class Vendor(MachCommandBase):
-    """Vendor third-party dependencies into the source repository."""
-
     # Fun quirk of ./mach - you can specify a default argument as well as subcommands.
     # If the default argument matches a subcommand, the subcommand gets called. If it
     # doesn't, we wind up in the default command.

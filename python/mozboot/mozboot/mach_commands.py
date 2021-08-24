@@ -14,8 +14,6 @@ from mozboot.bootstrap import APPLICATIONS
 
 @CommandProvider
 class Bootstrap(MachCommandBase):
-    """Bootstrap system and mach for optimal development experience."""
-
     @Command(
         "bootstrap",
         category="devenv",
@@ -37,6 +35,7 @@ class Bootstrap(MachCommandBase):
     def bootstrap(
         self, command_context, application_choice=None, no_system_changes=False
     ):
+        """Bootstrap system and mach for optimal development experience."""
         from mozboot.bootstrap import Bootstrapper
 
         bootstrapper = Bootstrapper(
