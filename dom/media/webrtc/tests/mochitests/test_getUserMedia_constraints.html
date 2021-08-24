@@ -122,7 +122,11 @@ runTest(() => pushPrefs(
   })
   .then(() => pushPrefs(["media.getusermedia.browser.enabled", false],
                         ["media.getusermedia.screensharing.enabled", false]))
-  .then(() => tests.reduce((p, test) => p.then(() => getUserMedia(test.constraints))
+  .then(() => tests.reduce((p, test) => p.then(
+    () => {
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
+      return getUserMedia(test.constraints);
+    })
     .then(stream => {
       is(null, test.error, test.message);
       stream.getTracks().forEach(t => t.stop());
