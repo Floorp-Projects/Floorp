@@ -100,12 +100,8 @@ XPCOMUtils.defineLazyGetter(
   () => /^([a-z+.-]+:\/{0,3})*([^\/@]+@).+/i
 );
 
-// Regex used to identify specific URI characteristics to disallow searching.
-XPCOMUtils.defineLazyGetter(
-  this,
-  "uriLikeRegex",
-  () => /(:\d{1,5}([?#/]|$)|\/.*[?#])/
-);
+// Regex used to identify the string that starts with port expression.
+XPCOMUtils.defineLazyGetter(this, "portRegex", () => /^:\d{1,5}([?#/]|$)/);
 
 // Regex used to identify numbers.
 XPCOMUtils.defineLazyGetter(this, "numberRegex", () => /^[0-9]+(\.[0-9]+)?$/);
@@ -940,7 +936,7 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext) {
   // uri-like characteristics, unless it looks like "user@unknownHost".
   // Note we already excluded passwords at this point.
   if (
-    !uriLikeRegex.test(uriString) ||
+    !isURILike(uriString, fixupInfo.fixedURI?.displayHost) ||
     (fixupInfo.fixedURI?.userPass && fixupInfo.fixedURI?.pathQueryRef === "/")
   ) {
     return tryKeywordFixupForURIInfo(
@@ -1097,4 +1093,32 @@ function fixupConsecutiveDotsHost(fixupInfo) {
       throw e;
     }
   }
+}
+
+/**
+ * Return whether or not given string is uri like.
+ * This function returns true like following strings.
+ * - ":8080"
+ * - "localhost:8080" (if given host is "localhost")
+ * - "/foo?bar"
+ * - "/foo#bar"
+ * @param {string} uriString.
+ * @param {string} host.
+ * @param {boolean} true if uri like.
+ */
+function isURILike(uriString, host) {
+  const indexOfSlash = uriString.indexOf("/");
+  if (
+    indexOfSlash >= 0 &&
+    (indexOfSlash < uriString.indexOf("?", indexOfSlash) ||
+      indexOfSlash < uriString.indexOf("#", indexOfSlash))
+  ) {
+    return true;
+  }
+
+  if (uriString.startsWith(host)) {
+    uriString = uriString.substring(host.length);
+  }
+
+  return portRegex.test(uriString);
 }
