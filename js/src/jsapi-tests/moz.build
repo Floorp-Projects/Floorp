@@ -138,6 +138,11 @@ SOURCES += [
     "hidePointer.cpp",
 ]
 
+if CONFIG["JS_HAS_INTL_API"]:
+    UNIFIED_SOURCES += [
+        "testDecimalNumber.cpp",
+    ]
+
 if not CONFIG["JS_CODEGEN_NONE"]:
     UNIFIED_SOURCES += [
         "testJitABIcalls.cpp",
