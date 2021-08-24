@@ -643,6 +643,7 @@ skip script test262/intl402/DisplayNames/prototype/of/type-calendar-valid.js
 skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
 skip script test262/intl402/NumberFormat/test-option-useGrouping.js
 skip script test262/intl402/NumberFormat/prototype/resolvedOptions/basic.js
+skip script test262/intl402/PluralRules/prototype/resolvedOptions/order.js
 
 
 ##############################################

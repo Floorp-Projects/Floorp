@@ -409,6 +409,7 @@
   MACRO_(revoke, revoke, "revoke")                                             \
   MACRO_(roundingIncrement, roundingIncrement, "roundingIncrement")            \
   MACRO_(roundingMode, roundingMode, "roundingMode")                           \
+  MACRO_(roundingPriority, roundingPriority, "roundingPriority")               \
   MACRO_(rtl, rtl, "rtl")                                                      \
   MACRO_(script, script, "script")                                             \
   MACRO_(scripts, scripts, "scripts")                                          \

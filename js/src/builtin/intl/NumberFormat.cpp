@@ -538,6 +538,33 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
         std::make_pair(minimumFractionDigits, maximumFractionDigits));
   }
 
+  if (!GetProperty(cx, internals, internals, cx->names().roundingPriority,
+                   &value)) {
+    return nullptr;
+  }
+
+  {
+    JSLinearString* roundingPriority = value.toString()->ensureLinear(cx);
+    if (!roundingPriority) {
+      return nullptr;
+    }
+
+    using RoundingPriority =
+        mozilla::intl::NumberFormatOptions::RoundingPriority;
+
+    RoundingPriority priority;
+    if (StringEqualsLiteral(roundingPriority, "auto")) {
+      priority = RoundingPriority::Auto;
+    } else if (StringEqualsLiteral(roundingPriority, "morePrecision")) {
+      priority = RoundingPriority::MorePrecision;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(roundingPriority, "lessPrecision"));
+      priority = RoundingPriority::LessPrecision;
+    }
+
+    options.mRoundingPriority = priority;
+  }
+
   if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
                    &value)) {
     return nullptr;
