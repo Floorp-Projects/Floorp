@@ -171,7 +171,7 @@ imply_option("--enable-replace-malloc", dmd, when=compile_environment)
 
 # ALSA cubeb backend
 # ==============================================================
-option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
+system_lib_option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
 
 alsa = pkg_check_modules("MOZ_ALSA", "alsa", when="--enable-alsa")
 
@@ -180,7 +180,7 @@ set_define("MOZ_ALSA", depends_if(alsa)(lambda _: True))
 
 # JACK cubeb backend
 # ==============================================================
-option("--enable-jack", env="MOZ_JACK", help="Enable JACK audio backend.")
+system_lib_option("--enable-jack", env="MOZ_JACK", help="Enable JACK audio backend.")
 
 jack = pkg_check_modules("MOZ_JACK", "jack", when="--enable-jack")
 
