@@ -17,7 +17,8 @@
 
 namespace mozilla::intl {
 class NumberFormat;
-}
+class NumberRangeFormat;
+}  // namespace mozilla::intl
 
 namespace js {
 
@@ -28,7 +29,8 @@ class NumberFormatObject : public NativeObject {
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t UNUMBER_FORMATTER_SLOT = 1;
-  static constexpr uint32_t SLOT_COUNT = 2;
+  static constexpr uint32_t UNUMBER_RANGE_FORMATTER_SLOT = 2;
+  static constexpr uint32_t SLOT_COUNT = 3;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                 "INTERNALS_SLOT must match self-hosting define for internals "
@@ -37,6 +39,10 @@ class NumberFormatObject : public NativeObject {
   // Estimated memory use for UNumberFormatter and UFormattedNumber
   // (see IcuMemoryUsage).
   static constexpr size_t EstimatedMemoryUse = 972;
+
+  // Estimated memory use for UNumberRangeFormatter and UFormattedNumberRange
+  // (see IcuMemoryUsage).
+  static constexpr size_t EstimatedRangeFormatterMemoryUse = 14143;
 
   mozilla::intl::NumberFormat* getNumberFormatter() const {
     const auto& slot = getFixedSlot(UNUMBER_FORMATTER_SLOT);
@@ -48,6 +54,18 @@ class NumberFormatObject : public NativeObject {
 
   void setNumberFormatter(mozilla::intl::NumberFormat* formatter) {
     setFixedSlot(UNUMBER_FORMATTER_SLOT, PrivateValue(formatter));
+  }
+
+  mozilla::intl::NumberRangeFormat* getNumberRangeFormatter() const {
+    const auto& slot = getFixedSlot(UNUMBER_RANGE_FORMATTER_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<mozilla::intl::NumberRangeFormat*>(slot.toPrivate());
+  }
+
+  void setNumberRangeFormatter(mozilla::intl::NumberRangeFormat* formatter) {
+    setFixedSlot(UNUMBER_RANGE_FORMATTER_SLOT, PrivateValue(formatter));
   }
 
  private:
@@ -87,6 +105,15 @@ class NumberFormatObject : public NativeObject {
  */
 [[nodiscard]] extern bool intl_FormatNumber(JSContext* cx, unsigned argc,
                                             Value* vp);
+
+/**
+ * Returns a string representing the number range «x - y» according to the
+ * effective locale and the formatting options of the given NumberFormat.
+ *
+ * Usage: formatted = intl_FormatNumberRange(numberFormat, x, y, formatToParts)
+ */
+[[nodiscard]] extern bool intl_FormatNumberRange(JSContext* cx, unsigned argc,
+                                                 Value* vp);
 
 #if DEBUG || MOZ_SYSTEM_ICU
 /**

@@ -213,6 +213,8 @@ public class IcuMemoryUsage {
         objects.add(Entry.of("DisplayNames", "o.of('en')"));
         objects.add(Entry.of("ListFormat", "o.format(['a', 'b'])"));
         objects.add(Entry.of("NumberFormat", "o.format(0)"));
+        objects.add(Entry.of("NumberFormat", "NumberFormat (UNumberRangeFormatter)",
+                             "o.formatRange(0, 1000)"));
         objects.add(Entry.of("PluralRules", "o.select(0)"));
         objects.add(Entry.of("RelativeTimeFormat", "o.format(0, 'hour')"));
 

@@ -2378,6 +2378,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_FormatDateTimeRange", intl_FormatDateTimeRange, 4, 0),
     JS_FN("intl_FormatList", intl_FormatList, 3, 0),
     JS_FN("intl_FormatNumber", intl_FormatNumber, 3, 0),
+    JS_FN("intl_FormatNumberRange", intl_FormatNumberRange, 4, 0),
     JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 4, 0),
     JS_FN("intl_GetCalendarInfo", intl_GetCalendarInfo, 1, 0),
     JS_FN("intl_GetLocaleInfo", intl_GetLocaleInfo, 1, 0),
