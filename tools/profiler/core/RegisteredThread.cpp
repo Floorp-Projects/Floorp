@@ -45,13 +45,6 @@ size_t RegisteredThread::SizeOfIncludingThis(
   return n;
 }
 
-void RegisteredThread::GetRunningEventDelay(const mozilla::TimeStamp& aNow,
-                                            mozilla::TimeDuration& aDelay,
-                                            mozilla::TimeDuration& aRunning) {
-  mRacyRegisteredThread.mThreadRegistration.mData.GetRunningEventDelay(
-      aNow, aDelay, aRunning);
-}
-
 void RegisteredThread::SetJSContext(JSContext* aContext) {
   mRacyRegisteredThread.mThreadRegistration.mData.SetJSContext(aContext);
 }
