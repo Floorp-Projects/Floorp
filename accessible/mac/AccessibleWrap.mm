@@ -385,9 +385,6 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::MATHML_UNDER_OVER:
       return [MOXMathUnderOverAccessible class];
 
-    case roles::SUMMARY:
-      return [MOXSummaryAccessible class];
-
     case roles::OUTLINE:
     case roles::TREE_TABLE:
       return [mozOutlineAccessible class];
