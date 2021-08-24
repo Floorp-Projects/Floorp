@@ -161,6 +161,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
     addCallback(this, result);
 
     this._addedResultInLastQuery = true;
+
+    // Record the Nimbus "exposure" event. Note that `recordExposureEvent` will
+    // make sure only one event gets recorded even it is called multiple times
+    // in the same browser session. However, it's an expensive call regardless,
+    // so do it only once per browser session and do it on idle.
+    if (!this._recordedExposureEvent) {
+      this._recordedExposureEvent = true;
+      Services.tm.idleDispatchToMainThread(() =>
+        NimbusFeatures.urlbar.recordExposureEvent()
+      );
+    }
   }
 
   /**
@@ -302,11 +313,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       TELEMETRY_EVENT_CATEGORY,
       UrlbarPrefs.get("quickSuggestEnabled")
     );
-
-    // Record the Nimbus "exposure" event. Note that `recordExposureEvent` will
-    // make sure only one event gets recorded even it is called multiple times
-    // in the same browser session.
-    NimbusFeatures.urlbar.recordExposureEvent();
 
     // QuickSuggest is only loaded by the UrlBar on it's first query, however
     // there is work it can preload when idle instead of starting it on user
