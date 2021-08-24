@@ -103,10 +103,7 @@ crashtest-qr:
             default: built-projects
     max-run-time: 1200
     tier: 2
-    virtualization:
-        by-test-platform:
-            windows10-64-2004.*: virtual-with-gpu
-            default: virtual
+    virtualization: virtual
 
 jsreftest:
     description: "JS Reftest run"
