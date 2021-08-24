@@ -457,7 +457,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
             }
           };
 
+          Services.prefs.setBoolPref("security.allow_parent_unrestricted_js_loads", true);
           mm.loadFrameScript("data:application/javascript,(" + fs.toString() + ")()", true);
+          Services.prefs.setBoolPref("security.allow_parent_unrestricted_js_loads", false);
         """  # NOQA: E501
         )
         self.assertSequenceEqual(tabURIs, self._expectedURLs)
