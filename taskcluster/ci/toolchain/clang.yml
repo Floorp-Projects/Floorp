@@ -120,6 +120,7 @@ linux64-clang-10:
             - linux64-binutils
             - linux64-gcc-7
             - linux64-toolchain-sysroot
+            - wasm32-wasi-compiler-rt-10
 
 linux64-clang-11:
     description: "Clang 11 toolchain build"
