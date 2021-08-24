@@ -6973,7 +6973,7 @@ nsIFrame* nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame) {
     if (f->IsTransformed() || f->IsPreserve3DLeaf() || IsPopup(f)) {
       return f;
     }
-    nsIFrame* parent = GetCrossDocParentFrame(f);
+    nsIFrame* parent = GetCrossDocParentFrameInProcess(f);
     if (!parent) {
       return f;
     }
