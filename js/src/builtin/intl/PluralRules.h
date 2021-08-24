@@ -69,6 +69,19 @@ class PluralRulesObject : public NativeObject {
                                                 JS::Value* vp);
 
 /**
+ * Returns a plural rule for the number range «x - y» according to the effective
+ * locale and the formatting options of the given PluralRules.
+ *
+ * A plural rule is a grammatical category that expresses count distinctions
+ * (such as "one", "two", "few" etc.).
+ *
+ * Usage: rule = intl_SelectPluralRuleRange(pluralRules, x, y)
+ */
+[[nodiscard]] extern bool intl_SelectPluralRuleRange(JSContext* cx,
+                                                     unsigned argc,
+                                                     JS::Value* vp);
+
+/**
  * Returns an array of plural rules categories for a given pluralRules object.
  *
  * Usage: categories = intl_GetPluralCategories(pluralRules)

@@ -600,6 +600,7 @@ MSG_DEF(JSMSG_UNDEFINED_UNIT,          0, JSEXN_TYPEERR, "undefined unit in Numb
 MSG_DEF(JSMSG_UNDEFINED_DATE,          2, JSEXN_TYPEERR, "undefined {0}-date in DateTimeFormat.{1}()")
 MSG_DEF(JSMSG_UNDEFINED_TYPE,          0, JSEXN_TYPEERR, "missing \"type\" option in DisplayNames()")
 MSG_DEF(JSMSG_START_AFTER_END_DATE,    1, JSEXN_RANGEERR, "start-date after end-date in DateTimeFormat.{0}()")
+MSG_DEF(JSMSG_START_AFTER_END_NUMBER,  2, JSEXN_RANGEERR, "start number after end number in {0}.{1}()")
 
 // RegExp
 MSG_DEF(JSMSG_BAD_CLASS_RANGE,         0, JSEXN_SYNTAXERR, "invalid range in character class")
