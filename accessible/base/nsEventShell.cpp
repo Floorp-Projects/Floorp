@@ -10,6 +10,7 @@
 #include "AccAttributes.h"
 
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/DOMStringList.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -36,6 +37,15 @@ void nsEventShell::FireEvent(AccEvent* aEvent) {
     nsAutoString type;
     GetAccService()->GetStringEventType(aEvent->GetEventType(), type);
     logging::MsgEntry("type: %s", NS_ConvertUTF16toUTF8(type).get());
+    if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_STATE_CHANGE) {
+      AccStateChangeEvent* event = downcast_accEvent(aEvent);
+      RefPtr<dom::DOMStringList> stringStates =
+          GetAccService()->GetStringStates(event->GetState());
+      nsAutoString state;
+      stringStates->Item(0, state);
+      logging::MsgEntry("state: %s = %s", NS_ConvertUTF16toUTF8(state).get(),
+                        event->IsStateEnabled() ? "true" : "false");
+    }
     logging::AccessibleInfo("target", aEvent->GetAccessible());
     logging::MsgEnd();
   }
