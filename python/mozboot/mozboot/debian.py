@@ -66,6 +66,7 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     MOBILE_ANDROID_COMMON_PACKAGES = [
         "openjdk-8-jdk-headless",  # Android's `sdkmanager` requires Java 1.8 exactly.
         "wget",  # For downloading the Android SDK and NDK.
+        "libncurses5",  # For native debugging in Android Studio
     ]
 
     def __init__(self, distro, version, dist_id, codename, **kwargs):
