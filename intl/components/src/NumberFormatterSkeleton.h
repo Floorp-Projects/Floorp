@@ -83,6 +83,11 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
   [[nodiscard]] bool fractionDigits(uint32_t min, uint32_t max,
                                     bool stripTrailingZero);
 
+  [[nodiscard]] bool fractionWithSignificantDigits(uint32_t mnfd, uint32_t mxfd,
+                                                   uint32_t mnsd, uint32_t mxsd,
+                                                   bool relaxed,
+                                                   bool stripTrailingZero);
+
   [[nodiscard]] bool minIntegerDigits(uint32_t min);
 
   [[nodiscard]] bool significantDigits(uint32_t min, uint32_t max,

@@ -155,6 +155,30 @@ TEST(IntlNumberFormat, Grouping)
   ASSERT_EQ(std::u16string_view(res16), u"10,000");
 }
 
+TEST(IntlNumberFormat, RoundingPriority)
+{
+  NumberFormatOptions options;
+  options.mFractionDigits = Some(std::make_pair(2, 2));
+  options.mSignificantDigits = Some(std::make_pair(1, 2));
+  options.mRoundingPriority =
+      NumberFormatOptions::RoundingPriority::LessPrecision;
+
+  UniquePtr<NumberFormat> nf1 = NumberFormat::TryCreate("en", options).unwrap();
+
+  const char16_t* res16 = nf1->format(4.321).unwrap().data();
+  ASSERT_TRUE(res16 != nullptr);
+  ASSERT_EQ(std::u16string_view(res16), u"4.30");
+
+  options.mRoundingPriority =
+      NumberFormatOptions::RoundingPriority::MorePrecision;
+
+  UniquePtr<NumberFormat> nf2 = NumberFormat::TryCreate("en", options).unwrap();
+
+  res16 = nf2->format(4.321).unwrap().data();
+  ASSERT_TRUE(res16 != nullptr);
+  ASSERT_EQ(std::u16string_view(res16), u"4.32");
+}
+
 TEST(IntlNumberFormat, FormatToParts)
 {
   NumberFormatOptions options;
