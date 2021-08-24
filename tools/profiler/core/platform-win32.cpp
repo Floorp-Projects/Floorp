@@ -118,11 +118,6 @@ mozilla::profiler::PlatformData::~PlatformData() {
   }
 }
 
-#if defined(USE_MOZ_STACK_WALK)
-HANDLE
-GetThreadHandle(PlatformData* aData) { return aData->ProfiledThread(); }
-#endif
-
 static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
 
 ////////////////////////////////////////////////////////////////////////
@@ -171,10 +166,10 @@ static void ClearThreadRunningTimes(PSLockRef aLock,
 
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const TimeStamp& aNow, const Func& aProcessRegs) {
-  HANDLE profiled_thread =
-      aRegisteredThread.GetPlatformData()->ProfiledThread();
+  HANDLE profiled_thread = aThreadData.PlatformDataCRef().ProfiledThread();
   if (profiled_thread == nullptr) {
     return;
   }
