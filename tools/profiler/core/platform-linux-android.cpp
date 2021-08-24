@@ -159,6 +159,15 @@ class PlatformData {
   RunningTimes mPreviousThreadRunningTimes;
 };
 
+mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId) {
+  MOZ_ASSERT(aThreadId == profiler_current_thread_id());
+  if (clockid_t clockid; pthread_getcpuclockid(pthread_self(), &clockid) == 0) {
+    mClockId = Some(clockid);
+  }
+}
+
+mozilla::profiler::PlatformData::~PlatformData() = default;
+
 ////////////////////////////////////////////////////////////////////////
 // BEGIN Sampler target specifics
 
