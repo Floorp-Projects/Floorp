@@ -70,7 +70,6 @@
 #include "InProcessBrowserChildMessageManager.h"
 
 #include "Layers.h"
-#include "ClientLayerManager.h"
 
 #include "ContentParent.h"
 #include "BrowserParent.h"

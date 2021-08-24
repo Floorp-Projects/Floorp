@@ -62,7 +62,6 @@
 #include "gfxUtils.h"
 #include "nsRegion.h"
 #include "Layers.h"
-#include "ClientLayerManager.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "GfxTexturesReporter.h"
 #include "GLTextureImage.h"

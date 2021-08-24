@@ -10,7 +10,6 @@
 #include <limits>
 
 #include "ActiveLayerTracker.h"
-#include "ClientLayerManager.h"
 #include "DisplayItemClip.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
@@ -3430,16 +3429,6 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
     builder->SetIsBuilding(false);
     builder->IncrementPresShellPaintCount(presShell);
-  }
-
-  if (StaticPrefs::layers_acceleration_draw_fps()) {
-    RefPtr<LayerManager> lm = builder->GetWidgetLayerManager();
-    PaintTiming* pt = ClientLayerManager::MaybeGetPaintTiming(lm);
-
-    if (pt) {
-      pt->dlMs() = static_cast<float>(metrics->mPartialBuildDuration);
-      pt->dl2Ms() = static_cast<float>(metrics->mFullBuildDuration);
-    }
   }
 
   MOZ_ASSERT(updateState != PartialUpdateResult::Failed);
