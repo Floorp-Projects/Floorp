@@ -121,6 +121,7 @@
  * -   `baseobjIndex` (`JOF_OBJECT`): `PlainObject*`
  * -   `funcIndex` (`JOF_OBJECT`): `JSFunction*`
  * -   `regexpIndex` (`JOF_REGEXP`): `RegExpObject*`
+ * -   `shapeIndex` (`JOF_SHAPE`): `Shape*`
  * -   `scopeIndex` (`JOF_SCOPE`): `Scope*`
  * -   `lexicalScopeIndex` (`JOF_SCOPE`): `LexicalScope*`
  * -   `classBodyScopeIndex` (`JOF_SCOPE`): `ClassBodyScope*`
