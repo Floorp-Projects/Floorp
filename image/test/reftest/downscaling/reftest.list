@@ -89,7 +89,7 @@ fuzzy(0-20,0-999) fails-if(OSX>=1008&&!skiaContent) != downscale-2e.html?205,53,
 
 # Skip on Android because it runs reftests via http, and moz-icon isn't
 # accessible from http/https origins anymore.
-fuzzy(0-17,0-3940) fuzzy-if(gtkWidget&&!webrender,4-4,2616-2616) fuzzy-if(gtkWidget&&!webrender&&!layersGPUAccelerated,0-0,0-0) fuzzy-if(gtkWidget&&webrender,0-0,0-0) skip-if(Android) fuzzy-if(appleSilicon,0-20,0-10123) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059: regular is 2616, no-accel is 0, qr passes with 0
+fuzzy(0-25,0-3940) fuzzy-if(gtkWidget&&!webrender,4-4,2616-2616) fuzzy-if(gtkWidget&&!webrender&&!layersGPUAccelerated,0-0,0-0) fuzzy-if(gtkWidget&&webrender,0-0,0-0) skip-if(Android) fuzzy-if(appleSilicon,0-20,0-10123) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html # gtkWidget Bug 1592059: regular is 2616, no-accel is 0, qr passes with 0
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
