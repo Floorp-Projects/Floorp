@@ -80,11 +80,13 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
 
   [[nodiscard]] bool percent();
 
-  [[nodiscard]] bool fractionDigits(uint32_t min, uint32_t max);
+  [[nodiscard]] bool fractionDigits(uint32_t min, uint32_t max,
+                                    bool stripTrailingZero);
 
   [[nodiscard]] bool minIntegerDigits(uint32_t min);
 
-  [[nodiscard]] bool significantDigits(uint32_t min, uint32_t max);
+  [[nodiscard]] bool significantDigits(uint32_t min, uint32_t max,
+                                       bool stripTrailingZero);
 
   [[nodiscard]] bool disableGrouping();
 
@@ -92,7 +94,10 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
 
   [[nodiscard]] bool signDisplay(NumberFormatOptions::SignDisplay display);
 
-  [[nodiscard]] bool roundingModeHalfUp();
+  [[nodiscard]] bool roundingIncrement(uint32_t increment, uint32_t mnfd,
+                                       uint32_t mxfd, bool stripTrailingZero);
+
+  [[nodiscard]] bool roundingMode(NumberFormatOptions::RoundingMode rounding);
 };
 
 }  // namespace intl
