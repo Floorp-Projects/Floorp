@@ -132,7 +132,7 @@ class JSFunction : public js::NativeObject {
   // -   When we clone these functions into normal realms, we set `_atom` to
   //     the standard name. (The self-hosted name is also stored on the clone,
   //     in another slot; see GetClonedSelfHostedFunctionName().)
-  js::GCPtrAtom atom_;
+  js::GCPtrValue atom_;
 
  public:
   static inline JSFunction* create(JSContext* cx, js::gc::AllocKind kind,
@@ -316,27 +316,36 @@ class JSFunction : public js::NativeObject {
                                               js::HandleFunction fun);
 
   JSAtom* explicitName() const {
-    return (hasInferredName() || hasGuessedAtom()) ? nullptr : atom_.get();
+    return (hasInferredName() || hasGuessedAtom()) ? nullptr : rawAtom();
   }
 
   JSAtom* explicitOrInferredName() const {
-    return hasGuessedAtom() ? nullptr : atom_.get();
+    return hasGuessedAtom() ? nullptr : rawAtom();
   }
 
   void initAtom(JSAtom* atom) {
     MOZ_ASSERT_IF(atom, js::AtomIsMarked(zone(), atom));
-    atom_.init(atom);
+    if (atom) {
+      atom_.init(JS::StringValue(atom));
+    }
   }
 
   void setAtom(JSAtom* atom) {
     MOZ_ASSERT_IF(atom, js::AtomIsMarked(zone(), atom));
-    atom_ = atom;
+    atom_ = atom ? JS::StringValue(atom) : JS::UndefinedValue();
   }
 
-  JSAtom* displayAtom() const { return atom_; }
+  JSAtom* displayAtom() const { return rawAtom(); }
+
+  JSAtom* rawAtom() const {
+    if (atom_.isUndefined()) {
+      return nullptr;
+    }
+    return &atom_.toString()->asAtom();
+  }
 
   void setInferredName(JSAtom* atom) {
-    MOZ_ASSERT(!atom_);
+    MOZ_ASSERT(!rawAtom());
     MOZ_ASSERT(atom);
     MOZ_ASSERT(!hasGuessedAtom());
     setAtom(atom);
@@ -344,12 +353,12 @@ class JSFunction : public js::NativeObject {
   }
   JSAtom* inferredName() const {
     MOZ_ASSERT(hasInferredName());
-    MOZ_ASSERT(atom_);
-    return atom_;
+    MOZ_ASSERT(rawAtom());
+    return rawAtom();
   }
 
   void setGuessedAtom(JSAtom* atom) {
-    MOZ_ASSERT(!atom_);
+    MOZ_ASSERT(!rawAtom());
     MOZ_ASSERT(atom);
     MOZ_ASSERT(!hasInferredName());
     MOZ_ASSERT(!hasGuessedAtom());
