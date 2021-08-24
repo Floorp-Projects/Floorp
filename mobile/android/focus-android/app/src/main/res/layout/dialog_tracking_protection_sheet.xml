@@ -29,7 +29,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         app:layout_constraintStart_toEndOf="@id/site_favicon"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/site_favicon"
+        app:layout_constraintBottom_toBottomOf="@id/site_favicon"
         tools:text="url.com" />
 
     <com.google.android.material.textview.MaterialTextView

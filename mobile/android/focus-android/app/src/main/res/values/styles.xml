@@ -186,7 +186,6 @@
     <style name="PanelTitle" parent="Widget.MaterialComponents.TextView">
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/primaryTextColor</item>
-        <item name="android:lineSpacingExtra">3sp</item>
     </style>
 
     <style name="PanelHeading" parent="Widget.MaterialComponents.TextView">
