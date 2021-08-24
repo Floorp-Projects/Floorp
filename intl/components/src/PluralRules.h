@@ -151,6 +151,33 @@ struct MOZ_STACK_CLASS PluralRulesOptions {
 
     return options;
   }
+  /**
+   * Creates a NumberFormatOptions from the PluralRulesOptions.
+   */
+  NumberRangeFormatOptions ToNumberRangeFormatOptions() const {
+    NumberRangeFormatOptions options;
+    options.mRoundingMode = NumberRangeFormatOptions::RoundingMode::HalfExpand;
+    options.mRangeCollapse = NumberRangeFormatOptions::RangeCollapse::None;
+    options.mRangeIdentityFallback =
+        NumberRangeFormatOptions::RangeIdentityFallback::Range;
+
+    if (mFractionDigits.isSome()) {
+      options.mFractionDigits.emplace(mFractionDigits.ref());
+    }
+
+    if (mMinIntegerDigits.isSome()) {
+      options.mMinIntegerDigits.emplace(mMinIntegerDigits.ref());
+    }
+
+    if (mSignificantDigits.isSome()) {
+      options.mSignificantDigits.emplace(mSignificantDigits.ref());
+    }
+
+    options.mRoundingPriority =
+        NumberFormatOptions::RoundingPriority(mRoundingPriority);
+
+    return options;
+  }
 
   /**
    * Set the plural type between cardinal and ordinal.

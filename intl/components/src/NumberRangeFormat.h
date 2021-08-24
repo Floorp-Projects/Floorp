@@ -4,6 +4,7 @@
 #ifndef intl_components_NumberRangeFormat_h_
 #define intl_components_NumberRangeFormat_h_
 
+#include "mozilla/intl/NumberFormat.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/UniquePtr.h"
@@ -19,8 +20,6 @@ struct UPluralRules;
 
 namespace mozilla::intl {
 
-struct NumberFormatOptions;
-
 #ifndef U_HIDE_DRAFT_API
 // UNumberRangeFormatter requires ICU draft API. And because we try to reduce
 // direct access to ICU definitions, add a separate pre-processor definition to
@@ -28,6 +27,64 @@ struct NumberFormatOptions;
 // U_HIDE_DRAFT_API.
 #  define MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
 #endif
+
+/**
+ * NumberRangeFormatOptions supports the same set of options as
+ * NumberFormatOptions and additionally allows to control how to display ranges.
+ */
+struct MOZ_STACK_CLASS NumberRangeFormatOptions : public NumberFormatOptions {
+  /**
+   * Controls if and how to collapse identical parts in a range.
+   */
+  enum class RangeCollapse {
+    /**
+     * Apply locale-specific heuristics.
+     */
+    Auto,
+
+    /**
+     * Never collapse identical parts.
+     */
+    None,
+
+    /**
+     * Collapse identical unit parts.
+     */
+    Unit,
+
+    /**
+     * Collapse all identical parts.
+     */
+    All,
+  } mRangeCollapse = RangeCollapse::Auto;
+
+  /**
+   * Controls how to display identical numbers.
+   */
+  enum class RangeIdentityFallback {
+    /**
+     * Display the range as a single value.
+     */
+    SingleValue,
+
+    /**
+     * Display the range as a single value if both numbers were equal before
+     * rounding. Otherwise display with a locale-sensitive approximation
+     * pattern.
+     */
+    ApproximatelyOrSingleValue,
+
+    /**
+     * Display with a locale-sensitive approximation pattern.
+     */
+    Approximately,
+
+    /**
+     * Display as a range expression.
+     */
+    Range,
+  } mRangeIdentityFallback = RangeIdentityFallback::SingleValue;
+};
 
 /**
  * A NumberRangeFormat implementation that roughly mirrors the API provided by
@@ -49,7 +106,7 @@ class NumberRangeFormat final {
    * https://tc39.es/ecma402/#sec-initializenumberformat
    */
   static Result<UniquePtr<NumberRangeFormat>, FormatError> TryCreate(
-      std::string_view aLocale, const NumberFormatOptions& aOptions);
+      std::string_view aLocale, const NumberRangeFormatOptions& aOptions);
 
   NumberRangeFormat() = default;
   NumberRangeFormat(const NumberRangeFormat&) = delete;
@@ -96,7 +153,7 @@ class NumberRangeFormat final {
   UFormattedNumberRange* mFormattedNumberRange = nullptr;
 
   Result<Ok, FormatError> initialize(std::string_view aLocale,
-                                     const NumberFormatOptions& aOptions);
+                                     const NumberRangeFormatOptions& aOptions);
 
   [[nodiscard]] bool formatInternal(double start, double end) const;
 

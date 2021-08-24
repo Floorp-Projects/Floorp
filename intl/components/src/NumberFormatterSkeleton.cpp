@@ -417,8 +417,43 @@ UNumberFormatter* NumberFormatterSkeleton::toFormatter(
 }
 
 #ifndef U_HIDE_DRAFT_API
+static UNumberRangeCollapse ToUNumberRangeCollapse(
+    NumberRangeFormatOptions::RangeCollapse collapse) {
+  using RangeCollapse = NumberRangeFormatOptions::RangeCollapse;
+  switch (collapse) {
+    case RangeCollapse::Auto:
+      return UNUM_RANGE_COLLAPSE_AUTO;
+    case RangeCollapse::None:
+      return UNUM_RANGE_COLLAPSE_NONE;
+    case RangeCollapse::Unit:
+      return UNUM_RANGE_COLLAPSE_UNIT;
+    case RangeCollapse::All:
+      return UNUM_RANGE_COLLAPSE_ALL;
+  }
+  MOZ_ASSERT_UNREACHABLE("unexpected range collapse");
+  return UNUM_RANGE_COLLAPSE_NONE;
+}
+
+static UNumberRangeIdentityFallback ToUNumberRangeIdentityFallback(
+    NumberRangeFormatOptions::RangeIdentityFallback identity) {
+  using RangeIdentityFallback = NumberRangeFormatOptions::RangeIdentityFallback;
+  switch (identity) {
+    case RangeIdentityFallback::SingleValue:
+      return UNUM_IDENTITY_FALLBACK_SINGLE_VALUE;
+    case RangeIdentityFallback::ApproximatelyOrSingleValue:
+      return UNUM_IDENTITY_FALLBACK_APPROXIMATELY_OR_SINGLE_VALUE;
+    case RangeIdentityFallback::Approximately:
+      return UNUM_IDENTITY_FALLBACK_APPROXIMATELY;
+    case RangeIdentityFallback::Range:
+      return UNUM_IDENTITY_FALLBACK_RANGE;
+  }
+  MOZ_ASSERT_UNREACHABLE("unexpected range identity fallback");
+  return UNUM_IDENTITY_FALLBACK_RANGE;
+}
+
 UNumberRangeFormatter* NumberFormatterSkeleton::toRangeFormatter(
-    std::string_view locale) {
+    std::string_view locale, NumberRangeFormatOptions::RangeCollapse collapse,
+    NumberRangeFormatOptions::RangeIdentityFallback identity) {
   if (!mValidSkeleton) {
     return nullptr;
   }
@@ -427,8 +462,9 @@ UNumberRangeFormatter* NumberFormatterSkeleton::toRangeFormatter(
   UErrorCode status = U_ZERO_ERROR;
   UNumberRangeFormatter* nrf =
       unumrf_openForSkeletonWithCollapseAndIdentityFallback(
-          mVector.begin(), mVector.length(), UNUM_RANGE_COLLAPSE_NONE,
-          UNUM_IDENTITY_FALLBACK_RANGE, locale.data(), perror, &status);
+          mVector.begin(), mVector.length(), ToUNumberRangeCollapse(collapse),
+          ToUNumberRangeIdentityFallback(identity), locale.data(), perror,
+          &status);
   if (U_FAILURE(status)) {
     return nullptr;
   }
