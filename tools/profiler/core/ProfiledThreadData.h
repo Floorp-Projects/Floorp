@@ -7,9 +7,8 @@
 #ifndef ProfiledThreadData_h
 #define ProfiledThreadData_h
 
-#include "ThreadInfo.h"
-
 #include "mozilla/Maybe.h"
+#include "mozilla/ProfilerThreadRegistrationInfo.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/RefPtr.h"
@@ -51,7 +50,9 @@ class SpliceableJSONWriter;
 // when the profiler is stopped.
 class ProfiledThreadData final {
  public:
-  ProfiledThreadData(ThreadInfo* aThreadInfo, nsIEventTarget* aEventTarget);
+  ProfiledThreadData(
+      const mozilla::profiler::ThreadRegistrationInfo& aThreadInfo,
+      nsIEventTarget* aEventTarget);
   ~ProfiledThreadData();
 
   void NotifyUnregistered(uint64_t aBufferPosition) {
@@ -79,7 +80,9 @@ class ProfiledThreadData final {
       JSContext* aCx, mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
       const mozilla::TimeStamp& aProcessStartTime);
 
-  const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
+  const mozilla::profiler::ThreadRegistrationInfo& Info() const {
+    return mThreadInfo;
+  }
 
   void NotifyReceivedJSContext(uint64_t aCurrentBufferPosition) {
     mBufferPositionWhenReceivedJSContext =
@@ -97,8 +100,9 @@ class ProfiledThreadData final {
   // The following fields are interesting for the entire lifetime of a
   // ProfiledThreadData object.
 
-  // This thread's thread info.
-  const RefPtr<ThreadInfo> mThreadInfo;
+  // This thread's thread info. Local copy because the one in ThreadRegistration
+  // may be destroyed while ProfiledThreadData stays alive.
+  const mozilla::profiler::ThreadRegistrationInfo mThreadInfo;
 
   // Contains JSON for JIT frames from any JSContexts that were used for this
   // thread in the past.

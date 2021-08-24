@@ -8,7 +8,6 @@
 
 #include "ProfileBuffer.h"
 #include "ProfiledThreadData.h"
-#include "ThreadInfo.h"
 
 #include "mozilla/ProfileJSONWriter.h"
 
