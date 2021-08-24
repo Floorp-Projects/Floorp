@@ -4933,12 +4933,13 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/pull/11859
       - https://github.com/mozilla-mobile/fenix/pull/18071
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - erichards@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   install_tap:
     type: event
     description: |
@@ -4949,12 +4950,13 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/pull/11859
       - https://github.com/mozilla-mobile/fenix/pull/18071
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - erichards@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   foreground:
     type: event
     description: |
@@ -4969,12 +4971,13 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/pull/11859
       - https://github.com/mozilla-mobile/fenix/pull/18071
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - erichards@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   background:
     type: event
     description: |
@@ -4989,12 +4992,13 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/pull/11859
       - https://github.com/mozilla-mobile/fenix/pull/18071
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
       - erichards@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
 
 master_password:
   displayed:
@@ -5007,11 +5011,12 @@ master_password:
       - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
       - https://github.com/mozilla-mobile/fenix/pull/18071
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   migration:
     type: event
     description: |
@@ -5022,11 +5027,12 @@ master_password:
       - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
       - https://github.com/mozilla-mobile/fenix/pull/18071
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
 
 tabs:
   setting_opened:
@@ -5552,11 +5558,12 @@ android_keystore_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   get_failure:
     type: event
     description: |
@@ -5571,11 +5578,12 @@ android_keystore_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   get_result:
     type: event
     description: |
@@ -5590,11 +5598,12 @@ android_keystore_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   write_failure:
     type: event
     description: |
@@ -5609,11 +5618,12 @@ android_keystore_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   write_success:
     type: event
     description: |
@@ -5623,11 +5633,12 @@ android_keystore_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
   reset:
     type: event
     description: |
@@ -5638,11 +5649,12 @@ android_keystore_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-09-01"
+    expires: "2022-03-01"
 
 set_default_newtab_experiment:
   set_default_browser_clicked:
