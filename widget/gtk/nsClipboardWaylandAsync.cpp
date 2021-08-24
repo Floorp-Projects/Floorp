@@ -85,7 +85,7 @@ void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
   if (aDataType == CLIPBOARD_TARGETS || aDataType == CLIPBOARD_DATA) {
     dataLength = gtk_selection_data_get_length((GtkSelectionData*)aData);
   } else {
-    dataLength = strlen((const char*)aData);
+    dataLength = aData ? strlen((const char*)aData) : 0;
   }
 
   mClipboardDataReceived = true;
