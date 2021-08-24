@@ -36,10 +36,10 @@ class DateTimeFormatObject : public NativeObject {
                 "object slot");
 
   // Estimated memory use for UDateFormat (see IcuMemoryUsage).
-  static constexpr size_t UDateFormatEstimatedMemoryUse = 91922;
+  static constexpr size_t UDateFormatEstimatedMemoryUse = 105402;
 
   // Estimated memory use for UDateIntervalFormat (see IcuMemoryUsage).
-  static constexpr size_t UDateIntervalFormatEstimatedMemoryUse = 119856;
+  static constexpr size_t UDateIntervalFormatEstimatedMemoryUse = 133064;
 
   mozilla::intl::DateTimeFormat* getDateFormat() const {
     const auto& slot = getFixedSlot(UDATE_FORMAT_SLOT);
