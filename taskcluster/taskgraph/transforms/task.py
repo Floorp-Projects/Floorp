@@ -14,7 +14,6 @@ import os
 import re
 import time
 from copy import deepcopy
-import six
 
 import attr
 
@@ -571,7 +570,7 @@ def build_docker_worker_payload(config, task, task_def):
 
             if out_of_tree_image:
                 name_hash = hashlib.sha256(
-                    six.ensure_binary(out_of_tree_image)
+                    out_of_tree_image.encode("utf-8")
                 ).hexdigest()
                 suffix += name_hash[0:12]
 
@@ -604,9 +603,7 @@ def build_docker_worker_payload(config, task, task_def):
 
     # And send down volumes information to run-task as well.
     if run_task and worker.get("volumes"):
-        payload["env"]["TASKCLUSTER_VOLUMES"] = ";".join(
-            [six.ensure_text(s) for s in sorted(worker["volumes"])]
-        )
+        payload["env"]["TASKCLUSTER_VOLUMES"] = ";".join(sorted(worker["volumes"]))
 
     if payload.get("cache") and skip_untrusted:
         payload["env"]["TASKCLUSTER_UNTRUSTED_CACHES"] = "1"
@@ -2049,10 +2046,8 @@ def check_caches_are_volumes(task):
     to be declared as Docker volumes. This check won't catch all offenders.
     But it is better than nothing.
     """
-    volumes = {six.ensure_text(s) for s in task["worker"]["volumes"]}
-    paths = {
-        six.ensure_text(c["mount-point"]) for c in task["worker"].get("caches", [])
-    }
+    volumes = {s for s in task["worker"]["volumes"]}
+    paths = {c["mount-point"] for c in task["worker"].get("caches", [])}
     missing = paths - volumes
 
     if not missing:

@@ -6,7 +6,6 @@
 import logging
 
 import requests
-import six
 import subprocess
 from redo import retry
 
@@ -100,19 +99,17 @@ def get_push_data(repository, project, push_id_start, push_id_end):
 def get_hg_revision_branch(root, revision):
     """Given the parameters for a revision, find the hg_branch (aka
     relbranch) of the revision."""
-    return six.ensure_text(
-        subprocess.check_output(
-            [
-                "hg",
-                "identify",
-                "-T",
-                "{branch}",
-                "--rev",
-                revision,
-            ],
-            cwd=root,
-            universal_newlines=True,
-        )
+    return subprocess.check_output(
+        [
+            "hg",
+            "identify",
+            "-T",
+            "{branch}",
+            "--rev",
+            revision,
+        ],
+        cwd=root,
+        universal_newlines=True,
     )
 
 
@@ -120,12 +117,12 @@ def get_hg_revision_branch(root, revision):
 # revision indicated by GECKO_HEAD_REF, so all that remains is to see what the
 # current revision is.  Mercurial refers to that as `.`.
 def get_hg_commit_message(root):
-    return six.ensure_text(
-        subprocess.check_output(["hg", "log", "-r", ".", "-T", "{desc}"], cwd=root)
+    return subprocess.check_output(
+        ["hg", "log", "-r", ".", "-T", "{desc}"], cwd=root, universal_newlines=True
     )
 
 
 def calculate_head_rev(root):
-    return six.ensure_text(
-        subprocess.check_output(["hg", "log", "-r", ".", "-T", "{node}"], cwd=root)
+    return subprocess.check_output(
+        ["hg", "log", "-r", ".", "-T", "{node}"], cwd=root, universal_newlines=True
     )

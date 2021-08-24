@@ -6,7 +6,6 @@ from mozbuild.util import memoize
 import mozpack.path as mozpath
 from mozversioncontrol import get_repository_object
 import hashlib
-import six
 
 
 @memoize
@@ -46,11 +45,9 @@ def hash_paths(base_path, patterns):
         if path.endswith((".pyc", ".pyd", ".pyo")):
             continue
         h.update(
-            six.ensure_binary(
-                "{} {}\n".format(
-                    hash_path(mozpath.abspath(mozpath.join(base_path, path))),
-                    mozpath.normsep(path),
-                )
-            )
+            "{} {}\n".format(
+                hash_path(mozpath.abspath(mozpath.join(base_path, path))),
+                mozpath.normsep(path),
+            ).encode("utf-8")
         )
     return h.hexdigest()

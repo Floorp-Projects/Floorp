@@ -13,7 +13,6 @@ run-using handlers in `taskcluster/taskgraph/transforms/job`.
 import copy
 import logging
 import json
-import six
 
 import mozpack.path as mozpath
 
@@ -355,10 +354,8 @@ def use_fetches(config, jobs):
 
         env = worker.setdefault("env", {})
         env["MOZ_FETCHES"] = {
-            "task-reference": six.ensure_text(
-                json.dumps(
-                    sorted(job_fetches, key=lambda x: sorted(x.items())), sort_keys=True
-                )
+            "task-reference": json.dumps(
+                sorted(job_fetches, key=lambda x: sorted(x.items())), sort_keys=True
             )
         }
         # The path is normalized to an absolute path in run-task

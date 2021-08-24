@@ -5,7 +5,6 @@
 
 import json
 import os
-import six
 import tarfile
 from io import BytesIO
 
@@ -31,7 +30,7 @@ def get_image_digest(image_name):
 
 
 def load_image_by_name(image_name, tag=None):
-    params = {"level": six.ensure_text(os.environ.get("MOZ_SCM_LEVEL", "3"))}
+    params = {"level": os.environ.get("MOZ_SCM_LEVEL", "3")}
     tasks = load_tasks_for_kind(params, "docker-image")
     task = tasks[f"docker-image-{image_name}"]
     deadline = None
