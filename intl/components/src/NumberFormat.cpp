@@ -114,9 +114,10 @@ NumberFormat::formatResult() const {
   return std::u16string_view(utf16Str, static_cast<size_t>(utf16Length));
 }
 
-Maybe<NumberPartType> NumberFormat::GetPartTypeForNumberField(
-    UNumberFormatFields fieldName, Maybe<double> number,
-    bool isNegative) const {
+Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
+                                                Maybe<double> number,
+                                                bool isNegative,
+                                                bool formatForUnit) {
   switch (fieldName) {
     case UNUM_INTEGER_FIELD:
       if (number.isSome()) {
@@ -143,7 +144,7 @@ Maybe<NumberPartType> NumberFormat::GetPartTypeForNumberField(
     case UNUM_CURRENCY_FIELD:
       return Some(NumberPartType::Currency);
     case UNUM_PERCENT_FIELD:
-      if (mFormatForUnit) {
+      if (formatForUnit) {
         return Some(NumberPartType::Unit);
       }
       return Some(NumberPartType::Percent);
@@ -229,7 +230,7 @@ NumberFormat::formatResultToParts(Maybe<double> number, bool isNegative,
     }
 
     Maybe<NumberPartType> partType = GetPartTypeForNumberField(
-        UNumberFormatFields(fieldName), number, isNegative);
+        UNumberFormatFields(fieldName), number, isNegative, mFormatForUnit);
     if (!partType || !fields.append(*partType, beginIndex, endIndex)) {
       return Err(FormatError::InternalError);
     }
