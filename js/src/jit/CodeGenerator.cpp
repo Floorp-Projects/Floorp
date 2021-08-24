@@ -6965,12 +6965,10 @@ void CodeGenerator::visitNewObjectVMCall(LNewObject* lir) {
         using Fn = JSObject* (*)(JSContext*, HandleObject);
         callVM<Fn, NewObjectOperationWithTemplate>(lir);
       } else {
-        pushArg(Imm32(GenericObject));
         pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
         pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
 
-        using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode * pc,
-                                 NewObjectKind);
+        using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode * pc);
         callVM<Fn, NewObjectOperation>(lir);
       }
       break;
