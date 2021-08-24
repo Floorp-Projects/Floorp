@@ -64,8 +64,8 @@ class MOZ_STACK_CLASS SafeOptionListMutation {
   /** Whether we should be notifying when we make various method calls on
       mSelect */
   const bool mNotify;
-  /** The selected index at mutation start. */
-  int32_t mInitialSelectedIndex;
+  /** The selected option at mutation start. */
+  RefPtr<HTMLOptionElement> mInitialSelectedOption;
   /** Option list must be recreated if more than one mutation is detected. */
   nsMutationGuard mGuard;
 };

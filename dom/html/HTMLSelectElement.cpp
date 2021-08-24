@@ -52,10 +52,9 @@ SafeOptionListMutation::SafeOptionListMutation(nsIContent* aSelect,
     : mSelect(HTMLSelectElement::FromNodeOrNull(aSelect)),
       mTopLevelMutation(false),
       mNeedsRebuild(false),
-      mNotify(aNotify),
-      mInitialSelectedIndex(-1) {
+      mNotify(aNotify) {
   if (mSelect) {
-    mInitialSelectedIndex = mSelect->SelectedIndex();
+    mInitialSelectedOption = mSelect->Item(mSelect->SelectedIndex());
     mTopLevelMutation = !mSelect->mMutating;
     if (mTopLevelMutation) {
       mSelect->mMutating = true;
@@ -84,7 +83,7 @@ SafeOptionListMutation::~SafeOptionListMutation() {
     if (mTopLevelMutation) {
       mSelect->mMutating = false;
     }
-    if (mSelect->SelectedIndex() != mInitialSelectedIndex) {
+    if (mSelect->Item(mSelect->SelectedIndex()) != mInitialSelectedOption) {
       // We must have triggered the SelectSomething() codepath, which can cause
       // our validity to change.  Unfortunately, our attempt to update validity
       // in that case may not have worked correctly, because we actually call it
