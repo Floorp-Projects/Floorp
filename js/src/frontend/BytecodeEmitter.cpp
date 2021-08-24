@@ -9404,6 +9404,16 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
       MOZ_ASSERT(numIsInt);
       MOZ_ASSERT(
           ObjLiteralWriter::arrayIndexInRange(i));  // checked previously.
+
+      // Ignore indexed properties if we're not storing property values, and
+      // rely on InitElem ops to define those. These properties will be either
+      // dense elements (not possible to represent in the literal's shape) or
+      // sparse elements (enumerated separately, so this doesn't affect property
+      // iteration order).
+      if (!useObjLiteralValues) {
+        continue;
+      }
+
       writer.setPropIndex(i);
     }
 
