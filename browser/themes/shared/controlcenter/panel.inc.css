@@ -852,7 +852,8 @@ description#identity-popup-content-verifier,
 /* Protection popup footer categories */
 
 #protections-popup-trackers-blocked-counter-box {
-  margin-inline-end: var(--horizontal-padding);
+  margin: var(--arrowpanel-menuitem-margin);
+  padding: var(--arrowpanel-menuitem-padding);
   visibility: hidden;
   opacity: 0;
   transition: opacity 200ms linear;
@@ -1002,11 +1003,6 @@ description#identity-popup-content-verifier,
 
 #protections-popup-footer-protection-type-label {
   margin-inline-end: 0;
-}
-
-#protections-popup-trackers-blocked-counter-box {
-  margin-inline-end: 8px;
-  padding-inline-end: var(--arrowpanel-menuitem-padding-block);
 }
 
 .protections-popup-category:hover,
