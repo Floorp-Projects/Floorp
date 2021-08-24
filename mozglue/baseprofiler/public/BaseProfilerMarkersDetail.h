@@ -318,10 +318,10 @@ template <typename StackCallback>
     aWriter.UniqueStringElement(aEntryReader.ReadObject<ProfilerString8View>());
 
     const double startTime = options.Timing().GetStartTime();
-    aWriter.DoubleElement(startTime);
+    aWriter.TimeDoubleMsElement(startTime);
 
     const double endTime = options.Timing().GetEndTime();
-    aWriter.DoubleElement(endTime);
+    aWriter.TimeDoubleMsElement(endTime);
 
     aWriter.IntElement(static_cast<int64_t>(options.Timing().MarkerPhase()));
 
