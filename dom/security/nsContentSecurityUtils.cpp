@@ -1132,6 +1132,16 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
+  // If we have allowed eval (because of a user configuration or more
+  // likely a test has requested it), and the script is an eval, allow it.
+  NS_ConvertUTF8toUTF16 filenameU(aFilename);
+  if (StaticPrefs::security_allow_eval_with_system_principal() ||
+      StaticPrefs::security_allow_eval_in_parent_process()) {
+    if (StringEndsWith(filenameU, u"> eval"_ns)) {
+      return true;
+    }
+  }
+
   DetectJsHacks();
 
   if (MOZ_UNLIKELY(sJSHacksPresent)) {
@@ -1151,7 +1161,6 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
-  NS_ConvertUTF8toUTF16 filenameU(aFilename);
   if (StringBeginsWith(filenameU, u"chrome://"_ns)) {
     // If it's a chrome:// url, allow it
     return true;
@@ -1210,6 +1219,19 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
   }
   Telemetry::RecordEvent(eventType, mozilla::Some(fileNameTypeAndDetails.first),
                          extra);
+
+#ifdef NIGHTLY_BUILD
+  // Cause a crash (if we've never crashed before and we can ensure we won't do
+  // it again.)
+  // The details in the second arg, passed to UNSAFE_PRINTF, are also included
+  // in Event Telemetry and have received data review.
+  if (fileNameTypeAndDetails.second.isSome()) {
+    PossiblyCrash("js_load_1",
+                  NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()));
+  } else {
+    PossiblyCrash("js_load_1", "(None)"_ns);
+  }
+#endif
 
   // Presently we are not enforcing any restrictions for the script filename,
   // we're only reporting Telemetry. In the future we will assert in debug
