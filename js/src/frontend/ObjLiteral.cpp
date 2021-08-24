@@ -233,9 +233,20 @@ static JSObject* InterpretObjLiteral(
                                       propertyCount);
 }
 
-JSObject* ObjLiteralStencil::create(
+JSObject* ObjLiteralStencil::createObject(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache) const {
   return InterpretObjLiteral(cx, atomCache, code_, flags_, propertyCount_);
+}
+
+Shape* ObjLiteralStencil::createShape(
+    JSContext* cx, const frontend::CompilationAtomCache& atomCache) const {
+  JSObject* obj =
+      InterpretObjLiteral(cx, atomCache, code_, flags_, propertyCount_);
+  if (!obj) {
+    return nullptr;
+  }
+
+  return obj->shape();
 }
 
 #ifdef DEBUG
