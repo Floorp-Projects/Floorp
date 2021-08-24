@@ -246,15 +246,16 @@ def get_attribute_label(node):
 
 
 def ast_get_source_segment(code, node):
-    if (
+    caller = inspect.stack()[1]
+
+    if "sphinx" in caller.filename or (
         not FORCE_DOWNGRADE_BEHAVIOR
         and sys.version_info[0] >= 3
         and sys.version_info[1] >= 8
     ):
-        return ast.get_source_segment(code, node)
+        return ast.original_get_source_segment(code, node)
 
-    caller = inspect.stack()[1].function
-    if caller == "log":
+    if caller.function == "log":
         return ""
 
     raise Exception("ast_get_source_segment is not available with this Python version.")
@@ -262,6 +263,7 @@ def ast_get_source_segment(code, node):
 
 # Overwrite it so we don't accidently use it
 if sys.version_info[0] >= 3 and sys.version_info[1] >= 8:
+    ast.original_get_source_segment = ast.get_source_segment
     ast.get_source_segment = ast_get_source_segment
 
 
