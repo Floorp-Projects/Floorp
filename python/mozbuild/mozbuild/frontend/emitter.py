@@ -1289,6 +1289,7 @@ class TreeMetadataEmitter(LoggingMixin):
             computed_flags.resolve_flags("RTL", [rtl_flag])
             if not context.config.substs.get("CROSS_COMPILE"):
                 computed_host_flags.resolve_flags("RTL", [rtl_flag])
+            computed_wasm_flags.resolve_flags("RTL", [rtl_flag])
 
         generated_files = set()
         localized_generated_files = set()
