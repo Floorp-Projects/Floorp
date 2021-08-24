@@ -5,15 +5,11 @@
 Do transforms specific to l10n kind
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
-import io
 import json
-import six
 
 from mozbuild.chunkify import chunkify
-from six import text_type
 from taskgraph.loader.multi_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import (
@@ -40,26 +36,26 @@ def _by_platform(arg):
 l10n_description_schema = schema.extend(
     {
         # Name for this job, inferred from the dependent job before validation
-        Required("name"): text_type,
+        Required("name"): str,
         # build-platform, inferred from dependent job before validation
-        Required("build-platform"): text_type,
+        Required("build-platform"): str,
         # max run time of the task
         Required("run-time"): _by_platform(int),
         # Locales not to repack for
-        Required("ignore-locales"): _by_platform([text_type]),
+        Required("ignore-locales"): _by_platform([str]),
         # All l10n jobs use mozharness
         Required("mozharness"): {
             # Script to invoke for mozharness
-            Required("script"): _by_platform(text_type),
+            Required("script"): _by_platform(str),
             # Config files passed to the mozharness script
-            Required("config"): _by_platform([text_type]),
+            Required("config"): _by_platform([str]),
             # Additional paths to look for mozharness configs in. These should be
             # relative to the base of the source checkout
-            Optional("config-paths"): [text_type],
+            Optional("config-paths"): [str],
             # Options to pass to the mozharness script
-            Optional("options"): _by_platform([text_type]),
+            Optional("options"): _by_platform([str]),
             # Action commands to provide to mozharness script
-            Required("actions"): _by_platform([text_type]),
+            Required("actions"): _by_platform([str]),
             # if true, perform a checkout of a comm-central based branch inside the
             # gecko checkout
             Optional("comm-checkout"): bool,
@@ -67,54 +63,54 @@ l10n_description_schema = schema.extend(
         # Items for the taskcluster index
         Optional("index"): {
             # Product to identify as in the taskcluster index
-            Required("product"): _by_platform(text_type),
+            Required("product"): _by_platform(str),
             # Job name to identify as in the taskcluster index
-            Required("job-name"): _by_platform(text_type),
+            Required("job-name"): _by_platform(str),
             # Type of index
-            Optional("type"): _by_platform(text_type),
+            Optional("type"): _by_platform(str),
         },
         # Description of the localized task
-        Required("description"): _by_platform(text_type),
+        Required("description"): _by_platform(str),
         Optional("run-on-projects"): job_description_schema["run-on-projects"],
         # worker-type to utilize
-        Required("worker-type"): _by_platform(text_type),
+        Required("worker-type"): _by_platform(str),
         # File which contains the used locales
-        Required("locales-file"): _by_platform(text_type),
+        Required("locales-file"): _by_platform(str),
         # Tooltool visibility required for task.
         Required("tooltool"): _by_platform(Any("internal", "public")),
         # Docker image required for task.  We accept only in-tree images
         # -- generally desktop-build or android-build -- for now.
         Optional("docker-image"): _by_platform(
             # an in-tree generated docker image (from `taskcluster/docker/<name>`)
-            {"in-tree": text_type},
+            {"in-tree": str},
         ),
         Optional("fetches"): {
-            text_type: _by_platform([text_type]),
+            str: _by_platform([str]),
         },
         # The set of secret names to which the task has access; these are prefixed
         # with `project/releng/gecko/{treeherder.kind}/level-{level}/`.  Setting
         # this will enable any worker features required and set the task's scopes
         # appropriately.  `true` here means ['*'], all secrets.  Not supported on
         # Windows
-        Optional("secrets"): _by_platform(Any(bool, [text_type])),
+        Optional("secrets"): _by_platform(Any(bool, [str])),
         # Information for treeherder
         Required("treeherder"): {
             # Platform to display the task on in treeherder
-            Required("platform"): _by_platform(text_type),
+            Required("platform"): _by_platform(str),
             # Symbol to use
-            Required("symbol"): text_type,
+            Required("symbol"): str,
             # Tier this task is
             Required("tier"): _by_platform(int),
         },
         # Extra environment values to pass to the worker
-        Optional("env"): _by_platform({text_type: taskref_or_string}),
+        Optional("env"): _by_platform({str: taskref_or_string}),
         # Max number locales per chunk
         Optional("locales-per-chunk"): _by_platform(int),
         # Task deps to chain this task with, added in transforms from primary-dependency
         # if this is a shippable-style build
-        Optional("dependencies"): {text_type: text_type},
+        Optional("dependencies"): {str: str},
         # Run the task when the listed files change (if present).
-        Optional("when"): {"files-changed": [text_type]},
+        Optional("when"): {"files-changed": [str]},
         # passed through directly to the job description
         Optional("attributes"): job_description_schema["attributes"],
         Optional("extra"): job_description_schema["extra"],
@@ -131,7 +127,7 @@ def parse_locales_file(locales_file, platform=None):
     """Parse the passed locales file for a list of locales."""
     locales = []
 
-    with io.open(locales_file, mode="r") as f:
+    with open(locales_file, mode="r") as f:
         if locales_file.endswith("json"):
             all_locales = json.load(f)
             # XXX Only single locales are fetched
@@ -241,11 +237,11 @@ def handle_artifact_prefix(config, jobs):
     """Resolve ``artifact_prefix`` in env vars"""
     for job in jobs:
         artifact_prefix = get_artifact_prefix(job)
-        for k1, v1 in six.iteritems(job.get("env", {})):
-            if isinstance(v1, text_type):
+        for k1, v1 in job.get("env", {}).items():
+            if isinstance(v1, str):
                 job["env"][k1] = v1.format(artifact_prefix=artifact_prefix)
             elif isinstance(v1, dict):
-                for k2, v2 in six.iteritems(v1):
+                for k2, v2 in v1.items():
                     job["env"][k1][k2] = v2.format(artifact_prefix=artifact_prefix)
         yield job
 
@@ -283,9 +279,7 @@ def chunk_locales(config, jobs):
                 chunks = int(chunks + 1)
             for this_chunk in range(1, chunks + 1):
                 chunked = copy.deepcopy(job)
-                chunked["name"] = chunked["name"].replace(
-                    "/", "-{}/".format(this_chunk), 1
-                )
+                chunked["name"] = chunked["name"].replace("/", f"-{this_chunk}/", 1)
                 chunked["mozharness"]["options"] = chunked["mozharness"].get(
                     "options", []
                 )
@@ -298,7 +292,7 @@ def chunk_locales(config, jobs):
                 )
                 chunked["mozharness"]["options"].extend(
                     [
-                        "locale={}:{}".format(locale, changeset)
+                        f"locale={locale}:{changeset}"
                         for locale, changeset in chunked_locales
                     ]
                 )
@@ -317,7 +311,7 @@ def chunk_locales(config, jobs):
             job["mozharness"]["options"] = job["mozharness"].get("options", [])
             job["mozharness"]["options"].extend(
                 [
-                    "locale={}:{}".format(locale, changeset)
+                    f"locale={locale}:{changeset}"
                     for locale, changeset in sorted(locales_with_changesets.items())
                 ]
             )

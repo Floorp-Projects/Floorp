@@ -2,13 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import copy
 import attr
-import six
-from six import text_type, ensure_text
+from six import ensure_text
 
 from . import filter_tasks
 from .graph import Graph
@@ -36,10 +34,10 @@ class KindNotFound(Exception):
 
 
 @attr.s(frozen=True)
-class Kind(object):
+class Kind:
 
-    name = attr.ib(type=text_type)
-    path = attr.ib(type=text_type)
+    name = attr.ib(type=str)
+    path = attr.ib(type=str)
     config = attr.ib(type=dict)
     graph_config = attr.ib(type=GraphConfig)
 
@@ -47,7 +45,7 @@ class Kind(object):
         try:
             loader = self.config["loader"]
         except KeyError:
-            raise KeyError("{!r} does not define `loader`".format(self.path))
+            raise KeyError(f"{self.path!r} does not define `loader`")
         return find_object(loader)
 
     def load_tasks(self, parameters, loaded_tasks, write_artifacts):
@@ -100,13 +98,13 @@ class Kind(object):
         if not os.path.exists(kind_yml):
             raise KindNotFound(kind_yml)
 
-        logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
+        logger.debug(f"loading kind `{kind_name}` from `{path}`")
         config = load_yaml(kind_yml)
 
         return cls(kind_name, path, config, graph_config)
 
 
-class TaskGraphGenerator(object):
+class TaskGraphGenerator:
     """
     The central controller for taskgraph.  This handles all phases of graph
     generation.  The task is generated from all of the kinds defined in
@@ -292,7 +290,7 @@ class TaskGraphGenerator(object):
         self.verify_kinds(kinds)
 
         edges = set()
-        for kind in six.itervalues(kinds):
+        for kind in kinds.values():
             for dep in kind.config.get("kind-dependencies", []):
                 edges.add((kind.name, dep, "kind-dependency"))
         kind_graph = Graph(set(kinds), edges)
@@ -303,7 +301,7 @@ class TaskGraphGenerator(object):
         logger.info("Generating full task set")
         all_tasks = {}
         for kind_name in kind_graph.visit_postorder():
-            logger.debug("Loading tasks for kind {}".format(kind_name))
+            logger.debug(f"Loading tasks for kind {kind_name}")
             kind = kinds[kind_name]
             try:
                 new_tasks = kind.load_tasks(
@@ -312,15 +310,13 @@ class TaskGraphGenerator(object):
                     self._write_artifacts,
                 )
             except Exception:
-                logger.exception("Error loading tasks for kind {}:".format(kind_name))
+                logger.exception(f"Error loading tasks for kind {kind_name}:")
                 raise
             for task in new_tasks:
                 if task.label in all_tasks:
                     raise Exception("duplicate tasks with label " + task.label)
                 all_tasks[task.label] = task
-            logger.info(
-                "Generated {} tasks for kind {}".format(len(new_tasks), kind_name)
-            )
+            logger.info(f"Generated {len(new_tasks)} tasks for kind {kind_name}")
         full_task_set = TaskGraph(all_tasks, Graph(set(all_tasks), set()))
         self.verify_attributes(all_tasks)
         self.verify_run_using()
@@ -329,7 +325,7 @@ class TaskGraphGenerator(object):
         logger.info("Generating full task graph")
         edges = set()
         for t in full_task_set:
-            for depname, dep in six.iteritems(t.dependencies):
+            for depname, dep in t.dependencies.items():
                 edges.add((t.label, dep, depname))
 
         full_task_graph = TaskGraph(all_tasks, Graph(full_task_set.graph.nodes, edges))
@@ -362,18 +358,18 @@ class TaskGraphGenerator(object):
 
         logger.info("Generating target task graph")
         # include all docker-image build tasks here, in case they are needed for a graph morph
-        docker_image_tasks = set(
+        docker_image_tasks = {
             t.label
-            for t in six.itervalues(full_task_graph.tasks)
+            for t in full_task_graph.tasks.values()
             if t.attributes["kind"] == "docker-image"
-        )
+        }
         # include all tasks with `always_target` set
         if parameters["tasks_for"] == "hg-push":
-            always_target_tasks = set(
+            always_target_tasks = {
                 t.label
-                for t in six.itervalues(full_task_graph.tasks)
+                for t in full_task_graph.tasks.values()
                 if t.attributes.get("always_target")
-            )
+            }
         else:
             always_target_tasks = set()
         logger.info(
@@ -434,7 +430,7 @@ class TaskGraphGenerator(object):
             try:
                 k, v = next(self._run)
             except StopIteration:
-                raise AttributeError("No such run result {}".format(name))
+                raise AttributeError(f"No such run result {name}")
             self._run_results[k] = v
         return self._run_results[name]
 
@@ -456,7 +452,7 @@ class TaskGraphGenerator(object):
 
     def verify_attributes(self, all_tasks):
         attribute_set = set()
-        for label, task in six.iteritems(all_tasks):
+        for label, task in all_tasks.items():
             attribute_set.update(task.attributes.keys())
         verify_docs(
             filename="attributes.rst",

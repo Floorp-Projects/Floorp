@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.util import memoize
 
@@ -54,7 +53,7 @@ def _get(graph_config, alias, level, release_level):
 
     worker_config["provisioner"] = evaluate_keyed_by(
         worker_config["provisioner"],
-        "worker-type alias {} field provisioner".format(alias),
+        f"worker-type alias {alias} field provisioner",
         {"level": level},
     ).format(
         **{
@@ -65,7 +64,7 @@ def _get(graph_config, alias, level, release_level):
     )
     worker_config["worker-type"] = evaluate_keyed_by(
         worker_config["worker-type"],
-        "worker-type alias {} field worker-type".format(alias),
+        f"worker-type alias {alias} field worker-type",
         {"level": level, "release-level": release_level},
     ).format(
         **{

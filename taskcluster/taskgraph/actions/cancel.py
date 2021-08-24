@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import requests
@@ -33,8 +30,6 @@ def cancel_action(parameters, graph_config, input, task_group_id, task_id):
             # A 409 response indicates that this task is past its deadline.  It
             # cannot be cancelled at this time, but it's also not running
             # anymore, so we can ignore this error.
-            logger.info(
-                "Task {} is past its deadline and cannot be cancelled.".format(task_id)
-            )
+            logger.info(f"Task {task_id} is past its deadline and cannot be cancelled.")
             return
         raise

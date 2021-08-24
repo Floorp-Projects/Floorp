@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 """Utility functions to handle test chunking."""
 
@@ -11,7 +10,6 @@ import logging
 import os
 from abc import ABCMeta, abstractmethod
 
-import six
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime
 from mozbuild.util import memoize
@@ -122,9 +120,9 @@ def get_runtimes(platform, suite_name):
         path = base.format("unix")
 
     if not os.path.exists(path):
-        raise IOError("manifest runtime file at {} not found.".format(path))
+        raise OSError(f"manifest runtime file at {path} not found.")
 
-    with open(path, "r") as fh:
+    with open(path) as fh:
         return json.load(fh)[suite_name]
 
 
@@ -168,8 +166,7 @@ def chunk_manifests(suite, platform, chunks, manifests):
     return chunked_manifests
 
 
-@six.add_metaclass(ABCMeta)
-class BaseManifestLoader(object):
+class BaseManifestLoader(metaclass=ABCMeta):
     def __init__(self, params):
         self.params = params
 
@@ -193,7 +190,6 @@ class BaseManifestLoader(object):
             run at least one test. The second is a list of skipped manifests (all tests are
             skipped).
         """
-        pass
 
 
 class DefaultLoader(BaseManifestLoader):
@@ -223,13 +219,13 @@ class DefaultLoader(BaseManifestLoader):
                 manifests.add(t["manifest"])
             return {"active": list(manifests), "skipped": []}
 
-        manifests = set(chunk_by_runtime.get_manifest(t) for t in tests)
+        manifests = {chunk_by_runtime.get_manifest(t) for t in tests}
 
         # Compute  the active tests.
         m = TestManifest()
         m.tests = tests
         tests = m.active_tests(disabled=False, exists=False, **mozinfo)
-        active = set(chunk_by_runtime.get_manifest(t) for t in tests)
+        active = {chunk_by_runtime.get_manifest(t) for t in tests}
         skipped = manifests - active
         return {"active": list(active), "skipped": list(skipped)}
 
@@ -241,12 +237,12 @@ class BugbugLoader(DefaultLoader):
     CONFIDENCE_THRESHOLD = CT_LOW
 
     def __init__(self, *args, **kwargs):
-        super(BugbugLoader, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.timedout = False
 
     @memoize
     def get_manifests(self, suite, mozinfo):
-        manifests = super(BugbugLoader, self).get_manifests(suite, mozinfo)
+        manifests = super().get_manifests(suite, mozinfo)
 
         # Don't prune any manifests if we're on a backstop push or there was a timeout.
         if self.params["backstop"] or self.timedout:

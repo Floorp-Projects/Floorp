@@ -4,7 +4,6 @@
 """
 Transform the {partials,mar}-signing task into an actual task description.
 """
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
@@ -39,7 +38,7 @@ transforms = TransformSequence()
 def generate_partials_artifacts(job, release_history, platform, locale=None):
     artifact_prefix = get_artifact_prefix(job)
     if locale:
-        artifact_prefix = "{}/{}".format(artifact_prefix, locale)
+        artifact_prefix = f"{artifact_prefix}/{locale}"
     else:
         locale = "en-US"
 
@@ -50,7 +49,7 @@ def generate_partials_artifacts(job, release_history, platform, locale=None):
             "taskId": {"task-reference": "<partials>"},
             "taskType": "partials",
             "paths": [
-                "{}/{}".format(artifact_prefix, path)
+                f"{artifact_prefix}/{path}"
                 for path, version in artifacts
                 # TODO Use mozilla-version to avoid comparing strings. Otherwise Firefox 100 will
                 # be considered smaller than Firefox 56
@@ -64,7 +63,7 @@ def generate_partials_artifacts(job, release_history, platform, locale=None):
         "taskId": {"task-reference": "<partials>"},
         "taskType": "partials",
         "paths": [
-            "{}/{}".format(artifact_prefix, path)
+            f"{artifact_prefix}/{path}"
             for path, version in artifacts
             # TODO Use mozilla-version to avoid comparing strings. Otherwise Firefox 100 will be
             # considered smaller than Firefox 56
@@ -88,7 +87,7 @@ def generate_complete_artifacts(job, kind):
         if basename in SIGNING_FORMATS[kind]:
             upstream_artifacts.append(
                 {
-                    "taskId": {"task-reference": "<{}>".format(job.kind)},
+                    "taskId": {"task-reference": f"<{job.kind}>"},
                     "taskType": "build",
                     "paths": [artifact],
                     "formats": SIGNING_FORMATS[kind][basename],
@@ -109,7 +108,7 @@ def make_task_description(config, jobs):
             "symbol", join_symbol(job.get("treeherder-group", "ms"), locale or "N")
         )
 
-        label = job.get("label", "{}-{}".format(config.kind, dep_job.label))
+        label = job.get("label", f"{config.kind}-{dep_job.label}")
 
         dependencies = {dep_job.kind: dep_job.label}
         signing_dependencies = dep_job.dependencies

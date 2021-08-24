@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-import six
 from taskgraph.try_option_syntax import TryOptionSyntax, parse_message
 from taskgraph.graph import Graph
 from taskgraph.taskgraph import TaskGraph
@@ -84,12 +82,8 @@ GRAPH_CONFIG = {
 for r in RIDEALONG_BUILDS.values():
     tasks.update({k: v for k, v in [unittest_task(n + "-test", n) for n in r]})
 
-unittest_tasks = {
-    k: v for k, v in six.iteritems(tasks) if "unittest_try_name" in v.attributes
-}
-talos_tasks = {
-    k: v for k, v in six.iteritems(tasks) if "talos_try_name" in v.attributes
-}
+unittest_tasks = {k: v for k, v in tasks.items() if "unittest_try_name" in v.attributes}
+talos_tasks = {k: v for k, v in tasks.items() if "talos_try_name" in v.attributes}
 graph_with_jobs = TaskGraph(tasks, Graph(set(tasks), set()))
 
 
@@ -310,12 +304,10 @@ class TestTryOptionSyntax(unittest.TestCase):
         "-u gtest[-linux] selects all platforms but linux for gtest"
         parameters = parse_message("try: -u gtest[-linux]")
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
-        all_platforms = set(
-            [x.attributes["test_platform"] for x in unittest_tasks.values()]
-        )
+        all_platforms = {x.attributes["test_platform"] for x in unittest_tasks.values()}
         self.assertEqual(
             sorted(tos.unittests[0]["platforms"]),
-            sorted([x for x in all_platforms if x != "linux"]),
+            sorted(x for x in all_platforms if x != "linux"),
         )
 
     def test_u_platforms_negated_pretty(self):

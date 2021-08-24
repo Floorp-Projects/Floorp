@@ -16,7 +16,7 @@ def fxrecord(config, jobs):
             job["dependencies"] = {dep_job.label: dep_job.label}
             job["treeherder"]["platform"] = dep_job.task["extra"]["treeherder-platform"]
             job["worker"].setdefault("env", {})["FXRECORD_TASK_ID"] = {
-                "task-reference": "<{}>".format(dep_job.label)
+                "task-reference": f"<{dep_job.label}>"
             }
 
             yield job

@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
@@ -133,7 +130,7 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id):
             # the exception that this call will produce
             push_decision_task_id = get_decision_task_id(parameters["project"], push_id)
         except Exception:
-            logger.warning("Could not find decision task for push {}".format(push_id))
+            logger.warning(f"Could not find decision task for push {push_id}")
             # The decision task may have failed, this is common enough that we
             # don't want to report an error for it.
             continue
@@ -146,7 +143,7 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id):
                 input=input_for_action,
             )
         except Exception:
-            logger.exception("Failed to trigger action for {}".format(push_id))
+            logger.exception(f"Failed to trigger action for {push_id}")
             failed = True
 
     if failed:
@@ -165,7 +162,7 @@ def test_manifests_modifier(task, label, symbol, revision, test_manifests):
     if task.label != label:
         return task
 
-    logger.debug("Modifying test_manifests for {}".format(task.label))
+    logger.debug(f"Modifying test_manifests for {task.label}")
     test_manifests = test_manifests
     task.attributes["test_manifests"] = test_manifests
     task.task["payload"]["env"]["MOZHARNESS_TEST_PATHS"] = json.dumps(test_manifests)
@@ -174,7 +171,7 @@ def test_manifests_modifier(task, label, symbol, revision, test_manifests):
     th_info = task.task["extra"]["treeherder"]
     # Use a job symbol of the originating task as defined in the backfill action
     th_info["symbol"] = add_backfill_suffix(
-        SYMBOL_REGEX, th_info["symbol"], "-{}-bk".format(revision[0:11])
+        SYMBOL_REGEX, th_info["symbol"], f"-{revision[0:11]}-bk"
     )
     if th_info.get("groupSymbol"):
         # Group all backfilled tasks together
@@ -204,11 +201,9 @@ def new_label(label, tasks):
         elif begining_label + "-1" in tasks:
             return begining_label + "-1"
         else:
-            raise Exception(
-                "New label ({}) was not found in the task-graph".format(label)
-            )
+            raise Exception(f"New label ({label}) was not found in the task-graph")
     else:
-        raise Exception("{} was not found in the task-graph".format(label))
+        raise Exception(f"{label} was not found in the task-graph")
 
 
 @register_callback_action(

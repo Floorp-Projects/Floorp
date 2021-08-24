@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -8,9 +6,6 @@
 Tools for interacting with existing taskgraphs.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-import six
 
 from taskgraph.util.taskcluster import (
     find_task_id,
@@ -48,7 +43,7 @@ def find_existing_tasks_from_previous_kinds(
     existing_tasks = find_existing_tasks(previous_graph_ids)
     kind_labels = {
         t.label
-        for t in six.itervalues(full_task_graph.tasks)
+        for t in full_task_graph.tasks.values()
         if t.attributes["kind"] not in rebuild_kinds
     }
     return {

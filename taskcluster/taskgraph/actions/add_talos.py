@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-import six
 
 from ..target_tasks import standard_filter
 from .registry import register_callback_action
@@ -48,7 +44,7 @@ def add_all_talos(parameters, graph_config, input, task_group_id, task_id):
     for i in range(times):
         to_run = [
             label
-            for label, entry in six.iteritems(full_task_graph.tasks)
+            for label, entry in full_task_graph.tasks.items()
             if "talos_try_name" in entry.attributes
             and standard_filter(entry, parameters)
         ]
@@ -61,6 +57,4 @@ def add_all_talos(parameters, graph_config, input, task_group_id, task_id):
             parameters,
             decision_task_id,
         )
-        logger.info(
-            "Scheduled {} talos tasks (time {}/{})".format(len(to_run), i + 1, times)
-        )
+        logger.info(f"Scheduled {len(to_run)} talos tasks (time {i + 1}/{times})")

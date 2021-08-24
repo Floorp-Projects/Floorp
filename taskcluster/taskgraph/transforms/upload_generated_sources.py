@@ -6,7 +6,6 @@ Transform the upload-generated-files task description template,
 taskcluster/ci/upload-generated-sources/kind.yml, into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 

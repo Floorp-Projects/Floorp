@@ -5,9 +5,7 @@
 Support for running hazard jobs via dedicated scripts
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional, Any
 
@@ -25,17 +23,17 @@ haz_run_schema = Schema(
     {
         Required("using"): "hazard",
         # The command to run within the task image (passed through to the worker)
-        Required("command"): text_type,
+        Required("command"): str,
         # The mozconfig to use; default in the script is used if omitted
-        Optional("mozconfig"): text_type,
+        Optional("mozconfig"): str,
         # The set of secret names to which the task has access; these are prefixed
         # with `project/releng/gecko/{treeherder.kind}/level-{level}/`.   Setting
         # this will enable any worker features required and set the task's scopes
         # appropriately.  `true` here means ['*'], all secrets.  Not supported on
         # Windows
-        Optional("secrets"): Any(bool, [text_type]),
+        Optional("secrets"): Any(bool, [str]),
         # Base work directory used to set up the task.
-        Optional("workdir"): text_type,
+        Optional("workdir"): str,
     }
 )
 

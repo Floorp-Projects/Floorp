@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
 import requests
 from requests.exceptions import HTTPError
-from six import string_types
 
 from .registry import register_callback_action
 from .util import create_tasks, combine_task_graph_files
@@ -82,9 +78,7 @@ def geckoprofile_action(parameters, graph_config, input, task_group_id, task_id)
             )
             push_decision_task_id = find_decision_task(push_params, graph_config)
         except HTTPError as e:
-            logger.info(
-                "Skipping {} due to missing index artifacts! Error: {}".format(push, e)
-            )
+            logger.info(f"Skipping {push} due to missing index artifacts! Error: {e}")
             continue
 
         if label in full_task_graph.tasks.keys():
@@ -113,7 +107,7 @@ def geckoprofile_action(parameters, graph_config, input, task_group_id, task_id)
             )
             backfill_pushes.append(push)
         else:
-            logging.info("Could not find {} on {}. Skipping.".format(label, push))
+            logging.info(f"Could not find {label} on {push}. Skipping.")
     combine_task_graph_files(backfill_pushes)
 
 
@@ -128,7 +122,7 @@ def add_args_to_perf_command(payload_commands, extra_args=[]):
     perf_command = payload_commands[perf_command_idx]
 
     command_form = "default"
-    if isinstance(perf_command, string_types):
+    if isinstance(perf_command, str):
         # windows has a single command, in long string form
         perf_command = perf_command.split(" ")
         command_form = "string"

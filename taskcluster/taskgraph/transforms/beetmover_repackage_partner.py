@@ -5,9 +5,7 @@
 Transform the beetmover task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -37,12 +35,10 @@ logger = logging.getLogger(__name__)
 beetmover_description_schema = schema.extend(
     {
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
-        Optional("label"): text_type,
-        Required("partner-bucket-scope"): optionally_keyed_by(
-            "release-level", text_type
-        ),
-        Required("partner-public-path"): Any(None, text_type),
-        Required("partner-private-path"): Any(None, text_type),
+        Optional("label"): str,
+        Required("partner-bucket-scope"): optionally_keyed_by("release-level", str),
+        Required("partner-public-path"): Any(None, str),
+        Required("partner-private-path"): Any(None, str),
         Optional("extra"): object,
         Required("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
@@ -61,7 +57,7 @@ def resolve_keys(config, jobs):
             job,
             "partner-bucket-scope",
             item_name=job["label"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         yield job
 
@@ -97,7 +93,7 @@ def make_task_description(config, jobs):
         base_label = "release-partner-repack"
         if "eme" in config.kind:
             base_label = "release-eme-free-repack"
-        dependencies["build"] = "{}-{}".format(base_label, build_platform)
+        dependencies["build"] = f"{base_label}-{build_platform}"
         if "macosx" in build_platform or "win" in build_platform:
             dependencies["repackage"] = "{}-repackage-{}-{}".format(
                 base_label, build_platform, repack_id.replace("/", "-")
@@ -182,7 +178,7 @@ def generate_upstream_artifacts(
             {
                 "taskId": {"task-reference": build_task_ref},
                 "taskType": "build",
-                "paths": ["{}/{}/target.tar.bz2".format(artifact_prefix, repack_id)],
+                "paths": [f"{artifact_prefix}/{repack_id}/target.tar.bz2"],
                 "locale": partner_path,
             }
         )
@@ -190,9 +186,7 @@ def generate_upstream_artifacts(
             {
                 "taskId": {"task-reference": repackage_signing_task_ref},
                 "taskType": "repackage",
-                "paths": [
-                    "{}/{}/target.tar.bz2.asc".format(artifact_prefix, repack_id)
-                ],
+                "paths": [f"{artifact_prefix}/{repack_id}/target.tar.bz2.asc"],
                 "locale": partner_path,
             }
         )
@@ -201,7 +195,7 @@ def generate_upstream_artifacts(
             {
                 "taskId": {"task-reference": repackage_task_ref},
                 "taskType": "repackage",
-                "paths": ["{}/{}/target.dmg".format(artifact_prefix, repack_id)],
+                "paths": [f"{artifact_prefix}/{repack_id}/target.dmg"],
                 "locale": partner_path,
             }
         )
@@ -209,7 +203,7 @@ def generate_upstream_artifacts(
             {
                 "taskId": {"task-reference": repackage_signing_task_ref},
                 "taskType": "repackage",
-                "paths": ["{}/{}/target.dmg.asc".format(artifact_prefix, repack_id)],
+                "paths": [f"{artifact_prefix}/{repack_id}/target.dmg.asc"],
                 "locale": partner_path,
             }
         )
@@ -218,9 +212,7 @@ def generate_upstream_artifacts(
             {
                 "taskId": {"task-reference": repackage_signing_task_ref},
                 "taskType": "repackage",
-                "paths": [
-                    "{}/{}/target.installer.exe".format(artifact_prefix, repack_id)
-                ],
+                "paths": [f"{artifact_prefix}/{repack_id}/target.installer.exe"],
                 "locale": partner_path,
             }
         )
@@ -228,9 +220,7 @@ def generate_upstream_artifacts(
             {
                 "taskId": {"task-reference": repackage_signing_task_ref},
                 "taskType": "repackage",
-                "paths": [
-                    "{}/{}/target.installer.exe.asc".format(artifact_prefix, repack_id)
-                ],
+                "paths": [f"{artifact_prefix}/{repack_id}/target.installer.exe.asc"],
                 "locale": partner_path,
             }
         )

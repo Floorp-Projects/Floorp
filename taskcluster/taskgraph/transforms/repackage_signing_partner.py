@@ -5,9 +5,7 @@
 Transform the repackage signing task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -21,7 +19,7 @@ transforms = TransformSequence()
 
 repackage_signing_description_schema = schema.extend(
     {
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional("extra"): object,
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
@@ -75,9 +73,7 @@ def make_repackage_signing_description(config, jobs):
                     "taskId": {"task-reference": "<repackage>"},
                     "taskType": "repackage",
                     "paths": [
-                        get_artifact_path(
-                            dep_job, "{}/target.installer.exe".format(repack_id)
-                        ),
+                        get_artifact_path(dep_job, f"{repack_id}/target.installer.exe"),
                     ],
                     "formats": ["autograph_authenticode", "autograph_gpg"],
                 }
@@ -96,7 +92,7 @@ def make_repackage_signing_description(config, jobs):
                         "paths": [
                             get_artifact_path(
                                 dep_job,
-                                "{}/target.stub-installer.exe".format(repack_id),
+                                f"{repack_id}/target.stub-installer.exe",
                             ),
                         ],
                         "formats": ["autograph_authenticode", "autograph_gpg"],
@@ -108,7 +104,7 @@ def make_repackage_signing_description(config, jobs):
                     "taskId": {"task-reference": "<repackage>"},
                     "taskType": "repackage",
                     "paths": [
-                        get_artifact_path(dep_job, "{}/target.dmg".format(repack_id)),
+                        get_artifact_path(dep_job, f"{repack_id}/target.dmg"),
                     ],
                     "formats": ["autograph_gpg"],
                 }
@@ -119,9 +115,7 @@ def make_repackage_signing_description(config, jobs):
                     "taskId": {"task-reference": "<repack>"},
                     "taskType": "repackage",
                     "paths": [
-                        get_artifact_path(
-                            dep_job, "{}/target.tar.bz2".format(repack_id)
-                        ),
+                        get_artifact_path(dep_job, f"{repack_id}/target.tar.bz2"),
                     ],
                     "formats": ["autograph_gpg"],
                 }

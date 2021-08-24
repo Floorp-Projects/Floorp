@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from fnmatch import fnmatch
 from collections import defaultdict
@@ -153,11 +152,11 @@ class BugBugPushSchedules(OptimizationStrategy):
                 return self.should_remove_task(task, params, importance)
 
         key = "reduced_tasks" if self.use_reduced_tasks else "tasks"
-        tasks = set(
+        tasks = {
             task
             for task, confidence in data.get(key, {}).items()
             if confidence >= self.confidence_threshold
-        )
+        }
 
         test_manifests = task.attributes.get("test_manifests")
         if test_manifests is None or self.tasks_only:

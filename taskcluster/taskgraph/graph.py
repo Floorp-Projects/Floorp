@@ -2,14 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import attr
 import collections
 
 
 @attr.s(frozen=True)
-class Graph(object):
+class Graph:
     """
     Generic representation of a directed acyclic graph with labeled edges
     connecting the nodes.  Graph operations are implemented in a functional
@@ -52,7 +51,7 @@ class Graph(object):
         assert isinstance(nodes, set)
         if not (nodes <= self.nodes):
             raise Exception(
-                "Unknown nodes in transitive closure: {}".format(nodes - self.nodes)
+                f"Unknown nodes in transitive closure: {nodes - self.nodes}"
             )
 
         # generate a new graph by expanding along edges until reaching a fixed
@@ -61,14 +60,12 @@ class Graph(object):
         nodes, edges = set(), set()
         while (new_nodes, new_edges) != (nodes, edges):
             nodes, edges = new_nodes, new_edges
-            add_edges = set(
+            add_edges = {
                 (left, right, name)
                 for (left, right, name) in self.edges
                 if (right if reverse else left) in nodes
-            )
-            add_nodes = set(
-                (left if reverse else right) for (left, right, _) in add_edges
-            )
+            }
+            add_nodes = {(left if reverse else right) for (left, right, _) in add_edges}
             new_nodes = nodes | add_nodes
             new_edges = edges | add_edges
         return Graph(new_nodes, new_edges)

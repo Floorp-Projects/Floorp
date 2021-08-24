@@ -4,13 +4,12 @@
 This transform passes options from `mach perftest` to the corresponding task.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from copy import deepcopy
 from datetime import date, timedelta
 import json
 
-from six import ensure_text, text_type
+from six import ensure_text
 
 from voluptuous import (
     Any,
@@ -29,25 +28,23 @@ transforms = TransformSequence()
 perftest_description_schema = Schema(
     {
         # The test names and the symbols to use for them: [test-symbol, test-path]
-        Optional("perftest"): [[text_type]],
+        Optional("perftest"): [[str]],
         # Metrics to gather for the test. These will be merged
         # with options specified through perftest-perfherder-global
         Optional("perftest-metrics"): optionally_keyed_by(
             "perftest",
             Any(
-                [text_type],
-                {text_type: Any(None, {text_type: Any(None, text_type, [text_type])})},
+                [str],
+                {str: Any(None, {str: Any(None, str, [str])})},
             ),
         ),
         # Perfherder data options that will be applied to
         # all metrics gathered.
         Optional("perftest-perfherder-global"): optionally_keyed_by(
-            "perftest", {text_type: Any(None, text_type, [text_type])}
+            "perftest", {str: Any(None, str, [str])}
         ),
         # Extra options to add to the test's command
-        Optional("perftest-extra-options"): optionally_keyed_by(
-            "perftest", [text_type]
-        ),
+        Optional("perftest-extra-options"): optionally_keyed_by("perftest", [str]),
         # Variants of the test to make based on extra browsertime
         # arguments. Expecting:
         #    [variant-suffix, options-to-use]
@@ -55,7 +52,7 @@ perftest_description_schema = Schema(
         # to the existing task. Otherwise, a new variant is created
         # with the given suffix and with its options replaced.
         Optional("perftest-btime-variants"): optionally_keyed_by(
-            "perftest", [[Any(None, text_type)]]
+            "perftest", [[Any(None, str)]]
         ),
         # These options will be parsed in the next schemas
         Extra: object,

@@ -5,10 +5,7 @@
 Transform the beetmover task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-import six
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -36,18 +33,18 @@ transforms = TransformSequence()
 beetmover_description_schema = schema.extend(
     {
         # attributes is used for enabling artifact-map by declarative artifacts
-        Required("attributes"): {text_type: object},
+        Required("attributes"): {str: object},
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
-        Optional("label"): text_type,
+        Optional("label"): str,
         # treeherder is allowed here to override any defaults we use for beetmover.  See
         # taskcluster/taskgraph/transforms/task.py for the schema details, and the
         # below transforms for defaults of various values.
         Optional("treeherder"): task_description_schema["treeherder"],
-        Required("description"): text_type,
-        Required("worker-type"): optionally_keyed_by("release-level", text_type),
+        Required("description"): str,
+        Required("worker-type"): optionally_keyed_by("release-level", str),
         Required("run-on-projects"): [],
         # locale is passed only for l10n beetmoving
-        Optional("locale"): text_type,
+        Optional("locale"): str,
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
     }
@@ -69,7 +66,7 @@ def resolve_keys(config, jobs):
                     "release-level": config.params.release_level(),
                     "release-type": config.params["release_type"],
                     "project": config.params["project"],
-                }
+                },
             )
         yield job
 
@@ -154,7 +151,7 @@ def yield_all_platform_jobs(config, jobs):
     for job in jobs:
         platforms = ("linux", "macosx64", "win32", "win64")
         if "devedition" in job["attributes"]["build_platform"]:
-            platforms = ("{}-devedition".format(plat) for plat in platforms)
+            platforms = (f"{plat}-devedition" for plat in platforms)
         for platform in platforms:
             platform_job = copy.deepcopy(job)
             if "ja" in platform_job["attributes"]["chunk_locales"] and platform in (
@@ -185,7 +182,7 @@ def _strip_ja_data_from_linux_job(platform_job):
 
 def _change_platform_in_artifact_map_paths(paths, orig_platform, new_platform):
     amended_paths = {}
-    for artifact, artifact_info in six.iteritems(paths):
+    for artifact, artifact_info in paths.items():
         amended_artifact_info = {
             "checksums_path": artifact_info["checksums_path"].replace(
                 orig_platform, new_platform

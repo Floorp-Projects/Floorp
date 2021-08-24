@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import os
 import re
 
-import six
 from redo import retry
 from taskgraph import try_option_syntax
 from taskgraph.parameters import Parameters
@@ -278,7 +274,7 @@ def _try_option_syntax(full_task_graph, parameters, graph_config):
     )
     target_tasks_labels = [
         t.label
-        for t in six.itervalues(full_task_graph.tasks)
+        for t in full_task_graph.tasks.values()
         if options.task_matches(t)
         and filter_by_uncommon_try_tasks(t.label)
         and filter_unsupported_artifact_builds(t, parameters)
@@ -326,10 +322,10 @@ def _try_option_syntax(full_task_graph, parameters, graph_config):
             owner = parameters.get("owner")
             routes = task.task.setdefault("routes", [])
             if options.notifications == "all":
-                routes.append("notify.email.{}.on-any".format(owner))
+                routes.append(f"notify.email.{owner}.on-any")
             elif options.notifications == "failure":
-                routes.append("notify.email.{}.on-failed".format(owner))
-                routes.append("notify.email.{}.on-exception".format(owner))
+                routes.append(f"notify.email.{owner}.on-failed")
+                routes.append(f"notify.email.{owner}.on-exception")
 
     return target_tasks_labels
 
@@ -398,7 +394,7 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
 
     return [
         l
-        for l, t in six.iteritems(full_task_graph.tasks)
+        for l, t in full_task_graph.tasks.items()
         if standard_filter(t, parameters)
         and filter_out_shipping_phase(t, parameters)
         and filter_out_devedition(t, parameters)
@@ -416,7 +412,7 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
     via the `run_on_projects` attributes."""
     return [
         l
-        for l, t in six.iteritems(full_task_graph.tasks)
+        for l, t in full_task_graph.tasks.items()
         if standard_filter(t, parameters)
         and filter_out_shipping_phase(t, parameters)
         and filter_out_devedition(t, parameters)
@@ -515,7 +511,7 @@ def target_tasks_mozilla_beta(full_task_graph, parameters, graph_config):
 
     return [
         l
-        for l, t in six.iteritems(full_task_graph.tasks)
+        for l, t in full_task_graph.tasks.items()
         if filter_release_tasks(t, parameters) and standard_filter(t, parameters)
     ]
 
@@ -528,7 +524,7 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
 
     return [
         l
-        for l, t in six.iteritems(full_task_graph.tasks)
+        for l, t in full_task_graph.tasks.items()
         if filter_release_tasks(t, parameters) and standard_filter(t, parameters)
     ]
 
@@ -560,7 +556,7 @@ def target_tasks_mozilla_esr78(full_task_graph, parameters, graph_config):
 
         return True
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("mozilla_esr91_tasks")
@@ -584,7 +580,7 @@ def target_tasks_mozilla_esr91(full_task_graph, parameters, graph_config):
 
         return True
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("promote_desktop")
@@ -608,7 +604,7 @@ def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
         if task.attributes.get("shipping_phase") == "promote":
             return True
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 def is_geckoview(task, parameters):
@@ -648,7 +644,7 @@ def target_tasks_push_desktop(full_task_graph, parameters, graph_config):
         ):
             return True
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("ship_desktop")
@@ -694,7 +690,7 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
         else:
             return not is_rc
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("pine_tasks")
@@ -715,7 +711,7 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
         ):
             return True
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("kaios_tasks")
@@ -726,7 +722,7 @@ def target_tasks_kaios(full_task_graph, parameters, graph_config):
         # We disable everything in central, and adjust downstream.
         return False
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("ship_geckoview")
@@ -743,7 +739,7 @@ def target_tasks_ship_geckoview(full_task_graph, parameters, graph_config):
             "upload-symbols",
         )
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("general_perf_testing")
@@ -834,7 +830,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     return True
         return False
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 def make_desktop_nightly_filter(platforms):
@@ -862,7 +858,7 @@ def target_tasks_nightly_linux(full_task_graph, parameters, graph_config):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filter = make_desktop_nightly_filter({"linux64-shippable", "linux-shippable"})
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("nightly_macosx")
@@ -871,7 +867,7 @@ def target_tasks_nightly_macosx(full_task_graph, parameters, graph_config):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filter = make_desktop_nightly_filter({"macosx64-shippable"})
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("nightly_win32")
@@ -880,7 +876,7 @@ def target_tasks_nightly_win32(full_task_graph, parameters, graph_config):
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filter = make_desktop_nightly_filter({"win32-shippable"})
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("nightly_win64")
@@ -889,7 +885,7 @@ def target_tasks_nightly_win64(full_task_graph, parameters, graph_config):
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filter = make_desktop_nightly_filter({"win64-shippable"})
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("nightly_win64_aarch64")
@@ -898,7 +894,7 @@ def target_tasks_nightly_win64_aarch64(full_task_graph, parameters, graph_config
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filter = make_desktop_nightly_filter({"win64-aarch64-shippable"})
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("nightly_asan")
@@ -909,7 +905,7 @@ def target_tasks_nightly_asan(full_task_graph, parameters, graph_config):
     filter = make_desktop_nightly_filter(
         {"linux64-asan-reporter-shippable", "win64-asan-reporter-shippable"}
     )
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("daily_releases")
@@ -921,7 +917,7 @@ def target_tasks_daily_releases(full_task_graph, parameters, graph_config):
     def filter(task):
         return task.kind in ["maybe-release"]
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("nightly_desktop")
@@ -944,9 +940,7 @@ def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
     # Tasks that aren't platform specific
     release_filter = make_desktop_nightly_filter({None})
     release_tasks = [
-        l
-        for l, t in six.iteritems(full_task_graph.tasks)
-        if release_filter(t, parameters)
+        l for l, t in full_task_graph.tasks.items() if release_filter(t, parameters)
     ]
     # Avoid duplicate tasks.
     return list(
@@ -999,7 +993,7 @@ def target_tasks_build_linux64_clang_trunk_perf(
             return True
         return False
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t.label)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t.label)]
 
 
 # Run Updatebot's cron job 4 times daily.
@@ -1034,7 +1028,7 @@ def target_tasks_file_update(full_task_graph, parameters, graph_config):
         # For now any task in the repo-update kind is ok
         return task.kind in ["repo-update"]
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("l10n_bump")
@@ -1045,7 +1039,7 @@ def target_tasks_l10n_bump(full_task_graph, parameters, graph_config):
         # For now any task in the repo-update kind is ok
         return task.kind in ["l10n-bump"]
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("merge_automation")
@@ -1056,7 +1050,7 @@ def target_tasks_merge_automation(full_task_graph, parameters, graph_config):
         # For now any task in the repo-update kind is ok
         return task.kind in ["merge-automation"]
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("scriptworker_canary")
@@ -1067,7 +1061,7 @@ def target_tasks_scriptworker_canary(full_task_graph, parameters, graph_config):
         # For now any task in the repo-update kind is ok
         return task.kind in ["scriptworker-canary"]
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("cron_bouncer_check")
@@ -1080,7 +1074,7 @@ def target_tasks_bouncer_check(full_task_graph, parameters, graph_config):
         # For now any task in the repo-update kind is ok
         return task.kind in ["cron-bouncer-check"]
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("staging_release_builds")
@@ -1104,7 +1098,7 @@ def target_tasks_staging_release(full_task_graph, parameters, graph_config):
             return True
         return False
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("release_simulation")
@@ -1137,7 +1131,7 @@ def target_tasks_release_simulation(full_task_graph, parameters, graph_config):
 
     return [
         l
-        for l, t in six.iteritems(full_task_graph.tasks)
+        for l, t in full_task_graph.tasks.items()
         if filter_release_tasks(t, parameters)
         and filter_out_cron(t, parameters)
         and filter_for_target_project(t)
@@ -1160,7 +1154,7 @@ def target_tasks_codereview(full_task_graph, parameters, graph_config):
 
         return False
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("nothing")
@@ -1194,7 +1188,7 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
             ):
                 return True
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("perftest_s7")
@@ -1230,7 +1224,7 @@ def target_tasks_perftest_s7(full_task_graph, parameters, graph_config):
                 else:
                     return True
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
 @_target_task("condprof")
@@ -1238,7 +1232,7 @@ def target_tasks_condprof(full_task_graph, parameters, graph_config):
     """
     Select tasks required for building conditioned profiles.
     """
-    for name, task in six.iteritems(full_task_graph.tasks):
+    for name, task in full_task_graph.tasks.items():
         if task.kind == "condprof":
             yield name
 
@@ -1248,7 +1242,7 @@ def target_tasks_system_symbols(full_task_graph, parameters, graph_config):
     """
     Select tasks for scraping and uploading system symbols.
     """
-    for name, task in six.iteritems(full_task_graph.tasks):
+    for name, task in full_task_graph.tasks.items():
         if task.kind in ["system-symbols", "system-symbols-upload"]:
             yield name
 
@@ -1258,7 +1252,7 @@ def target_tasks_perftest(full_task_graph, parameters, graph_config):
     """
     Select perftest tasks we want to run daily
     """
-    for name, task in six.iteritems(full_task_graph.tasks):
+    for name, task in full_task_graph.tasks.items():
         if task.kind != "perftest":
             continue
         if task.attributes.get("cron", False):
@@ -1270,7 +1264,7 @@ def target_tasks_perftest_autoland(full_task_graph, parameters, graph_config):
     """
     Select perftest tasks we want to run daily
     """
-    for name, task in six.iteritems(full_task_graph.tasks):
+    for name, task in full_task_graph.tasks.items():
         if task.kind != "perftest":
             continue
         if task.attributes.get("cron", False) and any(
@@ -1286,4 +1280,4 @@ def target_tasks_l10n_cross_channel(full_task_graph, parameters, graph_config):
     def filter(task):
         return task.kind in ["l10n-cross-channel"]
 
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]

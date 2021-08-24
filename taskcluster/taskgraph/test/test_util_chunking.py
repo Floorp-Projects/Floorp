@@ -2,12 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import re
 
 from itertools import combinations
-from six.moves import range
 
 import pytest
 
@@ -266,8 +264,8 @@ def test_mock_chunk_manifests_wpt(unchunked_manifests, suite, chunks):
             assert all(chunked_manifests)
     else:
         assert all(chunked_manifests)
-        minimum = min([len(c) for c in chunked_manifests])
-        maximum = max([len(c) for c in chunked_manifests])
+        minimum = min(len(c) for c in chunked_manifests)
+        maximum = max(len(c) for c in chunked_manifests)
         assert maximum - minimum <= 1
         assert expected == chunked_manifests
 

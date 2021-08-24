@@ -5,7 +5,6 @@
 Add notifications via taskcluster-notify for release tasks
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from pipes import quote as shell_quote
 
@@ -46,7 +45,7 @@ def add_notifications(config, jobs):
             "<decision>",
         ]
 
-        job["scopes"] = ["notify:email:{}".format(address) for address in emails]
+        job["scopes"] = [f"notify:email:{address}" for address in emails]
         job["run"] = {
             "using": "mach",
             "sparse-profile": "mach",

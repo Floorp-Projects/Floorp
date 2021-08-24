@@ -8,7 +8,6 @@ transformations is generic to any kind of task, but abstracts away some of the
 complexities of worker implementations, scopes, and treeherder annotations.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
 import os
@@ -16,7 +15,6 @@ import re
 import time
 from copy import deepcopy
 import six
-from six import text_type
 
 import attr
 
@@ -63,26 +61,26 @@ def _compute_geckoview_version(app_version, moz_build_date):
     # Must be synchronized with /mobile/android/geckoview/build.gradle computeVersionCode(...)
     version_without_milestone = re.sub(r"a[0-9]", "", app_version, 1)
     parts = version_without_milestone.split(".")
-    return "%s.%s.%s" % (parts[0], parts[1], moz_build_date)
+    return f"{parts[0]}.{parts[1]}.{moz_build_date}"
 
 
 # A task description is a general description of a TaskCluster task
 task_description_schema = Schema(
     {
         # the label for this task
-        Required("label"): text_type,
+        Required("label"): str,
         # description of the task (for metadata)
-        Required("description"): text_type,
+        Required("description"): str,
         # attributes for this task
-        Optional("attributes"): {text_type: object},
+        Optional("attributes"): {str: object},
         # relative path (from config.path) to the file task was defined in
-        Optional("job-from"): text_type,
+        Optional("job-from"): str,
         # dependencies of this task, keyed by name; these are passed through
         # verbatim and subject to the interpretation of the Task's get_dependencies
         # method.
         Optional("dependencies"): {
             All(
-                text_type,
+                str,
                 NotIn(
                     ["self", "decision"],
                     "Can't use 'self` or 'decision' as depdency names.",
@@ -90,34 +88,34 @@ task_description_schema = Schema(
             ): object,
         },
         # Soft dependencies of this task, as a list of tasks labels
-        Optional("soft-dependencies"): [text_type],
+        Optional("soft-dependencies"): [str],
         # Dependencies that must be scheduled in order for this task to run.
-        Optional("if-dependencies"): [text_type],
+        Optional("if-dependencies"): [str],
         Optional("requires"): Any("all-completed", "all-resolved"),
         # expiration and deadline times, relative to task creation, with units
         # (e.g., "14 days").  Defaults are set based on the project.
-        Optional("expires-after"): text_type,
-        Optional("deadline-after"): text_type,
+        Optional("expires-after"): str,
+        Optional("deadline-after"): str,
         # custom routes for this task; the default treeherder routes will be added
         # automatically
-        Optional("routes"): [text_type],
+        Optional("routes"): [str],
         # custom scopes for this task; any scopes required for the worker will be
         # added automatically. The following parameters will be substituted in each
         # scope:
         #  {level} -- the scm level of this push
         #  {project} -- the project of this push
-        Optional("scopes"): [text_type],
+        Optional("scopes"): [str],
         # Tags
-        Optional("tags"): {text_type: text_type},
+        Optional("tags"): {str: str},
         # custom "task.extra" content
-        Optional("extra"): {text_type: object},
+        Optional("extra"): {str: object},
         # treeherder-related information; see
         # https://firefox-ci-tc.services.mozilla.com/schemas/taskcluster-treeherder/v1/task-treeherder-config.json
         # If not specified, no treeherder extra information or routes will be
         # added to the task
         Optional("treeherder"): {
             # either a bare symbol, or "grp(sym)".
-            "symbol": text_type,
+            "symbol": str,
             # the job kind
             "kind": Any("build", "test", "other"),
             # tier for this task
@@ -131,9 +129,9 @@ task_description_schema = Schema(
         # if omitted, the build will not be indexed.
         Optional("index"): {
             # the name of the product this build produces
-            "product": text_type,
+            "product": str,
             # the names to use for this job in the TaskCluster index
-            "job-name": text_type,
+            "job-name": str,
             # Type of gecko v2 index to use
             "type": Any(
                 "generic",
@@ -165,9 +163,9 @@ task_description_schema = Schema(
         # The `run_on_projects` attribute, defaulting to "all".  This dictates the
         # projects on which this task should be included in the target task set.
         # See the attributes documentation for details.
-        Optional("run-on-projects"): optionally_keyed_by("build-platform", [text_type]),
+        Optional("run-on-projects"): optionally_keyed_by("build-platform", [str]),
         # Like `run_on_projects`, `run-on-hg-branches` defaults to "all".
-        Optional("run-on-hg-branches"): optionally_keyed_by("project", [text_type]),
+        Optional("run-on-hg-branches"): optionally_keyed_by("project", [str]),
         # The `shipping_phase` attribute, defaulting to None. This specifies the
         # release promotion phase that this task belongs to.
         Required("shipping-phase"): Any(
@@ -179,7 +177,7 @@ task_description_schema = Schema(
         ),
         # The `shipping_product` attribute, defaulting to None. This specifies the
         # release promotion product that this task belongs to.
-        Required("shipping-product"): Any(None, text_type),
+        Required("shipping-product"): Any(None, str),
         # The `always-target` attribute will cause the task to be included in the
         # target_task_graph regardless of filtering. Tasks included in this manner
         # will be candidates for optimization even when `optimize_target_tasks` is
@@ -192,18 +190,18 @@ task_description_schema = Schema(
         # the provisioner-id/worker-type for the task.  The following parameters will
         # be substituted in this string:
         #  {level} -- the scm level of this push
-        "worker-type": text_type,
+        "worker-type": str,
         # Whether the job should use sccache compiler caching.
         Required("use-sccache"): bool,
         # Set of artifacts relevant to release tasks
-        Optional("release-artifacts"): [text_type],
+        Optional("release-artifacts"): [str],
         # information specific to the worker implementation that will run this task
         Optional("worker"): {
-            Required("implementation"): text_type,
+            Required("implementation"): str,
             Extra: object,
         },
         # Override the default priority for the project
-        Optional("priority"): text_type,
+        Optional("priority"): str,
     }
 )
 
@@ -286,15 +284,15 @@ payload_builders = {}
 
 
 @attr.s(frozen=True)
-class PayloadBuilder(object):
+class PayloadBuilder:
     schema = attr.ib(type=Schema)
     builder = attr.ib()
 
 
 def payload_builder(name, schema):
-    schema = Schema(
-        {Required("implementation"): name, Optional("os"): text_type}
-    ).extend(schema)
+    schema = Schema({Required("implementation"): name, Optional("os"): str}).extend(
+        schema
+    )
 
     def wrap(func):
         payload_builders[name] = PayloadBuilder(schema, func)
@@ -337,11 +335,11 @@ def verify_index(config, index):
         # generally `desktop-test`, or an image that acts an awful lot like it.
         Required("docker-image"): Any(
             # a raw Docker image path (repo/image:tag)
-            text_type,
+            str,
             # an in-tree generated docker image (from `taskcluster/docker/<name>`)
-            {"in-tree": text_type},
+            {"in-tree": str},
             # an indexed docker image
-            {"indexed": text_type},
+            {"indexed": str},
         ),
         # worker features that should be enabled
         Required("chain-of-trust"): bool,
@@ -361,7 +359,7 @@ def verify_index(config, index):
         # Caches are often mounted to the same path as Docker volumes. In this
         # case, they take precedence over a Docker volume. But a volume still
         # needs to be declared for the path.
-        Optional("volumes"): [text_type],
+        Optional("volumes"): [str],
         Optional(
             "required-volumes",
             description=(
@@ -369,7 +367,7 @@ def verify_index(config, index):
                 "For in-tree images, these paths will be checked to verify that they "
                 "are defined as volumes."
             ),
-        ): [text_type],
+        ): [str],
         # caches to set up for the task
         Optional("caches"): [
             {
@@ -377,9 +375,9 @@ def verify_index(config, index):
                 "type": "persistent",
                 # name of the cache, allowing re-use by subsequent tasks naming the
                 # same cache
-                "name": text_type,
+                "name": str,
                 # location in the task image where the cache will be mounted
-                "mount-point": text_type,
+                "mount-point": str,
                 # Whether the cache is not used in untrusted environments
                 # (like the Try repo).
                 Optional("skip-untrusted"): bool,
@@ -391,14 +389,14 @@ def verify_index(config, index):
                 # type of artifact -- simple file, or recursive directory
                 "type": Any("file", "directory"),
                 # task image path from which to read artifact
-                "path": text_type,
+                "path": str,
                 # name of the produced artifact (root of the names for
                 # type=directory)
-                "name": text_type,
+                "name": str,
             }
         ],
         # environment variables
-        Required("env"): {text_type: taskref_or_string},
+        Required("env"): {str: taskref_or_string},
         # the command to run; if not given, docker-worker will default to the
         # command in the docker image
         Optional("command"): [taskref_or_string],
@@ -532,7 +530,7 @@ def build_docker_worker_payload(config, task, task_def):
             }
         payload["artifacts"] = artifacts
 
-    if isinstance(worker.get("docker-image"), text_type):
+    if isinstance(worker.get("docker-image"), str):
         out_of_tree_image = worker["docker-image"]
     else:
         out_of_tree_image = None
@@ -569,7 +567,7 @@ def build_docker_worker_payload(config, task, task_def):
         cache_version = "v3"
 
         if run_task:
-            suffix = "{}-{}".format(cache_version, _run_task_suffix())
+            suffix = f"{cache_version}-{_run_task_suffix()}"
 
             if out_of_tree_image:
                 name_hash = hashlib.sha256(
@@ -641,9 +639,9 @@ def build_docker_worker_payload(config, task, task_def):
                 # type of artifact -- simple file, or recursive directory
                 "type": Any("file", "directory"),
                 # filesystem path from which to read artifact
-                "path": text_type,
+                "path": str,
                 # if not specified, path is used for artifact name
-                Optional("name"): text_type,
+                Optional("name"): str,
             }
         ],
         # Directories and/or files to be mounted.
@@ -654,28 +652,28 @@ def build_docker_worker_payload(config, task, task_def):
             {
                 # A unique name for the cache volume, implies writable cache directory
                 # (otherwise mount is a read-only file or directory).
-                Optional("cache-name"): text_type,
+                Optional("cache-name"): str,
                 # Optional content for pre-loading cache, or mandatory content for
                 # read-only file or directory. Pre-loaded content can come from either
                 # a task artifact or from a URL.
                 Optional("content"): {
                     # *** Either (artifact and task-id) or url must be specified. ***
                     # Artifact name that contains the content.
-                    Optional("artifact"): text_type,
+                    Optional("artifact"): str,
                     # Task ID that has the artifact that contains the content.
                     Optional("task-id"): taskref_or_string,
                     # URL that supplies the content in response to an unauthenticated
                     # GET request.
-                    Optional("url"): text_type,
+                    Optional("url"): str,
                 },
                 # *** Either file or directory must be specified. ***
                 # If mounting a cache or read-only directory, the filesystem location of
                 # the directory should be specified as a relative path to the task
                 # directory here.
-                Optional("directory"): text_type,
+                Optional("directory"): str,
                 # If mounting a file, specify the relative path within the task
                 # directory to mount the file (the file will be read only).
-                Optional("file"): text_type,
+                Optional("file"): str,
                 # Required if and only if `content` is specified and mounting a
                 # directory (not a file). This should be the archive format of the
                 # content (either pre-loaded cache or read-only directory).
@@ -683,11 +681,11 @@ def build_docker_worker_payload(config, task, task_def):
             }
         ],
         # environment variables
-        Required("env"): {text_type: taskref_or_string},
+        Required("env"): {str: taskref_or_string},
         # the maximum time to run, in seconds
         Required("max-run-time"): int,
         # os user groups for test task workers
-        Optional("os-groups"): [text_type],
+        Optional("os-groups"): [str],
         # feature for test task to run as administarotr
         Optional("run-as-administrator"): bool,
         # optional features
@@ -824,12 +822,12 @@ def build_generic_worker_payload(config, task, task_def):
                 # taskId of the task with the artifact
                 Required("taskId"): taskref_or_string,
                 # type of signing task (for CoT)
-                Required("taskType"): text_type,
+                Required("taskType"): str,
                 # Paths to the artifacts to sign
-                Required("paths"): [text_type],
+                Required("paths"): [str],
                 # Signing formats to use on each of the paths
-                Required("formats"): [text_type],
-                Optional("singleFileGlobs"): [text_type],
+                Required("formats"): [str],
+                Optional("singleFileGlobs"): [str],
             }
         ],
         # behavior for mac iscript
@@ -840,7 +838,7 @@ def build_generic_worker_payload(config, task, task_def):
             "mac_geckodriver",
             "mac_single_file",
         ),
-        Optional("entitlements-url"): text_type,
+        Optional("entitlements-url"): str,
     },
 )
 def build_scriptworker_signing_payload(config, task, task_def):
@@ -888,15 +886,15 @@ def notarization_poller_payload(config, task, task_def):
         # the maximum time to run, in seconds
         Required("max-run-time"): int,
         # locale key, if this is a locale beetmover job
-        Optional("locale"): text_type,
+        Optional("locale"): str,
         Optional("partner-public"): bool,
         Required("release-properties"): {
-            "app-name": text_type,
-            "app-version": text_type,
-            "branch": text_type,
-            "build-id": text_type,
-            "hash-type": text_type,
-            "platform": text_type,
+            "app-name": str,
+            "app-version": str,
+            "branch": str,
+            "build-id": str,
+            "hash-type": str,
+            "platform": str,
         },
         # list of artifact URLs for the artifacts that should be beetmoved
         Required("upstream-artifacts"): [
@@ -904,11 +902,11 @@ def notarization_poller_payload(config, task, task_def):
                 # taskId of the task with the artifact
                 Required("taskId"): taskref_or_string,
                 # type of signing task (for CoT)
-                Required("taskType"): text_type,
+                Required("taskType"): str,
                 # Paths to the artifacts to sign
-                Required("paths"): [text_type],
+                Required("paths"): [str],
                 # locale is used to map upload path and allow for duplicate simple names
-                Required("locale"): text_type,
+                Required("locale"): str,
             }
         ],
         Optional("artifact-map"): object,
@@ -947,15 +945,13 @@ def build_beetmover_payload(config, task, task_def):
     schema={
         # the maximum time to run, in seconds
         Required("max-run-time"): int,
-        Required("product"): text_type,
+        Required("product"): str,
     },
 )
 def build_beetmover_push_to_release_payload(config, task, task_def):
     worker = task["worker"]
     release_config = get_release_config(config)
-    partners = [
-        "{}/{}".format(p, s) for p, s, _ in get_partners_to_be_published(config)
-    ]
+    partners = [f"{p}/{s}" for p, s, _ in get_partners_to_be_published(config)]
 
     task_def["payload"] = {
         "maxRunTime": worker["max-run-time"],
@@ -971,19 +967,19 @@ def build_beetmover_push_to_release_payload(config, task, task_def):
     schema={
         Required("max-run-time"): int,
         Required("release-properties"): {
-            "app-name": text_type,
-            "app-version": text_type,
-            "branch": text_type,
-            "build-id": text_type,
-            "artifact-id": text_type,
-            "hash-type": text_type,
-            "platform": text_type,
+            "app-name": str,
+            "app-version": str,
+            "branch": str,
+            "build-id": str,
+            "artifact-id": str,
+            "hash-type": str,
+            "platform": str,
         },
         Required("upstream-artifacts"): [
             {
                 Required("taskId"): taskref_or_string,
-                Required("taskType"): text_type,
-                Required("paths"): [text_type],
+                Required("taskType"): str,
+                Required("paths"): [str],
                 Optional("zipExtract"): bool,
             }
         ],
@@ -1012,24 +1008,24 @@ def build_beetmover_maven_payload(config, task, task_def):
     "balrog",
     schema={
         Required("balrog-action"): Any(*BALROG_ACTIONS),
-        Optional("product"): text_type,
-        Optional("platforms"): [text_type],
-        Optional("release-eta"): text_type,
-        Optional("channel-names"): optionally_keyed_by("release-type", [text_type]),
+        Optional("product"): str,
+        Optional("platforms"): [str],
+        Optional("release-eta"): str,
+        Optional("channel-names"): optionally_keyed_by("release-type", [str]),
         Optional("require-mirrors"): bool,
         Optional("publish-rules"): optionally_keyed_by(
             "release-type", "release-level", [int]
         ),
         Optional("rules-to-update"): optionally_keyed_by(
-            "release-type", "release-level", [text_type]
+            "release-type", "release-level", [str]
         ),
-        Optional("archive-domain"): optionally_keyed_by("release-level", text_type),
-        Optional("download-domain"): optionally_keyed_by("release-level", text_type),
-        Optional("blob-suffix"): text_type,
-        Optional("complete-mar-filename-pattern"): text_type,
-        Optional("complete-mar-bouncer-product-pattern"): text_type,
+        Optional("archive-domain"): optionally_keyed_by("release-level", str),
+        Optional("download-domain"): optionally_keyed_by("release-level", str),
+        Optional("blob-suffix"): str,
+        Optional("complete-mar-filename-pattern"): str,
+        Optional("complete-mar-bouncer-product-pattern"): str,
         Optional("update-line"): object,
-        Optional("suffixes"): [text_type],
+        Optional("suffixes"): [str],
         Optional("background-rate"): optionally_keyed_by(
             "release-type", "beta-number", Any(int, None)
         ),
@@ -1042,9 +1038,9 @@ def build_beetmover_maven_payload(config, task, task_def):
                 # taskId of the task with the artifact
                 Required("taskId"): taskref_or_string,
                 # type of signing task (for CoT)
-                Required("taskType"): text_type,
+                Required("taskType"): str,
                 # Paths to the artifacts to sign
-                Required("paths"): [text_type],
+                Required("paths"): [str],
             }
         ],
     },
@@ -1089,7 +1085,7 @@ def build_balrog_payload(config, task, task_def):
                         "release-type": config.params["release_type"],
                         "release-level": config.params.release_level(),
                         "beta-number": beta_number,
-                    }
+                    },
                 )
         task_def["payload"].update(
             {
@@ -1156,7 +1152,7 @@ def build_bouncer_aliases_payload(config, task, task_def):
     "bouncer-locations",
     schema={
         Required("implementation"): "bouncer-locations",
-        Required("bouncer-products"): [text_type],
+        Required("bouncer-products"): [str],
     },
 )
 def build_bouncer_locations_payload(config, task, task_def):
@@ -1173,7 +1169,7 @@ def build_bouncer_locations_payload(config, task, task_def):
 @payload_builder(
     "bouncer-submission",
     schema={
-        Required("locales"): [text_type],
+        Required("locales"): [str],
         Required("entries"): object,
     },
 )
@@ -1189,12 +1185,12 @@ def build_bouncer_submission_payload(config, task, task_def):
 @payload_builder(
     "push-snap",
     schema={
-        Required("channel"): text_type,
+        Required("channel"): str,
         Required("upstream-artifacts"): [
             {
                 Required("taskId"): taskref_or_string,
-                Required("taskType"): text_type,
-                Required("paths"): [text_type],
+                Required("taskType"): str,
+                Required("paths"): [str],
             }
         ],
     },
@@ -1211,12 +1207,12 @@ def build_push_snap_payload(config, task, task_def):
 @payload_builder(
     "push-flatpak",
     schema={
-        Required("channel"): text_type,
+        Required("channel"): str,
         Required("upstream-artifacts"): [
             {
                 Required("taskId"): taskref_or_string,
-                Required("taskType"): text_type,
-                Required("paths"): [text_type],
+                Required("taskType"): str,
+                Required("paths"): [str],
             }
         ],
     },
@@ -1233,7 +1229,7 @@ def build_push_flatpak_payload(config, task, task_def):
 @payload_builder(
     "shipit-shipped",
     schema={
-        Required("release-name"): text_type,
+        Required("release-name"): str,
     },
 )
 def build_ship_it_shipped_payload(config, task, task_def):
@@ -1245,7 +1241,7 @@ def build_ship_it_shipped_payload(config, task, task_def):
 @payload_builder(
     "shipit-maybe-release",
     schema={
-        Required("phase"): text_type,
+        Required("phase"): str,
     },
 )
 def build_ship_it_maybe_release_payload(config, task, task_def):
@@ -1270,8 +1266,8 @@ def build_ship_it_maybe_release_payload(config, task, task_def):
         Required("upstream-artifacts"): [
             {
                 Required("taskId"): taskref_or_string,
-                Required("taskType"): text_type,
-                Required("paths"): [text_type],
+                Required("taskType"): str,
+                Required("paths"): [str],
             }
         ],
     },
@@ -1290,25 +1286,25 @@ def build_push_addons_payload(config, task, task_def):
     schema={
         Required("tags"): [Any("buildN", "release", None)],
         Required("bump"): bool,
-        Optional("bump-files"): [text_type],
-        Optional("repo-param-prefix"): text_type,
+        Optional("bump-files"): [str],
+        Optional("repo-param-prefix"): str,
         Optional("dontbuild"): bool,
         Optional("ignore-closed-tree"): bool,
         Optional("force-dry-run"): bool,
         Optional("push"): bool,
-        Optional("source-repo"): text_type,
-        Optional("ssh-user"): text_type,
+        Optional("source-repo"): str,
+        Optional("ssh-user"): str,
         Optional("l10n-bump-info"): {
-            Required("name"): text_type,
-            Required("path"): text_type,
-            Required("version-path"): text_type,
-            Optional("l10n-repo-url"): text_type,
+            Required("name"): str,
+            Required("path"): str,
+            Required("version-path"): str,
+            Optional("l10n-repo-url"): str,
             Optional("ignore-config"): object,
             Required("platform-configs"): [
                 {
-                    Required("platforms"): [text_type],
-                    Required("path"): text_type,
-                    Optional("format"): text_type,
+                    Required("platforms"): [str],
+                    Required("path"): str,
+                    Optional("format"): str,
                 }
             ],
         },
@@ -1329,11 +1325,11 @@ def build_treescript_payload(config, task, task_def):
         if "buildN" in worker["tags"]:
             tag_names.extend(
                 [
-                    "{}_{}_BUILD{}".format(product, version, buildnum),
+                    f"{product}_{version}_BUILD{buildnum}",
                 ]
             )
         if "release" in worker["tags"]:
-            tag_names.extend(["{}_{}_RELEASE".format(product, version)])
+            tag_names.extend([f"{product}_{version}_RELEASE"])
         tag_info = {
             "tags": tag_names,
             "revision": config.params[
@@ -1927,7 +1923,7 @@ def build_task(config, tasks):
             task,
             "run-on-projects",
             item_name=task["label"],
-            **{"build-platform": build_platform}
+            **{"build-platform": build_platform},
         )
         attributes["run_on_projects"] = task.get("run-on-projects", ["all"])
         attributes["always_target"] = task["always-target"]
@@ -2053,10 +2049,10 @@ def check_caches_are_volumes(task):
     to be declared as Docker volumes. This check won't catch all offenders.
     But it is better than nothing.
     """
-    volumes = set(six.ensure_text(s) for s in task["worker"]["volumes"])
-    paths = set(
+    volumes = {six.ensure_text(s) for s in task["worker"]["volumes"]}
+    paths = {
         six.ensure_text(c["mount-point"]) for c in task["worker"].get("caches", [])
-    )
+    }
     missing = paths - volumes
 
     if not missing:
@@ -2125,7 +2121,7 @@ def check_run_task_caches(config, tasks):
         payload = task["task"].get("payload", {})
         command = payload.get("command") or [""]
 
-        main_command = command[0] if isinstance(command[0], text_type) else ""
+        main_command = command[0] if isinstance(command[0], str) else ""
         run_task = main_command.endswith("run-task")
 
         require_sparse_cache = False
@@ -2133,7 +2129,7 @@ def check_run_task_caches(config, tasks):
 
         if run_task:
             for arg in command[1:]:
-                if not isinstance(arg, text_type):
+                if not isinstance(arg, str):
                     continue
 
                 if arg == "--":

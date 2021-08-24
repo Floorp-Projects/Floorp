@@ -7,7 +7,6 @@ worker implementation they operate on, and take the same three parameters, for
 consistency.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.util.taskcluster import get_artifact_prefix
 
@@ -95,16 +94,16 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
 
     if is_win:
         checkoutdir = "./build"
-        geckodir = "{}/src".format(checkoutdir)
+        geckodir = f"{checkoutdir}/src"
         hgstore = "y:/hg-shared"
     elif is_docker:
         checkoutdir = "{workdir}/checkouts".format(**job["run"])
-        geckodir = "{}/gecko".format(checkoutdir)
-        hgstore = "{}/hg-store".format(checkoutdir)
+        geckodir = f"{checkoutdir}/gecko"
+        hgstore = f"{checkoutdir}/hg-store"
     else:
         checkoutdir = "./checkouts"
-        geckodir = "{}/gecko".format(checkoutdir)
-        hgstore = "{}/hg-shared".format(checkoutdir)
+        geckodir = f"{checkoutdir}/gecko"
+        hgstore = f"{checkoutdir}/hg-shared"
 
     cache_name = "checkouts"
 

@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
@@ -29,14 +26,14 @@ def get_image_digest(image_name):
         strict=False,
     )
     tasks = load_tasks_for_kind(params, "docker-image")
-    task = tasks["docker-image-{}".format(image_name)]
+    task = tasks[f"docker-image-{image_name}"]
     return task.attributes["cached_task"]["digest"]
 
 
 def load_image_by_name(image_name, tag=None):
     params = {"level": six.ensure_text(os.environ.get("MOZ_SCM_LEVEL", "3"))}
     tasks = load_tasks_for_kind(params, "docker-image")
-    task = tasks["docker-image-{}".format(image_name)]
+    task = tasks[f"docker-image-{image_name}"]
     deadline = None
     task_id = IndexSearch().should_replace_task(
         task, {}, deadline, task.optimization.get("index-search", [])
@@ -60,10 +57,10 @@ def load_image_by_task_id(task_id, tag=None):
     result = load_image(artifact_url, tag)
     print("Found docker image: {}:{}".format(result["image"], result["tag"]))
     if tag:
-        print("Re-tagged as: {}".format(tag))
+        print(f"Re-tagged as: {tag}")
     else:
         tag = "{}:{}".format(result["image"], result["tag"])
-    print("Try: docker run -ti --rm {} bash".format(tag))
+    print(f"Try: docker run -ti --rm {tag} bash")
     return True
 
 
@@ -99,7 +96,7 @@ def build_image(name, tag, args=None):
     docker.stream_context_tar(GECKO, image_dir, buf, name, args)
     docker.post_to_docker(buf.getvalue(), "/build", nocache=1, t=tag)
 
-    print("Successfully built %s and tagged with %s" % (name, tag))
+    print(f"Successfully built {name} and tagged with {tag}")
 
     if tag.endswith(":latest"):
         print("*" * 50)
@@ -133,7 +130,7 @@ def load_image(url, imageName=None, imageTag=None):
     def download_and_modify_image():
         # This function downloads and edits the downloaded tar file on the fly.
         # It emits chunked buffers of the editted tar file, as a generator.
-        print("Downloading from {}".format(url))
+        print(f"Downloading from {url}")
         # get_session() gets us a requests.Session set to retry several times.
         req = get_session().get(url, stream=True)
         req.raise_for_status()

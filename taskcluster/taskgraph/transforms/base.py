@@ -2,10 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import attr
-from six import text_type
 
 from ..config import GraphConfig
 from ..parameters import Parameters
@@ -13,7 +11,7 @@ from ..util.schema import Schema, validate_schema
 
 
 @attr.s(frozen=True)
-class TransformConfig(object):
+class TransformConfig:
     """
     A container for configuration affecting transforms.  The `config` argument
     to transforms is an instance of this class.
@@ -23,7 +21,7 @@ class TransformConfig(object):
     kind = attr.ib()
 
     # the path to the kind configuration directory
-    path = attr.ib(type=text_type)
+    path = attr.ib(type=str)
 
     # the parsed contents of kind.yml
     config = attr.ib(type=dict)
@@ -43,7 +41,7 @@ class TransformConfig(object):
 
 
 @attr.s()
-class TransformSequence(object):
+class TransformSequence:
     """
     Container for a sequence of transforms.  Each transform is represented as a
     callable taking (config, items) and returning a generator which will yield
@@ -60,7 +58,7 @@ class TransformSequence(object):
         for xform in self._transforms:
             items = xform(config, items)
             if items is None:
-                raise Exception("Transform {} is not a generator".format(xform))
+                raise Exception(f"Transform {xform} is not a generator")
         return items
 
     def add(self, func):
@@ -72,7 +70,7 @@ class TransformSequence(object):
 
 
 @attr.s
-class ValidateSchema(object):
+class ValidateSchema:
     schema = attr.ib(type=Schema)
 
     def __call__(self, config, tasks):

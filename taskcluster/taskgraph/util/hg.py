@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
@@ -91,7 +88,7 @@ def get_push_data(repository, project, push_id_start, push_id_end):
 
     # When we get invalid JSON (i.e. 500 error), it results in a ValueError (bug 1313426)
     except ValueError as error:
-        logger.warning("Invalid JSON, possible server error: {}".format(error))
+        logger.warning(f"Invalid JSON, possible server error: {error}")
 
     # We just print the error out as a debug message if we failed to catch the exception above
     except requests.exceptions.RequestException as error:

@@ -5,7 +5,6 @@
 Transform the snap beetmover kind into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 

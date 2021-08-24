@@ -2,11 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
-import six
-from six import text_type
 
 from voluptuous import Required
 
@@ -20,7 +17,7 @@ schema = Schema(
         Required(
             "dependent-tasks",
             "dictionary of dependent tasks, keyed by kind",
-        ): {text_type: Task},
+        ): {str: Task},
     }
 )
 
@@ -72,10 +69,10 @@ def loader(kind, path, config, params, loaded_tasks):
         if product:
             job.setdefault("shipping-product", product)
         job.setdefault("attributes", {})["required_signoffs"] = sorted_unique_list(
-            *[
+            *(
                 task.attributes.get("required_signoffs", [])
                 for task in dep_tasks.values()
-            ]
+            )
         )
 
         yield job
@@ -93,7 +90,7 @@ def skip_only_or_not(config, task):
         build_type = task_attrs.get("build_type")
         if not platform or not build_type:
             return True
-        combined_platform = "{}/{}".format(platform, build_type)
+        combined_platform = f"{platform}/{build_type}"
         if only_platforms and combined_platform not in only_platforms:
             return True
         elif not_platforms and combined_platform in not_platforms:
@@ -113,7 +110,7 @@ def group_tasks(config, tasks):
 
     groups = group_by_fn(config, tasks)
 
-    for combinations in six.itervalues(groups):
+    for combinations in groups.values():
         kinds = [f.kind for f in combinations]
         assert_unique_members(
             kinds,
@@ -254,7 +251,7 @@ def get_primary_dep(config, dep_tasks):
 
     """
     primary_dependencies = config.get("primary-dependency")
-    if isinstance(primary_dependencies, text_type):
+    if isinstance(primary_dependencies, str):
         primary_dependencies = [primary_dependencies]
     if not primary_dependencies:
         assert len(dep_tasks) == 1, "Must define a primary-dependency!"

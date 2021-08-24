@@ -5,7 +5,6 @@
 Transform the beetmover task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import six.moves.urllib.parse as urlparse
 
@@ -120,11 +119,11 @@ def add_command(config, tasks):
 
         for arg in optional_args:
             if task["extra"].get(arg):
-                command.append("--{}".format(arg))
+                command.append(f"--{arg}")
                 command.append(task["extra"][arg])
 
         for arg in keyed_by_args:
-            thing = "extra.{}".format(arg)
+            thing = f"extra.{arg}"
             resolve_keyed_by(
                 task,
                 thing,
@@ -133,7 +132,7 @@ def add_command(config, tasks):
                 **{
                     "release-type": config.params["release_type"],
                     "release-level": config.params.release_level(),
-                }
+                },
             )
             # ignore things that resolved to null
             if not task["extra"].get(arg):
@@ -143,7 +142,7 @@ def add_command(config, tasks):
             if arg == "mar-channel-id-override":
                 task["extra"][arg] = MAR_CHANNEL_ID_OVERRIDE_REGEXES[task["extra"][arg]]
 
-            command.append("--{}".format(arg))
+            command.append(f"--{arg}")
             command.append(task["extra"][arg])
 
         task["run"].update(

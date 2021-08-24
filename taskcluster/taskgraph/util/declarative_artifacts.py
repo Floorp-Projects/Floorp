@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals
 
 import re
 
@@ -37,7 +36,7 @@ def get_geckoview_upstream_artifacts(config, job, platform=""):
         platform="",
         **get_geckoview_template_vars(
             config, platform, job["attributes"].get("update-channel")
-        )
+        ),
     )
     return [
         {key: value for key, value in upstream_artifact.items() if key != "locale"}
@@ -66,7 +65,7 @@ def get_geckoview_artifact_id(config, platform, update_channel=None):
     if update_channel == "release":
         update_channel = ""
     elif update_channel is not None:
-        update_channel = "-{}".format(update_channel)
+        update_channel = f"-{update_channel}"
     else:
         # For shippable builds, mozharness defaults to using
         # "nightly-{project}" for the update channel.  For other builds, the

@@ -2,14 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import concurrent.futures as futures
 import json
 import sys
 import logging
 
-import six
 
 from slugid import nice as slugid
 from taskgraph.util.parameterization import resolve_timestamps
@@ -23,7 +21,7 @@ testing = False
 
 
 def create_tasks(graph_config, taskgraph, label_to_taskid, params, decision_task_id):
-    taskid_to_label = {t: l for l, t in six.iteritems(label_to_taskid)}
+    taskid_to_label = {t: l for l, t in label_to_taskid.items()}
 
     # when running as an actual decision task, we use the decision task's
     # taskId as the taskGroupId.  The process that created the decision task
@@ -124,9 +122,9 @@ def create_task(session, task_id, label, task_def):
         print("")
         return
 
-    logger.debug("Creating task with taskId {} for {}".format(task_id, label))
+    logger.debug(f"Creating task with taskId {task_id} for {label}")
     res = session.put(
-        "http://taskcluster/queue/v1/task/{}".format(task_id), data=json.dumps(task_def)
+        f"http://taskcluster/queue/v1/task/{task_id}", data=json.dumps(task_def)
     )
     if res.status_code != 200:
         try:

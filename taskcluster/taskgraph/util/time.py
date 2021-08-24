@@ -5,12 +5,11 @@
 # Python port of the ms.js node module this is not a direct port some things are
 # more complicated or less precise and we lean on time delta here.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 import datetime
 
-PATTERN = re.compile("((?:\d+)?\.?\d+) *([a-z]+)")
+PATTERN = re.compile(r"((?:\d+)?\.?\d+) *([a-z]+)")
 
 
 def seconds(value):
@@ -68,7 +67,7 @@ def value_of(input_str):
     matches = PATTERN.search(input_str)
 
     if matches is None or len(matches.groups()) < 2:
-        raise InvalidString("'{}' is invalid string".format(input_str))
+        raise InvalidString(f"'{input_str}' is invalid string")
 
     value, unit = matches.groups()
 

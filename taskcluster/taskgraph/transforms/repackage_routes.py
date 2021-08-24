@@ -5,7 +5,6 @@
 Add indexes to repackage kinds
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 
@@ -18,7 +17,7 @@ def add_indexes(config, jobs):
         repackage_type = job["attributes"].get("repackage_type")
         if repackage_type and job["attributes"]["build_type"] != "debug":
             build_platform = job["attributes"]["build_platform"]
-            job_name = "{}-{}".format(build_platform, repackage_type)
+            job_name = f"{build_platform}-{repackage_type}"
             product = job.get("index", {}).get("product", "firefox")
             index_type = "generic"
             if job["attributes"].get("shippable") and job["attributes"].get("locale"):

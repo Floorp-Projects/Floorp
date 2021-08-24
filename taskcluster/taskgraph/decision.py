@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import json
@@ -13,7 +11,6 @@ import sys
 from collections import defaultdict
 
 import six
-from six import text_type
 from redo import retry
 import yaml
 
@@ -102,16 +99,16 @@ PER_PROJECT_PARAMETERS = {
 
 try_task_config_schema = Schema(
     {
-        Required("tasks"): [text_type],
+        Required("tasks"): [str],
         Optional("browsertime"): bool,
         Optional("chemspill-prio"): bool,
         Optional("disable-pgo"): bool,
-        Optional("env"): {text_type: text_type},
+        Optional("env"): {str: str},
         Optional("gecko-profile"): bool,
         Optional("gecko-profile-interval"): float,
         Optional("gecko-profile-entries"): int,
-        Optional("gecko-profile-features"): text_type,
-        Optional("gecko-profile-threads"): text_type,
+        Optional("gecko-profile-features"): str,
+        Optional("gecko-profile-threads"): str,
         Optional(
             "perftest-options",
             description="Options passed from `mach perftest` to try.",
@@ -121,18 +118,18 @@ try_task_config_schema = Schema(
             description="Alternative optimization strategies to use instead of the default. "
             "A module path pointing to a dict to be use as the `strategy_override` "
             "argument in `taskgraph.optimize.optimize_task_graph`.",
-        ): text_type,
+        ): str,
         Optional("rebuild"): int,
         Optional("tasks-regex"): {
-            "include": Any(None, [text_type]),
-            "exclude": Any(None, [text_type]),
+            "include": Any(None, [str]),
+            "exclude": Any(None, [str]),
         },
         Optional("use-artifact-builds"): bool,
         Optional(
             "worker-overrides",
             description="Mapping of worker alias to worker pools to use for those aliases.",
-        ): {text_type: text_type},
-        Optional("routes"): [text_type],
+        ): {str: str},
+        Optional("routes"): [str],
     }
 )
 """
@@ -141,14 +138,14 @@ Schema for try_task_config.json files.
 
 try_task_config_schema_v2 = Schema(
     {
-        Optional("parameters"): {text_type: object},
+        Optional("parameters"): {str: object},
     }
 )
 
 
 def full_task_graph_to_runnable_jobs(full_task_json):
     runnable_jobs = {}
-    for label, node in six.iteritems(full_task_json):
+    for label, node in full_task_json.items():
         if not ("extra" in node["task"] and "treeherder" in node["task"]["extra"]):
             continue
 
@@ -165,7 +162,7 @@ def full_task_graph_to_runnable_jobs(full_task_json):
 
 def full_task_graph_to_manifests_by_task(full_task_json):
     manifests_by_task = defaultdict(list)
-    for label, node in six.iteritems(full_task_json):
+    for label, node in full_task_json.items():
         manifests = node["attributes"].get("test_manifests")
         if not manifests:
             continue
@@ -432,8 +429,8 @@ def get_existing_tasks(rebuild_kinds, parameters, graph_config):
 
 def set_try_config(parameters, task_config_file):
     if os.path.isfile(task_config_file):
-        logger.info("using try tasks from {}".format(task_config_file))
-        with open(task_config_file, "r") as fh:
+        logger.info(f"using try tasks from {task_config_file}")
+        with open(task_config_file) as fh:
             task_config = json.load(fh)
         task_config_version = task_config.pop("version", 1)
         if task_config_version == 1:
@@ -454,7 +451,7 @@ def set_try_config(parameters, task_config_file):
             return
         else:
             raise Exception(
-                "Unknown `try_task_config.json` version: {}".format(task_config_version)
+                f"Unknown `try_task_config.json` version: {task_config_version}"
             )
 
     if "try:" in parameters["message"]:
@@ -488,7 +485,7 @@ def set_decision_indexes(decision_task_id, params, graph_config):
 
 
 def write_artifact(filename, data):
-    logger.info("writing artifact file `{}`".format(filename))
+    logger.info(f"writing artifact file `{filename}`")
     if not os.path.isdir(ARTIFACTS_DIR):
         os.mkdir(ARTIFACTS_DIR)
     path = os.path.join(ARTIFACTS_DIR, filename)
@@ -504,7 +501,7 @@ def write_artifact(filename, data):
         with gzip.open(path, "wb") as f:
             f.write(json.dumps(data).encode("utf-8"))
     else:
-        raise TypeError("Don't know how to write to {}".format(filename))
+        raise TypeError(f"Don't know how to write to {filename}")
 
 
 def read_artifact(filename):
@@ -512,7 +509,7 @@ def read_artifact(filename):
     if filename.endswith(".yml"):
         return load_yaml(path, filename)
     elif filename.endswith(".json"):
-        with open(path, "r") as f:
+        with open(path) as f:
             return json.load(f)
     elif filename.endswith(".json.gz"):
         import gzip
@@ -520,7 +517,7 @@ def read_artifact(filename):
         with gzip.open(path, "rb") as f:
             return json.load(f.decode("utf-8"))
     else:
-        raise TypeError("Don't know how to read {}".format(filename))
+        raise TypeError(f"Don't know how to read {filename}")
 
 
 def rename_artifact(src, dest):

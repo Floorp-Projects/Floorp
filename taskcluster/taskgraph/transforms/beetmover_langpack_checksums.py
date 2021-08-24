@@ -5,9 +5,7 @@
 Transform release-beetmover-langpack-checksums into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -24,10 +22,10 @@ from voluptuous import Required, Optional
 
 beetmover_checksums_description_schema = schema.extend(
     {
-        Required("attributes"): {text_type: object},
-        Optional("label"): text_type,
+        Required("attributes"): {str: object},
+        Optional("label"): str,
         Optional("treeherder"): task_description_schema["treeherder"],
-        Optional("locale"): text_type,
+        Optional("locale"): str,
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
     }
@@ -108,7 +106,7 @@ def make_beetmover_checksums_worker(config, jobs):
         }
         for dependency in job["dependencies"].keys():
             if dependency.startswith("release-beetmover"):
-                refs["beetmover"] = "<{}>".format(dependency)
+                refs["beetmover"] = f"<{dependency}>"
         if None in refs.values():
             raise NotImplementedError(
                 "Beetmover checksums must have a beetmover dependency!"

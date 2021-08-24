@@ -5,9 +5,6 @@
 Support for running jobs that are invoked via the `run-task` script.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-from six import text_type
 
 from mozpack import path
 
@@ -32,12 +29,12 @@ run_task_schema = Schema(
             "cwd",
             description="Path to run command in. If a checkout is present, the path "
             "to the checkout will be interpolated with the key `checkout`",
-        ): text_type,
+        ): str,
         # The sparse checkout profile to use. Value is the filename relative to
         # "sparse-profile-prefix" which defaults to "build/sparse-profiles/".
-        Required("sparse-profile"): Any(text_type, None),
+        Required("sparse-profile"): Any(str, None),
         # The relative path to the sparse profile.
-        Optional("sparse-profile-prefix"): text_type,
+        Optional("sparse-profile-prefix"): str,
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
         Required("comm-checkout"): bool,
@@ -46,7 +43,7 @@ run_task_schema = Schema(
         # it will be included in a single argument to `bash -cx`.
         Required("command"): Any([taskref_or_string], taskref_or_string),
         # Base work directory used to set up the task.
-        Optional("workdir"): text_type,
+        Optional("workdir"): str,
         # If not false, tooltool downloads will be enabled via relengAPIProxy
         # for either just public files, or all files. Only supported on
         # docker-worker.
@@ -74,7 +71,7 @@ def common_setup(config, job, taskdesc, command):
             "sparse-profile-prefix", "build/sparse-profiles"
         )
         sparse_profile_path = path.join(sparse_profile_prefix, run["sparse-profile"])
-        command.append("--gecko-sparse-profile={}".format(sparse_profile_path))
+        command.append(f"--gecko-sparse-profile={sparse_profile_path}")
 
     taskdesc["worker"].setdefault("env", {})["MOZ_SCM_LEVEL"] = config.params["level"]
 
@@ -91,7 +88,7 @@ worker_defaults = {
 
 def script_url(config, script):
     return config.params.file_url(
-        "taskcluster/scripts/{}".format(script),
+        f"taskcluster/scripts/{script}",
     )
 
 
@@ -133,7 +130,7 @@ def docker_worker_run_task(config, job, taskdesc):
         )
 
     # dict is for the case of `{'task-reference': text_type}`.
-    if isinstance(run_command, (text_type, dict)):
+    if isinstance(run_command, (str, dict)):
         run_command = ["bash", "-cx", run_command]
     if run["comm-checkout"]:
         command.append(
@@ -213,13 +210,13 @@ def generic_worker_run_task(config, job, taskdesc):
         )
 
     # dict is for the case of `{'task-reference': text_type}`.
-    if isinstance(run_command, (text_type, dict)):
+    if isinstance(run_command, (str, dict)):
         if is_win:
             if isinstance(run_command, dict):
                 for k in run_command.keys():
-                    run_command[k] = '"{}"'.format(run_command[k])
+                    run_command[k] = f'"{run_command[k]}"'
             else:
-                run_command = '"{}"'.format(run_command)
+                run_command = f'"{run_command}"'
         run_command = ["bash", "-cx", run_command]
 
     if run["comm-checkout"]:
