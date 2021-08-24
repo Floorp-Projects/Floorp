@@ -494,6 +494,90 @@ void TestLEB128() {
   printf("TestLEB128 done\n");
 }
 
+struct StringWriteFunc : public JSONWriteFunc {
+  std::string mString;
+
+  void Write(const mozilla::Span<const char>& aStr) override {
+    mString.append(aStr.data(), aStr.size());
+  }
+};
+
+void CheckJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+               const char* aExpected, int aLine) {
+  const std::string& actual =
+      static_cast<StringWriteFunc*>(aWriter.WriteFunc())->mString;
+  if (strcmp(aExpected, actual.c_str()) != 0) {
+    fprintf(stderr,
+            "---- EXPECTED ---- (line %d)\n<<<%s>>>\n"
+            "---- ACTUAL ----\n<<<%s>>>\n",
+            aLine, aExpected, actual.c_str());
+    MOZ_RELEASE_ASSERT(false, "expected and actual output don't match");
+  }
+}
+
+void TestJSONTimeOutput() {
+  printf("TestJSONTimeOutput...\n");
+
+#  define TEST(in, out)                                        \
+    do {                                                       \
+      mozilla::baseprofiler::SpliceableJSONWriter writer(      \
+          mozilla::MakeUnique<StringWriteFunc>());             \
+      writer.Start(mozilla::JSONWriter::SingleLineStyle);      \
+      writer.TimeDoubleMsProperty("time_ms", (in));            \
+      writer.End();                                            \
+      CheckJSON(writer, "{\"time_ms\": " out "}\n", __LINE__); \
+    } while (false);
+
+  TEST(0, "0");
+
+  TEST(0.000'000'1, "0");
+  TEST(0.000'000'4, "0");
+  TEST(0.000'000'499, "0");
+  TEST(0.000'000'5, "0.000001");
+  TEST(0.000'001, "0.000001");
+  TEST(0.000'01, "0.00001");
+  TEST(0.000'1, "0.0001");
+  TEST(0.001, "0.001");
+  TEST(0.01, "0.01");
+  TEST(0.1, "0.1");
+  TEST(1, "1");
+  TEST(2, "2");
+  TEST(10, "10");
+  TEST(100, "100");
+  TEST(1'000, "1000");
+  TEST(10'000, "10000");
+  TEST(100'000, "100000");
+  TEST(1'000'000, "1000000");
+  // 2^53-2 ns in ms. 2^53-1 is the highest integer value representable in
+  // double, -1 again because we're adding 0.5 before truncating.
+  // That's 104 days, after which the nanosecond precision would decrease.
+  TEST(9'007'199'254.740'990, "9007199254.74099");
+
+  TEST(-0.000'000'1, "0");
+  TEST(-0.000'000'4, "0");
+  TEST(-0.000'000'499, "0");
+  TEST(-0.000'000'5, "-0.000001");
+  TEST(-0.000'001, "-0.000001");
+  TEST(-0.000'01, "-0.00001");
+  TEST(-0.000'1, "-0.0001");
+  TEST(-0.001, "-0.001");
+  TEST(-0.01, "-0.01");
+  TEST(-0.1, "-0.1");
+  TEST(-1, "-1");
+  TEST(-2, "-2");
+  TEST(-10, "-10");
+  TEST(-100, "-100");
+  TEST(-1'000, "-1000");
+  TEST(-10'000, "-10000");
+  TEST(-100'000, "-100000");
+  TEST(-1'000'000, "-1000000");
+  TEST(-9'007'199'254.740'990, "-9007199254.74099");
+
+#  undef TEST
+
+  printf("TestJSONTimeOutput done\n");
+}
+
 template <uint8_t byte, uint8_t... tail>
 constexpr bool TestConstexprULEB128Reader(ULEB128Reader<uint64_t>& aReader) {
   if (aReader.IsComplete()) {
@@ -3736,6 +3820,7 @@ void TestProfilerDependencies() {
   TestPowerOfTwoMask();
   TestPowerOfTwo();
   TestLEB128();
+  TestJSONTimeOutput();
   TestChunk();
   TestChunkManagerSingle();
   TestChunkManagerWithLocalLimit();
