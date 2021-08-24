@@ -168,12 +168,6 @@ TEST(GeckoProfiler, ThreadRegistrationInfo)
   }
 }
 
-static void EnsureThreadRegistrationTLSIsInitialized() {
-  char onStackChar;
-  profiler::ThreadRegistration tr{
-      "Temporary main thread registration to init TLS", &onStackChar};
-}
-
 static void TestConstUnlockedConstReader(
     const profiler::ThreadRegistration::UnlockedConstReader& aData,
     const TimeStamp& aBeforeRegistration, const TimeStamp& aAfterRegistration,
@@ -381,7 +375,6 @@ TEST(GeckoProfiler, ThreadRegistration_DataAccess)
   profiler_init_main_thread_id();
   ASSERT_TRUE(profiler_is_main_thread())
   << "This test assumes it runs on the main thread";
-  EnsureThreadRegistrationTLSIsInitialized();
 
   // Note that the main thread could already be registered, so we work in a new
   // thread to test an actual registration that we control.
@@ -568,7 +561,6 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
   profiler_init_main_thread_id();
   ASSERT_TRUE(profiler_is_main_thread())
   << "This test assumes it runs on the main thread";
-  EnsureThreadRegistrationTLSIsInitialized();
 
   // Note that the main thread could already be registered, so we work in a new
   // thread to test actual registrations that we control.
@@ -688,6 +680,47 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       ASSERT_FALSE(TR::IsRegistered());
     }
 
+    // Excess UnregisterThread with on-stack TR.
+    {
+      TR rt2{"Test thread #11", &onStackChar};
+      ASSERT_TRUE(TR::IsRegistered());
+      EXPECT_STREQ(GetThreadName(), "Test thread #11");
+
+      TR::UnregisterThread();
+      ASSERT_TRUE(TR::IsRegistered())
+      << "On-stack thread should still be registered after off-stack "
+         "un-registration";
+      EXPECT_STREQ(GetThreadName(), "Test thread #11")
+          << "On-stack thread should still be registered after off-stack "
+             "un-registration";
+    }
+    ASSERT_FALSE(TR::IsRegistered());
+
+    // Excess on-thread TR destruction with already-unregistered root off-thread
+    // registration.
+    {
+      TR::RegisterThread("Test thread #12", &onStackChar);
+      ASSERT_TRUE(TR::IsRegistered());
+      EXPECT_STREQ(GetThreadName(), "Test thread #12");
+
+      {
+        TR rt3{"Test thread #13", &onStackChar};
+        ASSERT_TRUE(TR::IsRegistered());
+        EXPECT_STREQ(GetThreadName(), "Test thread #12")
+            << "Nested registration shouldn't change the name";
+
+        // Note that we unregister the root registration, while nested `rt3` is
+        // still alive.
+        TR::UnregisterThread();
+        ASSERT_FALSE(TR::IsRegistered())
+        << "UnregisterThread() of the root RegisterThread() should always work";
+
+        // At this end of this block, `rt3` will be destroyed, but nothing
+        // should happen.
+      }
+      ASSERT_FALSE(TR::IsRegistered());
+    }
+
     ASSERT_FALSE(TR::IsRegistered());
   });
   testThread.join();
@@ -701,7 +734,6 @@ TEST(GeckoProfiler, ThreadRegistry_DataAccess)
   profiler_init_main_thread_id();
   ASSERT_TRUE(profiler_is_main_thread())
   << "This test assumes it runs on the main thread";
-  EnsureThreadRegistrationTLSIsInitialized();
 
   // Note that the main thread could already be registered, so we work in a new
   // thread to test an actual registration that we control.
@@ -1358,8 +1390,6 @@ TEST(GeckoProfiler, MultiRegistration)
 {
   // This whole test only checks that function calls don't crash, they don't
   // actually verify that threads get profiled or not.
-  char top;
-  profiler_register_thread("Main thread again", &top);
 
   {
     std::thread thread([]() {
