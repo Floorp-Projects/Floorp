@@ -742,8 +742,8 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
   // enough fixed slots to cover the number of reserved slots in the object,
   // regardless of the allocation kind specified.
   size_t nfixed = ClassCanHaveFixedData(clasp)
-                      ? GetGCKindSlots(gc::GetGCObjectKind(clasp), clasp)
-                      : GetGCKindSlots(kind, clasp);
+                      ? GetGCKindSlots(gc::GetGCObjectKind(clasp))
+                      : GetGCKindSlots(kind);
 
   RootedShape shape(
       cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), proto, nfixed,
@@ -1292,8 +1292,7 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT(!IsInsideNursery(obj));
 
   // Make sure the shape's numFixedSlots() is correct.
-  size_t nfixed =
-      gc::GetGCKindSlots(obj->asTenured().getAllocKind(), obj->getClass());
+  size_t nfixed = gc::GetGCKindSlots(obj->asTenured().getAllocKind());
   if (nfixed != obj->shape()->numFixedSlots()) {
     if (!NativeObject::changeNumFixedSlotsAfterSwap(cx, obj, nfixed)) {
       return false;
@@ -3769,8 +3768,7 @@ void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
       // Arrays can store the ObjectElements header inline.
       MOZ_ASSERT(shape->numFixedSlots() == 0);
     } else {
-      MOZ_ASSERT(gc::GetGCKindSlots(allocKind, clasp) ==
-                 shape->numFixedSlots());
+      MOZ_ASSERT(gc::GetGCKindSlots(allocKind) == shape->numFixedSlots());
     }
   }
 
