@@ -1161,6 +1161,7 @@ PeerConnectionWrapper.prototype = {
   },
 
   async getUserMedia(constraints) {
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
     var stream = await getUserMedia(constraints);
     if (constraints.audio) {
       stream.getAudioTracks().forEach(track => {

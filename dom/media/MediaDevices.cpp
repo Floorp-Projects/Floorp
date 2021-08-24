@@ -77,6 +77,21 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
     p->MaybeRejectWithInvalidStateError("The document is not fully active.");
     return p.forget();
   }
+  const OwningBooleanOrMediaTrackConstraints& video = aConstraints.mVideo;
+  if (aCallerType != CallerType::System && video.IsMediaTrackConstraints()) {
+    const Optional<nsString>& mediaSource =
+        video.GetAsMediaTrackConstraints().mMediaSource;
+    if (mediaSource.WasPassed() &&
+        !mediaSource.Value().EqualsLiteral("camera")) {
+      WindowContext* wc = owner->GetWindowContext();
+      if (!wc || !wc->HasValidTransientUserGestureActivation()) {
+        p->MaybeRejectWithInvalidStateError(
+            "Display capture requires transient activation "
+            "from a user gesture.");
+        return p.forget();
+      }
+    }
+  }
   const OwningBooleanOrMediaTrackConstraints& audio = aConstraints.mAudio;
   bool isMicrophone =
       audio.IsBoolean()

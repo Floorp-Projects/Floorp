@@ -126,6 +126,7 @@
     };
 
     info("Testing screenshare without constraints");
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
     let stream = await getUserMedia({video: {mediaSource: "screen"}});
     let settings = stream.getTracks()[0].getSettings();
     ok(settings.width <= 8192,
@@ -139,6 +140,7 @@
     const screenHeight = testVideo.videoHeight;
 
     info("Testing screenshare with size and framerate constraints");
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
     stream = await getUserMedia({
       video: {
         mediaSource: 'screen',

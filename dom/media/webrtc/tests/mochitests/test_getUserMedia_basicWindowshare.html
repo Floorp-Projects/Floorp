@@ -14,7 +14,7 @@
    * Run a test to verify that we can complete a start and stop media playback
    * cycle for an screenshare MediaStream on a video HTMLMediaElement.
    */
-  runTest(function () {
+  runTest(async function () {
     var testVideo = createMediaElement('video', 'testVideo');
     var constraints = {
       video: {
@@ -24,11 +24,17 @@
       fake: false
     };
 
-    return getUserMedia(constraints).then(stream => {
-      var playback = new MediaStreamPlayback(testVideo, stream);
-      return playback.playMedia(false);
-    });
+    try {
+      await getUserMedia(constraints);
+      ok(false, "Should require user gesture");
+    } catch (e) {
+      is(e.name, "InvalidStateError");
+    }
 
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    const stream = await getUserMedia(constraints);
+    const playback = new MediaStreamPlayback(testVideo, stream);
+    return playback.playMedia(false);
   });
 
 </script>
