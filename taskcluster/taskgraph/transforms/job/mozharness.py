@@ -10,7 +10,6 @@ way, and certainly anything using mozharness should use this approach.
 
 import json
 
-import six
 from textwrap import dedent
 
 from taskgraph.util.schema import Schema
@@ -184,9 +183,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     extra_config = run.pop("extra-config", {})
     extra_config["objdir"] = "obj-build"
-    env["EXTRA_MOZHARNESS_CONFIG"] = six.ensure_text(
-        json.dumps(extra_config, sort_keys=True)
-    )
+    env["EXTRA_MOZHARNESS_CONFIG"] = json.dumps(extra_config, sort_keys=True)
 
     if "job-script" in run:
         env["JOB_SCRIPT"] = run["job-script"]
@@ -278,9 +275,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     extra_config = run.pop("extra-config", {})
     extra_config["objdir"] = "obj-build"
-    env["EXTRA_MOZHARNESS_CONFIG"] = six.ensure_text(
-        json.dumps(extra_config, sort_keys=True)
-    )
+    env["EXTRA_MOZHARNESS_CONFIG"] = json.dumps(extra_config, sort_keys=True)
 
     # The windows generic worker uses batch files to pass environment variables
     # to commands.  Setting a variable to empty in a batch file unsets, so if

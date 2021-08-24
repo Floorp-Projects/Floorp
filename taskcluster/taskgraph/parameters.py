@@ -18,8 +18,6 @@ from voluptuous import (
     Schema,
 )
 
-import six
-
 from . import GECKO
 from .util.attributes import release_level
 
@@ -32,7 +30,7 @@ class ParameterMismatch(Exception):
 
 @memoize
 def get_head_ref():
-    return six.ensure_text(get_repository_object(GECKO).head_ref)
+    return get_repository_object(GECKO).head_ref
 
 
 def get_contents(path):
@@ -145,7 +143,7 @@ class Parameters(ReadOnlyDict):
             "hg_branch": "default",
             "level": "3",
             "message": "",
-            "moz_build_date": six.ensure_text(now.strftime("%Y%m%d%H%M%S")),
+            "moz_build_date": now.strftime("%Y%m%d%H%M%S"),
             "next_version": None,
             "optimize_strategies": None,
             "optimize_target_tasks": True,
@@ -225,7 +223,7 @@ class Parameters(ReadOnlyDict):
         """
         Whether this is a staging release or not.
 
-        :return six.text_type: One of "production" or "staging".
+        :return str: One of "production" or "staging".
         """
         return release_level(self["project"])
 

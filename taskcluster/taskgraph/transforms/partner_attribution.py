@@ -10,8 +10,6 @@ from collections import defaultdict
 import json
 import logging
 
-import six
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.partners import (
     apply_partner_priority,
@@ -114,8 +112,8 @@ def add_command_arguments(config, tasks):
                 }
                 for upstream_artifact, platform, locale in upstream_artifacts
             ]
-        worker.setdefault("env", {})["ATTRIBUTION_CONFIG"] = six.ensure_text(
-            json.dumps(attributions, sort_keys=True)
+        worker.setdefault("env", {})["ATTRIBUTION_CONFIG"] = json.dumps(
+            attributions, sort_keys=True
         )
         worker["artifacts"] = [
             {

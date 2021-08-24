@@ -3,18 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from copy import deepcopy
 import json
 import logging
 import os
-from redo import retry
 import requests
 import xml.etree.ElementTree as ET
+from copy import deepcopy
+from urllib.parse import urlencode
+
+import yaml
+from redo import retry
 
 from taskgraph.util.attributes import release_level
 from taskgraph.util.schema import resolve_keyed_by
-import six
-import yaml
 
 # Suppress chatty requests logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -551,5 +552,5 @@ def generate_attribution_code(defaults, partner):
     if partner.get("experiment"):
         params["experiment"] = partner["experiment"]
 
-    code = six.moves.urllib.parse.urlencode(params)
+    code = urlencode(params)
     return code

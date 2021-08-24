@@ -6,9 +6,6 @@
 import hashlib
 import time
 
-import six
-
-
 TARGET_CACHE_INDEX = "{trust_domain}.cache.level-{level}.{type}.{name}.hash.{digest}"
 EXTRA_CACHE_INDEXES = [
     "{trust_domain}.cache.level-{level}.{type}.{name}.latest",
@@ -44,7 +41,7 @@ def add_optimization(
     if (digest is None) == (digest_data is None):
         raise Exception("Must pass exactly one of `digest` and `digest_data`.")
     if digest is None:
-        digest = hashlib.sha256(six.ensure_binary("\n".join(digest_data))).hexdigest()
+        digest = hashlib.sha256("\n".join(digest_data).encode("utf-8")).hexdigest()
 
     subs = {
         "trust_domain": config.graph_config["trust-domain"],

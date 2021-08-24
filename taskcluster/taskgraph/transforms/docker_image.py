@@ -8,7 +8,6 @@ import os
 import re
 import json
 
-import six
 import mozpack.path as mozpath
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
@@ -163,9 +162,7 @@ def fill_template(config, tasks):
                     "PROJECT": config.params["project"],
                     "IMAGE_NAME": image_name,
                     "DOCKER_IMAGE_ZSTD_LEVEL": zstd_level,
-                    "DOCKER_BUILD_ARGS": {
-                        "task-reference": six.ensure_text(json.dumps(args))
-                    },
+                    "DOCKER_BUILD_ARGS": {"task-reference": json.dumps(args)},
                     "GECKO_BASE_REPOSITORY": config.params["base_repository"],
                     "GECKO_HEAD_REPOSITORY": config.params["head_repository"],
                     "GECKO_HEAD_REV": config.params["head_rev"],

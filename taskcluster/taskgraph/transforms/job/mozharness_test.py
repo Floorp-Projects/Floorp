@@ -7,7 +7,6 @@ import json
 import os
 import re
 
-import six
 from voluptuous import Required, Optional
 
 from taskgraph.util.taskcluster import get_artifact_url
@@ -198,7 +197,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         "test_packages_url": test_packages_url(taskdesc),
     }
     env["EXTRA_MOZHARNESS_CONFIG"] = {
-        "task-reference": six.ensure_text(json.dumps(extra_config, sort_keys=True))
+        "task-reference": json.dumps(extra_config, sort_keys=True)
     }
 
     # Bug 1634554 - pass in decision task artifact URL to mozharness for WPT.
@@ -216,8 +215,8 @@ def mozharness_test_on_docker(config, job, taskdesc):
     command.extend(mozharness.get("extra-options", []))
 
     if test.get("test-manifests"):
-        env["MOZHARNESS_TEST_PATHS"] = six.ensure_text(
-            json.dumps({test["suite"]: test["test-manifests"]}, sort_keys=True)
+        env["MOZHARNESS_TEST_PATHS"] = json.dumps(
+            {test["suite"]: test["test-manifests"]}, sort_keys=True
         )
 
     # TODO: remove the need for run['chunked']
@@ -349,7 +348,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         "test_packages_url": test_packages_url(taskdesc),
     }
     env["EXTRA_MOZHARNESS_CONFIG"] = {
-        "task-reference": six.ensure_text(json.dumps(extra_config, sort_keys=True))
+        "task-reference": json.dumps(extra_config, sort_keys=True)
     }
 
     # Bug 1634554 - pass in decision task artifact URL to mozharness for WPT.
@@ -412,8 +411,8 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         mh_command.append("--blob-upload-branch=" + config.params["project"])
 
     if test.get("test-manifests"):
-        env["MOZHARNESS_TEST_PATHS"] = six.ensure_text(
-            json.dumps({test["suite"]: test["test-manifests"]}, sort_keys=True)
+        env["MOZHARNESS_TEST_PATHS"] = json.dumps(
+            {test["suite"]: test["test-manifests"]}, sort_keys=True
         )
 
     # TODO: remove the need for run['chunked']
