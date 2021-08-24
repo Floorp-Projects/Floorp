@@ -525,7 +525,7 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(
     nsresult rv = CacheStorageService::Self()->AddStorageEntry(
         GetStorageID(), GetURI(), GetEnhanceID(), mUseDisk && !aMemoryOnly,
         mSkipSizeCheck, mPinned,
-        nsICacheStorage::OPEN_TRUNCATE,  // truncate existing (this one)
+        true,  // truncate existing (this one)
         getter_AddRefs(handle));
 
     if (NS_SUCCEEDED(rv)) {
