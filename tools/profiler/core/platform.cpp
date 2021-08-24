@@ -2736,6 +2736,44 @@ static JS::ProfilingCategoryPair InferJavaCategory(nsACString& aName) {
   return JS::ProfilingCategoryPair::OTHER;
 }
 
+// Marker type for Java markers without any details.
+struct JavaMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Java");
+  }
+  static void StreamJSONMarkerData(
+      baseprofiler::SpliceableJSONWriter& aWriter) {}
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::timelineOverview, MS::Location::markerChart,
+              MS::Location::markerTable};
+    schema.SetAllLabels("{marker.name}");
+    return schema;
+  }
+};
+
+// Marker type for Java markers with a detail field.
+struct JavaMarkerWithDetails {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("JavaWithDetails");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aText) {
+    aWriter.StringProperty("name", aText);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::timelineOverview, MS::Location::markerChart,
+              MS::Location::markerTable};
+    schema.SetTooltipLabel("{marker.name}");
+    schema.SetChartLabel("{marker.data.details}");
+    schema.SetTableLabel("{marker.name} - {marker.data.details}");
+    schema.AddKeyLabelFormat("details", "Details",
+                             MarkerSchema::Format::string);
+    return schema;
+  }
+};
+
 static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
   // locked_profiler_start uses sample count is 1000 for Java thread.
   // This entry size is enough now, but we might have to estimate it
@@ -2803,14 +2841,14 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
       // This marker doesn't have a text.
       AddMarkerToBuffer(aProfileBuffer.UnderlyingChunkedBuffer(), markerName,
                         geckoprofiler::category::JAVA_ANDROID,
-                        {MarkerThreadId(threadId), std::move(timing)});
+                        {MarkerThreadId(threadId), std::move(timing)},
+                        JavaMarker{});
     } else {
       // This marker has a text.
       AddMarkerToBuffer(aProfileBuffer.UnderlyingChunkedBuffer(), markerName,
                         geckoprofiler::category::JAVA_ANDROID,
                         {MarkerThreadId(threadId), std::move(timing)},
-                        geckoprofiler::markers::TextMarker{},
-                        text->ToCString());
+                        JavaMarkerWithDetails{}, text->ToCString());
     }
   }
 }
@@ -2845,6 +2883,28 @@ static void locked_profiler_stream_json_for_this_process(
     const double durationStartMs = collectionStartMs - *durationS * 1000;
     buffer.DiscardSamplesBeforeTime(durationStartMs);
   }
+
+#if defined(GP_OS_android)
+  // Java thread profile data should be collected before serializing the meta
+  // object. This is because Java thread adds some markers with marker schema
+  // objects. And these objects should be added before the serialization of the
+  // `profile.meta.markerSchema` array, so these marker schema objects can also
+  // be serialized properly. That's why java thread profile data needs to be
+  // done before everything.
+
+  // We are allocating it chunk by chunk. So this will not allocate 64 MiB
+  // at once. This size should be more than enough for java threads.
+  // This buffer is being created for each process but Android has
+  // relatively fewer processes compared to desktop, so it's okay here.
+  mozilla::ProfileBufferChunkManagerWithLocalLimit javaChunkManager(
+      64 * 1024 * 1024, 1024 * 1024);
+  ProfileChunkedBuffer javaBufferManager(
+      ProfileChunkedBuffer::ThreadSafety::WithoutMutex, javaChunkManager);
+  ProfileBuffer javaBuffer(javaBufferManager);
+  if (ActivePS::FeatureJava(aLock)) {
+    CollectJavaThreadProfileData(javaBuffer);
+  }
+#endif
 
   // Put shared library info
   aWriter.StartArrayProperty("libs");
@@ -2884,17 +2944,6 @@ static void locked_profiler_stream_json_for_this_process(
 
 #if defined(GP_OS_android)
     if (ActivePS::FeatureJava(aLock)) {
-      // We are allocating it chunk by chunk. So this will not allocate 64 MiB
-      // at once. This size should be more than enough for java threads.
-      // This buffer is being created for each process but Android has
-      // relatively less processes compared to desktop, so it's okay here.
-      mozilla::ProfileBufferChunkManagerWithLocalLimit chunkManager(
-          64 * 1024 * 1024, 1024 * 1024);
-      ProfileChunkedBuffer bufferManager(
-          ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
-      ProfileBuffer javaBuffer(bufferManager);
-      CollectJavaThreadProfileData(javaBuffer);
-
       // Set the thread id of the Android UI thread to be 0.
       // We are profiling the Android UI thread twice: Both from the C++ side
       // (as a regular C++ profiled thread with the name "AndroidUI"), and from
