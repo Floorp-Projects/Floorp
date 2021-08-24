@@ -49,10 +49,6 @@ class ProfiledThreadData;
 class PSAutoLock;
 struct JSContext;
 
-// TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
-class RacyRegisteredThread;
-class RegisteredThread;
-
 namespace mozilla::profiler {
 
 // All data members related to thread profiling are stored here.
@@ -86,11 +82,6 @@ class ThreadRegistrationData {
                "~ThreadRegistrationData");
   }
 #endif  // DEBUG
-
-  // Trust these to access mData.
-  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
-  friend class ::RacyRegisteredThread;
-  friend class ::RegisteredThread;
 
   // Permanent thread information.
   // Set at construction, read from anywhere, moved-from at destruction.
@@ -231,9 +222,6 @@ class ThreadRegistrationData {
   // Fully controlled by the profiler.
   // Invariant: `mIsBeingProfiled == !!mProfiledThreadData` (set together.)
   ProfiledThreadData* mProfiledThreadData = nullptr;
-
-  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
-  RegisteredThread* mRegisteredThread;
 };
 
 // Accessing const data from any thread.
@@ -246,9 +234,6 @@ class ThreadRegistrationUnlockedConstReader : public ThreadRegistrationData {
   }
 
   [[nodiscard]] const void* StackTop() const { return mStackTop; }
-
-  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
-  [[nodiscard]] const RacyRegisteredThread& RacyRegisteredThreadCRef() const;
 
  protected:
   ThreadRegistrationUnlockedConstReader(const char* aName,
@@ -317,9 +302,6 @@ class ThreadRegistrationUnlockedConstReaderAndAtomicRW
   }
 
   [[nodiscard]] bool IsSleeping() const { return mSleep != AWAKE; }
-
-  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
-  [[nodiscard]] RacyRegisteredThread& RacyRegisteredThreadRef();
 
  protected:
   ThreadRegistrationUnlockedConstReaderAndAtomicRW(const char* aName,
@@ -440,9 +422,6 @@ class ThreadRegistrationLockedRWFromAnyThread
     mJSSampling = INACTIVE_REQUESTED;
   }
 
-  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
-  [[nodiscard]] RegisteredThread& RegisteredThreadRef();
-
  protected:
   ThreadRegistrationLockedRWFromAnyThread(const char* aName,
                                           const void* aStackTop)
@@ -463,9 +442,6 @@ class ThreadRegistrationLockedRWOnThread
 
   // Poll to see if JS sampling should be started/stopped.
   void PollJSSampling();
-
-  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
-  void SetRegisteredThread(RegisteredThread* aRegisteredThread);
 
  public:
   ThreadRegistrationLockedRWOnThread(const char* aName, const void* aStackTop)
