@@ -13,6 +13,8 @@ add_task(async function test_height_reduced_after_removal() {
     set: [["browser.download.autohideButton", false]],
   });
   await promiseButtonShown("downloads-button");
+  // downloading two items since the download panel only shows up when at least one item is in it
+  await task_addDownloads([{ state: DownloadsCommon.DOWNLOAD_FINISHED }]);
   await task_addDownloads([{ state: DownloadsCommon.DOWNLOAD_FINISHED }]);
 
   await task_openPanel();
@@ -22,6 +24,8 @@ add_task(async function test_height_reduced_after_removal() {
   // We want to close the panel before we remove the download from the list.
   DownloadsPanel.hidePanel();
   await task_resetState();
+  // keep at least one item in the download list since the panel disabled when it is empty
+  await task_addDownloads([{ state: DownloadsCommon.DOWNLOAD_FINISHED }]);
 
   await task_openPanel();
   let heightAfterRemoval = panel.getBoundingClientRect().height;
