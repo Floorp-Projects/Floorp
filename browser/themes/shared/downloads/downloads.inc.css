@@ -277,12 +277,13 @@ button.downloadButton {
 /*** Blocked subview ***/
 #downloadsPanel-blockedSubview-title {
   font-size: calc(100% / var(--downloads-item-font-size-factor));
+  margin-bottom: 1.5em;
 }
 
 #downloadsPanel-blockedSubview-details1,
 #downloadsPanel-blockedSubview-details2 {
   font-size: calc(100% * var(--downloads-item-font-size-factor));
-  margin-bottom: 16px;
+  margin-bottom: 1em;
   opacity: var(--downloads-item-details-opacity);
 }
 
