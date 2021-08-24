@@ -2328,8 +2328,8 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
         return false;
       }
       memcpy(code, data.code().data(), length);
-      objLiteralData.infallibleEmplaceBack(code, length, data.kind(),
-                                           data.flags(), data.propertyCount());
+      objLiteralData.infallibleEmplaceBack(code, length, data.flags(),
+                                           data.propertyCount());
     }
   } else {
     if (!CopySpanToVector(cx, objLiteralData, other.objLiteralData)) {
@@ -3815,8 +3815,8 @@ bool CompilationStencilMerger::addDelazification(
     ObjLiteralModifier modifier(mozilla::Span(code, length));
     modifier.mapAtom(mapAtomIndex);
 
-    initial_->objLiteralData.infallibleEmplaceBack(
-        code, length, data.kind(), data.flags(), data.propertyCount());
+    initial_->objLiteralData.infallibleEmplaceBack(code, length, data.flags(),
+                                                   data.propertyCount());
   }
 
   // Append scopeData, with mapping indices in ScopeStencil fields.

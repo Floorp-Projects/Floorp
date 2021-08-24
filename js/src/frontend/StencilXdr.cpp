@@ -174,15 +174,14 @@ template <XDRMode mode>
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::codeObjLiteral(XDRState<mode>* xdr,
                                                   ObjLiteralStencil& stencil) {
-  uint8_t kindAndFlags = 0;
+  uint8_t flags = 0;
 
   if (mode == XDR_ENCODE) {
-    static_assert(sizeof(ObjLiteralKindAndFlags) == sizeof(uint8_t));
-    kindAndFlags = stencil.kindAndFlags_.toRaw();
+    flags = stencil.flags_.toRaw();
   }
-  MOZ_TRY(xdr->codeUint8(&kindAndFlags));
+  MOZ_TRY(xdr->codeUint8(&flags));
   if (mode == XDR_DECODE) {
-    stencil.kindAndFlags_.setRaw(kindAndFlags);
+    stencil.flags_.setRaw(flags);
   }
 
   MOZ_TRY(xdr->codeUint32(&stencil.propertyCount_));

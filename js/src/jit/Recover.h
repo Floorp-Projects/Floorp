@@ -725,6 +725,9 @@ class RTruncateToInt32 final : public RInstruction {
 };
 
 class RNewObject final : public RInstruction {
+ private:
+  MNewObject::Mode mode_;
+
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewObject, 1)
 
