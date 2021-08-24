@@ -620,19 +620,87 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
       } else {
         display = SignDisplay::Always;
       }
-    } else {
-      MOZ_ASSERT(StringEqualsLiteral(signDisplay, "exceptZero"));
+    } else if (StringEqualsLiteral(signDisplay, "exceptZero")) {
       if (accountingSign) {
         display = SignDisplay::AccountingExceptZero;
       } else {
         display = SignDisplay::ExceptZero;
+      }
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(signDisplay, "negative"));
+      if (accountingSign) {
+        display = SignDisplay::AccountingNegative;
+      } else {
+        display = SignDisplay::Negative;
       }
     }
 
     options.mSignDisplay = display;
   }
 
-  options.mRoundingMode = RoundingMode::HalfExpand;
+  if (!GetProperty(cx, internals, internals, cx->names().roundingIncrement,
+                   &value)) {
+    return nullptr;
+  }
+  options.mRoundingIncrement = AssertedCast<uint32_t>(value.toInt32());
+
+  if (!GetProperty(cx, internals, internals, cx->names().roundingMode,
+                   &value)) {
+    return nullptr;
+  }
+
+  {
+    JSLinearString* roundingMode = value.toString()->ensureLinear(cx);
+    if (!roundingMode) {
+      return nullptr;
+    }
+
+    using RoundingMode = mozilla::intl::NumberFormatOptions::RoundingMode;
+
+    RoundingMode rounding;
+    if (StringEqualsLiteral(roundingMode, "halfExpand")) {
+      // "halfExpand" is the default mode, so we handle it first.
+      rounding = RoundingMode::HalfExpand;
+    } else if (StringEqualsLiteral(roundingMode, "ceil")) {
+      rounding = RoundingMode::Ceil;
+    } else if (StringEqualsLiteral(roundingMode, "floor")) {
+      rounding = RoundingMode::Floor;
+    } else if (StringEqualsLiteral(roundingMode, "expand")) {
+      rounding = RoundingMode::Expand;
+    } else if (StringEqualsLiteral(roundingMode, "trunc")) {
+      rounding = RoundingMode::Trunc;
+    } else if (StringEqualsLiteral(roundingMode, "halfCeil")) {
+      rounding = RoundingMode::HalfCeil;
+    } else if (StringEqualsLiteral(roundingMode, "halfFloor")) {
+      rounding = RoundingMode::HalfFloor;
+    } else if (StringEqualsLiteral(roundingMode, "halfTrunc")) {
+      rounding = RoundingMode::HalfTrunc;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(roundingMode, "halfEven"));
+      rounding = RoundingMode::HalfEven;
+    }
+
+    options.mRoundingMode = rounding;
+  }
+
+  if (!GetProperty(cx, internals, internals, cx->names().trailingZeroDisplay,
+                   &value)) {
+    return nullptr;
+  }
+
+  {
+    JSLinearString* trailingZeroDisplay = value.toString()->ensureLinear(cx);
+    if (!trailingZeroDisplay) {
+      return nullptr;
+    }
+
+    if (StringEqualsLiteral(trailingZeroDisplay, "auto")) {
+      options.mStripTrailingZero = false;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(trailingZeroDisplay, "stripIfInteger"));
+      options.mStripTrailingZero = true;
+    }
+  }
 
   using NumberFormat = mozilla::intl::NumberFormat;
   mozilla::Result<mozilla::UniquePtr<NumberFormat>, NumberFormat::FormatError>
