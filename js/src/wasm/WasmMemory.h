@@ -27,6 +27,7 @@
 #include "js/Value.h"
 #include "vm/NativeObject.h"
 #include "wasm/WasmConstants.h"
+#include "wasm/WasmValType.h"
 
 namespace js {
 namespace wasm {
@@ -36,6 +37,10 @@ namespace wasm {
 // I32, while memories may use I64 when memory64 is enabled.
 
 enum class IndexType : uint8_t { I32, I64 };
+
+inline ValType ToValType(IndexType it) {
+  return it == IndexType::I64 ? ValType::I64 : ValType::I32;
+}
 
 extern bool ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType);
 

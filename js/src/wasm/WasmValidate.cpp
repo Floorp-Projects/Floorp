@@ -2897,7 +2897,8 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
     if (initializerKind == DataSegmentKind::Active ||
         initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
       InitExpr segOffset;
-      if (!InitExpr::decodeAndValidate(d, env, ValType::I32, &segOffset)) {
+      ValType exprType = ToValType(env->memory->indexType());
+      if (!InitExpr::decodeAndValidate(d, env, exprType, &segOffset)) {
         return false;
       }
       seg.offsetIfActive.emplace(std::move(segOffset));
