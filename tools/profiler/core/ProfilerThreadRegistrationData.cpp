@@ -98,9 +98,26 @@ static void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
       info.size, info.inNursery);
 }
 
-void ThreadRegistrationLockedRWFromAnyThread::SetIsBeingProfiled(
-    bool aIsBeingProfiled, const PSAutoLock&) {
-  mIsBeingProfiled = aIsBeingProfiled;
+void ThreadRegistrationLockedRWFromAnyThread::
+    SetIsBeingProfiledWithProfiledThreadData(
+        ProfiledThreadData* aProfiledThreadData, const PSAutoLock&) {
+  MOZ_ASSERT(!mIsBeingProfiled);
+  mIsBeingProfiled = true;
+
+  MOZ_ASSERT(!mProfiledThreadData);
+  MOZ_ASSERT(aProfiledThreadData);
+  mProfiledThreadData = aProfiledThreadData;
+
+  // Check invariants.
+  MOZ_ASSERT(mIsBeingProfiled == !!mProfiledThreadData);
+}
+
+void ThreadRegistrationLockedRWFromAnyThread::
+    ClearIsBeingProfiledAndProfiledThreadData(const PSAutoLock&) {
+  mIsBeingProfiled = false;
+  mProfiledThreadData = nullptr;
+  // Check invariants.
+  MOZ_ASSERT(mIsBeingProfiled == !!mProfiledThreadData);
 }
 
 void ThreadRegistrationLockedRWOnThread::SetJSContext(JSContext* aJSContext) {
