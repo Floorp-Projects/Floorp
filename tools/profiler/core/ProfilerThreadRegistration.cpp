@@ -6,37 +6,41 @@
 
 #include "mozilla/ProfilerThreadRegistration.h"
 
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerThreadRegistry.h"
+#include "nsString.h"
 
 namespace mozilla::profiler {
-
-// Statically-initialized to 0, i.e. NOT_YET.
-/* static */
-ThreadRegistration::TLSInitialization ThreadRegistration::sIsTLSInitialized;
 
 /* static */
 MOZ_THREAD_LOCAL(ThreadRegistration*) ThreadRegistration::tlsThreadRegistration;
 
 ThreadRegistration::ThreadRegistration(const char* aName, const void* aStackTop)
     : mData(aName, aStackTop) {
-  if (mData.Info().IsMainThread() &&
-      sIsTLSInitialized == TLSInitialization::NOT_YET) {
-    sIsTLSInitialized = tlsThreadRegistration.init()
-                            ? TLSInitialization::DONE
-                            : TLSInitialization::FAILED;
+  auto* tls = GetTLS();
+  if (MOZ_UNLIKELY(!tls)) {
+    // No TLS, nothing can be done without it.
+    return;
   }
 
-  if (auto* tls = GetTLS(); tls) {
-    if (ThreadRegistration* rootRegistration = tls->get(); rootRegistration) {
-      // This is a nested ThreadRegistration object, so the thread is already
-      // registered in the TLS and ThreadRegistry and we don't need to register
-      // again.
-      return;
-    }
-
-    tls->set(this);
-    ThreadRegistry::Register(OnThreadRef{*this});
+  if (ThreadRegistration* rootRegistration = tls->get(); rootRegistration) {
+    // This is a nested ThreadRegistration object, so the thread is already
+    // registered in the TLS and ThreadRegistry and we don't need to register
+    // again.
+    MOZ_ASSERT(
+        mData.Info().ThreadId() == rootRegistration->mData.Info().ThreadId(),
+        "Thread being re-registered has changed its TID");
+    // TODO: Use new name. This is currently not possible because the
+    // TLS-stored RegisteredThread's ThreadInfo cannot be changed.
+    // In the meantime, we record a marker that could be used in the frontend.
+    PROFILER_MARKER_TEXT("Nested ThreadRegistration()", OTHER_Profiling,
+                         MarkerOptions{},
+                         ProfilerString8View::WrapNullTerminatedString(aName));
+    return;
   }
+
+  tls->set(this);
+  ThreadRegistry::Register(OnThreadRef{*this});
 }
 
 ThreadRegistration::~ThreadRegistration() {
@@ -52,45 +56,127 @@ ThreadRegistration::~ThreadRegistration() {
   // Undo the above successful TryLock.
   mDataMutex.Unlock();
 #endif  // DEBUG
-  if (auto* tls = GetTLS(); tls) {
-    if (tls->get() != this) {
-      // This was a nested registration, nothing to unregister yet.
+  auto* tls = GetTLS();
+  if (MOZ_UNLIKELY(!tls)) {
+    // No TLS, nothing can be done without it.
+    return;
+  }
+
+  if (ThreadRegistration* rootRegistration = tls->get(); rootRegistration) {
+    if (rootRegistration != this) {
+      // `this` is not in the TLS, so it was a nested registration, there is
+      // nothing to unregister yet.
+      PROFILER_MARKER_TEXT(
+          "Nested ~ThreadRegistration()", OTHER_Profiling, MarkerOptions{},
+          ProfilerString8View::WrapNullTerminatedString(mData.Info().Name()));
       return;
     }
 
     ThreadRegistry::Unregister(OnThreadRef{*this});
     tls->set(nullptr);
+    return;
+  }
+
+  // Already removed from the TLS!? This could happen with improperly-nested
+  // register/unregister calls, and the first ThreadRegistration has already
+  // been unregistered.
+  // We cannot record a marker on this thread because it was already
+  // unregistered. Send it to the main thread (unless this *is* already the
+  // main thread, which has been unregistered); this may be useful to catch
+  // mismatched register/unregister pairs in Firefox.
+  if (!profiler_is_main_thread()) {
+    nsAutoCString threadId("thread id: ");
+    threadId.AppendInt(profiler_current_thread_id().ToNumber());
+    threadId.AppendLiteral(", name: \"");
+    threadId.AppendASCII(mData.Info().Name());
+    threadId.AppendLiteral("\"");
+    PROFILER_MARKER_TEXT(
+        "~ThreadRegistration() but TLS is empty", OTHER_Profiling,
+        MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
+        threadId);
   }
 }
 
 /* static */
-ProfilingStack& ThreadRegistration::RegisterThread(const char* aName,
+ProfilingStack* ThreadRegistration::RegisterThread(const char* aName,
                                                    const void* aStackTop) {
-  if (ThreadRegistration* rootRegistration = GetFromTLS(); rootRegistration) {
+  auto* tls = GetTLS();
+  if (MOZ_UNLIKELY(!tls)) {
+    // No TLS, nothing can be done without it.
+    return nullptr;
+  }
+
+  if (ThreadRegistration* rootRegistration = tls->get(); rootRegistration) {
     // Already registered, record the extra depth to ignore the matching
     // UnregisterThread.
     ++rootRegistration->mOtherRegistrations;
-    return rootRegistration->mData.mProfilingStack;
+    // TODO: Use new name. This is currently not possible because the
+    // TLS-stored RegisteredThread's ThreadInfo cannot be changed.
+    // In the meantime, we record a marker that could be used in the frontend.
+    PROFILER_MARKER_TEXT("Nested ThreadRegistration::RegisterThread()",
+                         OTHER_Profiling, MarkerOptions{},
+                         ProfilerString8View::WrapNullTerminatedString(aName));
+    return &rootRegistration->mData.mProfilingStack;
   }
 
   // Create on heap, it self-registers with the TLS (its effective owner, so
   // we can forget the pointer after this), and with the Profiler.
   ThreadRegistration* tr = new ThreadRegistration(aName, aStackTop);
-  return tr->mData.mProfilingStack;
+  tr->mIsOnHeap = true;
+  return &tr->mData.mProfilingStack;
 }
 
 /* static */
 void ThreadRegistration::UnregisterThread() {
-  if (ThreadRegistration* rootRegistration = GetFromTLS(); rootRegistration) {
+  auto* tls = GetTLS();
+  if (MOZ_UNLIKELY(!tls)) {
+    // No TLS, nothing can be done without it.
+    return;
+  }
+
+  if (ThreadRegistration* rootRegistration = tls->get(); rootRegistration) {
     if (rootRegistration->mOtherRegistrations != 0) {
       // This is assumed to be a matching UnregisterThread() for a nested
       // RegisterThread(). Decrease depth and we're done.
       --rootRegistration->mOtherRegistrations;
+      // We don't know what name was used in the related RegisterThread().
+      PROFILER_MARKER_UNTYPED("Nested ThreadRegistration::UnregisterThread()",
+                              OTHER_Profiling);
       return;
     }
-    // Just delete the root registration, it will de-register itself from the
+
+    if (!rootRegistration->mIsOnHeap) {
+      // The root registration was not added by `RegisterThread()`, so it
+      // shouldn't be deleted!
+      // This could happen if there are un-paired `UnregisterThread` calls when
+      // the initial registration (still alive) was done on the stack. We don't
+      // know what name was used in the related RegisterThread().
+      PROFILER_MARKER_UNTYPED("Excess ThreadRegistration::UnregisterThread()",
+                              OTHER_Profiling, MarkerStack::Capture());
+      return;
+    }
+
+    // This is the last `UnregisterThread()` that should match the first
+    // `RegisterThread()` that created this ThreadRegistration on the heap.
+    // Just delete this root registration, it will de-register itself from the
     // TLS (and from the Profiler).
     delete rootRegistration;
+    return;
+  }
+
+  // There is no known ThreadRegistration for this thread, ignore this
+  // request. We cannot record a marker on this thread because it was already
+  // unregistered. Send it to the main thread (unless this *is* already the
+  // main thread, which has been unregistered); this may be useful to catch
+  // mismatched register/unregister pairs in Firefox.
+  if (!profiler_is_main_thread()) {
+    nsAutoCString threadId("thread id: ");
+    threadId.AppendInt(profiler_current_thread_id().ToNumber());
+    PROFILER_MARKER_TEXT(
+        "ThreadRegistration::UnregisterThread() but TLS is empty",
+        OTHER_Profiling,
+        MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
+        threadId);
   }
 }
 
