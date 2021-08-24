@@ -100,6 +100,9 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
     // Intl.NumberFormat v3 Proposal
     internalProps.roundingMode = lazyNumberFormatData.roundingMode;
 
+    // Intl.NumberFormat v3 Proposal
+    internalProps.roundingPriority = lazyNumberFormatData.roundingPriority;
+
     // The caller is responsible for associating |internalProps| with the right
     // object using |setInternalProperties|.
     return internalProps;
@@ -167,72 +170,98 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
     // Step 10.
     lazyData.minimumIntegerDigits = mnid;
 
-    // Step 11.
-    if (mnsd !== undefined || mxsd !== undefined) {
-        // Step 11.a (Omitted).
+#ifdef NIGHTLY_BUILD
+    // Intl.NumberFormat v3 Proposal
+    var roundingPriority = GetOption(options, "roundingPriority", "string",
+                                     ["auto", "morePrecision", "lessPrecision"], "auto");
+#else
+    var roundingPriority = "auto";
+#endif
 
-        // Step 11.b.
-        mnsd = DefaultNumberOption(mnsd, 1, 21, 1);
+    const hasSignificantDigits = mnsd !== undefined || mxsd !== undefined;
+    const hasFractionDigits = mnfd !== undefined || mxfd !== undefined;
 
-        // Step 11.c.
-        mxsd = DefaultNumberOption(mxsd, mnsd, 21, 21);
+    const needSignificantDigits = hasSignificantDigits || roundingPriority !== "auto";
+    const needFractionalDigits = (!hasSignificantDigits && notation !== "compact") ||
+                                 roundingPriority !== "auto";
 
-        // Step 11.d.
-        lazyData.minimumSignificantDigits = mnsd;
+    if (needSignificantDigits) {
+        // Step 11.
+        if (hasSignificantDigits) {
+            // Step 11.a (Omitted).
 
-        // Step 11.e.
-        lazyData.maximumSignificantDigits = mxsd;
+            // Step 11.b.
+            mnsd = DefaultNumberOption(mnsd, 1, 21, 1);
+
+            // Step 11.c.
+            mxsd = DefaultNumberOption(mxsd, mnsd, 21, 21);
+
+            // Step 11.d.
+            lazyData.minimumSignificantDigits = mnsd;
+
+            // Step 11.e.
+            lazyData.maximumSignificantDigits = mxsd;
+        } else {
+            lazyData.minimumSignificantDigits = 1;
+            lazyData.maximumSignificantDigits = 21;
+        }
     }
 
-    // Step 12.
-    else if (mnfd !== undefined || mxfd !== undefined) {
-        // Step 12.a (Omitted).
+    if (needFractionalDigits) {
+        // Step 12.
+        if (hasFractionDigits) {
+            // Step 12.a (Omitted).
 
-        // Step 12.b.
-        mnfd = DefaultNumberOption(mnfd, 0, 20, undefined);
+            // Step 12.b.
+            mnfd = DefaultNumberOption(mnfd, 0, 20, undefined);
 
-        // Step 12.c.
-        mxfd = DefaultNumberOption(mxfd, 0, 20, undefined);
+            // Step 12.c.
+            mxfd = DefaultNumberOption(mxfd, 0, 20, undefined);
 
-        // Steps 12.d-e.
-        // Inlined DefaultNumberOption, only the fallback case applies here.
-        if (mnfd === undefined) {
-            assert(mxfd !== undefined, "mxfd isn't undefined when mnfd is undefined");
-            mnfd = std_Math_min(mnfdDefault, mxfd);
+            // Step 12.d.
+            if (mnfd === undefined) {
+                assert(mxfd !== undefined, "mxfd isn't undefined when mnfd is undefined");
+                mnfd = std_Math_min(mnfdDefault, mxfd);
+            }
+
+            // Step 12.e.
+            else if (mxfd === undefined) {
+                mxfd = std_Math_max(mxfdDefault, mnfd);
+            }
+
+            // Step 12.f.
+            else if (mnfd > mxfd) {
+                ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, mxfd);
+            }
+
+            // Step 12.g.
+            lazyData.minimumFractionDigits = mnfd;
+
+            // Step 12.h.
+            lazyData.maximumFractionDigits = mxfd;
+        } else {
+            // Step 14.a (Omitted).
+
+            // Step 14.b.
+            lazyData.minimumFractionDigits = mnfdDefault;
+
+            // Step 14.c.
+            lazyData.maximumFractionDigits = mxfdDefault;
         }
-
-        // Step 12.f.
-        // Inlined DefaultNumberOption, only the fallback case applies here.
-        else if (mxfd === undefined) {
-            mxfd = std_Math_max(mxfdDefault, mnfd);
-        }
-
-        // Step 12.g.
-        else if (mnfd > mxfd) {
-            ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, mxfd);
-        }
-
-        // Step 12.h.
-        lazyData.minimumFractionDigits = mnfd;
-
-        // Step 12.i.
-        lazyData.maximumFractionDigits = mxfd;
     }
 
-    // Step 13.
-    else if (notation === "compact") {
-        // Step 13.a (Omitted).
-    }
+    if (needSignificantDigits || needFractionalDigits) {
+        lazyData.roundingPriority = roundingPriority;
+    } else {
+        assert(!hasSignificantDigits, "bad significant digits in fallback case");
+        assert(roundingPriority === "auto", `bad rounding in fallback case: ${roundingPriority}`);
+        assert(notation === "compact", `bad notation in fallback case: ${notation}`);
 
-    // Step 14.
-    else {
-        // Step 14.a (Omitted).
-
-        // Step 14.b.
-        lazyData.minimumFractionDigits = mnfdDefault;
-
-        // Step 14.c.
-        lazyData.maximumFractionDigits = mxfdDefault;
+        lazyData.roundingPriority = "morePrecision";
+        lazyData.minimumFractionDigits = 0;
+        lazyData.maximumFractionDigits = 0;
+        lazyData.minimumSignificantDigits = 1;
+        lazyData.maximumSignificantDigits = 2;
     }
 }
 
@@ -391,6 +420,8 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //     // optional, mutually exclusive with the fraction-digits option
     //     minimumSignificantDigits: integer ∈ [1, 21],
     //     maximumSignificantDigits: integer ∈ [1, 21],
+    //
+    //     roundingPriority: "auto" / "lessPrecision" / "morePrecision",
     //
     //     // accepts different values when Intl.NumberFormat v3 proposal is enabled
     //     useGrouping: true / false,
@@ -556,6 +587,9 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     if (roundingIncrement !== 1) {
       if (hasOwn("minimumSignificantDigits", lazyNumberFormatData)) {
         ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, roundingIncrement);
+      } else {
+        assert(lazyNumberFormatData.roundingPriority === "auto",
+               "unexpected rounding priority with minimumSignificantDigits");
       }
     }
 #else
@@ -851,6 +885,7 @@ function Intl_NumberFormat_resolvedOptions() {
     DefineDataProperty(result, "roundingMode", internals.roundingMode);
     DefineDataProperty(result, "roundingIncrement", internals.roundingIncrement);
     DefineDataProperty(result, "trailingZeroDisplay", internals.trailingZeroDisplay);
+    DefineDataProperty(result, "roundingPriority", internals.roundingPriority);
 #endif
 
     // Step 6.
