@@ -20,6 +20,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ProfilerThreadRegistration.h"
 #include "mozilla/ThreadLocal.h"
 #include "nsString.h"
 
@@ -160,41 +161,7 @@ struct JSContext;
       ctx, label, dynamicString, JS::ProfilingCategoryPair::categoryPair,    \
       flags)
 
-class TLSRegisteredThread;  // Needed for friendship in ProfilingStackOwnerTLS.
-
 namespace mozilla {
-
-// Ref-counted shell around a `ProfilingStack`, to be used by the owning
-// (Racy)RegisteredThread and AutoProfilerLabel.
-class ProfilingStackOwner {
- public:
-  class ProfilingStack& ProfilingStack() {
-    return mProfilingStack;
-  }
-
-  // Using hand-rolled ref-counting, to evade leak checking (emergency patch
-  // for bug 1445822).
-  // TODO: Eliminate all/most leaks if possible.
-  void AddRef() const { ++mRefCnt; }
-  void Release() const {
-    MOZ_ASSERT(int32_t(mRefCnt) > 0);
-    if (--mRefCnt == 0) {
-      if (mProfilingStack.stackSize() > 0) {
-        DumpStackAndCrash();
-      }
-      delete this;
-    }
-  }
-
- private:
-  ~ProfilingStackOwner() = default;
-
-  MOZ_NORETURN void DumpStackAndCrash() const;
-
-  class ProfilingStack mProfilingStack;
-
-  mutable Atomic<int32_t, MemoryOrdering::ReleaseAcquire> mRefCnt;
-};
 
 #ifndef MOZ_GECKO_PROFILER
 
@@ -211,11 +178,6 @@ class MOZ_RAII AutoProfilerLabel {
                     JS::ProfilingCategoryPair aCategoryPair, uint32_t aFlags) {}
 
   ~AutoProfilerLabel() {}
-
-  class ProfilingStackOwnerTLS {
-   public:
-    static ProfilingStackOwner* Get() { return nullptr; }
-  };
 };
 
 #else  // !MOZ_GECKO_PROFILER
@@ -231,9 +193,14 @@ class MOZ_RAII AutoProfilerLabel {
                     JS::ProfilingCategoryPair aCategoryPair,
                     uint32_t aFlags = 0) {
     // Get the ProfilingStack from TLS.
-    ProfilingStackOwner* profilingStackOwner = ProfilingStackOwnerTLS::Get();
-    Push(profilingStackOwner ? &profilingStackOwner->ProfilingStack() : nullptr,
-         aLabel, aDynamicString, aCategoryPair, aFlags);
+    ProfilingStack* profilingStack =
+        profiler::ThreadRegistration::WithOnThreadRefOr(
+            [](profiler::ThreadRegistration::OnThreadRef aThread) {
+              return &aThread.UnlockedConstReaderAndAtomicRWRef()
+                          .ProfilingStackRef();
+            },
+            nullptr);
+    Push(profilingStack, aLabel, aDynamicString, aCategoryPair, aFlags);
   }
 
   // This is the AUTO_PROFILER_LABEL_FAST variant. It retrieves the
@@ -270,40 +237,6 @@ class MOZ_RAII AutoProfilerLabel {
   // We save a ProfilingStack pointer in the ctor so we don't have to redo the
   // TLS lookup in the dtor.
   ProfilingStack* mProfilingStack;
-
- public:
-  // See the comment on the definition in platform.cpp for details about this.
-  class ProfilingStackOwnerTLS {
-   public:
-    static ProfilingStackOwner* Get() {
-      MOZ_ASSERT(
-          sState != State::Uninitialized,
-          "ProfilingStackOwnerTLS::Get() should only be called after Init()");
-      if (sState != State::Initialized) {
-        return nullptr;
-      }
-      return sProfilingStackOwnerTLS.get();
-    }
-
-    static void Set(ProfilingStackOwner* aProfilingStackOwner) {
-      MOZ_ASSERT(
-          sState != State::Uninitialized,
-          "ProfilingStackOwnerTLS::Set() should only be called after Init()");
-      MOZ_DIAGNOSTIC_ASSERT(sState == State::Initialized,
-                            "ProfilingStackOwnerTLS::Set() should only be "
-                            "called after a successful Init()");
-      sProfilingStackOwnerTLS.set(aProfilingStackOwner);
-    }
-
-   private:
-    friend TLSRegisteredThread;
-    static void Init();
-
-    enum class State { Uninitialized = 0, Initialized, Unavailable };
-    static State sState;
-
-    static MOZ_THREAD_LOCAL(ProfilingStackOwner*) sProfilingStackOwnerTLS;
-  };
 };
 
 #endif  // !MOZ_GECKO_PROFILER
