@@ -172,6 +172,16 @@ add_task(async function setup() {
 });
 
 add_task(async function test_persistent_events() {
+  // The blob:-URL registered above in MODULE_INFO gets loaded at
+  // https://searchfox.org/mozilla-central/rev/0fec57c05d3996cc00c55a66f20dd5793a9bfb5d/toolkit/components/extensions/ExtensionCommon.jsm#1649
+  Services.prefs.setBoolPref(
+    "security.allow_parent_unrestricted_js_loads",
+    true
+  );
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
+  });
+
   await AddonTestUtils.promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension({
