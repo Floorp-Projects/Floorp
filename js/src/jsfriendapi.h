@@ -547,7 +547,7 @@ static const unsigned JS_FUNCTION_INTERPRETED_BITS = 0x0060;
 static MOZ_ALWAYS_INLINE const JSJitInfo* FUNCTION_VALUE_TO_JITINFO(
     const JS::Value& v) {
   JSObject* obj = &v.toObject();
-  MOZ_ASSERT(JS::GetClass(obj) == js::FunctionClassPtr);
+  MOZ_ASSERT(JS::GetClass(obj)->isJSFunction());
 
   auto* fun = reinterpret_cast<JS::shadow::Function*>(obj);
   MOZ_ASSERT(!(fun->flagsAndArgCount.toPrivateUint32() &

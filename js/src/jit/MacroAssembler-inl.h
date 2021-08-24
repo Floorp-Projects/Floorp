@@ -582,25 +582,43 @@ void MacroAssembler::branchTestObjClass(Condition cond, Register obj,
 void MacroAssembler::branchTestClassIsFunction(Condition cond, Register clasp,
                                                Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-  branchPtr(cond, clasp, ImmPtr(&JSFunction::class_), label);
+
+  if (cond == Assembler::Equal) {
+    branchPtr(Assembler::Equal, clasp, ImmPtr(&JSFunction::class_), label);
+    branchPtr(Assembler::Equal, clasp, ImmPtr(&FunctionExtended::class_),
+              label);
+    return;
+  }
+
+  Label isFunction;
+  branchPtr(Assembler::Equal, clasp, ImmPtr(&JSFunction::class_), &isFunction);
+  branchPtr(Assembler::NotEqual, clasp, ImmPtr(&FunctionExtended::class_),
+            label);
+  bind(&isFunction);
 }
 
 void MacroAssembler::branchTestObjIsFunction(Condition cond, Register obj,
                                              Register scratch,
                                              Register spectreRegToZero,
                                              Label* label) {
-  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-  MOZ_ASSERT(obj != scratch);
   MOZ_ASSERT(scratch != spectreRegToZero);
 
-  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
-  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
-  branchPtr(cond, Address(scratch, BaseShape::offsetOfClasp()),
-            ImmPtr(&JSFunction::class_), label);
+  branchTestObjIsFunctionNoSpectreMitigations(cond, obj, scratch, label);
 
   if (JitOptions.spectreObjectMitigations) {
     spectreZeroRegister(cond, scratch, spectreRegToZero);
   }
+}
+
+void MacroAssembler::branchTestObjIsFunctionNoSpectreMitigations(
+    Condition cond, Register obj, Register scratch, Label* label) {
+  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+  MOZ_ASSERT(obj != scratch);
+
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  loadPtr(Address(scratch, BaseShape::offsetOfClasp()), scratch);
+  branchTestClassIsFunction(cond, scratch, label);
 }
 
 void MacroAssembler::branchTestObjShape(Condition cond, Register obj,
