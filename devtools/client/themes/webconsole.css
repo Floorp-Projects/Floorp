@@ -425,6 +425,15 @@
   display: none;
 }
 
+/* Override the `postion:absolute` set on the `.panel-container`, this is only needed in the
+netmonitor to enable the use of top, right, bottom etc to support content scrolling.
+See https://searchfox.org/mozilla-central/rev/7bafa9b9c2156018ec1d410194f9bf4b5b23e77f
+/devtools/client/netmonitor/src/assets/styles/HeadersPanel.css#17-24.
+The webconsole does not need that as the `.webconsole-output` is already scrollable */
+.message.network .headers-panel-container .panel-container {
+  position: static;
+}
+
 /* JSTerm Styles */
 html #webconsole-notificationbox {
   flex: 0;
