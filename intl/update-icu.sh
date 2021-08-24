@@ -62,6 +62,7 @@ for patch in \
  bug-1714933-2-locale-basename-memory-leak.diff \
  bug-1714933-3-locale-nullptr-deref.diff \
  bug-1648137-clear-formatter-number.diff \
+ bug-1648137-non-finite-decimal.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch

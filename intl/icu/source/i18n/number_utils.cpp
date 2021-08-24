@@ -180,12 +180,6 @@ void DecNum::_setTo(const char* str, int32_t maxDigits, UErrorCode& status) {
         status = U_UNSUPPORTED_ERROR;
         return;
     }
-
-    // For consistency with Java BigDecimal, no support for DecNum that is NaN or Infinity!
-    if (decNumberIsSpecial(fData.getAlias())) {
-        status = U_UNSUPPORTED_ERROR;
-        return;
-    }
 }
 
 void
