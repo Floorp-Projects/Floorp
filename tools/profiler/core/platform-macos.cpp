@@ -128,10 +128,10 @@ static void ClearThreadRunningTimes(PSLockRef aLock,
 
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const TimeStamp& aNow, const Func& aProcessRegs) {
-  thread_act_t samplee_thread =
-      aRegisteredThread.GetPlatformData()->ProfiledThread();
+  thread_act_t samplee_thread = aThreadData.PlatformDataCRef().ProfiledThread();
 
   //----------------------------------------------------------------//
   // Suspend the samplee thread and get its context.
