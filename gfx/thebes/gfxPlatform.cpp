@@ -11,7 +11,6 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for GfxMemoryImageReporter
 #include "mozilla/layers/CompositorBridgeChild.h"
-#include "mozilla/layers/TiledContentClient.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -1237,7 +1236,6 @@ void gfxPlatform::Shutdown() {
   gfxGraphiteShaper::Shutdown();
   gfxPlatformFontList::Shutdown();
   gfxFontMissingGlyphs::Shutdown();
-  ShutdownTileCache();
 
   // Free the various non-null transforms and loaded profiles
   ShutdownCMS();
