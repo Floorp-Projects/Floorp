@@ -1024,7 +1024,7 @@ nsresult LoadLoadableCertsTask::LoadLoadableRoots() {
 // Table of pref names and SSL cipher ID
 typedef struct {
   const char* pref;
-  long id;
+  int32_t id;
   bool enabledByDefault;
 } CipherPref;
 
@@ -1075,12 +1075,13 @@ static const CipherPref sCipherPrefs[] = {
      true},  // deprecated (RSA key exchange)
     {"security.ssl3.rsa_aes_256_sha", TLS_RSA_WITH_AES_256_CBC_SHA,
      true},  // deprecated (RSA key exchange)
-    {"security.ssl3.rsa_des_ede3_sha", TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-     true},  // deprecated (RSA key exchange, 3DES)
+};
 
-    // All the rest are disabled
-
-    {nullptr, 0}  // end marker
+// These ciphersuites can only be enabled if deprecated versions of TLS are
+// also enabled (via the preference "security.tls.version.enable-deprecated").
+static const CipherPref sDeprecatedTLS1CipherPrefs[] = {
+    {"security.ssl3.deprecated.rsa_des_ede3_sha", TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+     true},
 };
 
 // This function will convert from pref values like 1, 2, ...
@@ -1357,6 +1358,25 @@ nsresult CipherSuiteChangeObserver::StartObserve() {
   return NS_OK;
 }
 
+// Enables or disabled ciphersuites from deprecated versions of TLS as
+// appropriate. If security.tls.version.enable-deprecated is true, these
+// ciphersuites may be enabled, if the corresponding preference is true.
+// Otherwise, these ciphersuites will be disabled.
+void SetDeprecatedTLS1CipherPrefs() {
+  if (Preferences::GetBool("security.tls.version.enable-deprecated", false)) {
+    for (const auto& deprecatedTLS1CipherPref : sDeprecatedTLS1CipherPrefs) {
+      bool cipherEnabled =
+          Preferences::GetBool(deprecatedTLS1CipherPref.pref,
+                               deprecatedTLS1CipherPref.enabledByDefault);
+      SSL_CipherPrefSetDefault(deprecatedTLS1CipherPref.id, cipherEnabled);
+    }
+  } else {
+    for (const auto& deprecatedTLS1CipherPref : sDeprecatedTLS1CipherPrefs) {
+      SSL_CipherPrefSetDefault(deprecatedTLS1CipherPref.id, false);
+    }
+  }
+}
+
 nsresult CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
                                             const char* aTopic,
                                             const char16_t* someData) {
@@ -1366,16 +1386,16 @@ nsresult CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
   if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     NS_ConvertUTF16toUTF8 prefName(someData);
     // Look through the cipher table and set according to pref setting
-    const CipherPref* const cp = sCipherPrefs;
-    for (size_t i = 0; cp[i].pref; ++i) {
-      if (prefName.Equals(cp[i].pref)) {
+    for (const auto& cipherPref : sCipherPrefs) {
+      if (prefName.Equals(cipherPref.pref)) {
         bool cipherEnabled =
-            Preferences::GetBool(cp[i].pref, cp[i].enabledByDefault);
-        SSL_CipherPrefSetDefault(cp[i].id, cipherEnabled);
-        nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
+            Preferences::GetBool(cipherPref.pref, cipherPref.enabledByDefault);
+        SSL_CipherPrefSetDefault(cipherPref.id, cipherEnabled);
         break;
       }
     }
+    SetDeprecatedTLS1CipherPrefs();
+    nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
   } else if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     Preferences::RemoveObserver(this, "security.");
     MOZ_ASSERT(sObserver.get() == this);
@@ -2773,12 +2793,13 @@ nsresult InitializeCipherSuite() {
   }
 
   // Now only set SSL/TLS ciphers we knew about at compile time
-  const CipherPref* const cp = sCipherPrefs;
-  for (size_t i = 0; cp[i].pref; ++i) {
+  for (const auto& cipherPref : sCipherPrefs) {
     bool cipherEnabled =
-        Preferences::GetBool(cp[i].pref, cp[i].enabledByDefault);
-    SSL_CipherPrefSetDefault(cp[i].id, cipherEnabled);
+        Preferences::GetBool(cipherPref.pref, cipherPref.enabledByDefault);
+    SSL_CipherPrefSetDefault(cipherPref.id, cipherEnabled);
   }
+
+  SetDeprecatedTLS1CipherPrefs();
 
   // Enable ciphers for PKCS#12
   SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
