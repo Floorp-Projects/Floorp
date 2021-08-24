@@ -105,8 +105,6 @@ class RegisteredThread final {
 
  private:
   class RacyRegisteredThread mRacyRegisteredThread;
-
-  const UniquePlatformData mPlatformData;
 };
 
 #endif  // RegisteredThread_h
