@@ -162,6 +162,7 @@ EXPORTS.mozilla += [
     "public/ProfilerThreadRegistrationData.h",
     "public/ProfilerThreadRegistrationInfo.h",
     "public/ProfilerThreadRegistry.h",
+    "public/ProfilerThreadState.h",
     "public/ProfilerUtils.h",
 ]
 
