@@ -274,7 +274,9 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
       break;
   }
 
-  options.mUseGrouping = aOptions->use_grouping;
+  options.mGrouping = aOptions->use_grouping
+                          ? NumberFormatOptions::Grouping::Auto
+                          : NumberFormatOptions::Grouping::Never;
   options.mMinIntegerDigits = Some(aOptions->minimum_integer_digits);
 
   if (aOptions->minimum_significant_digits >= 0 ||

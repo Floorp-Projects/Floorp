@@ -88,7 +88,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
   [[nodiscard]] bool significantDigits(uint32_t min, uint32_t max,
                                        bool stripTrailingZero);
 
-  [[nodiscard]] bool disableGrouping();
+  [[nodiscard]] bool grouping(NumberFormatOptions::Grouping grouping);
 
   [[nodiscard]] bool notation(NumberFormatOptions::Notation style);
 
