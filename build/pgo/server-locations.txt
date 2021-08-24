@@ -317,8 +317,9 @@ https://sha256ee.example.com:443                                  privileged,cer
 # Hosts for imminent distrust warning tests
 https://imminently-distrusted.example.com:443                     privileged,cert=imminently_distrusted
 
-# Hosts for ssl3/tls1 warning tests
+# Hosts for ssl3/3des/tls1 tests
 https://ssl3.example.com:443         privileged,ssl3
+https://3des.example.com:443         privileged,3des,tls1,tls1_2
 https://tls1.example.com:443         privileged,tls1
 https://tls11.example.com:443        privileged,tls1_1
 https://tls12.example.com:443        privileged,tls1_2
