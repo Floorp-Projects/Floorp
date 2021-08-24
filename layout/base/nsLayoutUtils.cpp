@@ -3720,9 +3720,10 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
         mRelativeToIsRoot(!aRelativeTo->GetParent()),
         mRelativeToIsTarget(aRelativeTo == aTargetFrame) {}
 
-  virtual void AddBox(nsIFrame* aFrame) override {
+  void AddBox(nsIFrame* aFrame) override {
     nsRect r;
     nsIFrame* outer = SVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
+    const bool usingSVGOuterFrame = !!outer;
     if (!outer) {
       outer = aFrame;
       switch (mFlags & nsLayoutUtils::RECTS_WHICH_BOX_MASK) {
@@ -3740,8 +3741,16 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
       }
     }
     if (mFlags & nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS) {
-      if (mRelativeToIsRoot ||
-          (mRelativeToIsTarget && !mInTargetContinuation)) {
+      const bool isAncestorKnown = [&] {
+        if (mRelativeToIsRoot) {
+          return true;
+        }
+        if (mRelativeToIsTarget && !mInTargetContinuation) {
+          return !usingSVGOuterFrame;
+        }
+        return false;
+      }();
+      if (isAncestorKnown) {
         r = nsLayoutUtils::TransformFrameRectToAncestor(outer, r, mRelativeTo);
       } else {
         nsLayoutUtils::TransformRect(outer, mRelativeTo, r);
@@ -3785,7 +3794,7 @@ struct MOZ_RAII BoxToRectAndText : public BoxToRect {
     }
   }
 
-  virtual void AddBox(nsIFrame* aFrame) override {
+  void AddBox(nsIFrame* aFrame) override {
     BoxToRect::AddBox(aFrame);
     if (mTextList) {
       nsString* textForFrame = mTextList->AppendElement(fallible);

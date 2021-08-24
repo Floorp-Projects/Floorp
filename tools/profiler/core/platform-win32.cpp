@@ -36,10 +36,7 @@
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
-void* GetStackTop(void* aGuess) {
-  PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
-  return reinterpret_cast<void*>(pTib->StackBase);
-}
+#include <type_traits>
 
 static void PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext) {
 #if defined(GP_ARCH_amd64)
@@ -76,40 +73,20 @@ static HANDLE GetRealCurrentThreadHandleForProfiling() {
   return realCurrentThreadHandle;
 }
 
-class PlatformData {
- public:
-  // Get a handle to the calling thread. This is the thread that we are
-  // going to profile. We need a real handle because we are going to use it in
-  // the sampler thread.
-  explicit PlatformData(ProfilerThreadId aThreadId)
-      : mProfiledThread(GetRealCurrentThreadHandleForProfiling()) {
-    MOZ_ASSERT(aThreadId == profiler_current_thread_id());
-    MOZ_COUNT_CTOR(PlatformData);
+static_assert(
+    std::is_same_v<mozilla::profiler::PlatformData::WindowsHandle, HANDLE>);
+
+mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId)
+    : mProfiledThread(GetRealCurrentThreadHandleForProfiling()) {
+  MOZ_ASSERT(aThreadId == ProfilerThreadId::FromNumber(::GetCurrentThreadId()));
+}
+
+mozilla::profiler::PlatformData::~PlatformData() {
+  if (mProfiledThread) {
+    CloseHandle(mProfiledThread);
+    mProfiledThread = nullptr;
   }
-
-  ~PlatformData() {
-    if (mProfiledThread != nullptr) {
-      CloseHandle(mProfiledThread);
-      mProfiledThread = nullptr;
-    }
-    MOZ_COUNT_DTOR(PlatformData);
-  }
-
-  HANDLE ProfiledThread() { return mProfiledThread; }
-
-  RunningTimes& PreviousThreadRunningTimesRef() {
-    return mPreviousThreadRunningTimes;
-  }
-
- private:
-  HANDLE mProfiledThread;
-  RunningTimes mPreviousThreadRunningTimes;
-};
-
-#if defined(USE_MOZ_STACK_WALK)
-HANDLE
-GetThreadHandle(PlatformData* aData) { return aData->ProfiledThread(); }
-#endif
+}
 
 static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
 
@@ -126,12 +103,13 @@ static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
 }
 
 static RunningTimes GetThreadRunningTimesDiff(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread) {
+    PSLockRef aLock,
+    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
   AUTO_PROFILER_STATS(GetRunningTimes);
 
-  PlatformData* const platformData = aRegisteredThread.GetPlatformData();
-  MOZ_RELEASE_ASSERT(platformData);
-  const HANDLE profiledThread = platformData->ProfiledThread();
+  const mozilla::profiler::PlatformData& platformData =
+      aThreadData.PlatformDataCRef();
+  const HANDLE profiledThread = platformData.ProfiledThread();
 
   const RunningTimes newRunningTimes = GetRunningTimesWithTightTimestamp(
       [profiledThread](RunningTimes& aRunningTimes) {
@@ -144,25 +122,22 @@ static RunningTimes GetThreadRunningTimesDiff(
         }
       });
 
-  const RunningTimes diff =
-      newRunningTimes - platformData->PreviousThreadRunningTimesRef();
-  platformData->PreviousThreadRunningTimesRef() = newRunningTimes;
+  ProfiledThreadData* profiledThreadData =
+      aThreadData.GetProfiledThreadData(aLock);
+  MOZ_ASSERT(profiledThreadData);
+  RunningTimes& previousRunningTimes =
+      profiledThreadData->PreviousThreadRunningTimesRef();
+  const RunningTimes diff = newRunningTimes - previousRunningTimes;
+  previousRunningTimes = newRunningTimes;
   return diff;
-}
-
-static void ClearThreadRunningTimes(PSLockRef aLock,
-                                    const RegisteredThread& aRegisteredThread) {
-  PlatformData* const platformData = aRegisteredThread.GetPlatformData();
-  MOZ_RELEASE_ASSERT(platformData);
-  platformData->PreviousThreadRunningTimesRef().Clear();
 }
 
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
-    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
+    PSLockRef aLock,
+    const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const TimeStamp& aNow, const Func& aProcessRegs) {
-  HANDLE profiled_thread =
-      aRegisteredThread.GetPlatformData()->ProfiledThread();
+  HANDLE profiled_thread = aThreadData.PlatformDataCRef().ProfiledThread();
   if (profiled_thread == nullptr) {
     return;
   }

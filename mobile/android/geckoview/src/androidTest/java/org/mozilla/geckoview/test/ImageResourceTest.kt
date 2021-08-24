@@ -6,10 +6,21 @@ package org.mozilla.geckoview.test
 
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import android.util.Log
 
 import org.hamcrest.Matchers.*
+import org.json.JSONObject
+import org.junit.After
+import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Assume.assumeThat
+import org.junit.Assume.assumeTrue
+
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.util.Callbacks
 
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.gecko.util.ImageResource

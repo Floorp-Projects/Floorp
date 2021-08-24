@@ -5348,13 +5348,6 @@
   value: 4
   mirror: always
 
-# Whether to allow widgets that don't support acceleration to use WebRender
-# software backend
-- name: gfx.webrender.software.unaccelerated-widget.allow
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether to force widgets to don't support acceleration to use WebRender
 # despite that
 - name: gfx.webrender.unaccelerated-widget.force
@@ -6942,14 +6935,14 @@
   value: true
   mirror: always
 
-# Whether we should throw on invalid pseudo-elements passed to
-# getComputedStyle() as per spec.
+# Whether we should return an empty style on invalid pseudo-elements starting
+# with a colon.
 #
-# Old behavior is a bit odd: returning an empty style if the string starts with
-# a double colon, and return the regular style otherwise.
-- name: layout.css.computed-style.throw-on-invalid-pseudo
+# Old behavior is returning an empty style if the string starts with a double
+# colon, and return the regular style otherwise.
+- name: layout.css.computed-style.new-invalid-pseudo-element-behavior
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Are implicit tracks in computed grid templates serialized?

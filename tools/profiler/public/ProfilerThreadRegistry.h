@@ -244,6 +244,22 @@ class ThreadRegistry {
     }
   }
 
+  static size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
+    LockedRegistry lockedRegistry;
+    // "Ex" because we don't count static objects, but we count whatever they
+    // allocated on the heap.
+    size_t bytes = sRegistryContainer.sizeOfExcludingThis(aMallocSizeOf);
+    for (const OffThreadRef& offThreadRef : lockedRegistry) {
+      bytes +=
+          offThreadRef.mThreadRegistration->SizeOfExcludingThis(aMallocSizeOf);
+    }
+    return bytes;
+  }
+
+  static size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+    return SizeOfExcludingThis(aMallocSizeOf);
+  }
+
   [[nodiscard]] static bool IsRegistryMutexLockedOnCurrentThread() {
     return sRegistryMutex.IsLockedOnCurrentThread();
   }

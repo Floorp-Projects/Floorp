@@ -7,12 +7,10 @@ package org.mozilla.geckoview.test
 import android.graphics.SurfaceTexture
 import android.net.Uri
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
-import org.mozilla.geckoview.GeckoSession.ProgressDelegate
-import org.mozilla.geckoview.GeckoSession.ContentDelegate
-import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
+import org.mozilla.geckoview.test.util.Callbacks
 
 import androidx.annotation.AnyThread
 import androidx.test.filters.MediumTest
@@ -33,7 +31,7 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun titleChange() {
         sessionRule.session.loadTestPath(TITLE_CHANGE_HTML_PATH)
 
-        sessionRule.waitUntilCalled(object : ContentDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 2)
             override fun onTitleChange(session: GeckoSession, title: String?) {
                 assertThat("Title should match", title,
@@ -48,7 +46,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
         sessionRule.session.loadTestPath(DOWNLOAD_HTML_PATH)
 
-        sessionRule.waitUntilCalled(object : NavigationDelegate, ContentDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
 
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
@@ -79,7 +77,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         mainSession.loadUri(CONTENT_CRASH_URL)
-        mainSession.waitUntilCalled(object : ContentDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onCrash(session: GeckoSession) {
                 assertThat("Session should be closed after a crash",
@@ -90,7 +88,7 @@ class ContentDelegateTest : BaseSessionTest() {
         // Recover immediately
         mainSession.open()
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        mainSession.waitUntilCalled(object: ProgressDelegate {
+        mainSession.waitUntilCalled(object: Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Page should load successfully", success, equalTo(true))
@@ -104,7 +102,7 @@ class ContentDelegateTest : BaseSessionTest() {
         // TODO: bug 1710940
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.delegateUntilTestEnd(object : ContentDelegate {
+        mainSession.delegateUntilTestEnd(object : Callbacks.ContentDelegate {
             override fun onCrash(session: GeckoSession) {
                 mainSession.open()
                 mainSession.loadTestPath(HELLO_HTML_PATH)
@@ -131,7 +129,7 @@ class ContentDelegateTest : BaseSessionTest() {
     @IgnoreCrash
     @Test fun killContent() {
         killAllContentProcesses()
-        mainSession.waitUntilCalled(object : ContentDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onKill(session: GeckoSession) {
                 assertThat("Session should be closed after being killed",
@@ -141,7 +139,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
         mainSession.open()
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        mainSession.waitUntilCalled(object : ProgressDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Page should load successfully", success, equalTo(true))
@@ -154,7 +152,7 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(FULLSCREEN_PATH)
         mainSession.waitForPageStop()
         val promise = mainSession.evaluatePromiseJS("document.querySelector('#fullscreen').requestFullscreen()")
-        sessionRule.waitUntilCalled(object : ContentDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
                 assertThat("Div went fullscreen", fullScreen, equalTo(true))
@@ -164,7 +162,7 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     private fun waitForFullscreenExit() {
-        sessionRule.waitUntilCalled(object : ContentDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
                 assertThat("Div left fullscreen", fullScreen, equalTo(false))
@@ -192,14 +190,14 @@ class ContentDelegateTest : BaseSessionTest() {
         val surface = Surface(texture)
         display.surfaceChanged(surface, 100, 100)
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitUntilCalled(object : ContentDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onFirstComposite(session: GeckoSession) {
             }
         })
         display.surfaceDestroyed()
         display.surfaceChanged(surface, 100, 100)
-        sessionRule.waitUntilCalled(object : ContentDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onFirstComposite(session: GeckoSession) {
             }
@@ -211,7 +209,7 @@ class ContentDelegateTest : BaseSessionTest() {
     @WithDisplay(width = 10, height = 10)
     @Test fun firstContentfulPaint() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitUntilCalled(object : ContentDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onFirstContentfulPaint(session: GeckoSession) {
             }
@@ -244,7 +242,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
     @Test fun webAppManifest() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        mainSession.waitUntilCalled(object : ContentDelegate, ProgressDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.All {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Page load should succeed", success, equalTo(true))
@@ -275,7 +273,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
     @Test fun viewportFit() {
         mainSession.loadTestPath(VIEWPORT_PATH)
-        mainSession.waitUntilCalled(object : ContentDelegate, ProgressDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.All {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Page load should succeed", success, equalTo(true))
@@ -288,7 +286,7 @@ class ContentDelegateTest : BaseSessionTest() {
         })
 
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        mainSession.waitUntilCalled(object : ContentDelegate, ProgressDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.All {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Page load should succeed", success, equalTo(true))
@@ -310,7 +308,7 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         mainSession.evaluateJS("window.close()")
-        mainSession.waitUntilCalled(object : ContentDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onCloseRequest(session: GeckoSession) {
             }
@@ -324,7 +322,7 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         val newSession = sessionRule.createClosedSession()
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
                 return GeckoResult.fromValue(newSession)
@@ -333,7 +331,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
         mainSession.evaluateJS("const w = window.open('about:blank'); w.close()")
 
-        newSession.waitUntilCalled(object : ContentDelegate, ProgressDelegate {
+        newSession.waitUntilCalled(object : Callbacks.All {
             @AssertCalled(count = 1)
             override fun onCloseRequest(session: GeckoSession) {
             }
@@ -360,11 +358,11 @@ class ContentDelegateTest : BaseSessionTest() {
     /**
      * With no delegate set, the default behaviour is to stop hung scripts.
      */
-    @NullDelegate(ContentDelegate::class)
+    @NullDelegate(GeckoSession.ContentDelegate::class)
     @Test fun stopHungProcessDefault() {
         setHangReportTestPrefs()
         mainSession.loadTestPath(HUNG_SCRIPT)
-        sessionRule.delegateUntilTestEnd(object : ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("The script did not complete.",
@@ -381,7 +379,7 @@ class ContentDelegateTest : BaseSessionTest() {
      */
     @Test fun stopHungProcessNull() {
         setHangReportTestPrefs()
-        sessionRule.delegateUntilTestEnd(object : ContentDelegate, ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
             // default onSlowScript returns null
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
@@ -400,7 +398,7 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun stopHungProcessDoNothing() {
         setHangReportTestPrefs()
         var scriptHungReportCount = 0
-        sessionRule.delegateUntilTestEnd(object : ContentDelegate, ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
             @AssertCalled()
             override fun onSlowScript(geckoSession: GeckoSession, scriptFileName: String): GeckoResult<SlowScriptResponse> {
                 scriptHungReportCount += 1;
@@ -423,7 +421,7 @@ class ContentDelegateTest : BaseSessionTest() {
      */
     @Test fun stopHungProcess() {
         setHangReportTestPrefs()
-        sessionRule.delegateUntilTestEnd(object : ContentDelegate, ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onSlowScript(geckoSession: GeckoSession, scriptFileName: String): GeckoResult<SlowScriptResponse> {
                 return GeckoResult.fromValue(SlowScriptResponse.STOP)
@@ -444,7 +442,7 @@ class ContentDelegateTest : BaseSessionTest() {
      */
     @Test fun stopHungProcessWait() {
         setHangReportTestPrefs()
-        sessionRule.delegateUntilTestEnd(object : ContentDelegate, ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onSlowScript(geckoSession: GeckoSession, scriptFileName: String): GeckoResult<SlowScriptResponse> {
                 return GeckoResult.fromValue(SlowScriptResponse.CONTINUE)
@@ -466,7 +464,7 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun stopHungProcessWaitThenStop() {
         setHangReportTestPrefs(500)
         var scriptWaited = false
-        sessionRule.delegateUntilTestEnd(object : ContentDelegate, ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
             @AssertCalled(count = 2, order = [1, 2])
             override fun onSlowScript(geckoSession: GeckoSession, scriptFileName: String): GeckoResult<SlowScriptResponse> {
                 return if (!scriptWaited) {

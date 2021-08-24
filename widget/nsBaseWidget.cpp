@@ -1336,12 +1336,8 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
         StaticPrefs::gfx_webrender_unaccelerated_widget_force()) {
       enableWR = gfx::gfxVars::UseWebRender();
       enableSWWR = gfx::gfxVars::UseSoftwareWebRender();
-    } else if (gfxPlatform::DoesFissionForceWebRender() ||
-               StaticPrefs::
-                   gfx_webrender_software_unaccelerated_widget_allow()) {
-      enableWR = enableSWWR = gfx::gfxVars::UseWebRender();
     } else {
-      enableWR = enableSWWR = false;
+      enableWR = enableSWWR = gfx::gfxVars::UseWebRender();
     }
     MOZ_RELEASE_ASSERT(enableWR);
     bool enableAPZ = UseAPZ();

@@ -138,7 +138,7 @@ class LoginManagerPrompter {
   ) {
     log.debug("promptToSavePassword");
     let inPrivateBrowsing = PrivateBrowsingUtils.isBrowserPrivate(aBrowser);
-    let notification = LoginManagerPrompter._showLoginCaptureDoorhanger(
+    LoginManagerPrompter._showLoginCaptureDoorhanger(
       aBrowser,
       aLogin,
       "password-save",
@@ -153,13 +153,6 @@ class LoginManagerPrompter {
       }
     );
     Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
-
-    return {
-      dismiss() {
-        let { PopupNotifications } = aBrowser.ownerGlobal.wrappedJSObject;
-        PopupNotifications.remove(notification);
-      },
-    };
   }
 
   /**
@@ -793,8 +786,6 @@ class LoginManagerPrompter {
       log.debug("Showing the ConfirmationHint");
       anchor.ownerGlobal.ConfirmationHint.show(anchor, "passwordSaved");
     }
-
-    return notification;
   }
 
   /**
@@ -849,7 +840,7 @@ class LoginManagerPrompter {
       messageStringID = "updateLoginMsgAddUsername2";
     }
 
-    let notification = LoginManagerPrompter._showLoginCaptureDoorhanger(
+    LoginManagerPrompter._showLoginCaptureDoorhanger(
       aBrowser,
       login,
       "password-change",
@@ -872,13 +863,6 @@ class LoginManagerPrompter {
       "passwordmgr-prompt-change",
       oldGUID
     );
-
-    return {
-      dismiss() {
-        let { PopupNotifications } = aBrowser.ownerGlobal.wrappedJSObject;
-        PopupNotifications.remove(notification);
-      },
-    };
   }
 
   /**
