@@ -51,10 +51,6 @@ class RegisteredThread final {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  const mozilla::profiler::ThreadRegistrationInfo& Info() const {
-    return mRacyRegisteredThread.mThreadRegistration.mData.mInfo;
-  }
-
  private:
   class RacyRegisteredThread mRacyRegisteredThread;
 };
