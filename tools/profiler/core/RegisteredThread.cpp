@@ -10,6 +10,7 @@
 #include "js/AllocationRecording.h"
 #include "js/ProfilingStack.h"
 #include "js/TraceLoggerAPI.h"
+#include "mozilla/ProfilerThreadRegistrationData.h"
 
 RacyRegisteredThread::RacyRegisteredThread(
     mozilla::profiler::ThreadRegistration& aThreadRegistration,
@@ -59,4 +60,28 @@ void RegisteredThread::SetJSContext(JSContext* aContext) {
 
 void RegisteredThread::PollJSSampling() {
   mRacyRegisteredThread.mThreadRegistration.mData.PollJSSampling();
+}
+
+const RacyRegisteredThread& mozilla::profiler::
+    ThreadRegistrationUnlockedConstReader::RacyRegisteredThreadCRef() const {
+  MOZ_ASSERT(mRegisteredThread);
+  return mRegisteredThread->RacyRegisteredThread();
+}
+
+RacyRegisteredThread&
+mozilla::profiler::ThreadRegistrationUnlockedConstReaderAndAtomicRW::
+    RacyRegisteredThreadRef() {
+  MOZ_ASSERT(mRegisteredThread);
+  return mRegisteredThread->RacyRegisteredThread();
+}
+
+RegisteredThread& mozilla::profiler::ThreadRegistrationLockedRWFromAnyThread::
+    RegisteredThreadRef() {
+  MOZ_ASSERT(mRegisteredThread);
+  return *mRegisteredThread;
+}
+
+void mozilla::profiler::ThreadRegistrationLockedRWOnThread::SetRegisteredThread(
+    RegisteredThread* aRegisteredThread) {
+  mRegisteredThread = aRegisteredThread;
 }
