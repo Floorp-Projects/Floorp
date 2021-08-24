@@ -236,7 +236,7 @@ interface mixin KeyEventMixin {
   // for compatibility with the other web browsers on Windows.
   const unsigned long DOM_VK_WIN_OEM_CLEAR  = 0xFE;
 
-  [BinaryName="initKeyEventJS", Pref="dom.keyboardevent.init_key_event.enabled"]
+  [BinaryName="initKeyEventJS", Func="KeyboardEvent::IsInitKeyEventAvailable"]
   void initKeyEvent(DOMString type,
                     optional boolean canBubble = false,
                     optional boolean cancelable = false,
