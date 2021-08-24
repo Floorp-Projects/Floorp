@@ -161,7 +161,6 @@
 #endif  // MOZ_XUL
 
 #include "mozilla/layers/CompositorBridgeChild.h"
-#include "ClientLayerManager.h"
 #include "gfxPlatform.h"
 #include "Layers.h"
 #include "LayerTreeInvalidation.h"
@@ -4591,7 +4590,7 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
     if (view && view->GetWidget() &&
         nsLayoutUtils::GetDisplayRootFrame(rootFrame) == rootFrame) {
       WindowRenderer* renderer = view->GetWidget()->GetWindowRenderer();
-      // ClientLayerManagers or WebRenderLayerManagers in content processes
+      // WebRenderLayerManagers in content processes
       // don't support taking snapshots.
       if (renderer &&
           (!renderer->AsKnowsCompositor() || XRE_IsParentProcess())) {

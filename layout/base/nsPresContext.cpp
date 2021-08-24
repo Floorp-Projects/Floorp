@@ -70,7 +70,6 @@
 #include "nsRefreshDriver.h"
 #include "Layers.h"
 #include "LayerUserData.h"
-#include "ClientLayerManager.h"
 #include "mozilla/dom/NotifyPaintEvent.h"
 #include "nsFontCache.h"
 #include "nsFrameLoader.h"

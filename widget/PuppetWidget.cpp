@@ -7,7 +7,6 @@
 
 #include "base/basictypes.h"
 
-#include "ClientLayerManager.h"
 #include "gfxPlatform.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/BrowserChild.h"
