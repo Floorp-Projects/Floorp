@@ -7,4 +7,4 @@ Internals
    :titlesonly:
    :glob:
 
-   *
+   **
