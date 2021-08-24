@@ -60,6 +60,9 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
         internalProps.maximumSignificantDigits = lazyPluralRulesData.maximumSignificantDigits;
     }
 
+    // Intl.NumberFormat v3 Proposal
+    internalProps.roundingPriority = lazyPluralRulesData.roundingPriority;
+
     // Step 13 (lazily computed on first access).
     internalProps.pluralCategories = null;
 
@@ -122,6 +125,8 @@ function InitializePluralRules(pluralRules, locales, options) {
     //     // optional, mutually exclusive with the fraction-digits option
     //     minimumSignificantDigits: integer ∈ [1, 21],
     //     maximumSignificantDigits: integer ∈ [1, 21],
+    //
+    //     roundingPriority: "auto" / "lessPrecision" / "morePrecision",
     //   }
     //
     // Note that lazy data is only installed as a final step of initialization,
@@ -292,6 +297,10 @@ function Intl_PluralRules_resolvedOptions() {
 
     // Step 7.
     DefineDataProperty(result, "pluralCategories", pluralCategories);
+
+#ifdef NIGHTLY_BUILD
+    DefineDataProperty(result, "roundingPriority", internals.roundingPriority);
+#endif
 
     // Step 8.
     return result;
