@@ -74,6 +74,7 @@ def make_task_description(config, jobs):
             "worker": {
                 "implementation": "notarization-poller",
                 "uuid-manifest": {"task-reference": uuid_manifest_url},
+                "max-run-time": 3600,
             },
             "worker-type": "mac-notarization-poller",
             "dependencies": {"part1": dep_job.label},
