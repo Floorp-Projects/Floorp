@@ -173,6 +173,7 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
 
     switch (aDataType) {
       case CLIPBOARD_TEXT: {
+        LOGCLIP(("  got text data %p\n", aData));
         const char* text = static_cast<const char*>(aData);
         if (text) {
           mClipboardDataLength = sizeof(char) * (strlen(text) + 1);
@@ -192,6 +193,8 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
           return;
         }
 
+        LOGCLIP(("  got %d targets\n", n_targets));
+
         mClipboardData = targets;
         mClipboardDataLength = n_targets;
       } break;
@@ -200,11 +203,14 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
             static_cast<const GtkSelectionData*>(aData);
 
         gint dataLength = gtk_selection_data_get_length(selection);
+        const guchar* data = gtk_selection_data_get_data(selection);
+
+        LOGCLIP(("  got data %p len %d\n", data, dataLength));
+
         if (dataLength > 0) {
           mClipboardDataLength = dataLength;
           mClipboardData = moz_xmalloc(dataLength);
-          memcpy(mClipboardData, gtk_selection_data_get_data(selection),
-                 dataLength);
+          memcpy(mClipboardData, data, dataLength);
         }
       } break;
     }
@@ -244,7 +250,8 @@ static void clipboard_text_received(GtkClipboard* clipboard, const gchar* text,
 bool nsRetrievalContextX11::WaitForClipboardData(ClipboardDataType aDataType,
                                                  GtkClipboard* clipboard,
                                                  const char* aMimeType) {
-  LOGCLIP(("nsRetrievalContextX11::WaitForClipboardData\n"));
+  LOGCLIP(
+      ("nsRetrievalContextX11::WaitForClipboardData, MIME %s\n", aMimeType));
 
   mState = INITIAL;
   NS_ASSERTION(!mClipboardData, "Leaking clipboard content!");
@@ -303,10 +310,10 @@ GdkAtom* nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard,
 const char* nsRetrievalContextX11::GetClipboardData(const char* aMimeType,
                                                     int32_t aWhichClipboard,
                                                     uint32_t* aContentLength) {
-  LOGCLIP(("nsRetrievalContextX11::GetClipboardData(%s)\n",
+  LOGCLIP(("nsRetrievalContextX11::GetClipboardData(%s) MIME %s\n",
            aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                               : "clipboard"));
-
+                                                               : "clipboard",
+           aMimeType));
   GtkClipboard* clipboard;
   clipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
 
