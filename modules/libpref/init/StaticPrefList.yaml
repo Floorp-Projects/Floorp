@@ -9938,14 +9938,6 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
-# When this pref is true, AddStorageEntry will return an error if the
-# OPEN_READONLY flag is passed and no entry exists. If no regressions occur
-# this pref should be removed at some point in the future.
-- name: network.cache.bug1708673
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 #  This is used for a temporary workaround for a web-compat issue. If pref is
 # true CORS preflight requests are allowed to send client certificates.
 - name: network.cors_preflight.allow_client_cert

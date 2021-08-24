@@ -677,80 +677,6 @@ function continue_test_prefetch() {
   );
 }
 
-function test_visitor_doom() {
-  // See bug 1708673
-  let p1 = new Promise(resolve => {
-    let doomTasks = [];
-    let visitor = {
-      onCacheStorageInfo() {},
-      async onCacheEntryInfo(
-        aURI,
-        aIdEnhance,
-        aDataSize,
-        aFetchCount,
-        aLastModifiedTime,
-        aExpirationTime,
-        aPinned,
-        aInfo
-      ) {
-        let storages = [
-          Services.cache2.memoryCacheStorage(aInfo),
-          Services.cache2.diskCacheStorage(aInfo, false),
-        ];
-        console.debug("asyncDoomURI", aURI.spec);
-        let doomTask = Promise.all(
-          storages.map(storage => {
-            return new Promise(resolve => {
-              storage.asyncDoomURI(aURI, aIdEnhance, {
-                onCacheEntryDoomed: resolve,
-              });
-            });
-          })
-        );
-        doomTasks.push(doomTask);
-      },
-      onCacheEntryVisitCompleted() {
-        Promise.allSettled(doomTasks).then(resolve);
-      },
-      QueryInterface: ChromeUtils.generateQI(["nsICacheStorageVisitor"]),
-    };
-    Services.cache2.asyncVisitAllStorages(visitor, true);
-  });
-
-  let p2 = new Promise(resolve => {
-    reset_predictor();
-    resolve();
-  });
-
-  do_test_pending();
-  Promise.allSettled([p1, p2]).then(() => {
-    return new Promise(resolve => {
-      let entryCount = 0;
-      let visitor = {
-        onCacheStorageInfo() {},
-        async onCacheEntryInfo(
-          aURI,
-          aIdEnhance,
-          aDataSize,
-          aFetchCount,
-          aLastModifiedTime,
-          aExpirationTime,
-          aPinned,
-          aInfo
-        ) {
-          entryCount++;
-        },
-        onCacheEntryVisitCompleted() {
-          Assert.equal(entryCount, 0);
-          resolve();
-        },
-        QueryInterface: ChromeUtils.generateQI(["nsICacheStorageVisitor"]),
-      };
-      Services.cache2.asyncVisitAllStorages(visitor, true);
-    }).then(run_next_test);
-  });
-}
-
 function cleanup() {
   observer.cleaningUp = true;
   if (running_single_process) {
@@ -778,7 +704,6 @@ var tests = [
   test_prefetch_prime,
   test_prefetch_prime,
   test_prefetch,
-  test_visitor_doom,
   // This must ALWAYS come last, to ensure we clean up after ourselves
   cleanup,
 ];
