@@ -720,7 +720,6 @@ class WasmFlags(TargetCompileFlags):
                 ),
                 ("WASM_CXXFLAGS", "WASM_CFLAGS"),
             ),
-            ("RTL", None, ("WASM_CXXFLAGS", "WASM_CFLAGS")),
             ("DEBUG", self._debug_flags(), ("WASM_CFLAGS", "WASM_CXXFLAGS")),
             (
                 "CLANG_PLUGIN",
@@ -728,11 +727,6 @@ class WasmFlags(TargetCompileFlags):
                 ("WASM_CFLAGS", "WASM_CXXFLAGS"),
             ),
             ("OPTIMIZE", self._optimize_flags(), ("WASM_CFLAGS", "WASM_CXXFLAGS")),
-            (
-                "FRAMEPTR",
-                context.config.substs.get("MOZ_FRAMEPTR_FLAGS"),
-                ("WASM_CFLAGS", "WASM_CXXFLAGS"),
-            ),
             (
                 "WARNINGS_AS_ERRORS",
                 self._warnings_as_errors(),
