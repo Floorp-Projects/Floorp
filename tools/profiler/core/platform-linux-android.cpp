@@ -357,7 +357,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
   if (!mSamplerTid.IsSpecified()) {
     mSamplerTid = profiler_current_thread_id();
   }
-  ProfilerThreadId sampleeTid = aRegisteredThread.Info()->ThreadId();
+  ProfilerThreadId sampleeTid = aRegisteredThread.Info().ThreadId();
   MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
 
   //----------------------------------------------------------------//
