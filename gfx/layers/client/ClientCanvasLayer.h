@@ -68,7 +68,6 @@ class ClientCanvasLayer : public CanvasLayer, public ClientLayer {
     return canvasRenderer->GetCanvasClient();
   }
 
- protected:
   ClientLayerManager* ClientManager() {
     return static_cast<ClientLayerManager*>(mManager);
   }
