@@ -120,6 +120,25 @@ TEST(IntlNumberFormat, Unit)
   ASSERT_EQ(std::u16string_view(res), u"12.34 metros por segundo");
 }
 
+TEST(IntlNumberFormat, RoundingMode)
+{
+  NumberFormatOptions options;
+  options.mFractionDigits = Some(std::make_pair(0, 2));
+  options.mStripTrailingZero = true;
+  options.mRoundingIncrement = 5;
+  options.mRoundingMode = NumberFormatOptions::RoundingMode::Ceil;
+
+  UniquePtr<NumberFormat> nf = NumberFormat::TryCreate("en", options).unwrap();
+
+  const char16_t* res16 = nf->format(1.92).unwrap().data();
+  ASSERT_TRUE(res16 != nullptr);
+  ASSERT_EQ(std::u16string_view(res16), u"1.95");
+
+  res16 = nf->format(1.96).unwrap().data();
+  ASSERT_TRUE(res16 != nullptr);
+  ASSERT_EQ(std::u16string_view(res16), u"2");
+}
+
 TEST(IntlNumberFormat, FormatToParts)
 {
   NumberFormatOptions options;
