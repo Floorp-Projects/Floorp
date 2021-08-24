@@ -455,6 +455,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     builder.Finalize(dlData);
     mLastDisplayListSize.items_size = dlData.mDLItems->mCapacity;
     mLastDisplayListSize.cache_size = dlData.mDLCache->mCapacity;
+    mLastDisplayListSize.spatial_tree_size = dlData.mDLSpatialTree->mCapacity;
     resourceUpdates.Flush(dlData.mResourceUpdates, dlData.mSmallShmems,
                           dlData.mLargeShmems);
     dlData.mRect =
