@@ -7,8 +7,6 @@
 import gdb
 import gdb.types
 from gdb.FrameDecorator import FrameDecorator
-from mozilla.JSObject import get_function_name, get_function_script
-from mozilla.prettyprinters import TypeCache
 import platform
 
 # For ease of use in Python 2, we use "long" instead of "int"
@@ -67,7 +65,7 @@ class UnwinderTypeCacheFrameType(object):
         return self.tc.__getattr__("FrameType::" + name)
 
 
-class UnwinderTypeCache(TypeCache):
+class UnwinderTypeCache(object):
     # All types and symbols that we need are attached to an object that we
     # can dispose of as needed.
 
@@ -75,7 +73,6 @@ class UnwinderTypeCache(TypeCache):
         self.d = None
         self.frame_enum_names = {}
         self.frame_class_types = {}
-        super(UnwinderTypeCache, self).__init__(None)
 
     # We take this bizarre approach to defer trying to look up any
     # symbols until absolutely needed.  Without this, the loading
@@ -85,8 +82,6 @@ class UnwinderTypeCache(TypeCache):
             self.initialize()
         if name == "frame_type":
             return UnwinderTypeCacheFrameType(self)
-        if name not in self.d:
-            return None
         return self.d[name]
 
     def value(self, name):
@@ -118,6 +113,7 @@ class UnwinderTypeCache(TypeCache):
             "CalleeToken_FunctionConstructing"
         )
         self.d["CalleeToken_Script"] = self.jit_value("CalleeToken_Script")
+        self.d["JSFunction"] = gdb.lookup_type("JSFunction").pointer()
         self.d["JSScript"] = gdb.lookup_type("JSScript").pointer()
         self.d["Value"] = gdb.lookup_type("JS::Value")
 
@@ -178,9 +174,14 @@ class JitFrameDecorator(FrameDecorator):
             tag == self.cache.CalleeToken_Function
             or tag == self.cache.CalleeToken_FunctionConstructing
         ):
-            value = gdb.Value(calleetoken)
-            function = get_function_name(value, self.cache)
-            script = get_function_script(value, self.cache)
+            fptr = gdb.Value(calleetoken).cast(self.cache.JSFunction)
+            try:
+                atom = fptr["atom_"]
+                if atom:
+                    function = str(atom)
+            except gdb.MemoryError:
+                function = "(could not read function name)"
+            script = fptr["u"]["scripted"]["s"]["script_"]
         elif tag == self.cache.CalleeToken_Script:
             script = gdb.Value(calleetoken).cast(self.cache.JSScript)
         return {"function": function, "script": script}
