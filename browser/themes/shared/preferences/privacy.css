@@ -115,7 +115,6 @@
 
 .content-blocking-category {
   border: 1px solid var(--in-content-box-border-color);
-  background-color: rgba(215, 215, 219, 0.1);
 }
 
 .content-blocking-category.disabled {
@@ -217,7 +216,22 @@
 
 .content-blocking-category.selected {
   border: 1px solid var(--in-content-accent-color);
-  background-color: var(--section-highlight-background-color);
+}
+
+@media (prefers-contrast) {
+  .content-blocking-category.selected {
+    outline: 2px solid var(--in-content-accent-color);
+  }
+}
+
+@media not (prefers-contrast) {
+  .content-blocking-category {
+    background-color: rgba(215, 215, 219, 0.1);
+  }
+
+  .content-blocking-category.selected {
+    background-color: var(--section-highlight-background-color);
+  }
 }
 
 .content-blocking-warning-title,
