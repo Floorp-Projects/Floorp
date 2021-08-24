@@ -656,12 +656,12 @@ var GeckoViewWebExtension = {
   async ensureBuiltIn(aUri, aId) {
     await gAddonManagerStartup;
     const extensionData = new ExtensionData(aUri);
-    const [manifest, extension] = await Promise.all([
-      extensionData.loadManifest(),
+    const [extensionVersion, extension] = await Promise.all([
+      extensionData.getExtensionVersionWithoutValidation(),
       this.extensionById(aId),
     ]);
 
-    if (!extension || manifest.version != extension.version) {
+    if (!extension || extensionVersion != extension.version) {
       return this.installBuiltIn(aUri);
     }
 
