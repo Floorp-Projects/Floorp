@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Lisää linkki aloitusnäyttöön</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Lisää pikavalintoihin</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Poista pikavalinnoista</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Mitä uutta</string>
     <string name="menu_settings">Asetukset</string>
@@ -207,6 +212,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Lisää mukautettu osoite</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Automaattisen täydennyksen lista:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Lisää osoite</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Lisää mukautettu osoite</string>
 
@@ -273,10 +284,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Ei</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">Ei kiitos</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Estä vain kolmannen osapuolen seurantaevästeet</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Estä vain kolmannen osapuolen evästeet</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Kyllä</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Kyllä kiitos</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Avaa sovellus sormenjäljellä</string>
@@ -329,6 +341,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Asennetut hakukoneet</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Valitse hakukone</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Palauta oletushakukoneet</string>
 
@@ -337,6 +352,12 @@
     <string name="preference_search_add2">+ Lisää toinen hakukone</string>
     <string name="preference_search_remove_title">Poista hakukone</string>
     <string name="preference_search_remove">Poista</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Lisää toinen hakukone</string>
+
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Valitse ensisijainen hakukone:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -497,8 +518,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Lisää</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">KYLLÄ</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Peruuta</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">EI</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -638,17 +665,11 @@
     <string name="biometric_auth_moved_too_quickly">Sormi liikkui liian nopeasti. Yritä uudelleen.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Haluatko ottaa hakuehdotukset käyttöön?</string>
+    <string name="enable_search_suggestion_title2">Näytetäänkö hakuehdotukset?</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">Hakuehdotusten saamiseksi %1$s-selaimen on lähetettävä osoitekenttään kirjoittamasi teksti valitsemallesi hakukoneelle. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Lue lisää</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Hakuehdotusten saamiseksi %1$sin on lähetettävä osoitekenttään kirjoittamasi teksti hakukoneelle.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ei</string>
@@ -668,6 +689,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Käyttäytyykö sivusto odottamattomasti?\n Kokeile kytkeä seurannan suojaus pois päältä</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Käyttäytyykö sivusto oudosti?\n
+    Kokeile kytkeä seurannan suojaus pois päältä</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Pääsy yhdellä napautuksella sivustoille, joilla useimmiten vierailet%1$s Valikko > Lisää linkki aloitusnäyttöön]]></string>
@@ -686,17 +712,22 @@
     <string name="tip_open_in_new_tab">Avaa linkki uuteen välilehteen\n Paina pitkään mitä tahansa linkkiä sivulla</string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Haluatko mieluummin nähdä sivuston täyden työpöytäversion?%1$s Valikko > Sivuston työpöytäversio]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Haluatko nähdä sivuston täyden version?\n
+        Vaihda työpöytäversioon %1$s -valikosta</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Älä näytä vinkkejä aloitusnäytössä</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Luotettu sivusto?\n
-        Sallittujen lista poistaa seurannan suojauksen käytöstä niillä sivustoilla, jotka tunnet ja joihin luotat.
+    <string name="tip_explain_allowlist2">Haluatko seurannan suojauksen pois luottamiltasi sivustoilta?\n
+        Lisää sivusto sallittujen listalle asetuksista
     </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Kyllä, meillä on uusi ulkoasu! Lue lisää %1$siin tehdyistä päivityksistä.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Uusi välilehti avattu</string>
@@ -724,6 +755,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Poista kaikki sivustot</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Estä evästeet</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Haluatko estää evästeet?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Välilehti kaatui</string>
     <!-- Headline for the tab crash report screen -->
@@ -735,4 +772,41 @@
 
     <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Lähetä kaatumisraportti Mozillalle</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Estetyt seuraimet %s lähtien</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Sisältö</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Mainonta</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Sosiaalinen</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analytiikka</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Tehostettu seurannan suojaus</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Suojaukset ovat POIS PÄÄLTÄ tällä sivustolla</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Suojaukset ovat PÄÄLLÄ tällä sivustolla</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Yhteys on suojattu</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Yhteys ei ole suojattu</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Estettävät seuraimet ja komentosarjat</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Takaisin</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Poista</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">Tallennettuja ja jaettuja kuvia &lt;b&gt;ei poisteta&lt;/b&gt; kun tyhjennät %1s -historian</string>
 </resources>

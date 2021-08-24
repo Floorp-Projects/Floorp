@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Το ιστορικό περιήγησής έχει εκκαθαριστεί.</string>
 
+    <string name="feedback_erase2">Το ιστορικό περιήγησης διαγράφηκε</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Το ιστορικό της καρτέλας έχει διαγραφεί.</string>
 
@@ -30,7 +32,7 @@
     <string name="menu_share">Κοινή χρήση…</string>
 
     <!-- Menu item: Report an issue on the current site -->
-    <string name="menu_report_site_issue">Αναφορά ζητήματος σελίδας</string>
+    <string name="menu_report_site_issue">Αναφορά ζητήματος ιστοτόπου</string>
 
     <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
       replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
@@ -44,7 +46,12 @@
     <string name="menu_open_with_a_browser2">Άνοιγμα σε…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
-    <string name="menu_add_to_home_screen">Προσθήκη στην Αρχική οθόνη</string>
+    <string name="menu_add_to_home_screen">Προσθήκη στην αρχική οθόνη</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Προσθήκη στις συντομεύσεις</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Αφαίρεση από συντομεύσεις</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Τι νέο υπάρχει</string>
@@ -60,8 +67,15 @@
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">Αποκλεισμένοι ιχνηλάτες</string>
 
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Η απενεργοποίηση αυτού ίσως διορθώσει μερικά προβλήματα</string>
+
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">Φραγή περιεχομένου</string>
+
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Απενεργοποιήστε το για διόρθωση μερικών ιστοτόπων</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -83,7 +97,7 @@
 
     <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
          to the foreground) -->
-    <string name="notification_action_erase_and_open">Διαγραφή και Άνοιγμα</string>
+    <string name="notification_action_erase_and_open">Διαγραφή και άνοιγμα</string>
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
@@ -111,10 +125,10 @@
     <string name="text_selection_search_action">Ιδιωτική αναζήτηση</string>
 
     <!-- Header for the Privacy and Security settings menu -->
-    <string name="preference_privacy_and_security_header">Απόρρητο &amp; Ασφάλεια</string>
+    <string name="preference_privacy_and_security_header">Απόρρητο &amp; ασφάλεια</string>
 
     <!-- Preference summary for settings related to privacy and security -->
-    <string name="preference_privacy_and_security_summary">Επιλογές παρακολούθησης, cookies, δεδομένων</string>
+    <string name="preference_privacy_and_security_summary">Επιλογές καταγραφής, cookie, δεδομένων</string>
 
     <!-- Preference category description for settings related to search, set default
     and autocomplete are settings a user can find and change inside the "search" settings screen -->
@@ -136,6 +150,9 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Γενικά</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Προεπιλεγμένος φυλλομετρητής, καρτέλες, γλώσσα</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Συλλογή &amp; χρήση δεδομένων</string>
@@ -164,16 +181,25 @@
     <string name="preference_subitem_autocomplete">Αυτόματη συμπλήρωση URL</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
-    <string name="preference_switch_autocomplete_topsites">Για κορυφαίες ιστοσελίδες</string>
+    <string name="preference_switch_autocomplete_topsites">Για κορυφαίους ιστοτόπους</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Για ιστοτόπους που προσθέτετε</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
-    <string name="preference_category_autocomplete_manage_sites">Διαχείριση ιστοσελίδων</string>
+    <string name="preference_category_autocomplete_manage_sites">Διαχείριση ιστοτόπων</string>
 
     <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
-    <string name="preference_autocomplete_subitem_manage_sites">Διαχείριση ιστοσελίδων</string>
+    <string name="preference_autocomplete_subitem_manage_sites">Διαχείριση ιστοτόπων</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Προσθήκη προσαρμοσμένου URL</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Λίστα αυτόματης συμπλήρωσης:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Προσθήκη URL</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Προσθήκη προσαρμοσμένου URL</string>
@@ -181,8 +207,11 @@
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">Προσθήκη προσαρμοσμένου URL</string>
 
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Προσθήκη συνδέσμου για αυτόματη συμπλήρωση</string>
+
     <!-- Preference category for settings about cookies and site data -->
-    <string name="preference_category_cookies">Cookies και δεδομένα ιστοσελίδων</string>
+    <string name="preference_category_cookies">Cookie και δεδομένα ιστοτόπων</string>
 
     <!-- Preference category for settings about data choices -->
     <string name="preference_category_data_choices">Επιλογές δεδομένων</string>
@@ -226,21 +255,23 @@
     <string name="preference_language_systemdefault">Προεπιλογή συστήματος</string>
 
     <string name="preference_category_privacy">Απόρρητο</string>
-    <string name="preference_privacy_block_ads">Φραγή trackers διαφημίσεων</string>
-    <string name="preference_privacy_block_ads_summary">Ορισμένες διαφημίσεις καταγράφουν επισκέψεις ιστοσελίδων, ακόμη κι αν δεν κάνετε κλικ σε διαφημίσεις</string>
-    <string name="preference_privacy_block_analytics">Φραγή trackers αναλύσεων</string>
-    <string name="preference_privacy_block_analytics_summary">Χρησιμοποιείται για συλλογή, ανάλυση και μέτρηση δραστηριοτήτων, όπως πατήματα και κύλιση</string>
-    <string name="preference_privacy_block_social">Φραγή κοινωνικών trackers</string>
-    <string name="preference_privacy_block_social_summary">Ενσωματωμένο σε ιστοσελίδες ώστε να καταγράφει τις επισκέψεις σας και να προβάλει λειτουργικότητα, όπως κουμπιά κοινής χρήσης</string>
-    <string name="preference_privacy_block_content">Φραγή trackers άλλου περιεχομένου</string>
-    <string name="preference_privacy_block_content_summary2">Η ενεργοποίηση ενδέχεται να προκαλέσει απροσδόκητη συμπεριφορά ορισμένων σελίδων</string>
-    <string name="preference_privacy_category_cookies">Αποκλεισμός cookies</string>
+    <string name="preference_privacy_block_ads">Φραγή ιχνηλατών διαφημίσεων</string>
+    <string name="preference_privacy_block_ads_summary">Ορισμένες διαφημίσεις καταγράφουν επισκέψεις σε ιστοτόπους, ακόμη κι αν δεν τις πατήσετε</string>
+    <string name="preference_privacy_block_analytics">Φραγή ιχνηλατών ανάλυσης</string>
+    <string name="preference_privacy_block_analytics_summary">Χρησιμοποιούνται για τη συλλογή, την ανάλυση και τη μέτρηση δραστηριοτήτων, όπως πατήματα και κυλίσεις</string>
+    <string name="preference_privacy_block_social">Φραγή κοινωνικών ιχνηλατών</string>
+    <string name="preference_privacy_block_social_summary">Ενσωματώνονται σε ιστοτόπους για την καταγραφή των επισκέψεών σας και την εμφάνιση λειτουργιών, όπως κουμπιά κοινοποίησης</string>
+    <string name="preference_privacy_block_content">Φραγή ιχνηλατών άλλου περιεχομένου</string>
+    <string name="preference_privacy_block_content_summary2">Η ενεργοποίηση ενδέχεται να προκαλέσει την απρόσμενη συμπεριφορά ορισμένων σελίδων</string>
+    <string name="preference_privacy_category_cookies">Φραγή cookie</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Όχι</string>
-    <string name="preference_privacy_should_block_cookies_third_party_only_option">Φραγή μόνο cookies τρίτων</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Ναι</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">Όχι, ευχαριστώ</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Φραγή μόνο cookie καταγραφής τρίτων</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Φραγή μόνο cookie τρίτων</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Ναι, παρακαλώ</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Χρήση αποτυπώματος για ξεκλείδωμα εφαρμογής</string>
@@ -260,12 +291,12 @@
 
     <string name="preference_category_security">Ασφάλεια</string>
 
-    <string name="preference_category_performance">Απόδοση</string>
+    <string name="preference_category_performance">Επιδόσεις</string>
     <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
     <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
     <string name="preference_performance_block_webfonts_summary">Ενδέχεται να οδηγήσει σε απώλεια εικονιδίων ή εικόνων</string>
 
-    <string name="preference_performance_block_javascript">Αποκλεισμός JavaScript</string>
+    <string name="preference_performance_block_javascript">Φραγή JavaScript</string>
     <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
     <string name="preference_performance_block_javascript_summary">Οι σελίδες ενδέχεται να φορτώνονται ταχύτερα, αλλά ίσως συμπεριφερθούν απροσδόκητα</string>
 
@@ -273,7 +304,7 @@
      "default apps" settings screen or if not supported by this Android version to a SUMO page describing
      how to set Focus as a default browser.
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_default_browser2">Ορισμός του %1$s ως προεπιλεγμένο πρόγραμμα περιήγησης</string>
+    <string name="preference_default_browser2">Ορισμός του %1$s ως προεπιλεγμένου φυλλομετρητή</string>
 
     <string name="preference_category_mozilla">Mozilla</string>
     <string name="preference_mozilla_telemetry2">Αποστολή δεδομένων χρήσης</string>
@@ -293,6 +324,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Εγκατεστημένες μηχανές αναζήτησης</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Επιλογή μηχανής αναζήτησης</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Επαναφορά προεπιλεγμένων μηχανών αναζήτησης</string>
 
@@ -301,6 +335,11 @@
     <string name="preference_search_add2">+ Προσθήκη άλλης μηχανής αναζήτησης</string>
     <string name="preference_search_remove_title">Αφαίρεση μηχανών αναζήτησης</string>
     <string name="preference_search_remove">Αφαίρεση</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Προσθήκη άλλης μηχανής αναζήτησης</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Επιλέξτε την προτιμώμενη μηχανή σας:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -318,10 +357,10 @@
 
     <string name="search_add_confirmation">Προστέθηκε νέα μηχανή αναζήτησης.</string>
 
-    <string name="search_add_error_empty_name">Εισάγετε όνομα μηχανής αναζήτησης</string>
+    <string name="search_add_error_empty_name">Εισαγάγετε το όνομα μηχανής αναζήτησης</string>
     <string name="search_add_error_duplicate_name">Μια εγκατεστημένη μηχανή αναζήτησης χρησιμοποιεί ήδη αυτό το όνομα.</string>
 
-    <string name="search_add_error_empty_search">Εισάγετε νήμα αναζήτησης</string>
+    <string name="search_add_error_empty_search">Εισαγάγετε νήμα αναζήτησης</string>
 
     <string name="search_add_error_format">Ελέγξτε ότι το νήμα αναζήτησης ταιριάζει με τη μορφή του παραδείγματος</string>
 
@@ -352,22 +391,26 @@
 
     <!-- This text is not visible. Instead it will be read by the accessibility service once we
      finished loading a website -->
-    <string name="accessibility_announcement_loading_finished">Η ιστοσελίδα φορτώθηκε</string>
+    <string name="accessibility_announcement_loading_finished">Ο ιστότοπος φορτώθηκε</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Περισσότερες επιλογές</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Κουμπί περισσότερων επιλογών</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="content_description_forward">Πλοήγηση προς τα εμπρός</string>
 
     <!-- Content description (not visible, for screen readers etc.): Reload current website -->
-    <string name="content_description_reload">Επαναφόρτωση ιστοσελίδας</string>
+    <string name="content_description_reload">Ανανέωση ιστοτόπου</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
     <string name="content_description_back">Πλοήγηση προς τα πίσω</string>
 
     <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
-    <string name="content_description_stop">Διακοπή φόρτωσης ιστοσελίδας</string>
+    <string name="content_description_stop">Διακοπή φόρτωσης ιστοτόπου</string>
 
     <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
     <string name="content_description_customtab_exit">Επιστροφή στην προηγούμενη εφαρμογή</string>
@@ -378,16 +421,16 @@
 
     <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
          content blocking for the current session -->
-    <string name="content_description_blocking_switch">Φραγή trackers</string>
+    <string name="content_description_blocking_switch">Φραγή ιχνηλατών</string>
 
     <string name="your_rights">Τα δικαιώματά σας</string>
 
     <string name="external_app_prompt_title">Άνοιγμα συνδέσμου σε άλλη εφαρμογή</string>
     <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
          Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
-    <string name="external_app_prompt">Μπορείτε να φύγετε από το %1$s για να ανοίξετε αυτό το σύνδεσμο στο %2$s.</string>
+    <string name="external_app_prompt">Μπορείτε να φύγετε από το %1$s για να ανοίξετε τον σύνδεσμο στο %2$s.</string>
     <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
-    <string name="external_app_prompt_no_app_title">Βρείτε μια εφαρμογή που μπορεί να ανοίξει το σύνδεσμο</string>
+    <string name="external_app_prompt_no_app_title">Βρείτε μια εφαρμογή που μπορεί να ανοίξει τον σύνδεσμο</string>
     <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
          the app store installed on the device (usually that's Google Play). -->
     <string name="external_app_prompt_no_app">Καμία από τις εφαρμογές της συσκευής σας δεν μπορεί να ανοίξει αυτό το σύνδεσμο. Μπορείτε να αποχωρήσετε από το %1$s για να αναζητήσετε στο %2$s μια εφαρμογή που να μπορεί να εκτελέσει αυτή την εργασία.</string>
@@ -395,7 +438,7 @@
     <string name="external_multiple_apps_matched_exit">Έξοδος από την ιδιωτική περιήγηση;</string>
 
     <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
-    <string name="download_snackbar_finished">%1$s τερματίστηκε</string>
+    <string name="download_snackbar_finished">Το %1$s ολοκληρώθηκε</string>
 
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Άνοιγμα</string>
@@ -431,7 +474,7 @@
   <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Ενισχύστε το απόρρητό σας</string>
     <!-- First run tour (Default browser): Text. -->
-    <string name="firstrun_defaultbrowser_text2">Εξελίξτε την ιδιωτική περιήγηση. Αποκλείστε διαφημίσεις και άλλο περιεχόμενο που μπορούν να σάς παρακολουθούν σε όλες τις ιστοσελίδες και επιβραδύνουν τη φόρτωση των σελίδων.</string>
+    <string name="firstrun_defaultbrowser_text2">Μεταβείτε στο επόμενο επίπεδο ιδιωτικής περιήγησης. Αποκλείστε διαφημίσεις και περιεχόμενο που μπορεί να καταγράψει τη δραστηριότητά σας και να επιβραδύνει τη φόρτωση σελίδων.</string>
 
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Η αναζήτησή σας, με τον τρόπο σας</string>
@@ -441,15 +484,15 @@
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Προσθήκη συντομεύσεων στην αρχική οθόνη</string>
     <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_shortcut_text">Επιστρέψτε γρήγορα στις αγαπημένες σας ιστοσελίδες στο %1$s. Απλά επιλέξτε \&quot;Προσθήκη στην αρχική οθόνη\&quot; από το μενού του %1$s.</string>
+    <string name="firstrun_shortcut_text">Επιστρέψτε γρήγορα στους αγαπημένους σας ιστοτόπους στο %1$s. Απλά επιλέξτε «Προσθήκη στην αρχική οθόνη» από το μενού του %1$s.</string>
 
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">Κάντε το απόρρητο συνήθεια</string>
     <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_privacy_text">Ορίστε το %1$s ως το προεπιλεγμένο πρόγραμμα περιήγησής σας και απολαύστε τα οφέλη της ιδιωτικής περιήγησης όταν ανοίγετε ιστοσελίδες από άλλες εφαρμογές.</string>
+    <string name="firstrun_privacy_text">Ορίστε το %1$s ως τον προεπιλεγμένο φυλλομετρητή και απολαύστε τα οφέλη της ιδιωτικής περιήγησης όταν ανοίγετε ιστοσελίδες από άλλες εφαρμογές.</string>
 
     <string name="firstrun_close_button">OK, το \'πιασα!</string>
-    <string name="firstrun_skip_button">Παράκαμψη</string>
+    <string name="firstrun_skip_button">Παράλειψη</string>
     <string name="firstrun_next_button">Επόμενο</string>
 
     <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
@@ -458,12 +501,18 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Προσθήκη</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ΝΑΙ</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Ακύρωση</string>
 
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">ΟΧΙ</string>
+
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Η συντόμευση θα ανοίξει με ανενεργή προστασία από παρακολούθηση</string>
+    <string name="dialog_addtohomescreen_tracking_protection">Η συντόμευση θα ανοίξει χωρίς προστασία από καταγραφή</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -490,7 +539,7 @@
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
-    <string name="your_rights_content1"><![CDATA[Το %1$s είναι δωρεάν και ανοικτού κώδικα λογισμικό, που αναπτύσσεται από τη Mozilla και άλλους συνεισφέροντες.]]></string>
+    <string name="your_rights_content1"><![CDATA[Το %1$s είναι δωρεάν και ανοικτού κώδικα λογισμικό, που αναπτύσσεται από τη Mozilla και άλλους εθελοντές.]]></string>
 
 
 
@@ -578,17 +627,7 @@
     <string name="biometric_auth_moved_too_quickly">Το δάκτυλο κουνήθηκε πολύ γρήγορα. Δοκιμάστε ξανά.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Θα θέλατε να ενεργοποιήσετε τις προτάσεις αναζήτησης;</string>
-
-    <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">Για προτάσεις αναζήτησης, το %1$s πρέπει να στέλνει στην επιλεγμένη σας μηχανή αναζήτησης ό,τι πληκτρολογείτε στη γραμμή διευθύνσεων. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Μάθετε περισσότερα</string>
+    <string name="enable_search_suggestion_title2">Εμφάνιση προτάσεων αναζήτησης;</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Όχι</string>
@@ -625,26 +664,80 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Άνοιγμα συνδέσμου σε νέα καρτέλα\n Πατήστε παρατεταμένα οποιοδήποτε σύνδεσμο σε μια σελίδα</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Προτιμάτε την πλήρη έκδοση για υπολογιστές;%1$s Μενού > Απαίτηση ιστοσελίδας για υπολογιστές]]></string>
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Απενεργοποίηση συμβουλών στην αρχική οθόνη</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Άνοιξε νέα καρτέλα</string>
 
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">Εναλλαγή</string>
 
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Άμεση αλλαγή στον σύνδεσμο νέας καρτέλας</string>
+
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_category_safe_browsing">Ασφαλής περιήγηση</string>
 
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Φραγή δυνητικά επικίνδυνων και παραπλανητικών ιστοτόπων</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Εξαιρέσεις</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Έχετε απενεργοποιήσει τη φραγή περιεχομένου στους εξής ιστοτόπους.</string>
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">Αφαίρεση</string>
     <!-- Button to remove all websites from the exception list -->
-    <string name="preference_exceptions_remove_all_button_label">Αφαίρεση όλων των ιστοσελίδων</string>
+    <string name="preference_exceptions_remove_all_button_label">Αφαίρεση όλων των ιστοτόπων</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Φραγή cookie</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Θέλετε να αποκλείσετε τα cookie;</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Η καρτέλα κατέρρευσε</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Δυστυχώς, αντιμετωπίζουμε πρόβλημα με αυτή την καρτέλα.</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">Κλείσιμο καρτέλας</string>
 
     <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Αποστολή αναφοράς κατάρρευσης στη Mozilla</string>
-</resources>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Αποκλεισμένοι ιχνηλάτες από τις %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Περιεχόμενο</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Διαφημίσεις</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Κοινωνικά δίκτυα</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Αναλύσεις</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Ενισχυμένη προστασία από καταγραφή</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Η προστασία είναι ΑΝΕΝΕΡΓΗ για τον ιστότοπο</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Η προστασία είναι ΕΝΕΡΓΗ για τον ιστότοπο</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Η σύνδεση είναι ασφαλής</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Η σύνδεση δεν είναι ασφαλής</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Ιχνηλάτες και σενάρια για φραγή</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Επιστροφή</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Αφαίρεση</string>
+
+    </resources>

@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Adder al pagina initial</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Adder al vias breve</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Remover del vias breve</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Novitates</string>
     <string name="menu_settings">Parametros</string>
@@ -207,6 +212,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Adder URL personalisate</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Tu lista auto-completate:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Adder URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Adder URL personalisate</string>
 
@@ -273,10 +284,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">No</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">No gratias</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blocar solo le cookies traciator de tertie partes</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca solo le cookies de tertie partes</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Si</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Si per favor</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Usa le impression digital pro disblocar le application</string>
@@ -329,6 +341,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Motores de recerca installate</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Elige motor de recerca</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Restaurar le motores de recerca predefinite</string>
 
@@ -337,6 +352,11 @@
     <string name="preference_search_add2">+ Adder un altere motor de recerca</string>
     <string name="preference_search_remove_title">Remover le motores de recerca</string>
     <string name="preference_search_remove">Remover</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Adde un altere motor de recerca</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Elige tu motor preferite:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -498,8 +518,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Adder</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">SI</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Cancellar</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NO</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -639,17 +665,11 @@
     <string name="biometric_auth_moved_too_quickly">Digito movite troppo rapide. Prova de novo.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Vole tu activar le suggestiones de recerca?</string>
+    <string name="enable_search_suggestion_title2">Monstrar suggestiones de recerca?</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">Pro obtener suggestiones de recerca, %1$s ha besonio de haber inviate lo que tu scribe in le barra de adresse al motor de recerca que tu ha eligite. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Saper plus</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Pro obtener suggestiones, %1$s debe inviar lo que tu scribe in le barra de adresses al motor de recerca.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">No</string>
@@ -669,6 +689,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Se comporta le sito inexpectatemente?\n Prova a disactivar le Protection de traciamento</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Sito que care de contento o age estranie?\n
+    Proba disactivar le protection de traciamento</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Installa le accesso a un tocco pro le sitos que tu usa plus %1$s Menu > Adder al Pagina initial]]></string>
@@ -687,15 +712,22 @@
     <string name="tip_open_in_new_tab">Aperi le ligamine in un nove scheda\n Retene pulsate longemente ulle ligamine sur un pagina</string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Vider plus tosto le sito in modo plen scriptorio?%1$s Menu > Requirer sito de scriptorio]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Vole tu vider le plen version de un sito?\n
+        Passa sur sito del scriptorio per le menu de %1$s.</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Disactivar le suggestiones sur le pagina initial</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Sito fidite?\nIste function disactiva le protection contra le traciamento pro sitos que tu cognosce e fide.</string>
+    <string name="tip_explain_allowlist2">Vole tu disactivar le protection de traciamento pro un sito cuje te fide?\n
+        Adde lo al lista permittite in Parametros
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Perque si, nos ha un fresc nove apparentia! Lege plus re iste e altere actualisationes a %1$s.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nove scheda aperite</string>
@@ -722,6 +754,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Remover tote le sitos web</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Blocar le cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Vole tu blocar le cookies?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Scheda collabite</string>
     <!-- Headline for the tab crash report screen -->
@@ -736,4 +774,41 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Inviar reporto de crash a Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Traciatores blocate desde %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content"></string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Publicitate</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Social</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analyse datos</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Protection antitraciamento reinfortiate</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Protectiones es INACTIVE pro iste sito</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Le protectiones es ACTIVE pro iste sito</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Connexion secur</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Le connexion non es secur</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Traciatores e scripts a blocar</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Retornar</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Remover</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">Le imagines salvate e compartite &lt;b&gt;non essera&lt;/b&gt; delite quando tu eliminara le chronologia de %1$s.</string>
 </resources>

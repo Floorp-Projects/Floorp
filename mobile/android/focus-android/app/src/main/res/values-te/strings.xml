@@ -133,6 +133,9 @@
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">అప్రమేయం</string>
 
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">శోధన యంత్రం</string>
+
     <!-- Text that is shown below a "switch" preference that is enabled. -->
     <string name="preference_state_on">చేతనం</string>
 
@@ -208,11 +211,7 @@
     <string name="preference_privacy_block_content">ఇతర ట్రాకర్లను నిరోధించు</string>
     <string name="preference_privacy_category_cookies">కుకీలను నిరోధించాలా</string>
 
-    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
-    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">వద్దు</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">3-వ పక్షం కుకీలను మాత్రమే నిరోధించు</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">అవును</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -511,13 +510,6 @@
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">వేలు చాలా వేగంగా కదిలింది. మళ్ళీ ప్రయత్నించండి.</string>
 
-    <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">వెతుకుడు సలహాలను చేతనం చెయ్యమంటారా?</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">ఇంకా తెలుసుకోండి</string>
-
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">వద్దు</string>
 
@@ -552,5 +544,7 @@
     <string name="tab_crash_report_headline">క్షమించండి. ఈ ట్యాబులో ఏదో సమస్య ఉంది.</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">ట్యాబును మూసివేయి</string>
+
+    <!-- Tracking protection bottom sheet -->
 
     </resources>

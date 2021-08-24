@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">添加到主屏幕</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">添加快捷方式</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">移除快捷方式</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">新版变化</string>
     <string name="menu_settings">设置</string>
@@ -207,6 +212,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ 添加自定义网址</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">您的自动补全列表：</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">添加网址</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">添加自定义网址</string>
 
@@ -273,10 +284,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">否</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">不用，谢谢</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">仅阻止第三方跟踪器 Cookie</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">仅阻止第三方 Cookie</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">是</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">好的</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">使用指纹解锁应用</string>
@@ -329,6 +341,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">已安装的搜索引擎</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">选择搜索引擎</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">恢复默认搜索引擎</string>
 
@@ -337,6 +352,11 @@
     <string name="preference_search_add2">添加更多搜索引擎</string>
     <string name="preference_search_remove_title">移除搜索引擎</string>
     <string name="preference_search_remove">移除</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">添加其他搜索引擎</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">选择想使用的搜索引擎：</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -498,8 +518,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">添加</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">是</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">取消</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">否</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -639,17 +665,11 @@
     <string name="biometric_auth_moved_too_quickly">手指移动太快。请重试。</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">想要开启搜索建议吗？</string>
+    <string name="enable_search_suggestion_title2">要显示搜索建议吗？</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">为获取搜索建议，%1$s 需将您在地址栏中输入的内容发送至您选择的搜索引擎。%2$s。</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">详细了解</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">为获取建议，%1$s 需将您在地址栏中输入的内容发送至搜索引擎。</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">否</string>
@@ -669,6 +689,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">网站表现异常？\n 尝试关闭跟踪保护</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">网站内容缺失，或表现异常？\n 尝试关闭跟踪保护</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[一键访问您的常用网站%1$s菜单 > 添加到主屏幕]]></string>
@@ -687,15 +711,19 @@
     <string name="tip_open_in_new_tab">新建标签页打开链接\n 长按页面上的任一链接</string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[想查看更完整的桌面版网站？%1$s菜单 > 要求桌面版网站]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">想看到完整版网站吗？\n 到 %1$s 菜单切换为桌面版</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">关闭启动页上的小提示</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">是受信任的网站吗？\n可通过允许列表来对您信任的网站禁用跟踪保护功能。</string>
+    <string name="tip_explain_allowlist2">想要对您信任的网站关闭跟踪保护吗？\n 到设置中加入允许列表</string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">当然，我们的外观已焕然一新！阅读了解更多 %1$s 的新变化。</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">已打开新标签页</string>
@@ -722,6 +750,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">移除全部网站</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">拦截 Cookie</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">您是要拦截网站 Cookie 吗？</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">标签页崩溃</string>
     <!-- Headline for the tab crash report screen -->
@@ -736,4 +770,41 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">向 Mozilla 发送崩溃报告</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">自 %s 起拦截的跟踪器</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">内容</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">营销</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">社交</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">统计</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">增强型跟踪保护</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">对此网站已关闭保护</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">对此网站已开启保护</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">连接安全</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">连接不安全</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">要拦截的跟踪器和脚本</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">返回</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">移除</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">清除 %1s 的历史记录时，&lt;b&gt;不会&lt;/b&gt;删除保存和分享的图像。</string>
 </resources>

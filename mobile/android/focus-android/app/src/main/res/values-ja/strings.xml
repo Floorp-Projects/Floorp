@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">ホーム画面に追加</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">ショートカットを追加</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">ショートカットから削除</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">新着情報</string>
     <string name="menu_settings">設定</string>
@@ -207,6 +212,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ カスタム URL を追加</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">自動補完リスト:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">URL を追加</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">カスタム URL を追加</string>
 
@@ -273,10 +284,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">いいえ</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">いいえ</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">サードバーティの追跡 Cookie のみブロック</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">サードパーティ Cookie のみブロック</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">はい</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">はい</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">アプリのロック解除に指紋を使用</string>
@@ -329,6 +341,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">選択可能な検索エンジン</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">検索エンジンの選択</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">既定の検索エンジンを復元</string>
 
@@ -337,6 +352,11 @@
     <string name="preference_search_add2">+ 別の検索エンジンを追加</string>
     <string name="preference_search_remove_title">検索エンジンを削除</string>
     <string name="preference_search_remove">削除</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">別の検索エンジンを追加</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">ご希望の検索エンジンを選択してください:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -498,8 +518,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">追加</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">はい</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">キャンセル</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">いいえ</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -639,17 +665,11 @@
     <string name="biometric_auth_moved_too_quickly">指の動きが素早すぎます。もう一度試してください。</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">検索語句の候補を表示しますか？</string>
+    <string name="enable_search_suggestion_title2">検索候補を表示しますか？</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">検索候補を取得する場合、%1$s はあなたがアドレスバーに入力した語句を選択された検索エンジンへ送信する必要があります。%2$s。</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">詳しくはこちら</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">検索候補を取得するには、アドレスバーに入力した内容を %1$s が検索エンジンへ送信する必要があります。</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">いいえ</string>
@@ -669,6 +689,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">サイトが予期せぬ挙動をしますか？\n トラッキング防止機能を無効化してみてください</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">サイトのコンテンツが欠けたりおかしな動作をしていますか？\n
+トラッキング防止機能をオフにしてみてください</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[よく使うサイトへワンタップでアクセスするには%1$s メニュー > ホーム画面に追加]]></string>
@@ -687,15 +712,17 @@
     <string name="tip_open_in_new_tab">リンクを新しいタブで開くには\n ページ上でリンクを長押しします</string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[完全なデスクトップ向けサイトを見たいですか？%1$s メニュー > デスクトップ版を見る]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">サイトの完全版を表示したいときは？\n
+%1$s メニューからデスクトップサイトをオンにしてください</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">スタート画面上のヒント表示をオフにする</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">信頼できるサイト？\n許可リストは、よく知っている信頼できるサイトのトラッキング防止を無効にします。</string>
+    <string name="tip_explain_allowlist2">信頼できるサイトでトラッキング防止機能を無効にしておきたいときは？\n
+設定でサイトを許可リストに追加してください</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">新しいタブを開きました</string>
@@ -736,4 +763,30 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">クラッシュレポートを Mozilla へ送信する</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">強化型トラッキング防止機能</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">このサイトでは保護が無効になっています</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">このサイトでは保護が有効になっています</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">接続は安全です</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">接続は安全ではありません</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">ブロックするトラッカーとスクリプト</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">戻る</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">削除</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">保存、共有された画像は %1s の履歴を消去しても &lt;b&gt;削除されません&lt;/b&gt;。</string>
 </resources>

@@ -1,103 +1,467 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Otkaži</string>
-  <string name="action_ok">U redu</string>
-  <string name="action_save">Spremi</string>
-  <string name="urlbar_hint">Pretražite ili upišite adresu</string>
-  <string name="teaser">Automatsko privatno pretraživanje.\nPretražujte. Obrišite. Ponovite.</string>
-  <string name="feedback_erase">Povijest pregledavanja je obrisana.</string>
-  <string name="search_hint">Pretraži %1$s</string>
-  <string name="menu_share">Dijeli…</string>
-  <string name="menu_report_site_issue">Prijavite problem sa stranicom</string>
-  <string name="menu_open_with_default_browser2">Otvori u %1$s</string>
-  <string name="menu_open_with_a_browser2">Otvori u…</string>
-  <string name="menu_add_to_home_screen">Dodaj na početni zaslon</string>
-  <string name="menu_whats_new">Što je novo</string>
-  <string name="menu_settings">Postavke</string>
-  <string name="menu_about">Informacije</string>
-  <string name="menu_help">Pomoć</string>
-  <string name="menu_rights">Vaša prava</string>
-  <string name="menu_trackers_blocked_title">Blokirani pratitelji</string>
-  <string name="menu_content_blocking">Blokiranje sadržaja</string>
-  <string name="share_dialog_title">Dijeli putem</string>
-  <string name="notification_erase_text">Obriši povijest pretraživanja</string>
-  <string name="notification_action_open">Otvori</string>
-  <string name="notification_action_erase_and_open">Obriši i otvori</string>
-  <string name="shortcut_erase_short_label">Obriši</string>
-  <string name="shortcut_erase_long_label">Obriši povijest pretraživanja</string>
-  <string name="text_selection_search_action">Privatno pretraži</string>
-  <string name="preference_privacy_and_security_header">Privatnost i sigurnost</string>
-  <string name="preference_category_tracking_protection">Zaštita od praćenja</string>
-  <string name="preference_category_web_content">Web sadržaj</string>
-  <string name="preference_category_general">Općenito</string>
-  <string name="preference_category_search">Traži</string>
-  <string name="preference_search_engine_default">Zadano</string>
-  <string name="preference_state_on">Uključeno</string>
-  <string name="preference_state_off">Isključeno</string>
-  <string name="preference_subitem_autocomplete">Automatsko popunjavanje URL-a</string>
-  <string name="preference_autocomplete_action_add">+ Dodaj prilagođeni URL</string>
-  <string name="preference_autocomplete_title_add">Dodaj prilagođeni URL</string>
-  <string name="custom_autocomplete_quick_add">Dodaj prilagođeni URL</string>
-  <string name="preference_category_data_choices">Izbori podataka</string>
-  <string name="preference_autocomplete_title_remove">Ukloni prilagođene URL-ove</string>
-  <string name="preference_autocomplete_learn_more">Saznajte više</string>
-  <string name="preference_autocomplete_custom_summary">Dodajte i upravljajte prilagođenim automatski popunjenim URL-ovima.</string>
-  <string name="preference_autocomplete_add_title">URL za dodati</string>
-  <string name="preference_autocomplete_add_hint">Zalijepite ili unesite URL</string>
-  <string name="preference_autocomplete_add_example2">Primjer: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Primjer: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Novi prilagođeni URL dodan.</string>
-  <string name="preference_autocomplete_menu_remove">Ukloni</string>
-  <string name="preference_autocomplete_action_remove_content_description">Ukloni</string>
-  <string name="preference_autocomplete_add_error">Provjerite URL koji ste upisali.</string>
-  <string name="preference_language">Jezik</string>
-  <string name="preference_language_systemdefault">Zadani sistemski</string>
-  <string name="preference_category_privacy">Privatnost</string>
-  <string name="preference_privacy_block_ads">Blokiraj praćenje oglasa</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Da</string>
-  <string name="preference_privacy_secure_mode">Tajni način</string>
-  <string name="preference_category_security">Sigurnost</string>
-  <string name="preference_category_performance">Performansa</string>
-  <string name="preference_performance_block_webfonts">Blokiraj web fontove</string>
-  <string name="preference_default_browser2">Učinite %1$s zadanim pretraživačem</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Šalji podatke o korištenju</string>
-  <string name="preference_mozilla_telemetry_summary">Saznajte više</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla nastoji sakupljati samo onoliko koliko nam treba da osiguramo i poboljšamo %1$s za sve.</string>
-  <string name="preference_privacy_notice">Politika privatnosti</string>
-  <string name="preference_about">O %1$s</string>
-  <string name="preference_search_installed_search_engines">Instalirani pretraživači</string>
-  <string name="preference_search_restore">Vrati zadane pretraživače</string>
-  <string name="preference_search_add2">+ Dodaj pretraživač</string>
-  <string name="preference_search_remove_title">Ukloni pretraživače</string>
-  <string name="preference_search_remove">Ukloni</string>
-  <string name="action_option_add_search_engine">Dodaj pretraživač</string>
-  <string name="search_add_manually_name_hint">Ime pretraživača</string>
-  <string name="search_add_manually_save">Spremi</string>
-  <string name="search_add_manually_example">Primjer: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Novi pretraživač je dodan.</string>
-  <string name="search_add_error_empty_name">Unesite naziv pretraživača</string>
-  <string name="search_add_error_duplicate_name">Instalirani pretraživač već koristi to ime.</string>
-  <string name="content_description_clear_input">Obriši unos</string>
-  <string name="content_description_dismiss_input">Odbaci</string>
-  <string name="content_description_erase">Obriši povijest pretraživanja</string>
-  <string name="content_description_tab_counter">Otvorenih kartica: %1$s</string>
-  <string name="content_description_lock">Sigurna veza</string>
-  <string name="accessibility_announcement_loading">Učitavanje</string>
-  <string name="accessibility_announcement_loading_finished">Stranica učitana</string>
-  <string name="content_description_menu">Više mogućnosti</string>
-  <string name="content_description_reload">Osvježi web stranicu</string>
-  <string name="content_description_stop">Zaustavi učitavanje stranice</string>
-  <string name="content_description_blocking_switch">Blokiraj pratitelje</string>
-  <string name="your_rights">Vaša prava</string>
-  <string name="external_app_prompt_title">Otvori poveznicu u drugoj aplikaciji</string>
-  <string name="external_app_prompt">Možete ostaviti %1$s otvoren kako biste otvorili ovu poveznicu u %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Pronađi aplikaciju koja može otvoriti poveznicu</string>
-  <string name="external_app_prompt_no_app">Nijedna aplikacija na vašem uređaju ne može otvoriti ovu poveznicu. Možete napustiti %1$s kako biste pretražili %2$s za aplikaciju koja može.</string>
-  <string name="external_multiple_apps_matched_exit">Izaći iz privatnog pretraživanja?</string>
-  <string name="download_snackbar_finished">%1$s dovršen</string>
-  <string name="download_snackbar_open">Otvori</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Otkaži</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">U redu</string>
+
+    <string name="action_save">Spremi</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Pretraži ili upiši adresu</string>
+
+    <string name="teaser">Automatsko privatno pretraživanje.\nPretražuj. Obriši. Ponovi.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Povijest pregledavanja je obrisana.</string>
+    <string name="feedback_erase2">Povijest pregledavanja očišćena</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Povijest pretraživanja kartice je obrisana.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Pretraži %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Dijeli…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Prijavi problem sa stranicom</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Otvori u %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Otvori u…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Dodaj na početni zaslon</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Dodaj u prečace</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Ukloni iz prečaca</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Što je novo</string>
+    <string name="menu_settings">Postavke</string>
+    <string name="menu_about">Informacije</string>
+    <string name="menu_help">Pomoć</string>
+    <string name="menu_rights">Vaša prava</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Blokirani programi za praćenje</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Isključivanje ovoga može riješiti probleme na nekim stranicama</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Blokiranje sadržaja</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Isključi za ispravljanje nekih stranica</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Omogućuje %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Dijeli putem</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Obriši povijest pretraživanja</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Otvori</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Obriši i otvori</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Obriši</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Obriši povijest pretraživanja</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Obriši i otvori</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Obriši i otvori %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Privatno pretraži</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s daje ti kontrolu.</p>
+<p>Koristi ga kao privatni pretraživač:
+  <ul>
+    <li>traži i pretražuj direktno u aplikaciji</li>
+    <li>blokiraj programe za praćenje (ili ih omogući u postavkama)</li>
+    <li>izbriši sve kolačiće kao i povijest pretraživanja i pregledavanja</li>
+  </ul>
+</p>
+<p>%1$s je kreirala Mozilla. Naša misija je njegovanje zdravog i otvorenog interneta.<br/>
+<a href="%2$s">Saznaj više</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Privatnost i sigurnost</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Praćenje, kolačići, izbori podataka</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Postavi zadanu tražilicu, automatsko ispunjavanje</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">O %1$su, pomoć</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Zaštita od praćenja</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Web-sadržaj</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Prebacivanje između aplikacija</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Općenito</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Zadani preglednik, kartice, jezik</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Prikupljanje i uporaba podataka</string>
+
+    <string name="preference_category_search">Traži</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Prikaži prijedloge pretraživanja</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s slat će što pišeš u adresnoj traci tvojoj tražilici</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Zadano</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Tražilica</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Uključeno</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Isključeno</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Automatsko popunjavanje URL-a</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Za omiljene stranice</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Uključi za automatsko dovršavanje više od 450 popularnih URL-ova u adresnoj traci.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Za stranice koje dodaš</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Uključi za automatsko dovršavanje više od 450 popularnih URL-ova u adresnoj traci.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Upravlja stranicama</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Upravlja stranicama</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Dodaj prilagođeni URL</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Tvoj popis za automatsko ispunjavanje:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Dodaj URL</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Dodaj prilagođeni URL</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Dodaj prilagođeni URL</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Dodaj poveznicu u automatsko ispunjavanje</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Kolačići i podatci stranica</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Izbori podataka</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Ukloni prilagođene URL-ove</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Saznaj više</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Dodaj i upravljaj prilagođenim automatski popunjenim URL-ovima.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL za dodati</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Zalijepi ili unesi URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Primjer: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Primjer: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Novi prilagođeni URL dodan.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Ukloni</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Ukloni</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Provjeri URL koji je upisan.</string>
+
+    <string name="preference_language">Jezik</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Zadano sustavom</string>
+
+    <string name="preference_category_privacy">Privatnost</string>
+    <string name="preference_privacy_block_ads">Blokiraj praćenje oglasa</string>
+
+    <string name="preference_privacy_block_ads_summary">Neki oglasi prate posjete stranicama, čak i kada ne klikneš na njih</string>
+    <string name="preference_privacy_block_analytics">Blokiraj analitičke programe za praćenje</string>
+    <string name="preference_privacy_block_analytics_summary">Koristi se za prikupljanje, analizu i mjerenje aktivnosti poput dodirivanja i pomicanja</string>
+    <string name="preference_privacy_block_social">Blokiraj društvene programe za praćenje</string>
+    <string name="preference_privacy_block_social_summary">Ugrađeno na web-stranice za praćenje tvojih posjeta i prikaz značajki kao što su gumbi za dijeljenje</string>
+    <string name="preference_privacy_block_content">Blokiraj druge programe za praćenje</string>
+    <string name="preference_privacy_block_content_summary2">Omogućavanje ove postavke može uzrokovati neočekivano ponašanje nekih stranica</string>
+    <string name="preference_privacy_category_cookies">Blokiraj kolačiće</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Ne, hvala</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Samo blokiraj kolačiće za praćenje trećih strana</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Samo blokiraj kolačiće trećih strana</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Da, molim</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Koristi otisak prsta za otključavanje aplikacije</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Tvoj otisak prsta može otključati %1$s, ako je neki URL već otvoren u aplikaciji.
+    Tajni način bit će uključen.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Tajni način</string>
+
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Sakrij web-stranice kod prebacivanja između aplikacija i blokiraj snimanje zaslona.</string>
+
+    <string name="preference_category_security">Sigurnost</string>
+
+    <string name="preference_category_performance">Performansa</string>
+    <string name="preference_performance_block_webfonts">Blokiraj web fontove</string>
+
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Može prouzrokovati nestajanje ikona ili slika</string>
+
+    <string name="preference_performance_block_javascript">Blokiraj JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Stranice će se brže učitavati, ali možda će se i ponašati neočekivano</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Učini %1$s zadanim preglednikom</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Šalji podatke o korištenju</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Saznaj više</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla nastoji sakupljati samo onoliko koliko nam treba da osiguramo i poboljšamo %1$s za sve.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Politika privatnosti</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">O %1$su</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Instalirani pretraživači</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Odaberi tražilicu</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Vrati zadane pretraživače</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Dodaj pretraživač</string>
+    <string name="preference_search_remove_title">Ukloni pretraživače</string>
+    <string name="preference_search_remove">Ukloni</string>
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Dodaj drugu tražilicu</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Odaberi omiljenu tražilicu:</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Prikaži savjete na početnom zaslonu</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Dodaj pretraživač</string>
+
+    <string name="search_add_manually_name_hint">Ime pretraživača</string>
+    <string name="search_add_manually_string">Tekst pretraživanja za korištenje</string>
+    <string name="search_add_manually_save">Spremi</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Primjer: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Novi pretraživač je dodan.</string>
+
+    <string name="search_add_error_empty_name">Unesi naziv tražilice</string>
+    <string name="search_add_error_duplicate_name">Instalirani pretraživač već koristi to ime.</string>
+
+    <string name="search_add_error_empty_search">Unesi tekst za pretraživanje</string>
+
+    <string name="search_add_error_format">Provjeri odgovara li tekst za pretraživanje primjeru</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Obriši unos</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Odbaci</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Obriši povijest pretraživanja</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Otvorenih kartica: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Sigurna veza</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Učitavanje</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Stranica učitana</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Više mogućnosti</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Gumb za više opcija</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Idi naprijed</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Osvježi web stranicu</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Idi natrag</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Zaustavi učitavanje stranice</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Povratak na prethodnu aplikaciju</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Broj blokiranih programa za praćenje</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Blokiraj programe za praćenje</string>
+
+    <string name="your_rights">Vaša prava</string>
+
+    <string name="external_app_prompt_title">Otvori poveznicu u drugoj aplikaciji</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Možeš ostaviti %1$s otvoren da bi poveznica bila otvorena u aplikaciji %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Pronađi aplikaciju koja može otvoriti poveznicu</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Nijedna aplikacija na tvojem uređaju ne može otvoriti ovu poveznicu. Možeš napustiti %1$s za pronalaženje aplikacije u %2$s.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Izaći iz privatnog pretraživanja?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s dovršen</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Otvori</string>
 
 
 
@@ -118,33 +482,329 @@
 
 
 
-  <string name="firstrun_close_button">U redu, razumijem!</string>
-  <string name="firstrun_skip_button">Preskoči</string>
-  <string name="firstrun_next_button">Dalje</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Dodaj</string>
-  <string name="dialog_addtohomescreen_action_cancel">Otkaži</string>
-  <string name="notification_browsing_session_channel_name">Sesija privatnog pretraživanja</string>
-  <string name="tabs_tray_action_erase">Obriši povijest pretraživanja</string>
-  <string name="download_firefox">Preuzmite Firefox</string>
-  <string name="gv_prompt_username_hint">Korisničko ime</string>
-  <string name="gv_prompt_password_hint">Lozinka</string>
-  <string name="gv_prompt_clear">Očisti</string>
-  <string name="security_popup_secure_connection">Sigurna veza</string>
-  <string name="security_popup_insecure_connection">Nesigurna veza</string>
-  <string name="security_popup_security_verified">Potvrdio: %1$s</string>
-  <string name="site_security_icon_content_description">Sigurnost stranice</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL već postoji</string>
-  <string name="find_in_page">Pronađi na stranici</string>
-  <string name="find_in_page_input">Pronađi na stranici</string>
-  <string name="accessibility_find_in_page_result">%1$d od %2$d</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Osnaži svoju privatnost</string>
+
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Podigni privatno pregledavanje na novu razinu. Blokiraj oglase i drugi sadržaj koji te može pratiti među stranicama i usporiti njihovo učitavanje.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Tvoja pretraga na tvoj način</string>
+
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Tražiš nešto drugačije? Izaberi drugu zadanu tražilicu u postavkama.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Dodaj prečice na svoj početni zaslon</string>
+
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Brzo se vrati na svoje omiljene stranice u %1$su. Samo odaberi \&quot;Dodaj na početni zaslon\&quot; u %1$sovom izborniku.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Učini privatnost navikom</string>
+
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Postavi %1$s kao zadani preglednik i iskoristi prednosti privatnog pretraživanja kada otvaraš web-stranice iz drugih aplikacija.</string>
+
+    <string name="firstrun_close_button">U redu, razumijem!</string>
+    <string name="firstrun_skip_button">Preskoči</string>
+    <string name="firstrun_next_button">Dalje</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Dodaj</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">DA</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Otkaži</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NE</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Prečac će se otvoriti uz onemogućenu zaštitu od praćenja</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Sesija privatnog pretraživanja</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Obavijesti ti omogućuju brisanje sesije u %1$su jednim dodirom. Ne moraš otvoriti aplikaciju ili vidjeti što je otvoreno u tvom pregledniku.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Obriši povijest pretraživanja</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Preuzmi Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s je besplatan softver i otvorenog kôda, kojeg je stvorila Mozilla i njeni doprinositelji.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s ti je omogućen pod uvjetima licencije <a href="%2$s">Mozilla Public License</a> i drugih licencija otvorenog kôda.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Nemaš prava ni licencije za zaštitne znakove Zaklade Mozilla i drugih strana, uključujući nazive i logotipove Mozille, Firefoxa i %1$sa. Dodatne informacije mogu se pronaći <a href="%2$s">ovdje</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Dodatni izvorni kôd za %1$s dostupan je pod različitim besplatnim i otvorenim <a href="%2$s">licencijama</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s koristi i popise za blokiranje koje pruža Disconnect Inc. kao odvojene i nezavisne radove pod licencijom <a href="%2$s">GNU General Public License v3</a> i dostupnima <a href="%3$s">ovdje</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Korisničko ime</string>
+    <string name="gv_prompt_password_hint">Lozinka</string>
+    <string name="gv_prompt_clear">Očisti</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Sigurna veza</string>
+    <string name="security_popup_insecure_connection">Nesigurna veza</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Potvrdio: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Sigurnost stranice</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL već postoji</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Pronađi na stranici</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Pronađi na stranici</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d od %2$d</string>
 
 
 
-  <string name="preference_advanced_summary">Alati za razvijatelje</string>
-  <string name="preference_category_advanced">Napredno</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Saznajte više</string>
-  <string name="enable_search_suggestions_no">Ne</string>
-  <string name="enable_search_suggestions_yes">Da</string>
-  <string name="dismiss_no_suggestions_prompt_button">Odbaci</string>
+  <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Pronađi sljedeći rezultat</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Pronađi prethodni rezultat</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Odbaci pretraživanje stranice</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Zatraži klasičnu stranicu</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Klasična stranica</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL je kopiran</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Alati za razvijatelje</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Napredno</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Udaljeno otklanjanje grešaka putem USB-a/WiFi-ja</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Otključaj %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Dotakni senzor otiska prsta za nastavak.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Nova sesija</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Otvori poveznicu u novoj sesiji</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Ikona otiska prsta</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Otisak prsta nije prepoznat. Pokušaj ponovno.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Prst je prebrzo maknut. Pokušaj ponovno.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Prikazati prijedloge pretraživanja?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Za primanje prijedloga, %1$s mora slati tražilici ono što upisuješ u adresnu traku.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Ne</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Da</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Neke tražili ne mogu prikazivati prijedloge.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Odbaci</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Stranica se ponaša neočekivano?\n
+    Pokušaj isključiti zaštitu od praćenja</string>
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Stranici nedostaje sadržaj ili se čudno ponaša?\n
+    Pokušaj isključiti zaštitu od praćenja</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Omogući pristup često korištenim stranicama jednim dodirom%1$s Izbornik > Dodaj na početni zaslon]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Otvori svaku poveznicu u %1$su\n
+        Postavi %1$s kao zadani preglednik
+    </string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Automatski ispuni URL-ove često korištenih stranica\n
+        Dugo pritisni bilo koji URL u adresnoj traci
+    </string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Otvori poveznicu u novoj kartici\n
+        Dugo pritisni bilo koju poveznicu na stranici
+    </string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Želiš vidjeti punu verziju stranice?\n
+        Prebaci se na klasičnu stranicu iz %1$sovog izbornika</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Isključi savjete na početnom zaslonu</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist2">Želiš isključiti zaštitu od praćenja na stranici kojoj vjeruješ?\n
+        Dodaj ju na popis dopuštenih stranica u postavkama
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Da, imamo novi izgled! Pročitaj više o ovome i drugim ažuriranjima %1$sa.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Otvorena nova kartica</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Prebaci</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Odmah prebaci na poveznicu u novoj kartici</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Sigurno pretraživanje</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Blokiraj potencijalno opasne i zavaravajuće stranice</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Blokiraj prijavljene zavaravajuće i napadačke stranice, stranice zaražene zlonamjernim softverom i stranice neželjenog softvera.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Iznimke</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Onemogućeno je blokiranje sadržaja za ove stranice.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Ukloni</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Ukloni sve stranice</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Blokiraj kolačiće</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Želiš li blokirati kolačiće?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Kartica se srušila</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Oprosti. Imamo problem s ovom karticom.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Kao privatni preglednik, nikad ne spremamo povijest i ne možemo vratiti ovu karticu.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Zatvori karticu</string>
+
+    <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Pošalji Mozilli izvještaj o rušenju</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Programa za praćenje blokirano od %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Sadržaj</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Oglašavanje</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Društveno</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analitika</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Poboljšana zaštita od praćenja</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Za ovu web-stranicu, zaštite su ISKLJUČENE</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Za ovu web-stranicu, zaštite su UKLJUČENE</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Veza je sigurna</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Veza nije sigurna</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Programi za praćenje i skripte koje će se blokirati</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Idi natrag</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Ukloni</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">Spremljene i podijeljene slike &lt;b&gt;neće biti&lt;/b&gt; izbrisane kada izbrišeš povijest u %1su</string>
 </resources>

@@ -44,6 +44,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">הוספה למסך הבית</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">הוספה לקיצורי הדרך</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">הסרה מקיצורי הדרך</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">מה חדש</string>
     <string name="menu_settings">הגדרות</string>
@@ -57,6 +62,10 @@
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">רכיבי מעקב חסומים</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">כיבוי אפשרות זו עשוי לתקן בעיות מסוימות באתרים</string>
 
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">חסימת תוכן</string>
@@ -149,7 +158,7 @@
     <string name="preference_show_search_suggestions">קבלת הצעות חיפוש</string>
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_show_search_suggestions_summary">‏%1$s ישלח מה שיוקלד בסרגל הכתובת אל מנוע החיפוש שלך</string>
+    <string name="preference_show_search_suggestions_summary">‏%1$s ישלח מה שיוקלד בשורת הכתובת אל מנוע החיפוש שלך</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">ברירת מחדל</string>
@@ -186,6 +195,12 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ הוספת כתובת מותאמת אישית</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">רשימת ההשלמה האוטומטית שלך:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">הוספת כתובת</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">הוספת כתובת מותאמת אישית</string>
@@ -253,10 +268,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">לא</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">לא תודה</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">חסימת עוגיות מעקב צד־שלישי בלבד</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">חסימת עוגיות צד־שלישי בלבד</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">כן</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">כן בבקשה</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">שימוש בטביעת אצבע כדי לשחרר את נעילת היישומון</string>
@@ -309,14 +325,22 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">מנועי חיפוש מותקנים</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">בחירת מנועי חיפוש</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">שחזור מנועי חיפוש ברירת מחדל</string>
 
     <!-- Action for adding an additional search engine to the list.
     The "+" is used to emphasize that this is an "add" action -->
-    <string name="preference_search_add2">+ הוספת מנוע חיפוש אחר</string>
+    <string name="preference_search_add2">+ הוספת מנוע חיפוש נוסף</string>
     <string name="preference_search_remove_title">הסרת מנועי חיפוש</string>
     <string name="preference_search_remove">הסרה</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">הוספת מנוע חיפוש נוסף</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">בחירת המנוע המועדף עליך:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -478,8 +502,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">הוספה</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">כן</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">ביטול</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">לא</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -572,6 +602,9 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">בקשת אתר שולחני</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">אתר למחשבים שולחניים</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">הכתובת הועתקה</string>
 
@@ -611,17 +644,11 @@
     <string name="biometric_auth_moved_too_quickly">האצבע זזה מהר מדי. נא לנסות שוב.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">האם ברצונך להפעיל הצעות חיפוש?</string>
+    <string name="enable_search_suggestion_title2">להציג הצעות חיפוש?</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">כדי לקבל הצעות חיפוש, על %1$s לשלוח מה שמוקלד בסרגל הכתובת אל מנוע החיפוש שבחרת. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">מידע נוסף</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">כדי לקבל הצעות, על %1$s לשלוח מה שמוקלד בשורת הכתובת אל מנוע החיפוש.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">לא</string>
@@ -641,6 +668,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">האתר מתנהג באופן בלתי צפוי?\n ניתן לנסות לבטל את הגנת המעקב</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">חסר תוכן כלשהו באתר, או שהוא מתנהג באופן בלתי צפוי?\n
+    ניתן לנסות לבטל את הגנת המעקב</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[קבלת גישה בלחיצה קלילה לאתרים הנפוצים שלך%1$s תפריט > הוספה למסך הבית]]></string>
@@ -652,22 +684,21 @@
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
     The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_autocomplete_url">השלמת כתובות עבור האתרים הנפוצים שלך\n יש ללחוץ לחיצה ארוכה על כתובת כלשהי בסרגל הכתובת</string>
+    <string name="tip_autocomplete_url">השלמה אוטומטית של כתובות עבור האתרים הנפוצים שלך\n
+יש ללחוץ לחיצה ארוכה על כתובת כלשהי בשורת הכתובת
+    </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">פתיחת קישור בלשונית חדשה\n יש ללחוץ לחיצה ארוכה על כל קישור שהוא בעמוד</string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[אפשר להציע לך לצפות באתר לשולחן העבודה?%1$s תפריט > בקשת אתר שולחני]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">רוצה לראות את הגרסה המלאה של אתר כלשהו?\n
+        ניתן להפעיל את האפשרות ’אתר למחשבים שולחניים’</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">כיבוי עצות במסך ההתחלה</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">אתר מהימן?\n רשימת היתר משביתה את הגנת המעקב עבור אתרים מוכרים ומהימנים בעיניך.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">לשונית חדשה נפתחה</string>
@@ -694,6 +725,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">הסרת כל האתרים</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">חסימת עוגיות</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">האם ברצונך לחסום עוגיות?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">הלשונית קרסה</string>
     <!-- Headline for the tab crash report screen -->
@@ -708,4 +745,38 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">שליחת דוח קריסה אל Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">רכיבי מעקב חסומים מאז %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">תוכן</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">פרסום</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">רשתות חברתיות</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">הגנת מעקב מתקדמת</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">ההגנות כבויות עבור אתר זה</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">ההגנות פעילות עבור אתר זה</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">החיבור מאובטח</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">החיבור אינו מאובטח</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">רכיבי מעקב ותסריטים לחסימה</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">חזרה אחורה</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">הסרה</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">תמונות שמורות ומשותפות &lt;b&gt;לא יימחקו&lt;/b&gt; בעת מחיקת ההיסטוריה של %1s</string>
 </resources>

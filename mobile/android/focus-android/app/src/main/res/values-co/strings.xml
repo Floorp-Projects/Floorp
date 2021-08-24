@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Fissà à u screnu d’accolta</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Aghjunghje à l’accurtatoghji</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Caccià da l’accurtatoghji</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Ciò chì hè novu</string>
     <string name="menu_settings">Preferenze</string>
@@ -207,6 +212,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Aghjunghje un indirizzu persunalizatu</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">A vostra lista di scrittura mezu-autumatica :</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Aghjunghje l’indirizzu</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Aghjunghje un indirizzu persunalizatu</string>
 
@@ -273,10 +284,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Innò</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">Innò, vi ringraziemu</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bluccà solu i canistrelli terzi impiegati per u spiunagiu</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Bluccà solu i canistrelli terzi</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Iè</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Iè, per piacè</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Impiegà un’impronta digitale per spalancà l’appiecazione</string>
@@ -329,6 +341,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Mutori di ricerca installati</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Sceglie u mutore di ricerca</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Risturà i mutori predefiniti</string>
 
@@ -337,6 +352,11 @@
     <string name="preference_search_add2">+ Aghjunghje un altru mutore di ricerca</string>
     <string name="preference_search_remove_title">Caccià mutori di ricerca</string>
     <string name="preference_search_remove">Caccià</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Aghjunghje un altru mutore di ricerca</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Selezziunate u vostru mutore di ricerca preferitu :</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -498,8 +518,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Aghjunghje</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">IÈ</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Abbandunà</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">INNÒ</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -639,17 +665,11 @@
     <string name="biometric_auth_moved_too_quickly">U ditu hà mossu troppu prestu. Pruvà torna.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Vulete attivà e suggestioni di ricerca ?</string>
+    <string name="enable_search_suggestion_title2">Affissà e sugestioni di ricerca ?</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">Per ottene suggestioni di ricerca, %1$s hà bisognu di mandà ciò chì hè scrittu in a barra d’indirizzu ver di u mutore di ricerca sceltu. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Per sapene di più</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Per ottene suggestioni di ricerca, %1$s hà bisognu di mandà à u mutore di ricerca ciò chì vo scrivite in a barra d’indirizzu.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Innò</string>
@@ -668,6 +688,11 @@
     <!-- Tip displayed on home view explaining how to disable tracking protection
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Stu situ ùn si cumporta micca cum’è previstu ?\n
+    Pruvate di disattivà a prutezzione contr’à u spiunagiu</string>
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Ci seria u cuntenutu chì manca o u situ si cumpurteria d’una manera strana ?\n
     Pruvate di disattivà a prutezzione contr’à u spiunagiu</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -692,17 +717,22 @@
     </string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Preferite fighjà a versione per urdinatore di u situ ?%1$s Listinu > Fighjà versione urdinatore]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Vulete fighjà a versione cumpleta d’un situ ?\n
+        Passate à a versione d’urdinatore da u listinu di %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Disattivà e minichichje nant’à u screnu d’avviu</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Un situ di cunfidenza ?\n
-    Allowlist disattiveghja a prutezzione contr’à u spiunagiu per i siti di cunfidenza chì voi cunniscite.
+    <string name="tip_explain_allowlist2">Vulete disattivà a prutezzione contr’à u spiunagiu per un situ di cunfidenza chì voi cunniscite ?\n
+        Aghjunghjelu à a lista di i siti di cunfidenza in e Preferenze
     </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Hè vera, avemu un aspettu tuttu novu ! Sapene di più apprupositu di què è d’altre mudificazioni nant’à %1$s.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nova unghjetta aperta</string>
@@ -729,6 +759,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Caccià tutti i siti web</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Bluccà i canistrelli</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Vulete bluccà i canistrelli ?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">L’unghjetta hè rotta</string>
     <!-- Headline for the tab crash report screen -->
@@ -743,4 +779,40 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Mandà un raportu di penseri à Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Perseguitatori bluccati dapoi u %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Cuntenutu</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Publicità</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Suciale</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Statistica</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Prutezzione rinfurzata contr’à u spiunagiu</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">E prutezzioni sò DISATTIVATE per stu situ</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">E prutezzioni sò ATTIVATE per stu situ</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">A cunnessione hè assicurata</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">A cunnessione ùn hè micca assicurata</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Perseguitatori è scenarii à bluccà</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Ritornu</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Caccià</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">E fiure sparte o arregistrate &lt;b&gt;ùn sò micca squassate &lt;/b&gt;quandu a crunulogia di %1s hè squassata.</string>
 </resources>

@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Uw navigatiegeschiedenis is gewist.</string>
 
+    <string name="feedback_erase2">Navigatiegeschiedenis gewist</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Navigatiegeschiedenis van tabblad is gewist.</string>
 
@@ -45,6 +47,11 @@
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Toevoegen aan startscherm</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Aan snelkoppelingen toevoegen</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Verwijderen uit Snelkoppelingen</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Wat is er nieuw</string>
@@ -206,6 +213,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Aangepaste URL toevoegen</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Uw lijst voor automatisch aanvullen:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">URL toevoegen</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Aangepaste URL toevoegen</string>
 
@@ -272,10 +285,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Nee</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">Nee, bedankt</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Alleen tracking-cookies van derden blokkeren</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Alleen cookies van derden blokkeren</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Ja, graag</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Vingerafdruk voor ontgrendelen van app gebruiken</string>
@@ -328,6 +342,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Geïnstalleerde zoekmachines</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Zoekmachine kiezen</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Standaardzoekmachines terugzetten</string>
 
@@ -336,6 +353,11 @@
     <string name="preference_search_add2">+ Nog een zoekmachine toevoegen</string>
     <string name="preference_search_remove_title">Zoekmachines verwijderen</string>
     <string name="preference_search_remove">Verwijderen</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Nog een zoekmachine toevoegen</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Selecteer uw gewenste zoekmachine:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -497,8 +519,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Toevoegen</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">JA</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Annuleren</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NEE</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -638,17 +666,11 @@
     <string name="biometric_auth_moved_too_quickly">Vinger te snel bewogen. Probeer het opnieuw.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Wilt u zoeksuggesties aanzetten?</string>
+    <string name="enable_search_suggestion_title2">Zoeksuggesties tonen?</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">Om zoeksuggesties te verkrijgen, moet %1$s wat u in de adresbalk intypt naar de gekozen zoekmachine sturen. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Meer info</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Om suggesties te verkrijgen, moet %1$s wat u in de adresbalk intypt naar de zoekmachine sturen.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Nee</string>
@@ -668,6 +690,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Gedraagt een website zich onverwacht?\n Probeer Bescherming tegen volgen uit te schakelen</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Mist een website inhoud of gedraagt deze zich vreemd?\n
+    Probeer Bescherming tegen volgen uit te schakelen</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Toegang via één tik tot uw meestgebruikte websites%1$s Menu > Toevoegen aan startscherm]]></string>
@@ -686,15 +713,22 @@
     <string name="tip_open_in_new_tab">Een koppeling in een nieuw tabblad openen\n Houd uw vinger op een koppeling op een pagina</string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Ziet u liever de volledige desktopwebsite?%1$s Menu > Desktopwebsite opvragen]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Wilt u de volledige versie van een website zien?\n
+        Schakel de desktopwebsite in vanuit het %1$s-menu</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Tips op het startscherm uitschakelen</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Vertrouwde website?\n De witte lijst schakelt Bescherming tegen volgen uit voor bekende en vertrouwde websites.</string>
+    <string name="tip_explain_allowlist2">Wilt u Bescherming tegen volgen uitschakelen voor een website die u vertrouwt?\n
+        Voeg deze toe aan de Toegestane lijst in de Instellingen
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Inderdaad, we hebben een frisse nieuwe uitstraling! Meer info hierover en over andere updates van %1$s.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nieuw tabblad geopend</string>
@@ -721,6 +755,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Alle websites verwijderen</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Cookies blokkeren</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Wilt u cookies blokkeren?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Tabblad gecrasht</string>
     <!-- Headline for the tab crash report screen -->
@@ -735,4 +775,36 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Crashrapport naar Mozilla verzenden</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Trackers geblokkeerd sinds %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Inhoud</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Advertenties</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Sociaal</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analyse</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Verbeterde bescherming tegen volgen</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Beschermingen voor deze website staan UIT</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Beschermingen voor deze website staan AAN</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Verbinding is beveiligd</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Verbinding is niet beveiligd</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Te blokkeren trackers en scripts</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Terug</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Verwijderen</string>
 </resources>

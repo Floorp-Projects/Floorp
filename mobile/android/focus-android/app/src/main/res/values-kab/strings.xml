@@ -48,6 +48,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Rnu γer ugdil agejdan</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Rnu ɣer yinegzumen n unasiw</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Kkes seg yinegzumen</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">D acu yellan d amaynut</string>
     <string name="menu_settings">Iγewwaṛen</string>
@@ -117,6 +122,19 @@
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Anadi uslig</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s ad k-d-yefk afus ad teqqimeḍ d aqeṛṛu.</p>
+<p>Seqdec-it d iminig uslig:
+  <ul>
+    <li>Nadi sakin snirem akken iwata deg usnas</li>
+    <li>Sewḥel ineḍfaren (neɣ leqqem iɣewwaren akken ad tsirgeḍ ineḍfaren)</li>
+    <li>Sfeḍ inagan n tuqqna akked uzray n tunigin d unadi</li>
+  </ul>
+</p>
+<p>%1$s yesnulfa-t-id Mozilla. Tuɣdaṭ-nneɣ ad nḥareb γef internet yeldin d tezmert-is.<br/>
+<a href="%2$s">Issin ugar</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">&quot;Tabaḍnit  &amp; Taɣellist&quot;</string>
@@ -195,6 +213,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Rnu URL aganan</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Tabdart-ik·im n usmad awurman:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Rnu URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Rnu URL aganan</string>
 
@@ -261,10 +285,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Ala</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">Uhu, tanemmirt</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Sewḥel kan inagan n tuqqna n ufecku wis 3</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Ih</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Ih, tanemmirt</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Seqdec adsil umḍin akken ad tserḥeḍ i usnas</string>
@@ -317,6 +342,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Imseddayen n unadi ibedden</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Fren amsedday n unadi</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Err-d imseddayen n unadi imezwar</string>
 
@@ -325,6 +353,12 @@
     <string name="preference_search_add2">+ Rnu amsedday nniḍen n unadi</string>
     <string name="preference_search_remove_title">Kkes imseddayen n unadi</string>
     <string name="preference_search_remove">Kkes</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Rnu amsedday n unadi wayeḍ</string>
+
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Fren amsedday-ine·inem n unadi ufrin</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -486,8 +520,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Rnu</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">IH</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Sefsex</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">UHU</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -606,17 +646,7 @@
     <string name="biometric_auth_moved_too_quickly">TƐherkeḍ aḍaḍ s lweǧlan. Ԑreḍ tikelt-nniḍen.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Tebɣiḍ ad tekkseḍ armad n isumren n unadi?</string>
-
-    <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">&quot;Akken ad tawiḍ isumar n unadi, %1$s isra ad ak-yazen  acu n tewsit deg ufeggag n tansa ɣer umsedday n unadi i tferneḍ. %2$s.&quot;</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Issin ugar</string>
+    <string name="enable_search_suggestion_title2">Sen isumar n unadi?</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ala</string>
@@ -654,15 +684,18 @@
     <string name="tip_open_in_new_tab">Ldi aseɣwen deg iccer amaynut\n Asenned ɣezzifen ɣef useɣwen deg usebter</string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Iff-itt ma twalaḍ asmel aččuran?%1$s Umuɣ > Suter asmel n tnarit]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Tebɣiḍ ad twaliḍ lqem ummid n usmel?\n
+        Uɣal ɣer usmel n tnarit seg wumuɣ n %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Sens timahaltin deg ugdil n tnekra</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Asmel ittwamnen?\n Tabdert usireg ad tsens asewḥel mgal aneḍfar i uismal i tettamneḍ akked wid i tesneḍ.</string>
+    <string name="tip_explain_allowlist2">Tebɣiḍ ad teǧǧeḍ ammesten mgal aḍfar yensa i usmel iɣef tettekleḍ\n
+        Rnu-t ɣer Tebdart n Usireg deg Yiɣewwaren
+    </string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Iccer amaynut yeldi</string>
@@ -689,6 +722,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Kkes akk ismal web</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Sewḥel inagan n tuqqna</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Tebɣiḍ ad tesweḥleḍ inagan n tuqqna?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Yaɣli iccer</string>
     <!-- Headline for the tab crash report screen -->
@@ -703,4 +742,37 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Azen aneqqis n uɣelluy i Mozilla</string>
-</resources>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Ineḍfaren ttusweḥlen seg %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content"></string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Adellel</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Anmetti</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Tidaddanin</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Ammesten mgal aḍfaṛ yettwaseǧhed</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Ammesten yensa i usmel-a</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Ammesten yermed i usmel-a</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Tuqqna d taɣellsant</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Tuqqna mačči d taɣellsant</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Ineḍfaren d yisekripten ara yettusweḥlen</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Uɣal ɣer deffir</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Kkes</string>
+
+    </resources>

@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Додати на головний екран</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Додати до ярликів</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Вилучити з ярликів</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Що нового</string>
     <string name="menu_settings">Налаштування</string>
@@ -207,6 +212,12 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Додати власну URL-адресу</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Ваш список автозаповнення:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Додати URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Додати власну URL-адресу</string>
 
@@ -273,10 +284,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Так</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">Ні, дякую</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Блокувати лише сторонні куки стеження</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Блокувати лише сторонні куки</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Так</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Так, будь ласка</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Використовувати відбиток пальця для розблокування</string>
@@ -329,6 +341,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Встановлені засоби пошуку</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Виберіть засіб пошуку</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Відновити типові засоби пошуку</string>
 
@@ -337,6 +352,11 @@
     <string name="preference_search_add2">+ Додати інший засіб пошуку</string>
     <string name="preference_search_remove_title">Вилучити засоби пошуку</string>
     <string name="preference_search_remove">Вилучити</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Додати інший засіб пошуку</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Оберіть бажаний засіб пошуку:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -498,8 +518,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Додати</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ТАК</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Скасувати</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">НІ</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -639,17 +665,11 @@
     <string name="biometric_auth_moved_too_quickly">Надто швидкий рух пальцем. Спробуйте знову.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Бажаєте увімкнути пошукові пропозиції?</string>
+    <string name="enable_search_suggestion_title2">Показувати пошукові пропозиції?</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">Для отримання пошукових пропозицій %1$s повинен відправляти введений в адресному рядку текст провайдеру пошуку. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Докладніше</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description"> Для отримання пропозицій %1$s повинен відправляти введений в адресному рядку текст провайдеру пошуку.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ні</string>
@@ -669,6 +689,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Неочікувана поведінка сайту?\n Спробуйте вимкнути захист від стеження</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Сайт виглядає чи поводиться дивно?\n
+    Спробуйте вимкнути захист від стеження</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Швидкий доступ до популярних сайтів%1$s Меню > Додати на головний екран]]></string>
@@ -687,15 +712,22 @@
     <string name="tip_open_in_new_tab">Відкривайте посилання в новій вкладці\n Тривалий дотик до посилання на сторінці</string>
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Бажаєте бачити повну версію сайту?%1$s Меню > Повна версія сайту]]></string>
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Хочете побачити повну версію сайту?\n
+        Перемкніть на повну версію сайту в меню %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Вимкнути поради у домівці</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Довірений сайт?\n Список дозволів вимикає захист від стеження для сайтів, яким ви довіряєте.</string>
+    <string name="tip_explain_allowlist2">Хочете вимкнути захист від стеження для довіреного сайту?\n
+        Додайте його до списку винятків у налаштуваннях
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Оновлений зовнішній вигляд! Ознайомтеся докладніше про це, а також про інші оновлення в %1$s.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Відкрито нову вкладку</string>
@@ -722,6 +754,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Вилучити всі веб-сайти</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Блокувати куки</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Бажаєте блокувати куки?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Збій вкладки</string>
     <!-- Headline for the tab crash report screen -->
@@ -736,4 +774,40 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Надіслати звіт про збій в Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Заблоковано стеження, починаючи з %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Вміст</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Реклама</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Соціальні мережі</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Аналітика</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Розширений захист від стеження</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Захист на цьому сайті вимкнено</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Захист на цьому сайті увімкнено</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Захищене з’єднання</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">З’єднання не захищене</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Блокувати стеження й скрипти</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Назад</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Вилучити</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">Збережені та спільні зображення &lt;b&gt;не будуть&lt;/b&gt; видалені, якщо ви зітрете історію %1s</string>
 </resources>

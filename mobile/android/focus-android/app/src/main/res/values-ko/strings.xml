@@ -1,152 +1,462 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">취소</string>
-  <string name="action_ok">확인</string>
-  <string name="action_save">저장</string>
-  <string name="urlbar_hint">검색어 또는 주소 입력</string>
-  <string name="teaser">자동화된 개인 정보 보호 브라우저.\n쓰고, 지우고. 쓰고, 지우고.</string>
-  <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
-  <string name="feedback_erase_custom_tab">탭의 탐색 기록이 삭제되었습니다.</string>
-  <string name="search_hint">%1$s 검색</string>
-  <string name="menu_share">공유…</string>
-  <string name="menu_report_site_issue">사이트 이슈 보고</string>
-  <string name="menu_open_with_default_browser2">%1$s로/으로 열기</string>
-  <string name="menu_open_with_a_browser2">다른 브라우저로 열기</string>
-  <string name="menu_add_to_home_screen">초기 화면에 추가하기</string>
-  <string name="menu_whats_new">새로운 기능</string>
-  <string name="menu_settings">설정</string>
-  <string name="menu_about">정보</string>
-  <string name="menu_help">도움말</string>
-  <string name="menu_rights">사용자 권리</string>
-  <string name="menu_trackers_blocked_title">차단된 추적기</string>
-  <string name="menu_trackers_blocked_subtitle">이 기능을 끄면 일부 사이트 문제가 해결 될 수 있습니다.</string>
-  <string name="menu_content_blocking">콘텐츠 차단</string>
-  <string name="menu_content_blocking_subtitle">일부 사이트 문제 해결을 위해 끄기</string>
-  <string name="menu_custom_tab_branding">%1$s에서 지원</string>
-  <string name="share_dialog_title">다음으로 공유</string>
-  <string name="notification_erase_text">방문 기록 지우기</string>
-  <string name="notification_action_open">열기</string>
-  <string name="notification_action_erase_and_open">지우고 열기</string>
-  <string name="shortcut_erase_short_label">지우기</string>
-  <string name="shortcut_erase_long_label">방문 기록 지우기</string>
-  <string name="shortcut_erase_and_open_short_label">지우고 열기</string>
-  <string name="shortcut_erase_and_open_long_label">%1$s 지우고 열기</string>
-  <string name="text_selection_search_action">사생활 보호 검색</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">개인정보 보호 및 보안</string>
-  <string name="preference_privacy_and_security_summary">추적, 쿠키, 데이타 선택</string>
-  <string name="preference_search_summary">기본 설정, 자동 완성</string>
-  <string name="preference_mozilla_summary">%1$s 정보, 도움말</string>
-  <string name="preference_category_tracking_protection">추적 방지</string>
-  <string name="preference_category_web_content">웹 콘텐츠</string>
-  <string name="preference_category_switching_apps">앱 전환</string>
-  <string name="preference_category_general">일반</string>
-  <string name="preference_general_summary">기본 브라우저, 탭, 언어</string>
-  <string name="preference_category_data_collection_use">데이터 수집 및 사용</string>
-  <string name="preference_category_search">검색</string>
-  <string name="preference_show_search_suggestions">추천 검색어 켜기</string>
-  <string name="preference_show_search_suggestions_summary">주소창에 입력을 하면 %1$s가 이를 검색 엔진에 보냄</string>
-  <string name="preference_search_engine_default">기본</string>
-  <string name="preference_search_engine_label">검색 엔진</string>
-  <string name="preference_state_on">사용 중</string>
-  <string name="preference_state_off">사용 안 함</string>
-  <string name="preference_subitem_autocomplete">URL 자동 완성</string>
-  <string name="preference_switch_autocomplete_topsites">자주 가는 사이트</string>
-  <string name="preference_autocomplete_topsite_summary">자동 완성 기능을 활성화해서 450개가 넘는 자주 찾는 URL을 주소창에서 사용해 보세요.</string>
-  <string name="preference_switch_autocomplete_user_list">내가 추가한 사이트</string>
-  <string name="preference_autocomplete_user_list_summary">자동 완성 기능을 활성화해서 450개가 넘는 자주 찾는 URL을 주소창에서 사용해 보세요.</string>
-  <string name="preference_category_autocomplete_manage_sites">사이트 관리</string>
-  <string name="preference_autocomplete_subitem_manage_sites">사이트 관리</string>
-  <string name="preference_autocomplete_action_add">+ 사용자 정의 URL 추가</string>
-  <string name="preference_autocomplete_title_add">사용자 정의 URL 추가</string>
-  <string name="custom_autocomplete_quick_add">사용자 정의 URL 추가</string>
-  <string name="add_custom_autocomplete_label">자동 완성 링크 추가</string>
-  <string name="preference_category_cookies">쿠키와 사이트 데이타</string>
-  <string name="preference_category_data_choices">데이타 선택</string>
-  <string name="preference_autocomplete_title_remove">사용자 정의 URL 삭제</string>
-  <string name="preference_autocomplete_learn_more">더 알아보기</string>
-  <string name="preference_autocomplete_custom_summary">사용자 정의 자동 완성 URL 추가하고 관리합니다.</string>
-  <string name="preference_autocomplete_add_title">추가할 URL</string>
-  <string name="preference_autocomplete_add_hint">URL 입력 또는 붙여넣기</string>
-  <string name="preference_autocomplete_add_example2">예: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">예: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">새 사용자 정의 URL이 추가되었습니다.</string>
-  <string name="preference_autocomplete_menu_remove">삭제</string>
-  <string name="preference_autocomplete_action_remove_content_description">삭제</string>
-  <string name="preference_autocomplete_add_error">입력한 URL을 다시 확인하세요.</string>
-  <string name="preference_language">언어</string>
-  <string name="preference_language_systemdefault">시스템 기본값</string>
-  <string name="preference_category_privacy">개인 정보</string>
-  <string name="preference_privacy_block_ads">광고 추적기 차단</string>
-  <string name="preference_privacy_block_ads_summary">특정 광고의 경우, 광고를 클릭하지 않은 경우에도 방문 기록을 추적합니다</string>
-  <string name="preference_privacy_block_analytics">분석용 추적기 차단</string>
-  <string name="preference_privacy_block_analytics_summary">탭한 기록이나 스크롤과 같은 사용자 활동 내역을 수집하고 분석하는데 사용됩니다</string>
-  <string name="preference_privacy_block_social">소셜 추적기 차단</string>
-  <string name="preference_privacy_block_social_summary">사용자의 방문 기록을 추적하거나 공유 버튼과 같은 기능을 표시하기 위해 사이트에 내장되어 있습니다</string>
-  <string name="preference_privacy_block_content">기타 콘텐츠 추적기 차단</string>
-  <string name="preference_privacy_block_content_summary2">설정 시 웹 페이지가 제대로 표시되지 않을 수 있습니다</string>
-  <string name="preference_privacy_category_cookies">쿠키 차단</string>
-  <string name="preference_privacy_should_block_cookies_no_option">아니오</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">제 3자 추적기 쿠키 만 차단</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">제 3자 쿠키만 차단</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">예</string>
-  <string name="preference_security_biometric">잠금 헤제에 지문을 사용</string>
-  <string name="preference_security_biometric_summary">앱에 URL이 이미 열려 있다면 지문으로 %1$s를 잠금 해제 할 수 있습니다. 스텔스가 켜집니다.</string>
-  <string name="preference_privacy_secure_mode">스텔스</string>
-  <string name="preference_privacy_stealth_summary">앱 전환 시 웹페이지를 감추고 스크린샷을 못찍게 합니다.</string>
-  <string name="preference_category_security">보안</string>
-  <string name="preference_category_performance">성능</string>
-  <string name="preference_performance_block_webfonts">웹 폰트 차단</string>
-  <string name="preference_performance_block_webfonts_summary">아이콘 또는 이미지가 누락될 수 있음</string>
-  <string name="preference_performance_block_javascript">JavaScript 차단</string>
-  <string name="preference_performance_block_javascript_summary">페이지가 더 빠르게 로드될 수 있지만 에상치 못한 동작을 할 수도 있음</string>
-  <string name="preference_default_browser2">%1$s를 기본 브라우저로 설정</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">사용 정보 보내기</string>
-  <string name="preference_mozilla_telemetry_summary">상세정보</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla는 %1$s 이용에 더 나은 서비스를 제공하고 향상시키는 데 오직 필요한 정보만을 수집합니다.</string>
-  <string name="preference_privacy_notice">개인 정보 보호 정책</string>
-  <string name="preference_about">%1$s에 대한 정보</string>
-  <string name="preference_search_installed_search_engines">설치된 검색 엔진 모음</string>
-  <string name="preference_search_restore">기본 검색 엔진 설정 초기화</string>
-  <string name="preference_search_add2">+ 또 다른 검색 엔진 추가</string>
-  <string name="preference_search_remove_title">검색 엔진 삭제</string>
-  <string name="preference_search_remove">삭제</string>
-  <string name="preference_homescreen_tips">홈 스크린 팁 표시</string>
-  <string name="action_option_add_search_engine">검색 엔진 추가</string>
-  <string name="search_add_manually_name_hint">검색 엔진 이름</string>
-  <string name="search_add_manually_string">사용할 검색 문구</string>
-  <string name="search_add_manually_save">저장</string>
-  <string name="search_add_manually_example">예: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">새 검색 엔진이 추가되었습니다.</string>
-  <string name="search_add_error_empty_name">검색 엔진 이름을 입력하세요</string>
-  <string name="search_add_error_duplicate_name">설치된 검색 엔진이 이미 해당 이름을 사용하고 있습니다.</string>
-  <string name="search_add_error_empty_search">검색어를 입력하세요</string>
-  <string name="search_add_error_format">검색어가 예시 형식과 일치하는 지 확인하세요</string>
-  <string name="content_description_clear_input">입력 값 초기화</string>
-  <string name="content_description_dismiss_input">취소</string>
-  <string name="content_description_erase">탐색 기록 지우기</string>
-  <string name="content_description_tab_counter">열린 탭: %1$s</string>
-  <string name="content_description_lock">보안 연결</string>
-  <string name="accessibility_announcement_loading">로딩 중</string>
-  <string name="accessibility_announcement_loading_finished">웹 사이트 불러옴</string>
-  <string name="content_description_menu">옵션 더보기</string>
-  <string name="indicator_content_description_menu">추가 옵션 버튼</string>
-  <string name="content_description_forward">앞으로 가기</string>
-  <string name="content_description_reload">웹 사이트 다시 불러오기</string>
-  <string name="content_description_back">뒤로 가기</string>
-  <string name="content_description_stop">웹사이트 로딩 중지</string>
-  <string name="content_description_customtab_exit">이전 앱으로 돌아가기</string>
-  <string name="content_description_trackers_blocked">차단된 추적기 수</string>
-  <string name="content_description_blocking_switch">추적기 차단</string>
-  <string name="your_rights">권리</string>
-  <string name="external_app_prompt_title">다른 앱으로 링크 열기</string>
-  <string name="external_app_prompt">%2$s로 링크를 열면 %1$s를 떠나게 됩니다.</string>
-  <string name="external_app_prompt_no_app_title">링크를 열 수 있는 앱 찾기</string>
-  <string name="external_app_prompt_no_app">이 링크를 열 수 있는 앱이 설치돼있지 않습니다. %1$s를 종료하고 %2$s를 열어 이 링크를 열 수 있는 앱을 찾을 수 있습니다.</string>
-  <string name="external_multiple_apps_matched_exit">개인 정보 보호 브라우징을 종료할까요?</string>
-  <string name="download_snackbar_finished">%1$s 다운로드됨</string>
-  <string name="download_snackbar_open">열기</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">취소</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">확인</string>
+
+    <string name="action_save">저장</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">검색어 또는 주소 입력</string>
+
+    <string name="teaser">자동화된 개인 정보 보호 브라우저.\n쓰고, 지우고. 쓰고, 지우고.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
+    <string name="feedback_erase2">방문 기록 삭제됨</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">탭의 탐색 기록이 삭제되었습니다.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">%1$s 검색</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">공유…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">사이트 이슈 보고</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">%1$s로/으로 열기</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">다른 브라우저로 열기</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">초기 화면에 추가하기</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">바로가기 추가</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">바로가기에서 제거</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">새로운 기능</string>
+    <string name="menu_settings">설정</string>
+    <string name="menu_about">정보</string>
+    <string name="menu_help">도움말</string>
+    <string name="menu_rights">사용자 권리</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">차단된 추적기</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">이 기능을 끄면 일부 사이트 문제가 해결 될 수 있습니다.</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">콘텐츠 차단</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">일부 사이트 문제 해결을 위해 끄기</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">%1$s에서 지원</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">다음으로 공유</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">방문 기록 지우기</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">열기</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">지우고 열기</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">지우기</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">방문 기록 지우기</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">지우고 열기</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">%1$s 지우고 열기</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">사생활 보호 검색</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s를 여러 기능으로 사용할 수 있습니다.</p>
+<p>개인 정보 보호 브라우저로 사용:
+  <ul>
+    <li>앱에서 바로 검색과 브라우징 하기</li>
+    <li>추적기 차단(설정을 변경해서 허용할 수 있음)</li>
+    <li>쿠키나 검색어, 브라우징 기록을 삭제</li>
+  </ul>
+</p>
+<p>%1$s는 Mozilla의 제품입니다. Mozilla의 사명은 건강하고 개방적인 인터넷을 조성하는 것입니다.<br/>
+<a href="%2$s">더 알아보기</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">개인정보 보호 및 보안</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">추적, 쿠키, 데이타 선택</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">기본 설정, 자동 완성</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">%1$s 정보, 도움말</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">추적 방지</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">웹 콘텐츠</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">앱 전환</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">일반</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">기본 브라우저, 탭, 언어</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">데이터 수집 및 사용</string>
+
+    <string name="preference_category_search">검색</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">추천 검색어 켜기</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">주소창에 입력을 하면 %1$s가 이를 검색 엔진에 보냄</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">기본</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">검색 엔진</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">사용 중</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">사용 안 함</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL 자동 완성</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">자주 가는 사이트</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">자동 완성 기능을 활성화해서 450개가 넘는 자주 찾는 URL을 주소창에서 사용해 보세요.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">내가 추가한 사이트</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">자동 완성 기능을 활성화해서 450개가 넘는 자주 찾는 URL을 주소창에서 사용해 보세요.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">사이트 관리</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">사이트 관리</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ 사용자 정의 URL 추가</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">자동 완성 목록:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">URL 추가</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">사용자 정의 URL 추가</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">사용자 정의 URL 추가</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">자동 완성 링크 추가</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">쿠키와 사이트 데이타</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">데이타 선택</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">사용자 정의 URL 삭제</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">더 알아보기</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">사용자 정의 자동 완성 URL 추가하고 관리합니다.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">추가할 URL</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">URL 입력 또는 붙여넣기</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">예: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">예: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">새 사용자 정의 URL이 추가되었습니다.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">삭제</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">삭제</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">입력한 URL을 다시 확인하세요.</string>
+
+    <string name="preference_language">언어</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">시스템 기본값</string>
+
+    <string name="preference_category_privacy">개인 정보</string>
+    <string name="preference_privacy_block_ads">광고 추적기 차단</string>
+    <string name="preference_privacy_block_ads_summary">특정 광고의 경우, 광고를 클릭하지 않은 경우에도 방문 기록을 추적합니다</string>
+    <string name="preference_privacy_block_analytics">분석용 추적기 차단</string>
+    <string name="preference_privacy_block_analytics_summary">탭한 기록이나 스크롤과 같은 사용자 활동 내역을 수집하고 분석하는데 사용됩니다</string>
+    <string name="preference_privacy_block_social">소셜 추적기 차단</string>
+    <string name="preference_privacy_block_social_summary">사용자의 방문 기록을 추적하거나 공유 버튼과 같은 기능을 표시하기 위해 사이트에 내장되어 있습니다</string>
+    <string name="preference_privacy_block_content">기타 콘텐츠 추적기 차단</string>
+    <string name="preference_privacy_block_content_summary2">설정 시 웹 페이지가 제대로 표시되지 않을 수 있습니다</string>
+    <string name="preference_privacy_category_cookies">쿠키 차단</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">아니오</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">제 3자 추적기 쿠키 만 차단</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">제 3자 쿠키만 차단</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">네, 물론이요.</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">잠금 헤제에 지문을 사용</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">앱에 URL이 이미 열려 있다면 지문으로 %1$s를 잠금 해제 할 수 있습니다. 스텔스가 켜집니다.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">스텔스</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">앱 전환 시 웹페이지를 감추고 스크린샷을 못찍게 합니다.</string>
+
+    <string name="preference_category_security">보안</string>
+
+    <string name="preference_category_performance">성능</string>
+    <string name="preference_performance_block_webfonts">웹 폰트 차단</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">아이콘 또는 이미지가 누락될 수 있음</string>
+
+    <string name="preference_performance_block_javascript">JavaScript 차단</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">페이지가 더 빠르게 로드될 수 있지만 에상치 못한 동작을 할 수도 있음</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s를 기본 브라우저로 설정</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">사용 정보 보내기</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">상세정보</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla는 %1$s 이용에 더 나은 서비스를 제공하고 향상시키는 데 오직 필요한 정보만을 수집합니다.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">개인 정보 보호 정책</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">%1$s에 대한 정보</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">설치된 검색 엔진 모음</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">검색 엔진 선택</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">기본 검색 엔진 설정 초기화</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ 또 다른 검색 엔진 추가</string>
+    <string name="preference_search_remove_title">검색 엔진 삭제</string>
+    <string name="preference_search_remove">삭제</string>
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">다른 검색 엔진 추가</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">선호하는 엔진 선택:</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">홈 스크린 팁 표시</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">검색 엔진 추가</string>
+
+    <string name="search_add_manually_name_hint">검색 엔진 이름</string>
+    <string name="search_add_manually_string">사용할 검색 문구</string>
+    <string name="search_add_manually_save">저장</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">예: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">새 검색 엔진이 추가되었습니다.</string>
+
+    <string name="search_add_error_empty_name">검색 엔진 이름을 입력하세요</string>
+    <string name="search_add_error_duplicate_name">설치된 검색 엔진이 이미 해당 이름을 사용하고 있습니다.</string>
+
+    <string name="search_add_error_empty_search">검색어를 입력하세요</string>
+
+    <string name="search_add_error_format">검색어가 예시 형식과 일치하는 지 확인하세요</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">입력 값 초기화</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">취소</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">탐색 기록 지우기</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">열린 탭: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">보안 연결</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">로딩 중</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">웹 사이트 불러옴</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">옵션 더보기</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">추가 옵션 버튼</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">앞으로 가기</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">웹 사이트 다시 불러오기</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">뒤로 가기</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">웹사이트 로딩 중지</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">이전 앱으로 돌아가기</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">차단된 추적기 수</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">추적기 차단</string>
+
+    <string name="your_rights">권리</string>
+
+    <string name="external_app_prompt_title">다른 앱으로 링크 열기</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">%2$s로 링크를 열면 %1$s를 떠나게 됩니다.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">링크를 열 수 있는 앱 찾기</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">이 링크를 열 수 있는 앱이 설치돼있지 않습니다. %1$s를 종료하고 %2$s를 열어 이 링크를 열 수 있는 앱을 찾을 수 있습니다.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">개인 정보 보호 브라우징을 종료할까요?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s 다운로드됨</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">열기</string>
 
 
 
@@ -176,91 +486,325 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">개인정보 보호 강화하기</string>
-  <string name="firstrun_defaultbrowser_text2">한 단계 높은 개인 정보 보호 브라우징을 즐겨보세요. 사이트의 경계를 넘어 개인정보를 추적하거나, 페이지 로딩 속도를 늦추는 원인이 되는 광고 및 기타 콘텐츠를 자동으로 차단해 줍니다.</string>
-  <string name="firstrun_search_title">검색을 내 입맛대로</string>
-  <string name="firstrun_search_text">다른 방식으로 검색을 원하세요? 설정에서 다른 검색 엔진을 기본값으로 선택할 수 있습니다.</string>
-  <string name="firstrun_shortcut_title">초기 화면에 바로 가기 추가</string>
-  <string name="firstrun_shortcut_text">%1$s에서는 자주 방문하는 사이트로 빠르게 이동할 수 있습니다. %1$s 메뉴에서 \"초기 화면에 추가하기\" 를 이용하세요.</string>
-  <string name="firstrun_privacy_title">사생활 보호를 습관처럼</string>
-  <string name="firstrun_privacy_text">%1$s 를 기본 브라우저로 설정하시면, 다른 앱에서 웹페이지를 열어볼 때 언제든지 개인 정보 보호의 혜택을 누릴 수 있습니다.</string>
-  <string name="firstrun_close_button">알겠습니다!</string>
-  <string name="firstrun_skip_button">건너뛰기</string>
-  <string name="firstrun_next_button">다음</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">추가</string>
-  <string name="dialog_addtohomescreen_action_cancel">취소</string>
-  <string name="dialog_addtohomescreen_tracking_protection">바로 가기가 추적 차단 기능이 해제된 상태에서 열립니다</string>
-  <string name="notification_browsing_session_channel_name">개인 정보 보호 브라우징 세션</string>
-  <string name="notification_browsing_session_channel_description">알림에서는 %1$s 세션을 탭 한번으로 삭제할 수 있습니다. 앱을 실행하거나 브라우저에 열려 있는 세션을 확인할 필요가 없습니다.</string>
-  <string name="tabs_tray_action_erase">방문 기록 삭제</string>
-  <string name="download_firefox">Firefox 다운로드</string>
-  <string name="your_rights_content1">%1$s는 Mozilla와 다른 공헌자들이 만들고 배포하는 무료 오픈 소스 소프트웨어 입니다.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">개인정보 보호 강화하기</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">한 단계 높은 개인 정보 보호 브라우징을 즐겨보세요. 사이트의 경계를 넘어 개인정보를 추적하거나, 페이지 로딩 속도를 늦추는 원인이 되는 광고 및 기타 콘텐츠를 자동으로 차단해 줍니다.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">검색을 내 입맛대로</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">다른 방식으로 검색을 원하세요? 설정에서 다른 검색 엔진을 기본값으로 선택할 수 있습니다.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">초기 화면에 바로 가기 추가</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">%1$s에서는 자주 방문하는 사이트로 빠르게 이동할 수 있습니다. %1$s 메뉴에서 \&quot;초기 화면에 추가하기\&quot; 를 이용하세요.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">사생활 보호를 습관처럼</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">%1$s 를 기본 브라우저로 설정하시면, 다른 앱에서 웹페이지를 열어볼 때 언제든지 개인 정보 보호의 혜택을 누릴 수 있습니다.</string>
+
+    <string name="firstrun_close_button">알겠습니다!</string>
+    <string name="firstrun_skip_button">건너뛰기</string>
+    <string name="firstrun_next_button">다음</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">추가</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">네</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">취소</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">아니오</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">바로 가기가 추적 차단 기능이 해제된 상태에서 열립니다</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">개인 정보 보호 브라우징 세션</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">알림에서는 %1$s 세션을 탭 한번으로 삭제할 수 있습니다. 앱을 실행하거나 브라우저에 열려 있는 세션을 확인할 필요가 없습니다.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">방문 기록 삭제</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Firefox 다운로드</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s는 Mozilla와 다른 공헌자들이 만들고 배포하는 무료 오픈 소스 소프트웨어 입니다.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">사용자명</string>
-  <string name="gv_prompt_password_hint">비밀번호</string>
-  <string name="gv_prompt_clear">지우기</string>
-  <string name="security_popup_secure_connection">안전한 연결</string>
-  <string name="security_popup_insecure_connection">안전하지 않은 연결</string>
-  <string name="security_popup_security_verified">인증: %1$s</string>
-  <string name="site_security_icon_content_description">사이트 보안</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL이 이미 존재함</string>
-  <string name="find_in_page">페이지내 검색</string>
-  <string name="find_in_page_input">페이지내 검색</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%2$d 중 %1$d</string>
-  <string name="accessibility_next_result">다음 결과 찾기</string>
-  <string name="accessibility_previous_result">이전 결과 찾기</string>
-  <string name="accessibility_dismiss_find_in_page">페이지에서 찾기 해제</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s는 <a href="%2$s">Mozilla 공개 라이선스</a> 및 기타 다른 오픈 소스 라이선스 이용 약관에 따라 제공됩니다.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[귀하는 Mozilla와 Firefox, %1$s 명칭이나 로고를 포함한 Mozilla 재단 및 다른 서비스 제공자 소유의 지적재산권으로 보호받는 권리나 라이선스가 부여되는 것이 아님을 인지하셔야 합니다. 추가적인 정보는 <a href="%2$s">다음</a>을 참고하시기 바랍니다.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$s의 소스 코드는 기타 다양한 무료 및 오픈 소스 <a href="%2$s">라이선스</a> 계약에 따라 제공됩니다.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s는 Disconnect, Inc에서 제공하는 차단목록에서 <a href="%2$s">GNU General Public License v3</a>를 바탕으로 자체적으로 별도로 관리하는 차단목록을 사용합니다. 자세한 내용은 <a href="%3$s">다음</a>에서 확인할 수 있습니다.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">사용자명</string>
+    <string name="gv_prompt_password_hint">비밀번호</string>
+    <string name="gv_prompt_clear">지우기</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">안전한 연결</string>
+    <string name="security_popup_insecure_connection">안전하지 않은 연결</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">인증: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">사이트 보안</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL이 이미 존재함</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">페이지내 검색</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">페이지내 검색</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%2$d 중 %1$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">다음 결과 찾기</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">이전 결과 찾기</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">페이지에서 찾기 해제</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">데스크톱 사이트 요청</string>
-  <string name="custom_tab_copy_url_action">URL 복사됨</string>
-  <string name="preference_advanced_summary">개발자 도구</string>
-  <string name="preference_category_advanced">고급</string>
-  <string name="preference_remote_debugging">USB/Wi-Fi 원격 디버깅</string>
-  <string name="biometric_auth_title">%1$s 잠금 해제</string>
-  <string name="biometric_auth_description">지문 센서를 터치해주세요.</string>
-  <string name="biometric_auth_new_session">새 세션</string>
-  <string name="biometric_auth_image_description">지문 아이콘</string>
-  <string name="biometric_auth_not_recognized_error">지문이 인식되지 않았습니다. 다시 시도해 주세요.</string>
-  <string name="biometric_auth_moved_too_quickly">손가락을 너무 빨리 움직였습니다. 다시 시도해 주세요.</string>
-  <string name="enable_search_suggestion_title">검색 자동완성을 사용하시겠습니까?</string>
-  <string name="enable_search_suggestion_subtitle">검색 자동 완성을 사용하려면 %1$s가 주소창에 입력한 내용을 선택한 검색 엔진에 보내야 합니다. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">자세히 보기</string>
-  <string name="enable_search_suggestions_no">아니오</string>
-  <string name="enable_search_suggestions_yes">네</string>
-  <string name="no_suggestions_message">일부 검색 엔진은 추천을 표시할 수 없습니다.</string>
-  <string name="dismiss_no_suggestions_prompt_button">닫기</string>
-  <string name="tip_disable_tracking_protection">사이트가 잘 작동하지 않나요?\n 추적 방지를 꺼보세요</string>
-  <string name="tip_add_to_homescreen">자주 사용하는 사이트를 탭 한번으로 여세요%1$s 메뉴 &gt; 홈 화면에 추가</string>
-  <string name="tip_set_default_browser">모든 링크를 %1$s에서 엽니다\n %1$s를 기본 브라우저로 설정</string>
-  <string name="tip_autocomplete_url">자주 사용하는 사이트 URL을 자동 완성합니다\n 주소창에서 URL을 길게 눌러 보세요</string>
-  <string name="tip_open_in_new_tab">링크를 새 탭에서 엽니다\n 페이지의 링크를 길게 눌러 보세요</string>
-  <string name="tip_request_desktop">전체 데스크톱 사이트를 보고 싶으세요?%1$s 메뉴 &gt; 데스크톱 사이트 요청</string>
-  <string name="tip_disable_tips2">시작 화면에서 도움말 끄기</string>
-  <string name="tip_explain_allowlist">신뢰할 수 있는 사이트인가요?\n 내가 알고 있는 사이트에 대해서 추적 보호를 비활성화 합니다.</string>
-  <string name="new_tab_opened_snackbar">새 탭 열림</string>
-  <string name="open_new_tab_snackbar">전환</string>
-  <string name="preference_open_new_tab">새탭의 링크로 즉시 전환</string>
-  <string name="preference_category_safe_browsing">안전한 브라우징</string>
-  <string name="preference_safe_browsing_title">잠재적으로 위험한 사이트 및 사기성 사이트 차단</string>
-  <string name="preference_safe_browsing_summary">사기성 사이트나 공격 사이트, 악성코드 사이트, 원치 않는 소프트웨어 사이트를 차단합니다.</string>
-  <string name="preference_exceptions">예외</string>
-  <string name="preference_exceptions_description">이 사이트에 대한 콘텐츠 차단을 비활성화 했습니다.</string>
-  <string name="preference_exceptions_menu_remove">삭제</string>
-  <string name="preference_exceptions_remove_all_button_label">모든 웹사이트 삭제</string>
-  <string name="tab_crash_report_title">오류난 탭</string>
-  <string name="tab_crash_report_headline">죄송합니다. 이 탭에 문제가 있습니다.</string>
-  <string name="tab_crash_report_description">사생활 보호 브라우저여서 저장하지 않았기 때문에 이 탭을 복원할 수 없습니다.</string>
-  <string name="tab_crash_report_close_tab_button_label">탭 닫기</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">데스크톱 사이트 요청</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">데스크톱 사이트</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL 복사됨</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">개발자 도구</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">고급</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">USB/Wi-Fi 원격 디버깅</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">%1$s 잠금 해제</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">지문 센서를 터치해주세요.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">새 세션</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">새 세션에서 링크 열기</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">지문 아이콘</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">지문이 인식되지 않았습니다. 다시 시도해 주세요.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">손가락을 너무 빨리 움직였습니다. 다시 시도해 주세요.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">추천 검색을 사용할까요?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">추천 검색을 사용하려면 %1$s가 주소창에 입력한 내용을 검색 엔진에 보내야 합니다.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">아니오</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">네</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">일부 검색 엔진은 추천을 표시할 수 없습니다.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">닫기</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">사이트가 잘 작동하지 않나요?\n 추적 방지를 꺼보세요</string>
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">사이트에서 콘텐츠가 나오지 않거나 이상하게 작동하나요?\n
+    추적 방지를 꺼보세요</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[자주 사용하는 사이트를 탭 한번으로 여세요%1$s 메뉴 > 홈 화면에 추가]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">모든 링크를 %1$s에서 엽니다\n %1$s를 기본 브라우저로 설정</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">자주 사용하는 사이트 URL을 자동 완성합니다\n 주소창에서 URL을 길게 눌러 보세요</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">링크를 새 탭에서 엽니다\n 페이지의 링크를 길게 눌러 보세요</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">사이트 전체 버전을 보고 싶으신가요?\n
+        %1$s 메뉴에서 데스크톱 사이트를 켜보세요.</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">시작 화면에서 도움말 끄기</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist2">신뢰할 수 있는 사이트는 처적 방지 기능을 해제하고 싶으신가요?\n
+        설정의 허용 목록에 추가해보세요.
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">네, 새로운 모습으로 바뀌었습니다! 이에 대해 더 읽어보고 %1$s의 다른 업데이트도 살펴 보세요.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">새 탭 열림</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">전환</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">새탭의 링크로 즉시 전환</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">안전한 브라우징</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">잠재적으로 위험한 사이트 및 사기성 사이트 차단</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">사기성 사이트나 공격 사이트, 악성코드 사이트, 원치 않는 소프트웨어 사이트를 차단합니다.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">예외</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">이 사이트에 대한 콘텐츠 차단을 비활성화 했습니다.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">삭제</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">모든 웹사이트 삭제</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">쿠키 차단</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">쿠키를 차단하시겠습니까?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">오류난 탭</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">죄송합니다. 이 탭에 문제가 있습니다.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">사생활 보호 브라우저여서 저장하지 않았기 때문에 이 탭을 복원할 수 없습니다.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">탭 닫기</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Mozilla에 충돌 보고서 보내기</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Mozilla에 충돌 보고서 보내기</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">%s 이후에 차단된 추적기</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">콘텐츠</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">광고</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">소셜</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">분석</string>
+
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">향상된 추적 방지 기능</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">이 사이트에서 보호 꺼짐</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">이 사이트에서 보호 켜짐</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">연결이 안전함</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">연결이 안전하지 않음</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">차단할 추적기 및 스크립트</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">뒤로 가기</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">제거</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">%1s 기록을 지울때 저장 및 공유된 이미지는 &lt;b&gt;삭제되지 않습니다&lt;/b&gt;.</string>
 </resources>

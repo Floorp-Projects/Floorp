@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Lägg till på startskärmen</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Lägg till i genvägar</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Ta bort från genvägar</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Vad är nytt</string>
     <string name="menu_settings">Inställningar</string>
@@ -207,6 +212,9 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Lägg till anpassad webbadress</string>
 
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Lägg till URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Lägg till anpassad webbadress</string>
 
@@ -273,10 +281,11 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Nej</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">Nej tack</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blockera endast tredjepartspårarkakor</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Blockera endast tredjepartskakor</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Ja tack</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Använd fingeravtryck för att låsa upp appen</string>
@@ -329,6 +338,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Installerade sökmotorer</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Välj sökmotor</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Återställ standardsökmotorer</string>
 
@@ -337,6 +349,11 @@
     <string name="preference_search_add2">+ Lägg till en annan sökmotor</string>
     <string name="preference_search_remove_title">Ta bort sökmotorer</string>
     <string name="preference_search_remove">Ta bort</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Lägg till en annan sökmotor</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Välj din önskade sökmotor:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -498,8 +515,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Lägg till</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">JA</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NEJ</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -639,17 +662,11 @@
     <string name="biometric_auth_moved_too_quickly">Fingret rörde sig för fort. Försök igen.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Vill du aktivera sökförslag?</string>
+    <string name="enable_search_suggestion_title2">Visa sökförslag?</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">För att få sökförslag behöver %1$s skicka det du skriver i adressfältet till sökmotorn du har valt. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Läs mer</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">För att få förslag måste %1$s skicka det du skriver i adressfältet till sökmotorn.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Nej</string>
@@ -686,16 +703,8 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Öppna en länk i en ny flik\n Tryck länge på en länk på en sida</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Vill du hellre se webbplatsen anpassad för datorer?%1$s Meny > Begär datorwebbplats]]></string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Stäng av tips på startskärmen</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Tillförlitlig webbplats?\n Tillåtelselistan inaktiverar spårningsskydd för webbplatser du känner och litar på.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Ny flik öppnad</string>
@@ -722,6 +731,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Ta bort alla webbplatser</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Blockera kakor</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Vill du blockera kakor?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Fliken kraschade</string>
     <!-- Headline for the tab crash report screen -->
@@ -736,4 +751,34 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Skicka kraschrapport till Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Spårare blockerade sedan %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Innehåll</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Annonser</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Socialt</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analys</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Förbättrat spårningsskydd</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Skydd är AV för den här webbplatsen</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Skydd är PÅ för den här webbplatsen</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Anslutningen är säker</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Anslutningen är inte säker</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Gå tillbaka</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Ta bort</string>
 </resources>

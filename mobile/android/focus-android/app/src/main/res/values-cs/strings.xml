@@ -1,152 +1,463 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Zrušit</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">Uložit</string>
-  <string name="urlbar_hint">Zadejte hledání nebo adresu</string>
-  <string name="teaser">Automatické anonymní prohlížení.\nProhlížejte. Vymažte. Opakujte.</string>
-  <string name="feedback_erase">Vaše historie prohlížení byla vymazána.</string>
-  <string name="feedback_erase_custom_tab">Historie prohlížení panelu byla vymazána.</string>
-  <string name="search_hint">Hledat %1$s</string>
-  <string name="menu_share">Sdílet…</string>
-  <string name="menu_report_site_issue">Nahlášení chyby stránky</string>
-  <string name="menu_open_with_default_browser2">Otevřít v aplikaci %1$s</string>
-  <string name="menu_open_with_a_browser2">Otevřít v…</string>
-  <string name="menu_add_to_home_screen">Přidat na domovskou obrazovku</string>
-  <string name="menu_whats_new">Co je nového</string>
-  <string name="menu_settings">Nastavení</string>
-  <string name="menu_about">O nás</string>
-  <string name="menu_help">Nápověda</string>
-  <string name="menu_rights">Vaše práva</string>
-  <string name="menu_trackers_blocked_title">Zablokováno sledovacích prvků</string>
-  <string name="menu_trackers_blocked_subtitle">Vypnutí této funkce může vyřešit některé problémy se stránkami</string>
-  <string name="menu_content_blocking">Blokování obsahu</string>
-  <string name="menu_content_blocking_subtitle">Vypněte pro opravu některých problémů se stránkami</string>
-  <string name="menu_custom_tab_branding">Pohání %1$s</string>
-  <string name="share_dialog_title">Sdílet přes</string>
-  <string name="notification_erase_text">Vymazat historii prohlížení</string>
-  <string name="notification_action_open">Otevřít</string>
-  <string name="notification_action_erase_and_open">Vymazat a otevřít</string>
-  <string name="shortcut_erase_short_label">Vymazat</string>
-  <string name="shortcut_erase_long_label">Vymazat historii prohlížení</string>
-  <string name="shortcut_erase_and_open_short_label">Vymazat a otevřít</string>
-  <string name="shortcut_erase_and_open_long_label">Vymazat a otevřít %1$s</string>
-  <string name="text_selection_search_action">Vyhledávejte soukromě</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Soukromí a zabezpečení</string>
-  <string name="preference_privacy_and_security_summary">Sledování, soubory cookie, možnosti hlášení</string>
-  <string name="preference_search_summary">Výchozí vyhledávač, doplňování</string>
-  <string name="preference_mozilla_summary">O aplikaci %1$s, nápověda</string>
-  <string name="preference_category_tracking_protection">Ochrana proti sledování</string>
-  <string name="preference_category_web_content">Webový obsah</string>
-  <string name="preference_category_switching_apps">Přepínání aplikací</string>
-  <string name="preference_category_general">Obecné</string>
-  <string name="preference_general_summary">Výchozí prohlížeč, panely, jazyk</string>
-  <string name="preference_category_data_collection_use">Sběr dat a jejich použití</string>
-  <string name="preference_category_search">Hledat</string>
-  <string name="preference_show_search_suggestions">Povolit našeptávání</string>
-  <string name="preference_show_search_suggestions_summary">%1$s bude odesílat text zadávaný to adresního řádku vyhledávači</string>
-  <string name="preference_search_engine_default">Výchozí</string>
-  <string name="preference_search_engine_label">Vyhledávací modul</string>
-  <string name="preference_state_on">Zapnuto</string>
-  <string name="preference_state_off">Vypnuto</string>
-  <string name="preference_subitem_autocomplete">Automatické doplňování URL adres</string>
-  <string name="preference_switch_autocomplete_topsites">Pro Top stránky</string>
-  <string name="preference_autocomplete_topsite_summary">Zapněte pro našeptávání více než 450 populárních URL adres.</string>
-  <string name="preference_switch_autocomplete_user_list">Pro stránky které přidáte</string>
-  <string name="preference_autocomplete_user_list_summary">Zapněte pro našeptávání více než 450 populárních URL adres.</string>
-  <string name="preference_category_autocomplete_manage_sites">Spravovat stránky</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Spravovat stránky</string>
-  <string name="preference_autocomplete_action_add">+ Přidat vlastní URL adresu</string>
-  <string name="preference_autocomplete_title_add">Přidat vlastní URL adresu</string>
-  <string name="custom_autocomplete_quick_add">Přidat vlastní URL adresu</string>
-  <string name="add_custom_autocomplete_label">Přidat odkaz na našeptávání</string>
-  <string name="preference_category_cookies">Cookies a data stránek</string>
-  <string name="preference_category_data_choices">Možnosti hlášení</string>
-  <string name="preference_autocomplete_title_remove">Odebrat vlastní URL adresy</string>
-  <string name="preference_autocomplete_learn_more">Zjistit více</string>
-  <string name="preference_autocomplete_custom_summary">Přidání a správa vlastních URL adres pro automatické doplňování.</string>
-  <string name="preference_autocomplete_add_title">URL adresa k přidání</string>
-  <string name="preference_autocomplete_add_hint">Vložte nebo zadejte URL adresu</string>
-  <string name="preference_autocomplete_add_example2">Příklad: mozilla.cz</string>
-  <string name="preference_autocomplete_add_example">Příklad: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Vlastní URL adresa přidána.</string>
-  <string name="preference_autocomplete_menu_remove">Odebrat</string>
-  <string name="preference_autocomplete_action_remove_content_description">Odebrat</string>
-  <string name="preference_autocomplete_add_error">Zkontrolujte zadanou URL adresu.</string>
-  <string name="preference_language">Jazyk</string>
-  <string name="preference_language_systemdefault">Systémové nastavení</string>
-  <string name="preference_category_privacy">Soukromí</string>
-  <string name="preference_privacy_block_ads">Blokovat sledující reklamy</string>
-  <string name="preference_privacy_block_ads_summary">Některé reklamy sledují návštěvy stránek i v případě, že na reklamy nekliknete</string>
-  <string name="preference_privacy_block_analytics">Blokovat analytické prvky</string>
-  <string name="preference_privacy_block_analytics_summary">Slouží k shromážďování, analýze a měření aktivit jako je klepnutí nebo posouvání</string>
-  <string name="preference_privacy_block_social">Blokovat sledovací prvky sociálních sítí</string>
-  <string name="preference_privacy_block_social_summary">Vloženo do stránek pro sledování vašich návštěv a zobrazování funkcí jako tlačítka pro sdílení</string>
-  <string name="preference_privacy_block_content">Blokovat ostatní sledovací prvky</string>
-  <string name="preference_privacy_block_content_summary2">Zapnutí může způsobit, že se některé stránky budou chovat neočekávaně</string>
-  <string name="preference_privacy_category_cookies">Blokovat cookies</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokovat pouze sledovací cookies třetích stran</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokovat pouze cookies třetích stran</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Ano</string>
-  <string name="preference_security_biometric">Odemknout aplikaci otiskem prstu</string>
-  <string name="preference_security_biometric_summary">Pokud je otevřena nějaká stránka, pro otevření bude %1$s vyžadovat váš otisk prstu.</string>
-  <string name="preference_privacy_secure_mode">Nenápadnost</string>
-  <string name="preference_privacy_stealth_summary">Skrýt webové stránky při přepínání aplikací a zabránit pořizování snímků obrazovky.</string>
-  <string name="preference_category_security">Zabezpečení</string>
-  <string name="preference_category_performance">Výkon</string>
-  <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
-  <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>
-  <string name="preference_performance_block_javascript">Blokovat JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Stránky se mohou načítat rychleji, ale také nemusí správně fungovat</string>
-  <string name="preference_default_browser2">Nastavit %1$s jako výchozí prohlížeč</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Odesílat údaje o používání</string>
-  <string name="preference_mozilla_telemetry_summary">Zjistit více</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla sbírá jenom ty informace, které potřebuje pro další vylepšování aplikace %1$s.</string>
-  <string name="preference_privacy_notice">Zásady ochrany osobních údajů</string>
-  <string name="preference_about">O aplikaci %1$s</string>
-  <string name="preference_search_installed_search_engines">Nainstalované vyhledávací moduly</string>
-  <string name="preference_search_restore">Obnovit výchozí vyhledávací moduly</string>
-  <string name="preference_search_add2">+ Přidat jiný vyhledávací modul</string>
-  <string name="preference_search_remove_title">Odebrat vyhledávací moduly</string>
-  <string name="preference_search_remove">Odebrat</string>
-  <string name="preference_homescreen_tips">Zobrazovat tipy na domovské stránce</string>
-  <string name="action_option_add_search_engine">Přidat vyhledávací modul</string>
-  <string name="search_add_manually_name_hint">Název vyhledávacího modulu</string>
-  <string name="search_add_manually_string">Použít řetězec pro vyhledávání</string>
-  <string name="search_add_manually_save">Uložit</string>
-  <string name="search_add_manually_example">Příklad: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Nový vyhledávací modul byl přidán.</string>
-  <string name="search_add_error_empty_name">Zadejte název vyhledávače</string>
-  <string name="search_add_error_duplicate_name">Tento název už je používán nainstalovaným vyhledávacím modulem.</string>
-  <string name="search_add_error_empty_search">Zadejte hledaný řetězec</string>
-  <string name="search_add_error_format">Zkontrolujte, zda vyhledávací řetězec odpovídá formátu příkladu</string>
-  <string name="content_description_clear_input">Vymazat pole</string>
-  <string name="content_description_dismiss_input">Zavřít</string>
-  <string name="content_description_erase">Vymazat historii prohlížení</string>
-  <string name="content_description_tab_counter">Počet otevřených panelů: %1$s</string>
-  <string name="content_description_lock">Zabezpečené připojení</string>
-  <string name="accessibility_announcement_loading">Načítání</string>
-  <string name="accessibility_announcement_loading_finished">Stránka načtena</string>
-  <string name="content_description_menu">Další možnosti</string>
-  <string name="indicator_content_description_menu">Tlačítko Další možnosti</string>
-  <string name="content_description_forward">Přejít vpřed</string>
-  <string name="content_description_reload">Obnovit stránku</string>
-  <string name="content_description_back">Návrat zpět</string>
-  <string name="content_description_stop">Zastavit načítání stránky</string>
-  <string name="content_description_customtab_exit">Návrat do předchozí aplikace</string>
-  <string name="content_description_trackers_blocked">Celkový počet zablokovaných sledovacích prvků</string>
-  <string name="content_description_blocking_switch">Blokovat sledovací prvky</string>
-  <string name="your_rights">Vaše práva</string>
-  <string name="external_app_prompt_title">Otevřít odkaz v jiné aplikaci</string>
-  <string name="external_app_prompt">Můžete opustit aplikaci %1$s a otevřít tento odkaz v aplikaci %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Najít aplikaci, která může otevřít odkaz</string>
-  <string name="external_app_prompt_no_app">Žádná z aplikací na vašem zařízení není schopná otevřít tento odkaz. Můžete opustit aplikaci %1$s a najít vhodnou aplikaci v %2$s.</string>
-  <string name="external_multiple_apps_matched_exit">Opustit režim anonymního prohlížení?</string>
-  <string name="download_snackbar_finished">Soubor %1$s byl stažen</string>
-  <string name="download_snackbar_open">Otevřít</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Zrušit</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">Uložit</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Zadejte hledání nebo adresu</string>
+
+    <string name="teaser">Automatické anonymní prohlížení.\nProhlížejte. Vymažte. Opakujte.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Vaše historie prohlížení byla vymazána.</string>
+    <string name="feedback_erase2">Historie prohlížení vymazána</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Historie prohlížení panelu byla vymazána.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Hledat %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Sdílet…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Nahlášení chyby stránky</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Otevřít v aplikaci %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Otevřít v…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Přidat na domovskou obrazovku</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Přidat zkratku</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Odebrat ze zkratek</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Co je nového</string>
+    <string name="menu_settings">Nastavení</string>
+    <string name="menu_about">O nás</string>
+    <string name="menu_help">Nápověda</string>
+    <string name="menu_rights">Vaše práva</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Zablokováno sledovacích prvků</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Vypnutí této funkce může vyřešit některé problémy se stránkami</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Blokování obsahu</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Vypněte pro opravu některých problémů se stránkami</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Pohání %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Sdílet přes</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Vymazat historii prohlížení</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Otevřít</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Vymazat a otevřít</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Vymazat</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Vymazat historii prohlížení</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Vymazat a otevřít</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Vymazat a otevřít %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Vyhledávejte soukromě</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s vám dává kontrolu.</p>
+<p>Používejte ho jako soukromý prohlížeč:
+  <ul>
+    <li>Vyhledávejte a prohlížejte přímo v aplikaci</li>
+    <li>Blokujte sledovací prvky (nebo aktualizujte nastavení pro povolení sledovacích prvků)</li>
+    <li>Tlačítkem smažte cookies a historii vyhledávání a prohlížení</li>
+  </ul>
+</p>
+<p>%1$s je vyvíjen Mozillou. Naší misí je podporovat zdravý a otevřený internet.<br/>
+<a href="%2$s">Zjistěte více</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Soukromí a zabezpečení</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Sledování, soubory cookie, možnosti hlášení</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Výchozí vyhledávač, doplňování</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">O aplikaci %1$s, nápověda</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Ochrana proti sledování</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Webový obsah</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Přepínání aplikací</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Obecné</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Výchozí prohlížeč, panely, jazyk</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Sběr dat a jejich použití</string>
+
+    <string name="preference_category_search">Hledat</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Povolit našeptávání</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s bude odesílat text zadávaný to adresního řádku vyhledávači</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Výchozí</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Vyhledávací modul</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Zapnuto</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Vypnuto</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Automatické doplňování URL adres</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Pro Top stránky</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Zapněte pro našeptávání více než 450 populárních URL adres.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Pro stránky které přidáte</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Zapněte pro našeptávání více než 450 populárních URL adres.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Spravovat stránky</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Spravovat stránky</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Přidat vlastní URL adresu</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Váš seznam automatického doplňování:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Přidat URL</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Přidat vlastní URL adresu</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Přidat vlastní URL adresu</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Přidat odkaz na našeptávání</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookies a data stránek</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Možnosti hlášení</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Odebrat vlastní URL adresy</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Zjistit více</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Přidání a správa vlastních URL adres pro automatické doplňování.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL adresa k přidání</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Vložte nebo zadejte URL adresu</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Příklad: mozilla.cz</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Příklad: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Vlastní URL adresa přidána.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Odebrat</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Odebrat</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Zkontrolujte zadanou URL adresu.</string>
+
+    <string name="preference_language">Jazyk</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Systémové nastavení</string>
+
+    <string name="preference_category_privacy">Soukromí</string>
+    <string name="preference_privacy_block_ads">Blokovat sledující reklamy</string>
+    <string name="preference_privacy_block_ads_summary">Některé reklamy sledují návštěvy stránek i v případě, že na reklamy nekliknete</string>
+    <string name="preference_privacy_block_analytics">Blokovat analytické prvky</string>
+    <string name="preference_privacy_block_analytics_summary">Slouží k shromážďování, analýze a měření aktivit jako je klepnutí nebo posouvání</string>
+    <string name="preference_privacy_block_social">Blokovat sledovací prvky sociálních sítí</string>
+    <string name="preference_privacy_block_social_summary">Vloženo do stránek pro sledování vašich návštěv a zobrazování funkcí jako tlačítka pro sdílení</string>
+    <string name="preference_privacy_block_content">Blokovat ostatní sledovací prvky</string>
+    <string name="preference_privacy_block_content_summary2">Zapnutí může způsobit, že se některé stránky budou chovat neočekávaně</string>
+    <string name="preference_privacy_category_cookies">Blokovat cookies</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Ne, díky</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokovat pouze sledovací cookies třetích stran</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokovat pouze cookies třetích stran</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Ano, prosím</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Odemknout aplikaci otiskem prstu</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Pokud je otevřena nějaká stránka, pro otevření bude %1$s vyžadovat váš otisk prstu.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Nenápadnost</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Skrýt webové stránky při přepínání aplikací a zabránit pořizování snímků obrazovky.</string>
+
+    <string name="preference_category_security">Zabezpečení</string>
+
+    <string name="preference_category_performance">Výkon</string>
+    <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>
+
+    <string name="preference_performance_block_javascript">Blokovat JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Stránky se mohou načítat rychleji, ale také nemusí správně fungovat</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Nastavit %1$s jako výchozí prohlížeč</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Odesílat údaje o používání</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Zjistit více</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla sbírá jenom ty informace, které potřebuje pro další vylepšování aplikace %1$s.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Zásady ochrany osobních údajů</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">O aplikaci %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Nainstalované vyhledávací moduly</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Vyberte vyhledávač</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Obnovit výchozí vyhledávací moduly</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Přidat jiný vyhledávací modul</string>
+    <string name="preference_search_remove_title">Odebrat vyhledávací moduly</string>
+    <string name="preference_search_remove">Odebrat</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Přidat další vyhledávač</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Vyberte preferovaný vyhledávač:</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Zobrazovat tipy na domovské stránce</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Přidat vyhledávací modul</string>
+
+    <string name="search_add_manually_name_hint">Název vyhledávacího modulu</string>
+    <string name="search_add_manually_string">Použít řetězec pro vyhledávání</string>
+    <string name="search_add_manually_save">Uložit</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Příklad: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Nový vyhledávací modul byl přidán.</string>
+
+    <string name="search_add_error_empty_name">Zadejte název vyhledávače</string>
+    <string name="search_add_error_duplicate_name">Tento název už je používán nainstalovaným vyhledávacím modulem.</string>
+
+    <string name="search_add_error_empty_search">Zadejte hledaný řetězec</string>
+
+    <string name="search_add_error_format">Zkontrolujte, zda vyhledávací řetězec odpovídá formátu příkladu</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Vymazat pole</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Zavřít</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Vymazat historii prohlížení</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Počet otevřených panelů: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Zabezpečené připojení</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Načítání</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Stránka načtena</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Další možnosti</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Tlačítko Další možnosti</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Přejít vpřed</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Obnovit stránku</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Návrat zpět</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Zastavit načítání stránky</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Návrat do předchozí aplikace</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Celkový počet zablokovaných sledovacích prvků</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Blokovat sledovací prvky</string>
+
+    <string name="your_rights">Vaše práva</string>
+
+    <string name="external_app_prompt_title">Otevřít odkaz v jiné aplikaci</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Můžete opustit aplikaci %1$s a otevřít tento odkaz v aplikaci %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Najít aplikaci, která může otevřít odkaz</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Žádná z aplikací na vašem zařízení není schopná otevřít tento odkaz. Můžete opustit aplikaci %1$s a najít vhodnou aplikaci v %2$s.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Opustit režim anonymního prohlížení?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">Soubor %1$s byl stažen</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Otevřít</string>
 
 
 
@@ -176,91 +487,319 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Posuňte své soukromí na vyšší úroveň</string>
-  <string name="firstrun_defaultbrowser_text2">Anonymní prohlížení dostalo nový rozměr. Blokuje reklamy a další obsah, který vás sleduje napříč stránkami a zpomaluje načítání.</string>
-  <string name="firstrun_search_title">Vaše hledání, vaše cesta</string>
-  <string name="firstrun_search_text">Hledáte něco jiného? V nastavení si zvolte jiný vyhledávací modul jako výchozí.</string>
-  <string name="firstrun_shortcut_title">Přidejte si zkratky na vaši domovskou obrazovku</string>
-  <string name="firstrun_shortcut_text">S aplikací %1$s se můžete rychle vrátit ke svým oblíbeným stránkám. Použijte „Přidat na domovskou obrazovku“ z nabídky aplikace %1$s.</string>
-  <string name="firstrun_privacy_title">Udělejte ze soukromí zvyk</string>
-  <string name="firstrun_privacy_text">Nastavte si %1$s jako svůj výchozí prohlížeč a získejte výhody soukromého prohlížení kdykoliv otevřete odkaz z ostatních aplikací.</string>
-  <string name="firstrun_close_button">OK, rozumím!</string>
-  <string name="firstrun_skip_button">Přeskočit</string>
-  <string name="firstrun_next_button">Další</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Přidat</string>
-  <string name="dialog_addtohomescreen_action_cancel">Zrušit</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Zkratka se bude otevírat s vypnutou ochranou proti sledování</string>
-  <string name="notification_browsing_session_channel_name">Relace anonymního prohlížení</string>
-  <string name="notification_browsing_session_channel_description">Oznámení aplikace %1$s vám umožní smazat historii jedním klepnutím. Nemusíte ani otevírat aplikaci nebo se dívat, co máte zrovna otevřeno.</string>
-  <string name="tabs_tray_action_erase">Vymazat historii prohlížení</string>
-  <string name="download_firefox">Stáhnout Firefox</string>
-  <string name="your_rights_content1">%1$s je otevřený software zdarma od Mozilly a jiných přispěvatelů.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Posuňte své soukromí na vyšší úroveň</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Anonymní prohlížení dostalo nový rozměr. Blokuje reklamy a další obsah, který vás sleduje napříč stránkami a zpomaluje načítání.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Vaše hledání, vaše cesta</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Hledáte něco jiného? V nastavení si zvolte jiný vyhledávací modul jako výchozí.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Přidejte si zkratky na vaši domovskou obrazovku</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">S aplikací %1$s se můžete rychle vrátit ke svým oblíbeným stránkám. Použijte „Přidat na domovskou obrazovku“ z nabídky aplikace %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Udělejte ze soukromí zvyk</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Nastavte si %1$s jako svůj výchozí prohlížeč a získejte výhody soukromého prohlížení kdykoliv otevřete odkaz z ostatních aplikací.</string>
+
+    <string name="firstrun_close_button">OK, rozumím!</string>
+    <string name="firstrun_skip_button">Přeskočit</string>
+    <string name="firstrun_next_button">Další</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Přidat</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ANO</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Zrušit</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NE</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Zkratka se bude otevírat s vypnutou ochranou proti sledování</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Relace anonymního prohlížení</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Oznámení aplikace %1$s vám umožní smazat historii jedním klepnutím. Nemusíte ani otevírat aplikaci nebo se dívat, co máte zrovna otevřeno.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Vymazat historii prohlížení</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Stáhnout Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s je otevřený software zdarma od Mozilly a jiných přispěvatelů.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Uživatelské jméno</string>
-  <string name="gv_prompt_password_hint">Heslo</string>
-  <string name="gv_prompt_clear">Vymazat</string>
-  <string name="security_popup_secure_connection">Zabezpečené připojení</string>
-  <string name="security_popup_insecure_connection">Nezabezpečené připojení</string>
-  <string name="security_popup_security_verified">Ověřil: %1$s</string>
-  <string name="site_security_icon_content_description">Zabezpečení stránky</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL adresa už existuje</string>
-  <string name="find_in_page">Najít na stránce</string>
-  <string name="find_in_page_input">Najít na stránce</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d z %2$d</string>
-  <string name="accessibility_next_result">Další výskyt</string>
-  <string name="accessibility_previous_result">Předchozí výskyt</string>
-  <string name="accessibility_dismiss_find_in_page">Ukončit hledání na stránce</string>
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s vám je zpřístupněn za podmínek <a href="%2$s">Mozilla Public License</a> a jiných open source licencí.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Nejsou vám však podstoupena žádná práva ani licence k ochranným známkám Mozilla Foundation či dalších stran, a to zejména k logům a názvům Mozilla, Firefox nebo %1$s. Podrobnější informace o ochranných známkách jsou dostupné <a href="%2$s">zde</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Další zdrojové kódy pro %1$s jsou dostupné pod dalšími různými <a href="%2$s">licencemi</a> svobodného softwaru.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s také používá seznamy společnosti Disconnect, Inc. poskytnuté jako samostatná a nezávislá díla pod licencí <a href="%2$s">GNU General Public License v3</a> a dostupné <a href="%3$s">zde</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Uživatelské jméno</string>
+    <string name="gv_prompt_password_hint">Heslo</string>
+    <string name="gv_prompt_clear">Vymazat</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Zabezpečené připojení</string>
+    <string name="security_popup_insecure_connection">Nezabezpečené připojení</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Ověřil: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Zabezpečení stránky</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL adresa už existuje</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Najít na stránce</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Najít na stránce</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d z %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Další výskyt</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Předchozí výskyt</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Ukončit hledání na stránce</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Verze stránky pro počítač</string>
-  <string name="custom_tab_copy_url_action">URL adresa zkopírována</string>
-  <string name="preference_advanced_summary">Vývojářské nástroje</string>
-  <string name="preference_category_advanced">Rozšířené</string>
-  <string name="preference_remote_debugging">Vzdálené ladění pomocí USB//Wi-Fi</string>
-  <string name="biometric_auth_title">Odemknout %1$s</string>
-  <string name="biometric_auth_description">Dotkněte se senzoru otisku prstů.</string>
-  <string name="biometric_auth_new_session">Nová relace</string>
-  <string name="biometric_auth_image_description">Ikonu otisku prstu</string>
-  <string name="biometric_auth_not_recognized_error">Otisk prstu nebyl rozpoznán. Zkuste to znovu.</string>
-  <string name="biometric_auth_moved_too_quickly">Pohyb prstem byl příliš rychlý. Zkuste to znovu.</string>
-  <string name="enable_search_suggestion_title">Chcete zapnout našeptávání při vyhledávání?</string>
-  <string name="enable_search_suggestion_subtitle">K realizaci našeptávání musí %1$s odesílat vámi napsaný text do adresního řádku zvolenému vyhledávači. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Zjistit více</string>
-  <string name="enable_search_suggestions_no">Ne</string>
-  <string name="enable_search_suggestions_yes">Ano</string>
-  <string name="no_suggestions_message">Některé vyhledávače nemohou návrhy zobrazit.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Zavřít</string>
-  <string name="tip_disable_tracking_protection">Nechová se stránka podle očekávání?\n Zkuste vypnout ochranu proti sledování</string>
-  <string name="tip_add_to_homescreen">Mějte rychlý přístup k nejpoužívanějším stránkám%1$sNabídka &gt; Přidat na domovskou obrazovku</string>
-  <string name="tip_set_default_browser">Otevírejte v aplikaci %1$s všechny odkazy\n Nastavte si %1$s jako výchozí prohlížeč</string>
-  <string name="tip_autocomplete_url">Nechcete si doplňovat nejpoužívanější adresy\n Podržte prst na adrese v adresním řádku</string>
-  <string name="tip_open_in_new_tab">Otevírejte si odkazy v novém panelu\n Podržte prst na jakémkoliv odkazu na stránce</string>
-  <string name="tip_request_desktop">Chcete vidět verzi stránky pro počítače?%1$s Nabídka &gt; Verze stránky pro počítač</string>
-  <string name="tip_disable_tips2">Vypnout tipy na domovské stránce</string>
-  <string name="tip_explain_allowlist">Důvěryhodná stránka?\n Seznam povolených stránek vypíná Ochranu proti sledování pro stránky, které znáte a kterým věříte.</string>
-  <string name="new_tab_opened_snackbar">Nový panel otevřen</string>
-  <string name="open_new_tab_snackbar">Přepnout</string>
-  <string name="preference_open_new_tab">Přepnout ihned na odkaz v novém panelu</string>
-  <string name="preference_category_safe_browsing">Bezpečné prohlížení</string>
-  <string name="preference_safe_browsing_title">Blokovat potenciálně nebezpečné a klamavé stránky</string>
-  <string name="preference_safe_browsing_summary">Blokuje hlášené klamavé a útočné stránky, stránky s malwarem a stránky s nevyžádaným obsahem.</string>
-  <string name="preference_exceptions">Výjimky</string>
-  <string name="preference_exceptions_description">Na těchto stránkách jste blokování obsahu vypnuli.</string>
-  <string name="preference_exceptions_menu_remove">Odebrat</string>
-  <string name="preference_exceptions_remove_all_button_label">Odebrat všechny stránky</string>
-  <string name="tab_crash_report_title">Panel spadl</string>
-  <string name="tab_crash_report_headline">Promiňte. S tímto panelem máme problém.</string>
-  <string name="tab_crash_report_description">Jako soukromý prohlížeč tento panel nikdy neukládáme a nemůžeme obnovit.</string>
-  <string name="tab_crash_report_close_tab_button_label">Zavřít panel</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Verze stránky pro počítač</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Verze pro počítač</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL adresa zkopírována</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Vývojářské nástroje</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Rozšířené</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Vzdálené ladění pomocí USB//Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Odemknout %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Dotkněte se senzoru otisku prstů.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Nová relace</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Otevřít odkaz v nové relaci</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Ikonu otisku prstu</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Otisk prstu nebyl rozpoznán. Zkuste to znovu.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Pohyb prstem byl příliš rychlý. Zkuste to znovu.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Našeptávat dotazy pro vyhledávač?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">K realizaci našeptávání musí %1$s text napsaný do adresního řádku odesílat zvolenému vyhledávači.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Ne</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Ano</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Některé vyhledávače nemohou návrhy zobrazit.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Zavřít</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Nechová se stránka podle očekávání?\n Zkuste vypnout ochranu proti sledování</string>
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Chybí na stránce nějaký obsah?\n Zkuste vypnout ochranu proti sledování</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Mějte rychlý přístup k nejpoužívanějším stránkám%1$sNabídka > Přidat na domovskou obrazovku]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Otevírejte v aplikaci %1$s všechny odkazy\n Nastavte si %1$s jako výchozí prohlížeč</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Nechcete si doplňovat nejpoužívanější adresy\n Podržte prst na adrese v adresním řádku</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Otevírejte si odkazy v novém panelu\n Podržte prst na jakémkoliv odkazu na stránce</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Chcete vidět plnou verzi této stránky?\n
+Přepněte v nabídce aplikace %1$s na verzi pro počítač.</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Vypnout tipy na domovské stránce</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist2">Chcete na stránkách, kterým důvěřujete, vypnout ochranu proti sledování?
+Přidejte je do seznamu výjimek v nastavení.</string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Ano, máme nový vzhled. Přečtěte si podrobnosti o něm i dalších novinkách v aplikaci %1$s.</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Nový panel otevřen</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Přepnout</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Přepnout ihned na odkaz v novém panelu</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Bezpečné prohlížení</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Blokovat potenciálně nebezpečné a klamavé stránky</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Blokuje hlášené klamavé a útočné stránky, stránky s malwarem a stránky s nevyžádaným obsahem.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Výjimky</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Na těchto stránkách jste blokování obsahu vypnuli.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Odebrat</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Odebrat všechny stránky</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Blokovat cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Chcete zablokovat cookies?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Panel spadl</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Promiňte. S tímto panelem máme problém.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Jako soukromý prohlížeč tento panel nikdy neukládáme a nemůžeme obnovit.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Zavřít panel</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Poslat zprávu o pádu Mozille</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Poslat zprávu o pádu Mozille</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Sledovací prvky blokovány od %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Obsah</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Reklama</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Sociální sítě</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analytika</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Rozšířená ochrana proti sledování</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Ochrana je na tomto serveru vypnuta</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Ochrana je na tomto serveru zapnuta</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Zabezpečené spojení</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Spojení není zabezpečené</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Blokované sledovací prvky a skripty</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Zpátky</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Odebrat</string>
 </resources>
