@@ -166,12 +166,80 @@ class SpliceableJSONWriter : public JSONWriter {
 
   void EndBareList() { EndCollection(scEmptyString); }
 
+  // Output a time (int64_t given in nanoseconds) in milliseconds. trim zeroes.
+  // E.g.: 1'234'567'890 -> "1234.56789"
+  void TimeI64NsProperty(const Span<const char>& aMaybePropertyName,
+                         int64_t aTime_ns) {
+    if (aTime_ns == 0) {
+      Scalar(aMaybePropertyName, MakeStringSpan("0"));
+      return;
+    }
+
+    static constexpr int64_t million = 1'000'000;
+    const int64_t absNanos = std::abs(aTime_ns);
+    const int64_t integerMilliseconds = absNanos / million;
+    auto remainderNanoseconds = static_cast<uint32_t>(absNanos % million);
+
+    // Plenty enough to fit INT64_MIN (-9223372036854775808).
+    static constexpr size_t DIGITS_MAX = 23;
+    char buf[DIGITS_MAX + 1];
+    int len =
+        snprintf(buf, DIGITS_MAX, (aTime_ns >= 0) ? "%" PRIu64 : "-%" PRIu64,
+                 integerMilliseconds);
+    if (remainderNanoseconds != 0) {
+      buf[len++] = '.';
+      // Output up to 6 fractional digits. Exit early if the rest would
+      // be trailing zeros.
+      uint32_t powerOfTen = static_cast<uint32_t>(million / 10);
+      for (;;) {
+        auto digit = remainderNanoseconds / powerOfTen;
+        buf[len++] = '0' + static_cast<char>(digit);
+        remainderNanoseconds %= powerOfTen;
+        if (remainderNanoseconds == 0) {
+          break;
+        }
+        powerOfTen /= 10;
+        if (powerOfTen == 0) {
+          break;
+        }
+      }
+    }
+
+    Scalar(aMaybePropertyName, Span<const char>(buf, len));
+  }
+
+  // Output a (double) time in milliseconds, with at best nanosecond precision.
+  void TimeDoubleMsProperty(const Span<const char>& aMaybePropertyName,
+                            double aTime_ms) {
+    const double dTime_ns = aTime_ms * 1'000'000.0;
+    // Make sure it's well within int64_t range.
+    // 2^63 nanoseconds is almost 300 years; these times are relative to
+    // firefox startup, this should be enough for most uses.
+    if (dTime_ns >= 0.0) {
+      MOZ_RELEASE_ASSERT(dTime_ns < double(INT64_MAX - 1));
+    } else {
+      MOZ_RELEASE_ASSERT(dTime_ns > double(INT64_MIN + 2));
+    }
+    // Round to nearest integer nanosecond. The conversion to integer truncates
+    // the fractional part, so first we need to push it 0.5 away from zero.
+    const int64_t iTime_ns =
+        (dTime_ns >= 0.0) ? int64_t(dTime_ns + 0.5) : int64_t(dTime_ns - 0.5);
+    TimeI64NsProperty(aMaybePropertyName, iTime_ns);
+  }
+
+  // Output a (double) time in milliseconds, with at best nanosecond precision.
+  void TimeDoubleMsElement(double aTime_ms) {
+    TimeDoubleMsProperty(nullptr, aTime_ms);
+  }
+
   // This function must be used to correctly stream timestamps in profiles.
   // Null timestamps don't output anything.
-  void TimeProperty(const Span<const char>& aName, const TimeStamp& aTime) {
+  void TimeProperty(const Span<const char>& aMaybePropertyName,
+                    const TimeStamp& aTime) {
     if (!aTime.IsNull()) {
-      DoubleProperty(aName,
-                     (aTime - TimeStamp::ProcessCreation()).ToMilliseconds());
+      TimeDoubleMsProperty(
+          aMaybePropertyName,
+          (aTime - TimeStamp::ProcessCreation()).ToMilliseconds());
     }
   }
 
