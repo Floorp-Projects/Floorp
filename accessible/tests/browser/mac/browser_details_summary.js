@@ -15,7 +15,7 @@ loadScripts(
  * Test details/summary
  */
 addAccessibleTask(
-  `<details id="details"><summary>Foo</summary><p>Bar</p></details>`,
+  `<details id="details"><summary id="summary">Foo</summary><p>Bar</p></details>`,
   async (browser, accDoc) => {
     let details = getNativeInterface(accDoc, "details");
     is(
@@ -48,13 +48,22 @@ addAccessibleTask(
     let actions = summary.actionNames;
     ok(actions.includes("AXPress"), "Summary Has press action");
 
-    let reorder = waitForEvent(EVENT_REORDER, "details");
+    let stateChanged = waitForStateChange("summary", STATE_EXPANDED, true);
     summary.performAction("AXPress");
-    is(summary.getAttributeValue("AXExpanded"), 1, "Summary is collapsed");
     // The reorder gecko event notifies us of a tree change.
-    await reorder;
+    await stateChanged;
+    is(summary.getAttributeValue("AXExpanded"), 1, "Summary is expanded");
 
     detailsChildren = details.getAttributeValue("AXChildren");
     is(detailsChildren.length, 2, "collapsed details has only one child");
+
+    stateChanged = waitForStateChange("summary", STATE_EXPANDED, false);
+    summary.performAction("AXPress");
+    // The reorder gecko event notifies us of a tree change.
+    await stateChanged;
+    is(summary.getAttributeValue("AXExpanded"), 0, "Summary is collapsed 2");
+
+    detailsChildren = details.getAttributeValue("AXChildren");
+    is(detailsChildren.length, 1, "collapsed details has only one child");
   }
 );
