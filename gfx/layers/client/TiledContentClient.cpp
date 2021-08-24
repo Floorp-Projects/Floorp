@@ -115,10 +115,6 @@ bool SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   MOZ_ASSERT(aLayer);
 
   CompositorBridgeChild* compositor = nullptr;
-  if (aLayer.Manager() && aLayer.Manager()->AsClientLayerManager()) {
-    compositor =
-        aLayer.Manager()->AsClientLayerManager()->GetCompositorBridgeChild();
-  }
 
   if (!compositor) {
     return false;
