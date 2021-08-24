@@ -203,6 +203,9 @@ class ThreadRegistrationData {
   static const int SLEEPING_OBSERVED = 2;
   // Read&written from thread and suspended thread.
   Atomic<int> mSleep{AWAKE};
+
+  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
+  RegisteredThread* mRegisteredThread;
 };
 
 // Accessing const data from any thread.
@@ -215,6 +218,9 @@ class ThreadRegistrationUnlockedConstReader : public ThreadRegistrationData {
   }
 
   [[nodiscard]] const void* StackTop() const { return mStackTop; }
+
+  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
+  [[nodiscard]] const RacyRegisteredThread& RacyRegisteredThreadCRef() const;
 
  protected:
   ThreadRegistrationUnlockedConstReader(const char* aName,
@@ -283,6 +289,9 @@ class ThreadRegistrationUnlockedConstReaderAndAtomicRW
   }
 
   [[nodiscard]] bool IsSleeping() const { return mSleep != AWAKE; }
+
+  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
+  [[nodiscard]] RacyRegisteredThread& RacyRegisteredThreadRef();
 
  protected:
   ThreadRegistrationUnlockedConstReaderAndAtomicRW(const char* aName,
@@ -389,6 +398,9 @@ class ThreadRegistrationLockedRWFromAnyThread
     mJSSampling = INACTIVE_REQUESTED;
   }
 
+  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
+  [[nodiscard]] RegisteredThread& RegisteredThreadRef();
+
  protected:
   ThreadRegistrationLockedRWFromAnyThread(const char* aName,
                                           const void* aStackTop)
@@ -409,6 +421,9 @@ class ThreadRegistrationLockedRWOnThread
 
   // Poll to see if JS sampling should be started/stopped.
   void PollJSSampling();
+
+  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
+  void SetRegisteredThread(RegisteredThread* aRegisteredThread);
 
  public:
   ThreadRegistrationLockedRWOnThread(const char* aName, const void* aStackTop)
