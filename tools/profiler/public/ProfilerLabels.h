@@ -11,7 +11,7 @@
 #ifndef ProfilerLabels_h
 #define ProfilerLabels_h
 
-#include "mozilla/ProfilerState.h"
+#include "mozilla/ProfilerThreadState.h"
 
 #include "js/ProfilingCategory.h"
 #include "js/ProfilingStack.h"

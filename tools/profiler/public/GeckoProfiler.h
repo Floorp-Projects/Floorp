@@ -26,6 +26,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerState.h"
+#include "mozilla/ProfilerThreadState.h"
 
 enum class IsFastShutdown {
   No,
