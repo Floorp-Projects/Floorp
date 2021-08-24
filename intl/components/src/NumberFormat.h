@@ -171,6 +171,18 @@ struct MOZ_STACK_CLASS NumberFormatOptions {
     HalfEven,
     HalfOdd,
   } mRoundingMode = RoundingMode::HalfExpand;
+
+  /**
+   * Set the rounding priority. |mFractionDigits| and |mSignificantDigits| must
+   * both be set if the rounding priority isn't equal to "auto".
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#fraction-precision
+   */
+  enum class RoundingPriority {
+    Auto,
+    MorePrecision,
+    LessPrecision,
+  } mRoundingPriority = RoundingPriority::Auto;
 };
 
 enum class NumberPartType {

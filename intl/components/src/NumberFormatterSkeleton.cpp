@@ -39,7 +39,8 @@ NumberFormatterSkeleton::NumberFormatterSkeleton(
                            options.mStripTrailingZero)) {
       return;
     }
-  } else {
+  } else if (options.mRoundingPriority ==
+             NumberFormatOptions::RoundingPriority::Auto) {
     if (options.mFractionDigits.isSome()) {
       if (!fractionDigits(options.mFractionDigits->first,
                           options.mFractionDigits->second,
@@ -54,6 +55,19 @@ NumberFormatterSkeleton::NumberFormatterSkeleton(
                              options.mStripTrailingZero)) {
         return;
       }
+    }
+  } else {
+    MOZ_ASSERT(options.mFractionDigits);
+    MOZ_ASSERT(options.mSignificantDigits);
+
+    bool relaxed = options.mRoundingPriority ==
+                   NumberFormatOptions::RoundingPriority::MorePrecision;
+    if (!fractionWithSignificantDigits(options.mFractionDigits->first,
+                                       options.mFractionDigits->second,
+                                       options.mSignificantDigits->first,
+                                       options.mSignificantDigits->second,
+                                       relaxed, options.mStripTrailingZero)) {
+      return;
     }
   }
 
@@ -179,6 +193,31 @@ bool NumberFormatterSkeleton::fractionDigits(uint32_t min, uint32_t max,
   // Note: |min| can be zero here.
   MOZ_ASSERT(min <= max);
   if (!append('.') || !appendN('0', min) || !appendN('#', max - min)) {
+    return false;
+  }
+  if (stripTrailingZero) {
+    if (!append(u"/w")) {
+      return false;
+    }
+  }
+  return append(' ');
+}
+
+bool NumberFormatterSkeleton::fractionWithSignificantDigits(
+    uint32_t mnfd, uint32_t mxfd, uint32_t mnsd, uint32_t mxsd, bool relaxed,
+    bool stripTrailingZero) {
+  // Note: |mnfd| can be zero here.
+  MOZ_ASSERT(mnfd <= mxfd);
+  MOZ_ASSERT(mnsd > 0);
+  MOZ_ASSERT(mnsd <= mxsd);
+
+  if (!append('.') || !appendN('0', mnfd) || !appendN('#', mxfd - mnfd)) {
+    return false;
+  }
+  if (!append('/') || !appendN('@', mnsd) || !appendN('#', mxsd - mnsd)) {
+    return false;
+  }
+  if (!append(relaxed ? 'r' : 's')) {
     return false;
   }
   if (stripTrailingZero) {
