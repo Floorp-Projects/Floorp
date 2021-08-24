@@ -16,6 +16,7 @@ bool NumberFormatFields::append(NumberPartType type, int32_t begin,
 }
 
 bool NumberFormatFields::toPartsVector(size_t overallLength,
+                                       const NumberPartSourceMap& sourceMap,
                                        NumberPartVector& parts) {
   std::sort(fields_.begin(), fields_.end(),
             [](const NumberFormatField& left, const NumberFormatField& right) {
@@ -87,6 +88,8 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
     // The length of the overall formatted string.
     const uint32_t limit = 0;
 
+    NumberPartSourceMap sourceMap;
+
     Vector<size_t, 4> enclosingFields;
 
     void popEnclosingFieldsEndingAt(uint32_t end) {
@@ -109,13 +112,13 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
       if (index == len) {
         if (enclosingFields.length() > 0) {
           const auto& enclosing = fields[enclosingFields.popCopy()];
-          *part = {enclosing.type, enclosing.end};
+          *part = {enclosing.type, sourceMap.source(enclosing), enclosing.end};
 
           // If additional enclosing fields end where this part ends,
           // pop them as well.
           popEnclosingFieldsEndingAt(part->endIndex);
         } else {
-          *part = {NumberPartType::Literal, limit};
+          *part = {NumberPartType::Literal, sourceMap.source(limit), limit};
         }
 
         return true;
@@ -134,11 +137,13 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
           // field or the end of the enclosing field, whichever is
           // earlier.
           const auto& enclosing = fields[enclosingFields.back()];
-          *part = {enclosing.type, std::min(enclosing.end, current->begin)};
+          *part = {enclosing.type, sourceMap.source(enclosing),
+                   std::min(enclosing.end, current->begin)};
           popEnclosingFieldsEndingAt(part->endIndex);
         } else {
           // If there's no enclosing field, the space is a literal.
-          *part = {NumberPartType::Literal, current->begin};
+          *part = {NumberPartType::Literal, sourceMap.source(current->begin),
+                   current->begin};
         }
 
         return true;
@@ -152,7 +157,7 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
 
         // If the current field is last, the part extends to its end.
         if (++index == len) {
-          *part = {current->type, current->end};
+          *part = {current->type, sourceMap.source(*current), current->end};
           return true;
         }
 
@@ -175,20 +180,21 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
       if (current->end <= next->begin) {
         // The next field begins after the current field ends.  Therefore
         // the current part ends at the end of the current field.
-        *part = {current->type, current->end};
+        *part = {current->type, sourceMap.source(*current), current->end};
         popEnclosingFieldsEndingAt(part->endIndex);
       } else {
         // The current field encloses the next one.  The current part
         // ends where the next field/part will start.
-        *part = {current->type, next->begin};
+        *part = {current->type, sourceMap.source(*current), next->begin};
       }
 
       return true;
     }
 
    public:
-    PartGenerator(const FieldsVector& vec, uint32_t limit)
-        : fields(vec), limit(limit), enclosingFields() {}
+    PartGenerator(const FieldsVector& vec, uint32_t limit,
+                  const NumberPartSourceMap& sourceMap)
+        : fields(vec), limit(limit), sourceMap(sourceMap), enclosingFields() {}
 
     bool nextPart(bool* hasPart, NumberPart* part) {
       // There are no parts left if we've partitioned the entire string.
@@ -211,7 +217,7 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
   // Finally, generate the result array.
   size_t lastEndIndex = 0;
 
-  PartGenerator gen(fields_, overallLength);
+  PartGenerator gen(fields_, overallLength, sourceMap);
   do {
     bool hasPart;
     NumberPart part;
