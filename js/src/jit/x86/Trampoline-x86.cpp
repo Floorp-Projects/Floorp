@@ -416,8 +416,7 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   masm.loadPtr(Address(esp, RectifierFrameLayout::offsetOfCalleeToken()), eax);
   masm.mov(eax, ecx);
   masm.andl(Imm32(CalleeTokenMask), ecx);
-  masm.mov(Operand(ecx, JSFunction::offsetOfFlagsAndArgCount()), ecx);
-  masm.rshift32(Imm32(JSFunction::ArgCountShift), ecx);
+  masm.movzwl(Operand(ecx, JSFunction::offsetOfNargs()), ecx);
 
   // The frame pointer and its padding are pushed on the stack.
   // Including |this|, there are (|nformals| + 1) arguments to push to the
@@ -515,8 +514,7 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
         sizeof(RectifierFrameLayout) + sizeof(Value) + sizeof(void*));
 
     masm.andl(Imm32(CalleeTokenMask), ebx);
-    masm.movl(Operand(ebx, JSFunction::offsetOfFlagsAndArgCount()), ebx);
-    masm.rshift32(Imm32(JSFunction::ArgCountShift), ebx);
+    masm.movzwl(Operand(ebx, JSFunction::offsetOfNargs()), ebx);
 
     BaseValueIndex dst(esp, ebx, sizeof(Value));
 

@@ -454,9 +454,8 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
 
   masm.mov(calleeTokenReg, numArgsReg);
   masm.andPtr(Imm32(CalleeTokenMask), numArgsReg);
-  masm.load32(Address(numArgsReg, JSFunction::offsetOfFlagsAndArgCount()),
-              numArgsReg);
-  masm.rshift32(Imm32(JSFunction::ArgCountShift), numArgsReg);
+  masm.load16ZeroExtend(Address(numArgsReg, JSFunction::offsetOfNargs()),
+                        numArgsReg);
 
   masm.as_subu(t1, numArgsReg, s3);
 
