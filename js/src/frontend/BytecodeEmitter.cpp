@@ -1687,8 +1687,7 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
     ReportAllocationOverflow(cx);
     return false;
   }
-  if (!compilationState.objLiteralData.emplaceBack(code, len, writer.getKind(),
-                                                   writer.getFlags(),
+  if (!compilationState.objLiteralData.emplaceBack(code, len, writer.getFlags(),
                                                    writer.getPropertyCount())) {
     js::ReportOutOfMemory(cx);
     return false;
@@ -1697,11 +1696,11 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
   return perScriptData().gcThingList().append(objIndex, outIndex);
 }
 
-bool BytecodeEmitter::emitPrepareIteratorResult() {
-  constexpr JSOp op = JSOp::NewObject;
+bool BytecodeEmitter::iteratorResultShape(GCThingIndex* outShape) {
+  ObjLiteralFlags flags;
 
   ObjLiteralWriter writer;
-  writer.beginShape(op);
+  writer.beginObject(flags);
 
   writer.setPropNameNoDuplicateCheck(parserAtoms(),
                                      TaggedParserAtomIndex::WellKnown::value());
@@ -1714,12 +1713,15 @@ bool BytecodeEmitter::emitPrepareIteratorResult() {
     return false;
   }
 
+  return addObjLiteralData(writer, outShape);
+}
+
+bool BytecodeEmitter::emitPrepareIteratorResult() {
   GCThingIndex shape;
-  if (!addObjLiteralData(writer, &shape)) {
+  if (!iteratorResultShape(&shape)) {
     return false;
   }
-
-  return emitGCIndexOp(op, shape);
+  return emitGCIndexOp(JSOp::NewObject, shape);
 }
 
 bool BytecodeEmitter::emitFinishIteratorResult(bool done) {
@@ -4867,7 +4869,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
   return true;
 }
 
-bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
+bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
                                               GCThingIndex* outArrayIndex) {
   uint32_t count = cookedOrRaw->count();
   ParseNode* pn = cookedOrRaw->head();
@@ -4883,7 +4885,8 @@ bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
 
   ObjLiteralWriter writer;
 
-  writer.beginArray(op);
+  ObjLiteralFlags flags({ObjLiteralFlag::Array});
+  writer.beginObject(flags);
   writer.beginDenseArrayElements();
 
   size_t idx;
@@ -4901,21 +4904,19 @@ bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
-  constexpr JSOp op = JSOp::CallSiteObj;
-
   GCThingIndex cookedIndex;
-  if (!emitCallSiteObjectArray(op, callSiteObj, &cookedIndex)) {
+  if (!emitCallSiteObjectArray(callSiteObj, &cookedIndex)) {
     return false;
   }
 
   GCThingIndex rawIndex;
-  if (!emitCallSiteObjectArray(op, callSiteObj->rawNodes(), &rawIndex)) {
+  if (!emitCallSiteObjectArray(callSiteObj->rawNodes(), &rawIndex)) {
     return false;
   }
 
   MOZ_ASSERT(sc->hasCallSiteObj());
 
-  return emitObjectPairOp(cookedIndex, rawIndex, op);
+  return emitObjectPairOp(cookedIndex, rawIndex, JSOp::CallSiteObj);
 }
 
 bool BytecodeEmitter::emitCatch(BinaryNode* catchClause) {
@@ -9354,7 +9355,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
   return true;
 }
 
-bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
+bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
+                                                 ObjLiteralFlags flags,
                                                  bool useObjLiteralValues) {
   ObjLiteralWriter writer;
 
@@ -9368,12 +9370,8 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
   }
 #endif
 
-  if (op == JSOp::Object) {
-    writer.beginObject(op);
-  } else {
-    MOZ_ASSERT(op == JSOp::NewObject);
-    writer.beginShape(op);
-  }
+  writer.beginObject(flags);
+  bool singleton = flags.hasFlag(ObjLiteralFlag::Singleton);
 
   for (ParseNode* propdef : obj->contents()) {
     BinaryNode* prop = &propdef->as<BinaryNode>();
@@ -9406,21 +9404,11 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
       MOZ_ASSERT(numIsInt);
       MOZ_ASSERT(
           ObjLiteralWriter::arrayIndexInRange(i));  // checked previously.
-
-      // Ignore indexed properties if we're not storing property values, and
-      // rely on InitElem ops to define those. These properties will be either
-      // dense elements (not possible to represent in the literal's shape) or
-      // sparse elements (enumerated separately, so this doesn't affect property
-      // iteration order).
-      if (!useObjLiteralValues) {
-        continue;
-      }
-
       writer.setPropIndex(i);
     }
 
     if (useObjLiteralValues) {
-      MOZ_ASSERT(op == JSOp::Object);
+      MOZ_ASSERT(singleton);
       ParseNode* value = prop->right();
       if (!emitObjLiteralValue(writer, value)) {
         return false;
@@ -9438,9 +9426,9 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
   }
 
   // JSOp::Object may only be used by (top-level) run-once scripts.
-  MOZ_ASSERT_IF(op == JSOp::Object,
-                sc->isTopLevelContext() && sc->treatAsRunOnce());
+  MOZ_ASSERT_IF(singleton, sc->isTopLevelContext() && sc->treatAsRunOnce());
 
+  JSOp op = singleton ? JSOp::Object : JSOp::NewObject;
   if (!emitGCIndexOp(op, index)) {
     //              [stack] OBJ
     return false;
@@ -9451,13 +9439,10 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
 
 bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
     ListNode* pattern) {
-  // Note: if we want to squeeze out a little more performance, we could switch
-  // to the `JSOp::Object` opcode, because the exclusion set object is never
-  // exposed to the user, so it's safe to bake the object into the bytecode.
-  constexpr JSOp op = JSOp::NewObject;
+  ObjLiteralFlags flags;
 
   ObjLiteralWriter writer;
-  writer.beginShape(op);
+  writer.beginObject(flags);
 
   for (ParseNode* member : pattern->contents()) {
     if (member->isKind(ParseNodeKind::Spread)) {
@@ -9487,7 +9472,12 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
     return false;
   }
 
-  if (!emitGCIndexOp(op, index)) {
+  // If we want to squeeze out a little more performance, we could switch to the
+  // `JSOp::Object` opcode, because the exclusion set object is never exposed to
+  // the user, so it's safe to bake the object into the bytecode. But first we
+  // need to make sure this won't interfere with XDR, cf. the
+  // `RealmBehaviors::singletonsAsTemplates_` flag.
+  if (!emitGCIndexOp(JSOp::NewObject, index)) {
     //              [stack] OBJ
     return false;
   }
@@ -9498,10 +9488,11 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead) {
   MOZ_ASSERT(checkSingletonContext());
 
-  constexpr JSOp op = JSOp::Object;
-
   ObjLiteralWriter writer;
-  writer.beginArray(op);
+
+  ObjLiteralFlags flags({ObjLiteralFlag::Array, ObjLiteralFlag::Singleton});
+
+  writer.beginObject(flags);
 
   writer.beginDenseArrayElements();
   for (ParseNode* elem = arrayHead; elem; elem = elem->pn_next) {
@@ -9515,7 +9506,7 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead) {
     return false;
   }
 
-  if (!emitGCIndexOp(op, index)) {
+  if (!emitGCIndexOp(JSOp::Object, index)) {
     //              [stack] OBJ
     return false;
   }
@@ -10195,10 +10186,10 @@ bool BytecodeEmitter::emitInitializeStaticFields(ListNode* classMembers) {
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   // Note: this method uses the ObjLiteralWriter and emits ObjLiteralStencil
   // objects into the GCThingList, which will evaluate them into real GC objects
-  // or shapes during JSScript::fullyInitFromEmitter. Eventually we want
-  // OBJLITERAL to be a real opcode, but for now, performance constraints limit
-  // us to evaluating object literals at the end of parse, when we're allowed to
-  // allocate GC things.
+  // during JSScript::fullyInitFromEmitter. Eventually we want OBJLITERAL to be
+  // a real opcode, but for now, performance constraints limit us to evaluating
+  // object literals at the end of parse, when we're allowed to allocate GC
+  // things.
   //
   // There are four cases here, in descending order of preference:
   //
@@ -10221,9 +10212,10 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   //    occurs in a non-run-once (non-singleton) context. In this case, we can
   //    use the ObjLiteral functionality to describe an *empty* object (all
   //    values left undefined) with the right fields, which will become a
-  //    JSOp::NewObject opcode using the object's shape to speed up the creation
-  //    of the object each time it executes. The emitted bytecode still needs
-  //    InitProp ops to set the values in this case.
+  //    JSOp::NewObject opcode using this template object to speed the creation
+  //    of the object each time it executes (stealing its shape, etc.). The
+  //    emitted bytecode still needs InitProp ops to set the values in this
+  //    case.
   //
   // 4. Any other case. As a fallback, we use NewInit to create a new, empty
   //    object (i.e., `{}`) and then emit bytecode to initialize its properties
@@ -10240,22 +10232,22 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   if (useObjLiteral) {
     bool singleton = checkSingletonContext() &&
                      !objNode->hasNonConstInitializer() && objNode->head();
-    JSOp op;
+
+    ObjLiteralFlags flags;
     if (singleton) {
       // Case 1 or 2.
-      op = JSOp::Object;
+      flags.setFlag(ObjLiteralFlag::Singleton);
     } else {
       // Case 3.
       useObjLiteralValues = false;
-      op = JSOp::NewObject;
     }
 
     // Use an ObjLiteral op. This will record ObjLiteral insns in the
     // objLiteralWriter's buffer and add a fixup to the list of ObjLiteral
-    // fixups so that at GC-publish time at the end of parse, the full object
-    // (case 1 or 2) or shape (case 3) can be allocated and the bytecode can be
-    // patched to refer to it.
-    if (!emitPropertyListObjLiteral(objNode, op, useObjLiteralValues)) {
+    // fixups so that at GC-publish time at the end of parse, the full (case 1
+    // or 2) or template-without-values (case 3) object can be allocated and
+    // the bytecode can be patched to refer to it.
+    if (!emitPropertyListObjLiteral(objNode, flags, useObjLiteralValues)) {
       //            [stack] OBJ
       return false;
     }

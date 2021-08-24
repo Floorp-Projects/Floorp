@@ -7,7 +7,6 @@
 
 #include "frontend/ObjLiteral.h"
 
-#include "mozilla/DebugOnly.h"  // mozilla::DebugOnly
 #include "mozilla/HashTable.h"  // mozilla::HashSet
 
 #include "NamespaceImports.h"  // ValueVector
@@ -118,7 +117,10 @@ enum class PropertySetKind {
 template <PropertySetKind kind>
 bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
                             const frontend::CompilationAtomCache& atomCache,
-                            const mozilla::Span<const uint8_t> literalInsns) {
+                            const mozilla::Span<const uint8_t> literalInsns,
+                            ObjLiteralFlags flags) {
+  bool singleton = flags.hasFlag(ObjLiteralFlag::Singleton);
+
   ObjLiteralReader reader(literalInsns);
 
   RootedId propId(cx);
@@ -142,9 +144,13 @@ bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
       propId = AtomToId(jsatom);
     }
 
-    InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
+    if (singleton) {
+      InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
+    } else {
+      propVal.setUndefined();
+    }
 
-    if constexpr (kind == PropertySetKind::UniqueNames) {
+    if (kind == PropertySetKind::UniqueNames) {
       if (!AddDataPropertyNonPrototype(cx, obj, propId, propVal)) {
         return false;
       }
@@ -158,18 +164,19 @@ bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
   return true;
 }
 
-static gc::AllocKind AllocKindForObjectLiteral(uint32_t propCount) {
-  // Use NewObjectGCKind for empty object literals to reserve some fixed slots
-  // for new properties. This improves performance for common patterns such as
-  // |Object.assign({}, ...)|.
-  return (propCount == 0) ? NewObjectGCKind() : gc::GetGCObjectKind(propCount);
-}
-
 static JSObject* InterpretObjLiteralObj(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
     uint32_t propertyCount) {
-  gc::AllocKind allocKind = AllocKindForObjectLiteral(propertyCount);
+  // Use NewObjectGCKind for empty object literals to reserve some fixed slots
+  // for new properties. This improves performance for common patterns such as
+  // |Object.assign({}, ...)|.
+  gc::AllocKind allocKind;
+  if (propertyCount == 0) {
+    allocKind = NewObjectGCKind();
+  } else {
+    allocKind = gc::GetGCObjectKind(propertyCount);
+  }
 
   RootedPlainObject obj(
       cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, TenuredObject));
@@ -179,12 +186,12 @@ static JSObject* InterpretObjLiteralObj(
 
   if (!flags.hasFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
     if (!InterpretObjLiteralObj<PropertySetKind::UniqueNames>(
-            cx, obj, atomCache, literalInsns)) {
+            cx, obj, atomCache, literalInsns, flags)) {
       return nullptr;
     }
   } else {
     if (!InterpretObjLiteralObj<PropertySetKind::Normal>(cx, obj, atomCache,
-                                                         literalInsns)) {
+                                                         literalInsns, flags)) {
       return nullptr;
     }
   }
@@ -193,7 +200,8 @@ static JSObject* InterpretObjLiteralObj(
 
 static JSObject* InterpretObjLiteralArray(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
-    const mozilla::Span<const uint8_t> literalInsns, uint32_t propertyCount) {
+    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
+    uint32_t propertyCount) {
   ObjLiteralReader reader(literalInsns);
   ObjLiteralInsn insn;
 
@@ -214,121 +222,20 @@ static JSObject* InterpretObjLiteralArray(
                              NewObjectKind::TenuredObject);
 }
 
-template <PropertySetKind kind>
-Shape* InterpretObjLiteralShape(JSContext* cx,
-                                const frontend::CompilationAtomCache& atomCache,
-                                const mozilla::Span<const uint8_t> literalInsns,
-                                uint32_t numFixedSlots) {
-  ObjLiteralReader reader(literalInsns);
-
-  Rooted<SharedPropMap*> map(cx);
-  uint32_t mapLength = 0;
-  ObjectFlags objectFlags;
-
-  uint32_t slot = 0;
-  RootedId propId(cx);
-  while (true) {
-    // Make sure `insn` doesn't live across GC.
-    ObjLiteralInsn insn;
-    if (!reader.readInsn(&insn)) {
-      break;
-    }
-    MOZ_ASSERT(insn.isValid());
-    MOZ_ASSERT(!insn.getKey().isArrayIndex());
-    MOZ_ASSERT(insn.getOp() == ObjLiteralOpcode::Undefined);
-
-    JSAtom* jsatom =
-        atomCache.getExistingAtomAt(cx, insn.getKey().getAtomIndex());
-    MOZ_ASSERT(jsatom);
-    propId = AtomToId(jsatom);
-
-    // Assert or check property names are unique.
-    if constexpr (kind == PropertySetKind::UniqueNames) {
-      mozilla::DebugOnly<uint32_t> index;
-      MOZ_ASSERT_IF(map, !map->lookupPure(mapLength, propId, &index));
-    } else {
-      uint32_t index;
-      if (map && map->lookupPure(mapLength, propId, &index)) {
-        continue;
-      }
-    }
-
-    constexpr PropertyFlags propFlags = PropertyFlags::defaultDataPropFlags;
-
-    if (!SharedPropMap::addPropertyWithKnownSlot(cx, &PlainObject::class_, &map,
-                                                 &mapLength, propId, propFlags,
-                                                 slot, &objectFlags)) {
-      return nullptr;
-    }
-
-    slot++;
-  }
-
-  RootedObject proto(cx,
-                     GlobalObject::getOrCreatePrototype(cx, JSProto_Object));
-  if (!proto) {
-    return nullptr;
-  }
-
-  // In rare cases involving off-thread XDR, Object.prototype is not yet marked
-  // used-as-prototype, so do that now.
-  if (MOZ_UNLIKELY(!proto->isUsedAsPrototype())) {
-    if (!JSObject::setIsUsedAsPrototype(cx, proto)) {
-      return nullptr;
-    }
-  }
-
-  return SharedShape::getInitialOrPropMapShape(
-      cx, &PlainObject::class_, cx->realm(), AsTaggedProto(proto),
-      numFixedSlots, map, mapLength, objectFlags);
-}
-
-static Shape* InterpretObjLiteralShape(
+static JSObject* InterpretObjLiteral(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
     uint32_t propertyCount) {
-  gc::AllocKind allocKind = AllocKindForObjectLiteral(propertyCount);
-  uint32_t numFixedSlots = GetGCKindSlots(allocKind);
-
-  if (!flags.hasFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
-    return InterpretObjLiteralShape<PropertySetKind::UniqueNames>(
-        cx, atomCache, literalInsns, numFixedSlots);
-  }
-  return InterpretObjLiteralShape<PropertySetKind::Normal>(
-      cx, atomCache, literalInsns, numFixedSlots);
+  return flags.hasFlag(ObjLiteralFlag::Array)
+             ? InterpretObjLiteralArray(cx, atomCache, literalInsns, flags,
+                                        propertyCount)
+             : InterpretObjLiteralObj(cx, atomCache, literalInsns, flags,
+                                      propertyCount);
 }
 
-JS::GCCellPtr ObjLiteralStencil::create(
+JSObject* ObjLiteralStencil::create(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache) const {
-  switch (kind()) {
-    case ObjLiteralKind::Array: {
-      JSObject* obj =
-          InterpretObjLiteralArray(cx, atomCache, code_, propertyCount_);
-      if (!obj) {
-        return JS::GCCellPtr();
-      }
-      return JS::GCCellPtr(obj);
-    }
-    case ObjLiteralKind::Object: {
-      JSObject* obj =
-          InterpretObjLiteralObj(cx, atomCache, code_, flags(), propertyCount_);
-      if (!obj) {
-        return JS::GCCellPtr();
-      }
-      return JS::GCCellPtr(obj);
-    }
-    case ObjLiteralKind::Shape: {
-      Shape* shape = InterpretObjLiteralShape(cx, atomCache, code_, flags(),
-                                              propertyCount_);
-      if (!shape) {
-        return JS::GCCellPtr();
-      }
-      return JS::GCCellPtr(shape);
-    }
-    case ObjLiteralKind::Invalid:
-      break;
-  }
-  MOZ_CRASH("Invalid kind");
+  return InterpretObjLiteral(cx, atomCache, code_, flags_, propertyCount_);
 }
 
 #ifdef DEBUG
@@ -341,6 +248,14 @@ bool ObjLiteralStencil::isContainedIn(const LifoAlloc& alloc) const {
 
 static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
                                      ObjLiteralFlags flags) {
+  if (flags.hasFlag(ObjLiteralFlag::Array)) {
+    json.value("Array");
+    flags.clearFlag(ObjLiteralFlag::Array);
+  }
+  if (flags.hasFlag(ObjLiteralFlag::Singleton)) {
+    json.value("Singleton");
+    flags.clearFlag(ObjLiteralFlag::Singleton);
+  }
   if (flags.hasFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
     json.value("HasIndexOrDuplicatePropName");
     flags.clearFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName);
@@ -351,27 +266,11 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
   }
 }
 
-static const char* ObjLiteralKindToString(ObjLiteralKind kind) {
-  switch (kind) {
-    case ObjLiteralKind::Object:
-      return "Object";
-    case ObjLiteralKind::Array:
-      return "Array";
-    case ObjLiteralKind::Shape:
-      return "Shape";
-    case ObjLiteralKind::Invalid:
-      break;
-  }
-  MOZ_CRASH("Invalid kind");
-}
-
 static void DumpObjLiteral(js::JSONPrinter& json,
                            const frontend::CompilationStencil* stencil,
                            mozilla::Span<const uint8_t> code,
-                           ObjLiteralKind kind, const ObjLiteralFlags& flags,
+                           const ObjLiteralFlags& flags,
                            uint32_t propertyCount) {
-  json.property("kind", ObjLiteralKindToString(kind));
-
   json.beginListProperty("flags");
   DumpObjLiteralFlagsItems(json, flags);
   json.endList();
@@ -446,7 +345,7 @@ void ObjLiteralWriter::dump(js::JSONPrinter& json,
 
 void ObjLiteralWriter::dumpFields(
     js::JSONPrinter& json, const frontend::CompilationStencil* stencil) const {
-  DumpObjLiteral(json, stencil, getCode(), kind_, flags_, propertyCount_);
+  DumpObjLiteral(json, stencil, getCode(), flags_, propertyCount_);
 }
 
 void ObjLiteralStencil::dump() const {
@@ -464,7 +363,7 @@ void ObjLiteralStencil::dump(
 
 void ObjLiteralStencil::dumpFields(
     js::JSONPrinter& json, const frontend::CompilationStencil* stencil) const {
-  DumpObjLiteral(json, stencil, code_, kind(), flags(), propertyCount_);
+  DumpObjLiteral(json, stencil, code_, flags_, propertyCount_);
 }
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)

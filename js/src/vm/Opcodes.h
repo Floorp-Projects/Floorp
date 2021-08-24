@@ -121,7 +121,6 @@
  * -   `baseobjIndex` (`JOF_OBJECT`): `PlainObject*`
  * -   `funcIndex` (`JOF_OBJECT`): `JSFunction*`
  * -   `regexpIndex` (`JOF_REGEXP`): `RegExpObject*`
- * -   `shapeIndex` (`JOF_SHAPE`): `Shape*`
  * -   `scopeIndex` (`JOF_SCOPE`): `Scope*`
  * -   `lexicalScopeIndex` (`JOF_SCOPE`): `LexicalScope*`
  * -   `classBodyScopeIndex` (`JOF_SCOPE`): `ClassBodyScope*`
@@ -816,16 +815,17 @@
     /*
      * Create and push a new object of a predetermined shape.
      *
-     * The new object has the shape `script->getShape(shapeIndex)`.
-     * Subsequent `InitProp` instructions must fill in all slots of the new
-     * object before it is used in any other way.
+     * The new object has the shape of the template object
+     * `script->getObject(baseobjIndex)`. Subsequent `InitProp` instructions
+     * must fill in all slots of the new object before it is used in any other
+     * way.
      *
      *   Category: Objects
      *   Type: Creating objects
-     *   Operands: uint32_t shapeIndex
+     *   Operands: uint32_t baseobjIndex
      *   Stack: => obj
      */ \
-    MACRO(NewObject, new_object, NULL, 5, 0, 1, JOF_SHAPE|JOF_IC) \
+    MACRO(NewObject, new_object, NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
     /*
      * Push a preconstructed object.
      *
