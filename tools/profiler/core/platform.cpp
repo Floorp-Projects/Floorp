@@ -5519,38 +5519,6 @@ void ThreadRegistry::Register(ThreadRegistration::OnThreadRef aOnThreadRef) {
     return;
   }
 
-  if (!TLSRegisteredThread::IsTLSInited()) {
-    return;
-  }
-
-  if (RegisteredThread* thread = TLSRegisteredThread::RegisteredThread(lock)) {
-    MOZ_RELEASE_ASSERT(IsRegisteredThreadInRegisteredThreadsList(lock, thread),
-                       "Thread being re-registered is not in registered thread "
-                       "list even though its TLS is non-null");
-    MOZ_RELEASE_ASSERT(
-        thread->Info()->ThreadId() == profiler_current_thread_id(),
-        "Thread being re-registered has changed its TID");
-    LOG("profiler_register_thread(%s) - thread %" PRIu64
-        " already registered as %s",
-        aOnThreadRef.UnlockedConstReaderCRef().Info().Name(),
-        uint64_t(profiler_current_thread_id().ToNumber()),
-        thread->Info()->Name());
-    // TODO: Use new name. This is currently not possible because the
-    // RegisteredThread's ThreadInfo cannot be changed.
-    // In the meantime, we record a marker that could be used in the frontend.
-    nsCString text("Thread ");
-    text.AppendInt(profiler_current_thread_id().ToNumber());
-    text.AppendLiteral(" \"");
-    text.AppendASCII(thread->Info()->Name());
-    text.AppendLiteral("\" attempted to re-register as \"");
-    text.AppendASCII(aOnThreadRef.UnlockedConstReaderCRef().Info().Name());
-    text.AppendLiteral("\"");
-    PROFILER_MARKER_TEXT("profiler_register_thread again", OTHER_Profiling,
-                         MarkerThreadId::MainThread(), text);
-
-    return;
-  }
-
   (void)locked_register_thread(lock, OffThreadRef{aOnThreadRef});
 }
 
@@ -5610,28 +5578,6 @@ static void locked_unregister_thread(PSLockRef lock) {
     MOZ_RELEASE_ASSERT(
         !TLSRegisteredThread::RegisteredThread(lock),
         "TLS should have been reset after un-registering thread");
-  } else {
-    // There are two ways TLSRegisteredThread::RegisteredThread() might be
-    // empty.
-    //
-    // - TLSRegisteredThread::Init() failed in locked_register_thread().
-    //
-    // - We've already called profiler_unregister_thread() for this thread.
-    //   (Whether or not it should, this does happen in practice.)
-    LOG("profiler_unregister_thread() - thread %" PRIu64
-        " already unregistered",
-        uint64_t(profiler_current_thread_id().ToNumber()));
-    // We cannot record a marker on this thread because it was already
-    // unregistered. Send it to the main thread (unless this *is* already the
-    // main thread, which has been unregistered); this may be useful to catch
-    // mismatched register/unregister pairs in Firefox.
-    if (ProfilerThreadId tid = profiler_current_thread_id();
-        tid != profiler_main_thread_id()) {
-      nsCString threadIdString;
-      threadIdString.AppendInt(tid.ToNumber());
-      PROFILER_MARKER_TEXT("profiler_unregister_thread again", OTHER_Profiling,
-                           MarkerThreadId::MainThread(), threadIdString);
-    }
   }
 }
 
