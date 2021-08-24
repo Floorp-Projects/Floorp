@@ -898,6 +898,10 @@ class ExtensionData {
     return this.manifest.manifest_version;
   }
 
+  async getExtensionVersionWithoutValidation() {
+    return (await this.readJSON("manifest.json")).version;
+  }
+
   /**
    * Load a locale and return a localized manifest.  The extension must
    * be initialized, and manifest parsed prior to calling.

@@ -39,3 +39,35 @@ add_task(async function test_json_parser() {
 
   Services.obs.notifyObservers(xpi, "flush-cache-entry");
 });
+
+add_task(async function test_getExtensionVersionWithoutValidation() {
+  let xpi = AddonTestUtils.createTempWebExtensionFile({
+    files: {
+      "manifest.json": String.raw`{
+        // This is valid JSON but not a valid manifest.
+        "version": ["This is not a valid version"]
+      }`,
+    },
+  });
+  let fileURI = Services.io.newFileURI(xpi);
+  let uri = NetUtil.newURI(`jar:${fileURI.spec}!/`);
+  let extension = new ExtensionData(uri);
+
+  let rawVersion = await extension.getExtensionVersionWithoutValidation();
+  Assert.deepEqual(
+    rawVersion,
+    ["This is not a valid version"],
+    "Got the raw value of the 'version' key from an (invalid) manifest file"
+  );
+
+  // The manifest lacks several required properties and manifest_version is
+  // invalid. The exact error here doesn't matter, as long as it shows that the
+  // manifest is invalid.
+  await Assert.rejects(
+    extension.parseManifest(),
+    /Unexpected params.manifestVersion value: undefined/,
+    "parseManifest() should reject an invalid manifest"
+  );
+
+  Services.obs.notifyObservers(xpi, "flush-cache-entry");
+});
