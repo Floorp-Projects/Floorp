@@ -307,6 +307,29 @@ enum MatrixCoefficients : uint8_t {
   MC_CHROMAT_CL = 13,
   MC_ICTCP = 14,
 };
+
+inline bool IsReserved(MatrixCoefficients aIn) {
+  switch (aIn) {
+    case MC_IDENTITY:
+    case MC_BT709:
+    case MC_UNSPECIFIED:
+    case MC_RESERVED_MIN:
+    case MC_FCC:
+    case MC_BT470BG:
+    case MC_BT601:
+    case MC_SMPTE240:
+    case MC_YCGCO:
+    case MC_BT2020_NCL:
+    case MC_BT2020_CL:
+    case MC_SMPTE2085:
+    case MC_CHROMAT_NCL:
+    case MC_CHROMAT_CL:
+    case MC_ICTCP:
+      return false;
+    default:
+      return true;
+  }
+}
 }  // namespace CICP
 
 // The matrix coeffiecients used for YUV to RGB conversion.
@@ -432,8 +455,8 @@ static inline SurfaceFormat SurfaceFormatForColorDepth(ColorDepth aColorDepth) {
   return format;
 }
 
-static inline uint32_t BitDepthForColorDepth(ColorDepth aColorDepth) {
-  uint32_t depth = 8;
+static inline uint8_t BitDepthForColorDepth(ColorDepth aColorDepth) {
+  uint8_t depth = 8;
   switch (aColorDepth) {
     case ColorDepth::COLOR_8:
       break;
