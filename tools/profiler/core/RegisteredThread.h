@@ -39,16 +39,6 @@ class RacyRegisteredThread final {
     mThreadRegistration.mData.ReinitializeOnResume();
   }
 
-  // Call this whenever the current thread sleeps. Calling it twice in a row
-  // without an intervening setAwake() call is an error.
-  void SetSleeping() { mThreadRegistration.mData.SetSleeping(); }
-
-  // Call this whenever the current thread wakes. Calling it twice in a row
-  // without an intervening setSleeping() call is an error.
-  void SetAwake() { mThreadRegistration.mData.SetAwake(); }
-
-  bool IsSleeping() { return mThreadRegistration.mData.IsSleeping(); }
-
   class ProfilingStack& ProfilingStack() {
     return mThreadRegistration.mData.ProfilingStackRef();
   }
