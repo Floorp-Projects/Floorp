@@ -63,10 +63,8 @@ NumberFormatterSkeleton::NumberFormatterSkeleton(
     }
   }
 
-  if (!options.mUseGrouping) {
-    if (!disableGrouping()) {
-      return;
-    }
+  if (!grouping(options.mGrouping)) {
+    return;
   }
 
   if (!notation(options.mNotation)) {
@@ -211,8 +209,20 @@ bool NumberFormatterSkeleton::significantDigits(uint32_t min, uint32_t max,
   return append(' ');
 }
 
-bool NumberFormatterSkeleton::disableGrouping() {
-  return appendToken(u"group-off");
+bool NumberFormatterSkeleton::grouping(NumberFormatOptions::Grouping grouping) {
+  switch (grouping) {
+    case NumberFormatOptions::Grouping::Auto:
+      // Default, no additional tokens needed.
+      return true;
+    case NumberFormatOptions::Grouping::Always:
+      return appendToken(u"group-on-aligned");
+    case NumberFormatOptions::Grouping::Min2:
+      return appendToken(u"group-min2");
+    case NumberFormatOptions::Grouping::Never:
+      return appendToken(u"group-off");
+  }
+  MOZ_ASSERT_UNREACHABLE("unexpected grouping mode");
+  return false;
 }
 
 bool NumberFormatterSkeleton::notation(NumberFormatOptions::Notation style) {

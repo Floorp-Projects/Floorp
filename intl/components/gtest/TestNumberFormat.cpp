@@ -139,6 +139,22 @@ TEST(IntlNumberFormat, RoundingMode)
   ASSERT_EQ(std::u16string_view(res16), u"2");
 }
 
+TEST(IntlNumberFormat, Grouping)
+{
+  NumberFormatOptions options;
+  options.mGrouping = NumberFormatOptions::Grouping::Min2;
+
+  UniquePtr<NumberFormat> nf = NumberFormat::TryCreate("en", options).unwrap();
+
+  const char16_t* res16 = nf->format(1'000.0).unwrap().data();
+  ASSERT_TRUE(res16 != nullptr);
+  ASSERT_EQ(std::u16string_view(res16), u"1000");
+
+  res16 = nf->format(10'000.0).unwrap().data();
+  ASSERT_TRUE(res16 != nullptr);
+  ASSERT_EQ(std::u16string_view(res16), u"10,000");
+}
+
 TEST(IntlNumberFormat, FormatToParts)
 {
   NumberFormatOptions options;
