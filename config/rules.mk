@@ -501,7 +501,7 @@ $(LIBRARY): $(OBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 $(WASM_ARCHIVE): $(CWASMOBJS) $(CPPWASMOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD_VERBOSE)
 	$(RM) $(WASM_ARCHIVE)
-	$(WASM_CXX) -o $@ -Wl,--export-all -Wl,--stack-first -Wl,-z,stack-size=$(if $(MOZ_OPTIMIZE),262144,1048576) -Wl,--no-entry -Wl,--growable-table $(CWASMOBJS) $(CPPWASMOBJS)
+	$(WASM_CXX) $(OUTOPTION)$@ -Wl,--export-all -Wl,--stack-first -Wl,-z,stack-size=$(if $(MOZ_OPTIMIZE),262144,1048576) -Wl,--no-entry -Wl,--growable-table $(CWASMOBJS) $(CPPWASMOBJS)
 
 $(addsuffix .c,$(WASM_ARCHIVE)): $(WASM_ARCHIVE)
 	$(DIST)/host/bin/wasm2c -o $@ $<
@@ -597,7 +597,7 @@ $(COBJS):
 
 $(CWASMOBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(WASM_CC) -o $@ -c $(WASM_CFLAGS) $($(notdir $<)_FLAGS) $<
+	$(WASM_CC) $(OUTOPTION)$@ -c $(WASM_CFLAGS) $($(notdir $<)_FLAGS) $<
 
 WINEWRAP = $(if $(and $(filter %.exe,$1),$(WINE)),$(WINE) $1,$1)
 
@@ -677,7 +677,7 @@ $(CPPOBJS):
 $(CPPWASMOBJS):
 	$(REPORT_BUILD_VERBOSE)
 	$(call BUILDSTATUS,OBJECT_FILE $@)
-	$(WASM_CXX) -o $@ -c $(WASM_CXXFLAGS) $($(notdir $<)_FLAGS) $<
+	$(WASM_CXX) $(OUTOPTION)$@ -c $(WASM_CXXFLAGS) $($(notdir $<)_FLAGS) $<
 
 $(CMMOBJS):
 	$(REPORT_BUILD_VERBOSE)
