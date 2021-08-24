@@ -141,6 +141,14 @@ add_task(async function setup() {
  * and script makes sense.
  */
 add_task(async function test_cache_worker() {
+  Services.prefs.setBoolPref(
+    "security.allow_parent_unrestricted_js_loads",
+    true
+  );
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
+  });
+
   let state = AboutNewTab.activityStream.store.getState();
 
   let cacheWorker = new BasePromiseWorker(CACHE_WORKER_URL);
