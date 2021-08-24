@@ -128,12 +128,12 @@ function stringForRange(macDoc, range) {
   return str;
 }
 
-function waitForStateChange(id, state, isEnabled) {
+function waitForStateChange(id, state, isEnabled, isExtra = false) {
   return waitForEvent(EVENT_STATE_CHANGE, e => {
     e.QueryInterface(nsIAccessibleStateChangeEvent);
     return (
       e.state == state &&
-      !e.isExtraState &&
+      e.isExtraState == isExtra &&
       isEnabled == e.isEnabled &&
       id == getAccessibleDOMNodeID(e.accessible)
     );
