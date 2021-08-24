@@ -296,14 +296,14 @@ void FillAlphaToRGBA(const uint8_t* aAlpha, const int32_t aAlphaStride,
   }
 }
 
-void ConvertYCbCrAToARGB(const layers::PlanarYCbCrData& aYCbCr,
-                         const layers::PlanarAlphaData& aAlpha,
+void ConvertYCbCrAToARGB(const layers::PlanarYCbCrAData& aData,
                          const SurfaceFormat& aDestFormat,
                          const IntSize& aDestSize, unsigned char* aDestBuffer,
                          int32_t aStride, PremultFunc premultiplyAlphaOp) {
   // libyuv makes endian-correct result, so the format needs to be B8G8R8A8.
   MOZ_ASSERT(aDestFormat == SurfaceFormat::B8G8R8A8);
-  MOZ_ASSERT(aAlpha.mSize == aYCbCr.mYSize);
+  MOZ_ASSERT(aData.mAlphaSize == aData.mYSize);
+  MOZ_ASSERT(aData.mAlphaChannel);
 
   // libyuv has libyuv::I420AlphaToARGB, but lacks support for 422 and 444.
   // Until that's added, we'll rely on our own code to handle this more
@@ -314,40 +314,40 @@ void ConvertYCbCrAToARGB(const layers::PlanarYCbCrData& aYCbCr,
   uint8_t* alphaChannel8bpp = nullptr;
 
   // This function converts non-8-bpc images to 8-bpc. (Bug 1682322)
-  ConvertYCbCrToRGBInternal(aYCbCr, aDestFormat, aDestSize, aDestBuffer,
+  ConvertYCbCrToRGBInternal(aData, aDestFormat, aDestSize, aDestBuffer,
                             aStride);
 
-  if (aYCbCr.mColorDepth != ColorDepth::COLOR_8) {
+  if (aData.mColorDepth != ColorDepth::COLOR_8) {
     // These two lines are borrowed from ConvertYCbCrToRGBInternal, since
     // there's not a very elegant way of sharing the logic that I can see
-    alphaStride8bpp = (aAlpha.mSize.width + 31) & ~31;
+    alphaStride8bpp = (aData.mAlphaSize.width + 31) & ~31;
     size_t alphaSize =
-        GetAlignedStride<1>(alphaStride8bpp, aAlpha.mSize.height);
+        GetAlignedStride<1>(alphaStride8bpp, aData.mAlphaSize.height);
 
     alphaChannel = MakeUnique<uint8_t[]>(alphaSize);
 
     ConvertYCbCr16to8Line(alphaChannel.get(), alphaStride8bpp,
-                          reinterpret_cast<uint16_t*>(aAlpha.mChannel),
-                          aYCbCr.mYStride / 2, aAlpha.mSize.width,
-                          aAlpha.mSize.height,
-                          BitDepthForColorDepth(aYCbCr.mColorDepth));
+                          reinterpret_cast<uint16_t*>(aData.mAlphaChannel),
+                          aData.mYStride / 2, aData.mAlphaSize.width,
+                          aData.mAlphaSize.height,
+                          BitDepthForColorDepth(aData.mColorDepth));
 
     alphaChannel8bpp = alphaChannel.get();
   } else {
-    alphaStride8bpp = aYCbCr.mYStride;
-    alphaChannel8bpp = aAlpha.mChannel;
+    alphaStride8bpp = aData.mYStride;
+    alphaChannel8bpp = aData.mAlphaChannel;
   }
 
   MOZ_ASSERT(alphaStride8bpp != 0);
   MOZ_ASSERT(alphaChannel8bpp);
 
   FillAlphaToRGBA(alphaChannel8bpp, alphaStride8bpp, aDestBuffer,
-                  aYCbCr.mPicSize.width, aYCbCr.mPicSize.height, aDestFormat);
+                  aData.mPicSize.width, aData.mPicSize.height, aDestFormat);
 
   if (premultiplyAlphaOp) {
     DebugOnly<int> err =
         premultiplyAlphaOp(aDestBuffer, aStride, aDestBuffer, aStride,
-                           aYCbCr.mPicSize.width, aYCbCr.mPicSize.height);
+                           aData.mPicSize.width, aData.mPicSize.height);
     MOZ_ASSERT(!err);
   }
 
@@ -355,7 +355,7 @@ void ConvertYCbCrAToARGB(const layers::PlanarYCbCrData& aYCbCr,
   // libyuv makes endian-correct result, which needs to be swapped to BGRA
   gfx::SwizzleData(aDestBuffer, aStride, gfx::SurfaceFormat::A8R8G8B8,
                    aDestBuffer, aStride, gfx::SurfaceFormat::B8G8R8A8,
-                   aYCbCr.mPicSize);
+                   aData.mPicSize);
 #endif
 }
 
