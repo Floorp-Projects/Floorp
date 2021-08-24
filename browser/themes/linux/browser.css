@@ -112,6 +112,10 @@ menuitem.bookmark-item {
   opacity: 0.7;
 }
 
+#PlacesToolbar menu menupopup {
+  margin-top: -12px;
+}
+
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
