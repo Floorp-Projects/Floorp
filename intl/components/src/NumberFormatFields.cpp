@@ -109,15 +109,13 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
       if (index == len) {
         if (enclosingFields.length() > 0) {
           const auto& enclosing = fields[enclosingFields.popCopy()];
-          part->first = enclosing.type;
-          part->second = enclosing.end;
+          *part = {enclosing.type, enclosing.end};
 
           // If additional enclosing fields end where this part ends,
           // pop them as well.
-          popEnclosingFieldsEndingAt(part->second);
+          popEnclosingFieldsEndingAt(part->endIndex);
         } else {
-          part->first = NumberPartType::Literal;
-          part->second = limit;
+          *part = {NumberPartType::Literal, limit};
         }
 
         return true;
@@ -136,13 +134,11 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
           // field or the end of the enclosing field, whichever is
           // earlier.
           const auto& enclosing = fields[enclosingFields.back()];
-          part->first = enclosing.type;
-          part->second = std::min(enclosing.end, current->begin);
-          popEnclosingFieldsEndingAt(part->second);
+          *part = {enclosing.type, std::min(enclosing.end, current->begin)};
+          popEnclosingFieldsEndingAt(part->endIndex);
         } else {
           // If there's no enclosing field, the space is a literal.
-          part->first = NumberPartType::Literal;
-          part->second = current->begin;
+          *part = {NumberPartType::Literal, current->begin};
         }
 
         return true;
@@ -156,8 +152,7 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
 
         // If the current field is last, the part extends to its end.
         if (++index == len) {
-          part->first = current->type;
-          part->second = current->end;
+          *part = {current->type, current->end};
           return true;
         }
 
@@ -177,17 +172,15 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
         // Do so until the next field begins after this one.
       } while (current->begin == next->begin);
 
-      part->first = current->type;
-
       if (current->end <= next->begin) {
         // The next field begins after the current field ends.  Therefore
         // the current part ends at the end of the current field.
-        part->second = current->end;
-        popEnclosingFieldsEndingAt(part->second);
+        *part = {current->type, current->end};
+        popEnclosingFieldsEndingAt(part->endIndex);
       } else {
         // The current field encloses the next one.  The current part
         // ends where the next field/part will start.
-        part->second = next->begin;
+        *part = {current->type, next->begin};
       }
 
       return true;
@@ -210,7 +203,7 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
       }
 
       *hasPart = true;
-      lastEnd = part->second;
+      lastEnd = part->endIndex;
       return true;
     }
   };
@@ -230,13 +223,13 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
       break;
     }
 
-    MOZ_ASSERT(lastEndIndex < part.second);
+    MOZ_ASSERT(lastEndIndex < part.endIndex);
 
     if (!parts.append(part)) {
       return false;
     }
 
-    lastEndIndex = part.second;
+    lastEndIndex = part.endIndex;
   } while (true);
 
   MOZ_ASSERT(lastEndIndex == overallLength,

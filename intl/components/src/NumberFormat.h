@@ -207,7 +207,15 @@ enum class NumberPartType {
 // Because parts fully partition the formatted string, we only track the
 // index of the end of each part -- the beginning is implicitly the last
 // part's end.
-using NumberPart = std::pair<NumberPartType, size_t>;
+struct NumberPart {
+  NumberPartType type;
+  size_t endIndex;
+
+  bool operator==(const NumberPart& rhs) const {
+    return type == rhs.type && endIndex == rhs.endIndex;
+  }
+  bool operator!=(const NumberPart& rhs) const { return !(*this == rhs); }
+};
 
 using NumberPartVector = mozilla::Vector<NumberPart, 8>;
 
