@@ -78,6 +78,11 @@ static const JSFunctionSpec pluralRules_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_PluralRules_resolvedOptions", 0,
                       0),
     JS_SELF_HOSTED_FN("select", "Intl_PluralRules_select", 1, 0),
+#ifdef NIGHTLY_BUILD
+#  ifdef MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
+    JS_SELF_HOSTED_FN("selectRange", "Intl_PluralRules_selectRange", 2, 0),
+#  endif
+#endif
     JS_FN(js_toSource_str, pluralRules_toSource, 0, 0), JS_FS_END};
 
 static const JSPropertySpec pluralRules_properties[] = {
@@ -304,6 +309,55 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setString(str);
   return true;
+}
+
+bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
+#ifdef MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 3);
+
+  Rooted<PluralRulesObject*> pluralRules(
+      cx, &args[0].toObject().as<PluralRulesObject>());
+
+  double x = args[1].toNumber();
+  double y = args[2].toNumber();
+
+  if (x > y) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_START_AFTER_END_NUMBER, "PluralRules",
+                              "selectRange");
+    return false;
+  }
+
+  // Obtain a cached PluralRules object.
+  using PluralRules = mozilla::intl::PluralRules;
+  PluralRules* pr = pluralRules->getPluralRules();
+  if (!pr) {
+    pr = NewPluralRules(cx, pluralRules);
+    if (!pr) {
+      return false;
+    }
+    pluralRules->setPluralRules(pr);
+
+    intl::AddICUCellMemory(pluralRules,
+                           PluralRulesObject::UPluralRulesEstimatedMemoryUse);
+  }
+
+  Result<PluralRules::Keyword, PluralRules::Error> keywordResult =
+      pr->SelectRange(x, y);
+  if (keywordResult.isErr()) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+
+  JSString* str = KeywordToString(keywordResult.unwrap(), cx);
+  MOZ_ASSERT(str);
+
+  args.rval().setString(str);
+  return true;
+#else
+  MOZ_CRASH("ICU draft API not enabled");
+#endif
 }
 
 bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {

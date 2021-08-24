@@ -209,6 +209,31 @@ function Intl_PluralRules_select(value) {
 }
 
 /**
+ * Returns a String value representing the plural category matching the input
+ * number range according to the effective locale and the formatting options
+ * of this PluralRules.
+ */
+function Intl_PluralRules_selectRange(start, end) {
+    // Step 1.
+    var pluralRules = this;
+
+    // Step 2.
+    if (!IsObject(pluralRules) || (pluralRules = intl_GuardToPluralRules(pluralRules)) === null) {
+        return callFunction(intl_CallPluralRulesMethodIfWrapped, this, start, end,
+                            "Intl_PluralRules_selectRange");
+    }
+
+    // Step 3.
+    var x = ToNumber(start);
+
+    // Step 4.
+    var y = ToNumber(end);
+
+    // Step 5.
+    return intl_SelectPluralRuleRange(pluralRules, x, y);
+}
+
+/**
  * Returns the resolved options for a PluralRules object.
  *
  * Spec: ECMAScript 402 API, PluralRules, 13.4.4.
