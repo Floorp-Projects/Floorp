@@ -1602,8 +1602,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Loads the function length. This handles interpreted, native, and bound
   // functions. The caller is responsible for checking that INTERPRETED_LAZY and
   // RESOLVED_LENGTH flags are not set.
-  void loadFunctionLength(Register func, Register funFlags, Register output,
-                          Label* slowPath);
+  void loadFunctionLength(Register func, Register funFlagsAndArgCount,
+                          Register output, Label* slowPath);
 
   // Loads the function name. This handles interpreted, native, and bound
   // functions.
