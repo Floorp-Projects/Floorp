@@ -4129,7 +4129,8 @@ static ProfilingStack* locked_register_thread(
   if (ActivePS::Exists(aLock) &&
       ActivePS::ShouldProfileThread(
           aLock, aOffThreadRef.UnlockedConstReaderCRef().Info())) {
-    nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
+    nsCOMPtr<nsIEventTarget> eventTarget =
+        lockedRWFromAnyThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
         aLock, registeredThread.get(),
         MakeUnique<ProfiledThreadData>(
@@ -4257,12 +4258,15 @@ static Vector<const char*> SplitAtCommas(const char* aString,
 void profiler_init_threadmanager() {
   LOG("profiler_init_threadmanager");
 
-  PSAutoLock lock;
-  RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(lock);
-  if (registeredThread && !registeredThread->GetEventTarget()) {
-    registeredThread->ResetMainThread(NS_GetCurrentThreadNoCreate());
-  }
+  ThreadRegistration::WithOnThreadRef(
+      [](ThreadRegistration::OnThreadRef aOnThreadRef) {
+        aOnThreadRef.WithLockedRWOnThread(
+            [](ThreadRegistration::LockedRWOnThread& aThreadData) {
+              if (!aThreadData.GetEventTarget()) {
+                aThreadData.ResetMainThread(NS_GetCurrentThreadNoCreate());
+              }
+            });
+      });
 }
 
 void profiler_init(void* aStackTop) {
