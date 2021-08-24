@@ -448,12 +448,21 @@ const MediaDevicesCleaner = {
     mediaMgr.sanitizeDeviceIds(aFrom);
   },
 
-  deleteByPrincipal(aPrincipal) {
-    return this.deleteAll();
+  // TODO: We should call the MediaManager to clear by principal, rather than
+  // over-clearing for user requests or bailing out for programmatic calls.
+  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    return this.deleteAll();
+  // TODO: Same as above, but for base domain.
+  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
   async deleteAll() {
@@ -737,12 +746,21 @@ const PredictorNetworkCleaner = {
     np.reset();
   },
 
-  deleteByPrincipal(aPrincipal) {
-    return this.deleteAll();
+  // TODO: We should call the NetworkPredictor to clear by principal, rather
+  // than over-clearing for user requests or bailing out for programmatic calls.
+  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    return this.deleteAll();
+  // TODO: Same as above, but for base domain.
+  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 };
 
@@ -944,12 +962,20 @@ const SessionHistoryCleaner = {
 };
 
 const AuthTokensCleaner = {
-  deleteByPrincipal(aPrincipal) {
-    return this.deleteAll();
+  // TODO: Bug 1726742
+  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    return this.deleteAll();
+  // TODO: Bug 1726742
+  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
   async deleteAll() {
@@ -961,12 +987,20 @@ const AuthTokensCleaner = {
 };
 
 const AuthCacheCleaner = {
-  deleteByPrincipal(aPrincipal) {
-    return this.deleteAll();
+  // TODO: Bug 1726743
+  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    return this.deleteAll();
+  // TODO: Bug 1726743
+  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
   deleteAll() {
@@ -1242,12 +1276,18 @@ const ContentBlockingCleaner = {
     return TrackingDBService.clearAll();
   },
 
-  deleteByPrincipal(aPrincipal) {
-    return this.deleteAll();
+  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    return this.deleteAll();
+  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
   deleteByRange(aFrom, aTo) {
@@ -1260,12 +1300,18 @@ const ContentBlockingCleaner = {
  * about where the user has been, or what they've downloaded.
  */
 const AboutHomeStartupCacheCleaner = {
-  deleteByPrincipal(aPrincipal) {
-    return this.deleteAll();
+  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    return this.deleteAll();
+  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
+    if (!aIsUserRequest) {
+      return;
+    }
+    await this.deleteAll();
   },
 
   deleteAll() {
