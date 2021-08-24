@@ -2073,7 +2073,6 @@ def default_wasm_sandboxing_libraries(libraries, target, automation):
         (target.kernel == "Linux" and target.os == "GNU" and target.cpu == "x86_64")
         or (target.os == "Android" and target.bitness == 64)
         or (target.kernel == "Darwin" and target.bitness == 64)
-        or (target.kernel == "WINNT" and target.bitness == 64)
     ):
         return libraries
 
