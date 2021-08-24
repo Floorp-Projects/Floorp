@@ -39,10 +39,6 @@ size_t RegisteredThread::SizeOfIncludingThis(
   return n;
 }
 
-void RegisteredThread::PollJSSampling() {
-  mRacyRegisteredThread.mThreadRegistration.mData.PollJSSampling();
-}
-
 const RacyRegisteredThread& mozilla::profiler::
     ThreadRegistrationUnlockedConstReader::RacyRegisteredThreadCRef() const {
   MOZ_ASSERT(mRegisteredThread);
