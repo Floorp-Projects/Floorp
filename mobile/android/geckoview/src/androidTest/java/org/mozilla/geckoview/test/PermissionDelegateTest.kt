@@ -6,10 +6,9 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.NavigationDelegate
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
+import org.mozilla.geckoview.test.util.Callbacks
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -76,7 +75,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat("Device list should contain microphone device",
                 hasAudio, equalTo(true))
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onMediaPermissionRequest(
                     session: GeckoSession, uri: String,
@@ -124,7 +123,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertThat("Stream should be active and id should not be empty.", isActive, equalTo(true));
 
         // Now test rejecting the request.
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onMediaPermissionRequest(
                     session: GeckoSession, uri: String,
@@ -159,7 +158,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             // Ensure the content permission is asked first, before the Android permission.
             @AssertCalled(count = 1, order = [1])
             override fun onContentPermissionRequest(
@@ -208,7 +207,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Geolocation permission should be set to allow", permFound, equalTo(true))
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 var permFound2 : Boolean = false
@@ -230,7 +229,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -266,7 +265,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Geolocation permission should be set to allow", permFound, equalTo(true))
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 var permFound2 : Boolean = false
@@ -289,7 +288,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -319,7 +318,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Notification permission should be set to allow", permFound, equalTo(true))
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 var permFound2 : Boolean = false
@@ -347,7 +346,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -374,7 +373,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Notification permission should be set to allow", permFound, equalTo(true))
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 var permFound2 : Boolean = false
@@ -399,7 +398,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.loadTestPath(AUTOPLAY_PATH)
 
-        mainSession.waitUntilCalled(object : PermissionDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 2)
             override fun onContentPermissionRequest(session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
                     GeckoResult<Int>? {
@@ -417,7 +416,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -448,7 +447,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Notification permission should be set to allow", permFound, equalTo(true))
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 var permFound2: Boolean = false
@@ -472,7 +471,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         session2.loadUri(url)
         session2.waitForPageStop()
 
-        session2.delegateDuringNextWait(object : PermissionDelegate {
+        session2.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -504,7 +503,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Notification permission should be set to allow", permFound, equalTo(true))
 
-        session2.delegateDuringNextWait(object : NavigationDelegate {
+        session2.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 var permFound2: Boolean = false
@@ -528,7 +527,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -559,7 +558,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         sessionRule.runtime.storageController.setPermission(notificationPerm!!,
                 GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 var permFound2 : Boolean = false
@@ -587,7 +586,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -622,7 +621,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         sessionRule.runtime.storageController.setPermission(notificationPerm!!,
                 GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY)
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 var permFound2 : Boolean = false
@@ -650,7 +649,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -685,7 +684,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         sessionRule.runtime.storageController.setPermission(notificationPerm!!,
                 GeckoSession.PermissionDelegate.ContentPermission.VALUE_PROMPT)
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -706,7 +705,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @AssertCalled(count = 1)
             override fun onContentPermissionRequest(
                     session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
@@ -756,7 +755,7 @@ class PermissionDelegateTest : BaseSessionTest() {
     //     mainSession.waitForPageStop()
 
     //     // Persistent storage can be rejected
-    //     mainSession.delegateDuringNextWait(object : PermissionDelegate {
+    //     mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
     //         @AssertCalled(count = 1)
     //         override fun onContentPermissionRequest(
     //                 session: GeckoSession, uri: String?, type: Int,
@@ -771,7 +770,7 @@ class PermissionDelegateTest : BaseSessionTest() {
     //             success as Boolean, equalTo(false))
 
     //     // Persistent storage can be granted
-    //     mainSession.delegateDuringNextWait(object : PermissionDelegate {
+    //     mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
     //         // Ensure the content permission is asked first, before the Android permission.
     //         @AssertCalled(count = 1, order = [1])
     //         override fun onContentPermissionRequest(
@@ -791,7 +790,7 @@ class PermissionDelegateTest : BaseSessionTest() {
     //             equalTo(true))
 
     //     // after permission granted further requests will always return true, regardless of response
-    //     mainSession.delegateDuringNextWait(object : PermissionDelegate {
+    //     mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
     //         @AssertCalled(count = 1)
     //         override fun onContentPermissionRequest(
     //                 session: GeckoSession, uri: String?, type: Int,

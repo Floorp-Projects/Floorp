@@ -119,3 +119,15 @@ wasm32-wasi-compiler-rt-12:
         fetch:
             - clang-12
             - wasi-sdk
+
+wasm32-wasi-compiler-rt-10:
+    description: "wasm32-wasi Compiler-rt for Clang 10 toolchain build"
+    treeherder:
+        symbol: TL(wasi-crt-10)
+    worker-type: b-linux-xlarge
+    run:
+        script: build-compiler-rt-wasi.sh
+    fetches:
+        fetch:
+            - clang-10
+            - wasi-sdk

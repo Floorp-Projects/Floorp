@@ -871,11 +871,15 @@ def build_scriptworker_signing_payload(config, task, task_def):
     "notarization-poller",
     schema={
         Required("uuid-manifest"): taskref_or_string,
+        # the maximum time to run, in seconds
+        Optional("max-run-time"): int,
     },
 )
 def notarization_poller_payload(config, task, task_def):
     worker = task["worker"]
     task_def["payload"] = {"uuid_manifest": worker["uuid-manifest"]}
+    if "max-run-time" in worker:
+        task_def["payload"]["maxRunTime"] = worker["max-run-time"]
 
 
 @payload_builder(

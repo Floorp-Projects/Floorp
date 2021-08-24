@@ -36,6 +36,13 @@ interface nsILoginManagerAuthPrompter : nsISupports {
    * This is required if the init function received a chrome window as argument.
    */
   attribute Element browser;
+
+  /**
+   * The opener browser that was used to open the window passed to init.
+   * The opener can be used to determine in which window the prompt
+   * should be shown.
+   */
+  attribute Element openerBrowser;
 };
 %{C++
 

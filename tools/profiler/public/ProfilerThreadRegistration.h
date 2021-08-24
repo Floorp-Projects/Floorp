@@ -40,7 +40,7 @@ class ThreadRegistration {
   // RegisterThread() *must* be paired with exactly one UnregisterThread() on
   // the same thread. (Extra UnregisterThread() calls are handled safely, but
   // they may cause profiling of this thread to stop earlier than expected.)
-  static ProfilingStack& RegisterThread(const char* aName,
+  static ProfilingStack* RegisterThread(const char* aName,
                                         const void* aStackTop);
   static void UnregisterThread();
 
@@ -309,6 +309,18 @@ class ThreadRegistration {
     return false;
   }
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+    DataLock lock(mDataMutex);
+    return mData.SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    // aMallocSizeOf can only be used on head-allocated objects. Stack
+    // allocations and static objects are not counted.
+    return (mIsOnHeap ? aMallocSizeOf(this) : 0) +
+           SizeOfExcludingThis(aMallocSizeOf);
+  }
+
  private:
   friend class ThreadRegistry;
 
@@ -325,19 +337,20 @@ class ThreadRegistration {
 
   // Used when writing on self thread, and for any access from any thread.
   // Locking order: Profiler, ThreadRegistry, ThreadRegistration.
-  DataMutex mDataMutex;
+  mutable DataMutex mDataMutex;
 
   // In case of nested (non-RAII) registrations. Only accessed on thread.
   int mOtherRegistrations = 0;
 
-  enum class TLSInitialization { NOT_YET, DONE, FAILED };
-  static TLSInitialization sIsTLSInitialized;
+  // Set to true if allocated by `RegisterThread()`. Otherwise we assume that it
+  // is on the stack.
+  bool mIsOnHeap = false;
+
   static MOZ_THREAD_LOCAL(ThreadRegistration*) tlsThreadRegistration;
 
   [[nodiscard]] static decltype(tlsThreadRegistration)* GetTLS() {
-    return (sIsTLSInitialized == TLSInitialization::DONE)
-               ? &tlsThreadRegistration
-               : nullptr;
+    static const bool initialized = tlsThreadRegistration.init();
+    return initialized ? &tlsThreadRegistration : nullptr;
   }
 
   [[nodiscard]] static ThreadRegistration* GetFromTLS() {

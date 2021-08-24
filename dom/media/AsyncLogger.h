@@ -191,7 +191,7 @@ class AsyncLogger {
  private:
   void Run() {
     mThread.reset(new std::thread([this]() {
-      PROFILER_REGISTER_THREAD("AsyncLogger");
+      AUTO_PROFILER_REGISTER_THREAD("AsyncLogger");
       while (mRunning) {
         {
           TextPayload message;
@@ -241,7 +241,6 @@ class AsyncLogger {
         }
         Sleep();
       }
-      PROFILER_UNREGISTER_THREAD();
     }));
     // cleanup is done via mRunning
     mThread->detach();

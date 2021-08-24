@@ -34,17 +34,6 @@ namespace nsStyleTransformMatrix {
 // The operator passed to Servo backend.
 enum class MatrixTransformOperator : uint8_t { Interpolate, Accumulate };
 
-// Function for applying perspective() transform function.
-inline void ApplyPerspectiveToMatrix(mozilla::gfx::Matrix4x4& aMatrix,
-                                     float aDepth) {
-  // TODO(Bug 1725207): Infinite perspective values from stylo are being
-  // serialized as FLOAT_MAX, so we have to explicitly check for that case
-  // and treat it as infinity (which is the identity matrix).
-  if (!std::isinf(aDepth) && aDepth != std::numeric_limits<float>::max()) {
-    aMatrix.Perspective(std::max(aDepth, 1.0f));
-  }
-}
-
 /**
  * This class provides on-demand access to the 'reference box' for CSS
  * transforms (needed to resolve percentage values in 'transform',

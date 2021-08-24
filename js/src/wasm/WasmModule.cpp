@@ -572,7 +572,9 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
                                   &offsetVal)) {
         return false;  // OOM
       }
-      uint32_t offset = offsetVal.get().i32();
+      uint64_t offset = memoryObj->indexType() == IndexType::I32
+                            ? offsetVal.get().i32()
+                            : offsetVal.get().i64();
       uint32_t count = seg->bytes.length();
 
       if (offset > memoryLength || memoryLength - offset < count) {
@@ -580,7 +582,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
                                  JSMSG_WASM_OUT_OF_BOUNDS);
         return false;
       }
-      memcpy(memoryBase + offset, seg->bytes.begin(), count);
+      memcpy(memoryBase + uintptr_t(offset), seg->bytes.begin(), count);
     }
   }
 
