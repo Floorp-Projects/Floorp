@@ -203,66 +203,6 @@ nsresult RegexEval(const nsAString& aPattern, const nsAString& aString,
 }
 
 /*
- * MOZ_CRASH_UNSAFE_PRINTF has a sPrintfCrashReasonSize-sized buffer. We need
- * to make sure we don't exceed it.  These functions perform this check and
- * munge things for us.
- *
- */
-
-/*
- * Destructively truncates a string to fit within the limit
- */
-char* nsContentSecurityUtils::SmartFormatCrashString(const char* str) {
-  return nsContentSecurityUtils::SmartFormatCrashString(strdup(str));
-}
-
-char* nsContentSecurityUtils::SmartFormatCrashString(char* str) {
-  auto str_len = strlen(str);
-
-  if (str_len > sPrintfCrashReasonSize) {
-    str[sPrintfCrashReasonSize - 1] = '\0';
-    str_len = strlen(str);
-  }
-  MOZ_RELEASE_ASSERT(sPrintfCrashReasonSize > str_len);
-
-  return str;
-}
-
-/*
- * Destructively truncates two strings to fit within the limit.
- * format_string is a format string containing two %s entries
- * The second string will be truncated to the _last_ 25 characters
- * The first string will be truncated to the remaining limit.
- */
-nsCString nsContentSecurityUtils::SmartFormatCrashString(
-    const char* part1, const char* part2, const char* format_string) {
-  return SmartFormatCrashString(strdup(part1), strdup(part2), format_string);
-}
-
-nsCString nsContentSecurityUtils::SmartFormatCrashString(
-    char* part1, char* part2, const char* format_string) {
-  auto part1_len = strlen(part1);
-  auto part2_len = strlen(part2);
-
-  auto constant_len = strlen(format_string) - 4;
-
-  if (part1_len + part2_len + constant_len > sPrintfCrashReasonSize) {
-    if (part2_len > 25) {
-      part2 += (part2_len - 25);
-    }
-    part2_len = strlen(part2);
-
-    part1[sPrintfCrashReasonSize - (constant_len + part2_len + 1)] = '\0';
-    part1_len = strlen(part1);
-  }
-  MOZ_RELEASE_ASSERT(sPrintfCrashReasonSize >
-                     constant_len + part1_len + part2_len);
-
-  auto parts = nsPrintfCString(format_string, part1, part2);
-  return std::move(parts);
-}
-
-/*
  * Telemetry Events extra data only supports 80 characters, so we optimize the
  * filename to be smaller and collect more data.
  */
@@ -465,62 +405,6 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   return FilenameTypeAndDetails(kOther, Nothing());
 }
 
-#ifdef NIGHTLY_BUILD
-// Crash String must be safe from a telemetry point of view.
-// This will be ensured when this function is used.
-void PossiblyCrash(const char* aPrefSuffix, const char* aUnsafeCrashString,
-                   const nsCString& aSafeCrashString) {
-  if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
-    // We only crash in the parent (unfortunately) because it's
-    // the only place we can be sure that our only-crash-once
-    // pref-writing works.
-    return;
-  }
-
-  nsCString previous_crashes("security.crash_tracking.");
-  previous_crashes.Append(aPrefSuffix);
-  previous_crashes.Append(".prevCrashes");
-
-  nsCString max_crashes("security.crash_tracking.");
-  max_crashes.Append(aPrefSuffix);
-  max_crashes.Append(".maxCrashes");
-
-  int32_t numberOfPreviousCrashes = 0;
-  numberOfPreviousCrashes = Preferences::GetInt(previous_crashes.get(), 0);
-
-  int32_t maxAllowableCrashes = 0;
-  maxAllowableCrashes = Preferences::GetInt(max_crashes.get(), 0);
-
-  if (numberOfPreviousCrashes >= maxAllowableCrashes) {
-    return;
-  }
-
-  nsresult rv =
-      Preferences::SetInt(previous_crashes.get(), ++numberOfPreviousCrashes);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsIPrefService> prefsCom = Preferences::GetService();
-  Preferences* prefs = static_cast<Preferences*>(prefsCom.get());
-
-  if (!prefs->AllowOffMainThreadSave()) {
-    // Do not crash if we can't save prefs off the main thread
-    return;
-  }
-
-  rv = prefs->SavePrefFileBlocking();
-  if (!NS_FAILED(rv)) {
-    // We can only use this in local builds where we don't send stuff up to the
-    // crash reporter because it has user private data.
-    // MOZ_CRASH_UNSAFE_PRINTF("%s",
-    //                        nsContentSecurityUtils::SmartFormatCrashString(aUnsafeCrashString));
-    MOZ_CRASH_UNSAFE_PRINTF(
-        "%s", nsContentSecurityUtils::SmartFormatCrashString(aSafeCrashString.get()));
-  }
-}
-#endif
-
 class EvalUsageNotificationRunnable final : public Runnable {
  public:
   EvalUsageNotificationRunnable(bool aIsSystemPrincipal,
@@ -679,20 +563,29 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   }
 
   // Log to MOZ_LOG
-  MOZ_LOG(sCSMLog, LogLevel::Error,
+  MOZ_LOG(sCSMLog, LogLevel::Warning,
           ("Blocking eval() %s from file %s and script "
            "provided %s",
            (aIsSystemPrincipal ? "with System Principal" : "in parent process"),
            fileName.get(), NS_ConvertUTF16toUTF8(aScript).get()));
 
   // Maybe Crash
-#if defined(DEBUG) || defined(FUZZING)
-  auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
-      NS_ConvertUTF16toUTF8(aScript).get(), fileName.get(),
-      (aIsSystemPrincipal
-           ? "Blocking eval() with System Principal with script %s from file %s"
-           : "Blocking eval() in parent process with script %s from file %s"));
-  MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
+#ifdef DEBUG
+  // MOZ_CRASH_UNSAFE_PRINTF gives us at most 1024 characters to print.
+  // The given string literal leaves us with ~950, so I'm leaving
+  // each 475 for fileName and aScript each.
+  if (fileName.Length() > 475) {
+    fileName.SetLength(475);
+  }
+  nsAutoCString trimmedScript = NS_ConvertUTF16toUTF8(aScript);
+  if (trimmedScript.Length() > 475) {
+    trimmedScript.SetLength(475);
+  }
+  MOZ_CRASH_UNSAFE_PRINTF(
+      "Blocking eval() %s from file %s and script provided "
+      "%s",
+      (aIsSystemPrincipal ? "with System Principal" : "in parent process"),
+      fileName.get(), trimmedScript.get());
 #endif
 
   return false;
@@ -1138,16 +1031,6 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
-  // If we have allowed eval (because of a user configuration or more
-  // likely a test has requested it), and the script is an eval, allow it.
-  NS_ConvertUTF8toUTF16 filenameU(aFilename);
-  if (StaticPrefs::security_allow_eval_with_system_principal() ||
-      StaticPrefs::security_allow_eval_in_parent_process()) {
-    if (StringEndsWith(filenameU, u"> eval"_ns)) {
-      return true;
-    }
-  }
-
   DetectJsHacks();
 
   if (MOZ_UNLIKELY(sJSHacksPresent)) {
@@ -1167,6 +1050,7 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
+  NS_ConvertUTF8toUTF16 filenameU(aFilename);
   if (StringBeginsWith(filenameU, u"chrome://"_ns)) {
     // If it's a chrome:// url, allow it
     return true;
@@ -1225,25 +1109,6 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
   }
   Telemetry::RecordEvent(eventType, mozilla::Some(fileNameTypeAndDetails.first),
                          extra);
-
-#ifdef NIGHTLY_BUILD
-  // Cause a crash (if we've never crashed before and we can ensure we won't do
-  // it again.)
-  // The details in the second arg, passed to UNSAFE_PRINTF, are also included
-  // in Event Telemetry and have received data review.
-  if (fileNameTypeAndDetails.second.isSome()) {
-    PossiblyCrash("js_load_1", aFilename,
-                  NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()));
-  } else {
-    PossiblyCrash("js_load_1", aFilename, "(None)"_ns);
-  }
-#elif defined(FUZZING)
-  auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
-      aFilename,
-      NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value().get()),
-      "Blocking a script load %s from file %s");
-  MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
-#endif
 
   // Presently we are not enforcing any restrictions for the script filename,
   // we're only reporting Telemetry. In the future we will assert in debug
