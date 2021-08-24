@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     "TestCSPParser.cpp",
     "TestFilenameEvalParser.cpp",
     "TestSecureContext.cpp",
+    "TestSmartCrashTrimmer.cpp",
 ]
 
 if CONFIG["OS_TARGET"] != "Android":
