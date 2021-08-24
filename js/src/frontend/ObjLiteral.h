@@ -18,6 +18,8 @@
 #include "js/Value.h"
 #include "js/Vector.h"
 #include "util/EnumFlags.h"
+#include "vm/BytecodeUtil.h"
+#include "vm/Opcodes.h"
 
 /*
  * [SMDOC] ObjLiteral (Object Literal) Handling
@@ -131,23 +133,64 @@ enum class ObjLiteralOpcode : uint8_t {
   MAX = False,
 };
 
+// The kind of GC thing constructed by the ObjLiteral framework and stored in
+// the script data.
+enum class ObjLiteralKind : uint8_t {
+  // Construct an ArrayObject from a list of dense elements.
+  Array,
+
+  // Construct a PlainObject from a list of property keys/values.
+  Object,
+
+  // Construct a PlainObject Shape from a list of property keys.
+  Shape,
+
+  // Invalid sentinel value. Must be the last enum value.
+  Invalid
+};
+
 // Flags that are associated with a sequence of object-literal instructions.
 // (These become bitflags by wrapping with EnumSet below.)
 enum class ObjLiteralFlag : uint8_t {
-  // If set, this object is an array.
-  Array = 1 << 0,
-
-  // If set, this is an object literal in a singleton context and property
-  // values are included. See also JSOp::Object.
-  Singleton = 1 << 1,
-
   // If set, this object contains index property, or duplicate non-index
   // property.
-  // This flag is valid only if Array flag isn't set.
-  HasIndexOrDuplicatePropName = 1 << 2,
+  // This flag is valid only if the ObjLiteralKind is not Array.
+  HasIndexOrDuplicatePropName = 1 << 0,
+
+  // Note: at most 6 flags are currently supported. See ObjLiteralKindAndFlags.
 };
 
 using ObjLiteralFlags = EnumFlags<ObjLiteralFlag>;
+
+// Helper class to encode ObjLiteralKind and ObjLiteralFlags in a single byte.
+class ObjLiteralKindAndFlags {
+  uint8_t bits_ = 0;
+
+  static constexpr size_t KindBits = 2;
+  static constexpr size_t KindMask = BitMask(KindBits);
+
+  static_assert(size_t(ObjLiteralKind::Invalid) <= KindMask,
+                "ObjLiteralKind needs more bits");
+
+ public:
+  ObjLiteralKindAndFlags() = default;
+
+  ObjLiteralKindAndFlags(ObjLiteralKind kind, ObjLiteralFlags flags)
+      : bits_(size_t(kind) | (flags.toRaw() << KindBits)) {
+    MOZ_ASSERT(this->kind() == kind);
+    MOZ_ASSERT(this->flags() == flags);
+  }
+
+  ObjLiteralKind kind() const { return ObjLiteralKind(bits_ & KindMask); }
+  ObjLiteralFlags flags() const {
+    ObjLiteralFlags res;
+    res.setRaw(bits_ >> KindBits);
+    return res;
+  }
+
+  uint8_t toRaw() const { return bits_; }
+  void setRaw(uint8_t bits) { bits_ = bits; }
+};
 
 inline bool ObjLiteralOpcodeHasValueArg(ObjLiteralOpcode op) {
   return op == ObjLiteralOpcode::ConstValue;
@@ -291,10 +334,26 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
   bool checkForDuplicatedNames(JSContext* cx);
   mozilla::Span<const uint8_t> getCode() const { return code_; }
+  ObjLiteralKind getKind() const { return kind_; }
   ObjLiteralFlags getFlags() const { return flags_; }
   uint32_t getPropertyCount() const { return propertyCount_; }
 
-  void beginObject(ObjLiteralFlags flags) { flags_ = flags; }
+  void beginArray(JSOp op) {
+    MOZ_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
+    MOZ_ASSERT(op == JSOp::Object || op == JSOp::CallSiteObj);
+    kind_ = ObjLiteralKind::Array;
+  }
+  void beginObject(JSOp op) {
+    MOZ_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
+    MOZ_ASSERT(op == JSOp::Object);
+    kind_ = ObjLiteralKind::Object;
+  }
+  void beginShape(JSOp op) {
+    MOZ_ASSERT(JOF_OPTYPE(op) == JOF_SHAPE);
+    MOZ_ASSERT(op == JSOp::NewObject);
+    kind_ = ObjLiteralKind::Shape;
+  }
+
   bool setPropName(JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
                    const frontend::TaggedParserAtomIndex propName) {
     // Only valid in object-mode.
@@ -320,21 +379,19 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   void setPropNameNoDuplicateCheck(
       frontend::ParserAtomsTable& parserAtoms,
       const frontend::TaggedParserAtomIndex propName) {
-    // Only valid in object-mode.
-    MOZ_ASSERT(!flags_.hasFlag(ObjLiteralFlag::Array));
+    MOZ_ASSERT(kind_ == ObjLiteralKind::Object ||
+               kind_ == ObjLiteralKind::Shape);
     parserAtoms.markUsedByStencil(propName);
     nextKey_ = ObjLiteralKey::fromPropName(propName);
   }
   void setPropIndex(uint32_t propIndex) {
-    // Only valid in object-mode.
-    MOZ_ASSERT(!flags_.hasFlag(ObjLiteralFlag::Array));
+    MOZ_ASSERT(kind_ == ObjLiteralKind::Object);
     MOZ_ASSERT(propIndex <= ATOM_INDEX_MASK);
     nextKey_ = ObjLiteralKey::fromArrayIndex(propIndex);
     flags_.setFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName);
   }
   void beginDenseArrayElements() {
-    // Only valid in array-mode.
-    MOZ_ASSERT(flags_.hasFlag(ObjLiteralFlag::Array));
+    MOZ_ASSERT(kind_ == ObjLiteralKind::Array);
     // Dense array element sequences do not use the keys; the indices are
     // implicit.
     nextKey_ = ObjLiteralKey::none();
@@ -342,6 +399,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
   [[nodiscard]] bool propWithConstNumericValue(JSContext* cx,
                                                const JS::Value& value) {
+    MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
     MOZ_ASSERT(value.isNumber());
     return pushOpAndName(cx, ObjLiteralOpcode::ConstValue, nextKey_) &&
@@ -350,12 +408,14 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   [[nodiscard]] bool propWithAtomValue(
       JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
       const frontend::TaggedParserAtomIndex value) {
+    MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
     parserAtoms.markUsedByStencil(value);
     return pushOpAndName(cx, ObjLiteralOpcode::ConstAtom, nextKey_) &&
            pushAtomArg(cx, value);
   }
   [[nodiscard]] bool propWithNullValue(JSContext* cx) {
+    MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
     return pushOpAndName(cx, ObjLiteralOpcode::Null, nextKey_);
   }
@@ -364,10 +424,12 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     return pushOpAndName(cx, ObjLiteralOpcode::Undefined, nextKey_);
   }
   [[nodiscard]] bool propWithTrueValue(JSContext* cx) {
+    MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
     return pushOpAndName(cx, ObjLiteralOpcode::True, nextKey_);
   }
   [[nodiscard]] bool propWithFalseValue(JSContext* cx) {
+    MOZ_ASSERT(kind_ != ObjLiteralKind::Shape);
     propertyCount_++;
     return pushOpAndName(cx, ObjLiteralOpcode::False, nextKey_);
   }
@@ -389,6 +451,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   // This field is placed next to `flags_` field, to reduce padding.
   bool mightContainDuplicatePropertyNames_ = false;
 
+  ObjLiteralKind kind_ = ObjLiteralKind::Invalid;
   ObjLiteralFlags flags_;
   ObjLiteralKey nextKey_;
   uint32_t propertyCount_ = 0;
@@ -657,25 +720,24 @@ class ObjLiteralStencil {
   friend class frontend::StencilXDR;
 
   mozilla::Span<uint8_t> code_;
-  ObjLiteralFlags flags_;
+  ObjLiteralKindAndFlags kindAndFlags_;
   uint32_t propertyCount_ = 0;
 
  public:
   ObjLiteralStencil() = default;
 
-  ObjLiteralStencil(uint8_t* code, size_t length, const ObjLiteralFlags& flags,
-                    uint32_t propertyCount)
+  ObjLiteralStencil(uint8_t* code, size_t length, ObjLiteralKind kind,
+                    const ObjLiteralFlags& flags, uint32_t propertyCount)
       : code_(mozilla::Span(code, length)),
-        flags_(flags),
+        kindAndFlags_(kind, flags),
         propertyCount_(propertyCount) {}
 
-  JSObject* createObject(JSContext* cx,
-                         const frontend::CompilationAtomCache& atomCache) const;
-  Shape* createShape(JSContext* cx,
-                     const frontend::CompilationAtomCache& atomCache) const;
+  JS::GCCellPtr create(JSContext* cx,
+                       const frontend::CompilationAtomCache& atomCache) const;
 
   mozilla::Span<const uint8_t> code() const { return code_; }
-  ObjLiteralFlags flags() const { return flags_; }
+  ObjLiteralKind kind() const { return kindAndFlags_.kind(); }
+  ObjLiteralFlags flags() const { return kindAndFlags_.flags(); }
   uint32_t propertyCount() const { return propertyCount_; }
 
 #ifdef DEBUG
