@@ -53,12 +53,13 @@ class JSFunction : public js::NativeObject {
   using FunctionFlags = js::FunctionFlags;
 
   /*
-   * Bitfield composed of FunctionFlags and argument count.
+   * Bitfield composed of FunctionFlags and argument count, stored as a
+   * PrivateUint32Value.
    *
    * If any of these flags needs to be accessed in off-thread JIT compilation,
    * copy it to js::jit::WrappedFunction.
    */
-  uint32_t flagsAndArgCount_;
+  js::GCPtrValue flagsAndArgCount_;
 
   union U {
     class {
@@ -151,12 +152,18 @@ class JSFunction : public js::NativeObject {
     return needsFunctionEnvironmentObjects() || needsExtraBodyVarEnvironment();
   }
 
-  uint32_t flagsAndArgCountRaw() const { return flagsAndArgCount_; }
+  uint32_t flagsAndArgCountRaw() const {
+    return flagsAndArgCount_.toPrivateUint32();
+  }
 
-  size_t nargs() const { return flagsAndArgCount_ >> ArgCountShift; }
+  void initFlagsAndArgCount() {
+    flagsAndArgCount_.init(JS::PrivateUint32Value(0));
+  }
+
+  size_t nargs() const { return flagsAndArgCountRaw() >> ArgCountShift; }
 
   FunctionFlags flags() const {
-    return FunctionFlags(uint16_t(flagsAndArgCount_ & FlagsMask));
+    return FunctionFlags(uint16_t(flagsAndArgCountRaw() & FlagsMask));
   }
 
   FunctionFlags::FunctionKind kind() const { return flags().kind(); }
@@ -269,8 +276,10 @@ class JSFunction : public js::NativeObject {
 
   void setFlags(FunctionFlags flags) { setFlags(flags.toRaw()); }
   void setFlags(uint16_t flags) {
-    flagsAndArgCount_ &= ~FlagsMask;
-    flagsAndArgCount_ |= flags;
+    uint32_t flagsAndArgCount = flagsAndArgCountRaw();
+    flagsAndArgCount &= ~FlagsMask;
+    flagsAndArgCount |= flags;
+    flagsAndArgCount_.unbarrieredSet(JS::PrivateUint32Value(flagsAndArgCount));
   }
 
   // Make the function constructible.
@@ -278,8 +287,10 @@ class JSFunction : public js::NativeObject {
 
   // Can be called multiple times by the parser.
   void setArgCount(uint16_t nargs) {
-    flagsAndArgCount_ &= ~ArgCountMask;
-    flagsAndArgCount_ |= nargs << ArgCountShift;
+    uint32_t flagsAndArgCount = flagsAndArgCountRaw();
+    flagsAndArgCount &= ~ArgCountMask;
+    flagsAndArgCount |= nargs << ArgCountShift;
+    flagsAndArgCount_.set(JS::PrivateUint32Value(flagsAndArgCount));
   }
 
   void setIsBoundFunction() { setFlags(flags().setIsBoundFunction()); }
