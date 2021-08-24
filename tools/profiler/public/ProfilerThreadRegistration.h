@@ -312,6 +312,11 @@ class ThreadRegistration {
  private:
   friend class ThreadRegistry;
 
+  // Trust these to access mData.
+  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
+  friend class ::RacyRegisteredThread;
+  friend class ::RegisteredThread;
+
   // This is what is embedded inside ThreadRegistration.
   // References to sub-classes will be provided, to limit access as appropriate.
   class EmbeddedData final : public LockedRWOnThread {
