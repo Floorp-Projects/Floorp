@@ -47,6 +47,10 @@
 class PSAutoLock;
 struct JSContext;
 
+// TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
+class RacyRegisteredThread;
+class RegisteredThread;
+
 namespace mozilla::profiler {
 
 // All data members related to thread profiling are stored here.
@@ -61,6 +65,11 @@ class ThreadRegistrationData {
   // `protected` to allow derived classes to read all data members.
  protected:
   ThreadRegistrationData(const char* aName, const void* aStackTop);
+
+  // Trust these to access mData.
+  // TODO: Remove when {,Racy}RegisteredThread are removed in a later patch.
+  friend class ::RacyRegisteredThread;
+  friend class ::RegisteredThread;
 
   // Permanent thread information.
   // Set at construction, read from anywhere, moved-from at destruction.
