@@ -8,7 +8,6 @@
 #include "CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/TextureForwarder.h"
-#include "mozilla/layers/TiledContentClient.h"
 #include "mozilla/StaticPrefs_layers.h"
 
 #include "nsComponentManagerUtils.h"

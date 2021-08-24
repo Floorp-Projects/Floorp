@@ -410,35 +410,6 @@ void ShadowLayerForwarder::UseTextures(
     CompositableClient* aCompositable,
     const nsTArray<TimedTextureClient>& aTextures) {
   MOZ_ASSERT(aCompositable);
-
-  if (!aCompositable->IsConnected()) {
-    return;
-  }
-
-  AutoTArray<TimedTexture, 4> textures;
-
-  for (auto& t : aTextures) {
-    MOZ_ASSERT(t.mTextureClient);
-    MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
-    MOZ_RELEASE_ASSERT(t.mTextureClient->GetIPDLActor()->GetIPCChannel() ==
-                       mShadowManager->GetIPCChannel());
-    bool readLocked = t.mTextureClient->OnForwardedToHost();
-    textures.AppendElement(
-        TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(), t.mTimeStamp,
-                     t.mPictureRect, t.mFrameID, t.mProducerID, readLocked));
-    mClientLayerManager->GetCompositorBridgeChild()
-        ->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
-
-    auto fenceFd = t.mTextureClient->GetInternalData()->GetAcquireFence();
-    if (fenceFd.IsValid()) {
-      mTxn->AddEdit(CompositableOperation(
-          aCompositable->GetIPCHandle(),
-          OpDeliverAcquireFence(nullptr, t.mTextureClient->GetIPDLActor(),
-                                fenceFd)));
-    }
-  }
-  mTxn->AddEdit(CompositableOperation(aCompositable->GetIPCHandle(),
-                                      OpUseTexture(textures)));
 }
 
 void ShadowLayerForwarder::UseComponentAlphaTextures(
@@ -446,50 +417,7 @@ void ShadowLayerForwarder::UseComponentAlphaTextures(
     TextureClient* aTextureOnWhite) {
   MOZ_ASSERT(aCompositable);
 
-  if (!aCompositable->IsConnected()) {
-    return;
-  }
-
-  MOZ_ASSERT(aTextureOnWhite);
-  MOZ_ASSERT(aTextureOnBlack);
-  MOZ_ASSERT(aCompositable->GetIPCHandle());
-  MOZ_ASSERT(aTextureOnBlack->GetIPDLActor());
-  MOZ_ASSERT(aTextureOnWhite->GetIPDLActor());
-  MOZ_ASSERT(aTextureOnBlack->GetSize() == aTextureOnWhite->GetSize());
-  MOZ_RELEASE_ASSERT(aTextureOnWhite->GetIPDLActor()->GetIPCChannel() ==
-                     mShadowManager->GetIPCChannel());
-  MOZ_RELEASE_ASSERT(aTextureOnBlack->GetIPDLActor()->GetIPCChannel() ==
-                     mShadowManager->GetIPCChannel());
-
-  bool readLockedB = aTextureOnBlack->OnForwardedToHost();
-  bool readLockedW = aTextureOnWhite->OnForwardedToHost();
-
-  mClientLayerManager->GetCompositorBridgeChild()
-      ->HoldUntilCompositableRefReleasedIfNecessary(aTextureOnBlack);
-  mClientLayerManager->GetCompositorBridgeChild()
-      ->HoldUntilCompositableRefReleasedIfNecessary(aTextureOnWhite);
-
-  auto fenceFdB = aTextureOnBlack->GetInternalData()->GetAcquireFence();
-  if (fenceFdB.IsValid()) {
-    mTxn->AddEdit(CompositableOperation(
-        aCompositable->GetIPCHandle(),
-        OpDeliverAcquireFence(nullptr, aTextureOnBlack->GetIPDLActor(),
-                              fenceFdB)));
-  }
-
-  auto fenceFdW = aTextureOnWhite->GetInternalData()->GetAcquireFence();
-  if (fenceFdW.IsValid()) {
-    mTxn->AddEdit(CompositableOperation(
-        aCompositable->GetIPCHandle(),
-        OpDeliverAcquireFence(nullptr, aTextureOnWhite->GetIPDLActor(),
-                              fenceFdW)));
-  }
-
-  mTxn->AddEdit(CompositableOperation(
-      aCompositable->GetIPCHandle(),
-      OpUseComponentAlphaTextures(nullptr, aTextureOnBlack->GetIPDLActor(),
-                                  nullptr, aTextureOnWhite->GetIPDLActor(),
-                                  readLockedB, readLockedW)));
+  return;
 }
 
 static bool AddOpDestroy(Transaction* aTxn, const OpDestroy& op) {
