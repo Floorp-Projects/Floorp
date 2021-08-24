@@ -5,7 +5,6 @@
 Transform the repackage task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 
@@ -21,6 +20,6 @@ def split_locales(config, jobs):
         for locale in dep_job.attributes.get("chunk_locales", []):
             locale_job = copy.deepcopy(job)  # don't overwrite dict values here
             treeherder = locale_job.setdefault("treeherder", {})
-            treeherder["symbol"] = "L10n-Rpk({})".format(locale)
+            treeherder["symbol"] = f"L10n-Rpk({locale})"
             locale_job["locale"] = locale
             yield locale_job

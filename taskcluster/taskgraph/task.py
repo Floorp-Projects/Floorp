@@ -2,13 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import attr
 
 
 @attr.s
-class Task(object):
+class Task:
     """
     Representation of a task in a TaskGraph.  Each Task has, at creation:
 
@@ -55,7 +54,7 @@ class Task(object):
         if self.label.startswith(self.kind + "-"):
             return self.label[len(self.kind) + 1 :]
         else:
-            raise AttributeError("Task {} does not have a name.".format(self.label))
+            raise AttributeError(f"Task {self.label} does not have a name.")
 
     def to_json(self):
         rv = {

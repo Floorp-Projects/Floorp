@@ -2,13 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import logging
 import sys
 import attr
-from six import text_type
 from mozpack import path
 
 from .util.python_path import find_object
@@ -22,35 +20,35 @@ graph_config_schema = Schema(
     {
         # The trust-domain for this graph.
         # (See https://firefox-source-docs.mozilla.org/taskcluster/taskcluster/taskgraph.html#taskgraph-trust-domain)  # noqa
-        Required("trust-domain"): text_type,
+        Required("trust-domain"): str,
         # This specifes the prefix for repo parameters that refer to the project being built.
         # This selects between `head_rev` and `comm_head_rev` and related paramters.
         # (See http://firefox-source-docs.mozilla.org/taskcluster/taskcluster/parameters.html#push-information  # noqa
         # and http://firefox-source-docs.mozilla.org/taskcluster/taskcluster/parameters.html#comm-push-information)  # noqa
-        Required("project-repo-param-prefix"): text_type,
+        Required("project-repo-param-prefix"): str,
         # This specifies the top level directory of the application being built.
         # ie. "browser/" for Firefox, "comm/mail/" for Thunderbird.
-        Required("product-dir"): text_type,
+        Required("product-dir"): str,
         Required("treeherder"): {
             # Mapping of treeherder group symbols to descriptive names
-            Required("group-names"): {text_type: text_type}
+            Required("group-names"): {str: str}
         },
-        Required("index"): {Required("products"): [text_type]},
+        Required("index"): {Required("products"): [str]},
         Required("try"): {
             # We have a few platforms for which we want to do some "extra" builds, or at
             # least build-ish things.  Sort of.  Anyway, these other things are implemented
             # as different "platforms".  These do *not* automatically ride along with "-p
             # all"
-            Required("ridealong-builds"): {text_type: [text_type]},
+            Required("ridealong-builds"): {str: [str]},
         },
         Required("release-promotion"): {
-            Required("products"): [text_type],
+            Required("products"): [str],
             Required("flavors"): {
-                text_type: {
-                    Required("product"): text_type,
-                    Required("target-tasks-method"): text_type,
+                str: {
+                    Required("product"): str,
+                    Required("target-tasks-method"): str,
                     Optional("is-rc"): bool,
-                    Optional("rebuild-kinds"): [text_type],
+                    Optional("rebuild-kinds"): [str],
                     Optional("version-bump"): bool,
                     Optional("partial-updates"): bool,
                 }
@@ -58,29 +56,29 @@ graph_config_schema = Schema(
         },
         Required("merge-automation"): {
             Required("behaviors"): {
-                text_type: {
-                    Optional("from-branch"): text_type,
-                    Required("to-branch"): text_type,
-                    Optional("from-repo"): text_type,
-                    Required("to-repo"): text_type,
+                str: {
+                    Optional("from-branch"): str,
+                    Required("to-branch"): str,
+                    Optional("from-repo"): str,
+                    Required("to-repo"): str,
                     Required("version-files"): [
                         {
-                            Required("filename"): text_type,
-                            Optional("new-suffix"): text_type,
+                            Required("filename"): str,
+                            Optional("new-suffix"): str,
                             Optional("version-bump"): Any("major", "minor"),
                         }
                     ],
-                    Required("replacements"): [[text_type]],
+                    Required("replacements"): [[str]],
                     Required("merge-old-head"): bool,
-                    Optional("base-tag"): text_type,
-                    Optional("end-tag"): text_type,
-                    Optional("fetch-version-from"): text_type,
+                    Optional("base-tag"): str,
+                    Optional("end-tag"): str,
+                    Optional("fetch-version-from"): str,
                 }
             },
         },
         Required("scriptworker"): {
             # Prefix to add to scopes controlling scriptworkers
-            Required("scope-prefix"): text_type,
+            Required("scope-prefix"): str,
         },
         Required("task-priority"): optionally_keyed_by(
             "project",
@@ -96,23 +94,23 @@ graph_config_schema = Schema(
         ),
         Required("partner-urls"): {
             Required("release-partner-repack"): optionally_keyed_by(
-                "release-product", "release-level", "release-type", Any(text_type, None)
+                "release-product", "release-level", "release-type", Any(str, None)
             ),
             Optional("release-partner-attribution"): optionally_keyed_by(
-                "release-product", "release-level", "release-type", Any(text_type, None)
+                "release-product", "release-level", "release-type", Any(str, None)
             ),
             Required("release-eme-free-repack"): optionally_keyed_by(
-                "release-product", "release-level", "release-type", Any(text_type, None)
+                "release-product", "release-level", "release-type", Any(str, None)
             ),
         },
         Required("workers"): {
             Required("aliases"): {
-                text_type: {
-                    Required("provisioner"): optionally_keyed_by("level", text_type),
-                    Required("implementation"): text_type,
-                    Required("os"): text_type,
+                str: {
+                    Required("provisioner"): optionally_keyed_by("level", str),
+                    Required("implementation"): str,
+                    Required("os"): str,
                     Required("worker-type"): optionally_keyed_by(
-                        "level", "release-level", text_type
+                        "level", "release-level", str
                     ),
                 }
             },
@@ -124,22 +122,22 @@ graph_config_schema = Schema(
                 Any("mac_notarize", "mac_geckodriver", "mac_sign", "mac_sign_and_pkg"),
             ),
             Required("mac-entitlements"): optionally_keyed_by(
-                "platform", "release-level", text_type
+                "platform", "release-level", str
             ),
         },
         Required("taskgraph"): {
             Optional(
                 "register",
                 description="Python function to call to register extensions.",
-            ): text_type,
-            Optional("decision-parameters"): text_type,
+            ): str,
+            Optional("decision-parameters"): str,
         },
     }
 )
 
 
 @attr.s(frozen=True, cmp=False)
-class GraphConfig(object):
+class GraphConfig:
     _config = attr.ib()
     root_dir = attr.ib()
 
@@ -187,9 +185,9 @@ def validate_graph_config(config):
 def load_graph_config(root_dir):
     config_yml = os.path.join(root_dir, "config.yml")
     if not os.path.exists(config_yml):
-        raise Exception("Couldn't find taskgraph configuration: {}".format(config_yml))
+        raise Exception(f"Couldn't find taskgraph configuration: {config_yml}")
 
-    logger.debug("loading config from `{}`".format(config_yml))
+    logger.debug(f"loading config from `{config_yml}`")
     config = load_yaml(config_yml)
     logger.debug("validating the graph config.")
     validate_graph_config(config)

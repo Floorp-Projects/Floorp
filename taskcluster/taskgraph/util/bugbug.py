@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import json
@@ -69,9 +68,7 @@ def _write_perfherder_data(lower_is_better):
                 for suite, value in lower_is_better.items()
             ],
         }
-        print(
-            "PERFHERDER_DATA: {}".format(json.dumps(perfherder_data)), file=sys.stderr
-        )
+        print(f"PERFHERDER_DATA: {json.dumps(perfherder_data)}", file=sys.stderr)
 
 
 @memoize
@@ -111,9 +108,7 @@ def push_schedules(branch, rev):
 
     data = r.json()
     if r.status_code == 202:
-        raise BugbugTimeoutException(
-            "Timed out waiting for result from '{}'".format(url)
-        )
+        raise BugbugTimeoutException(f"Timed out waiting for result from '{url}'")
 
     if "groups" in data:
         data["groups"] = {translate_group(k): v for k, v in data["groups"].items()}

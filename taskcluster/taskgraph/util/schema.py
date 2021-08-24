@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 import pprint
@@ -10,7 +9,6 @@ import collections
 import collections.abc
 import voluptuous
 
-from six import text_type, iteritems
 
 import taskgraph
 
@@ -138,7 +136,7 @@ def resolve_keyed_by(
 
     container[subfield] = evaluate_keyed_by(
         value=container[subfield],
-        item_name="`{}` in `{}`".format(field, item_name),
+        item_name=f"`{field}` in `{item_name}`",
         defer=defer,
         enforce_single_match=enforce_single_match,
         attributes=dict(item, **extra_values),
@@ -169,11 +167,11 @@ def check_schema(schema):
 
     def iter(path, sch):
         def check_identifier(path, k):
-            if k in (text_type, text_type, voluptuous.Extra):
+            if k in (str, str, voluptuous.Extra):
                 pass
             elif isinstance(k, voluptuous.NotIn):
                 pass
-            elif isinstance(k, text_type):
+            elif isinstance(k, str):
                 if not identifier_re.match(k) and not whitelisted(path):
                     raise RuntimeError(
                         "YAML schemas should use dashed lower-case identifiers, "
@@ -192,13 +190,13 @@ def check_schema(schema):
                 )
 
         if isinstance(sch, collections.abc.Mapping):
-            for k, v in iteritems(sch):
-                child = "{}[{!r}]".format(path, k)
+            for k, v in sch.items():
+                child = f"{path}[{k!r}]"
                 check_identifier(child, k)
                 iter(child, v)
         elif isinstance(sch, (list, tuple)):
             for i, v in enumerate(sch):
-                iter("{}[{}]".format(path, i), v)
+                iter(f"{path}[{i}]", v)
         elif isinstance(sch, voluptuous.Any):
             for v in sch.validators:
                 iter(path, v)
@@ -213,12 +211,12 @@ class Schema(voluptuous.Schema):
     """
 
     def __init__(self, *args, **kwargs):
-        super(Schema, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if not taskgraph.fast:
             check_schema(self)
 
     def extend(self, *args, **kwargs):
-        schema = super(Schema, self).extend(*args, **kwargs)
+        schema = super().extend(*args, **kwargs)
         check_schema(schema)
         # We want twice extend schema to be checked too.
         schema.__class__ = Schema
@@ -227,7 +225,7 @@ class Schema(voluptuous.Schema):
     def _compile(self, schema):
         if taskgraph.fast:
             return
-        return super(Schema, self)._compile(schema)
+        return super()._compile(schema)
 
     def __getitem__(self, item):
         return self.schema[item]
@@ -235,7 +233,7 @@ class Schema(voluptuous.Schema):
 
 # shortcut for a string where task references are allowed
 taskref_or_string = voluptuous.Any(
-    text_type,
-    {voluptuous.Required("task-reference"): text_type},
-    {voluptuous.Required("artifact-reference"): text_type},
+    str,
+    {voluptuous.Required("task-reference"): str},
+    {voluptuous.Required("artifact-reference"): str},
 )

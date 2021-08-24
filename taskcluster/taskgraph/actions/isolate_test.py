@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import json
@@ -125,7 +122,7 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
     each failing test directory and individual path.
 
     """
-    logger.info("Isolate task:\n{}".format(json.dumps(task_definition, indent=2)))
+    logger.info(f"Isolate task:\n{json.dumps(task_definition, indent=2)}")
 
     # Operate on a copy of the original task_definition
     task_definition = copy.deepcopy(task_definition)
@@ -243,14 +240,13 @@ def isolate_test_failures(parameters, graph_config, input, task_group_id, task_i
     # fix up the task's dependencies, similar to how optimization would
     # have done in the decision
     dependencies = {
-        name: label_to_taskid[label]
-        for name, label in six.iteritems(pre_task.dependencies)
+        name: label_to_taskid[label] for name, label in pre_task.dependencies.items()
     }
 
     task_definition = resolve_task_references(
         pre_task.label, pre_task.task, task_id, decision_task_id, dependencies
     )
-    task_definition.setdefault("dependencies", []).extend(six.itervalues(dependencies))
+    task_definition.setdefault("dependencies", []).extend(dependencies.values())
 
     failures = get_failures(task_id)
     logger.info("isolate_test_failures: %s" % failures)

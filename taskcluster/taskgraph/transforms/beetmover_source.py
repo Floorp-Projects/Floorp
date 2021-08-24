@@ -4,7 +4,6 @@
 """
 Transform the beetmover-source task to also append `build` as dependency
 """
-from __future__ import absolute_import
 
 from taskgraph.transforms.base import TransformSequence
 
@@ -29,7 +28,7 @@ def remove_build_dependency_in_beetmover_source(config, jobs):
         upstream_artifacts_without_build = [
             upstream_artifact
             for upstream_artifact in all_upstream_artifacts
-            if upstream_artifact["taskId"]["task-reference"] != "<{}>".format(depname)
+            if upstream_artifact["taskId"]["task-reference"] != f"<{depname}>"
         ]
         job["worker"]["upstream-artifacts"] = upstream_artifacts_without_build
 

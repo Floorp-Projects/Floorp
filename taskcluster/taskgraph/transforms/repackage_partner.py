@@ -5,11 +5,9 @@
 Transform the repackage task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -39,22 +37,22 @@ PACKAGE_FORMATS["installer-stub"]["args"].extend(["--package-name", "{package-na
 packaging_description_schema = schema.extend(
     {
         # unique label to describe this repackaging task
-        Optional("label"): text_type,
+        Optional("label"): str,
         # Routes specific to this task, if defined
-        Optional("routes"): [text_type],
+        Optional("routes"): [str],
         # passed through directly to the job description
         Optional("extra"): task_description_schema["extra"],
         # Shipping product and phase
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
-        Required("package-formats"): _by_platform([text_type]),
+        Required("package-formats"): _by_platform([str]),
         # All l10n jobs use mozharness
         Required("mozharness"): {
             # Config files passed to the mozharness script
-            Required("config"): _by_platform([text_type]),
+            Required("config"): _by_platform([str]),
             # Additional paths to look for mozharness configs in. These should be
             # relative to the base of the source checkout
-            Optional("config-paths"): [text_type],
+            Optional("config-paths"): [str],
             # if true, perform a checkout of a comm-central based branch inside the
             # gecko checkout
             Optional("comm-checkout"): bool,
@@ -237,13 +235,13 @@ def _generate_download_config(
     project=None,
     repack_stub_installer=False,
 ):
-    locale_path = "{}/".format(partner) if partner else ""
+    locale_path = f"{partner}/" if partner else ""
 
     if build_platform.startswith("macosx"):
         return {
             signing_task: [
                 {
-                    "artifact": "{}target.tar.gz".format(locale_path),
+                    "artifact": f"{locale_path}target.tar.gz",
                     "extract": False,
                 },
             ],
@@ -251,24 +249,24 @@ def _generate_download_config(
     elif build_platform.startswith("win"):
         download_config = [
             {
-                "artifact": "{}target.zip".format(locale_path),
+                "artifact": f"{locale_path}target.zip",
                 "extract": False,
             },
-            "{}setup.exe".format(locale_path),
+            f"{locale_path}setup.exe",
         ]
         if build_platform.startswith("win32") and repack_stub_installer:
             download_config.extend(
                 [
                     {
-                        "artifact": "{}target-stub.zip".format(locale_path),
+                        "artifact": f"{locale_path}target-stub.zip",
                         "extract": False,
                     },
-                    "{}setup-stub.exe".format(locale_path),
+                    f"{locale_path}setup-stub.exe",
                 ]
             )
         return {signing_task: download_config}
 
-    raise NotImplementedError('Unsupported build_platform: "{}"'.format(build_platform))
+    raise NotImplementedError(f'Unsupported build_platform: "{build_platform}"')
 
 
 def _generate_task_output_files(task, worker_implementation, repackage_config, partner):
@@ -276,7 +274,7 @@ def _generate_task_output_files(task, worker_implementation, repackage_config, p
     too, courtesy of generic_worker_add_artifacts() (windows) or docker_worker_add_artifacts().
     Any errors here are likely masked by that.
     """
-    partner_output_path = "{}/".format(partner)
+    partner_output_path = f"{partner}/"
     artifact_prefix = get_artifact_prefix(task)
 
     if worker_implementation == ("docker-worker", "linux"):
@@ -285,7 +283,7 @@ def _generate_task_output_files(task, worker_implementation, repackage_config, p
         local_prefix = "workspace/"
     else:
         raise NotImplementedError(
-            'Unsupported worker implementation: "{}"'.format(worker_implementation)
+            f'Unsupported worker implementation: "{worker_implementation}"'
         )
 
     output_files = []

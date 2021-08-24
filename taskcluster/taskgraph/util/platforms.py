@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 
@@ -56,6 +55,4 @@ def architecture(build_platform):
     matches = keymatch(_architectures, build_platform)
     if len(matches) == 1:
         return matches[0]
-    raise Exception(
-        "Could not determine architecture of platform `{}`.".format(build_platform)
-    )
+    raise Exception(f"Could not determine architecture of platform `{build_platform}`.")

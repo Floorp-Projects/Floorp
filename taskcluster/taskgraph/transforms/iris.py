@@ -6,7 +6,6 @@ Take the base iris task definition and generate all of the actual test chunks
 for all combinations of test categories and test platforms.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from copy import deepcopy
 
@@ -53,7 +52,7 @@ def make_iris_tasks(config, jobs):
                     clone["name"],
                     **{
                         "platform": platform,
-                    }
+                    },
                 )
 
             # iris uses this to select the tests to run in this chunk
@@ -88,7 +87,7 @@ def fill_email_data(config, tasks):
             item_name=task["name"],
             **{
                 "project": config.params["project"],
-            }
+            },
         )
 
         email = task["notify"].get("email")
@@ -116,7 +115,7 @@ def add_notify_email(config, tasks):
             routes = task.setdefault("routes", [])
             routes.extend(
                 [
-                    "notify.email.{}.on-{}".format(address, reason)
+                    f"notify.email.{address}.on-{reason}"
                     for address in email_config["emails"]
                     for reason in email_config["on-reasons"]
                 ]

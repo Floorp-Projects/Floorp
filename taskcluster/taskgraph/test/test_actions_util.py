@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 import json
@@ -167,7 +166,7 @@ def test_extract_applicable_action(
     monkeypatch.setenv("TASKCLUSTER_PROXY_URL", base_url)
     responses.add(
         responses.GET,
-        "{}/api/queue/v1/task/{}".format(base_url, task_id),
+        f"{base_url}/api/queue/v1/task/{task_id}",
         status=200,
         json=task_def,
     )

@@ -2,14 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
 import re
 
 import six
-from six import text_type
 from voluptuous import Required, Optional
 
 from taskgraph.util.taskcluster import get_artifact_url
@@ -38,7 +36,7 @@ VARIANTS = [
 
 def get_variant(test_platform):
     for v in VARIANTS:
-        if "-{}/".format(v) in test_platform:
+        if f"-{v}/" in test_platform:
             return v
     return ""
 
@@ -48,7 +46,7 @@ mozharness_test_run_schema = Schema(
         Required("using"): "mozharness-test",
         Required("test"): test_description_schema,
         # Base work directory used to set up the task.
-        Optional("workdir"): text_type,
+        Optional("workdir"): str,
     }
 )
 
@@ -139,7 +137,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
             "MOZILLA_BUILD_URL": {"task-reference": installer},
             "NEED_PULSEAUDIO": "true",
             "NEED_WINDOW_MANAGER": "true",
-            "ENABLE_E10S": text_type(bool(test.get("e10s"))).lower(),
+            "ENABLE_E10S": str(bool(test.get("e10s"))).lower(),
             "WORKING_DIR": "/builds/worker",
         }
     )
@@ -376,7 +374,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         ]
     elif is_bitbar:
         py_binary = "python3" if py_3 else "python"
-        mh_command = ["bash", "./{}".format(bitbar_script)]
+        mh_command = ["bash", f"./{bitbar_script}"]
     elif is_macosx:
         py_binary = "/usr/local/bin/{}".format("python3" if py_3 else "python2")
         mh_command = [
@@ -406,7 +404,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         mh_command.extend(["--cfg", cfg_path])
     mh_command.extend(mozharness.get("extra-options", []))
     if mozharness.get("download-symbols"):
-        if isinstance(mozharness["download-symbols"], text_type):
+        if isinstance(mozharness["download-symbols"], str):
             mh_command.extend(["--download-symbols", mozharness["download-symbols"]])
         else:
             mh_command.extend(["--download-symbols", "true"])
@@ -438,7 +436,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     ]
     if is_bitbar:
         a_url = config.params.file_url(
-            "taskcluster/scripts/tester/{}".format(bitbar_script),
+            f"taskcluster/scripts/tester/{bitbar_script}",
         )
         worker["mounts"] = [
             {

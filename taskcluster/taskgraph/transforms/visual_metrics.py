@@ -6,7 +6,6 @@ These transformations take a task description for a visual metrics task and
 add the necessary environment variables to run on the given inputs.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 

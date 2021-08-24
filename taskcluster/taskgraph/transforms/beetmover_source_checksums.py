@@ -5,9 +5,7 @@
 Transform release-beetmover-source-checksums into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -23,9 +21,9 @@ from voluptuous import Optional
 
 beetmover_checksums_description_schema = schema.extend(
     {
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional("treeherder"): task_description_schema["treeherder"],
-        Optional("locale"): text_type,
+        Optional("locale"): str,
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("attributes"): task_description_schema["attributes"],
@@ -50,7 +48,7 @@ def make_beetmover_checksums_description(config, jobs):
             .get("machine", {})
             .get("platform", "")
         )
-        treeherder.setdefault("platform", "{}/opt".format(dep_th_platform))
+        treeherder.setdefault("platform", f"{dep_th_platform}/opt")
         treeherder.setdefault("tier", 1)
         treeherder.setdefault("kind", "build")
 
@@ -113,9 +111,9 @@ def make_beetmover_checksums_worker(config, jobs):
         }
         for dependency in job["dependencies"].keys():
             if dependency.startswith("beetmover"):
-                refs["beetmover"] = "<{}>".format(dependency)
+                refs["beetmover"] = f"<{dependency}>"
             else:
-                refs["signing"] = "<{}>".format(dependency)
+                refs["signing"] = f"<{dependency}>"
         if None in refs.values():
             raise NotImplementedError(
                 "Beetmover checksums must have a beetmover and signing dependency!"

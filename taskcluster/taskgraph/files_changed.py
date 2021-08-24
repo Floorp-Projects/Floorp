@@ -6,7 +6,6 @@
 Support for optimizing tasks based on the set of files that have changed.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import requests
@@ -25,7 +24,7 @@ def get_changed_files(repository, revision):
     Get the set of files changed in the push headed by the given revision.
     Responses are cached, so multiple calls with the same arguments are OK.
     """
-    url = "%s/json-automationrelevance/%s" % (repository.rstrip("/"), revision)
+    url = "{}/json-automationrelevance/{}".format(repository.rstrip("/"), revision)
     logger.debug("Querying version control for metadata: %s", url)
 
     def get_automationrelevance():

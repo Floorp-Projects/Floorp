@@ -5,7 +5,6 @@
 Transform the mac notarization poller task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -34,9 +33,7 @@ def make_task_description(config, jobs):
                 .get("platform", "")
             )
             build_type = dep_job.attributes.get("build_type")
-            treeherder.setdefault(
-                "platform", "{}/{}".format(dep_th_platform, build_type)
-            )
+            treeherder.setdefault("platform", f"{dep_th_platform}/{build_type}")
 
             dep_treeherder = dep_job.task.get("extra", {}).get("treeherder", {})
             treeherder.setdefault("tier", dep_treeherder.get("tier", 1))

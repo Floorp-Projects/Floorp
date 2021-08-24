@@ -6,7 +6,6 @@
 Tests for the 'job' transform subsystem.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 from copy import deepcopy
@@ -86,7 +85,7 @@ def test_worker_caches(task, transform):
     add_cache(job, taskdesc, "cache2", "/cache2", skip_untrusted=True)
 
     if impl not in ("docker-worker", "generic-worker"):
-        pytest.xfail("caches not implemented for '{}'".format(impl))
+        pytest.xfail(f"caches not implemented for '{impl}'")
 
     key = "caches" if impl == "docker-worker" else "mounts"
     assert key in taskdesc["worker"]

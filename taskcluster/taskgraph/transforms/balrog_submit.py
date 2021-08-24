@@ -5,9 +5,7 @@
 Transform the per-locale balrog task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -23,7 +21,7 @@ from voluptuous import Optional
 balrog_description_schema = schema.extend(
     {
         # unique label to describe this balrog task, defaults to balrog-{dep.label}
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional(
             "update-no-wnp",
             description="Whether the parallel `-No-WNP` blob should be updated as well.",
@@ -60,7 +58,7 @@ def handle_keyed_by(config, jobs):
                 **{
                     "project": config.params["project"],
                     "release-type": config.params["release_type"],
-                }
+                },
             )
         yield job
 
@@ -78,7 +76,7 @@ def make_task_description(config, jobs):
             .get("machine", {})
             .get("platform", "")
         )
-        treeherder.setdefault("platform", "{}/opt".format(dep_th_platform))
+        treeherder.setdefault("platform", f"{dep_th_platform}/opt")
         treeherder.setdefault(
             "tier", dep_job.task.get("extra", {}).get("treeherder", {}).get("tier", 1)
         )

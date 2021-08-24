@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-import six
 
 from ..util.templates import merge
 from ..util.yaml import load_yaml
@@ -36,7 +34,7 @@ def loader(kind, path, config, params, loaded_tasks):
 
     def jobs():
         defaults = config.get("job-defaults")
-        for name, job in six.iteritems(config.get("jobs", {})):
+        for name, job in config.get("jobs", {}).items():
             if defaults:
                 job = merge(defaults, job)
             job["job-from"] = "kind.yml"
@@ -49,7 +47,7 @@ def loader(kind, path, config, params, loaded_tasks):
             if defaults:
                 file_defaults = merge(defaults, file_defaults or {})
 
-            for name, job in six.iteritems(tasks):
+            for name, job in tasks.items():
                 if file_defaults:
                     job = merge(file_defaults, job)
                 job["job-from"] = filename
@@ -57,5 +55,5 @@ def loader(kind, path, config, params, loaded_tasks):
 
     for name, job in jobs():
         job["name"] = name
-        logger.debug("Generating tasks for {} {}".format(kind, name))
+        logger.debug(f"Generating tasks for {kind} {name}")
         yield job

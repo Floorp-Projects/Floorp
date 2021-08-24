@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from copy import deepcopy
 import json
@@ -328,7 +327,7 @@ def get_partner_config_by_url(manifest_url, kind, token, partner_subset=None):
     partner repacking, signing, repackage, repackage signing all having the same kind prefix.
     """
     if not manifest_url:
-        raise RuntimeError("Manifest url for {} not defined".format(kind))
+        raise RuntimeError(f"Manifest url for {kind} not defined")
     if kind not in partner_configs:
         log.info("Looking up data for %s from %s", kind, manifest_url)
         check_login(token)
@@ -361,8 +360,7 @@ def check_if_partners_enabled(config, tasks):
             and config.kind.startswith("release-eme-free-")
         )
     ):
-        for task in tasks:
-            yield task
+        yield from tasks
 
 
 def get_partner_config_by_kind(config, kind):
@@ -411,12 +409,12 @@ def _fix_subpartner_locales(orig_config, all_locales):
 
 def fix_partner_config(orig_config):
     pc = {}
-    with open(LOCALES_FILE, "r") as fh:
+    with open(LOCALES_FILE) as fh:
         all_locales = list(json.load(fh).keys())
     # l10n-changesets.json doesn't include en-US, but the repack list does
     if "en-US" not in all_locales:
         all_locales.append("en-US")
-    for kind, kind_config in six.iteritems(orig_config):
+    for kind, kind_config in orig_config.items():
         if kind == "release-partner-attribution":
             pc[kind] = {}
             if kind_config:
@@ -427,8 +425,8 @@ def fix_partner_config(orig_config):
                         _fix_subpartner_locales(config, all_locales)
                     )
         else:
-            for partner, partner_config in six.iteritems(kind_config):
-                for subpartner, subpartner_config in six.iteritems(partner_config):
+            for partner, partner_config in kind_config.items():
+                for subpartner, subpartner_config in partner_config.items():
                     # get rid of empty subpartner configs
                     if not subpartner_config:
                         continue
@@ -454,7 +452,7 @@ def get_ftp_platform(platform):
     elif platform.startswith("linux64"):
         return "linux-x86_64"
     else:
-        raise ValueError("Unimplemented platform {}".format(platform))
+        raise ValueError(f"Unimplemented platform {platform}")
 
 
 # Ugh
@@ -477,19 +475,19 @@ def get_partner_url_config(parameters, graph_config):
         partner_url_config,
         "release-eme-free-repack",
         "eme-free manifest_url",
-        **substitutions
+        **substitutions,
     )
     resolve_keyed_by(
         partner_url_config,
         "release-partner-repack",
         "partner manifest url",
-        **substitutions
+        **substitutions,
     )
     resolve_keyed_by(
         partner_url_config,
         "release-partner-attribution",
         "partner attribution url",
-        **substitutions
+        **substitutions,
     )
     return partner_url_config
 
@@ -505,7 +503,7 @@ def get_repack_ids_by_platform(config, build_platform):
                 build_platform, sub_config.get("locales", [])
             )
             for locale in locales:
-                combinations.append("{}/{}/{}".format(partner, sub_config_name, locale))
+                combinations.append(f"{partner}/{sub_config_name}/{locale}")
     return sorted(combinations)
 
 

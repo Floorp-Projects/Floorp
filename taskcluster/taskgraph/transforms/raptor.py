@@ -2,10 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from copy import deepcopy
-from six import text_type
 
 from voluptuous import (
     Optional,
@@ -23,11 +21,11 @@ transforms = TransformSequence()
 raptor_description_schema = Schema(
     {
         # Raptor specific configs.
-        Optional("apps"): optionally_keyed_by("test-platform", "subtest", [text_type]),
-        Optional("raptor-test"): text_type,
+        Optional("apps"): optionally_keyed_by("test-platform", "subtest", [str]),
+        Optional("raptor-test"): str,
         Optional("raptor-subtests"): optionally_keyed_by("app", "test-platform", list),
-        Optional("activity"): optionally_keyed_by("app", text_type),
-        Optional("binary-path"): optionally_keyed_by("app", text_type),
+        Optional("activity"): optionally_keyed_by("app", str),
+        Optional("binary-path"): optionally_keyed_by("app", str),
         # Configs defined in the 'test_description_schema'.
         Optional("max-run-time"): optionally_keyed_by(
             "app", "subtest", "test-platform", test_description_schema["max-run-time"]
@@ -50,7 +48,7 @@ raptor_description_schema = Schema(
             "app", "raptor-test", "subtest", "variant", test_description_schema["tier"]
         ),
         Optional("test-url-param"): optionally_keyed_by(
-            "subtest", "test-platform", text_type
+            "subtest", "test-platform", str
         ),
         Optional("run-visual-metrics"): optionally_keyed_by("app", bool),
         Required("test-name"): test_description_schema["test-name"],
@@ -92,9 +90,9 @@ def split_apps(config, tests):
 
         for app in apps:
             atest = deepcopy(test)
-            suffix = "-{}".format(app)
+            suffix = f"-{app}"
             atest["app"] = app
-            atest["description"] += " on {}".format(app.capitalize())
+            atest["description"] += f" on {app.capitalize()}"
 
             name = atest["test-name"] + suffix
             atest["test-name"] = name
@@ -102,7 +100,7 @@ def split_apps(config, tests):
 
             if app in app_symbols:
                 group, symbol = split_symbol(atest["treeherder-symbol"])
-                group += "-{}".format(app_symbols[app])
+                group += f"-{app_symbols[app]}"
                 atest["treeherder-symbol"] = join_symbol(group, symbol)
 
             yield atest
@@ -203,13 +201,13 @@ def split_page_load_by_url(config, tests):
             test["raptor-test"] = "raptor-tp6-" + subtest + "-{}".format(test["app"])
 
         # Only run the subtest/single URL
-        test["test-name"] += "-{}".format(subtest)
-        test["try-name"] += "-{}".format(subtest)
+        test["test-name"] += f"-{subtest}"
+        test["try-name"] += f"-{subtest}"
 
         # Set treeherder symbol and description
         group, _ = split_symbol(test["treeherder-symbol"])
         test["treeherder-symbol"] = join_symbol(group, subtest_symbol)
-        test["description"] += " on {}".format(subtest)
+        test["description"] += f" on {subtest}"
 
         yield test
 

@@ -6,7 +6,6 @@ Transform the upload-symbols task description template,
 taskcluster/ci/upload-symbols/job-template.yml into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import RELEASE_PROJECTS

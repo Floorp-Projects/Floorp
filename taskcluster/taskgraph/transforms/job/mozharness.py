@@ -8,11 +8,9 @@ way, and certainly anything using mozharness should use this approach.
 
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 import json
 
 import six
-from six import text_type
 from textwrap import dedent
 
 from taskgraph.util.schema import Schema
@@ -40,14 +38,14 @@ mozharness_run_schema = Schema(
         Required("using"): "mozharness",
         # the mozharness script used to run this task, relative to the testing/
         # directory and using forward slashes even on Windows
-        Required("script"): text_type,
+        Required("script"): str,
         # Additional paths to look for mozharness configs in. These should be
         # relative to the base of the source checkout
-        Optional("config-paths"): [text_type],
+        Optional("config-paths"): [str],
         # the config files required for the task, relative to
         # testing/mozharness/configs or one of the paths specified in
         # `config-paths` and using forward slashes even on Windows
-        Required("config"): [text_type],
+        Required("config"): [str],
         # any additional actions to pass to the mozharness command
         Optional("actions"): [
             Match("^[a-z0-9-]+$", "actions must be `-` seperated alphanumeric strings")
@@ -60,7 +58,7 @@ mozharness_run_schema = Schema(
             )
         ],
         # --custom-build-variant-cfg value
-        Optional("custom-build-variant-cfg"): text_type,
+        Optional("custom-build-variant-cfg"): str,
         # Extra configuration options to pass to mozharness.
         Optional("extra-config"): dict,
         # If not false, tooltool downloads will be enabled via relengAPIProxy
@@ -75,7 +73,7 @@ mozharness_run_schema = Schema(
         # this will enable any worker features required and set the task's scopes
         # appropriately.  `true` here means ['*'], all secrets.  Not supported on
         # Windows
-        Required("secrets"): Any(bool, [text_type]),
+        Required("secrets"): Any(bool, [str]),
         # If true, taskcluster proxy will be enabled; note that it may also be enabled
         # automatically e.g., for secrets support.  Not supported on Windows.
         Required("taskcluster-proxy"): bool,
@@ -85,7 +83,7 @@ mozharness_run_schema = Schema(
         # supported on Windows.
         Required("keep-artifacts"): bool,
         # If specified, use the in-tree job script specified.
-        Optional("job-script"): text_type,
+        Optional("job-script"): str,
         Required("requires-signed-builds"): bool,
         # Whether or not to use caches.
         Optional("use-caches"): bool,
@@ -99,7 +97,7 @@ mozharness_run_schema = Schema(
         # gecko checkout
         Required("comm-checkout"): bool,
         # Base work directory used to set up the task.
-        Optional("workdir"): text_type,
+        Optional("workdir"): str,
     }
 )
 
@@ -305,14 +303,14 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         gecko_path = "$GECKO_PATH"
 
     mh_command += [
-        "{}/mach".format(gecko_path),
+        f"{gecko_path}/mach",
         "python",
         "--no-activate",
         "{}/testing/{}".format(gecko_path, run.pop("script")),
     ]
 
     for path in run.pop("config-paths", []):
-        mh_command.append("--extra-config-path {}/{}".format(gecko_path, path))
+        mh_command.append(f"--extra-config-path {gecko_path}/{path}")
 
     for cfg in run.pop("config"):
         mh_command.extend(("--config", cfg))

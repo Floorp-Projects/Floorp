@@ -5,7 +5,6 @@
 Add from parameters.yml into bouncer submission tasks.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
@@ -30,13 +29,13 @@ def make_task_worker(config, jobs):
             job,
             "worker-type",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         resolve_keyed_by(
             job,
             "scopes",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         resolve_keyed_by(
             job,
@@ -92,7 +91,7 @@ def craft_bouncer_entries(config, job):
             entries.update(
                 {
                     bouncer_alias.replace(
-                        "PARTNER", "{}-{}".format(partner, sub_config_name)
+                        "PARTNER", f"{partner}-{sub_config_name}"
                     ): craft_partner_bouncer_product_name(
                         product,
                         bouncer_product,

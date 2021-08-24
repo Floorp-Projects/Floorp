@@ -2,10 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import pytest
-import six
 
 from taskgraph import morph
 from taskgraph.graph import Graph
@@ -20,7 +18,7 @@ from mozunit import main
 def make_taskgraph():
     def inner(tasks):
         label_to_taskid = {k: k + "-tid" for k in tasks}
-        for label, task_id in six.iteritems(label_to_taskid):
+        for label, task_id in label_to_taskid.items():
             tasks[label].task_id = task_id
         graph = Graph(nodes=set(tasks), edges=set())
         taskgraph = TaskGraph(tasks, graph)

@@ -5,7 +5,6 @@
 Transform the partner repack task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
@@ -50,12 +49,12 @@ def populate_repack_manifests_url(config, tasks):
             raise Exception("Can't find partner REPACK_MANIFESTS_URL")
 
         for property in ("limit-locales",):
-            property = "extra.{}".format(property)
+            property = f"extra.{property}"
             resolve_keyed_by(
                 task,
                 property,
                 property,
-                **{"release-level": config.params.release_level()}
+                **{"release-level": config.params.release_level()},
             )
 
         if task["worker"]["env"]["REPACK_MANIFESTS_URL"].startswith("git@"):
@@ -98,22 +97,20 @@ def add_command_arguments(config, tasks):
         task["run"]["options"] = [
             "version={}".format(release_config["version"]),
             "build-number={}".format(release_config["build_number"]),
-            "platform={}".format(platform),
+            f"platform={platform}",
         ]
         if task["extra"]["limit-locales"]:
             for locale in all_locales:
-                task["run"]["options"].append("limit-locale={}".format(locale))
+                task["run"]["options"].append(f"limit-locale={locale}")
         if "partner" in config.kind and config.params["release_partners"]:
             for partner in config.params["release_partners"]:
-                task["run"]["options"].append("partner={}".format(partner))
+                task["run"]["options"].append(f"partner={partner}")
 
         # The upstream taskIds are stored a special environment variable, because we want to use
         # task-reference's to resolve dependencies, but the string handling of MOZHARNESS_OPTIONS
         # blocks that. It's space-separated string of ids in the end.
         task["worker"]["env"]["UPSTREAM_TASKIDS"] = {
-            "task-reference": " ".join(
-                ["<{}>".format(dep) for dep in task["dependencies"]]
-            )
+            "task-reference": " ".join([f"<{dep}>" for dep in task["dependencies"]])
         }
 
         # Forward the release type for bouncer product construction

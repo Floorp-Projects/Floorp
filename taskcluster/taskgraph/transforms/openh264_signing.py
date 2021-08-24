@@ -5,9 +5,7 @@
 Transform the repackage signing task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -20,7 +18,7 @@ transforms = TransformSequence()
 
 signing_description_schema = schema.extend(
     {
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional("extra"): object,
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
@@ -79,7 +77,7 @@ def make_signing_description(config, jobs):
             upstream_artifact["formats"] = ["autograph_gpg"]
 
         upstream_artifact["paths"] = [
-            "private/openh264/openh264-{}-{}.zip".format(build_platform, rev),
+            f"private/openh264/openh264-{build_platform}-{rev}.zip",
         ]
         worker["upstream-artifacts"] = [upstream_artifact]
 

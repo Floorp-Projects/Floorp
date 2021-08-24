@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from .registry import register_callback_action
 
@@ -60,7 +57,7 @@ def add_new_jobs_action(parameters, graph_config, input, task_group_id, task_id)
             else:
                 to_run.append(elem)
         else:
-            raise Exception("{} was not found in the task-graph".format(elem))
+            raise Exception(f"{elem} was not found in the task-graph")
     if len(browsertime_tasks) > 0:
         to_run.extend(
             list(

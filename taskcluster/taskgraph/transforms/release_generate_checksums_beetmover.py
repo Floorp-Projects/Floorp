@@ -4,9 +4,7 @@
 """
 Transform the `release-generate-checksums-beetmover` task to also append `build` as dependency
 """
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -26,7 +24,7 @@ transforms = TransformSequence()
 release_generate_checksums_beetmover_schema = schema.extend(
     {
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
-        Optional("label"): text_type,
+        Optional("label"): str,
         # treeherder is allowed here to override any defaults we use for beetmover.  See
         # taskcluster/taskgraph/transforms/task.py for the schema details, and the
         # below transforms for defaults of various values.
@@ -56,11 +54,11 @@ def make_task_description(config, jobs):
             .get("machine", {})
             .get("platform", "")
         )
-        treeherder.setdefault("platform", "{}/opt".format(dep_th_platform))
+        treeherder.setdefault("platform", f"{dep_th_platform}/opt")
         treeherder.setdefault("tier", 1)
         treeherder.setdefault("kind", "build")
 
-        job_template = "{}".format(dep_job.label)
+        job_template = f"{dep_job.label}"
         label = job_template.replace("signing", "beetmover")
 
         description = "Transfer *SUMS and *SUMMARY checksums file to S3."

@@ -5,7 +5,6 @@
 Transform the update generation task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
@@ -25,7 +24,7 @@ def handle_keyed_by(config, tasks):
         fields = default_fields[:]
         for additional_field in ("l10n-bump-info", "source-repo", "dontbuild"):
             if additional_field in task["worker"]:
-                fields.append("worker.{}".format(additional_field))
+                fields.append(f"worker.{additional_field}")
         for field in fields:
             resolve_keyed_by(
                 task,
@@ -34,6 +33,6 @@ def handle_keyed_by(config, tasks):
                 **{
                     "project": config.params["project"],
                     "release-type": config.params["release_type"],
-                }
+                },
             )
         yield task

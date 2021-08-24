@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.optimize import All, OptimizationStrategy, register_strategy
 from taskgraph.util.backstop import BACKSTOP_PUSH_INTERVAL
@@ -28,7 +27,7 @@ class SkipUnlessPushInterval(OptimizationStrategy):
 
     @property
     def description(self):
-        return "skip-unless-push-interval-{}".format(self.push_interval)
+        return f"skip-unless-push-interval-{self.push_interval}"
 
     def should_remove_task(self, task, params, _):
         # On every Nth push, want to run all tasks.

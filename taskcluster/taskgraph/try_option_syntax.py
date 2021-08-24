@@ -2,14 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import copy
 import logging
 import re
 import shlex
-import six
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
@@ -19,16 +17,14 @@ logger = logging.getLogger(__name__)
 BUILD_TYPE_ALIASES = {"o": "opt", "d": "debug"}
 
 # consider anything in this whitelist of kinds to be governed by -b/-p
-BUILD_KINDS = set(
-    [
-        "build",
-        "artifact-build",
-        "hazard",
-        "l10n",
-        "valgrind",
-        "spidermonkey",
-    ]
-)
+BUILD_KINDS = {
+    "build",
+    "artifact-build",
+    "hazard",
+    "l10n",
+    "valgrind",
+    "spidermonkey",
+}
 
 
 # mapping from shortcut name (usable with -u) to a boolean function identifying
@@ -158,7 +154,7 @@ def escape_whitespace_in_brackets(input_str):
             continue
 
         if char == " " and in_brackets:
-            result += "\ "
+            result += r"\ "
             continue
 
         result += char
@@ -258,7 +254,7 @@ def parse_message(message):
     }
 
 
-class TryOptionSyntax(object):
+class TryOptionSyntax:
     def __init__(self, parameters, full_task_graph, graph_config):
         """
         Apply the try options in parameters.
@@ -330,7 +326,7 @@ class TryOptionSyntax(object):
 
     def generate_test_tiers(self, full_task_graph):
         retval = defaultdict(set)
-        for t in six.itervalues(full_task_graph.tasks):
+        for t in full_task_graph.tasks.values():
             if t.attributes.get("kind") == "test":
                 try:
                     tier = t.task["extra"]["treeherder"]["tier"]
@@ -363,11 +359,11 @@ class TryOptionSyntax(object):
             if _f
         ]
 
-        all_types = set(
+        all_types = {
             t.attributes["build_type"]
-            for t in six.itervalues(full_task_graph.tasks)
+            for t in full_task_graph.tasks.values()
             if "build_type" in t.attributes
-        )
+        }
         bad_types = set(build_types) - all_types
         if bad_types:
             raise Exception(
@@ -410,16 +406,16 @@ class TryOptionSyntax(object):
                     % (build, ", ".join(RIDEALONG_BUILDS[build]))
                 )
 
-        test_platforms = set(
+        test_platforms = {
             t.attributes["test_platform"]
-            for t in six.itervalues(full_task_graph.tasks)
+            for t in full_task_graph.tasks.values()
             if "test_platform" in t.attributes
-        )
-        build_platforms = set(
+        }
+        build_platforms = {
             t.attributes["build_platform"]
-            for t in six.itervalues(full_task_graph.tasks)
+            for t in full_task_graph.tasks.values()
             if "build_platform" in t.attributes
-        )
+        }
         all_platforms = test_platforms | build_platforms
         bad_platforms = set(results) - all_platforms
         if bad_platforms:
@@ -445,22 +441,22 @@ class TryOptionSyntax(object):
         if test_arg is None or test_arg == "none":
             return []
 
-        all_platforms = set(
+        all_platforms = {
             t.attributes["test_platform"].split("/")[0]
-            for t in six.itervalues(full_task_graph.tasks)
+            for t in full_task_graph.tasks.values()
             if "test_platform" in t.attributes
-        )
+        }
 
         tests = self.parse_test_opts(test_arg, all_platforms)
 
         if not tests:
             return []
 
-        all_tests = set(
+        all_tests = {
             t.attributes[attr_name]
-            for t in six.itervalues(full_task_graph.tasks)
+            for t in full_task_graph.tasks.values()
             if attr_name in t.attributes
-        )
+        }
 
         # Special case where tests is 'all' and must be expanded
         if tests[0]["test"] == "all":
@@ -619,7 +615,7 @@ class TryOptionSyntax(object):
 
     def find_all_attribute_suffixes(self, graph, prefix):
         rv = set()
-        for t in six.itervalues(graph.tasks):
+        for t in graph.tasks.values():
             for a in t.attributes:
                 if a.startswith(prefix):
                     rv.add(a[len(prefix) :])

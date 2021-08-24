@@ -6,11 +6,9 @@ with either `platform` or a list of `platforms`, and set the appropriate
 treeherder configuration and attributes for that platform.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import os
-from six import text_type
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.job import job_description_schema
@@ -37,14 +35,12 @@ source_test_description_schema = Schema(
         # The platform on which this task runs.  This will be used to set up attributes
         # (for try selection) and treeherder metadata (for display).  If given as a list,
         # the job will be "split" into multiple tasks, one with each platform.
-        Required("platform"): Any(text_type, [text_type]),
+        Required("platform"): Any(str, [str]),
         # Build labels required for the task. If this key is provided it must
         # contain a build label for the task platform.
         # The task will then depend on a build task, and the installer url will be
         # saved to the GECKO_INSTALLER_URL environment variable.
-        Optional("require-build"): optionally_keyed_by(
-            "project", {text_type: text_type}
-        ),
+        Optional("require-build"): optionally_keyed_by("project", {str: str}),
         # These fields can be keyed by "platform", and are otherwise identical to
         # job descriptions.
         Required("worker-type"): optionally_keyed_by(
@@ -60,8 +56,8 @@ source_test_description_schema = Schema(
         },
         # A list of artifacts to install from 'fetch' tasks.
         Optional("fetches"): {
-            text_type: optionally_keyed_by(
-                "platform", job_description_schema["fetches"][text_type]
+            str: optionally_keyed_by(
+                "platform", job_description_schema["fetches"][str]
             ),
         },
     }
@@ -84,7 +80,7 @@ def set_job_name(config, jobs):
 @transforms.add
 def expand_platforms(config, jobs):
     for job in jobs:
-        if isinstance(job["platform"], text_type):
+        if isinstance(job["platform"], str):
             yield job
             continue
 
@@ -108,12 +104,12 @@ def split_python(config, jobs):
             yield job
             continue
         for version in versions:
-            group = "py{0}".format(version)
+            group = f"py{version}"
             pyjob = copy.deepcopy(job)
             if "name" in pyjob:
-                pyjob["name"] += "-{0}".format(group)
+                pyjob["name"] += f"-{group}"
             else:
-                pyjob["label"] += "-{0}".format(group)
+                pyjob["label"] += f"-{group}"
             symbol = split_symbol(pyjob["treeherder"]["symbol"])[1]
             pyjob["treeherder"]["symbol"] = join_symbol(group, symbol)
             pyjob["run"][key] = version
@@ -140,7 +136,7 @@ def split_jsshell(config, jobs):
             )
             new_job["shell"] = shell
 
-            group = "js-bench-{}".format(shell)
+            group = f"js-bench-{shell}"
             symbol = split_symbol(new_job["treeherder"]["symbol"])[1]
             new_job["treeherder"]["symbol"] = join_symbol(group, symbol)
 
@@ -165,7 +161,7 @@ def add_build_dependency(config, job):
         )
 
     if len(matches) > 1:
-        raise Exception("More than one build platform found for '{}'.".format(key))
+        raise Exception(f"More than one build platform found for '{key}'.")
 
     label = matches[0]
     deps = job.setdefault("dependencies", {})
@@ -195,7 +191,7 @@ def handle_platform(config, jobs):
         for field in job.get("dependencies", {}):
             resolve_keyed_by(
                 job,
-                "dependencies.{}".format(field),
+                f"dependencies.{field}",
                 item_name=job["name"],
                 project=config.params["project"],
             )

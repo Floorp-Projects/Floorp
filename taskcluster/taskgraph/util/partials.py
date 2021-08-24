@@ -2,12 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
 import requests
-import six
 
 import redo
 from taskgraph.util.scriptworker import (
@@ -115,7 +113,7 @@ def get_partials_info_from_params(release_history, platform, locale):
 
 def _retry_on_http_errors(url, verify, params, errors):
     if params:
-        params_str = "&".join("=".join([k, str(v)]) for k, v in six.iteritems(params))
+        params_str = "&".join("=".join([k, str(v)]) for k, v in params.items())
     else:
         params_str = ""
     logger.info("Connecting to %s?%s", url, params_str)
@@ -141,13 +139,13 @@ def get_sorted_releases(product, branch):
     :param branch: branch name, e.g. mozilla-central
     :return: a sorted list of release names, most recent first.
     """
-    url = "{}/releases".format(_get_balrog_api_root(branch))
+    url = f"{_get_balrog_api_root(branch)}/releases"
     params = {
         "product": product,
         # Adding -nightly-2 (2 stands for the beginning of build ID
         # based on date) should filter out release and latest blobs.
         # This should be changed to -nightly-3 in 3000 ;)
-        "name_prefix": "{}-{}-nightly-2".format(product, branch),
+        "name_prefix": f"{product}-{branch}-nightly-2",
         "names_only": True,
     }
     req = _retry_on_http_errors(url=url, verify=True, params=params, errors=[500])
@@ -157,7 +155,7 @@ def get_sorted_releases(product, branch):
 
 
 def get_release_builds(release, branch):
-    url = "{}/releases/{}".format(_get_balrog_api_root(branch), release)
+    url = f"{_get_balrog_api_root(branch)}/releases/{release}"
     req = _retry_on_http_errors(url=url, verify=True, params=None, errors=[500])
     return req.json()
 
@@ -269,11 +267,11 @@ def _populate_nightly_history(product, branch, maxbuilds=4, maxsearch=10):
 
 def _populate_release_history(product, branch, partial_updates):
     builds = dict()
-    for version, release in six.iteritems(partial_updates):
+    for version, release in partial_updates.items():
         prev_release_blob = "{product}-{version}-build{build_number}".format(
             product=product, version=version, build_number=release["buildNumber"]
         )
-        partial_mar_key = "target-{version}.partial.mar".format(version=version)
+        partial_mar_key = f"target-{version}.partial.mar"
         history = get_release_builds(prev_release_blob, branch)
         # use one of the localtest channels to avoid relying on bouncer
         localtest = find_localtest(history["fileUrls"])

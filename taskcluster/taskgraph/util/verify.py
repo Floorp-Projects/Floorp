@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import re
@@ -23,13 +21,13 @@ doc_base_path = os.path.join(GECKO, "taskcluster", "docs")
 
 
 @attr.s(frozen=True)
-class Verification(object):
+class Verification:
     verify = attr.ib()
     run_on_projects = attr.ib()
 
 
 @attr.s(frozen=True)
-class VerificationSequence(object):
+class VerificationSequence:
     """
     Container for a sequence of verifications over a TaskGraph. Each
     verification is represented as a callable taking (task, taskgraph,
@@ -76,7 +74,7 @@ verifications = VerificationSequence()
 
 
 @attr.s(frozen=True)
-class DocPaths(object):
+class DocPaths:
     _paths = attr.ib(factory=list)
 
     def get_files(self, filename):
@@ -127,7 +125,7 @@ def verify_docs(filename, identifiers, appearing_as):
             if not identifier.startswith("_")
         ]
     else:
-        raise Exception("appearing_as = `{}` not defined".format(appearing_as))
+        raise Exception(f"appearing_as = `{appearing_as}` not defined")
 
     for expression, identifier in zip(expression_list, identifiers):
         match_group = re.search(expression, doctext)
@@ -173,7 +171,7 @@ def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config, paramet
                     "`{}`and `{}`: {} {}".format(
                         task.label,
                         scratch_pad[key],
-                        "{}/{}".format(platform, collection_keys[0]),
+                        f"{platform}/{collection_keys[0]}",
                         join_symbol(group_symbol, symbol),
                     )
                 )
@@ -249,9 +247,9 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config, paramete
                 return "unknown"
             return tier
 
-        for task in six.itervalues(taskgraph.tasks):
+        for task in taskgraph.tasks.values():
             tier = tiers[task.label]
-            for d in six.itervalues(task.dependencies):
+            for d in task.dependencies.values():
                 if taskgraph[d].task.get("workerType") == "always-optimized":
                     continue
                 if "dummy" in taskgraph[d].kind:
@@ -288,9 +286,9 @@ def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config, paramet
             else:
                 return "no required signoffs"
 
-        for task in six.itervalues(taskgraph.tasks):
+        for task in taskgraph.tasks.values():
             required_signoffs = all_required_signoffs[task.label]
-            for d in six.itervalues(task.dependencies):
+            for d in task.dependencies.values():
                 if required_signoffs < all_required_signoffs[d]:
                     raise Exception(
                         "{} ({}) cannot depend on {} ({})".format(
@@ -314,7 +312,7 @@ def verify_toolchain_alias(task, taskgraph, scratch_pad, graph_config, parameter
         keys = attributes["toolchain-alias"]
         if not keys:
             keys = []
-        elif isinstance(keys, six.text_type):
+        elif isinstance(keys, str):
             keys = [keys]
         for key in keys:
             if key in scratch_pad:
@@ -338,14 +336,14 @@ def verify_always_optimized(task, taskgraph, scratch_pad, graph_config, paramete
     if task is None:
         return
     if task.task.get("workerType") == "always-optimized":
-        raise Exception("Could not optimize the task {!r}".format(task.label))
+        raise Exception(f"Could not optimize the task {task.label!r}")
 
 
 @verifications.add("full_task_graph", run_on_projects=RELEASE_PROJECTS)
 def verify_shippable_no_sccache(task, taskgraph, scratch_pad, graph_config, parameters):
     if task and task.attributes.get("shippable"):
         if task.task.get("payload", {}).get("env", {}).get("USE_SCCACHE"):
-            raise Exception("Shippable job {} cannot use sccache".format(task.label))
+            raise Exception(f"Shippable job {task.label} cannot use sccache")
 
 
 @verifications.add("full_task_graph")
@@ -363,7 +361,7 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters
         )
 
         exceptions = []
-        for task in six.itervalues(taskgraph.tasks):
+        for task in taskgraph.tasks.values():
             if task.kind == "build" and not task.attributes.get(
                 "skip-verify-test-packaging"
             ):

@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
 
-import six
 
 from ..util import taskcluster
 from ..util.parameterization import resolve_task_references
@@ -132,15 +128,12 @@ def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task
     # fix up the task's dependencies, similar to how optimization would
     # have done in the decision
     dependencies = {
-        name: label_to_taskid[label]
-        for name, label in six.iteritems(pre_task.dependencies)
+        name: label_to_taskid[label] for name, label in pre_task.dependencies.items()
     }
     new_task_definition = resolve_task_references(
         pre_task.label, pre_task.task, task_id, decision_task_id, dependencies
     )
-    new_task_definition.setdefault("dependencies", []).extend(
-        six.itervalues(dependencies)
-    )
+    new_task_definition.setdefault("dependencies", []).extend(dependencies.values())
 
     # don't want to run mozharness tests, want a custom mach command instead
     new_task_definition["payload"]["command"] += ["--no-run-tests"]
@@ -171,8 +164,8 @@ def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task
         custom_mach_command += ["--repeat", str(input.get("repeat", 30))]
 
     # add any custom gecko preferences
-    for (key, val) in six.iteritems(input.get("preferences", {})):
-        custom_mach_command += ["--setpref", "{}={}".format(key, val)]
+    for (key, val) in input.get("preferences", {}).items():
+        custom_mach_command += ["--setpref", f"{key}={val}"]
 
     custom_mach_command += [input["path"]]
     new_task_definition["payload"]["env"]["CUSTOM_MACH_COMMAND"] = " ".join(

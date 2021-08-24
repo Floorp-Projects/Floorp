@@ -6,7 +6,6 @@ Apply some defaults and minor modifications to the jobs defined in the build
 kind.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import RELEASE_PROJECTS
@@ -51,7 +50,7 @@ def stub_installer(config, jobs):
             project=config.params["project"],
             **{
                 "release-type": config.params["release_type"],
-            }
+            },
         )
         job.setdefault("attributes", {})
         if job.get("stub-installer"):
@@ -71,7 +70,7 @@ def resolve_shipping_product(config, jobs):
             item_name=job["name"],
             **{
                 "release-type": config.params["release_type"],
-            }
+            },
         )
         yield job
 
@@ -93,7 +92,7 @@ def update_channel(config, jobs):
                 **{
                     "project": config.params["project"],
                     "release-type": config.params["release_type"],
-                }
+                },
             )
         update_channel = job["run"].pop("update-channel", None)
         if update_channel:
@@ -120,7 +119,7 @@ def mozconfig(config, jobs):
             item_name=job["name"],
             **{
                 "release-type": config.params["release_type"],
-            }
+            },
         )
         mozconfig_variant = job["run"].pop("mozconfig-variant", None)
         if mozconfig_variant:
@@ -169,7 +168,7 @@ def use_profile_data(config, jobs):
             name = job["name"]
         else:
             name = use_pgo
-        dependencies = "generate-profile-{}".format(name)
+        dependencies = f"generate-profile-{name}"
         job.setdefault("dependencies", {})["generate-profile"] = dependencies
         job.setdefault("fetches", {})["generate-profile"] = ["profdata.tar.xz"]
         job["worker"]["env"].update({"TASKCLUSTER_PGO_PROFILE_USE": "1"})
@@ -191,7 +190,7 @@ def resolve_keys(config, jobs):
             job,
             "use-sccache",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         yield job
 

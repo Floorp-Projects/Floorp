@@ -9,13 +9,11 @@ the job at a higher level, using a "run" field that can be interpreted by
 run-using handlers in `taskcluster/taskgraph/transforms/job`.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import logging
 import json
 import six
-from six import text_type
 
 import mozpack.path as mozpath
 
@@ -44,8 +42,8 @@ job_description_schema = Schema(
         # The name of the job and the job's label.  At least one must be specified,
         # and the label will be generated from the name if necessary, by prepending
         # the kind.
-        Optional("name"): text_type,
-        Optional("label"): text_type,
+        Optional("name"): str,
+        Optional("label"): str,
         # the following fields are passed directly through to the task description,
         # possibly modified by the run implementation.  See
         # taskcluster/taskgraph/transforms/task.py for the schema details.
@@ -82,15 +80,15 @@ job_description_schema = Schema(
             # This task only needs to be run if a file matching one of the given
             # patterns has changed in the push.  The patterns use the mozpack
             # match function (python/mozbuild/mozpack/path.py).
-            Optional("files-changed"): [text_type],
+            Optional("files-changed"): [str],
         },
         # A list of artifacts to install from 'fetch' tasks.
         Optional("fetches"): {
-            text_type: [
-                text_type,
+            str: [
+                str,
                 {
-                    Required("artifact"): text_type,
-                    Optional("dest"): text_type,
+                    Required("artifact"): str,
+                    Optional("dest"): str,
                     Optional("extract"): bool,
                     Optional("verify-hash"): bool,
                 },
@@ -99,9 +97,9 @@ job_description_schema = Schema(
         # A description of how to run this job.
         "run": {
             # The key to a job implementation in a peer module to this one
-            "using": text_type,
+            "using": str,
             # Base work directory used to set up the task.
-            Optional("workdir"): text_type,
+            Optional("workdir"): str,
             # Any remaining content is verified against that job implementation's
             # own schema.
             Extra: object,
@@ -128,7 +126,7 @@ def rewrite_when_to_optimization(config, jobs):
         files_changed = when.get("files-changed")
 
         # implicitly add task config directory.
-        files_changed.append("{}/**".format(config.path))
+        files_changed.append(f"{config.path}/**")
 
         # "only when files changed" implies "skip if files have not changed"
         job["optimization"] = {"skip-unless-changed": files_changed}
@@ -185,9 +183,7 @@ def add_resource_monitor(config, jobs):
                 arch = "64"
             job.setdefault("fetches", {})
             job["fetches"].setdefault("toolchain", [])
-            job["fetches"]["toolchain"].append(
-                "{}{}-resource-monitor".format(worker_os, arch)
-            )
+            job["fetches"]["toolchain"].append(f"{worker_os}{arch}-resource-monitor")
 
             if worker_implementation == "docker-worker":
                 artifact_source = "/builds/worker/monitoring/resource-monitor.json"
@@ -227,13 +223,13 @@ def use_fetches(config, jobs):
             run = job.get("run", {})
             label = job["label"]
             get_attribute(artifact_names, label, run, "toolchain-artifact")
-            value = run.get("{}-alias".format(config.kind))
+            value = run.get(f"{config.kind}-alias")
             if not value:
                 value = []
-            elif isinstance(value, text_type):
+            elif isinstance(value, str):
                 value = [value]
             for alias in value:
-                aliases["{}-{}".format(config.kind, alias)] = label
+                aliases[f"{config.kind}-{alias}"] = label
 
     for task in config.kind_dependencies_tasks.values():
         if task.kind in ("fetch", "toolchain"):
@@ -241,15 +237,15 @@ def use_fetches(config, jobs):
                 artifact_names,
                 task.label,
                 task.attributes,
-                "{kind}-artifact".format(kind=task.kind),
+                f"{task.kind}-artifact",
             )
-            value = task.attributes.get("{}-alias".format(task.kind))
+            value = task.attributes.get(f"{task.kind}-alias")
             if not value:
                 value = []
-            elif isinstance(value, text_type):
+            elif isinstance(value, str):
                 value = [value]
             for alias in value:
-                aliases["{}-{}".format(task.kind, alias)] = task.label
+                aliases[f"{task.kind}-{alias}"] = task.label
 
     artifact_prefixes = {}
     for job in order_tasks(config, jobs):
@@ -269,7 +265,7 @@ def use_fetches(config, jobs):
         for kind, artifacts in fetches.items():
             if kind in ("fetch", "toolchain"):
                 for fetch_name in artifacts:
-                    label = "{kind}-{name}".format(kind=kind, name=fetch_name)
+                    label = f"{kind}-{fetch_name}"
                     label = aliases.get(label, label)
                     if label not in artifact_names:
                         raise Exception(
@@ -284,7 +280,7 @@ def use_fetches(config, jobs):
                     job_fetches.append(
                         {
                             "artifact": path,
-                            "task": "<{label}>".format(label=label),
+                            "task": f"<{label}>",
                             "extract": True,
                         }
                     )
@@ -316,7 +312,7 @@ def use_fetches(config, jobs):
                     )
 
                 for artifact in artifacts:
-                    if isinstance(artifact, text_type):
+                    if isinstance(artifact, str):
                         path = artifact
                         dest = None
                         extract = True
@@ -328,10 +324,10 @@ def use_fetches(config, jobs):
                         verify_hash = artifact.get("verify-hash", False)
 
                     fetch = {
-                        "artifact": "{prefix}/{path}".format(prefix=prefix, path=path)
+                        "artifact": f"{prefix}/{path}"
                         if not path.startswith("/")
                         else path[1:],
-                        "task": "<{dep}>".format(dep=kind),
+                        "task": f"<{kind}>",
                         "extract": extract,
                     }
                     if dest is not None:
@@ -353,7 +349,7 @@ def use_fetches(config, jobs):
             # 'scopes: [queue:get-artifact:path/to/*]' for 'path/to/artifact.tar.xz'.
             worker["taskcluster-proxy"] = True
             for prefix in sorted(job_artifact_prefixes):
-                scope = "queue:get-artifact:{}/*".format(prefix)
+                scope = f"queue:get-artifact:{prefix}/*"
                 if scope not in job.setdefault("scopes", []):
                     job["scopes"].append(scope)
 
@@ -448,7 +444,7 @@ def configure_taskdesc_for_run(config, job, taskdesc, worker_implementation):
     """
     run_using = job["run"]["using"]
     if run_using not in registry:
-        raise Exception("no functions for run.using {!r}".format(run_using))
+        raise Exception(f"no functions for run.using {run_using!r}")
 
     if worker_implementation not in registry[run_using]:
         raise Exception(
