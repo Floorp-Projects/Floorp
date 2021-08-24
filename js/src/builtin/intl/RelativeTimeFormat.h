@@ -34,7 +34,7 @@ class RelativeTimeFormatObject : public NativeObject {
                 "object slot");
 
   // Estimated memory use for URelativeDateTimeFormatter (see IcuMemoryUsage).
-  static constexpr size_t EstimatedMemoryUse = 278;
+  static constexpr size_t EstimatedMemoryUse = 10896;
 
   URelativeDateTimeFormatter* getRelativeDateTimeFormatter() const {
     const auto& slot = getFixedSlot(URELATIVE_TIME_FORMAT_SLOT);
