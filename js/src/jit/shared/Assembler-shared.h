@@ -508,10 +508,10 @@ class MemoryAccessDesc {
 
  public:
   explicit MemoryAccessDesc(
-      Scalar::Type type, uint32_t align, uint32_t offset,
+      Scalar::Type type, uint32_t align, uint64_t offset,
       BytecodeOffset trapOffset,
       const jit::Synchronization& sync = jit::Synchronization::None())
-      : offset_(offset),
+      : offset_(uint32_t(offset)),
         align_(align),
         type_(type),
         sync_(sync),
@@ -519,6 +519,9 @@ class MemoryAccessDesc {
         widenOp_(wasm::SimdOp::Limit),
         loadOp_(Plain) {
     MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
+    // Temporary implementation limit on the offset, enforced by
+    // readLinearMemoryAddress in WasmOpIter.h
+    MOZ_ASSERT(offset <= UINT32_MAX);
   }
 
   uint32_t offset() const { return offset_; }
