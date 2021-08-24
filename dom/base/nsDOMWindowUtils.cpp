@@ -36,7 +36,6 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/PCompositorBridgeTypes.h"
 #include "mozilla/layers/ShadowLayers.h"
-#include "ClientLayerManager.h"
 #include "nsQueryObject.h"
 #include "CubebDeviceEnumerator.h"
 
@@ -4166,11 +4165,7 @@ nsDOMWindowUtils::GetContentAPZTestData(
     if (!renderer) {
       return NS_OK;
     }
-    if (ClientLayerManager* clm = renderer->AsClientLayerManager()) {
-      if (!clm->GetAPZTestData().ToJS(aOutContentTestData, aContext)) {
-        return NS_ERROR_FAILURE;
-      }
-    } else if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
+    if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
       if (!wr->GetAPZTestData().ToJS(aOutContentTestData, aContext)) {
         return NS_ERROR_FAILURE;
       }
@@ -4189,9 +4184,7 @@ nsDOMWindowUtils::GetCompositorAPZTestData(
       return NS_OK;
     }
     APZTestData compositorSideData;
-    if (ClientLayerManager* clm = renderer->AsClientLayerManager()) {
-      clm->GetCompositorSideAPZTestData(&compositorSideData);
-    } else if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
+    if (WebRenderLayerManager* wr = renderer->AsWebRender()) {
       if (!wr->WrBridge()) {
         return NS_ERROR_UNEXPECTED;
       }

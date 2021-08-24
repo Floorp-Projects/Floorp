@@ -20,7 +20,6 @@ class WebRenderLayerManager;
 class KnowsCompositor;
 class ShadowLayerForwarder;
 class CompositorBridgeChild;
-class ClientLayerManager;
 class FrameUniformityData;
 class PersistentBufferProvider;
 }  // namespace layers
@@ -206,8 +205,6 @@ class WindowRenderer : public FrameRecorder {
   virtual layers::CompositorBridgeChild* GetCompositorBridgeChild() {
     return nullptr;
   }
-
-  virtual layers::ClientLayerManager* AsClientLayerManager() { return nullptr; }
 
   // Provided functionality
 

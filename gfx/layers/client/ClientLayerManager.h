@@ -77,8 +77,6 @@ class ClientLayerManager final : public LayerManager,
 
   KnowsCompositor* AsKnowsCompositor() override { return mForwarder; }
 
-  ClientLayerManager* AsClientLayerManager() override { return this; }
-
   int32_t GetMaxTextureSize() const override;
 
   void SetDefaultTargetConfiguration(BufferMode aDoubleBuffering,
@@ -258,9 +256,6 @@ class ClientLayerManager final : public LayerManager,
   static PaintTiming* MaybeGetPaintTiming(LayerManager* aManager) {
     if (!aManager) {
       return nullptr;
-    }
-    if (ClientLayerManager* lm = aManager->AsClientLayerManager()) {
-      return &lm->AsShadowForwarder()->GetPaintTiming();
     }
     return nullptr;
   }

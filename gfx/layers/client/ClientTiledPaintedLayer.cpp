@@ -225,9 +225,6 @@ void ClientTiledPaintedLayer::BeginPaint() {
 bool ClientTiledPaintedLayer::IsScrollingOnCompositor(
     const FrameMetrics& aParentMetrics) {
   CompositorBridgeChild* compositor = nullptr;
-  if (Manager() && Manager()->AsClientLayerManager()) {
-    compositor = Manager()->AsClientLayerManager()->GetCompositorBridgeChild();
-  }
 
   if (!compositor) {
     return false;
