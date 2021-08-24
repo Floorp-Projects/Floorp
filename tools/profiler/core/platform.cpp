@@ -5135,27 +5135,26 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   RegisterProfilerLabelEnterExit(nullptr, nullptr);
 
   // Stop sampling live threads.
-  ProfilerThreadId tid = profiler_current_thread_id();
-  const Vector<LiveProfiledThreadData>& liveProfiledThreads =
-      ActivePS::LiveProfiledThreads(aLock);
-  for (auto& thread : liveProfiledThreads) {
-    ThreadRegistry::WithOffThreadRef(
-        thread.mProfiledThreadData->Info().ThreadId(),
-        [&](ThreadRegistry::OffThreadRef aOffThreadRef) {
-          aOffThreadRef.WithLockedRWFromAnyThread(
-              [&](ThreadRegistration::LockedRWFromAnyThread& aRW) {
-                aRW.ClearIsBeingProfiledAndProfiledThreadData(aLock);
-              });
-        });
-    RegisteredThread* registeredThread = thread.mRegisteredThread;
+  ThreadRegistry::LockedRegistry lockedRegistry;
+  for (ThreadRegistry::OffThreadRef offThreadRef : lockedRegistry) {
+    if (!offThreadRef.UnlockedRWForLockedProfilerRef().IsBeingProfiled(aLock)) {
+      continue;
+    }
+
+    ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock lockedThreadData =
+        offThreadRef.LockedRWFromAnyThread();
+
+    lockedThreadData->ClearIsBeingProfiledAndProfiledThreadData(aLock);
+
     if (ActivePS::FeatureJS(aLock)) {
-      registeredThread->StopJSSampling();
-      const ThreadRegistrationInfo& info = registeredThread->Info();
-      if (info.ThreadId() == tid) {
-        // We can manually poll the current thread so it stops profiling
-        // immediately.
-        registeredThread->PollJSSampling();
-      } else if (info.IsMainThread()) {
+      lockedThreadData->StopJSSampling();
+      if (ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
+              lockedThreadData.GetLockedRWOnThread();
+          lockedRWOnThread) {
+        // We are on the thread, we can manually poll the current thread so it
+        // stops profiling immediately.
+        lockedRWOnThread->PollJSSampling();
+      } else if (lockedThreadData->Info().IsMainThread()) {
         // Dispatch a runnable to the main thread to call PollJSSampling(),
         // so that we don't have wait for the next JS interrupt callback in
         // order to start profiling JS.
