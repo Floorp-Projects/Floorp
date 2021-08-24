@@ -133,11 +133,16 @@ class FeatureGate {
       return;
     }
     let features = await FeatureGate.all();
-    let enabledFeatures = features
-      .filter(async f => f.getValue())
-      .map(f => f.preference)
-      .join(",");
-    crashReporter.annotateCrashReport("ExperimentalFeatures", enabledFeatures);
+    let enabledFeatures = [];
+    for (let feature of features) {
+      if (await feature.getValue()) {
+        enabledFeatures.push(feature.preference);
+      }
+    }
+    crashReporter.annotateCrashReport(
+      "ExperimentalFeatures",
+      enabledFeatures.join(",")
+    );
   }
 
   /**
