@@ -773,6 +773,9 @@ already_AddRefed<DOMStringList> nsAccessibilityService::GetStringStates(
   if (aStates & states::SENSITIVE) {
     stringStates->Add(u"sensitive"_ns);
   }
+  if (aStates & states::EXPANDABLE) {
+    stringStates->Add(u"expandable"_ns);
+  }
   if (aStates & states::PINNED) {
     stringStates->Add(u"pinned"_ns);
   }
