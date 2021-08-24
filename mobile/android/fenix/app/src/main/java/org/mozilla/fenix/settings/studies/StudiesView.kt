@@ -5,16 +5,14 @@
 package org.mozilla.fenix.settings.studies
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.text.HtmlCompat
 import androidx.core.text.getSpans
@@ -27,6 +25,8 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.SettingsStudiesBinding
+import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.OPT_OUT_STUDIES
 import org.mozilla.fenix.utils.Settings
@@ -47,15 +47,40 @@ class StudiesView(
     @VisibleForTesting
     internal lateinit var adapter: StudiesAdapter
 
-    @Suppress("TooGenericExceptionCaught")
+    @Suppress("TooGenericExceptionCaught", "ApplySharedPref")
     fun bind() {
         provideStudiesTitle().text = getSwitchTitle()
         provideStudiesSwitch().isChecked = settings.isExperimentationEnabled
-        provideStudiesSwitch().setOnCheckedChangeListener { _, isChecked ->
-            settings.isExperimentationEnabled = isChecked
-            experiments.globalUserParticipation = isChecked
-            provideStudiesTitle().text = getSwitchTitle()
-            quitTheApp()
+        provideStudiesSwitch().setOnClickListener {
+            val isChecked = provideStudiesSwitch().isChecked
+            provideStudiesTitle().text = getSwitchCheckedTitle()
+            val builder = AlertDialog.Builder(context)
+                .setPositiveButton(
+                    R.string.studies_restart_dialog_ok
+                ) { dialog, _ ->
+                    settings.isExperimentationEnabled = isChecked
+                    val experimentsKey = context.getPreferenceKey(R.string.pref_key_experimentation)
+                    // In this case, we are using commit() on purpose as we want to warranty
+                    // that we are changing the setting before quitting the app.
+                    context.settings().preferences.edit().putBoolean(experimentsKey, isChecked)
+                        .commit()
+
+                    experiments.globalUserParticipation = isChecked
+                    dialog.dismiss()
+                    quitTheApp()
+                }
+                .setNegativeButton(
+                    R.string.studies_restart_dialog_cancel
+                ) { dialog, _ ->
+                    provideStudiesSwitch().isChecked = !isChecked
+                    provideStudiesTitle().text = getSwitchTitle()
+                    dialog.dismiss()
+                }
+                .setTitle(R.string.preference_experiments_2)
+                .setMessage(R.string.studies_restart_app)
+                .setCancelable(false)
+            val alertDialog: AlertDialog = builder.create()
+            alertDialog.show()
         }
         bindDescription()
 
@@ -128,6 +153,16 @@ class StudiesView(
     }
 
     @VisibleForTesting
+    internal fun getSwitchCheckedTitle(): String {
+        val stringId = if (provideStudiesSwitch().isChecked) {
+            R.string.studies_on
+        } else {
+            R.string.studies_off
+        }
+        return context.getString(stringId)
+    }
+
+    @VisibleForTesting
     internal fun provideStudiesTitle(): TextView = binding.studiesTitle
 
     @VisibleForTesting
@@ -138,20 +173,6 @@ class StudiesView(
 
     @VisibleForTesting
     internal fun quitTheApp() {
-        Toast.makeText(
-            context,
-            context.getString(R.string.studies_toast_quit_application),
-            Toast.LENGTH_LONG
-        ).show()
-        Handler(Looper.getMainLooper()).postDelayed(
-            {
-                exitProcess(0)
-            },
-            OVERRIDE_EXIT_DELAY
-        )
-    }
-
-    companion object {
-        private const val OVERRIDE_EXIT_DELAY = 3000L
+        exitProcess(0)
     }
 }
