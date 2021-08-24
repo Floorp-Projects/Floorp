@@ -845,6 +845,14 @@ avif:
       - write_buffer_error
       - alpha_y_sz_mismatch
       - alpha_y_bpc_mismatch
+      - ispe_mismatch
+      - invalid_cicp
+      - unsupported_a1lx
+      - unsupported_a1op
+      - unsupported_clap
+      - unsupported_grid
+      - unsupported_ipro
+      - unsupported_lsel
     gecko_datapoint: AVIF_DECODE_RESULT
     description: >
       Decode result of AVIF image.
@@ -935,6 +943,182 @@ avif:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
+  alpha:
+    type: labeled_counter
+    labels:
+      - absent
+      - present
+    gecko_datapoint: AVIF_ALPHA
+    description: >
+      AVIF alpha plane.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+    data_reviews:
+      - TODO
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
+  colr:
+    type: labeled_counter
+    labels:
+      - nclx
+      - icc
+      - absent
+    gecko_datapoint: AVIF_COLR
+    description: >
+      AVIF colour information type.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+    data_reviews:
+      - TODO
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
+  cicp_cp:
+    type: labeled_counter
+    labels:
+      - reserved
+      - bt709
+      - unspecified
+      - reserved_3
+      - bt470m
+      - bt470bg
+      - bt601
+      - smpte240
+      - generic_film
+      - bt2020
+      - xyz
+      - smpte431
+      - smpte432
+      - reserved_13
+      - reserved_14
+      - reserved_15
+      - reserved_16
+      - reserved_17
+      - reserved_18
+      - reserved_19
+      - reserved_20
+      - reserved_21
+      - ebu3213
+      - reserved_rest
+    gecko_datapoint: AVIF_CICP_CP
+    description: >
+      AVIF CICP colour primaries.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+    data_reviews:
+      - TODO
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
+  cicp_tc:
+    type: labeled_counter
+    labels:
+      - reserved
+      - bt709
+      - unspecified
+      - reserved_3
+      - bt470m
+      - bt470bg
+      - bt601
+      - smpte240
+      - linear
+      - log_100
+      - log_100_sqrt10
+      - iec61966
+      - bt_1361
+      - srgb
+      - bt2020_10bit
+      - bt2020_12bit
+      - smpte2084
+      - smpte428
+      - hlg
+      - reserved_rest
+    gecko_datapoint: AVIF_CICP_TC
+    description: >
+      AVIF CICP transfer characteristics.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+    data_reviews:
+      - TODO
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
+  cicp_mc:
+    type: labeled_counter
+    labels:
+      - identity
+      - bt709
+      - unspecified
+      - reserved
+      - fcc
+      - bt470bg
+      - bt601
+      - smpte240
+      - ycgco
+      - bt2020_ncl
+      - bt2020_cl
+      - smpte2085
+      - chromat_ncl
+      - chromat_cl
+      - ictcp
+      - reserved_rest
+    gecko_datapoint: AVIF_CICP_MC
+    description: >
+      AVIF CICP transfer characteristics.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+    data_reviews:
+      - TODO
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
+  ispe:
+    type: labeled_counter
+    labels:
+      - valid
+      - absent
+      - bitstream_mismatch
+    gecko_datapoint: AVIF_ISPE
+    description: >
+      AVIF spatial extents (image size).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+    data_reviews:
+      - TODO
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
+  pixi:
+    type: labeled_counter
+    labels:
+      - valid
+      - absent
+      - bitstream_mismatch
+    gecko_datapoint: AVIF_PIXI
+    description: >
+      AVIF pixel information (bits per channel).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
+    data_reviews:
+      - TODO
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
