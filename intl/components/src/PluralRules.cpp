@@ -37,8 +37,8 @@ Result<UniquePtr<PluralRules>, PluralRules::Error> PluralRules::TryCreate(
     return Err(PluralRules::Error::InternalError);
   }
 
-  auto numberRangeFormat =
-      NumberRangeFormat::TryCreate(aLocale, aOptions.ToNumberFormatOptions());
+  auto numberRangeFormat = NumberRangeFormat::TryCreate(
+      aLocale, aOptions.ToNumberRangeFormatOptions());
 
   if (numberRangeFormat.isErr()) {
     return Err(PluralRules::Error::InternalError);
