@@ -2712,8 +2712,8 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
 
   aBuilder->SetIsCompositingCheap(temp);
 
-  if (document && widgetTransaction && layerManager) {
-    TriggerPendingAnimations(*document, layerManager->GetAnimationReadyTime());
+  if (document && widgetTransaction) {
+    TriggerPendingAnimations(*document, renderer->GetAnimationReadyTime());
   }
 
   nsIntRegion invalid;
