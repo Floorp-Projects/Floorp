@@ -231,8 +231,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   static bool UseWebRender();
 
-  static bool DoesFissionForceWebRender();
-
   static bool UseRemoteCanvas();
 
   static bool IsBackendAccelerated(
