@@ -2260,7 +2260,7 @@ static void DoNativeBacktrace(
 // The grammar for entry sequences is in a comment above
 // ProfileBuffer::StreamSamplesToJSON.
 static inline void DoSharedSample(
-    PSLockRef aLock, bool aIsSynchronous, uint32_t aFeatures,
+    bool aIsSynchronous, uint32_t aFeatures,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     JsFrame* aJsFrames, const Registers& aRegs, uint64_t aSamplePos,
     uint64_t aBufferRangeStart, ProfileBuffer& aBuffer,
@@ -2269,8 +2269,6 @@ static inline void DoSharedSample(
 
   MOZ_ASSERT(!aBuffer.IsThreadSafe(),
              "Mutexes cannot be used inside this critical section");
-
-  MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
   ProfileBufferCollector collector(aBuffer, aSamplePos, aBufferRangeStart);
   StackWalkControl* stackWalkControlIfSupported = nullptr;
@@ -2312,7 +2310,7 @@ static inline void DoSharedSample(
 
 // Writes the components of a synchronous sample to the given ProfileBuffer.
 static void DoSyncSample(
-    PSLockRef aLock, uint32_t aFeatures,
+    uint32_t aFeatures,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const TimeStamp& aNow, const Registers& aRegs, ProfileBuffer& aBuffer,
     StackCaptureOptions aCaptureOptions) {
@@ -2329,7 +2327,7 @@ static void DoSyncSample(
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
   aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
-  DoSharedSample(aLock, /* aIsSynchronous = */ true, aFeatures, aThreadData,
+  DoSharedSample(/* aIsSynchronous = */ true, aFeatures, aThreadData,
                  aThreadData.GetJsFrameBuffer(), aRegs, samplePos,
                  bufferRangeStart, aBuffer, aCaptureOptions);
 }
@@ -2344,8 +2342,10 @@ static inline void DoPeriodicSample(
     ProfileBuffer& aBuffer) {
   // WARNING: this function runs within the profiler's "critical section".
 
+  MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
+
   JsFrameBuffer& jsFrames = CorePS::JsFrames(aLock);
-  DoSharedSample(aLock, /* aIsSynchronous = */ false, ActivePS::Features(aLock),
+  DoSharedSample(/* aIsSynchronous = */ false, ActivePS::Features(aLock),
                  aThreadData, jsFrames, aRegs, aSamplePos, aBufferRangeStart,
                  aBuffer);
 }
@@ -5511,7 +5511,7 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
 
   PSAutoLock lock;
 
-  if (!ActivePS::Exists(lock) ||
+  if (!profiler_is_active() ||
       aCaptureOptions == StackCaptureOptions::NoStack) {
     return false;
   }
@@ -5533,7 +5533,7 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
         regs.Clear();
 #endif
 
-        DoSyncSample(lock, *maybeFeatures,
+        DoSyncSample(*maybeFeatures,
                      aOnThreadRef.UnlockedReaderAndAtomicRWOnThreadCRef(),
                      TimeStamp::Now(), regs, profileBuffer, aCaptureOptions);
 
