@@ -35,7 +35,6 @@
 #include "nsIFrame.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/PCompositorBridgeTypes.h"
-#include "mozilla/layers/ShadowLayers.h"
 #include "nsQueryObject.h"
 #include "CubebDeviceEnumerator.h"
 
@@ -95,7 +94,6 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/layers/FrameUniformityData.h"
-#include "mozilla/layers/ShadowLayers.h"
 #include "nsPrintfCString.h"
 #include "nsViewportInfo.h"
 #include "nsIFormControl.h"
@@ -255,19 +253,6 @@ Document* nsDOMWindowUtils::GetDocument() {
     return nullptr;
   }
   return window->GetExtantDoc();
-}
-
-LayerTransactionChild* nsDOMWindowUtils::GetLayerTransaction() {
-  nsIWidget* widget = GetWidget();
-  if (!widget) return nullptr;
-
-  WindowRenderer* renderer = widget->GetWindowRenderer();
-  if (!renderer) return nullptr;
-
-  ShadowLayerForwarder* forwarder = renderer->AsShadowForwarder();
-  return forwarder && forwarder->HasShadowManager()
-             ? forwarder->GetShadowManager()
-             : nullptr;
 }
 
 WebRenderBridgeChild* nsDOMWindowUtils::GetWebRenderBridge() {
@@ -2754,10 +2739,7 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds) {
     nsRefreshDriver* driver = presContext->RefreshDriver();
     driver->AdvanceTimeAndRefresh(aMilliseconds);
 
-    RefPtr<LayerTransactionChild> transaction = GetLayerTransaction();
-    if (transaction && transaction->IPCOpen()) {
-      transaction->SendSetTestSampleTime(driver->MostRecentRefresh());
-    } else if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
+    if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
       wrbc->SendSetTestSampleTime(driver->MostRecentRefresh());
     }
   }
@@ -2782,10 +2764,7 @@ nsDOMWindowUtils::RestoreNormalRefresh() {
   // Kick the compositor out of test mode before the refresh driver, so that
   // the refresh driver doesn't send an update that gets ignored by the
   // compositor.
-  RefPtr<LayerTransactionChild> transaction = GetLayerTransaction();
-  if (transaction && transaction->IPCOpen()) {
-    transaction->SendLeaveTestMode();
-  } else if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
+  if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
     wrbc->SendLeaveTestMode();
   }
 
@@ -2842,12 +2821,7 @@ nsDOMWindowUtils::SetAsyncScrollOffset(Element* aElement, float aX, float aY) {
     wrbc->SendSetAsyncScrollOffset(viewId, aX, aY);
     return NS_OK;
   }
-  ShadowLayerForwarder* forwarder = renderer->AsShadowForwarder();
-  if (!forwarder || !forwarder->HasShadowManager()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  forwarder->GetShadowManager()->SendSetAsyncScrollOffset(viewId, aX, aY);
-  return NS_OK;
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
@@ -2875,12 +2849,7 @@ nsDOMWindowUtils::SetAsyncZoom(Element* aRootElement, float aValue) {
     wrbc->SendSetAsyncZoom(viewId, aValue);
     return NS_OK;
   }
-  ShadowLayerForwarder* forwarder = renderer->AsShadowForwarder();
-  if (!forwarder || !forwarder->HasShadowManager()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  forwarder->GetShadowManager()->SendSetAsyncZoom(viewId, aValue);
-  return NS_OK;
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
@@ -2909,13 +2878,7 @@ nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult) {
     *aOutResult = true;
     return NS_OK;
   }
-  ShadowLayerForwarder* forwarder = renderer->AsShadowForwarder();
-  if (!forwarder || !forwarder->HasShadowManager()) {
-    *aOutResult = false;
-    return NS_OK;
-  }
-  forwarder->GetShadowManager()->SendFlushApzRepaints();
-  *aOutResult = true;
+  *aOutResult = false;
   return NS_OK;
 }
 

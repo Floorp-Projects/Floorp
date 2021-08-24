@@ -83,7 +83,6 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
   mozilla::PresShell* GetPresShell();
   nsPresContext* GetPresContext();
   mozilla::dom::Document* GetDocument();
-  mozilla::layers::LayerTransactionChild* GetLayerTransaction();
   mozilla::layers::WebRenderBridgeChild* GetWebRenderBridge();
   mozilla::layers::CompositorBridgeChild* GetCompositorBridge();
 
