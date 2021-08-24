@@ -320,9 +320,6 @@ class RacyFeatures {
 // is inactive.
 [[nodiscard]] bool profiler_is_sampling_paused();
 
-// Is the current thread sleeping?
-[[nodiscard]] bool profiler_thread_is_sleeping();
-
 // Get all the features supported by the profiler that are accepted by
 // profiler_start(). The result is the same whether the profiler is active or
 // not.
