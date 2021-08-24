@@ -104,7 +104,7 @@ object PopupUtils {
         } else {
             verifier.visibility = View.GONE
         }
-        securityInfoIcon.setImageResource(R.drawable.ic_lock)
+        securityInfoIcon.setImageResource(R.drawable.mozac_ic_lock)
         securityInfoIcon.setColorFilter(photonGreen)
     }
 
@@ -124,10 +124,10 @@ object PopupUtils {
             securityInfoIcon.setImageResource(R.drawable.ic_internet)
             securityInfoIcon.setColorFilter(inactiveColor)
         } else {
-            securityInfoIcon.setImageResource(R.drawable.ic_warning)
+            securityInfoIcon.setImageResource(R.drawable.mozac_ic_warning)
             securityInfoIcon.setColorFilter(photonYellow)
             securityIcon = DrawableUtils.loadAndTintDrawable(
-                context, R.drawable.ic_warning,
+                context, R.drawable.mozac_ic_warning,
                 photonYellow
             )
             identityState.setCompoundDrawables(

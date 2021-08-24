@@ -41,7 +41,7 @@
         android:drawablePadding="20dp"
         android:gravity="center_vertical"
         app:drawableEndCompat="@drawable/mozac_ic_arrowhead_right"
-        app:drawableStartCompat="@drawable/ic_lock"
+        app:drawableStartCompat="@drawable/mozac_ic_lock"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/site_title"
         tools:text="@string/secure_connection" />

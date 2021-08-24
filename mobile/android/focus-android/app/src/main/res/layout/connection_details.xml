@@ -67,7 +67,7 @@
         android:gravity="center_vertical"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        app:drawableStartCompat="@drawable/ic_lock"
+        app:drawableStartCompat="@drawable/mozac_ic_lock"
         app:layout_constraintStart_toStartOf="@id/site_favicon"
         app:layout_constraintTop_toBottomOf="@id/site_full_url"
         tools:text="@string/secure_connection" />

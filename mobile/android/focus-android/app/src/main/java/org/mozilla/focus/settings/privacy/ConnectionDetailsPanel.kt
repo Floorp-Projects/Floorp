@@ -60,9 +60,9 @@ class ConnectionDetailsPanel(
         }
 
         val securityIcon = if (isConnectionSecure) {
-            AppCompatResources.getDrawable(context, R.drawable.ic_lock)
+            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_lock)
         } else {
-            AppCompatResources.getDrawable(context, R.drawable.ic_warning)
+            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_warning)
         }
 
         binding.securityInfo.putCompoundDrawablesRelativeWithIntrinsicBounds(
