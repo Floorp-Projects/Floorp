@@ -12,6 +12,8 @@
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/intl/NumberFormat.h"
+#include "mozilla/Span.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/UniquePtr.h"
 
 #include <algorithm>
@@ -24,6 +26,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
+#include "builtin/intl/DecimalNumber.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/MeasureUnitGenerated.h"
 #include "builtin/intl/RelativeTimeFormat.h"
@@ -43,6 +46,7 @@
 #include "unicode/unumsys.h"
 #include "unicode/ures.h"
 #include "unicode/utypes.h"
+#include "util/Text.h"
 #include "vm/BigIntType.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -1385,15 +1389,207 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
   return true;
 }
 
+// Return true if the string starts with "0[bBoOxX]", possibly skipping over
+// leading whitespace.
+template <typename CharT>
+static bool IsNonDecimalNumber(mozilla::Range<const CharT> chars) {
+  const CharT* end = chars.begin().get() + chars.length();
+  const CharT* start = SkipSpace(chars.begin().get(), end);
+
+  if (end - start >= 2 && start[0] == '0') {
+    CharT ch = start[1];
+    return ch == 'b' || ch == 'B' || ch == 'o' || ch == 'O' || ch == 'x' ||
+           ch == 'X';
+  }
+  return false;
+}
+
+static bool IsNonDecimalNumber(JSLinearString* str) {
+  JS::AutoCheckCannotGC nogc;
+  return str->hasLatin1Chars() ? IsNonDecimalNumber(str->latin1Range(nogc))
+                               : IsNonDecimalNumber(str->twoByteRange(nogc));
+}
+
+static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value) {
+  if (!ToPrimitive(cx, JSTYPE_NUMBER, value)) {
+    return false;
+  }
+
+  // Maximum exponent supported by ICU. Exponents larger than this value will
+  // cause ICU to report an error.
+  // See also "intl/icu/source/i18n/decContext.h".
+  constexpr int32_t maximumExponent = 999'999'999;
+
+  // When formatting a number range, ICU inserts the integer digits of the
+  // second number into the middle of the result string. This leads to calling
+  // memmove for each digit, which causes tremendous slowdowns. Therefore we
+  // additionally limit the maximum positive exponent.
+  //
+  // Filed at <https://unicode-org.atlassian.net/browse/ICU-21684>.
+  constexpr int32_t maximumPositiveExponent = 99'999;
+
+  // Compute the maximum BigInt digit length from the maximum positive exponent.
+  //
+  // BigInts are stored with base |2 ** BigInt::DigitBits|, so we have:
+  //
+  //   |maximumPositiveExponent| * Log_DigitBase(10)
+  // = |maximumPositiveExponent| * Log2(10) / Log2(2 ** BigInt::DigitBits)
+  // = |maximumPositiveExponent| * Log2(10) / BigInt::DigitBits
+  // = 332189.4875606413... / BigInt::DigitBits
+  constexpr size_t maximumBigIntLength = 332189.4875606413 / BigInt::DigitBits;
+
+  if (!value.isString()) {
+    if (!ToNumeric(cx, value)) {
+      return false;
+    }
+
+    if (value.isBigInt() &&
+        value.toBigInt()->digitLength() > maximumBigIntLength) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_EXPONENT_TOO_LARGE);
+      return false;
+    }
+
+    return true;
+  }
+
+  JSLinearString* str = value.toString()->ensureLinear(cx);
+  if (!str) {
+    return false;
+  }
+
+  // Call StringToNumber to validate the input can be parsed as a number.
+  double number;
+  if (!StringToNumber(cx, str, &number)) {
+    return false;
+  }
+
+  bool exponentTooLarge = false;
+  if (mozilla::IsNaN(number)) {
+    // Set to NaN if the input can't be parsed as a number.
+    value.setNaN();
+  } else if (IsNonDecimalNumber(str)) {
+    // ICU doesn't accept non-decimal numbers, so we have to convert the input
+    // into a base-10 string.
+
+    MOZ_ASSERT(!mozilla::IsNegative(number),
+               "non-decimal numbers can't be negative");
+
+    if (number < DOUBLE_INTEGRAL_PRECISION_LIMIT) {
+      // Fast-path if we can guarantee there was no loss of precision.
+      value.setDouble(number);
+    } else {
+      // For the slow-path convert the string into a BigInt.
+
+      // StringToBigInt can't fail (other than OOM) when StringToNumber already
+      // succeeded.
+      RootedString rooted(cx, str);
+      BigInt* bi;
+      JS_TRY_VAR_OR_RETURN_FALSE(cx, bi, StringToBigInt(cx, rooted));
+      MOZ_ASSERT(bi);
+
+      if (bi->digitLength() > maximumBigIntLength) {
+        exponentTooLarge = true;
+      } else {
+        value.setBigInt(bi);
+      }
+    }
+  } else {
+    JS::AutoCheckCannotGC nogc;
+    if (auto decimal = intl::DecimalNumber::from(str, nogc)) {
+      if (decimal->isZero()) {
+        // Normalize positive/negative zero.
+        MOZ_ASSERT(number == 0);
+
+        value.setDouble(number);
+      } else if (decimal->exponentTooLarge() ||
+                 std::abs(decimal->exponent()) >= maximumExponent ||
+                 decimal->exponent() > maximumPositiveExponent) {
+        exponentTooLarge = true;
+      }
+    } else {
+      // If we can't parse the string as a decimal, it must be ±Infinity.
+      MOZ_ASSERT(mozilla::IsInfinite(number));
+      MOZ_ASSERT(StringFindPattern(str, cx->names().Infinity, 0) >= 0);
+
+      value.setDouble(number);
+    }
+  }
+
+  if (exponentTooLarge) {
+    // Throw an error if the exponent is too large.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_EXPONENT_TOO_LARGE);
+    return false;
+  }
+
+  return true;
+}
+
+// Return the number part of the input by removing leading and trailing
+// whitespace.
+template <typename CharT>
+static mozilla::Span<const CharT> NumberPart(const CharT* chars,
+                                             size_t length) {
+  const CharT* start = chars;
+  const CharT* end = chars + length;
+
+  start = SkipSpace(start, end);
+
+  // |SkipSpace| only supports forward iteration, so inline the backwards
+  // iteration here.
+  MOZ_ASSERT(start <= end);
+  while (end > start && unicode::IsSpace(end[-1])) {
+    end--;
+  }
+
+  // The number part is a non-empty, ASCII-only substring.
+  MOZ_ASSERT(start < end);
+  MOZ_ASSERT(mozilla::IsAscii(mozilla::Span(start, end)));
+
+  return {start, end};
+}
+
+static bool NumberPart(JSContext* cx, JSLinearString* str,
+                       const JS::AutoCheckCannotGC& nogc,
+                       JS::UniqueChars& latin1, std::string_view& result) {
+  if (str->hasLatin1Chars()) {
+    auto span = NumberPart(
+        reinterpret_cast<const char*>(str->latin1Chars(nogc)), str->length());
+
+    result = {span.data(), span.size()};
+    return true;
+  }
+
+  auto span = NumberPart(str->twoByteChars(nogc), str->length());
+
+  latin1.reset(JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, span).c_str());
+  if (!latin1) {
+    return false;
+  }
+
+  result = {latin1.get(), span.size()};
+  return true;
+}
+
 bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 3);
   MOZ_ASSERT(args[0].isObject());
+#ifndef NIGHTLY_BUILD
   MOZ_ASSERT(args[1].isNumeric());
+#endif
   MOZ_ASSERT(args[2].isBoolean());
 
   Rooted<NumberFormatObject*> numberFormat(
       cx, &args[0].toObject().as<NumberFormatObject>());
+
+  RootedValue value(cx, args[1]);
+#ifdef NIGHTLY_BUILD
+  if (!ToIntlMathematicalValue(cx, &value)) {
+    return false;
+  }
+#endif
 
   // Obtain a cached mozilla::intl::NumberFormat object.
   mozilla::intl::NumberFormat* nf = numberFormat->getNumberFormatter();
@@ -1415,15 +1611,15 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   mozilla::Result<std::u16string_view, FormatError> result =
       mozilla::Err(FormatError::InternalError);
   mozilla::intl::NumberPartVector parts;
-  if (args[1].isNumber()) {
-    double num = args[1].toNumber();
+  if (value.isNumber()) {
+    double num = value.toNumber();
     if (formatToParts) {
       result = nf->formatToParts(num, parts);
     } else {
       result = nf->format(num);
     }
-  } else {
-    RootedBigInt bi(cx, args[1].toBigInt());
+  } else if (value.isBigInt()) {
+    RootedBigInt bi(cx, value.toBigInt());
 
     int64_t num;
     if (BigInt::isInt64(bi, &num)) {
@@ -1439,7 +1635,6 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
       }
       MOZ_RELEASE_ASSERT(str->hasLatin1Chars());
 
-      // Tell the analysis the |formatToParts| method can't GC.
       JS::AutoCheckCannotGC nogc;
 
       const char* chars = reinterpret_cast<const char*>(str->latin1Chars(nogc));
@@ -1449,6 +1644,27 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
       } else {
         result = nf->format(std::string_view(chars, str->length()));
       }
+    }
+  } else {
+    JSLinearString* str = value.toString()->ensureLinear(cx);
+    if (!str) {
+      return false;
+    }
+
+    JS::AutoCheckCannotGC nogc;
+
+    // Two-byte strings have to be copied into a separate |char| buffer.
+    JS::UniqueChars latin1;
+
+    std::string_view sv;
+    if (!NumberPart(cx, str, nogc, latin1, sv)) {
+      return false;
+    }
+
+    if (formatToParts) {
+      result = nf->formatToParts(sv, parts);
+    } else {
+      result = nf->format(sv);
     }
   }
 
@@ -1461,7 +1677,6 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   RootedString str(cx, NewStringCopyN<CanGC>(
                            cx, result_string_view.data(),
                            AssertedCast<uint32_t>(result_string_view.size())));
-
   if (!str) {
     return false;
   }
