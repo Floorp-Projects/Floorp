@@ -505,7 +505,7 @@ LoginTestUtils.recipes = {
 LoginTestUtils.masterPassword = {
   masterPassword: "omgsecret!",
 
-  _set(enable) {
+  _set(enable, stayLoggedIn) {
     let oldPW, newPW;
     if (enable) {
       oldPW = "";
@@ -526,7 +526,9 @@ LoginTestUtils.masterPassword = {
         token.checkPassword(oldPW);
         dump("MP change from " + oldPW + " to " + newPW + "\n");
         token.changePassword(oldPW, newPW);
-        token.logoutSimple();
+        if (!stayLoggedIn) {
+          token.logoutSimple();
+        }
       }
     } catch (e) {
       dump(
@@ -535,8 +537,8 @@ LoginTestUtils.masterPassword = {
     }
   },
 
-  enable() {
-    this._set(true);
+  enable(stayLoggedIn = false) {
+    this._set(true, stayLoggedIn);
   },
 
   disable() {
