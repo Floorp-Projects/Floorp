@@ -15,7 +15,6 @@
 #include <utility>
 
 #include "BrowserParent.h"
-#include "ClientLayerManager.h"
 #include "ContentChild.h"
 #include "DocumentInlines.h"
 #include "EventStateManager.h"
@@ -3248,14 +3247,6 @@ void BrowserChild::ReinitRenderingForDeviceReset() {
       mPuppetWidget->GetWindowRenderer()->AsLayerManager();
   if (lm && lm->AsWebRenderLayerManager()) {
     lm->AsWebRenderLayerManager()->DoDestroy(/* aIsSync */ true);
-  } else if (lm && lm->AsClientLayerManager()) {
-    if (ShadowLayerForwarder* fwd = lm->AsShadowForwarder()) {
-      // Force the LayerTransactionChild to synchronously shutdown. It is
-      // okay to do this early, we'll simply stop sending messages. This
-      // step is necessary since otherwise the compositor will think we
-      // are trying to attach two layer trees to the same ID.
-      fwd->SynchronouslyShutdown();
-    }
   } else {
     if (mLayersConnected.isNothing()) {
       return;
