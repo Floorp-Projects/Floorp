@@ -1657,6 +1657,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchTestObjIsFunction(Condition cond, Register obj,
                                       Register scratch,
                                       Register spectreRegToZero, Label* label);
+  inline void branchTestObjIsFunctionNoSpectreMitigations(Condition cond,
+                                                          Register obj,
+                                                          Register scratch,
+                                                          Label* label);
 
   inline void branchTestObjShape(Condition cond, Register obj, Register shape,
                                  Register scratch, Register spectreRegToZero,

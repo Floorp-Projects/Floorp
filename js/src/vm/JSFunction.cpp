@@ -1176,7 +1176,12 @@ const JSClass JSFunction::class_ = {js_Function_str,
                                     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
                                     &JSFunctionClassOps, &JSFunctionClassSpec};
 
+const JSClass FunctionExtended::class_ = {
+    js_Function_str, JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
+    &JSFunctionClassOps, &JSFunctionClassSpec};
+
 const JSClass* const js::FunctionClassPtr = &JSFunction::class_;
+const JSClass* const js::FunctionExtendedClassPtr = &FunctionExtended::class_;
 
 bool JSFunction::isDerivedClassConstructor() const {
   bool derived = hasBaseScript() && baseScript()->isDerivedClassConstructor();
@@ -1905,6 +1910,12 @@ static bool NewFunctionEnvironmentIsWellFormed(JSContext* cx,
 }
 #endif
 
+static inline const JSClass* FunctionClassForAllocKind(
+    gc::AllocKind allocKind) {
+  return (allocKind == gc::AllocKind::FUNCTION) ? FunctionClassPtr
+                                                : FunctionExtendedClassPtr;
+}
+
 JSFunction* js::NewFunctionWithProto(
     JSContext* cx, Native native, unsigned nargs, FunctionFlags flags,
     HandleObject enclosingEnv, HandleAtom atom, HandleObject proto,
@@ -1917,8 +1928,10 @@ JSFunction* js::NewFunctionWithProto(
 
   // NOTE: Keep this in sync with `CreateFunctionFast` in Stencil.cpp
 
-  JSFunction* fun =
-      NewObjectWithClassProto<JSFunction>(cx, proto, allocKind, newKind);
+  const JSClass* clasp = FunctionClassForAllocKind(allocKind);
+
+  JSFunction* fun = static_cast<JSFunction*>(
+      NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind));
   if (!fun) {
     return nullptr;
   }
@@ -2012,9 +2025,11 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
     }
   }
 
+  const JSClass* clasp = FunctionClassForAllocKind(allocKind);
+
   RootedFunction clone(cx);
-  clone =
-      NewObjectWithClassProto<JSFunction>(cx, cloneProto, allocKind, newKind);
+  clone = static_cast<JSFunction*>(
+      NewObjectWithClassProto(cx, clasp, cloneProto, allocKind, newKind));
   if (!clone) {
     return nullptr;
   }
