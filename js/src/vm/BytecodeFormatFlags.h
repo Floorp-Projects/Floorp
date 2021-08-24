@@ -37,6 +37,7 @@ enum {
   JOF_TWO_UINT8 = 23,   /* A pair of unspecified uint8_t arguments */
   JOF_DEBUGCOORD = 24,  /* An embedded ScopeCoordinate immediate that may
                            traverse DebugEnvironmentProxies*/
+  JOF_SHAPE = 25,       /* uint32_t shape index */
   JOF_TYPEMASK = 0xFF,  /* mask for above immediate types */
 
   JOF_NAME = 1 << 8,        /* name operation */
