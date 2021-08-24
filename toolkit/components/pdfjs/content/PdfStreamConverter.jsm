@@ -1050,7 +1050,7 @@ PdfStreamConverter.prototype = {
     let { processType, PROCESS_TYPE_DEFAULT } = Services.appinfo;
     // If we're not in the parent, or are the default, then just say yes.
     if (processType != PROCESS_TYPE_DEFAULT || PdfJs.cachedIsDefault()) {
-      return true;
+      return { shouldOpen: true };
     }
 
     // OK, PDF.js might not be the default. Find out if we've misled the user
@@ -1063,24 +1063,27 @@ PdfStreamConverter.prototype = {
     if (!mime) {
       // This shouldn't happen, but we can't fix what isn't there. Assume
       // we're OK to handle with PDF.js
-      return true;
+      return { shouldOpen: true };
     }
 
     const { saveToDisk, useHelperApp, useSystemDefault } = Ci.nsIHandlerInfo;
     let { preferredAction, alwaysAskBeforeHandling } = mime;
+    // return this info so getConvertedType can use it.
+    let rv = { alwaysAskBeforeHandling, shouldOpen: false };
     // If the user has indicated they want to be asked or want to save to
     // disk, we shouldn't render inline immediately:
     if (alwaysAskBeforeHandling || preferredAction == saveToDisk) {
-      return false;
+      return rv;
     }
     // If we have usable helper app info, don't use PDF.js
     if (preferredAction == useHelperApp && this._usableHandler(mime)) {
-      return false;
+      return rv;
     }
     // If we want the OS default and that's not Firefox, don't use PDF.js
     if (preferredAction == useSystemDefault && !mime.isCurrentAppOSDefault()) {
-      return false;
+      return rv;
     }
+    rv.shouldOpen = true;
     // Log that we're doing this to help debug issues if people end up being
     // surprised by this behaviour.
     Cu.reportError("Found unusable PDF preferences. Fixing back to PDF.js");
@@ -1117,17 +1120,33 @@ PdfStreamConverter.prototype = {
       // fall through, this appears to be a pdf.
     }
 
-    if (this._validateAndMaybeUpdatePDFPrefs()) {
+    let {
+      alwaysAskBeforeHandling,
+      shouldOpen,
+    } = this._validateAndMaybeUpdatePDFPrefs();
+
+    if (shouldOpen) {
       return HTML;
     }
-    // Hm, so normally, no pdfjs. However... if this is a file: channel loaded
-    // with system principal, load it anyway:
+    // Hm, so normally, no pdfjs. However... if this is a file: channel there
+    // are some edge-cases.
     if (channelURI?.schemeIs("file")) {
+      // If we're loaded with system principal, we were likely handed the PDF
+      // by the OS or directly from the URL bar. Assume we should load it:
       let triggeringPrincipal = aChannel.loadInfo?.triggeringPrincipal;
-      if (
-        triggeringPrincipal?.isSystemPrincipal ||
-        triggeringPrincipal?.schemeIs("file")
-      ) {
+      if (triggeringPrincipal?.isSystemPrincipal) {
+        return HTML;
+      }
+
+      // If we're loading from a file: link, load it in PDF.js unless the user
+      // has told us they always want to open/save PDFs.
+      // This is because handing off the choice to open in Firefox itself
+      // through the dialog doesn't work properly and making it work is
+      // non-trivial (see https://bugzilla.mozilla.org/show_bug.cgi?id=1680147#c3 )
+      // - and anyway, opening the file is what we do for *all*
+      // other file types we handle internally (and users can then use other UI
+      // to save or open it with other apps from there).
+      if (triggeringPrincipal?.schemeIs("file") && alwaysAskBeforeHandling) {
         return HTML;
       }
     }
