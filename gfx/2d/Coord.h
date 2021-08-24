@@ -21,7 +21,7 @@ struct IsPixel;
 
 namespace gfx {
 
-template <class units>
+template <class units, class Rep = int32_t>
 struct IntCoordTyped;
 template <class units, class F = Float>
 struct CoordTyped;
@@ -37,9 +37,9 @@ struct CoordTyped;
 template <class coord, class primitive>
 struct CommonType;
 
-template <class units, class primitive>
-struct CommonType<IntCoordTyped<units>, primitive> {
-  using type = decltype(int32_t() + primitive());
+template <class units, class Rep, class primitive>
+struct CommonType<IntCoordTyped<units, Rep>, primitive> {
+  using type = decltype(Rep() + primitive());
 };
 
 template <class units, class F, class primitive>
@@ -85,19 +85,19 @@ struct CoordOperatorsHelper<true, coord, primitive> {
   // 'scale / coord' is intentionally omitted because it doesn't make sense.
 };
 
-template <class units>
+template <class units, class Rep>
 struct IntCoordTyped
-    : public BaseCoord<int32_t, IntCoordTyped<units>>,
+    : public BaseCoord<Rep, IntCoordTyped<units, Rep>>,
       public units,
-      public CoordOperatorsHelper<true, IntCoordTyped<units>, float>,
-      public CoordOperatorsHelper<true, IntCoordTyped<units>, double> {
+      public CoordOperatorsHelper<true, IntCoordTyped<units, Rep>, float>,
+      public CoordOperatorsHelper<true, IntCoordTyped<units, Rep>, double> {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  using Super = BaseCoord<int32_t, IntCoordTyped<units>>;
+  using Super = BaseCoord<Rep, IntCoordTyped<units, Rep>>;
 
   constexpr IntCoordTyped() : Super() {}
-  constexpr MOZ_IMPLICIT IntCoordTyped(int32_t aValue) : Super(aValue) {}
+  constexpr MOZ_IMPLICIT IntCoordTyped(Rep aValue) : Super(aValue) {}
 };
 
 template <class units, class F>
