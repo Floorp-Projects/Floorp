@@ -548,7 +548,17 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
   if (!GetProperty(cx, internals, internals, cx->names().useGrouping, &value)) {
     return nullptr;
   }
-  options.mUseGrouping = value.toBoolean();
+
+  using Grouping = mozilla::intl::NumberFormatOptions::Grouping;
+
+  Grouping grouping;
+  if (value.toBoolean()) {
+    grouping = Grouping::Auto;
+  } else {
+    grouping = Grouping::Never;
+  }
+
+  options.mGrouping = grouping;
 
   if (!GetProperty(cx, internals, internals, cx->names().notation, &value)) {
     return nullptr;

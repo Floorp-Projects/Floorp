@@ -110,7 +110,12 @@ struct MOZ_STACK_CLASS NumberFormatOptions {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#grouping
    */
-  bool mUseGrouping = true;
+  enum class Grouping {
+    Auto,
+    Always,
+    Min2,
+    Never,
+  } mGrouping = Grouping::Auto;
 
   /**
    * Set the notation style.
