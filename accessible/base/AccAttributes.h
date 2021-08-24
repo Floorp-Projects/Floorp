@@ -40,6 +40,7 @@ class AccAttributes {
 
   using AttrValueType =
       Variant<bool, float, int32_t, RefPtr<nsAtom>, CSSCoord, FontSize, Color>;
+  static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
  protected:
