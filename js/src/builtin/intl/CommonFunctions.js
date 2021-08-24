@@ -640,6 +640,40 @@ function GetOption(options, property, type, values, fallback) {
 }
 
 /**
+ * Extracts a property value from the provided options object, converts it to
+ * a boolean or string, checks whether it is one of a list of allowed values,
+ * and fills in a fallback value if necessary.
+ */
+function GetStringOrBooleanOption(options, property, values, trueValue, falsyValue, fallback) {
+    assert(IsObject(values), "GetStringOrBooleanOption");
+
+    // Step 1.
+    var value = options[property];
+
+    // Step 2.
+    if (value === undefined)
+        return fallback;
+
+    // Step 3.
+    if (value === true)
+        return trueValue;
+
+    // Steps 4-5.
+    if (!value)
+        return falsyValue;
+
+    // Step 6.
+    value = ToString(value);
+
+    // Step 7.
+    if (callFunction(ArrayIndexOf, values, value) === -1)
+        ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, `"${value}"`);
+
+    // Step 8.
+    return value;
+}
+
+/**
  * The abstract operation DefaultNumberOption converts value to a Number value,
  * checks whether it is in the allowed range, and fills in a fallback value if
  * necessary.

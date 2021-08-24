@@ -392,7 +392,9 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //     minimumSignificantDigits: integer ∈ [1, 21],
     //     maximumSignificantDigits: integer ∈ [1, 21],
     //
+    //     // accepts different values when Intl.NumberFormat v3 proposal is enabled
     //     useGrouping: true / false,
+    //     useGrouping: "auto" / "always" / "min2" / false,
     //
     //     notation: "standard" / "scientific" / "engineering" / "compact",
     //
@@ -576,7 +578,13 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
         lazyNumberFormatData.compactDisplay = compactDisplay;
 
     // Steps 23.
+#ifdef NIGHTLY_BUILD
+    var defaultUseGrouping = notation !== "compact" ? "auto" : "min2";
+    var useGrouping = GetStringOrBooleanOption(options, "useGrouping", ["min2", "auto", "always"],
+                                               "always", false, defaultUseGrouping);
+#else
     var useGrouping = GetOption(options, "useGrouping", "boolean", undefined, true);
+#endif
     lazyNumberFormatData.useGrouping = useGrouping;
 
     // Intl.NumberFormat Unified API Proposal
