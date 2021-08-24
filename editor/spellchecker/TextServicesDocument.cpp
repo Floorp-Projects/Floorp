@@ -1652,7 +1652,7 @@ TextServicesDocument::OffsetEntryArray::WillSetSelection(
         // inserted text offset entry, if the offsets
         // match exactly!
         if (entry->mOffsetInTextInBlock == aOffsetInTextInBlock) {
-          newStart.Set(entry->mTextNode, entry->EndOffsetInTextInBlock());
+          newStart.Set(entry->mTextNode, entry->EndOffsetInTextNode());
         }
       } else if (aOffsetInTextInBlock >= entry->mOffsetInTextInBlock) {
         bool foundEntry = false;
