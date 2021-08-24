@@ -6,7 +6,6 @@ package org.mozilla.focus.screenshots;
 
 import android.os.SystemClock;
 
-import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.ClassRule;
@@ -20,14 +19,12 @@ import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.clearText;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.pressImeActionButton;
 import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasFocus;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
@@ -79,7 +76,7 @@ public class HomeScreenScreenshots extends ScreenshotTest {
                     .check(matches(hasFocus()))
                     .perform(click(), replaceText("l10n:tip:" + tip.value), pressImeActionButton());
 
-            onView(withId(R.id.homeViewTipsLabel))
+            onView(withId(R.id.home_tips))
                     .check(matches(isDisplayed()));
             Screengrab.screenshot("MainViewTip_" + tip.name());
             onView(withId(R.id.mozac_browser_toolbar_edit_url_view)).perform(click());

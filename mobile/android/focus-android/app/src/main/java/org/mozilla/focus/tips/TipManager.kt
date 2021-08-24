@@ -5,26 +5,15 @@
 package org.mozilla.focus.tips
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.locale.LocaleManager
-import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
-import java.util.Locale
-import java.util.Random
 
 class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val deepLink: (() -> Unit)? = null) {
     companion object {
-        private const val FORCE_SHOW_DISABLE_TIPS_LAUNCH_COUNT = 2
-        private const val FORCE_SHOW_DISABLE_TIPS_INTERVAL = 30
 
         fun createAllowlistTip(context: Context): Tip {
             val id = R.string.tip_explain_allowlist3
@@ -56,6 +45,26 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             return Tip(id, name, shouldDisplayAllowListTip, deepLink)
         }
 
+        fun createFreshLookTip(context: Context): Tip {
+            val id = R.string.tip_fresh_look
+            val name = context.resources.getString(id, context.getString(R.string.app_name))
+
+            val shouldDisplayFreshLookTip = {
+                Settings.getInstance(context).getAppLaunchCount() == 0
+            }
+
+            return Tip(id, name, shouldDisplayFreshLookTip)
+        }
+
+        fun createShortcutsTip(context: Context): Tip {
+            val id = R.string.tip_about_shortcuts
+            val name = context.resources.getString(id, context.getString(R.string.app_name))
+
+            val shouldDisplayShortcutsTip = { true }
+
+            return Tip(id, name, shouldDisplayShortcutsTip)
+        }
+
         fun createTrackingProtectionTip(context: Context): Tip {
             val id = R.string.tip_disable_tracking_protection3
             val name = context.resources.getString(id)
@@ -69,105 +78,9 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             return Tip(id, name, shouldDisplayTrackingProtection)
         }
 
-        fun createHomescreenTip(context: Context): Tip {
-            val id = R.string.tip_add_to_homescreen
-            val name = context.resources.getString(id)
-            val homescreenURL =
-                "https://support.mozilla.org/kb/add-web-page-shortcuts-your-home-screen"
-
-            val deepLinkAddToHomescreen = {
-                context.components.tabsUseCases.addTab(
-                    homescreenURL,
-                    source = SessionState.Source.Internal.Menu,
-                    selectTab = true,
-                    private = true
-                )
-
-                TelemetryWrapper.pressTipEvent(id)
-            }
-
-            val shouldDisplayAddToHomescreen = { !Settings.getInstance(context).hasAddedToHomeScreen }
-
-            return Tip(id, name, shouldDisplayAddToHomescreen, deepLinkAddToHomescreen)
-        }
-
-        fun createDefaultBrowserTip(context: Context): Tip {
-            val appName = context.resources.getString(R.string.app_name)
-            val id = R.string.tip_set_default_browser
-            val name = context.resources.getString(id, appName)
-            val browsers = Browsers(context, Browsers.TRADITIONAL_BROWSER_URL)
-
-            val shouldDisplayDefaultBrowser = {
-                !Browsers(context, Browsers.TRADITIONAL_BROWSER_URL).isDefaultBrowser(context)
-            }
-
-            val deepLinkDefaultBrowser = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    SupportUtils.openDefaultAppsSettings(context)
-                } else if (!browsers.hasDefaultBrowser(context)) {
-                    // Open in method:
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL))
-                    context.startActivity(intent)
-                } else {
-                    SupportUtils.openDefaultBrowserSumoPage(context)
-                }
-                TelemetryWrapper.pressTipEvent(id)
-            }
-
-            return Tip(id, name, shouldDisplayDefaultBrowser, deepLinkDefaultBrowser)
-        }
-
-        fun createAutocompleteURLTip(context: Context): Tip {
-            val id = R.string.tip_autocomplete_url
-            val name = context.resources.getString(id)
-            val autocompleteURL =
-                "https://support.mozilla.org/kb/autocomplete-settings-firefox-focus-address-bar"
-
-            val shouldDisplayAutocompleteUrl = {
-                !Settings.getInstance(context).shouldAutocompleteFromCustomDomainList()
-            }
-
-            val deepLinkAutocompleteUrl = {
-                context.components.tabsUseCases.addTab(
-                    autocompleteURL,
-                    source = SessionState.Source.Internal.Menu,
-                    selectTab = true,
-                    private = true
-                )
-
-                TelemetryWrapper.pressTipEvent(id)
-            }
-
-            return Tip(id, name, shouldDisplayAutocompleteUrl, deepLinkAutocompleteUrl)
-        }
-
-        fun createOpenInNewTabTip(context: Context): Tip {
-            val id = R.string.tip_open_in_new_tab
-            val name = context.resources.getString(id)
-            val newTabURL =
-                "https://support.mozilla.org/kb/open-new-tab-firefox-focus-android"
-
-            val shouldDisplayOpenInNewTab = {
-                !Settings.getInstance(context).hasOpenedInNewTab()
-            }
-
-            val deepLinkOpenInNewTab = {
-                context.components.tabsUseCases.addTab(
-                    newTabURL,
-                    source = SessionState.Source.Internal.Menu,
-                    selectTab = true,
-                    private = true
-                )
-
-                TelemetryWrapper.pressTipEvent(id)
-            }
-
-            return Tip(id, name, shouldDisplayOpenInNewTab, deepLinkOpenInNewTab)
-        }
-
         fun createRequestDesktopTip(context: Context): Tip {
             val id = R.string.tip_request_desktop2
-            val name = context.resources.getString(id)
+            val name = String.format(context.resources.getString(id), context.getString(R.string.app_name))
             val requestDesktopURL =
                 "https://support.mozilla.org/kb/switch-desktop-view-firefox-focus-android"
 
@@ -187,106 +100,46 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
 
             return Tip(id, name, shouldDisplayRequestDesktop, deepLinkRequestDesktop)
         }
-
-        fun createDisableTipsTip(context: Context): Tip {
-            val id = R.string.tip_disable_tips2
-            val name = context.resources.getString(id)
-
-            val shouldDisplayDisableTips = {
-                // Count number of app launches
-                val launchCount = Settings.getInstance(context).getAppLaunchCount()
-                var shouldDisplay = false
-
-                if (launchCount != 0 && (
-                    launchCount == FORCE_SHOW_DISABLE_TIPS_LAUNCH_COUNT ||
-                        launchCount % FORCE_SHOW_DISABLE_TIPS_INTERVAL == 0
-                    )
-                ) {
-                    shouldDisplay = true
-                }
-
-                shouldDisplay
-            }
-
-            val deepLinkDisableTips = {
-                context.components.appStore.dispatch(
-                    AppAction.OpenSettings(
-                        page = Screen.Settings.Page.Mozilla
-                    )
-                )
-                TelemetryWrapper.pressTipEvent(id)
-            }
-
-            return Tip(id, name, shouldDisplayDisableTips, deepLinkDisableTips)
-        }
     }
 }
 
 // Yes, this a large class with a lot of functions. But it's very simple and still easy to read.
 @Suppress("TooManyFunctions")
 object TipManager {
-    private const val MAX_TIPS_TO_DISPLAY = 3
 
     private val listOfTips = mutableListOf<Tip>()
-    private val random = Random()
     private var listInitialized = false
-    private var tipsShown = 0
-    private var locale: Locale? = null
 
     private fun populateListOfTips(context: Context) {
+        addFreshLookTip(context)
+        addShortcutsTip(context)
         addAllowlistTip(context)
         addTrackingProtectionTip(context)
-        addHomescreenTip(context)
-        addDefaultBrowserTip(context)
-        addAutocompleteUrlTip(context)
-        addOpenInNewTabTip(context)
         addRequestDesktopTip(context)
-        addDisableTipsTip(context)
     }
 
-    // Will not return a tip if tips are disabled or if MAX TIPS have already been shown.
-    @Suppress("ReturnCount", "ComplexMethod") // Using early returns
-    fun getNextTipIfAvailable(context: Context): Tip? {
+    fun getAvailableTips(context: Context): List<Tip>? {
         if (!Settings.getInstance(context).shouldDisplayHomescreenTips()) return null
-        val currentLocale = LocaleManager.getInstance().getCurrentLocale(context)
 
-        if (!listInitialized || currentLocale != locale) {
-            locale = currentLocale
+        if (!listInitialized) {
             listOfTips.clear()
             populateListOfTips(context)
             listInitialized = true
         }
 
-        // Only show three tips before going back to the "Focus" branding
-        if (tipsShown == MAX_TIPS_TO_DISPLAY || listOfTips.count() <= 0) {
-            return null
-        }
-
-        // Always show the disable tip if it's ready to be displayed
-        for (tip in listOfTips) {
-            if (tip.id == R.string.tip_disable_tips2 && tip.shouldDisplay()) {
-                listOfTips.remove(tip)
-                return tip
-            }
-        }
-
-        var tip = listOfTips[getRandomTipIndex()]
-
-        // Find a random tip that the user doesn't already know about
-        while (!tip.shouldDisplay()) {
-            listOfTips.remove(tip)
-            if (listOfTips.count() == 0) { return null }
-            tip = listOfTips[getRandomTipIndex()]
-        }
-
-        listOfTips.remove(tip)
-        tipsShown += 1
-        TelemetryWrapper.displayTipEvent(tip.id)
-        return tip
+        // All tips should be filtered by 'shouldDisplay' but for now we are sending the list as it is
+        // listOfTips.filter { tip -> tip.shouldDisplay() }
+        return listOfTips
     }
 
-    private fun getRandomTipIndex(): Int {
-        return if (listOfTips.count() == 1) 0 else random.nextInt(listOfTips.count() - 1)
+    private fun addFreshLookTip(context: Context) {
+        val tip = Tip.createFreshLookTip(context)
+        listOfTips.add(tip)
+    }
+
+    private fun addShortcutsTip(context: Context) {
+        val tip = Tip.createShortcutsTip(context)
+        listOfTips.add(tip)
     }
 
     private fun addAllowlistTip(context: Context) {
@@ -299,33 +152,8 @@ object TipManager {
         listOfTips.add(tip)
     }
 
-    private fun addHomescreenTip(context: Context) {
-        val tip = Tip.createHomescreenTip(context)
-        listOfTips.add(tip)
-    }
-
-    private fun addDefaultBrowserTip(context: Context) {
-        val tip = Tip.createDefaultBrowserTip(context)
-        listOfTips.add(tip)
-    }
-
-    private fun addAutocompleteUrlTip(context: Context) {
-        val tip = Tip.createAutocompleteURLTip(context)
-        listOfTips.add(tip)
-    }
-
-    private fun addOpenInNewTabTip(context: Context) {
-        val tip = Tip.createOpenInNewTabTip(context)
-        listOfTips.add(tip)
-    }
-
     private fun addRequestDesktopTip(context: Context) {
         val tip = Tip.createRequestDesktopTip(context)
-        listOfTips.add(tip)
-    }
-
-    private fun addDisableTipsTip(context: Context) {
-        val tip = Tip.createDisableTipsTip(context)
         listOfTips.add(tip)
     }
 }

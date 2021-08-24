@@ -9,15 +9,10 @@ import android.animation.AnimatorListenerAdapter
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
-import android.text.SpannableString
-import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
-import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.TextView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Observer
@@ -56,7 +51,6 @@ import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.topsites.TopSiteMenuItem
@@ -70,6 +64,12 @@ import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.coroutines.CoroutineContext
+
+private const val TIP_ONE_CAROUSEL_POSITION = 1
+private const val TIP_TWO_CAROUSEL_POSITION = 2
+private const val TIP_THREE_CAROUSEL_POSITION = 3
+private const val TIP_FOUR_CAROUSEL_POSITION = 4
+private const val TIP_FIVE_CAROUSEL_POSITION = 5
 
 class FocusCrashException : Exception()
 
@@ -96,7 +96,6 @@ class UrlInputFragment :
         private val ANIMATION_BROWSER_SCREEN = "browser_screen"
 
         private val ANIMATION_DURATION = 200
-        private val TIPS_ALPHA = 0.65f
 
         private lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
 
@@ -206,6 +205,8 @@ class UrlInputFragment :
 
         StatusBarUtils.getStatusBarHeight(keyboardLinearLayout) {
             adjustViewToStatusBarHeight(it)
+            // Show tips section as a carousel when the keyboard is hidden
+            home_tips.showAsCarousel(keyboardLinearLayout.paddingBottom != 0)
         }
 
         if (!isInitialized) {
@@ -224,52 +225,8 @@ class UrlInputFragment :
 
     private fun updateTipsLabel() {
         val context = context ?: return
-        val tip = TipManager.getNextTipIfAvailable(context)
-        updateSubtitle(tip)
-    }
-
-    private fun updateSubtitle(tip: Tip?) {
-        if (tip == null) {
-            showFocusSubtitle()
-            return
-        }
-
-        val tipText = String.format(tip.text, System.getProperty("line.separator"))
-        keyboardLinearLayout.homeViewTipsLabel.alpha = TIPS_ALPHA
-
-        if (tip.deepLink == null) {
-            homeViewTipsLabel.text = tipText
-            return
-        }
-
-        // Only make the second line clickable if applicable
-        val linkStartIndex =
-            if (tipText.contains("\n")) tipText.indexOf("\n") + 2
-            else 0
-
-        keyboardLinearLayout.homeViewTipsLabel.movementMethod = LinkMovementMethod()
-        homeViewTipsLabel.setText(tipText, TextView.BufferType.SPANNABLE)
-
-        val deepLinkAction = object : ClickableSpan() {
-            override fun onClick(p0: View) {
-                tip.deepLink.invoke()
-            }
-        }
-
-        val textWithDeepLink = SpannableString(tipText).apply {
-            setSpan(deepLinkAction, linkStartIndex, tipText.length, 0)
-
-            val colorSpan = ForegroundColorSpan(homeViewTipsLabel.currentTextColor)
-            setSpan(colorSpan, linkStartIndex, tipText.length, 0)
-        }
-
-        homeViewTipsLabel.text = textWithDeepLink
-    }
-
-    private fun showFocusSubtitle() {
-        keyboardLinearLayout.homeViewTipsLabel.text = getString(R.string.teaser)
-        keyboardLinearLayout.homeViewTipsLabel.alpha = 1f
-        keyboardLinearLayout.homeViewTipsLabel.setOnClickListener(null)
+        val tips = TipManager.getAvailableTips(context)
+        home_tips.tipsAdapter.submitList(tips)
     }
 
     private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {
@@ -660,13 +617,11 @@ class UrlInputFragment :
         var triggerHandled = true
 
         when (input) {
-            "l10n:tip:1" -> updateSubtitle(Tip.createTrackingProtectionTip(requireContext()))
-            "l10n:tip:2" -> updateSubtitle(Tip.createHomescreenTip(requireContext()))
-            "l10n:tip:3" -> updateSubtitle(Tip.createDefaultBrowserTip(requireContext()))
-            "l10n:tip:4" -> updateSubtitle(Tip.createAutocompleteURLTip(requireContext()))
-            "l10n:tip:5" -> updateSubtitle(Tip.createOpenInNewTabTip(requireContext()))
-            "l10n:tip:6" -> updateSubtitle(Tip.createRequestDesktopTip(requireContext()))
-            "l10n:tip:7" -> updateSubtitle(Tip.createAllowlistTip(requireContext()))
+            "l10n:tip:1" -> home_tips.scrollToPosition(TIP_ONE_CAROUSEL_POSITION)
+            "l10n:tip:2" -> home_tips.scrollToPosition(TIP_TWO_CAROUSEL_POSITION)
+            "l10n:tip:3" -> home_tips.scrollToPosition(TIP_THREE_CAROUSEL_POSITION)
+            "l10n:tip:4" -> home_tips.scrollToPosition(TIP_FOUR_CAROUSEL_POSITION)
+            "l10n:tip:5" -> home_tips.scrollToPosition(TIP_FIVE_CAROUSEL_POSITION)
             else -> triggerHandled = false
         }
 

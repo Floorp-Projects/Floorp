@@ -61,4 +61,11 @@
     <color name="destructive">#FF6A75</color>
     <color name="primaryText">@color/photonLightGrey05</color>
     <color name="secondaryText">@color/photonLightGrey50</color>
+
+    <!-- Home Tips -->
+    <color name="inactive_dot_background" tools:ignore="MissingDefaultResource">#66FBFBFE</color>
+    <color name="active_dot_background" tools:ignore="MissingDefaultResource">#FBFBFE</color>
+    <color name="tip_text_color" tools:ignore="MissingDefaultResource">#BFBFC9</color>
+    <color name="tip_deeplink_color" tools:ignore="MissingDefaultResource">#cf3e8c</color>
+
 </resources>

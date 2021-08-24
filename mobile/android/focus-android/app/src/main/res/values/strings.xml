@@ -703,7 +703,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Why yes, we do have a fresh new look! Read more about this and other updates to %1$s.</string>
+    <string name="tip_fresh_look">Why yes, we do have a fresh new look!\n Read more about this and other updates to %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
