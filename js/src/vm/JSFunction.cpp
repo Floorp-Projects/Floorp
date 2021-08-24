@@ -761,6 +761,8 @@ bool JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v,
 }
 
 inline void JSFunction::trace(JSTracer* trc) {
+  TraceEdge(trc, &nativeFuncOrInterpretedEnv_, "fun_environment");
+
   if (isExtended()) {
     TraceRange(trc, std::size(toExtended()->extendedSlots),
                (GCPtrValue*)toExtended()->extendedSlots, "nativeReserved");
@@ -784,10 +786,6 @@ inline void JSFunction::trace(JSTracer* trc) {
       }
     }
     // NOTE: The u.scripted.s.selfHostedLazy_ does not point to GC things.
-
-    if (u.scripted.env_) {
-      TraceManuallyBarrieredEdge(trc, &u.scripted.env_, "fun_environment");
-    }
   }
 }
 
