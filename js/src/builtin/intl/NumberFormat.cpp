@@ -104,18 +104,22 @@ static bool numberFormat_toSource(JSContext* cx, unsigned argc, Value* vp) {
 static const JSFunctionSpec numberFormat_static_methods[] = {
     JS_SELF_HOSTED_FN("supportedLocalesOf",
                       "Intl_NumberFormat_supportedLocalesOf", 1, 0),
-    JS_FS_END};
+    JS_FS_END,
+};
 
 static const JSFunctionSpec numberFormat_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_NumberFormat_resolvedOptions", 0,
                       0),
     JS_SELF_HOSTED_FN("formatToParts", "Intl_NumberFormat_formatToParts", 1, 0),
-    JS_FN(js_toSource_str, numberFormat_toSource, 0, 0), JS_FS_END};
+    JS_FN(js_toSource_str, numberFormat_toSource, 0, 0),
+    JS_FS_END,
+};
 
 static const JSPropertySpec numberFormat_properties[] = {
     JS_SELF_HOSTED_GET("format", "$Intl_NumberFormat_format_get", 0),
     JS_STRING_SYM_PS(toStringTag, "Intl.NumberFormat", JSPROP_READONLY),
-    JS_PS_END};
+    JS_PS_END,
+};
 
 static bool NumberFormat(JSContext* cx, unsigned argc, Value* vp);
 
@@ -315,20 +319,8 @@ static constexpr size_t MaxUnitLength() {
   return length * 2 + std::char_traits<char>::length("-per-");
 }
 
-/**
- * Returns a new mozilla::intl::NumberFormat with the locale and number
- * formatting options of the given NumberFormat, or a nullptr if
- * initialization failed.
- */
-static mozilla::intl::NumberFormat* NewNumberFormat(
-    JSContext* cx, Handle<NumberFormatObject*> numberFormat) {
+static UniqueChars NumberFormatLocale(JSContext* cx, HandleObject internals) {
   RootedValue value(cx);
-
-  RootedObject internals(cx, intl::GetInternalsObject(cx, numberFormat));
-  if (!internals) {
-    return nullptr;
-  }
-
   if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
     return nullptr;
   }
@@ -373,34 +365,36 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
     return nullptr;
   }
 
-  UniqueChars locale = tag.toStringZ(cx);
-  if (!locale) {
-    return nullptr;
-  }
+  return tag.toStringZ(cx);
+}
 
-  mozilla::intl::NumberFormatOptions options;
+struct NumberFormatOptions : public mozilla::intl::NumberFormatOptions {
   char currencyChars[3] = {};
   char unitChars[MaxUnitLength()] = {};
+};
 
+static bool FillNumberFormatOptions(JSContext* cx, HandleObject internals,
+                                    NumberFormatOptions& options) {
+  RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, cx->names().style, &value)) {
-    return nullptr;
+    return false;
   }
 
   bool accountingSign = false;
   {
     JSLinearString* style = value.toString()->ensureLinear(cx);
     if (!style) {
-      return nullptr;
+      return false;
     }
 
     if (StringEqualsLiteral(style, "currency")) {
       if (!GetProperty(cx, internals, internals, cx->names().currency,
                        &value)) {
-        return nullptr;
+        return false;
       }
       JSLinearString* currency = value.toString()->ensureLinear(cx);
       if (!currency) {
-        return nullptr;
+        return false;
       }
 
       MOZ_RELEASE_ASSERT(
@@ -408,15 +402,16 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
           "IsWellFormedCurrencyCode permits only length-3 strings");
       MOZ_ASSERT(StringIsAscii(currency),
                  "IsWellFormedCurrencyCode permits only ASCII strings");
-      CopyChars(reinterpret_cast<Latin1Char*>(currencyChars), *currency);
+      CopyChars(reinterpret_cast<Latin1Char*>(options.currencyChars),
+                *currency);
 
       if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay,
                        &value)) {
-        return nullptr;
+        return false;
       }
       JSLinearString* currencyDisplay = value.toString()->ensureLinear(cx);
       if (!currencyDisplay) {
-        return nullptr;
+        return false;
       }
 
       using CurrencyDisplay =
@@ -436,11 +431,11 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
 
       if (!GetProperty(cx, internals, internals, cx->names().currencySign,
                        &value)) {
-        return nullptr;
+        return false;
       }
       JSLinearString* currencySign = value.toString()->ensureLinear(cx);
       if (!currencySign) {
-        return nullptr;
+        return false;
       }
 
       if (StringEqualsLiteral(currencySign, "accounting")) {
@@ -450,31 +445,31 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
       }
 
       options.mCurrency = mozilla::Some(
-          std::make_pair(std::string_view(currencyChars, 3), display));
+          std::make_pair(std::string_view(options.currencyChars, 3), display));
     } else if (StringEqualsLiteral(style, "percent")) {
       options.mPercent = true;
     } else if (StringEqualsLiteral(style, "unit")) {
       if (!GetProperty(cx, internals, internals, cx->names().unit, &value)) {
-        return nullptr;
+        return false;
       }
       JSLinearString* unit = value.toString()->ensureLinear(cx);
       if (!unit) {
-        return nullptr;
+        return false;
       }
 
       size_t unit_str_length = unit->length();
 
       MOZ_ASSERT(StringIsAscii(unit));
       MOZ_RELEASE_ASSERT(unit_str_length <= MaxUnitLength());
-      CopyChars(reinterpret_cast<Latin1Char*>(unitChars), *unit);
+      CopyChars(reinterpret_cast<Latin1Char*>(options.unitChars), *unit);
 
       if (!GetProperty(cx, internals, internals, cx->names().unitDisplay,
                        &value)) {
-        return nullptr;
+        return false;
       }
       JSLinearString* unitDisplay = value.toString()->ensureLinear(cx);
       if (!unitDisplay) {
-        return nullptr;
+        return false;
       }
 
       using UnitDisplay = mozilla::intl::NumberFormatOptions::UnitDisplay;
@@ -490,7 +485,7 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
       }
 
       options.mUnit = mozilla::Some(std::make_pair(
-          std::string_view(unitChars, unit_str_length), display));
+          std::string_view(options.unitChars, unit_str_length), display));
     } else {
       MOZ_ASSERT(StringEqualsLiteral(style, "decimal"));
     }
@@ -499,19 +494,19 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
   bool hasMinimumSignificantDigits;
   if (!HasProperty(cx, internals, cx->names().minimumSignificantDigits,
                    &hasMinimumSignificantDigits)) {
-    return nullptr;
+    return false;
   }
 
   if (hasMinimumSignificantDigits) {
     if (!GetProperty(cx, internals, internals,
                      cx->names().minimumSignificantDigits, &value)) {
-      return nullptr;
+      return false;
     }
     uint32_t minimumSignificantDigits = AssertedCast<uint32_t>(value.toInt32());
 
     if (!GetProperty(cx, internals, internals,
                      cx->names().maximumSignificantDigits, &value)) {
-      return nullptr;
+      return false;
     }
     uint32_t maximumSignificantDigits = AssertedCast<uint32_t>(value.toInt32());
 
@@ -522,19 +517,19 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
   bool hasMinimumFractionDigits;
   if (!HasProperty(cx, internals, cx->names().minimumFractionDigits,
                    &hasMinimumFractionDigits)) {
-    return nullptr;
+    return false;
   }
 
   if (hasMinimumFractionDigits) {
     if (!GetProperty(cx, internals, internals,
                      cx->names().minimumFractionDigits, &value)) {
-      return nullptr;
+      return false;
     }
     uint32_t minimumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
 
     if (!GetProperty(cx, internals, internals,
                      cx->names().maximumFractionDigits, &value)) {
-      return nullptr;
+      return false;
     }
     uint32_t maximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
 
@@ -544,13 +539,13 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
 
   if (!GetProperty(cx, internals, internals, cx->names().roundingPriority,
                    &value)) {
-    return nullptr;
+    return false;
   }
 
   {
     JSLinearString* roundingPriority = value.toString()->ensureLinear(cx);
     if (!roundingPriority) {
-      return nullptr;
+      return false;
     }
 
     using RoundingPriority =
@@ -571,19 +566,19 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
 
   if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
                    &value)) {
-    return nullptr;
+    return false;
   }
   options.mMinIntegerDigits =
       mozilla::Some(AssertedCast<uint32_t>(value.toInt32()));
 
   if (!GetProperty(cx, internals, internals, cx->names().useGrouping, &value)) {
-    return nullptr;
+    return false;
   }
 
   if (value.isString()) {
     JSLinearString* useGrouping = value.toString()->ensureLinear(cx);
     if (!useGrouping) {
-      return nullptr;
+      return false;
     }
 
     using Grouping = mozilla::intl::NumberFormatOptions::Grouping;
@@ -620,13 +615,13 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
   }
 
   if (!GetProperty(cx, internals, internals, cx->names().notation, &value)) {
-    return nullptr;
+    return false;
   }
 
   {
     JSLinearString* notation = value.toString()->ensureLinear(cx);
     if (!notation) {
-      return nullptr;
+      return false;
     }
 
     using Notation = mozilla::intl::NumberFormatOptions::Notation;
@@ -643,12 +638,12 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
 
       if (!GetProperty(cx, internals, internals, cx->names().compactDisplay,
                        &value)) {
-        return nullptr;
+        return false;
       }
 
       JSLinearString* compactDisplay = value.toString()->ensureLinear(cx);
       if (!compactDisplay) {
-        return nullptr;
+        return false;
       }
 
       if (StringEqualsLiteral(compactDisplay, "short")) {
@@ -663,13 +658,13 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
   }
 
   if (!GetProperty(cx, internals, internals, cx->names().signDisplay, &value)) {
-    return nullptr;
+    return false;
   }
 
   {
     JSLinearString* signDisplay = value.toString()->ensureLinear(cx);
     if (!signDisplay) {
-      return nullptr;
+      return false;
     }
 
     using SignDisplay = mozilla::intl::NumberFormatOptions::SignDisplay;
@@ -709,19 +704,19 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
 
   if (!GetProperty(cx, internals, internals, cx->names().roundingIncrement,
                    &value)) {
-    return nullptr;
+    return false;
   }
   options.mRoundingIncrement = AssertedCast<uint32_t>(value.toInt32());
 
   if (!GetProperty(cx, internals, internals, cx->names().roundingMode,
                    &value)) {
-    return nullptr;
+    return false;
   }
 
   {
     JSLinearString* roundingMode = value.toString()->ensureLinear(cx);
     if (!roundingMode) {
-      return nullptr;
+      return false;
     }
 
     using RoundingMode = mozilla::intl::NumberFormatOptions::RoundingMode;
@@ -754,13 +749,13 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
 
   if (!GetProperty(cx, internals, internals, cx->names().trailingZeroDisplay,
                    &value)) {
-    return nullptr;
+    return false;
   }
 
   {
     JSLinearString* trailingZeroDisplay = value.toString()->ensureLinear(cx);
     if (!trailingZeroDisplay) {
-      return nullptr;
+      return false;
     }
 
     if (StringEqualsLiteral(trailingZeroDisplay, "auto")) {
@@ -771,9 +766,35 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
     }
   }
 
-  using NumberFormat = mozilla::intl::NumberFormat;
-  mozilla::Result<mozilla::UniquePtr<NumberFormat>, NumberFormat::FormatError>
-      result = NumberFormat::TryCreate(locale.get(), options);
+  return true;
+}
+
+/**
+ * Returns a new mozilla::intl::Number[Range]Format with the locale and number
+ * formatting options of the given NumberFormat, or a nullptr if
+ * initialization failed.
+ */
+template <class Formatter>
+static Formatter* NewNumberFormat(JSContext* cx,
+                                  Handle<NumberFormatObject*> numberFormat) {
+  RootedObject internals(cx, intl::GetInternalsObject(cx, numberFormat));
+  if (!internals) {
+    return nullptr;
+  }
+
+  UniqueChars locale = NumberFormatLocale(cx, internals);
+  if (!locale) {
+    return nullptr;
+  }
+
+  NumberFormatOptions options;
+  if (!FillNumberFormatOptions(cx, internals, options)) {
+    return nullptr;
+  }
+
+  mozilla::Result<mozilla::UniquePtr<Formatter>,
+                  typename Formatter::FormatError>
+      result = Formatter::TryCreate(locale.get(), options);
 
   if (result.isOk()) {
     return result.unwrap().release();
@@ -1335,8 +1356,25 @@ static FieldType GetFieldTypeForNumberPartType(
   return nullptr;
 }
 
+static FieldType GetFieldTypeForNumberPartSource(
+    mozilla::intl::NumberPartSource source) {
+  switch (source) {
+    case mozilla::intl::NumberPartSource::Shared:
+      return &JSAtomState::shared;
+    case mozilla::intl::NumberPartSource::Start:
+      return &JSAtomState::startRange;
+    case mozilla::intl::NumberPartSource::End:
+      return &JSAtomState::endRange;
+  }
+
+  MOZ_CRASH("unexpected number part source");
+}
+
+enum class DisplayNumberPartSource : bool { No, Yes };
+
 static bool FormattedNumberToParts(JSContext* cx, HandleString str,
                                    const mozilla::intl::NumberPartVector& parts,
+                                   DisplayNumberPartSource displaySource,
                                    MutableHandleValue result) {
   size_t lastEndIndex = 0;
 
@@ -1376,6 +1414,15 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
     propVal.setString(partSubstr);
     if (!DefineDataProperty(cx, singlePart, cx->names().value, propVal)) {
       return false;
+    }
+
+    if (displaySource == DisplayNumberPartSource::Yes) {
+      FieldType source = GetFieldTypeForNumberPartSource(part.source);
+
+      propVal.setString(cx->names().*source);
+      if (!DefineDataProperty(cx, singlePart, cx->names().source, propVal)) {
+        return false;
+      }
     }
 
     partsArray->initDenseElement(index++, ObjectValue(*singlePart));
@@ -1596,7 +1643,7 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   // Obtain a cached mozilla::intl::NumberFormat object.
   mozilla::intl::NumberFormat* nf = numberFormat->getNumberFormatter();
   if (!nf) {
-    nf = NewNumberFormat(cx, numberFormat);
+    nf = NewNumberFormat<mozilla::intl::NumberFormat>(cx, numberFormat);
     if (!nf) {
       return false;
     }
@@ -1684,7 +1731,8 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (formatToParts) {
-    return FormattedNumberToParts(cx, str, parts, args.rval());
+    return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
+                                  args.rval());
   }
 
   args.rval().setString(str);
