@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions - Protection Query</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Tests in this file check that output protection queries are performed and
+// handled correctly. This is done by using a special clear key key system that
+// emits key status to track protection status.
+
+// Special key system used for these tests.
+const kClearKeyWithProtectionQuery =
+  "org.mozilla.clearkey_with_protection_query";
+const kTestFile = "bipbop-cenc-video-10s.mp4";
+const kTestMimeType = 'video/mp4; codecs="avc1.4d4015"';
+const kTestKeyId = "7e571d037e571d037e571d037e571d11"; // Hex representation
+const kTestKey = "7e5733337e5733337e5733337e573311";
+
+// This is the special key-id used by the mozilla clearkey CDM to signal
+// protection query status. As hex it is "6f75747075742d70726f74656374696f6e",
+// the hex translates to ascii "output-protection".
+const kProtectionQueryKeyIdString = "output-protection";
+
+// Options for requestMediaKeySystemAccess
+const kKeySystemOptions = [
+  {
+    initDataTypes: ["cenc"],
+    videoCapabilities: [{ contentType: kTestMimeType }],
+  },
+];
+
+// Helper to setup EME on `video`.
+// @param video the HTMLMediaElement to configure EME on.
+// @returns a media key session for the video. Callers can use this to
+// configure the `onkeystatuseschange` event handler for each test. Callers
+// *should not* configure other aspects of the session as this helper already
+// does so.
+async function setupEme(video) {
+  // Start setting up EME.
+  let access = await navigator.requestMediaKeySystemAccess(
+    kClearKeyWithProtectionQuery,
+    kKeySystemOptions
+  );
+  let mediaKeys = await access.createMediaKeys();
+  await video.setMediaKeys(mediaKeys);
+
+  let session = video.mediaKeys.createSession();
+
+  video.onencrypted = async encryptedEvent => {
+    session.onmessage = messageEvent => {
+      // Handle license messages. Hard code the license because we always test
+      // with the same file and we know what the license should be.
+      const license = {
+        keys: [
+          {
+            kty: "oct",
+            kid: HexToBase64(kTestKeyId),
+            k: HexToBase64(kTestKey),
+          },
+        ],
+        type: "temporary",
+      };
+
+      const encodedLicense = new TextEncoder().encode(JSON.stringify(license));
+
+      session.update(encodedLicense);
+    };
+
+    session.generateRequest(
+      encryptedEvent.initDataType,
+      encryptedEvent.initData
+    );
+  };
+
+  return session;
+}
+
+// Helper to setup MSE media on `video`.
+// @param video the HTMLMediaElement to configure MSE on.
+async function setupMse(video) {
+  const mediaSource = new MediaSource();
+  video.src = URL.createObjectURL(mediaSource);
+  await once(mediaSource, "sourceopen");
+  const sourceBuffer = mediaSource.addSourceBuffer("video/mp4");
+  let fetchResponse = await fetch(kTestFile);
+  sourceBuffer.appendBuffer(await fetchResponse.arrayBuffer());
+  await once(sourceBuffer, "updateend");
+  mediaSource.endOfStream();
+  await once(mediaSource, "sourceended");
+}
+
+// Helper to create a video element and append it to the page.
+function createAndAppendVideo() {
+  const video = document.createElement("video");
+  video.id = "video";
+  // Loop in case tests run slowly, we want video to keep playing until we
+  // get expected events.
+  video.loop = true;
+  document.body.appendChild(video);
+  return video;
+}
+
+// Helper to remove a video from the page.
+function removeVideo() {
+  let video = document.getElementById("video");
+  CleanUpMedia(video);
+}
+
+// Helper to get the status for the kProtectionQueryKeyIdString key id. A
+// session can (and will) have other keys with their own status, but we want
+// to check this special key to find the protection query status.
+function getKeyStatusForProtectionKeyId(session) {
+  for (let [keyId, status] of session.keyStatuses) {
+    if (ArrayBufferToString(keyId) == kProtectionQueryKeyIdString) {
+      return status;
+    }
+  }
+  return null;
+}
+
+// Tests playing encrypted media, starting a screen capture during playback,
+// then stopping the capture while playback continues.
+async function testProtectionQueryWithCaptureDuringVideo() {
+  let video = createAndAppendVideo();
+
+  // Configure the video and start it playing. KeyId should be usable (not restricted).
+  let session = await setupEme(video);
+  let keyStatusChangedPromise1 = new Promise(
+    resolve =>
+      (session.onkeystatuseschange = () => {
+        // We may get status changes prior to kProtectionQueryKeyIdString changing,
+        // ensure we wait for the first kProtectionQueryKeyIdString change.
+        if (getKeyStatusForProtectionKeyId(session)) {
+          resolve();
+        }
+      })
+  );
+  await setupMse(video);
+  await Promise.all([video.play(), keyStatusChangedPromise1]);
+  is(
+    getKeyStatusForProtectionKeyId(session),
+    "usable",
+    "Should be usable as capture hasn't started"
+  );
+
+  // Start a screen capture, this should restrict output.
+  let displayMediaStreamPromise = navigator.mediaDevices.getDisplayMedia({
+    video: true,
+  });
+  let keyStatusChangedPromise2 = new Promise(
+    resolve => (session.onkeystatuseschange = resolve)
+  );
+  let [displayMediaStream] = await Promise.all([
+    displayMediaStreamPromise,
+    keyStatusChangedPromise2,
+  ]);
+  is(
+    getKeyStatusForProtectionKeyId(session),
+    "output-restricted",
+    "Should be output-restricted as capture is happening"
+  );
+
+  // Stop the screen capture, output should be usable again.
+  let keyStatusChangedPromise3 = new Promise(
+    resolve => (session.onkeystatuseschange = resolve)
+  );
+  displayMediaStream.getTracks().forEach(track => track.stop());
+  displayMediaStream = null;
+  await keyStatusChangedPromise3;
+  is(
+    getKeyStatusForProtectionKeyId(session),
+    "usable",
+    "Should be usable as capture has stopped"
+  );
+
+  removeVideo();
+}
+
+// Tests starting a screen capture, then starting encrypted playback, then
+// stopping the screen capture while encrypted playback continues.
+async function testProtectionQueryWithCaptureStartingBeforeVideo() {
+  // Start capture before setting up video.
+  let displayMediaStream = await navigator.mediaDevices.getDisplayMedia({
+    video: true,
+  });
+
+  let video = createAndAppendVideo();
+
+  // Configure the video and start it playing. KeyId should be restricted already.
+  let session = await setupEme(video);
+  let keyStatusChangedPromise1 = new Promise(
+    resolve =>
+      (session.onkeystatuseschange = () => {
+        // We may get status changes prior to kProtectionQueryKeyIdString changing,
+        // ensure we wait for the first kProtectionQueryKeyIdString change. In
+        // rare cases the first protection status can be "usable" due to racing
+        // between playback and the machinery that detects WebRTC capture. To
+        // avoid this, wait for the first 'output-restricted' notification,
+        // which will either be the first event, or will quickly follow 'usable'.
+        if (getKeyStatusForProtectionKeyId(session) == "output-restricted") {
+          resolve();
+        }
+      })
+  );
+  await setupMse(video);
+  await Promise.all([video.play(), keyStatusChangedPromise1]);
+  is(
+    getKeyStatusForProtectionKeyId(session),
+    "output-restricted",
+    "Should be restricted as capture is happening"
+  );
+
+  // Stop the screen capture, output should be usable again.
+  let keyStatusChangedPromise2 = new Promise(
+    resolve => (session.onkeystatuseschange = resolve)
+  );
+  displayMediaStream.getTracks().forEach(track => track.stop());
+  displayMediaStream = null;
+  await keyStatusChangedPromise2;
+  is(
+    getKeyStatusForProtectionKeyId(session),
+    "usable",
+    "Should be usable as capture has stopped"
+  );
+
+  removeVideo();
+}
+
+function setupEnvironment() {
+  return new Promise(resolve => {
+    SetupEMEPref(async () => {
+      // Need gesture activation for getDisplayMedia.
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
+      // Need test key systems for test key system. Need relaxed navigator
+      // permissions and fake streams for getDisplayMedia.
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["media.clearkey.test-key-systems.enabled", true],
+          ["media.navigator.permission.disabled", true],
+          ["media.navigator.streams.fake", true],
+        ],
+      });
+      resolve();
+    });
+  });
+}
+
+add_task(setupEnvironment);
+add_task(testProtectionQueryWithCaptureDuringVideo);
+add_task(testProtectionQueryWithCaptureStartingBeforeVideo);
+</script>
+</pre>
+</body>
+</html>
