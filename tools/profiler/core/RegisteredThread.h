@@ -29,12 +29,6 @@ class RacyRegisteredThread final {
 
   MOZ_COUNTED_DTOR(RacyRegisteredThread)
 
-  // This is called on every profiler restart. Put things that should happen at
-  // that time here.
-  void ReinitializeOnResume() {
-    mThreadRegistration.mData.ReinitializeOnResume();
-  }
-
   class ProfilingStack& ProfilingStack() {
     return mThreadRegistration.mData.ProfilingStackRef();
   }
@@ -77,22 +71,6 @@ class RegisteredThread final {
   void ResetMainThread(nsIThread* aThread) {
     mRacyRegisteredThread.mThreadRegistration.mData.mThread = aThread;
   }
-
-  // Request that this thread start JS sampling. JS sampling won't actually
-  // start until a subsequent PollJSSampling() call occurs *and* mContext has
-  // been set.
-  void StartJSSampling(uint32_t aJSFlags) {
-    mRacyRegisteredThread.mThreadRegistration.mData.StartJSSampling(aJSFlags);
-  }
-
-  // Request that this thread stop JS sampling. JS sampling won't actually stop
-  // until a subsequent PollJSSampling() call occurs.
-  void StopJSSampling() {
-    mRacyRegisteredThread.mThreadRegistration.mData.StopJSSampling();
-  }
-
-  // Poll to see if JS sampling should be started/stopped.
-  void PollJSSampling();
 
  private:
   class RacyRegisteredThread mRacyRegisteredThread;
