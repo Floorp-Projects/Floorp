@@ -12,7 +12,7 @@ namespace mozilla {
 namespace layers {
 
 CompositableForwarder* ClientCanvasRenderer::GetForwarder() {
-  return mLayer->Manager()->AsShadowForwarder();
+  return mLayer->ClientManager()->AsShadowForwarder();
 }
 
 bool ClientCanvasRenderer::CreateCompositable() {

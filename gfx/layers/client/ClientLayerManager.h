@@ -73,7 +73,7 @@ class ClientLayerManager final : public LayerManager,
   virtual ~ClientLayerManager();
 
  public:
-  ShadowLayerForwarder* AsShadowForwarder() override { return mForwarder; }
+  ShadowLayerForwarder* AsShadowForwarder() { return mForwarder; }
 
   KnowsCompositor* AsKnowsCompositor() override { return mForwarder; }
 
