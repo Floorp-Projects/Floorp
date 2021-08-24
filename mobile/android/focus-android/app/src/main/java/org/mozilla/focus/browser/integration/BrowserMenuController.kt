@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.ToolbarMenu
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
@@ -52,7 +53,7 @@ class BrowserMenuController(
                 ioScope.launch {
                     currentTab?.let { state ->
                         topSitesUseCases.addPinnedSites(
-                            title = state.content.title,
+                            title = state.content.titleOrDomain,
                             url = state.content.url
                         )
                     }
