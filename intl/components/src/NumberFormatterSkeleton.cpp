@@ -8,6 +8,8 @@
 
 #include <algorithm>
 
+#include "unicode/unumberrangeformatter.h"
+
 namespace mozilla {
 namespace intl {
 
@@ -271,6 +273,26 @@ UNumberFormatter* NumberFormatterSkeleton::toFormatter(
   }
   return nf;
 }
+
+#ifndef U_HIDE_DRAFT_API
+UNumberRangeFormatter* NumberFormatterSkeleton::toRangeFormatter(
+    std::string_view locale) {
+  if (!mValidSkeleton) {
+    return nullptr;
+  }
+
+  UParseError* perror = nullptr;
+  UErrorCode status = U_ZERO_ERROR;
+  UNumberRangeFormatter* nrf =
+      unumrf_openForSkeletonWithCollapseAndIdentityFallback(
+          mVector.begin(), mVector.length(), UNUM_RANGE_COLLAPSE_NONE,
+          UNUM_IDENTITY_FALLBACK_RANGE, locale.data(), perror, &status);
+  if (U_FAILURE(status)) {
+    return nullptr;
+  }
+  return nrf;
+}
+#endif
 
 }  // namespace intl
 }  // namespace mozilla

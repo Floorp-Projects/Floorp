@@ -10,6 +10,7 @@ EXPORTS.mozilla.intl = [
     "src/DateTimePatternGenerator.h",
     "src/ICU4CGlue.h",
     "src/NumberFormat.h",
+    "src/NumberRangeFormat.h",
     "src/PluralRules.h",
 ]
 
@@ -22,6 +23,7 @@ UNIFIED_SOURCES += [
     "src/NumberFormat.cpp",
     "src/NumberFormatFields.cpp",
     "src/NumberFormatterSkeleton.cpp",
+    "src/NumberRangeFormat.cpp",
     "src/PluralRules.cpp",
 ]
 

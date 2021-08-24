@@ -5,6 +5,7 @@
 #include "mozilla/intl/PluralRules.h"
 
 #include "mozilla/intl/NumberFormat.h"
+#include "mozilla/intl/NumberRangeFormat.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Span.h"
@@ -18,8 +19,11 @@ namespace mozilla {
 namespace intl {
 
 PluralRules::PluralRules(UPluralRules*& aPluralRules,
-                         UniquePtr<NumberFormat>&& aNumberFormat)
-    : mPluralRules(aPluralRules), mNumberFormat(std::move(aNumberFormat)) {
+                         UniquePtr<NumberFormat>&& aNumberFormat,
+                         UniquePtr<NumberRangeFormat>&& aNumberRangeFormat)
+    : mPluralRules(aPluralRules),
+      mNumberFormat(std::move(aNumberFormat)),
+      mNumberRangeFormat(std::move(aNumberRangeFormat)) {
   MOZ_ASSERT(aPluralRules);
   aPluralRules = nullptr;
 }
@@ -30,6 +34,13 @@ Result<UniquePtr<PluralRules>, PluralRules::Error> PluralRules::TryCreate(
       NumberFormat::TryCreate(aLocale, aOptions.ToNumberFormatOptions());
 
   if (numberFormat.isErr()) {
+    return Err(PluralRules::Error::InternalError);
+  }
+
+  auto numberRangeFormat =
+      NumberRangeFormat::TryCreate(aLocale, aOptions.ToNumberFormatOptions());
+
+  if (numberRangeFormat.isErr()) {
     return Err(PluralRules::Error::InternalError);
   }
 
@@ -44,8 +55,8 @@ Result<UniquePtr<PluralRules>, PluralRules::Error> PluralRules::TryCreate(
     return Err(PluralRules::Error::InternalError);
   }
 
-  return UniquePtr<PluralRules>(
-      new PluralRules(pluralRules, numberFormat.unwrap()));
+  return UniquePtr<PluralRules>(new PluralRules(
+      pluralRules, numberFormat.unwrap(), numberRangeFormat.unwrap()));
 }
 
 Result<PluralRules::Keyword, PluralRules::Error> PluralRules::Select(
@@ -61,6 +72,22 @@ Result<PluralRules::Keyword, PluralRules::Error> PluralRules::Select(
 
   return KeywordFromUtf16(Span(keyword, lengthResult.unwrap()));
 }
+
+#ifdef MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
+Result<PluralRules::Keyword, PluralRules::Error> PluralRules::SelectRange(
+    double aStart, double aEnd) const {
+  char16_t keyword[MAX_KEYWORD_LENGTH];
+
+  auto lengthResult = mNumberRangeFormat->selectForRange(
+      aStart, aEnd, keyword, MAX_KEYWORD_LENGTH, mPluralRules);
+
+  if (lengthResult.isErr()) {
+    return Err(PluralRules::Error::FormatError);
+  }
+
+  return KeywordFromUtf16(Span(keyword, lengthResult.unwrap()));
+}
+#endif
 
 Result<EnumSet<PluralRules::Keyword>, PluralRules::Error>
 PluralRules::Categories() const {
