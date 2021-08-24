@@ -65,9 +65,10 @@ auto GraphRunner::OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
   mIterationState = Some(IterationState(aStateTime, aIterationEnd, aMixer));
 
 #ifdef DEBUG
-  if (auto audioDriver = mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
+  if (const auto* audioDriver =
+          mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
     mAudioDriverThreadId = audioDriver->ThreadId();
-  } else if (auto clockDriver =
+  } else if (const auto* clockDriver =
                  mGraph->CurrentDriver()->AsSystemClockDriver()) {
     mClockDriverThread = clockDriver->Thread();
   } else {
@@ -140,11 +141,11 @@ bool GraphRunner::InDriverIteration(const GraphDriver* aDriver) const {
     return false;
   }
 
-  if (auto audioDriver = aDriver->AsAudioCallbackDriver()) {
+  if (const auto* audioDriver = aDriver->AsAudioCallbackDriver()) {
     return audioDriver->ThreadId() == mAudioDriverThreadId;
   }
 
-  if (auto clockDriver = aDriver->AsSystemClockDriver()) {
+  if (const auto* clockDriver = aDriver->AsSystemClockDriver()) {
     return clockDriver->Thread() == mClockDriverThread;
   }
 
