@@ -1350,8 +1350,8 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
 
   size_t index = 0;
   for (const auto& part : parts) {
-    FieldType type = GetFieldTypeForNumberPartType(part.first);
-    size_t endIndex = part.second;
+    FieldType type = GetFieldTypeForNumberPartType(part.type);
+    size_t endIndex = part.endIndex;
 
     MOZ_ASSERT(lastEndIndex < endIndex);
 
