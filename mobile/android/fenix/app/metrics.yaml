@@ -144,11 +144,12 @@ events:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18895
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-10-01"
+    expires: "2022-04-01"
   default_browser_notif_tapped:
     type: event
     description: |
@@ -171,11 +172,12 @@ events:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18895
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-10-01"
+    expires: "2022-04-01"
   total_uri_count:
     type: counter
     description: |
@@ -593,11 +595,12 @@ experiments_default_browser:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18895
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-10-01"
+    expires: "2022-04-01"
 toolbar_settings:
   changed_position:
     type: event
@@ -4636,12 +4639,13 @@ perf.startup:
       - https://github.com/mozilla-mobile/fenix/issues/18836
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/19028
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
-    expires: "2021-10-09"
+    expires: "2022-04-01"
 
 perf.awesomebar:
   history_suggestions:
@@ -5510,11 +5514,12 @@ home_menu:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18987
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-10-01"
+    expires: "2022-04-01"
 
 home_screen:
   home_screen_displayed:
@@ -5525,11 +5530,12 @@ home_screen:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/19025
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-10-01"
+    expires: "2022-04-01"
 
 android_keystore_experiment:
   experiment_failure:
@@ -5648,11 +5654,12 @@ set_default_newtab_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18895
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-10-01"
+    expires: "2022-04-01"
   close_experiment_card_clicked:
     type: event
     description: |
@@ -5662,11 +5669,12 @@ set_default_newtab_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/18895
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-10-01"
+    expires: "2022-04-01"
 
 set_default_setting_experiment:
   set_default_browser_clicked:
@@ -5678,11 +5686,12 @@ set_default_setting_experiment:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/19047
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2021-10-01"
+    expires: "2022-04-01"
 start_on_home:
   enter_home_screen:
     type: event
