@@ -39,6 +39,7 @@
 
 #include "js/ProfilingStack.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/ProfilerThreadPlatformData.h"
 #include "mozilla/ProfilerThreadRegistrationInfo.h"
 #include "nsCOMPtr.h"
@@ -62,6 +63,15 @@ class ThreadRegistrationData {
  public:
   // No public accessors here. See derived classes for accessors, and
   // Get.../With... functions for who can uses these accessors.
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+    // Not including data that is not fully owned here.
+    return 0;
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
 
   // `protected` to allow derived classes to read all data members.
  protected:
