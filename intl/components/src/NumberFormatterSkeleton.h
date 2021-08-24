@@ -5,6 +5,7 @@
 #define intl_components_NumberFormatterSkeleton_h_
 #include <string_view>
 #include "mozilla/intl/NumberFormat.h"
+#include "mozilla/intl/NumberRangeFormat.h"
 #include "mozilla/Vector.h"
 #include "unicode/unumberformatter.h"
 #include "unicode/utypes.h"
@@ -33,7 +34,9 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
   /**
    * Return a new UNumberRangeFormatter based on this skeleton.
    */
-  UNumberRangeFormatter* toRangeFormatter(std::string_view locale);
+  UNumberRangeFormatter* toRangeFormatter(
+      std::string_view locale, NumberRangeFormatOptions::RangeCollapse collapse,
+      NumberRangeFormatOptions::RangeIdentityFallback identity);
 #endif
 
  private:

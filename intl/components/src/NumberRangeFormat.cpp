@@ -18,7 +18,7 @@ namespace mozilla::intl {
 
 /*static*/ Result<UniquePtr<NumberRangeFormat>, NumberRangeFormat::FormatError>
 NumberRangeFormat::TryCreate(std::string_view aLocale,
-                             const NumberFormatOptions& aOptions) {
+                             const NumberRangeFormatOptions& aOptions) {
   UniquePtr<NumberRangeFormat> nrf = MakeUnique<NumberRangeFormat>();
   MOZ_TRY(nrf->initialize(aLocale, aOptions));
   return nrf;
@@ -34,9 +34,10 @@ NumberRangeFormat::~NumberRangeFormat() {
 }
 
 Result<Ok, NumberRangeFormat::FormatError> NumberRangeFormat::initialize(
-    std::string_view aLocale, const NumberFormatOptions& aOptions) {
+    std::string_view aLocale, const NumberRangeFormatOptions& aOptions) {
   NumberFormatterSkeleton skeleton(aOptions);
-  mNumberRangeFormatter = skeleton.toRangeFormatter(aLocale);
+  mNumberRangeFormatter = skeleton.toRangeFormatter(
+      aLocale, aOptions.mRangeCollapse, aOptions.mRangeIdentityFallback);
   if (mNumberRangeFormatter) {
     UErrorCode status = U_ZERO_ERROR;
     mFormattedNumberRange = unumrf_openResult(&status);
