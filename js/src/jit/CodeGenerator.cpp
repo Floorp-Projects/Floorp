@@ -6958,26 +6958,22 @@ void CodeGenerator::visitNewObjectVMCall(LNewObject* lir) {
   // PlainObject::class_'d) from self-hosted code, we need a different init
   // function.
   switch (lir->mir()->mode()) {
-    case MNewObject::ObjectLiteral:
-      if (templateObject) {
-        pushArg(ImmGCPtr(templateObject));
+    case MNewObject::ObjectLiteral: {
+      MOZ_ASSERT(!templateObject);
+      pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
+      pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
 
-        using Fn = JSObject* (*)(JSContext*, HandleObject);
-        callVM<Fn, NewObjectOperationWithTemplate>(lir);
-      } else {
-        pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
-        pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
-
-        using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode * pc);
-        callVM<Fn, NewObjectOperation>(lir);
-      }
+      using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode * pc);
+      callVM<Fn, NewObjectOperation>(lir);
       break;
-    case MNewObject::ObjectCreate:
+    }
+    case MNewObject::ObjectCreate: {
       pushArg(ImmGCPtr(templateObject));
 
       using Fn = PlainObject* (*)(JSContext*, HandlePlainObject);
       callVM<Fn, ObjectCreateWithTemplate>(lir);
       break;
+    }
   }
 
   if (ReturnReg != objReg) {
