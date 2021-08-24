@@ -410,7 +410,7 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
     if (parent) {
       frame = parent;
     } else {
-      parent = nsLayoutUtils::GetCrossDocParentFrame(frame);
+      parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(frame);
       if (!parent) break;
 
       if ((aFlags & nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) == 0 &&
