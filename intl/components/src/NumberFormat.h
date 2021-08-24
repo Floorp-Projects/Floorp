@@ -339,7 +339,7 @@ class NumberFormat final {
   }
 
   /**
-   * Formats a string encoded big integer to a utf-16 string. The string view
+   * Formats a string encoded decimal number to a utf-16 string. The string view
    * is valid until another number is formatted. Accessing the string view
    * after this event is undefined behavior.
    *
@@ -355,7 +355,7 @@ class NumberFormat final {
   }
 
   /**
-   * Formats a string encoded big integer to a utf-16 string, and fills the
+   * Formats a string encoded decimal number to a utf-16 string, and fills the
    * provided parts vector. The string view is valid until another number is
    * formatted. Accessing the string view after this event is undefined
    * behavior.
@@ -374,7 +374,7 @@ class NumberFormat final {
   }
 
   /**
-   * Formats a string encoded big integer to the provider buffer
+   * Formats a string encoded decimal number to the provider buffer
    * (either utf-8 or utf-16).
    *
    * https://tc39.es/ecma402/#sec-formatnumberstring
