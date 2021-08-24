@@ -35,10 +35,6 @@ class RacyRegisteredThread final {
     mThreadRegistration.mData.mIsBeingProfiled = aIsBeingProfiled;
   }
 
-  bool IsBeingProfiled() const {
-    return mThreadRegistration.mData.mIsBeingProfiled;
-  }
-
   // This is called on every profiler restart. Put things that should happen at
   // that time here.
   void ReinitializeOnResume() {

@@ -164,7 +164,6 @@ using ProfilingStateChangeCallback = std::function<void(ProfilingState)>;
 
 [[nodiscard]] inline bool profiler_is_active() { return false; }
 [[nodiscard]] inline bool profiler_can_accept_markers() { return false; }
-[[nodiscard]] inline bool profiler_thread_is_being_profiled() { return false; }
 [[nodiscard]] inline bool profiler_feature_active(uint32_t aFeature) {
   return false;
 }
@@ -276,7 +275,6 @@ class RacyFeatures {
       sActiveAndFeatures;
 };
 
-[[nodiscard]] bool IsThreadBeingProfiled();
 }  // namespace mozilla::profiler::detail
 
 //---------------------------------------------------------------------------
@@ -313,13 +311,6 @@ class RacyFeatures {
 //   }
 [[nodiscard]] inline bool profiler_can_accept_markers() {
   return mozilla::profiler::detail::RacyFeatures::IsActiveAndUnpaused();
-}
-
-// Is the profiler active, and is the current thread being profiled?
-// (Same caveats and recommented usage as profiler_is_active().)
-[[nodiscard]] inline bool profiler_thread_is_being_profiled() {
-  return profiler_is_active() &&
-         mozilla::profiler::detail::IsThreadBeingProfiled();
 }
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
