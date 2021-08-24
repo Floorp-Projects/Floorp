@@ -4036,12 +4036,6 @@ void SamplerThread::Run() {
 #  error "bad platform"
 #endif
 
-UniquePlatformData AllocPlatformData(ProfilerThreadId aThreadId) {
-  return UniquePlatformData(new PlatformData(aThreadId));
-}
-
-void PlatformDataDestructor::operator()(PlatformData* aData) { delete aData; }
-
 // END SamplerThread
 ////////////////////////////////////////////////////////////////////////
 
