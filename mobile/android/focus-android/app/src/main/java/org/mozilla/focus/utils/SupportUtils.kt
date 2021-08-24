@@ -42,7 +42,7 @@ object SupportUtils {
         AUTOCOMPLETE("autofill-domain-android"),
         TRACKERS("trackers"),
         USAGE_DATA("usage-data"),
-        WHATS_NEW("whats-new-firefox-focus-android-version-93"),
+        WHATS_NEW("whats-new-firefox-focus-android"),
         SEARCH_SUGGESTIONS("search-suggestions-focus-android"),
         ALLOWLIST("focus-android-allowlist")
     }
