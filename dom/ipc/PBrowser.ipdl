@@ -223,7 +223,12 @@ parent:
      */
     sync DispatchFocusToTopLevelWindow();
 
-    async DidUnsuppressPainting();
+    /**
+     * When the child process unsuppresses painting, we send the message for the
+     * parent process to start painting the new document, if it's still painting
+     * the old one.
+     */
+    [Priority=mediumhigh] async DidUnsuppressPainting();
 
     /**
      * When child sends this message, parent should move focus to
