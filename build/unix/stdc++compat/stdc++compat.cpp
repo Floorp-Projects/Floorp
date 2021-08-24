@@ -76,6 +76,10 @@ void __attribute__((weak)) __throw_bad_array_new_length() { MOZ_CRASH(); }
 namespace std {
 __attribute__((weak)) runtime_error::runtime_error(char const* s)
     : runtime_error(std::string(s)) {}
+__attribute__((weak)) out_of_range::out_of_range(char const* s)
+    : out_of_range(std::string(s)) {}
+__attribute__((weak)) invalid_argument::invalid_argument(char const* s)
+    : invalid_argument(std::string(s)) {}
 }  // namespace std
 
 /* Expose the definitions for the old ABI, allowing us to call its functions */
