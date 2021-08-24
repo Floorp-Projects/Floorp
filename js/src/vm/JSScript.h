@@ -2111,6 +2111,15 @@ class JSScript : public js::BaseScript {
     return getObject(GET_GCTHING_INDEX(pc));
   }
 
+  js::Shape* getShape(js::GCThingIndex index) const {
+    return &gcthings()[index].as<js::Shape>();
+  }
+
+  js::Shape* getShape(jsbytecode* pc) const {
+    MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
+    return getShape(GET_GCTHING_INDEX(pc));
+  }
+
   js::Scope* getScope(js::GCThingIndex index) const {
     return &gcthings()[index].as<js::Scope>();
   }
