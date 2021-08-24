@@ -5,8 +5,7 @@
 
 from fnmatch import fnmatch
 from collections import defaultdict
-
-from six.moves.urllib.parse import urlsplit
+from urllib.parse import urlsplit
 
 from taskgraph.optimize import register_strategy, registry, OptimizationStrategy
 from taskgraph.util.bugbug import (

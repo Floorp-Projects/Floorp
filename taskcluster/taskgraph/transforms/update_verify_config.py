@@ -5,8 +5,7 @@
 Transform the beetmover task into an actual task description.
 """
 
-
-import six.moves.urllib.parse as urlparse
+from urllib.parse import urlsplit
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
@@ -110,7 +109,7 @@ def add_command(config, tasks):
             "update-verify.cfg",
         ]
 
-        repo_path = urlparse.urlsplit(get_branch_repo(config)).path.lstrip("/")
+        repo_path = urlsplit(get_branch_repo(config)).path.lstrip("/")
         command.extend(["--repo-path", repo_path])
 
         if release_config.get("partial_versions"):

@@ -9,8 +9,6 @@ import logging
 import os
 import re
 
-import six
-
 from taskgraph.util.taskcluster import list_artifacts, get_artifact, get_task_definition
 from ..util.parameterization import resolve_task_references
 from .registry import register_callback_action
@@ -194,9 +192,9 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
                 failure_path = "testing/web-platform/tests" + failure_path
             if is_windows:
                 failure_path = "\\".join(failure_path.split("/"))
-            task_definition["payload"]["env"][
-                "MOZHARNESS_TEST_PATHS"
-            ] = six.ensure_text(json.dumps({suite: [failure_path]}, sort_keys=True))
+            task_definition["payload"]["env"]["MOZHARNESS_TEST_PATHS"] = json.dumps(
+                {suite: [failure_path]}, sort_keys=True
+            )
 
             logger.info(
                 "Creating task for path {} with command {}".format(

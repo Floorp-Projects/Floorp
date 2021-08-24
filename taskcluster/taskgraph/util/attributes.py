@@ -162,6 +162,6 @@ def release_level(project):
     """
     Whether this is a staging release or not.
 
-    :return six.text_type: One of "production" or "staging".
+    :return str: One of "production" or "staging".
     """
     return "production" if project in RELEASE_PROJECTS else "staging"

@@ -9,8 +9,6 @@ from copy import deepcopy
 from datetime import date, timedelta
 import json
 
-from six import ensure_text
-
 from voluptuous import (
     Any,
     Optional,
@@ -275,8 +273,8 @@ def setup_perftest_extra_options(config, jobs):
 def pass_perftest_options(config, jobs):
     for job in jobs:
         env = job.setdefault("worker", {}).setdefault("env", {})
-        env["PERFTEST_OPTIONS"] = ensure_text(
-            json.dumps(config.params["try_task_config"].get("perftest-options"))
+        env["PERFTEST_OPTIONS"] = json.dumps(
+            config.params["try_task_config"].get("perftest-options")
         )
         yield job
 

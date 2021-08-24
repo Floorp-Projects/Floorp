@@ -9,11 +9,9 @@ import os
 import re
 import requests
 import requests_unixsocket
-import six
 import sys
-
-from six.moves.urllib.parse import quote, urlencode, urlunparse
-from six.moves.collections_abc import Mapping
+from collections.abc import Mapping
+from urllib.parse import quote, urlencode, urlunparse
 
 from mozbuild.util import memoize
 from mozpack.files import GeneratedFile
@@ -185,7 +183,7 @@ class HashingWriter:
         self._writer.write(buf)
 
     def hexdigest(self):
-        return six.ensure_text(self._hash.hexdigest())
+        return self._hash.hexdigest()
 
 
 def create_context_tar(topsrcdir, context_dir, out_path, image_name, args):
@@ -260,9 +258,7 @@ def stream_context_tar(topsrcdir, context_dir, out_file, image_name, args):
                 archive_path = os.path.join("topsrcdir", p)
                 archive_files[archive_path] = fs_path
 
-    archive_files["Dockerfile"] = GeneratedFile(
-        b"".join(six.ensure_binary(s) for s in content)
-    )
+    archive_files["Dockerfile"] = GeneratedFile("".join(content).encode("utf-8"))
 
     writer = HashingWriter(out_file)
     create_tar_gz_from_files(writer, archive_files, f"{image_name}.tar")
@@ -333,6 +329,6 @@ def parse_volumes(image):
                     "convert to multiple entries"
                 )
 
-            volumes |= {six.ensure_text(v) for v in v.split()}
+            volumes |= {v.decode("utf-8") for v in v.split()}
 
     return volumes
