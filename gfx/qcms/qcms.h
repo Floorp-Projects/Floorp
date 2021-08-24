@@ -151,7 +151,10 @@ void qcms_data_create_rgb_with_gamma(
                 void **mem,
                 size_t *size);
 
-/* Don't use enums here because they can't go safely across FFI */
+/* The arguments are standardized Coding-independent Code Points
+ * See [Rec. ITU-T H.273 (12/2016)](https://www.itu.int/rec/T-REC-H.273-201612-I/en)
+ *
+ * Don't use enums here because they can't go safely across FFI. */
 qcms_profile* qcms_profile_create_cicp(uint8_t colour_primaries,
                                        uint8_t transfer_characteristics);
 
