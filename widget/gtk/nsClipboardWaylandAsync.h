@@ -22,12 +22,16 @@ class nsRetrievalContextWaylandAsync : public nsRetrievalContext {
  public:
   nsRetrievalContextWaylandAsync();
 
+  // Successful call of GetClipboardData()/GetClipboardText() needs to be paired
+  // with ReleaseClipboardData().
   virtual const char* GetClipboardData(const char* aMimeType,
                                        int32_t aWhichClipboard,
                                        uint32_t* aContentLength) override;
   virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
   virtual void ReleaseClipboardData(const char* aClipboardData) override;
 
+  // GetTargets() uses clipboard data internally so it can't be used between
+  // GetClipboardData()/GetClipboardText() and ReleaseClipboardData() calls.
   virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                               int* aTargetNum) override;
 
