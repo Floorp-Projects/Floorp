@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test event suppression and scrolling</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    function run() {
+      let testWin = window.open("file_suppressed_events_and_scrolling.html");
+      // The order of xhrDone and didScroll is random.
+      let xhrDone = false;
+      let didScroll = false;
+      window.onmessage = function(e) {
+        let iframeWindow = testWin.document.body.firstChild.contentWindow;
+        info(e.data);
+        if (e.data == "doscroll") {
+          iframeWindow.scrollTo(0, 1500);
+        } else if (e.data == "xhr_done") {
+          xhrDone = true;
+          if (didScroll) {
+            iframeWindow.scrollTo(0, 3000);
+          }
+        } else if (e.data == "didscroll") {
+          if (didScroll && xhrDone) {
+            // We got the second scroll event.
+            ok(true, "Should have got two scroll events");
+            testWin.close();
+            SimpleTest.finish();
+          }
+          didScroll = true;
+          if (xhrDone) {
+            iframeWindow.scrollTo(0, 3000);
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body onload="run()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
