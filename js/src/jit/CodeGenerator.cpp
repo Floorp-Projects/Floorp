@@ -14220,7 +14220,7 @@ void CodeGenerator::visitAssertClass(LAssertClass* ins) {
   Register temp = ToRegister(ins->getTemp(0));
 
   Label success;
-  if (ins->mir()->getClass() == &JSFunction::class_) {
+  if (ins->mir()->getClass() == &FunctionClass) {
     // Allow both possible function classes here.
     masm.branchTestObjIsFunctionNoSpectreMitigations(Assembler::Equal, obj,
                                                      temp, &success);
