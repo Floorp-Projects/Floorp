@@ -36,13 +36,6 @@
 
 @end
 
-@interface MOXSummaryAccessible : mozAccessible
-
-// override
-- (NSNumber*)moxExpanded;
-
-@end
-
 @interface MOXListItemAccessible : mozAccessible
 
 // override
