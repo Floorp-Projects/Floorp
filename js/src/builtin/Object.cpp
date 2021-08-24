@@ -567,7 +567,7 @@ static MOZ_ALWAYS_INLINE JSString* GetBuiltinTagFast(JSObject* obj,
     return cx->names().objectArray;
   }
 
-  if (clasp->isJSFunction()) {
+  if (clasp == &JSFunction::class_) {
     return cx->names().objectFunction;
   }
 

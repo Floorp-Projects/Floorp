@@ -1894,9 +1894,6 @@
 - name: GuardToClass
   gen_boilerplate: false
 
-- name: GuardToFunction
-  gen_boilerplate: false
-
 - name: IsArray
   gen_boilerplate: false
 
