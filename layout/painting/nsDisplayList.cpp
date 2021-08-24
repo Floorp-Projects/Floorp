@@ -101,7 +101,6 @@
 #include "nsTextFrame.h"
 #include "nsSliderFrame.h"
 #include "nsFocusManager.h"
-#include "ClientLayerManager.h"
 #include "TextDrawTarget.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/CompositorThread.h"
