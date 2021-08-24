@@ -757,6 +757,12 @@ class WasmFlags(TargetCompileFlags):
 
         TargetCompileFlags.__init__(self, context)
 
+    def _debug_flags(self):
+        substs = self._context.config.substs
+        if substs.get("MOZ_DEBUG") or substs.get("MOZ_DEBUG_SYMBOLS"):
+            return ["-g"]
+        return []
+
     def _optimize_flags(self):
         if not self._context.config.substs.get("MOZ_OPTIMIZE"):
             return []
