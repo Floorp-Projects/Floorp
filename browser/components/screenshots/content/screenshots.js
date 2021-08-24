@@ -42,9 +42,18 @@ class ScreenshotsUI extends HTMLElement {
     this._downloadButton.addEventListener("click", this);
   }
 
+  close() {
+    let params = new URLSearchParams(location.search);
+    let browsingContextId = parseInt(params.get("browsingContextId"), 10);
+    let browsingContext = BrowsingContext.get(browsingContextId);
+    let win = browsingContext.top.embedderElement.ownerGlobal;
+    Services.obs.notifyObservers(win, "toggle-screenshot-disable", "false");
+    window.close();
+  }
+
   async handleEvent(event) {
     if (event.type == "click" && event.target == this._cancelButton) {
-      window.close();
+      this.close();
     } else if (event.type == "click" && event.target == this._copyButton) {
       this.saveToClipboard(
         this.ownerDocument.getElementById("placeholder-image").src
@@ -91,7 +100,7 @@ class ScreenshotsUI extends HTMLElement {
       // add the download to the download list in the Downloads list in the Browser UI
       list.add(download);
 
-      window.close();
+      this.close();
 
       // Await successful completion of the save via the download manager
       await download.start();
@@ -107,6 +116,7 @@ class ScreenshotsUI extends HTMLElement {
 
       var img = new Image();
       img.crossOrigin = "Anonymous";
+      var self = this;
       img.onload = function() {
         var canvas = document.createElement("canvas");
         var ctx = canvas.getContext("2d");
@@ -137,7 +147,7 @@ class ScreenshotsUI extends HTMLElement {
           Services.clipboard.kGlobalClipboard
         );
 
-        window.close();
+        self.close();
       };
       img.src = src;
     } catch (ex) {}
