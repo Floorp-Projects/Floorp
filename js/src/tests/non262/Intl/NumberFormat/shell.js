@@ -21,6 +21,21 @@ const NumberFormatParts = {
     Unit: GenericPartCreator("unit"),
 };
 
+function NumberRangeFormatParts(source) {
+  let entries = Object.entries(NumberFormatParts)
+
+  entries.push(["Approx", GenericPartCreator("approximatelySign")]);
+
+  return Object.fromEntries(entries.map(([key, part]) => {
+    let partWithSource = str => {
+      return Object.defineProperty(part(str), "source", {
+        value: source, writable: true, enumerable: true, configurable: true
+      });
+    };
+    return [key, partWithSource];
+  }));
+}
+
 function assertParts(nf, x, expected) {
     var parts = nf.formatToParts(x);
     assertEq(parts.map(part => part.value).join(""), nf.format(x),
@@ -31,6 +46,20 @@ function assertParts(nf, x, expected) {
     for (var i = 0; i < len; i++) {
         assertEq(parts[i].type, expected[i].type, "type mismatch at " + i);
         assertEq(parts[i].value, expected[i].value, "value mismatch at " + i);
+    }
+}
+
+function assertRangeParts(nf, start, end, expected) {
+    var parts = nf.formatRangeToParts(start, end);
+    assertEq(parts.map(part => part.value).join(""), nf.formatRange(start, end),
+             "formatRangeToParts and formatRange must agree");
+
+    var len = parts.length;
+    assertEq(len, expected.length, "parts count mismatch");
+    for (var i = 0; i < len; i++) {
+        assertEq(parts[i].type, expected[i].type, "type mismatch at " + i);
+        assertEq(parts[i].value, expected[i].value, "value mismatch at " + i);
+        assertEq(parts[i].source, expected[i].source, "source mismatch at " + i);
     }
 }
 

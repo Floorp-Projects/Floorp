@@ -807,6 +807,52 @@ function Intl_NumberFormat_formatToParts(value) {
 }
 
 /**
+ * Intl.NumberFormat.prototype.formatRange ( start, end )
+ */
+function Intl_NumberFormat_formatRange(start, end) {
+    // Step 1.
+    var nf = this;
+
+    // Step 2.
+    if (!IsObject(nf) || (nf = intl_GuardToNumberFormat(nf)) === null) {
+        return callFunction(intl_CallNumberFormatMethodIfWrapped, this, start, end,
+                            "Intl_NumberFormat_formatRange");
+    }
+
+    // Step 3.
+    if (start === undefined || end === undefined) {
+        ThrowTypeError(JSMSG_UNDEFINED_NUMBER, start === undefined ? "start" : "end",
+                       "formatRange");
+    }
+
+    // Steps 4-6.
+    return intl_FormatNumberRange(nf, start, end, /* formatToParts = */ false);
+}
+
+/**
+ * Intl.NumberFormat.prototype.formatRangeToParts ( start, end )
+ */
+function Intl_NumberFormat_formatRangeToParts(start, end) {
+    // Step 1.
+    var nf = this;
+
+    // Step 2.
+    if (!IsObject(nf) || (nf = intl_GuardToNumberFormat(nf)) === null) {
+        return callFunction(intl_CallNumberFormatMethodIfWrapped, this, start, end,
+                            "Intl_NumberFormat_formatRangeToParts");
+    }
+
+    // Step 3.
+    if (start === undefined || end === undefined) {
+        ThrowTypeError(JSMSG_UNDEFINED_NUMBER, start === undefined ? "start" : "end",
+                       "formatRangeToParts");
+    }
+
+    // Steps 4-6.
+    return intl_FormatNumberRange(nf, start, end, /* formatToParts = */ true);
+}
+
+/**
  * Returns the resolved options for a NumberFormat object.
  *
  * Spec: ECMAScript Internationalization API Specification, 11.4.5.
