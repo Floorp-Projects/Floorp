@@ -11,6 +11,9 @@ add_task(async function() {
   const { inspector, tab } = await openInspectorForURL("about:blank");
   await selectNode("body", inspector);
 
+  // Before we start navigating, attach a listener on the reloaded event.
+  const onInspectorReloaded = inspector.once("reloaded");
+
   // Note: here we don't want to use the `navigateTo` helper from shared-head.js
   // because we want to modify the page as early as possible after the
   // navigation, ideally before the inspector has fully initialized.
@@ -56,6 +59,9 @@ add_task(async function() {
     return content.document.querySelector("#yay").textContent;
   });
   is(expectedText, "load", "Load event fired.");
+
+  info("Wait for the inspector to be properly reloaded");
+  await onInspectorReloaded;
 
   // Smoke test to check that the inspector can still select nodes and hasn't
   // gone blank.
