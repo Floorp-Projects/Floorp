@@ -1459,18 +1459,7 @@ class TLSRegisteredThread {
   // the main thread registers itself.
   static void Init() {
     MOZ_ASSERT(sState == State::Uninitialized, "Already initialized");
-    AutoProfilerLabel::ProfilingStackOwnerTLS::Init();
-    MOZ_ASSERT(
-        AutoProfilerLabel::ProfilingStackOwnerTLS::sState !=
-            AutoProfilerLabel::ProfilingStackOwnerTLS::State::Uninitialized,
-        "Unexpected ProfilingStackOwnerTLS::sState after "
-        "ProfilingStackOwnerTLS::Init()");
-    sState =
-        (AutoProfilerLabel::ProfilingStackOwnerTLS::sState ==
-             AutoProfilerLabel::ProfilingStackOwnerTLS::State::Initialized &&
-         sRegisteredThread.init())
-            ? State::Initialized
-            : State::Unavailable;
+    sState = sRegisteredThread.init() ? State::Initialized : State::Unavailable;
   }
 
   static bool IsTLSInited() {
@@ -1497,23 +1486,8 @@ class TLSRegisteredThread {
                             : nullptr;
   }
 
-  // Get only the ProfilingStack. Accesses are not guarded by gPSMutex.
-  // RacyRegisteredThread() can also be used to get the ProfilingStack, but that
-  // is marginally slower because it requires an extra pointer indirection.
-  static ProfilingStack* Stack() {
-    if (!IsTLSInited()) {
-      return nullptr;
-    }
-    ProfilingStackOwner* profilingStackOwner =
-        AutoProfilerLabel::ProfilingStackOwnerTLS::Get();
-    if (!profilingStackOwner) {
-      return nullptr;
-    }
-    return &profilingStackOwner->ProfilingStack();
-  }
-
-  static void SetRegisteredThreadAndAutoProfilerLabelProfilingStack(
-      PSLockRef, class RegisteredThread* aRegisteredThread) {
+  static void SetRegisteredThread(PSLockRef,
+                                  class RegisteredThread* aRegisteredThread) {
     if (!IsTLSInited()) {
       return;
     }
@@ -1521,33 +1495,13 @@ class TLSRegisteredThread {
         aRegisteredThread,
         "Use ResetRegisteredThread() instead of SetRegisteredThread(nullptr)");
     sRegisteredThread.set(aRegisteredThread);
-    ProfilingStackOwner& profilingStackOwner =
-        aRegisteredThread->RacyRegisteredThread().ProfilingStackOwner();
-    profilingStackOwner.AddRef();
-    AutoProfilerLabel::ProfilingStackOwnerTLS::Set(&profilingStackOwner);
   }
 
-  // Only reset the registered thread. The AutoProfilerLabel's ProfilingStack
-  // is kept, because the thread may not have unregistered itself yet, so it may
-  // still push/pop labels even after the profiler has shut down.
   static void ResetRegisteredThread(PSLockRef) {
     if (!IsTLSInited()) {
       return;
     }
     sRegisteredThread.set(nullptr);
-  }
-
-  // Reset the AutoProfilerLabels' ProfilingStack, because the thread is
-  // unregistering itself.
-  static void ResetAutoProfilerLabelProfilingStack(PSLockRef) {
-    if (!IsTLSInited()) {
-      return;
-    }
-    MOZ_RELEASE_ASSERT(
-        AutoProfilerLabel::ProfilingStackOwnerTLS::Get(),
-        "ResetAutoProfilerLabelProfilingStack should only be called once");
-    AutoProfilerLabel::ProfilingStackOwnerTLS::Get()->Release();
-    AutoProfilerLabel::ProfilingStackOwnerTLS::Set(nullptr);
   }
 
  private:
@@ -1570,67 +1524,6 @@ TLSRegisteredThread::State TLSRegisteredThread::sState;
 
 /* static */
 MOZ_THREAD_LOCAL(RegisteredThread*) TLSRegisteredThread::sRegisteredThread;
-
-// Only written once from `profiler_init` (through `TLSRegisteredThread::Init()`
-// and `AutoProfilerLabel::ProfilingStackOwnerTLS::Init()`); all reads should
-// only happen after `Init()`, so there is no need to make it atomic.
-// Zero-initialized to State::Uninitialized.
-/* static */
-AutoProfilerLabel::ProfilingStackOwnerTLS::State
-    AutoProfilerLabel::ProfilingStackOwnerTLS::sState;
-
-// Although you can access a thread's ProfilingStack via
-// TLSRegisteredThread::sRegisteredThread, we also have a second TLS pointer
-// directly to the ProfilingStack. Here's why.
-//
-// - We need to be able to push to and pop from the ProfilingStack in
-//   AutoProfilerLabel.
-//
-// - The class functions are hot and must be defined in GeckoProfiler.h so they
-//   can be inlined.
-//
-// - We don't want to expose TLSRegisteredThread (and RegisteredThread) in
-//   GeckoProfiler.h.
-//
-// This second pointer isn't ideal, but does provide a way to satisfy those
-// constraints. TLSRegisteredThread is responsible for updating it.
-//
-// The (Racy)RegisteredThread and AutoProfilerLabel::ProfilingStackOwnerTLS
-// co-own the thread's ProfilingStack, so whichever is reset second, is
-// responsible for destroying the ProfilingStack; Because MOZ_THREAD_LOCAL
-// doesn't support RefPtr, AddRef&Release are done explicitly in
-// TLSRegisteredThread.
-/* static */
-MOZ_THREAD_LOCAL(ProfilingStackOwner*)
-AutoProfilerLabel::ProfilingStackOwnerTLS::sProfilingStackOwnerTLS;
-
-/* static */
-void AutoProfilerLabel::ProfilingStackOwnerTLS::Init() {
-  MOZ_ASSERT(sState == State::Uninitialized, "Already initialized");
-  sState =
-      sProfilingStackOwnerTLS.init() ? State::Initialized : State::Unavailable;
-}
-
-void ProfilingStackOwner::DumpStackAndCrash() const {
-  fprintf(stderr,
-          "ProfilingStackOwner::DumpStackAndCrash() thread id: %" PRIu64
-          ", size: %u\n",
-          uint64_t(profiler_current_thread_id().ToNumber()),
-          unsigned(mProfilingStack.stackSize()));
-  js::ProfilingStackFrame* allFrames = mProfilingStack.frames;
-  for (uint32_t i = 0; i < mProfilingStack.stackSize(); i++) {
-    js::ProfilingStackFrame& frame = allFrames[i];
-    if (frame.isLabelFrame()) {
-      fprintf(stderr, "%u: label frame, sp=%p, label='%s' (%s)\n", unsigned(i),
-              frame.stackAddress(), frame.label(),
-              frame.dynamicString() ? frame.dynamicString() : "-");
-    } else {
-      fprintf(stderr, "%u: non-label frame\n", unsigned(i));
-    }
-  }
-
-  MOZ_CRASH("Non-empty stack!");
-}
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
@@ -4224,8 +4117,7 @@ static ProfilingStack* locked_register_thread(
       info, NS_GetCurrentThreadNoCreate(),
       (void*)aOffThreadRef.UnlockedConstReaderCRef().StackTop());
 
-  TLSRegisteredThread::SetRegisteredThreadAndAutoProfilerLabelProfilingStack(
-      aLock, registeredThread.get());
+  TLSRegisteredThread::SetRegisteredThread(aLock, registeredThread.get());
 
   if (ActivePS::Exists(aLock) && ActivePS::ShouldProfileThread(aLock, info)) {
     registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
@@ -4308,21 +4200,22 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 // This basically duplicates AutoProfilerLabel's constructor.
 static void* MozGlueLabelEnter(const char* aLabel, const char* aDynamicString,
                                void* aSp) {
-  ProfilingStackOwner* profilingStackOwner =
-      AutoProfilerLabel::ProfilingStackOwnerTLS::Get();
-  if (profilingStackOwner) {
-    profilingStackOwner->ProfilingStack().pushLabelFrame(
-        aLabel, aDynamicString, aSp, JS::ProfilingCategoryPair::OTHER);
+  ThreadRegistration::OnThreadPtr onThreadPtr =
+      ThreadRegistration::GetOnThreadPtr();
+  if (!onThreadPtr) {
+    return nullptr;
   }
-  return profilingStackOwner;
+  ProfilingStack& profilingStack =
+      onThreadPtr->UnlockedConstReaderAndAtomicRWRef().ProfilingStackRef();
+  profilingStack.pushLabelFrame(aLabel, aDynamicString, aSp,
+                                JS::ProfilingCategoryPair::OTHER);
+  return &profilingStack;
 }
 
 // This basically duplicates AutoProfilerLabel's destructor.
-static void MozGlueLabelExit(void* aProfilingStackOwner) {
-  if (aProfilingStackOwner) {
-    reinterpret_cast<ProfilingStackOwner*>(aProfilingStackOwner)
-        ->ProfilingStack()
-        .pop();
+static void MozGlueLabelExit(void* aProfilingStack) {
+  if (aProfilingStack) {
+    reinterpret_cast<ProfilingStack*>(aProfilingStack)->pop();
   }
 }
 
@@ -5533,11 +5426,8 @@ static void locked_unregister_thread(PSLockRef lock) {
   }
 
   if (!CorePS::Exists()) {
-    // This function can be called after the main thread has already shut down.
-    // We want to reset the AutoProfilerLabel's ProfilingStack pointer (if
-    // needed), because a thread could stay registered after the profiler has
-    // shut down.
-    TLSRegisteredThread::ResetAutoProfilerLabelProfilingStack(lock);
+    // This function can be called after the main thread has already shut
+    // down.
     return;
   }
 
@@ -5562,10 +5452,8 @@ static void locked_unregister_thread(PSLockRef lock) {
     }
 
     // Clear the pointer to the RegisteredThread object that we're about to
-    // destroy, as well as the AutoProfilerLabel's ProfilingStack because the
-    // thread is unregistering itself and won't need the ProfilingStack anymore.
+    // destroy.
     TLSRegisteredThread::ResetRegisteredThread(lock);
-    TLSRegisteredThread::ResetAutoProfilerLabelProfilingStack(lock);
 
     // Remove the thread from the list of registered threads. This deletes the
     // registeredThread object.
