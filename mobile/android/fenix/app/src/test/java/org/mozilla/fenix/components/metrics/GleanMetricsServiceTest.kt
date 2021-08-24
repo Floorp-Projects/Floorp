@@ -19,6 +19,7 @@ import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.History
+import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -276,5 +277,16 @@ class GleanMetricsServiceTest {
         assertFalse(Events.defaultBrowserNotifTapped.testHasValue())
         gleanService.track(Event.DefaultBrowserNotifTapped)
         assertTrue(Events.defaultBrowserNotifTapped.testHasValue())
+    }
+
+    @Test
+    fun `Home screen recent bookmarks events are correctly recorded`() {
+        assertFalse(RecentBookmarks.bookmarkClicked.testHasValue())
+        gleanService.track(Event.BookmarkClicked)
+        assertTrue(RecentBookmarks.bookmarkClicked.testHasValue())
+
+        assertFalse(RecentBookmarks.showAllBookmarks.testHasValue())
+        gleanService.track(Event.ShowAllBookmarks)
+        assertTrue(RecentBookmarks.showAllBookmarks.testHasValue())
     }
 }

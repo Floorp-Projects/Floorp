@@ -12,6 +12,8 @@ import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
 
@@ -47,9 +49,11 @@ class DefaultRecentBookmarksController(
             newTab = true,
             from = BrowserDirection.FromHome
         )
+        activity.components.core.metrics.track(Event.BookmarkClicked)
     }
 
     override fun handleShowAllBookmarksClicked() {
+        activity.components.core.metrics.track(Event.ShowAllBookmarks)
         dismissSearchDialogIfDisplayed()
         navController.navigate(
             HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)

@@ -46,6 +46,7 @@ import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.ReaderMode
+import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchSuggestions
@@ -851,6 +852,14 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.ShowAllRecentTabs -> EventWrapper<NoExtraKeys>(
             { RecentTabs.showAllClicked.record(it) }
+        )
+
+        is Event.BookmarkClicked -> EventWrapper<NoExtraKeys>(
+            { RecentBookmarks.bookmarkClicked.add() }
+        )
+
+        is Event.ShowAllBookmarks -> EventWrapper<NoExtraKeys>(
+            { RecentBookmarks.showAllBookmarks.add() }
         )
 
         is Event.AndroidAutofillRequestWithLogins -> EventWrapper<NoExtraKeys>(
