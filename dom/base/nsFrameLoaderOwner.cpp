@@ -186,18 +186,13 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
   // nsSubDocumentFrame to use the new one. We can delay doing this if we're
   // keeping our old frameloader around in the BFCache and the new frame hasn't
   // presented yet to continue painting the previous document.
-  //
-  // We may not have a `BrowserParent` yet, so if `IsRemoteFrame` is true, and
-  // `browserParent` is null, we know it hasn't painted yet.
-  bool retainPaint = true;
-  auto* browserParent = BrowserParent::GetFrom(mFrameLoader);
-  if (!bfcacheEntry || !mFrameLoader->IsRemoteFrame()) {
-    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-            ("Previous frameLoader not entering BFCache - immediately "
-             "resetting nsSubDocumentFrame (bfcacheEntry=%p, isRemoteFrame=%d, "
-             "browserParent=%p)",
-             bfcacheEntry.get(), mFrameLoader->IsRemoteFrame(), browserParent));
-    retainPaint = false;
+  const bool retainPaint = bfcacheEntry && mFrameLoader->IsRemoteFrame();
+  if (!retainPaint) {
+    MOZ_LOG(
+        gSHIPBFCacheLog, LogLevel::Debug,
+        ("Previous frameLoader not entering BFCache - not retaining paint data"
+         "(bfcacheEntry=%p, isRemoteFrame=%d)",
+         bfcacheEntry.get(), mFrameLoader->IsRemoteFrame()));
   }
 
   ChangeFrameLoaderCommon(owner, retainPaint);
