@@ -31,6 +31,7 @@ async function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
   const opts = {video: aVideo, audio: aAudio};
   if (aShare) {
     opts.video = { mediaSource: aShare };
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
   }
   if (useFakeStreams) {
     opts.fake = true;

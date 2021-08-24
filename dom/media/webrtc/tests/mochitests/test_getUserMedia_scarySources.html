@@ -17,6 +17,7 @@ let observe = topic => new Promise(r => Services.obs.addObserver(function o(...a
 }, topic));
 
 let getDevices = async constraints => {
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
   let [{ windowID, innerWindowID, callID, devices }] = await Promise.race([
     getUserMedia(constraints),
     observe("getUserMedia:request")

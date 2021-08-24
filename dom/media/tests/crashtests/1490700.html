@@ -6,6 +6,7 @@
 </body>
 <script type="application/javascript">
 async function test() {
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
   await window.navigator.mediaDevices.getUserMedia({
     video: {
       mediaSource: 'screen',
