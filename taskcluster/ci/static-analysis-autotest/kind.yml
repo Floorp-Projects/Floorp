@@ -100,4 +100,3 @@ jobs:
                 - win64-node
                 - win64-dump_syms
                 - win64-winchecksec
-                - sysroot-wasm32-wasi
