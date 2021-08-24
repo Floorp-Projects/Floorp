@@ -1840,7 +1840,11 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
         initialHeap_(initialHeap),
         mode_(mode),
         vmCall_(vmCall) {
-    MOZ_ASSERT_IF(mode != ObjectLiteral, templateObject());
+    if (mode == ObjectLiteral) {
+      MOZ_ASSERT(!templateObject());
+    } else {
+      MOZ_ASSERT(templateObject());
+    }
     setResultType(MIRType::Object);
 
     // The constant is kept separated in a MConstant, this way we can safely

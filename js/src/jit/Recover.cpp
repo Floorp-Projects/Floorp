@@ -1492,32 +1492,24 @@ bool RTruncateToInt32::recover(JSContext* cx, SnapshotIterator& iter) const {
 
 bool MNewObject::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
+
   writer.writeUnsigned(uint32_t(RInstruction::Recover_NewObject));
-  MOZ_ASSERT(Mode(uint8_t(mode_)) == mode_);
-  writer.writeByte(uint8_t(mode_));
+
+  // Recover instructions are only supported if we have a template object.
+  MOZ_ASSERT(mode_ == MNewObject::ObjectCreate);
   return true;
 }
 
-RNewObject::RNewObject(CompactBufferReader& reader) {
-  mode_ = MNewObject::Mode(reader.readByte());
-}
+RNewObject::RNewObject(CompactBufferReader& reader) {}
 
 bool RNewObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
   RootedValue result(cx);
-  JSObject* resultObject = nullptr;
 
-  // See CodeGenerator::visitNewObjectVMCall
-  switch (mode_) {
-    case MNewObject::ObjectLiteral:
-      resultObject = NewObjectOperationWithTemplate(cx, templateObject);
-      break;
-    case MNewObject::ObjectCreate:
-      resultObject =
-          ObjectCreateWithTemplate(cx, templateObject.as<PlainObject>());
-      break;
-  }
-
+  // See CodeGenerator::visitNewObjectVMCall.
+  // Note that recover instructions are only used if mode == ObjectCreate.
+  JSObject* resultObject =
+      ObjectCreateWithTemplate(cx, templateObject.as<PlainObject>());
   if (!resultObject) {
     return false;
   }

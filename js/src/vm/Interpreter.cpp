@@ -5038,14 +5038,6 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   return NewBuiltinClassInstanceWithKind<PlainObject>(cx, GenericObject);
 }
 
-JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
-                                             HandleObject templateObject) {
-  MOZ_ASSERT(cx->realm() == templateObject->nonCCWRealm());
-
-  NewObjectKind newKind = GenericObject;
-  return CopyTemplateObject(cx, templateObject.as<PlainObject>(), newKind);
-}
-
 JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
                                              gc::AllocKind allocKind,
                                              gc::AllocSite* site) {
