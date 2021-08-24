@@ -118,7 +118,7 @@ jsreftest:
             android-hw.*\/debug: 12
             android-hw.*/(opt|pgo)?: 6
             windows.*\/opt: 2
-            windows10-64-asan-qr/opt: 3
+            windows10-64-2004-asan-qr/opt: 3
             windows10-64-ccov-qr/opt: 5
             linux.*64-ccov.*/.*: 5
             linux1804-64-qr/opt: 4
@@ -145,10 +145,7 @@ jsreftest:
                     android-hw-.*-aarch64(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     android-hw-.*-arm7(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     default: built-projects
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual
+    virtualization: virtual
 
 reftest:
     description: "Reftest run"
