@@ -14,16 +14,19 @@ ThreadRegistry::RegistryContainer ThreadRegistry::sRegistryContainer;
 /* static */
 ThreadRegistry::RegistryMutex ThreadRegistry::sRegistryMutex;
 
+#if !defined(MOZ_GECKO_PROFILER)
+// When MOZ_GECKO_PROFILER is not defined, the function definitions in
+// platform.cpp are not built, causing link errors. So we keep these simple
+// definitions here.
+
 /* static */
 void ThreadRegistry::Register(ThreadRegistration::OnThreadRef aOnThreadRef) {
-  // TODO in bug 1722261: Move to platform.cpp to interact with profiler code.
   LockedRegistry lock;
   MOZ_RELEASE_ASSERT(sRegistryContainer.append(OffThreadRef{aOnThreadRef}));
 }
 
 /* static */
 void ThreadRegistry::Unregister(ThreadRegistration::OnThreadRef aOnThreadRef) {
-  // TODO in bug 1722261: Move to platform.cpp to interact with profiler code.
   LockedRegistry lock;
   for (OffThreadRef& thread : sRegistryContainer) {
     if (thread.IsPointingAt(*aOnThreadRef.mThreadRegistration)) {
@@ -32,5 +35,6 @@ void ThreadRegistry::Unregister(ThreadRegistration::OnThreadRef aOnThreadRef) {
     }
   }
 }
+#endif  // !defined(MOZ_GECKO_PROFILER)
 
 }  // namespace mozilla::profiler
