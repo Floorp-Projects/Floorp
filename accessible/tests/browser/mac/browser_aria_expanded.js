@@ -28,7 +28,10 @@ addAccessibleTask(
     await stateChanged;
     is(button.getAttributeValue("AXExpanded"), 1, "button is expanded");
 
-    stateChanged = waitForStateChange("b", STATE_EXPANDED, false);
+    stateChanged = Promise.all([
+      waitForStateChange("b", STATE_EXPANDED, false),
+      waitForStateChange("b", EXT_STATE_EXPANDABLE, false, true),
+    ]);
     await SpecialPowers.spawn(browser, [], () => {
       content.document.getElementById("b").removeAttribute("aria-expanded");
     });
