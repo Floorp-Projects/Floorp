@@ -189,11 +189,19 @@ TEST(IntlNumberFormat, FormatToParts)
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"123.456,789");
   ASSERT_EQ(parts.length(), 5U);
-  ASSERT_EQ(parts[0], (NumberPart{NumberPartType::Integer, 3}));
-  ASSERT_EQ(parts[1], (NumberPart{NumberPartType::Group, 4}));
-  ASSERT_EQ(parts[2], (NumberPart{NumberPartType::Integer, 7}));
-  ASSERT_EQ(parts[3], (NumberPart{NumberPartType::Decimal, 8}));
-  ASSERT_EQ(parts[4], (NumberPart{NumberPartType::Fraction, 11}));
+
+  // NumberFormat only ever produces number parts with NumberPartSource::Shared.
+
+  ASSERT_EQ(parts[0],
+            (NumberPart{NumberPartType::Integer, NumberPartSource::Shared, 3}));
+  ASSERT_EQ(parts[1],
+            (NumberPart{NumberPartType::Group, NumberPartSource::Shared, 4}));
+  ASSERT_EQ(parts[2],
+            (NumberPart{NumberPartType::Integer, NumberPartSource::Shared, 7}));
+  ASSERT_EQ(parts[3],
+            (NumberPart{NumberPartType::Decimal, NumberPartSource::Shared, 8}));
+  ASSERT_EQ(parts[4], (NumberPart{NumberPartType::Fraction,
+                                  NumberPartSource::Shared, 11}));
 }
 
 }  // namespace intl
