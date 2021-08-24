@@ -44,21 +44,21 @@ class JSFunction : public js::NativeObject {
  public:
   static const JSClass class_;
 
+  static_assert(sizeof(js::FunctionFlags) == sizeof(uint16_t));
+  static constexpr size_t ArgCountShift = 16;
+  static constexpr size_t FlagsMask = js::BitMask(ArgCountShift);
+  static constexpr size_t ArgCountMask = js::BitMask(16) << ArgCountShift;
+
  private:
-  /*
-   * number of formal arguments
-   * (including defaults and the rest parameter unlike f.length)
-   */
-  uint16_t nargs_;
+  using FunctionFlags = js::FunctionFlags;
 
   /*
-   * Bitfield composed of the above Flags enum, as well as the kind.
+   * Bitfield composed of FunctionFlags and argument count.
    *
-   * If any of these flags needs to be accessed in off-thread JIT
-   * compilation, copy it to js::jit::WrappedFunction.
+   * If any of these flags needs to be accessed in off-thread JIT compilation,
+   * copy it to js::jit::WrappedFunction.
    */
-  using FunctionFlags = js::FunctionFlags;
-  FunctionFlags flags_;
+  uint32_t flagsAndArgCount_;
 
   union U {
     class {
@@ -151,81 +151,84 @@ class JSFunction : public js::NativeObject {
     return needsFunctionEnvironmentObjects() || needsExtraBodyVarEnvironment();
   }
 
-  static constexpr size_t NArgsBits = sizeof(nargs_) * CHAR_BIT;
-  size_t nargs() const { return nargs_; }
+  uint32_t flagsAndArgCountRaw() const { return flagsAndArgCount_; }
 
-  FunctionFlags flags() { return flags_; }
+  size_t nargs() const { return flagsAndArgCount_ >> ArgCountShift; }
 
-  FunctionFlags::FunctionKind kind() const { return flags_.kind(); }
+  FunctionFlags flags() const {
+    return FunctionFlags(uint16_t(flagsAndArgCount_ & FlagsMask));
+  }
+
+  FunctionFlags::FunctionKind kind() const { return flags().kind(); }
 
   /* A function can be classified as either native (C++) or interpreted (JS): */
-  bool isInterpreted() const { return flags_.isInterpreted(); }
-  bool isNativeFun() const { return flags_.isNativeFun(); }
+  bool isInterpreted() const { return flags().isInterpreted(); }
+  bool isNativeFun() const { return flags().isNativeFun(); }
 
-  bool isConstructor() const { return flags_.isConstructor(); }
+  bool isConstructor() const { return flags().isConstructor(); }
 
   bool isNonBuiltinConstructor() const {
-    return flags_.isNonBuiltinConstructor();
+    return flags().isNonBuiltinConstructor();
   }
 
   /* Possible attributes of a native function: */
-  bool isAsmJSNative() const { return flags_.isAsmJSNative(); }
+  bool isAsmJSNative() const { return flags().isAsmJSNative(); }
 
-  bool isWasm() const { return flags_.isWasm(); }
-  bool isWasmWithJitEntry() const { return flags_.isWasmWithJitEntry(); }
+  bool isWasm() const { return flags().isWasm(); }
+  bool isWasmWithJitEntry() const { return flags().isWasmWithJitEntry(); }
   bool isNativeWithoutJitEntry() const {
-    return flags_.isNativeWithoutJitEntry();
+    return flags().isNativeWithoutJitEntry();
   }
-  bool isBuiltinNative() const { return flags_.isBuiltinNative(); }
+  bool isBuiltinNative() const { return flags().isBuiltinNative(); }
 
-  bool hasJitEntry() const { return flags_.hasJitEntry(); }
+  bool hasJitEntry() const { return flags().hasJitEntry(); }
 
   /* Possible attributes of an interpreted function: */
-  bool isBoundFunction() const { return flags_.isBoundFunction(); }
-  bool hasInferredName() const { return flags_.hasInferredName(); }
-  bool hasGuessedAtom() const { return flags_.hasGuessedAtom(); }
+  bool isBoundFunction() const { return flags().isBoundFunction(); }
+  bool hasInferredName() const { return flags().hasInferredName(); }
+  bool hasGuessedAtom() const { return flags().hasGuessedAtom(); }
   bool hasBoundFunctionNamePrefix() const {
-    return flags_.hasBoundFunctionNamePrefix();
+    return flags().hasBoundFunctionNamePrefix();
   }
 
-  bool isLambda() const { return flags_.isLambda(); }
+  bool isLambda() const { return flags().isLambda(); }
 
   // These methods determine which of the u.scripted.s union arms are active.
   // For live JSFunctions the pointer values will always be non-null, but due
   // to partial initialization the GC (and other features that scan the heap
   // directly) may still return a null pointer.
   bool hasSelfHostedLazyScript() const {
-    return flags_.hasSelfHostedLazyScript();
+    return flags().hasSelfHostedLazyScript();
   }
-  bool hasBaseScript() const { return flags_.hasBaseScript(); }
+  bool hasBaseScript() const { return flags().hasBaseScript(); }
 
   bool hasBytecode() const {
     MOZ_ASSERT(!isIncomplete());
     return hasBaseScript() && baseScript()->hasBytecode();
   }
 
-  bool isGhost() const { return flags_.isGhost(); }
+  bool isGhost() const { return flags().isGhost(); }
 
   // Arrow functions store their lexical new.target in the first extended slot.
-  bool isArrow() const { return flags_.isArrow(); }
+  bool isArrow() const { return flags().isArrow(); }
   // Every class-constructor is also a method.
-  bool isMethod() const { return flags_.isMethod(); }
-  bool isClassConstructor() const { return flags_.isClassConstructor(); }
+  bool isMethod() const { return flags().isMethod(); }
+  bool isClassConstructor() const { return flags().isClassConstructor(); }
 
-  bool isGetter() const { return flags_.isGetter(); }
-  bool isSetter() const { return flags_.isSetter(); }
+  bool isGetter() const { return flags().isGetter(); }
+  bool isSetter() const { return flags().isSetter(); }
 
-  bool allowSuperProperty() const { return flags_.allowSuperProperty(); }
+  bool allowSuperProperty() const { return flags().allowSuperProperty(); }
 
-  bool hasResolvedLength() const { return flags_.hasResolvedLength(); }
-  bool hasResolvedName() const { return flags_.hasResolvedName(); }
+  bool hasResolvedLength() const { return flags().hasResolvedLength(); }
+  bool hasResolvedName() const { return flags().hasResolvedName(); }
 
   bool isSelfHostedOrIntrinsic() const {
-    return flags_.isSelfHostedOrIntrinsic();
+    return flags().isSelfHostedOrIntrinsic();
   }
-  bool isSelfHostedBuiltin() const { return flags_.isSelfHostedBuiltin(); }
+  bool isSelfHostedBuiltin() const { return flags().isSelfHostedBuiltin(); }
 
-  bool isIntrinsic() const { return flags_.isIntrinsic(); }
+  bool isIntrinsic() const { return flags().isIntrinsic(); }
 
   bool hasJitScript() const {
     if (!hasBaseScript()) {
@@ -239,7 +242,7 @@ class JSFunction : public js::NativeObject {
   bool isBuiltin() const { return isBuiltinNative() || isSelfHostedBuiltin(); }
 
   bool isNamedLambda() const {
-    return flags_.isNamedLambda(displayAtom() != nullptr);
+    return flags().isNamedLambda(displayAtom() != nullptr);
   }
 
   bool hasLexicalThis() const { return isArrow(); }
@@ -264,21 +267,27 @@ class JSFunction : public js::NativeObject {
   /* Returns the strictness of this function, which must be interpreted. */
   bool strict() const { return baseScript()->strict(); }
 
-  void setFlags(uint16_t flags) { flags_ = FunctionFlags(flags); }
-  void setFlags(FunctionFlags flags) { flags_ = flags; }
+  void setFlags(FunctionFlags flags) { setFlags(flags.toRaw()); }
+  void setFlags(uint16_t flags) {
+    flagsAndArgCount_ &= ~FlagsMask;
+    flagsAndArgCount_ |= flags;
+  }
 
   // Make the function constructible.
-  void setIsConstructor() { flags_.setIsConstructor(); }
+  void setIsConstructor() { setFlags(flags().setIsConstructor()); }
 
   // Can be called multiple times by the parser.
-  void setArgCount(uint16_t nargs) { this->nargs_ = nargs; }
+  void setArgCount(uint16_t nargs) {
+    flagsAndArgCount_ &= ~ArgCountMask;
+    flagsAndArgCount_ |= nargs << ArgCountShift;
+  }
 
-  void setIsBoundFunction() { flags_.setIsBoundFunction(); }
-  void setIsSelfHostedBuiltin() { flags_.setIsSelfHostedBuiltin(); }
-  void setIsIntrinsic() { flags_.setIsIntrinsic(); }
+  void setIsBoundFunction() { setFlags(flags().setIsBoundFunction()); }
+  void setIsSelfHostedBuiltin() { setFlags(flags().setIsSelfHostedBuiltin()); }
+  void setIsIntrinsic() { setFlags(flags().setIsIntrinsic()); }
 
-  void setResolvedLength() { flags_.setResolvedLength(); }
-  void setResolvedName() { flags_.setResolvedName(); }
+  void setResolvedLength() { setFlags(flags().setResolvedLength()); }
+  void setResolvedName() { setFlags(flags().setResolvedName()); }
 
   static bool getUnresolvedLength(JSContext* cx, js::HandleFunction fun,
                                   js::MutableHandleValue v);
@@ -316,7 +325,7 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(atom);
     MOZ_ASSERT(!hasGuessedAtom());
     setAtom(atom);
-    flags_.setInferredName();
+    setFlags(flags().setInferredName());
   }
   JSAtom* inferredName() const {
     MOZ_ASSERT(hasInferredName());
@@ -331,13 +340,13 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(!hasGuessedAtom());
     MOZ_ASSERT(!isBoundFunction());
     setAtom(atom);
-    flags_.setGuessedAtom();
+    setFlags(flags().setGuessedAtom());
   }
 
   void setPrefixedBoundFunctionName(JSAtom* atom) {
     MOZ_ASSERT(!hasBoundFunctionNamePrefix());
     MOZ_ASSERT(atom);
-    flags_.setPrefixedBoundFunctionName();
+    setFlags(flags().setPrefixedBoundFunctionName());
     setAtom(atom);
   }
 
@@ -359,11 +368,8 @@ class JSFunction : public js::NativeObject {
   }
 
  public:
-  static constexpr size_t offsetOfNargs() {
-    return offsetof(JSFunction, nargs_);
-  }
-  static constexpr size_t offsetOfFlags() {
-    return offsetof(JSFunction, flags_);
+  static constexpr size_t offsetOfFlagsAndArgCount() {
+    return offsetof(JSFunction, flagsAndArgCount_);
   }
   static size_t offsetOfEnvironment() {
     return offsetof(JSFunction, u.scripted.env_);
@@ -496,8 +502,10 @@ class JSFunction : public js::NativeObject {
   void initSelfHostedLazyScript(js::SelfHostedLazyScript* lazy) {
     MOZ_ASSERT(isSelfHostedBuiltin());
     MOZ_ASSERT(isInterpreted());
-    flags_.clearBaseScript();
-    flags_.setSelfHostedLazy();
+    FunctionFlags f = flags();
+    f.clearBaseScript();
+    f.setSelfHostedLazy();
+    setFlags(f);
     u.scripted.s.selfHostedLazy_ = lazy;
     MOZ_ASSERT(hasSelfHostedLazyScript());
   }
@@ -505,8 +513,10 @@ class JSFunction : public js::NativeObject {
   void clearSelfHostedLazyScript() {
     // Note: The selfHostedLazy_ field is not a GC-thing pointer so we don't
     // need to trigger barriers.
-    flags_.clearSelfHostedLazy();
-    flags_.setBaseScript();
+    FunctionFlags f = flags();
+    f.clearSelfHostedLazy();
+    f.setBaseScript();
+    setFlags(f);
     u.scripted.s.script_ = nullptr;
     MOZ_ASSERT(isIncomplete());
   }
@@ -568,7 +578,7 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(*entry);
     MOZ_ASSERT(isWasm());
     MOZ_ASSERT(!isWasmWithJitEntry());
-    flags_.setWasmJitEntry();
+    setFlags(flags().setWasmJitEntry());
     u.native.extra.wasmJitEntry_ = entry;
     MOZ_ASSERT(isWasmWithJitEntry());
   }
@@ -628,7 +638,7 @@ class JSFunction : public js::NativeObject {
 
  public:
   inline bool isExtended() const {
-    bool extended = flags_.isExtended();
+    bool extended = flags().isExtended();
     MOZ_ASSERT_IF(isTenured(),
                   extended == (asTenured().getAllocKind() ==
                                js::gc::AllocKind::FUNCTION_EXTENDED));

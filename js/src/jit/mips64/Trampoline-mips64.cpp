@@ -461,8 +461,9 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
       calleeTokenReg);
   masm.mov(calleeTokenReg, numArgsReg);
   masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), numArgsReg);
-  masm.load16ZeroExtend(Address(numArgsReg, JSFunction::offsetOfNargs()),
-                        numArgsReg);
+  masm.load32(Address(numArgsReg, JSFunction::offsetOfFlagsAndArgCount()),
+              numArgsReg);
+  masm.rshift32(Imm32(JSFunction::ArgCountShift), numArgsReg);
 
   // Stash another copy in t3, since we are going to do destructive operations
   // on numArgsReg
