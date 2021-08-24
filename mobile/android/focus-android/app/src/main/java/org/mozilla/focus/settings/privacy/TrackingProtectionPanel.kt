@@ -12,9 +12,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
-import org.mozilla.focus.ext.beautifyUrl
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.installedDate
 
@@ -52,7 +52,7 @@ class TrackingProtectionPanel(
     }
 
     private fun updateTitle() {
-        binding.siteTitle.text = tabUrl.beautifyUrl()
+        binding.siteTitle.text = tabUrl.tryGetHostFromUrl()
         context.components.icons.loadIntoView(
             binding.siteFavicon,
             IconRequest(tabUrl, isPrivate = true)
