@@ -83,6 +83,10 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
         internalProps.maximumSignificantDigits = lazyNumberFormatData.maximumSignificantDigits;
     }
 
+    // Intl.NumberFormat v3 Proposal
+    internalProps.trailingZeroDisplay = lazyNumberFormatData.trailingZeroDisplay;
+    internalProps.roundingIncrement = lazyNumberFormatData.roundingIncrement;
+
     // Intl.NumberFormat Unified API Proposal
     if (notation === "compact")
         internalProps.compactDisplay = lazyNumberFormatData.compactDisplay;
@@ -92,6 +96,9 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
 
     // Intl.NumberFormat Unified API Proposal
     internalProps.signDisplay = lazyNumberFormatData.signDisplay;
+
+    // Intl.NumberFormat v3 Proposal
+    internalProps.roundingMode = lazyNumberFormatData.roundingMode;
 
     // The caller is responsible for associating |internalProps| with the right
     // object using |setInternalProperties|.
@@ -336,6 +343,7 @@ For example "speed/kilometer-per-hour" is implied by "length/kilometer" and
     return isSanctioned;
 }
 
+/* eslint-disable complexity */
 /**
  * Initializes an object as a NumberFormat.
  *
@@ -392,6 +400,16 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //     compactDisplay: "short" / "long",
     //
     //     signDisplay: "auto" / "never" / "always" / "exceptZero",
+    //
+    //     trailingZeroDisplay: "auto" / "stripIfInteger",
+    //
+    //     roundingIncrement: integer ∈ (1, 2, 5,
+    //                                   10, 20, 25, 50,
+    //                                   100, 200, 250, 500,
+    //                                   1000, 2000, 2500, 5000),
+    //
+    //     roundingMode: "ceil" / "floor" / "expand" / "trunc" /
+    //                   "halfCeil" / "halfFloor" / "halfExpand" / "halfTrunc" / "halfEven",
     //   }
     //
     // Note that lazy data is only installed as a final step of initialization,
@@ -508,6 +526,49 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // Step 22.
     SetNumberFormatDigitOptions(lazyNumberFormatData, options, mnfdDefault, mxfdDefault, notation);
 
+#ifdef NIGHTLY_BUILD
+    // Intl.NumberFormat v3 Proposal
+    var roundingIncrement = GetNumberOption(options, "roundingIncrement", 1, 5000, 1);
+    switch (roundingIncrement) {
+      case 1:
+      case 2:
+      case 5:
+      case 10:
+      case 20:
+      case 25:
+      case 50:
+      case 100:
+      case 200:
+      case 250:
+      case 500:
+      case 1000:
+      case 2000:
+      case 2500:
+      case 5000:
+        break;
+      default:
+        ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, roundingIncrement);
+    }
+    lazyNumberFormatData.roundingIncrement = roundingIncrement;
+
+    if (roundingIncrement !== 1) {
+      if (hasOwn("minimumSignificantDigits", lazyNumberFormatData)) {
+        ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, roundingIncrement);
+      }
+    }
+#else
+    lazyNumberFormatData.roundingIncrement = 1;
+#endif
+
+#ifdef NIGHTLY_BUILD
+    // Intl.NumberFormat v3 Proposal
+    var trailingZeroDisplay = GetOption(options, "trailingZeroDisplay", "string",
+                                        ["auto", "stripIfInteger"], "auto");
+    lazyNumberFormatData.trailingZeroDisplay = trailingZeroDisplay;
+#else
+    lazyNumberFormatData.trailingZeroDisplay = "auto";
+#endif
+
     // Intl.NumberFormat Unified API Proposal
     var compactDisplay = GetOption(options, "compactDisplay", "string",
                                    ["short", "long"], "short");
@@ -520,8 +581,24 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 
     // Intl.NumberFormat Unified API Proposal
     var signDisplay = GetOption(options, "signDisplay", "string",
-                                ["auto", "never", "always", "exceptZero"], "auto");
+#ifdef NIGHTLY_BUILD
+                                ["auto", "never", "always", "exceptZero", "negative"],
+#else
+                                ["auto", "never", "always", "exceptZero"],
+#endif
+                                "auto");
     lazyNumberFormatData.signDisplay = signDisplay;
+
+#ifdef NIGHTLY_BUILD
+    // Intl.NumberFormat v3 Proposal
+    var roundingMode = GetOption(options, "roundingMode", "string",
+                                 ["ceil", "floor", "expand", "trunc",
+                                  "halfCeil", "halfFloor", "halfExpand", "halfTrunc", "halfEven"],
+                                 "halfExpand");
+    lazyNumberFormatData.roundingMode = roundingMode;
+#else
+    lazyNumberFormatData.roundingMode = "halfExpand";
+#endif
 
     // Step 31.
     //
@@ -542,6 +619,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // 11.2.1, step 6.
     return numberFormat;
 }
+/* eslint-enable complexity */
 
 /**
  * Returns the number of decimal digits to be used for the given currency.
@@ -760,6 +838,12 @@ function Intl_NumberFormat_resolvedOptions() {
         DefineDataProperty(result, "compactDisplay", internals.compactDisplay);
 
     DefineDataProperty(result, "signDisplay", internals.signDisplay);
+
+#ifdef NIGHTLY_BUILD
+    DefineDataProperty(result, "roundingMode", internals.roundingMode);
+    DefineDataProperty(result, "roundingIncrement", internals.roundingIncrement);
+    DefineDataProperty(result, "trailingZeroDisplay", internals.trailingZeroDisplay);
+#endif
 
     // Step 6.
     return result;
