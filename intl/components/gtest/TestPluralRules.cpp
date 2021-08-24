@@ -586,5 +586,92 @@ TEST(IntlPluralRules, MaxSignificantDigitsTwo)
   TEST_SELECT(pr->Select(0.990), PluralRules::Keyword::Other);
 }
 
+// en Plural Range Rules
+//   other: one other
+//   other: other one
+//   other: other other
+TEST(IntlPluralRules, SelectRangeEn)
+{
+#ifdef INTL_PLURAL_RULES_HAS_SELECT_RANGE
+  for (auto type : {PluralRules::Type::Cardinal, PluralRules::Type::Ordinal}) {
+    PluralRulesOptions options;
+    options.mPluralType = type;
+    auto prResult = PluralRules::TryCreate("en", options);
+    ASSERT_TRUE(prResult.isOk());
+    auto pr = prResult.unwrap();
+
+    TEST_SELECT(pr->SelectRange(0, 0), PluralRules::Keyword::Other);
+    TEST_SELECT(pr->SelectRange(0, 1), PluralRules::Keyword::Other);
+    TEST_SELECT(pr->SelectRange(0, 2), PluralRules::Keyword::Other);
+    TEST_SELECT(pr->SelectRange(1, 1), PluralRules::Keyword::Other);
+    TEST_SELECT(pr->SelectRange(1, 2), PluralRules::Keyword::Other);
+    TEST_SELECT(pr->SelectRange(1, 10), PluralRules::Keyword::Other);
+  }
+#endif
+}
+
+// fr Cardinal Plural Rules
+//   one: i = 0,1
+//        @integer 0, 1
+//        @decimal 0.0~1.5
+//   many: e = 0 and i != 0 and i % 1000000 = 0 and v = 0 or e != 0..5
+//         @integer 1000000, 1c6, 2c6, 3c6, 4c6, 5c6, 6c6, …
+//         @decimal 1.0000001c6, 1.1c6, 2.0000001c6, 2.1c6, 3.0000001c6, 3.1c6,
+//         …
+//   other: @integer 2~17, 100, 1000, 10000, 100000, 1c3, 2c3, 3c3, 4c3, 5c3,
+//   6c3, …
+//          @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0,
+//          1000000.0, 1.0001c3, 1.1c3, 2.0001c3, 2.1c3, 3.0001c3, 3.1c3, …
+//
+// fr Plural Range Rules
+//   one: one one
+//   other: one other
+//   other: other other
+TEST(IntlPluralRules, SelectRangeFrCardinal)
+{
+#ifdef INTL_PLURAL_RULES_HAS_SELECT_RANGE
+  PluralRulesOptions options;
+  options.mPluralType = PluralRules::Type::Cardinal;
+  auto prResult = PluralRules::TryCreate("fr", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  TEST_SELECT(pr->SelectRange(0, 0), PluralRules::Keyword::One);
+  TEST_SELECT(pr->SelectRange(0, 1), PluralRules::Keyword::One);
+  TEST_SELECT(pr->SelectRange(0, 2), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->SelectRange(1, 1), PluralRules::Keyword::One);
+  TEST_SELECT(pr->SelectRange(1, 2), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->SelectRange(1, 10), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->SelectRange(1, 1000000), PluralRules::Keyword::Other);
+#endif
+}
+
+// fr Ordinal Plural Rules
+//   one: n = 1 @integer 1
+//   other: @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, …
+//
+// fr Plural Range Rules
+//   one: one one
+//   other: one other
+//   other: other other
+TEST(IntlPluralRules, SelectRangeFrOrdinal)
+{
+#ifdef INTL_PLURAL_RULES_HAS_SELECT_RANGE
+  PluralRulesOptions options;
+  options.mPluralType = PluralRules::Type::Ordinal;
+  auto prResult = PluralRules::TryCreate("fr", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  TEST_SELECT(pr->SelectRange(0, 0), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->SelectRange(0, 1), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->SelectRange(0, 2), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->SelectRange(1, 1), PluralRules::Keyword::One);
+  TEST_SELECT(pr->SelectRange(1, 2), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->SelectRange(1, 10), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->SelectRange(1, 1000000), PluralRules::Keyword::Other);
+#endif
+}
+
 }  // namespace intl
 }  // namespace mozilla
