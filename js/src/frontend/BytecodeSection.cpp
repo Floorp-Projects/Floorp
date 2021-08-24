@@ -82,11 +82,11 @@ bool js::frontend::EmitScriptThingsVector(
       case TaggedScriptThingIndex::Kind::ObjLiteral: {
         const ObjLiteralStencil& data =
             stencil.objLiteralData[thing.toObjLiteral()];
-        JS::GCCellPtr ptr = data.create(cx, atomCache);
-        if (!ptr) {
+        JSObject* obj = data.create(cx, atomCache);
+        if (!obj) {
           return false;
         }
-        output[i] = ptr;
+        output[i] = JS::GCCellPtr(obj);
         break;
       }
       case TaggedScriptThingIndex::Kind::RegExp: {

@@ -5027,14 +5027,24 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
 }
 
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
-                                 jsbytecode* pc) {
+                                 jsbytecode* pc,
+                                 NewObjectKind newKind /* = GenericObject */) {
+  // Extract the template object, if one exists, and copy it.
   if (JSOp(*pc) == JSOp::NewObject) {
-    RootedShape shape(cx, script->getShape(pc));
-    return PlainObject::createWithShape(cx, shape);
+    RootedPlainObject baseObject(cx, &script->getObject(pc)->as<PlainObject>());
+    return CopyTemplateObject(cx, baseObject, newKind);
   }
 
   MOZ_ASSERT(JSOp(*pc) == JSOp::NewInit);
-  return NewBuiltinClassInstanceWithKind<PlainObject>(cx, GenericObject);
+  return NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
+}
+
+JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
+                                             HandleObject templateObject) {
+  MOZ_ASSERT(cx->realm() == templateObject->nonCCWRealm());
+
+  NewObjectKind newKind = GenericObject;
+  return CopyTemplateObject(cx, templateObject.as<PlainObject>(), newKind);
 }
 
 JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,

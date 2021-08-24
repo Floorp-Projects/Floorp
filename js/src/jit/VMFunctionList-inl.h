@@ -197,6 +197,7 @@ namespace jit {
   _(NewArrayWithShape, js::NewArrayWithShape)                                  \
   _(NewCallObject, js::jit::NewCallObject)                                     \
   _(NewObjectOperation, js::NewObjectOperation)                                \
+  _(NewObjectOperationWithTemplate, js::NewObjectOperationWithTemplate)        \
   _(NewPlainObjectBaselineFallback, js::NewPlainObjectBaselineFallback)        \
   _(NewPlainObjectOptimizedFallback, js::NewPlainObjectOptimizedFallback)      \
   _(NewPrivateName, js::NewPrivateName)                                        \

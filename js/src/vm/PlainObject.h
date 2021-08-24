@@ -33,10 +33,10 @@ class PlainObject : public NativeObject {
   void assertHasNoNonWritableOrAccessorPropExclProto() const;
 #endif
 
- public:
   static inline js::PlainObject* createWithShape(JSContext* cx,
                                                  JS::Handle<Shape*> shape);
 
+ public:
   static inline PlainObject* createWithTemplate(
       JSContext* cx, JS::Handle<PlainObject*> templateObject);
 

@@ -438,129 +438,6 @@ static XDRResult XDRInnerObject(XDRState<mode>* xdr,
   return Ok();
 }
 
-static bool GetShapeProperties(HandleShape shape,
-                               MutableHandle<IdVector> properties) {
-  MOZ_ASSERT(properties.empty());
-  MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
-
-  // This function relies on the fact that all slots are used for data
-  // properties.
-  MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(&PlainObject::class_) == 0);
-
-  if (!properties.growBy(shape->slotSpan())) {
-    return false;
-  }
-
-  for (ShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
-    MOZ_ASSERT(iter->isDataProperty());
-    uint32_t slot = iter->slot();
-    properties[slot].get() = iter->key();
-  }
-
-  return true;
-}
-
-static Shape* NewShapeFromProperties(JSContext* cx, Handle<IdVector> properties,
-                                     uint32_t numFixedSlots) {
-  Rooted<SharedPropMap*> map(cx);
-  uint32_t mapLength = 0;
-
-  constexpr PropertyFlags propFlags = PropertyFlags::defaultDataPropFlags;
-  ObjectFlags objectFlags = {};
-
-  for (size_t i = 0; i < properties.length(); i++) {
-    MOZ_ASSERT(properties[i].isString());
-    if (!SharedPropMap::addPropertyWithKnownSlot(cx, &PlainObject::class_, &map,
-                                                 &mapLength, properties[i],
-                                                 propFlags, i, &objectFlags)) {
-      return nullptr;
-    }
-  }
-
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateObjectPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
-  // In cases involving off-thread XDR, Object.prototype is not always marked
-  // used-as-prototype, so do that now.
-  if (!JSObject::setIsUsedAsPrototype(cx, proto)) {
-    return nullptr;
-  }
-
-  return SharedShape::getInitialOrPropMapShape(
-      cx, &PlainObject::class_, cx->realm(), AsTaggedProto(proto),
-      numFixedSlots, map, mapLength, objectFlags);
-}
-
-static Shape* CloneScriptObjectShape(JSContext* cx, HandleShape shape) {
-  MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
-
-  Rooted<IdVector> properties(cx, IdVector(cx));
-
-  if (!GetShapeProperties(shape, &properties)) {
-    return nullptr;
-  }
-
-  for (size_t i = 0; i < properties.length(); i++) {
-    cx->markId(properties[i]);
-  }
-
-  return NewShapeFromProperties(cx, properties, shape->numFixedSlots());
-}
-
-template <XDRMode mode>
-static XDRResult XDRShape(XDRState<mode>* xdr, MutableHandleShape shape) {
-  JSContext* cx = xdr->cx();
-
-  // Code the properties in the object.
-  Rooted<IdVector> properties(cx, IdVector(cx));
-  if (mode == XDR_ENCODE && !GetShapeProperties(shape, &properties)) {
-    return xdr->fail(JS::TranscodeResult::Throw);
-  }
-
-  uint32_t nproperties = 0;
-  uint32_t numFixedSlots = 0;
-  if (mode == XDR_ENCODE) {
-    nproperties = properties.length();
-    numFixedSlots = shape->numFixedSlots();
-  }
-  MOZ_TRY(xdr->codeUint32(&nproperties));
-  MOZ_TRY(xdr->codeUint32(&numFixedSlots));
-
-  if (mode == XDR_DECODE && !properties.growBy(nproperties)) {
-    return xdr->fail(JS::TranscodeResult::Throw);
-  }
-
-  RootedValue tmpKeyValue(cx);
-  Rooted<PropertyKey> tmpKey(cx);
-
-  for (size_t i = 0; i < nproperties; i++) {
-    if (mode == XDR_ENCODE) {
-      tmpKeyValue = IdToValue(properties[i]);
-    }
-
-    MOZ_TRY(XDRScriptConst(xdr, &tmpKeyValue));
-
-    if (mode == XDR_DECODE) {
-      if (!PrimitiveValueToId<CanGC>(cx, tmpKeyValue, &tmpKey)) {
-        return xdr->fail(JS::TranscodeResult::Throw);
-      }
-      properties[i].get() = tmpKey;
-    }
-  }
-
-  if (mode == XDR_DECODE) {
-    shape.set(NewShapeFromProperties(cx, properties, numFixedSlots));
-    if (!shape) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-  }
-
-  return Ok();
-}
-
 template <XDRMode mode>
 static XDRResult XDRScope(XDRState<mode>* xdr, js::PrivateScriptData* data,
                           HandleScope scriptEnclosingScope,
@@ -685,18 +562,6 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
       MOZ_TRY(XDRInnerObject(xdr, data, sourceObject, &obj));
       if (mode == XDR_DECODE) {
         *thingp = JS::GCCellPtr(obj.get());
-      }
-      break;
-    }
-
-    case JS::TraceKind::Shape: {
-      RootedShape shape(cx);
-      if (mode == XDR_ENCODE) {
-        shape = &thingp->as<Shape>();
-      }
-      MOZ_TRY(XDRShape(xdr, &shape));
-      if (mode == XDR_DECODE) {
-        *thingp = JS::GCCellPtr(shape.get());
       }
       break;
     }
@@ -4359,7 +4224,6 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
   size_t scopeIndex = 0;
   Rooted<ScriptSourceObject*> sourceObject(cx, dst->sourceObject());
   RootedObject obj(cx);
-  RootedShape shape(cx);
   RootedScope scope(cx);
   RootedScope enclosingScope(cx);
   RootedBigInt bigint(cx);
@@ -4368,12 +4232,6 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
       obj = &gcThing.as<JSObject>();
       JSObject* clone =
           CloneScriptObject(cx, srcData, obj, sourceObject, gcThings);
-      if (!clone || !gcThings.append(JS::GCCellPtr(clone))) {
-        return false;
-      }
-    } else if (gcThing.is<Shape>()) {
-      shape = &gcThing.as<Shape>();
-      Shape* clone = CloneScriptObjectShape(cx, shape);
       if (!clone || !gcThings.append(JS::GCCellPtr(clone))) {
         return false;
       }

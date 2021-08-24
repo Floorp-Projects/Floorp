@@ -1336,40 +1336,6 @@ static bool DecompileAtPCForStackDump(
     JSContext* cx, HandleScript script,
     const OffsetAndDefIndex& offsetAndDefIndex, Sprinter* sp);
 
-static bool PrintShapeProperties(JSContext* cx, Sprinter* sp, Shape* shape) {
-  // Add all property keys to a vector to allow printing them in property
-  // definition order.
-  Vector<PropertyKey> props(cx);
-  for (ShapePropertyIter<NoGC> iter(shape); !iter.done(); iter++) {
-    if (!props.append(iter->key())) {
-      return false;
-    }
-  }
-
-  if (!sp->put("{")) {
-    return false;
-  }
-
-  for (size_t i = props.length(); i > 0; i--) {
-    PropertyKey key = props[i - 1];
-    RootedValue keyv(cx, IdToValue(key));
-    JSString* str = ToString<NoGC>(cx, keyv);
-    if (!str) {
-      return false;
-    }
-    if (!sp->putString(str)) {
-      return false;
-    }
-    if (i > 1) {
-      if (!sp->put(", ")) {
-        return false;
-      }
-    }
-  }
-
-  return sp->put("}");
-}
-
 static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
                              unsigned loc, bool lines,
                              const BytecodeParser* parser, Sprinter* sp) {
@@ -1543,17 +1509,6 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         if (!sp->jsprintf(" %s", bytes.get())) {
           return 0;
         }
-      }
-      break;
-    }
-
-    case JOF_SHAPE: {
-      Shape* shape = script->getShape(pc);
-      if (!sp->put(" ")) {
-        return 0;
-      }
-      if (!PrintShapeProperties(cx, sp, shape)) {
-        return 0;
       }
       break;
     }

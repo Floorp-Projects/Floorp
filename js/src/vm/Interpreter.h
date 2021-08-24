@@ -615,8 +615,11 @@ bool SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
 
 bool OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized);
 
-JSObject* NewObjectOperation(JSContext* cx, HandleScript script,
-                             jsbytecode* pc);
+JSObject* NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
+                             NewObjectKind newKind = GenericObject);
+
+JSObject* NewObjectOperationWithTemplate(JSContext* cx,
+                                         HandleObject templateObject);
 
 JSObject* NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
                                          gc::AllocKind allocKind,
