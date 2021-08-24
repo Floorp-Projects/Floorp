@@ -924,6 +924,7 @@ class MochitestDesktop(object):
     sslTunnel = None
     DEFAULT_TIMEOUT = 60.0
     mediaDevices = None
+    mozinfo_variables_shown = False
 
     patternFiles = {}
 
@@ -2889,6 +2890,14 @@ toolbar#nav-bar {
             }
         )
 
+        if not self.mozinfo_variables_shown:
+            self.mozinfo_variables_shown = True
+            self.log.info(
+                "These variables are available in the mozinfo environment and "
+                "can be used to skip tests conditionally:"
+            )
+            for info in sorted(mozinfo.info.items(), key=lambda item: item[0]):
+                self.log.info("    {key}: {value}".format(key=info[0], value=info[1]))
         self.setTestRoot(options)
 
         # Despite our efforts to clean up servers started by this script, in practice
