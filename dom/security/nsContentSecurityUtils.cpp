@@ -679,14 +679,14 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   }
 
   // Log to MOZ_LOG
-  MOZ_LOG(sCSMLog, LogLevel::Warning,
+  MOZ_LOG(sCSMLog, LogLevel::Error,
           ("Blocking eval() %s from file %s and script "
            "provided %s",
            (aIsSystemPrincipal ? "with System Principal" : "in parent process"),
            fileName.get(), NS_ConvertUTF16toUTF8(aScript).get()));
 
   // Maybe Crash
-#if defined(DEBUG)
+#if defined(DEBUG) || defined(FUZZING)
   auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
       NS_ConvertUTF16toUTF8(aScript).get(), fileName.get(),
       (aIsSystemPrincipal
@@ -1237,6 +1237,12 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
   } else {
     PossiblyCrash("js_load_1", aFilename, "(None)"_ns);
   }
+#elif defined(FUZZING)
+  auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
+      aFilename,
+      NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value().get()),
+      "Blocking a script load %s from file %s");
+  MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
 #endif
 
   // Presently we are not enforcing any restrictions for the script filename,
