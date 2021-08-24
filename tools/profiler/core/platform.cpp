@@ -1442,7 +1442,8 @@ class Registers {
 #if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
   // This contains all the registers, which means it duplicates the four fields
   // above. This is ok.
-  ucontext_t* mContext;  // The context from the signal handler.
+  ucontext_t* mContext;  // The context from the signal handler or below.
+  ucontext_t mContextSyncStorage;  // Storage for sync stack unwinding.
 #endif
 };
 
