@@ -131,7 +131,7 @@ struct MOZ_STACK_CLASS PluralRulesOptions {
    */
   NumberFormatOptions ToNumberFormatOptions() const {
     NumberFormatOptions options;
-    options.mRoundingModeHalfUp = true;
+    options.mRoundingMode = NumberFormatOptions::RoundingMode::HalfExpand;
 
     if (mFractionDigits.isSome()) {
       options.mFractionDigits.emplace(mFractionDigits.ref());

@@ -98,6 +98,14 @@ struct MOZ_STACK_CLASS NumberFormatOptions {
   bool mPercent = false;
 
   /**
+   * Set to true to strip trailing zeros after the decimal point for integer
+   * values.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#trailing-zero-display
+   */
+  bool mStripTrailingZero = false;
+
+  /**
    * Enable or disable grouping.
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#grouping
@@ -127,17 +135,37 @@ struct MOZ_STACK_CLASS NumberFormatOptions {
     Never,
     Always,
     ExceptZero,
+    Negative,
     Accounting,
     AccountingAlways,
-    AccountingExceptZero
+    AccountingExceptZero,
+    AccountingNegative,
   } mSignDisplay = SignDisplay::Auto;
 
   /**
-   * Set the rounding mode to 'half-up'.
+   * Set the rounding increment, which must be a non-zero number.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#precision
+   */
+  uint32_t mRoundingIncrement = 1;
+
+  /**
+   * Set the rounding mode.
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#rounding-mode
    */
-  bool mRoundingModeHalfUp = true;
+  enum class RoundingMode {
+    Ceil,
+    Floor,
+    Expand,
+    Trunc,
+    HalfCeil,
+    HalfFloor,
+    HalfExpand,
+    HalfTrunc,
+    HalfEven,
+    HalfOdd,
+  } mRoundingMode = RoundingMode::HalfExpand;
 };
 
 enum class NumberPartType {

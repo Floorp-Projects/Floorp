@@ -632,7 +632,7 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
     options.mSignDisplay = display;
   }
 
-  options.mRoundingModeHalfUp = true;
+  options.mRoundingMode = RoundingMode::HalfExpand;
 
   using NumberFormat = mozilla::intl::NumberFormat;
   mozilla::Result<mozilla::UniquePtr<NumberFormat>, NumberFormat::FormatError>
