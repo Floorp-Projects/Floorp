@@ -5,9 +5,7 @@
 Transform the repackage signing task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -17,7 +15,7 @@ from voluptuous import Optional
 
 repackage_signing_description_schema = schema.extend(
     {
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional("treeherder"): task_description_schema["treeherder"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
     }
@@ -114,11 +112,11 @@ def _craft_upstream_artifacts(dep_job, dependency_kind, build_platform):
     elif build_platform.startswith("macosx"):
         signing_format = "mac_geckodriver"
     else:
-        raise ValueError('Unsupported build platform "{}"'.format(build_platform))
+        raise ValueError(f'Unsupported build platform "{build_platform}"')
 
     return [
         {
-            "taskId": {"task-reference": "<{}>".format(dependency_kind)},
+            "taskId": {"task-reference": f"<{dependency_kind}>"},
             "taskType": "build",
             "paths": [dep_job.attributes["toolchain-artifact"]],
             "formats": [signing_format],

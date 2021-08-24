@@ -5,11 +5,9 @@
 Transform the beetmover task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from copy import deepcopy
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import (
@@ -29,11 +27,11 @@ from voluptuous import Required, Optional
 
 beetmover_description_schema = schema.extend(
     {
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional("treeherder"): task_description_schema["treeherder"],
         Required("run-on-projects"): task_description_schema["run-on-projects"],
         Required("run-on-hg-branches"): task_description_schema["run-on-hg-branches"],
-        Optional("bucket-scope"): optionally_keyed_by("release-level", text_type),
+        Optional("bucket-scope"): optionally_keyed_by("release-level", str),
         Optional("shipping-phase"): optionally_keyed_by(
             "project", task_description_schema["shipping-phase"]
         ),
@@ -65,7 +63,7 @@ def resolve_keys(config, jobs):
             job,
             "bucket-scope",
             item_name=job["label"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         yield job
 
@@ -85,7 +83,7 @@ def make_task_description(config, jobs):
             .get("machine", {})
             .get("platform", "")
         )
-        treeherder.setdefault("platform", "{}/opt".format(dep_th_platform))
+        treeherder.setdefault("platform", f"{dep_th_platform}/opt")
         treeherder.setdefault("tier", 2)
         treeherder.setdefault("kind", "build")
         label = job["label"]
@@ -134,7 +132,7 @@ def make_task_worker(config, jobs):
                     config,
                     job["attributes"]["build_platform"],
                     job["attributes"].get("update-channel"),
-                )
+                ),
             ),
             "implementation": "beetmover-maven",
             "release-properties": craft_release_properties(config, job),

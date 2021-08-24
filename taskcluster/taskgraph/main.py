@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
@@ -13,7 +12,6 @@ import logging
 import json
 from collections import namedtuple
 
-import six
 import yaml
 
 Command = namedtuple("Command", ["func", "args", "kwargs", "defaults"])
@@ -76,7 +74,7 @@ def get_filtered_taskgraph(taskgraph, tasksregex):
         task = taskgraph.tasks[key]
         if regexprogram.match(task.label):
             filteredtasks[key] = task
-            for depname, dep in six.iteritems(named_links_dict[key]):
+            for depname, dep in named_links_dict[key].items():
                 if regexprogram.match(dep):
                     filterededges.add((key, dep, depname))
     filtered_taskgraph = TaskGraph(
@@ -420,7 +418,7 @@ def test_action_callback(options):
             elif filename.endswith(".json"):
                 return json.load(f)
             else:
-                raise Exception("unknown filename {}".format(filename))
+                raise Exception(f"unknown filename {filename}")
 
     try:
         task_id = options["task_id"]

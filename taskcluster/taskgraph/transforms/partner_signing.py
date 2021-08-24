@@ -5,7 +5,6 @@
 Transform the signing task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -49,7 +48,7 @@ def define_upstream_artifacts(config, jobs):
             task_type = "scriptworker"
         job["upstream-artifacts"] = [
             {
-                "taskId": {"task-reference": "<{}>".format(dep_job.kind)},
+                "taskId": {"task-reference": f"<{dep_job.kind}>"},
                 "taskType": task_type,
                 "paths": [
                     path_template.format(locale=repack_id)

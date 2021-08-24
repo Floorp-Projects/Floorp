@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import shutil
@@ -48,9 +47,9 @@ class TestDocker(unittest.TestCase):
 
     def test_docker_image_explicit_registry(self):
         files = {}
-        files["{}/myimage/REGISTRY".format(docker.IMAGE_DIR)] = "cool-images"
-        files["{}/myimage/VERSION".format(docker.IMAGE_DIR)] = "1.2.3"
-        files["{}/myimage/HASH".format(docker.IMAGE_DIR)] = "sha256:434..."
+        files[f"{docker.IMAGE_DIR}/myimage/REGISTRY"] = "cool-images"
+        files[f"{docker.IMAGE_DIR}/myimage/VERSION"] = "1.2.3"
+        files[f"{docker.IMAGE_DIR}/myimage/HASH"] = "sha256:434..."
         with MockedOpen(files):
             self.assertEqual(
                 docker.docker_image("myimage"), "cool-images/myimage@sha256:434..."
@@ -58,9 +57,9 @@ class TestDocker(unittest.TestCase):
 
     def test_docker_image_explicit_registry_by_tag(self):
         files = {}
-        files["{}/myimage/REGISTRY".format(docker.IMAGE_DIR)] = "myreg"
-        files["{}/myimage/VERSION".format(docker.IMAGE_DIR)] = "1.2.3"
-        files["{}/myimage/HASH".format(docker.IMAGE_DIR)] = "sha256:434..."
+        files[f"{docker.IMAGE_DIR}/myimage/REGISTRY"] = "myreg"
+        files[f"{docker.IMAGE_DIR}/myimage/VERSION"] = "1.2.3"
+        files[f"{docker.IMAGE_DIR}/myimage/HASH"] = "sha256:434..."
         with MockedOpen(files):
             self.assertEqual(
                 docker.docker_image("myimage", by_tag=True), "myreg/myimage:1.2.3"
@@ -68,9 +67,9 @@ class TestDocker(unittest.TestCase):
 
     def test_docker_image_default_registry(self):
         files = {}
-        files["{}/REGISTRY".format(docker.IMAGE_DIR)] = "mozilla"
-        files["{}/myimage/VERSION".format(docker.IMAGE_DIR)] = "1.2.3"
-        files["{}/myimage/HASH".format(docker.IMAGE_DIR)] = "sha256:434..."
+        files[f"{docker.IMAGE_DIR}/REGISTRY"] = "mozilla"
+        files[f"{docker.IMAGE_DIR}/myimage/VERSION"] = "1.2.3"
+        files[f"{docker.IMAGE_DIR}/myimage/HASH"] = "sha256:434..."
         with MockedOpen(files):
             self.assertEqual(
                 docker.docker_image("myimage"), "mozilla/myimage@sha256:434..."
@@ -78,9 +77,9 @@ class TestDocker(unittest.TestCase):
 
     def test_docker_image_default_registry_by_tag(self):
         files = {}
-        files["{}/REGISTRY".format(docker.IMAGE_DIR)] = "mozilla"
-        files["{}/myimage/VERSION".format(docker.IMAGE_DIR)] = "1.2.3"
-        files["{}/myimage/HASH".format(docker.IMAGE_DIR)] = "sha256:434..."
+        files[f"{docker.IMAGE_DIR}/REGISTRY"] = "mozilla"
+        files[f"{docker.IMAGE_DIR}/myimage/VERSION"] = "1.2.3"
+        files[f"{docker.IMAGE_DIR}/myimage/HASH"] = "sha256:434..."
         with MockedOpen(files):
             self.assertEqual(
                 docker.docker_image("myimage", by_tag=True), "mozilla/myimage:1.2.3"

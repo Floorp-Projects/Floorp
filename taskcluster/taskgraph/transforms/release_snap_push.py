@@ -5,9 +5,7 @@
 Transform the release-snap-push kind into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
@@ -17,15 +15,15 @@ from voluptuous import Optional, Required
 
 push_snap_description_schema = Schema(
     {
-        Required("name"): text_type,
+        Required("name"): str,
         Required("job-from"): task_description_schema["job-from"],
         Required("dependencies"): task_description_schema["dependencies"],
         Required("description"): task_description_schema["description"],
         Required("treeherder"): task_description_schema["treeherder"],
         Required("run-on-projects"): task_description_schema["run-on-projects"],
-        Required("worker-type"): optionally_keyed_by("release-level", text_type),
+        Required("worker-type"): optionally_keyed_by("release-level", str),
         Required("worker"): object,
-        Optional("scopes"): [text_type],
+        Optional("scopes"): [str],
         Required("shipping-phase"): task_description_schema["shipping-phase"],
         Required("shipping-product"): task_description_schema["shipping-product"],
         Optional("extra"): task_description_schema["extra"],
@@ -51,13 +49,13 @@ def make_task_description(config, jobs):
             job,
             "worker.channel",
             item_name=job["name"],
-            **{"release-type": config.params["release_type"]}
+            **{"release-type": config.params["release_type"]},
         )
         resolve_keyed_by(
             job,
             "worker-type",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         if config.params.release_level() == "production":
             job.setdefault("scopes", []).append(
@@ -75,7 +73,7 @@ def make_task_description(config, jobs):
 def generate_upstream_artifacts(dependencies):
     return [
         {
-            "taskId": {"task-reference": "<{}>".format(task_kind)},
+            "taskId": {"task-reference": f"<{task_kind}>"},
             # TODO bug 1417960
             "taskType": "build",
             "paths": ["public/build/target.snap"],

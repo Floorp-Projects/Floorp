@@ -5,7 +5,6 @@
 Defines artifacts to sign before repackage.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.util.declarative_artifacts import get_geckoview_upstream_artifacts
 
@@ -76,7 +75,7 @@ def generate_specifications_of_artifacts_to_sign(
             artifacts_specifications = [
                 {
                     "artifacts": [
-                        get_artifact_path(job, "{{locale}}/target.{}".format(extension))
+                        get_artifact_path(job, f"{{locale}}/target.{extension}")
                     ],
                     "formats": ["macapp", "autograph_widevine", "autograph_omnija"],
                 }
@@ -181,7 +180,7 @@ def get_signed_artifacts(input, formats, behavior=None):
     else:
         artifacts.add(input)
     if "autograph_gpg" in formats:
-        artifacts.add("{}.asc".format(input))
+        artifacts.add(f"{input}.asc")
 
     return artifacts
 

@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
@@ -168,7 +165,7 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
     )
 
     taskId = label_to_taskid[label]
-    logger.info("Created interactive task {}; sending notification".format(taskId))
+    logger.info(f"Created interactive task {taskId}; sending notification")
 
     if input and "notify" in input:
         email = input["notify"]
@@ -177,9 +174,7 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
             return
 
         info = {
-            "url": taskcluster_urls.ui(
-                get_root_url(False), "tasks/{}/connect".format(taskId)
-            ),
+            "url": taskcluster_urls.ui(get_root_url(False), f"tasks/{taskId}/connect"),
             "label": label,
             "revision": parameters["head_rev"],
             "repo": parameters["head_repository"],

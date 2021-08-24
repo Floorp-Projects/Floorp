@@ -5,9 +5,7 @@
 Transform release-beetmover-source-checksums into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -17,7 +15,7 @@ from voluptuous import Optional
 
 beetmover_checksums_description_schema = schema.extend(
     {
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional("extra"): object,
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
@@ -101,7 +99,7 @@ def generate_upstream_artifacts(refs, partner_path):
             "taskId": {"task-reference": refs["beetmover"]},
             "taskType": "signing",
             "paths": common_paths,
-            "locale": "beetmover-checksums/{}".format(partner_path),
+            "locale": f"beetmover-checksums/{partner_path}",
         }
     ]
 
@@ -120,7 +118,7 @@ def make_beetmover_checksums_worker(config, jobs):
         }
         for dependency in job["dependencies"].keys():
             if dependency.endswith("beetmover"):
-                refs["beetmover"] = "<{}>".format(dependency)
+                refs["beetmover"] = f"<{dependency}>"
         if None in refs.values():
             raise NotImplementedError(
                 "Beetmover checksums must have a beetmover dependency!"

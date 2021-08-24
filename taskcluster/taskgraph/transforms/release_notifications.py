@@ -5,7 +5,6 @@
 Add notifications via taskcluster-notify for release tasks
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from string import Formatter
 from taskgraph.transforms.base import TransformSequence
@@ -22,7 +21,7 @@ class TitleCaseFormatter(Formatter):
     def convert_field(self, value, conversion):
         if conversion == "t":
             return str(value).title()
-        super(TitleCaseFormatter, self).convert_field(value, conversion)
+        super().convert_field(value, conversion)
         return value
 
 
@@ -56,7 +55,7 @@ def add_notifications(config, jobs):
             status_types = notifications.get("status-types", ["on-completed"])
             for s in status_types:
                 job.setdefault("routes", []).extend(
-                    ["notify.email.{}.{}".format(email, s) for email in emails]
+                    [f"notify.email.{email}.{s}" for email in emails]
                 )
 
             # Customize the email subject to include release name and build number

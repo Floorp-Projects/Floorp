@@ -17,14 +17,12 @@ the graph.
 # `{'relative-datestamp': '..'}` is handled at the last possible moment during
 # task creation.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import logging
 import os
 import re
 
-import six
 
 from slugid import nice as slugid
 from .task import Task
@@ -45,7 +43,7 @@ def amend_taskgraph(taskgraph, label_to_taskid, to_add):
         new_tasks[task.task_id] = task
         assert task.label not in label_to_taskid
         label_to_taskid[task.label] = task.task_id
-        for depname, dep in six.iteritems(task.dependencies):
+        for depname, dep in task.dependencies.items():
             new_edges.add((task.task_id, dep, depname))
 
     taskgraph = TaskGraph(new_tasks, Graph(set(new_tasks), new_edges))
@@ -64,7 +62,7 @@ def derive_misc_task(
 ):
     """Create the shell of a task that depends on `dependencies` and on the given docker
     image."""
-    label = "{}-{}".format(purpose, target_task.label)
+    label = f"{purpose}-{target_task.label}"
 
     # this is why all docker image tasks are included in the target task graph: we
     # need to find them in label_to_taskid, even if nothing else required them
@@ -87,7 +85,7 @@ def derive_misc_task(
         "expires": target_task.task["deadline"],
         "metadata": {
             "name": label,
-            "description": "{} for {}".format(purpose, target_task.description),
+            "description": f"{purpose} for {target_task.description}",
             "owner": target_task.task["metadata"]["owner"],
             "source": target_task.task["metadata"]["source"],
         },
@@ -156,7 +154,7 @@ def make_index_task(
     # temporary credential.
     scopes = set()
     for path in index_paths:
-        scope = "index:insert-task:{}".format(path)
+        scope = f"index:insert-task:{path}"
         for summ_re in SCOPE_SUMMARY_REGEXPS:
             match = summ_re.match(scope)
             if match:
@@ -186,7 +184,7 @@ def add_index_tasks(
 
     # Add indexes for tasks that exceed MAX_ROUTES.
     added = []
-    for label, task in six.iteritems(taskgraph.tasks):
+    for label, task in taskgraph.tasks.items():
         if len(task.task.get("routes", [])) <= MAX_ROUTES:
             continue
         index_paths = [
@@ -211,7 +209,7 @@ def add_index_tasks(
 
     if added:
         taskgraph, label_to_taskid = amend_taskgraph(taskgraph, label_to_taskid, added)
-        logger.info("Added {} index tasks".format(len(added)))
+        logger.info(f"Added {len(added)} index tasks")
 
     return taskgraph, label_to_taskid
 
@@ -229,7 +227,7 @@ def add_eager_cache_index_tasks(
     logger.debug("Morphing: Adding eager cached index's")
 
     added = []
-    for label, task in six.iteritems(taskgraph.tasks):
+    for label, task in taskgraph.tasks.items():
         if "eager_indexes" not in task.attributes:
             continue
         eager_indexes = task.attributes["eager_indexes"]
@@ -249,7 +247,7 @@ def add_eager_cache_index_tasks(
 
     if added:
         taskgraph, label_to_taskid = amend_taskgraph(taskgraph, label_to_taskid, added)
-        logger.info("Added {} eager index tasks".format(len(added)))
+        logger.info(f"Added {len(added)} eager index tasks")
     return taskgraph, label_to_taskid
 
 
@@ -259,7 +257,7 @@ def add_try_task_duplicates(
     try_config = parameters["try_task_config"]
     rebuild = try_config.get("rebuild")
     if rebuild:
-        for task in six.itervalues(taskgraph.tasks):
+        for task in taskgraph.tasks.values():
             if task.label in try_config.get("tasks", []):
                 task.attributes["task_duplicates"] = rebuild
     return taskgraph, label_to_taskid

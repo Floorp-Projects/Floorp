@@ -5,16 +5,13 @@
 # Support for running tasks that download remote content and re-export
 # it as task artifacts.
 
-from __future__ import absolute_import, unicode_literals
 
 import attr
 
 from mozbuild.shellutil import quote as shell_quote
 
-import io
 import os
 import re
-from six import text_type
 
 from voluptuous import (
     Optional,
@@ -38,26 +35,26 @@ CACHE_TYPE = "content.v1"
 FETCH_SCHEMA = Schema(
     {
         # Name of the task.
-        Required("name"): text_type,
+        Required("name"): str,
         # Relative path (from config.path) to the file the task was defined
         # in.
-        Optional("job-from"): text_type,
+        Optional("job-from"): str,
         # Description of the task.
-        Required("description"): text_type,
+        Required("description"): str,
         Optional(
             "fetch-alias",
             description="An alias that can be used instead of the real fetch job name in "
             "fetch stanzas for jobs.",
-        ): text_type,
+        ): str,
         Optional(
             "artifact-prefix",
             description="The prefix of the taskcluster artifact being uploaded. "
             "Defaults to `public/`; if it starts with something other than "
             "`public/` the artifact will require scopes to access.",
-        ): text_type,
-        Optional("attributes"): {text_type: object},
+        ): str,
+        Optional("attributes"): {str: object},
         Required("fetch"): {
-            Required("type"): text_type,
+            Required("type"): str,
             Extra: object,
         },
     }
@@ -69,7 +66,7 @@ fetch_builders = {}
 
 
 @attr.s(frozen=True)
-class FetchBuilder(object):
+class FetchBuilder:
     schema = attr.ib(type=Schema)
     builder = attr.ib()
 
@@ -97,10 +94,8 @@ def process_fetch_job(config, jobs):
         fetch = job.pop("fetch")
 
         if typ not in fetch_builders:
-            raise Exception("Unknown fetch type {} in fetch {}".format(typ, name))
-        validate_schema(
-            fetch_builders[typ].schema, fetch, "In task.fetch {!r}:".format(name)
-        )
+            raise Exception(f"Unknown fetch type {typ} in fetch {name}")
+        validate_schema(fetch_builders[typ].schema, fetch, f"In task.fetch {name!r}:")
 
         job.update(configure_fetch(config, typ, name, fetch))
 
@@ -109,10 +104,8 @@ def process_fetch_job(config, jobs):
 
 def configure_fetch(config, typ, name, fetch):
     if typ not in fetch_builders:
-        raise Exception("No fetch type {} in fetch {}".format(typ, name))
-    validate_schema(
-        fetch_builders[typ].schema, fetch, "In task.fetch {!r}:".format(name)
-    )
+        raise Exception(f"No fetch type {typ} in fetch {name}")
+    validate_schema(fetch_builders[typ].schema, fetch, f"In task.fetch {name!r}:")
 
     return fetch_builders[typ].builder(config, name, fetch)
 
@@ -180,7 +173,7 @@ def make_task(config, jobs):
             task["worker"]["taskcluster-proxy"] = True
 
         if not taskgraph.fast:
-            cache_name = task["label"].replace("{}-".format(config.kind), "", 1)
+            cache_name = task["label"].replace(f"{config.kind}-", "", 1)
 
             # This adds the level to the index path automatically.
             add_optimization(
@@ -197,9 +190,9 @@ def make_task(config, jobs):
     "static-url",
     schema={
         # The URL to download.
-        Required("url"): text_type,
+        Required("url"): str,
         # The SHA-256 of the downloaded content.
-        Required("sha256"): text_type,
+        Required("sha256"): str,
         # Size of the downloaded entity, in bytes.
         Required("size"): int,
         # GPG signature verification.
@@ -207,23 +200,23 @@ def make_task(config, jobs):
             # URL where GPG signature document can be obtained. Can contain the
             # value ``{url}``, which will be substituted with the value from
             # ``url``.
-            Required("sig-url"): text_type,
+            Required("sig-url"): str,
             # Path to file containing GPG public key(s) used to validate
             # download.
-            Required("key-path"): text_type,
+            Required("key-path"): str,
         },
         # The name to give to the generated artifact. Defaults to the file
         # portion of the URL. Using a different extension converts the
         # archive to the given type. Only conversion to .tar.zst is
         # supported.
-        Optional("artifact-name"): text_type,
+        Optional("artifact-name"): str,
         # Strip the given number of path components at the beginning of
         # each file entry in the archive.
         # Requires an artifact-name ending with .tar.zst.
         Optional("strip-components"): int,
         # Add the given prefix to each file entry in the archive.
         # Requires an artifact-name ending with .tar.zst.
-        Optional("add-prefix"): text_type,
+        Optional("add-prefix"): str,
         # IMPORTANT: when adding anything that changes the behavior of the task,
         # it is important to update the digest data used to compute cache hits.
     },
@@ -260,7 +253,7 @@ def create_fetch_url_task(config, name, fetch):
         sig_url = fetch["gpg-signature"]["sig-url"].format(url=fetch["url"])
         key_path = os.path.join(taskgraph.GECKO, fetch["gpg-signature"]["key-path"])
 
-        with io.open(key_path, "r") as fh:
+        with open(key_path, "r") as fh:
             gpg_key = fh.read()
 
         env["FETCH_GPG_KEY"] = gpg_key
@@ -294,15 +287,15 @@ def create_fetch_url_task(config, name, fetch):
 @fetch_builder(
     "git",
     schema={
-        Required("repo"): text_type,
-        Required(Any("revision", "branch")): text_type,
-        Optional("artifact-name"): text_type,
-        Optional("path-prefix"): text_type,
+        Required("repo"): str,
+        Required(Any("revision", "branch")): str,
+        Optional("artifact-name"): str,
+        Optional("path-prefix"): str,
         # ssh-key is a taskcluster secret path (e.g. project/civet/github-deploy-key)
         # In the secret dictionary, the key should be specified as
         #  "ssh_privkey": "-----BEGIN OPENSSH PRIVATE KEY-----\nkfksnb3jc..."
         # n.b. The OpenSSH private key file format requires a newline at the end of the file.
-        Optional("ssh-key"): text_type,
+        Optional("ssh-key"): str,
     },
 )
 def create_git_fetch_task(config, name, fetch):
@@ -311,7 +304,7 @@ def create_git_fetch_task(config, name, fetch):
         path_prefix = fetch["repo"].rstrip("/").rsplit("/", 1)[-1]
     artifact_name = fetch.get("artifact-name")
     if not artifact_name:
-        artifact_name = "{}.tar.zst".format(path_prefix)
+        artifact_name = f"{path_prefix}.tar.zst"
 
     if "revision" in fetch and "branch" in fetch:
         raise Exception("revision and branch cannot be used in the same context")
@@ -321,7 +314,7 @@ def create_git_fetch_task(config, name, fetch):
     if "revision" in fetch:
         revision_or_branch = fetch["revision"]
         if not re.match(r"[0-9a-fA-F]{40}", fetch["revision"]):
-            raise Exception('Revision is not a sha1 in fetch task "{}"'.format(name))
+            raise Exception(f'Revision is not a sha1 in fetch task "{name}"')
     else:
         # we are sure we are dealing with a branch
         revision_or_branch = fetch["branch"]
@@ -352,13 +345,13 @@ def create_git_fetch_task(config, name, fetch):
 @fetch_builder(
     "chromium-fetch",
     schema={
-        Required("script"): text_type,
+        Required("script"): str,
         # Platform type for chromium build
-        Required("platform"): text_type,
+        Required("platform"): str,
         # Chromium revision to obtain
-        Optional("revision"): text_type,
+        Optional("revision"): str,
         # The name to give to the generated artifact.
-        Required("artifact-name"): text_type,
+        Required("artifact-name"): str,
     },
 )
 def create_chromium_fetch_task(config, name, fetch):
@@ -383,8 +376,8 @@ def create_chromium_fetch_task(config, name, fetch):
         "command": cmd,
         "artifact_name": artifact_name,
         "digest_data": [
-            "revision={}".format(revision),
-            "platform={}".format(platform),
-            "artifact_name={}".format(artifact_name),
+            f"revision={revision}",
+            f"platform={platform}",
+            f"artifact_name={artifact_name}",
         ],
     }

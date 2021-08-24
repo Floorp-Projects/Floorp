@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import inspect
 import os
@@ -18,9 +17,7 @@ def find_object(path):
             return mod.<objectpath>
     """
     if path.count(":") != 1:
-        raise ValueError(
-            'python path {!r} does not have the form "module:object"'.format(path)
-        )
+        raise ValueError(f'python path {path!r} does not have the form "module:object"')
 
     modulepath, objectpath = path.split(":")
     obj = __import__(modulepath)
@@ -43,7 +40,7 @@ def import_sibling_modules(exceptions=None):
     mod = inspect.getmodule(frame[0])
 
     name = os.path.basename(mod.__file__)
-    excs = set(["__init__.py", name])
+    excs = {"__init__.py", name}
     if exceptions:
         excs.update(exceptions)
 

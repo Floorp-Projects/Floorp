@@ -5,7 +5,6 @@
 Adjust dependencies to not exceed MAX_DEPENDENCIES
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
@@ -22,7 +21,7 @@ def yield_job(orig_job, deps, count):
     job["name"] = "{}-{}".format(orig_job["name"], count)
     if "treeherder" in job:
         job["treeherder"]["symbol"] = add_suffix(
-            job["treeherder"]["symbol"], "-{}".format(count)
+            job["treeherder"]["symbol"], f"-{count}"
         )
 
     return job

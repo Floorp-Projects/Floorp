@@ -5,9 +5,7 @@
 Transform the beetmover task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -35,14 +33,12 @@ from copy import deepcopy
 beetmover_description_schema = schema.extend(
     {
         # depname is used in taskref's to identify the taskID of the unsigned things
-        Required("depname", default="build"): text_type,
+        Required("depname", default="build"): str,
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
-        Optional("label"): text_type,
-        Required("partner-bucket-scope"): optionally_keyed_by(
-            "release-level", text_type
-        ),
-        Required("partner-public-path"): Any(None, text_type),
-        Required("partner-private-path"): Any(None, text_type),
+        Optional("label"): str,
+        Required("partner-bucket-scope"): optionally_keyed_by("release-level", str),
+        Required("partner-public-path"): Any(None, str),
+        Required("partner-private-path"): Any(None, str),
         Optional("extra"): object,
         Required("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
@@ -62,7 +58,7 @@ def resolve_keys(config, jobs):
             job,
             "partner-bucket-scope",
             item_name=job["label"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         yield job
 
@@ -143,11 +139,11 @@ def make_task_description(config, jobs):
         label = config.kind
         description = "Beetmover for partner attribution"
         if job["partner_public"]:
-            label = "{}-public".format(label)
-            description = "{} public".format(description)
+            label = f"{label}-public"
+            description = f"{description} public"
         else:
-            label = "{}-private".format(label)
-            description = "{} private".format(description)
+            label = f"{label}-private"
+            description = f"{description} private"
         attributes = copy_attributes_from_dependent_job(dep_job)
 
         task = {

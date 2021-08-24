@@ -5,7 +5,6 @@
 Build a command to run `mach release push-scriptworker-canaries`.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from pipes import quote as shell_quote
 
@@ -40,7 +39,7 @@ def build_command(config, jobs):
         if "ssh-key-secret" in job:
             ssh_key_secret = job.pop("ssh-key-secret")
             command.extend(["--ssh-key-secret", ssh_key_secret])
-            job.setdefault("scopes", []).append("secrets:get:{}".format(ssh_key_secret))
+            job.setdefault("scopes", []).append(f"secrets:get:{ssh_key_secret}")
 
         job.setdefault("run", {}).update(
             {"using": "mach", "mach": " ".join(map(shell_quote, command))}

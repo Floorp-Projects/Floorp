@@ -5,7 +5,6 @@
 Add from parameters.yml into bouncer submission tasks.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import logging
@@ -136,11 +135,9 @@ def make_task_worker(config, jobs):
         # No need to filter out ja-JP-mac, we need to upload both; but we do
         # need to filter out the platforms they come with
         all_locales = sorted(
-            [
-                locale
-                for locale in parse_locales_file(job["locales-file"]).keys()
-                if locale not in ("linux", "win32", "osx")
-            ]
+            locale
+            for locale in parse_locales_file(job["locales-file"]).keys()
+            if locale not in ("linux", "win32", "osx")
         )
 
         job["worker"]["locales"] = all_locales
@@ -269,7 +266,7 @@ def _craft_filename_product(product):
 
 
 @attr.s
-class InvalidSubstitution(object):
+class InvalidSubstitution:
     error = attr.ib(type=str)
 
     def __str__(self):

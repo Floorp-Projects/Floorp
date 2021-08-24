@@ -5,9 +5,7 @@
 Transform the release-sign-and-push task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -20,9 +18,9 @@ transforms = TransformSequence()
 
 langpack_sign_push_description_schema = schema.extend(
     {
-        Required("label"): text_type,
-        Required("description"): text_type,
-        Required("worker-type"): optionally_keyed_by("release-level", text_type),
+        Required("label"): str,
+        Required("description"): str,
+        Required("worker-type"): optionally_keyed_by("release-level", str),
         Required("worker"): {
             Required("implementation"): "push-addons",
             Required("channel"): optionally_keyed_by(
@@ -31,7 +29,7 @@ langpack_sign_push_description_schema = schema.extend(
             Required("upstream-artifacts"): None,  # Processed here below
         },
         Required("run-on-projects"): [],
-        Required("scopes"): optionally_keyed_by("release-level", [text_type]),
+        Required("scopes"): optionally_keyed_by("release-level", [str]),
         Required("shipping-phase"): task_description_schema["shipping-phase"],
         Required("shipping-product"): task_description_schema["shipping-product"],
     }
@@ -57,13 +55,13 @@ def resolve_keys(config, jobs):
             job,
             "worker-type",
             item_name=job["label"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         resolve_keyed_by(
             job,
             "scopes",
             item_name=job["label"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": config.params.release_level()},
         )
         resolve_keyed_by(
             job,
@@ -168,7 +166,7 @@ def get_upstream_task_ref(job, expected_kinds):
     if len(upstream_tasks) > 1:
         raise Exception("Only one dependency expected")
 
-    return "<{}>".format(upstream_tasks[0])
+    return f"<{upstream_tasks[0]}>"
 
 
 @transforms.add

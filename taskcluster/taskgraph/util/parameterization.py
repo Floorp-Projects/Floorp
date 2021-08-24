@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 
-import six
 
 from taskgraph.util.time import json_time_from_now
 from taskgraph.util.taskcluster import get_artifact_url
@@ -22,9 +20,9 @@ def _recurse(val, param_fns):
         elif isinstance(val, dict):
             if len(val) == 1:
                 for param_key, param_fn in param_fns.items():
-                    if set(six.iterkeys(val)) == {param_key}:
+                    if set(val.keys()) == {param_key}:
                         return param_fn(val[param_key])
-            return {k: recurse(v) for k, v in six.iteritems(val)}
+            return {k: recurse(v) for k, v in val.items()}
         else:
             return val
 
@@ -63,9 +61,7 @@ def resolve_task_references(label, task_def, task_id, decision_task_id, dependen
                 # handle escaping '<'
                 if key == "<":
                     return key
-                raise KeyError(
-                    "task '{}' has no dependency named '{}'".format(label, key)
-                )
+                raise KeyError(f"task '{label}' has no dependency named '{key}'")
 
         return TASK_REFERENCE_PATTERN.sub(repl, val)
 
@@ -74,9 +70,7 @@ def resolve_task_references(label, task_def, task_id, decision_task_id, dependen
             dependency, artifact_name = match.group(1, 2)
 
             if dependency == "self":
-                raise KeyError(
-                    "task '{}' can't reference artifacts of self".format(label)
-                )
+                raise KeyError(f"task '{label}' can't reference artifacts of self")
             elif dependency == "decision":
                 task_id = decision_task_id
             else:

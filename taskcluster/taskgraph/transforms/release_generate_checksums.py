@@ -5,7 +5,6 @@
 Transform the checksums task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 import copy
 
 from taskgraph.transforms.base import TransformSequence

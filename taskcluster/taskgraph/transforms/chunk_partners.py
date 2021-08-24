@@ -5,7 +5,6 @@
 Chunk the partner repack tasks by subpartner and locale
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 

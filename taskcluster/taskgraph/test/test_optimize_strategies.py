@@ -1,7 +1,6 @@
 # Any copyright is dedicated to the public domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-from __future__ import absolute_import
 
 import time
 from datetime import datetime
@@ -47,7 +46,7 @@ def params():
 
 def generate_tasks(*tasks):
     for i, task in enumerate(tasks):
-        task.setdefault("label", "task-{}-label".format(i))
+        task.setdefault("label", f"task-{i}-label")
         task.setdefault("kind", "test")
         task.setdefault("task", {})
         task.setdefault("attributes", {})
@@ -333,7 +332,7 @@ def test_bugbug_push_schedules(responses, params, args, data, expected):
 
 
 def test_bugbug_multiple_pushes(responses, params):
-    pushes = {str(pid): {"changesets": ["c{}".format(pid)]} for pid in range(8, 10)}
+    pushes = {str(pid): {"changesets": [f"c{pid}"]} for pid in range(8, 10)}
 
     responses.add(
         responses.GET,

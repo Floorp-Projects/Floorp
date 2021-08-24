@@ -5,9 +5,7 @@
 Support for running mach tasks (via run-task)
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.transforms.job import run_job_using, configure_taskdesc_for_run
 from taskgraph.util.schema import (
     Schema,
@@ -23,15 +21,15 @@ mach_schema = Schema(
         # The version of Python to run with. Either an absolute path to the binary
         # on the worker, a version identifier (e.g python2.7 or 3.8). There is no
         # validation performed to ensure the specified binaries actually exist.
-        Optional("python-version"): Any(text_type, int, float),
+        Optional("python-version"): Any(str, int, float),
         # The sparse checkout profile to use. Value is the filename relative to the
         # directory where sparse profiles are defined (build/sparse-profiles/).
-        Optional("sparse-profile"): Any(text_type, None),
+        Optional("sparse-profile"): Any(str, None),
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
         Required("comm-checkout"): bool,
         # Base work directory used to set up the task.
-        Optional("workdir"): text_type,
+        Optional("workdir"): str,
     }
 )
 

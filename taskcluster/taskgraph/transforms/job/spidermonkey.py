@@ -5,9 +5,7 @@
 Support for running spidermonkey jobs via dedicated scripts
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.util.schema import Schema
 from voluptuous import Required, Any, Optional
 
@@ -27,10 +25,10 @@ sm_run_schema = Schema(
             "spidermonkey-package",
         ),
         # SPIDERMONKEY_VARIANT and SPIDERMONKEY_PLATFORM
-        Required("spidermonkey-variant"): text_type,
-        Optional("spidermonkey-platform"): text_type,
+        Required("spidermonkey-variant"): str,
+        Optional("spidermonkey-platform"): str,
         # Base work directory used to set up the task.
-        Optional("workdir"): text_type,
+        Optional("workdir"): str,
         Required("tooltool-downloads"): Any(
             False,
             "public",
@@ -68,9 +66,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
 
     run["using"] = "run-task"
     run["cwd"] = run["workdir"]
-    run["command"] = [
-        "./checkouts/gecko/taskcluster/scripts/builder/{script}".format(script=script)
-    ]
+    run["command"] = [f"./checkouts/gecko/taskcluster/scripts/builder/{script}"]
 
     configure_taskdesc_for_run(config, job, taskdesc, worker["implementation"])
 

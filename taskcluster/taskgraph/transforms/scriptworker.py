@@ -6,7 +6,6 @@
 Transforms for adding appropriate scopes to scriptworker tasks.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.util.scriptworker import get_balrog_server_scope
 

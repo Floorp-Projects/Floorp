@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
@@ -10,7 +9,6 @@ import re
 import json
 
 import six
-from six import text_type
 import mozpack.path as mozpath
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
@@ -44,21 +42,21 @@ transforms = TransformSequence()
 docker_image_schema = Schema(
     {
         # Name of the docker image.
-        Required("name"): text_type,
+        Required("name"): str,
         # Name of the parent docker image.
-        Optional("parent"): text_type,
+        Optional("parent"): str,
         # Treeherder symbol.
-        Required("symbol"): text_type,
+        Required("symbol"): str,
         # relative path (from config.path) to the file the docker image was defined
         # in.
-        Optional("job-from"): text_type,
+        Optional("job-from"): str,
         # Arguments to use for the Dockerfile.
-        Optional("args"): {text_type: text_type},
+        Optional("args"): {str: str},
         # Name of the docker image definition under taskcluster/docker, when
         # different from the docker image name.
-        Optional("definition"): text_type,
+        Optional("definition"): str,
         # List of package tasks this docker image depends on.
-        Optional("packages"): [text_type],
+        Optional("packages"): [str],
         Optional(
             "index",
             description="information for indexing this build so its artifacts can be discovered",
@@ -88,7 +86,7 @@ def fill_template(config, tasks):
         parent = task.pop("parent", None)
 
         for p in packages:
-            if "packages-{}".format(p) not in config.kind_dependencies_tasks:
+            if f"packages-{p}" not in config.kind_dependencies_tasks:
                 raise Exception(
                     "Missing package job for {}-{}: {}".format(
                         config.kind, image_name, p
@@ -98,12 +96,8 @@ def fill_template(config, tasks):
         if not taskgraph.fast:
             context_path = mozpath.relpath(image_path(image_name), GECKO)
             if config.write_artifacts:
-                context_file = os.path.join(
-                    CONTEXTS_DIR, "{}.tar.gz".format(image_name)
-                )
-                logger.info(
-                    "Writing {} for docker image {}".format(context_file, image_name)
-                )
+                context_file = os.path.join(CONTEXTS_DIR, f"{image_name}.tar.gz")
+                logger.info(f"Writing {context_file} for docker image {image_name}")
                 context_hash = create_context_tar(
                     GECKO, context_path, context_file, image_name, args
                 )
@@ -122,7 +116,7 @@ def fill_template(config, tasks):
             image_name
         )
 
-        args["DOCKER_IMAGE_PACKAGES"] = " ".join("<{}>".format(p) for p in packages)
+        args["DOCKER_IMAGE_PACKAGES"] = " ".join(f"<{p}>" for p in packages)
 
         # Adjust the zstandard compression level based on the execution level.
         # We use faster compression for level 1 because we care more about
@@ -134,7 +128,7 @@ def fill_template(config, tasks):
         # include some information that is useful in reconstructing this task
         # from JSON
         taskdesc = {
-            "label": "{}-{}".format(config.kind, image_name),
+            "label": f"{config.kind}-{image_name}",
             "description": description,
             "attributes": {
                 "image_name": image_name,
@@ -189,20 +183,20 @@ def fill_template(config, tasks):
 
         if image_name == "image_builder":
             worker["docker-image"] = IMAGE_BUILDER_IMAGE
-            digest_data.append("image-builder-image:{}".format(IMAGE_BUILDER_IMAGE))
+            digest_data.append(f"image-builder-image:{IMAGE_BUILDER_IMAGE}")
         else:
             worker["docker-image"] = {"in-tree": "image_builder"}
             deps = taskdesc.setdefault("dependencies", {})
-            deps["docker-image"] = "{}-image_builder".format(config.kind)
+            deps["docker-image"] = f"{config.kind}-image_builder"
 
         if packages:
             deps = taskdesc.setdefault("dependencies", {})
             for p in sorted(packages):
-                deps[p] = "packages-{}".format(p)
+                deps[p] = f"packages-{p}"
 
         if parent:
             deps = taskdesc.setdefault("dependencies", {})
-            deps["parent"] = "{}-{}".format(config.kind, parent)
+            deps["parent"] = f"{config.kind}-{parent}"
             worker["env"]["PARENT_TASK_ID"] = {
                 "task-reference": "<parent>",
             }

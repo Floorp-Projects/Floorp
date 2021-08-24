@@ -5,11 +5,9 @@
 Transform the repackage signing task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -19,7 +17,7 @@ from voluptuous import Optional
 
 repackage_signing_description_schema = schema.extend(
     {
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional("treeherder"): task_description_schema["treeherder"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
@@ -55,7 +53,7 @@ def make_repackage_signing_description(config, jobs):
         treeherder.setdefault("kind", "build")
 
         if locale:
-            treeherder["symbol"] = "rs({})".format(locale)
+            treeherder["symbol"] = f"rs({locale})"
 
         if config.kind == "repackage-signing-msi":
             treeherder["symbol"] = "MSIs({})".format(locale or "N")
@@ -112,7 +110,7 @@ def make_repackage_signing_description(config, jobs):
             if basename in SIGNING_FORMATS:
                 upstream_artifacts.append(
                     {
-                        "taskId": {"task-reference": "<{}>".format(dep_kind)},
+                        "taskId": {"task-reference": f"<{dep_kind}>"},
                         "taskType": "repackage",
                         "paths": [artifact],
                         "formats": SIGNING_FORMATS[os.path.basename(artifact)],

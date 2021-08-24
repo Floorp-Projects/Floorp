@@ -5,7 +5,6 @@
 This transform is used to help populate mozharness options for openh264 jobs
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 
@@ -24,5 +23,5 @@ def set_mh_options(config, jobs):
         attributes["openh264_rev"] = rev
         run = job.setdefault("run", {})
         options = run.setdefault("options", [])
-        options.extend(["repo={}".format(repo), "rev={}".format(rev)])
+        options.extend([f"repo={repo}", f"rev={rev}"])
         yield job

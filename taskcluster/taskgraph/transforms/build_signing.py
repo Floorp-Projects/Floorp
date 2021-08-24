@@ -5,7 +5,6 @@
 Transform the signing task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -31,7 +30,7 @@ def add_signed_routes(config, jobs):
                     continue
                 branch = dep_route.split(".")[3]
                 rest = ".".join(dep_route.split(".")[4:])
-                job["routes"].append("index.gecko.v2.{}.signed.{}".format(branch, rest))
+                job["routes"].append(f"index.gecko.v2.{branch}.signed.{rest}")
 
         yield job
 
@@ -52,7 +51,7 @@ def define_upstream_artifacts(config, jobs):
             dep_kind=upstream_artifact_task.kind,
         )
 
-        task_ref = "<{}>".format(upstream_artifact_task.kind)
+        task_ref = f"<{upstream_artifact_task.kind}>"
         task_type = "build"
         if "notarization" in upstream_artifact_task.kind:
             task_type = "scriptworker"

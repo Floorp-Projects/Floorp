@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 import unittest
 from mozunit import main
 from taskgraph.util.schema import (
@@ -16,7 +14,7 @@ from taskgraph.util.schema import (
 schema = Schema(
     {
         "x": int,
-        "y": text_type,
+        "y": str,
     }
 )
 

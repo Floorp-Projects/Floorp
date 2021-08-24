@@ -5,7 +5,6 @@
 Transform the beetmover task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 
@@ -22,7 +21,7 @@ def add_command(config, tasks):
         for upstream in sorted(task.get("dependencies", {}).keys()):
             if "update-verify-config" in upstream:
                 final_verify_configs.append(
-                    "<{}/public/build/update-verify.cfg>".format(upstream),
+                    f"<{upstream}/public/build/update-verify.cfg>",
                 )
         task["run"] = {
             "using": "run-task",

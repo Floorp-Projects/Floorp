@@ -4,7 +4,6 @@
 """
 Transform the partials task into an actual task description.
 """
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -21,7 +20,7 @@ transforms = TransformSequence()
 
 
 def _generate_task_output_files(job, filenames, locale=None):
-    locale_output_path = "{}/".format(locale) if locale else ""
+    locale_output_path = f"{locale}/" if locale else ""
     artifact_prefix = get_artifact_prefix(job)
 
     data = list()
@@ -29,15 +28,15 @@ def _generate_task_output_files(job, filenames, locale=None):
         data.append(
             {
                 "type": "file",
-                "path": "/home/worker/artifacts/{}".format(filename),
-                "name": "{}/{}{}".format(artifact_prefix, locale_output_path, filename),
+                "path": f"/home/worker/artifacts/{filename}",
+                "name": f"{artifact_prefix}/{locale_output_path}{filename}",
             }
         )
     data.append(
         {
             "type": "file",
             "path": "/home/worker/artifacts/manifest.json",
-            "name": "{}/{}manifest.json".format(artifact_prefix, locale_output_path),
+            "name": f"{artifact_prefix}/{locale_output_path}manifest.json",
         }
     )
     return data
@@ -70,7 +69,7 @@ def make_task_description(config, jobs):
         treeherder = inherit_treeherder_from_dep(job, dep_job)
         treeherder.setdefault("symbol", "p(N)")
 
-        label = job.get("label", "partials-{}".format(dep_job.label))
+        label = job.get("label", f"partials-{dep_job.label}")
 
         dependencies = {dep_job.kind: dep_job.label}
 
@@ -78,7 +77,7 @@ def make_task_description(config, jobs):
         locale = dep_job.attributes.get("locale")
         if locale:
             attributes["locale"] = locale
-            treeherder["symbol"] = "p({})".format(locale)
+            treeherder["symbol"] = f"p({locale})"
         attributes["shipping_phase"] = job["shipping-phase"]
 
         build_locale = locale or "en-US"
@@ -98,7 +97,7 @@ def make_task_description(config, jobs):
 
         locale_suffix = ""
         if locale:
-            locale_suffix = "{}/".format(locale)
+            locale_suffix = f"{locale}/"
         artifact_path = "<{}/{}/{}target.complete.mar>".format(
             dep_job.kind,
             get_artifact_prefix(dep_job),
@@ -138,7 +137,7 @@ def make_task_description(config, jobs):
                 "SIGNING_CERT": identify_desired_signing_keys(
                     config.params["project"], config.params["release_product"]
                 ),
-                "EXTRA_PARAMS": "--arch={}".format(architecture(build_platform)),
+                "EXTRA_PARAMS": f"--arch={architecture(build_platform)}",
                 "MAR_CHANNEL_ID": attributes["mar-channel-id"],
             },
         }
@@ -147,7 +146,7 @@ def make_task_description(config, jobs):
 
         task = {
             "label": label,
-            "description": "{} Partials".format(dep_job.description),
+            "description": f"{dep_job.description} Partials",
             "worker-type": "b-linux",
             "dependencies": dependencies,
             "scopes": [],

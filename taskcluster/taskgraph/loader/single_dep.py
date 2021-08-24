@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 
@@ -49,7 +48,7 @@ def loader(kind, path, config, params, loaded_tasks):
             build_type = task.attributes.get("build_type")
             if not build_platform or not build_type:
                 continue
-            platform = "{}/{}".format(build_platform, build_type)
+            platform = f"{build_platform}/{build_type}"
             if only_platforms and platform not in only_platforms:
                 continue
             elif not_platforms and platform in not_platforms:

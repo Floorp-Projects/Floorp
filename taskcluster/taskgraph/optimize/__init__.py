@@ -11,14 +11,12 @@ task.
 See ``taskcluster/docs/optimization.rst`` for more information.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
 import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import defaultdict
 
-import six
 from slugid import nice as slugid
 
 from taskgraph.graph import Graph
@@ -102,7 +100,7 @@ def _get_optimizations(target_task_graph, strategies):
             opt_by, arg = list(task.optimization.items())[0]
             strategy = strategies[opt_by]
             if hasattr(strategy, "description"):
-                opt_by += " ({})".format(strategy.description)
+                opt_by += f" ({strategy.description})"
             return (opt_by, strategy, arg)
         else:
             return ("never", strategies["never"], None)
@@ -118,14 +116,12 @@ def _log_optimization(verb, opt_counts, opt_reasons=None):
 
     if opt_counts:
         logger.info(
-            "{} ".format(verb.title())
-            + ", ".join(
-                "{} tasks by {}".format(c, b) for b, c in sorted(opt_counts.items())
-            )
+            f"{verb.title()} "
+            + ", ".join(f"{c} tasks by {b}" for b, c in sorted(opt_counts.items()))
             + " during optimization."
         )
     else:
-        logger.info("No tasks {} during optimization".format(verb))
+        logger.info(f"No tasks {verb} during optimization")
 
 
 def remove_tasks(
@@ -348,7 +344,7 @@ def get_subgraph(
     ]
     if bad_edges:
         probs = ", ".join(
-            "{} depends on {} as {} but it has been removed".format(l, r, n)
+            f"{l} depends on {r} as {n} but it has been removed"
             for l, r, n in bad_edges
         )
         raise Exception("Optimization error: " + probs)
@@ -364,7 +360,7 @@ def get_subgraph(
     tasks_by_taskid = {}
     named_links_dict = target_task_graph.graph.named_links_dict()
     omit = removed_tasks | replaced_tasks
-    for label, task in six.iteritems(target_task_graph.tasks):
+    for label, task in target_task_graph.tasks.items():
         if label in omit:
             continue
         task.task_id = label_to_taskid[label]
@@ -401,17 +397,17 @@ def get_subgraph(
     )
     # ..and drop edges that are no longer entirely in the task graph
     #   (note that this omits edges to replaced tasks, but they are still in task.dependnecies)
-    edges_by_taskid = set(
+    edges_by_taskid = {
         (left, right, name)
         for (left, right, name) in edges_by_taskid
         if left in tasks_by_taskid and right in tasks_by_taskid
-    )
+    }
 
     return TaskGraph(tasks_by_taskid, Graph(set(tasks_by_taskid), edges_by_taskid))
 
 
 @register_strategy("never")
-class OptimizationStrategy(object):
+class OptimizationStrategy:
     def should_remove_task(self, task, params, arg):
         """Determine whether to optimize this task by removing it.  Returns
         True to remove."""
@@ -430,13 +426,12 @@ class Always(OptimizationStrategy):
         return True
 
 
-@six.add_metaclass(ABCMeta)
-class CompositeStrategy(OptimizationStrategy):
+class CompositeStrategy(OptimizationStrategy, metaclass=ABCMeta):
     def __init__(self, *substrategies, **kwargs):
         self.substrategies = []
         missing = set()
         for sub in substrategies:
-            if isinstance(sub, six.text_type):
+            if isinstance(sub, str):
                 if sub not in registry.keys():
                     missing.add(sub)
                     continue
@@ -460,13 +455,11 @@ class CompositeStrategy(OptimizationStrategy):
     @abstractproperty
     def description(self):
         """A textual description of the combined substrategies."""
-        pass
 
     @abstractmethod
     def reduce(self, results):
         """Given all substrategy results as a generator, return the overall
         result."""
-        pass
 
     def _generate_results(self, fname, *args):
         *passthru, arg = args
@@ -532,7 +525,7 @@ class Alias(CompositeStrategy):
     """
 
     def __init__(self, strategy):
-        super(Alias, self).__init__(strategy)
+        super().__init__(strategy)
 
     @property
     def description(self):
@@ -546,7 +539,7 @@ class Not(CompositeStrategy):
     """Given a strategy, returns the opposite."""
 
     def __init__(self, strategy):
-        super(Not, self).__init__(strategy)
+        super().__init__(strategy)
 
     @property
     def description(self):
@@ -591,7 +584,7 @@ register_strategy("upload-symbols", args=("never",))(Alias)
 # by the `optimize_strategies` parameter.
 
 
-class project(object):
+class project:
     """Strategies that should be applied per-project."""
 
     autoland = {
@@ -652,7 +645,7 @@ class project(object):
     """Strategy overrides that apply to autoland."""
 
 
-class experimental(object):
+class experimental:
     """Experimental strategies either under development or used as benchmarks.
 
     These run as "shadow-schedulers" on each autoland push (tier 3) and/or can be used
@@ -786,7 +779,7 @@ class experimental(object):
     """Runs task containing tests in the same directories as modified files."""
 
 
-class ExperimentalOverride(object):
+class ExperimentalOverride:
     """Overrides dictionaries that are stored in a container with new values.
 
     This can be used to modify all strategies in a collection the same way,

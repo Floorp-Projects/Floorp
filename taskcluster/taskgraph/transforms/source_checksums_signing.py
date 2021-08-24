@@ -4,9 +4,7 @@
 Transform the checksums signing task into an actual task description.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -16,7 +14,7 @@ from voluptuous import Optional
 
 checksums_signing_description_schema = schema.extend(
     {
-        Optional("label"): text_type,
+        Optional("label"): str,
         Optional("treeherder"): task_description_schema["treeherder"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
@@ -41,7 +39,7 @@ def make_checksums_signing_description(config, jobs):
             .get("machine", {})
             .get("platform", "")
         )
-        treeherder.setdefault("platform", "{}/opt".format(dep_th_platform))
+        treeherder.setdefault("platform", f"{dep_th_platform}/opt")
         treeherder.setdefault("tier", 1)
         treeherder.setdefault("kind", "build")
 

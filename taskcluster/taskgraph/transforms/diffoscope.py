@@ -6,9 +6,7 @@ This transform construct tasks to perform diffs between builds, as
 defined in kind.yml
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import Schema
@@ -20,40 +18,40 @@ from voluptuous import (
 )
 
 index_or_string = Any(
-    text_type,
-    {Required("index-search"): text_type},
+    str,
+    {Required("index-search"): str},
 )
 
 diff_description_schema = Schema(
     {
         # Name of the diff task.
-        Required("name"): text_type,
+        Required("name"): str,
         # Treeherder tier.
         Required("tier"): int,
         # Treeherder symbol.
-        Required("symbol"): text_type,
+        Required("symbol"): str,
         # relative path (from config.path) to the file the task was defined in.
-        Optional("job-from"): text_type,
+        Optional("job-from"): str,
         # Original and new builds to compare.
         Required("original"): index_or_string,
         Required("new"): index_or_string,
         # Arguments to pass to diffoscope, used for job-defaults in
         # taskcluster/ci/diffoscope/kind.yml
-        Optional("args"): text_type,
+        Optional("args"): str,
         # Extra arguments to pass to diffoscope, that can be set per job.
-        Optional("extra-args"): text_type,
+        Optional("extra-args"): str,
         # Fail the task when differences are detected.
         Optional("fail-on-diff"): bool,
         # What artifact to check the differences of. Defaults to target.tar.bz2
         # for Linux, target.dmg for Mac, target.zip for Windows, target.apk for
         # Android.
-        Optional("artifact"): text_type,
+        Optional("artifact"): str,
         # Whether to unpack first. Diffoscope can normally work without unpacking,
         # but when one needs to --exclude some contents, that doesn't work out well
         # if said content is packed (e.g. in omni.ja).
         Optional("unpack"): bool,
         # Commands to run before performing the diff.
-        Optional("pre-diff-commands"): [text_type],
+        Optional("pre-diff-commands"): [str],
         # Only run the task on a set of projects/branches.
         Optional("run-on-projects"): task_description_schema["run-on-projects"],
         Optional("optimization"): task_description_schema["optimization"],
@@ -77,7 +75,7 @@ def fill_template(config, tasks):
         artifact = task.get("artifact")
         for k in ("original", "new"):
             value = task[k]
-            if isinstance(value, text_type):
+            if isinstance(value, str):
                 deps[k] = value
                 dep_name = k
                 os_hint = value
@@ -110,7 +108,7 @@ def fill_template(config, tasks):
             elif "win" in os_hint:
                 artifact = "target.zip"
             else:
-                raise Exception("Cannot figure out the OS for {!r}".format(value))
+                raise Exception(f"Cannot figure out the OS for {value!r}")
             if previous_artifact is not None and previous_artifact != artifact:
                 raise Exception("Cannot compare builds from different OSes")
             urls[k] = {
@@ -135,8 +133,8 @@ def fill_template(config, tasks):
                 "artifacts": [
                     {
                         "type": "file",
-                        "path": "/builds/worker/{}".format(f),
-                        "name": "public/{}".format(f),
+                        "path": f"/builds/worker/{f}",
+                        "name": f"public/{f}",
                     }
                     for f in (
                         "diff.html",

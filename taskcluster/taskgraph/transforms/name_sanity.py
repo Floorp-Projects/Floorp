@@ -6,7 +6,6 @@ Generate labels for tasks without names, consistently.
 Uses attributes from `primary-dependency`.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 
