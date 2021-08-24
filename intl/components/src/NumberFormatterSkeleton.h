@@ -7,6 +7,9 @@
 #include "mozilla/intl/NumberFormat.h"
 #include "mozilla/Vector.h"
 #include "unicode/unumberformatter.h"
+#include "unicode/utypes.h"
+
+struct UNumberRangeFormatter;
 
 namespace mozilla {
 namespace intl {
@@ -25,6 +28,13 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    * Return a new UNumberFormatter based on this skeleton.
    */
   UNumberFormatter* toFormatter(std::string_view locale);
+
+#ifndef U_HIDE_DRAFT_API
+  /**
+   * Return a new UNumberRangeFormatter based on this skeleton.
+   */
+  UNumberRangeFormatter* toRangeFormatter(std::string_view locale);
+#endif
 
  private:
   static constexpr size_t DefaultVectorSize = 128;

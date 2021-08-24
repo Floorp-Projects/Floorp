@@ -9,13 +9,23 @@
 #include <utility>
 
 #include "mozilla/intl/NumberFormat.h"
+#include "mozilla/intl/NumberRangeFormat.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
 
+#include "unicode/utypes.h"
+
 namespace mozilla {
 namespace intl {
+
+#ifndef U_HIDE_DRAFT_API
+// SelectRange() requires ICU draft API. And because we try to reduce direct
+// access to ICU definitions, add a separate pre-processor definition to guard
+// the access to SelectRange() instead of directly using U_HIDE_DRAFT_API.
+#  define MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
+#endif
 
 class PluralRules final {
  public:
@@ -69,6 +79,17 @@ class PluralRules final {
    */
   Result<PluralRules::Keyword, PluralRules::Error> Select(double aNumber) const;
 
+#ifdef MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
+  /**
+   * Returns the PluralRules keyword that corresponds to the range from |aStart|
+   * to |aEnd|.
+   *
+   * https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.selectrange
+   */
+  Result<PluralRules::Keyword, PluralRules::Error> SelectRange(
+      double aStart, double aEnd) const;
+#endif
+
   /**
    * Returns an EnumSet with the plural-rules categories that are supported by
    * the locale that the PluralRules instance was created with.
@@ -83,8 +104,10 @@ class PluralRules final {
 
   UPluralRules* mPluralRules = nullptr;
   UniquePtr<NumberFormat> mNumberFormat;
+  UniquePtr<NumberRangeFormat> mNumberRangeFormat;
 
-  PluralRules(UPluralRules*&, UniquePtr<NumberFormat>&&);
+  PluralRules(UPluralRules*&, UniquePtr<NumberFormat>&&,
+              UniquePtr<NumberRangeFormat>&&);
 
   /**
    * Returns the PluralRules::Keyword that matches the UTF-16 string.

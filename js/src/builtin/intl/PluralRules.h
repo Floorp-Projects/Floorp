@@ -32,9 +32,10 @@ class PluralRulesObject : public NativeObject {
                 "object slot");
 
   // Estimated memory use for UPluralRules (see IcuMemoryUsage).
-  // Includes usage for UNumberFormat since our PluralRules impl
-  // contains a NumberFormat object.
-  static constexpr size_t UPluralRulesEstimatedMemoryUse = 3726;
+  // Includes usage for UNumberFormat and UNumberRangeFormatter since our
+  // PluralRules implementations contains a NumberFormat and a NumberRangeFormat
+  // object.
+  static constexpr size_t UPluralRulesEstimatedMemoryUse = 5736;
 
   mozilla::intl::PluralRules* getPluralRules() const {
     const auto& slot = getFixedSlot(UPLURAL_RULES_SLOT);
