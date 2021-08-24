@@ -34,29 +34,6 @@
 
 // this port is based off of v8 svn revision 9837
 
-class PlatformData {
- public:
-  explicit PlatformData(ProfilerThreadId aThreadId)
-      : mProfiledThread(mach_thread_self()) {
-    MOZ_COUNT_CTOR(PlatformData);
-  }
-
-  ~PlatformData() {
-    // Deallocate Mach port for thread.
-    mach_port_deallocate(mach_task_self(), mProfiledThread);
-
-    MOZ_COUNT_DTOR(PlatformData);
-  }
-
-  thread_act_t ProfiledThread() const { return mProfiledThread; }
-
- private:
-  // Note: for mProfiledThread Mach primitives are used instead of pthread's
-  // because the latter doesn't provide thread manipulation primitives required.
-  // For details, consult "Mac OS X Internals" book, Section 7.3.
-  thread_act_t mProfiledThread;
-};
-
 mozilla::profiler::PlatformData::PlatformData(ProfilerThreadId aThreadId)
     : mProfiledThread(mach_thread_self()) {}
 
