@@ -125,7 +125,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.11.91';
+    const workerVersion = '2.11.142';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -577,7 +577,7 @@ class WorkerMessageHandler {
           sink,
           task,
           intent: data.intent,
-          renderInteractiveForms: data.renderInteractiveForms,
+          cacheKey: data.cacheKey,
           annotationStorage: data.annotationStorage
         }).then(function (operatorListInfo) {
           finishWorkerTask(task);
@@ -741,7 +741,7 @@ exports.stringToUTF8String = stringToUTF8String;
 exports.unreachable = unreachable;
 exports.utf8StringToString = utf8StringToString;
 exports.warn = warn;
-exports.VerbosityLevel = exports.Util = exports.UNSUPPORTED_FEATURES = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.IsLittleEndianCached = exports.IsEvalSupportedCached = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UNSUPPORTED_FEATURES = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.IsLittleEndianCached = exports.IsEvalSupportedCached = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 
 __w_pdfjs_require__(3);
 
@@ -749,6 +749,15 @@ const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
+const RenderingIntentFlag = {
+  ANY: 0x01,
+  DISPLAY: 0x02,
+  PRINT: 0x04,
+  ANNOTATIONS_FORMS: 0x10,
+  ANNOTATIONS_STORAGE: 0x20,
+  OPLIST: 0x100
+};
+exports.RenderingIntentFlag = RenderingIntentFlag;
 const PermissionFlag = {
   PRINT: 0x04,
   MODIFY_CONTENTS: 0x08,
@@ -1164,13 +1173,13 @@ function shadow(obj, prop, value) {
 }
 
 const BaseException = function BaseExceptionClosure() {
-  function BaseException(message) {
+  function BaseException(message, name) {
     if (this.constructor === BaseException) {
       unreachable("Cannot initialize BaseException.");
     }
 
     this.message = message;
-    this.name = this.constructor.name;
+    this.name = name;
   }
 
   BaseException.prototype = new Error();
@@ -1182,7 +1191,7 @@ exports.BaseException = BaseException;
 
 class PasswordException extends BaseException {
   constructor(msg, code) {
-    super(msg);
+    super(msg, "PasswordException");
     this.code = code;
   }
 
@@ -1192,7 +1201,7 @@ exports.PasswordException = PasswordException;
 
 class UnknownErrorException extends BaseException {
   constructor(msg, details) {
-    super(msg);
+    super(msg, "UnknownErrorException");
     this.details = details;
   }
 
@@ -1200,17 +1209,27 @@ class UnknownErrorException extends BaseException {
 
 exports.UnknownErrorException = UnknownErrorException;
 
-class InvalidPDFException extends BaseException {}
+class InvalidPDFException extends BaseException {
+  constructor(msg) {
+    super(msg, "InvalidPDFException");
+  }
+
+}
 
 exports.InvalidPDFException = InvalidPDFException;
 
-class MissingPDFException extends BaseException {}
+class MissingPDFException extends BaseException {
+  constructor(msg) {
+    super(msg, "MissingPDFException");
+  }
+
+}
 
 exports.MissingPDFException = MissingPDFException;
 
 class UnexpectedResponseException extends BaseException {
   constructor(msg, status) {
-    super(msg);
+    super(msg, "UnexpectedResponseException");
     this.status = status;
   }
 
@@ -1218,11 +1237,21 @@ class UnexpectedResponseException extends BaseException {
 
 exports.UnexpectedResponseException = UnexpectedResponseException;
 
-class FormatError extends BaseException {}
+class FormatError extends BaseException {
+  constructor(msg) {
+    super(msg, "FormatError");
+  }
+
+}
 
 exports.FormatError = FormatError;
 
-class AbortException extends BaseException {}
+class AbortException extends BaseException {
+  constructor(msg) {
+    super(msg, "AbortException");
+  }
+
+}
 
 exports.AbortException = AbortException;
 const NullCharactersRegExp = /\x00/g;
@@ -1839,7 +1868,7 @@ class Dict {
         if (property === undefined) {
           property = [];
           properties.set(key, property);
-        } else if (!mergeSubDicts) {
+        } else if (!mergeSubDicts || !(value instanceof Dict)) {
           continue;
         }
 
@@ -1856,10 +1885,6 @@ class Dict {
       const subDict = new Dict(xref);
 
       for (const dict of values) {
-        if (!(dict instanceof Dict)) {
-          continue;
-        }
-
         for (const [key, value] of Object.entries(dict._map)) {
           if (subDict._map[key] === undefined) {
             subDict._map[key] = value;
@@ -2977,7 +3002,7 @@ function getArrayLookupTableFactory(initializer) {
 
 class MissingDataException extends _util.BaseException {
   constructor(begin, end) {
-    super(`Missing data [${begin}, ${end})`);
+    super(`Missing data [${begin}, ${end})`, "MissingDataException");
     this.begin = begin;
     this.end = end;
   }
@@ -2986,15 +3011,30 @@ class MissingDataException extends _util.BaseException {
 
 exports.MissingDataException = MissingDataException;
 
-class ParserEOFException extends _util.BaseException {}
+class ParserEOFException extends _util.BaseException {
+  constructor(msg) {
+    super(msg, "ParserEOFException");
+  }
+
+}
 
 exports.ParserEOFException = ParserEOFException;
 
-class XRefEntryException extends _util.BaseException {}
+class XRefEntryException extends _util.BaseException {
+  constructor(msg) {
+    super(msg, "XRefEntryException");
+  }
+
+}
 
 exports.XRefEntryException = XRefEntryException;
 
-class XRefParseException extends _util.BaseException {}
+class XRefParseException extends _util.BaseException {
+  constructor(msg) {
+    super(msg, "XRefParseException");
+  }
+
+}
 
 exports.XRefParseException = XRefParseException;
 
@@ -3695,8 +3735,8 @@ class Page {
     sink,
     task,
     intent,
-    renderInteractiveForms,
-    annotationStorage
+    cacheKey,
+    annotationStorage = null
   }) {
     const contentStreamPromise = this.getContentStream(handler);
     const resourcesPromise = this.loadResources(["ColorSpace", "ExtGState", "Font", "Pattern", "Properties", "Shading", "XObject"]);
@@ -3717,7 +3757,7 @@ class Page {
       handler.send("StartRenderPage", {
         transparency: partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet),
         pageIndex: this.pageIndex,
-        intent
+        cacheKey
       });
       return partialEvaluator.getOperatorList({
         stream: contentStream,
@@ -3736,12 +3776,15 @@ class Page {
         };
       }
 
-      const annotationIntent = intent.startsWith("oplist-") ? intent.split("-")[1] : intent;
+      const renderForms = !!(intent & _util.RenderingIntentFlag.ANNOTATIONS_FORMS),
+            intentAny = !!(intent & _util.RenderingIntentFlag.ANY),
+            intentDisplay = !!(intent & _util.RenderingIntentFlag.DISPLAY),
+            intentPrint = !!(intent & _util.RenderingIntentFlag.PRINT);
       const opListPromises = [];
 
       for (const annotation of annotations) {
-        if (annotationIntent === "display" && annotation.mustBeViewed(annotationStorage) || annotationIntent === "print" && annotation.mustBePrinted(annotationStorage)) {
-          opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderInteractiveForms, annotationStorage).catch(function (reason) {
+        if (intentAny || intentDisplay && annotation.mustBeViewed(annotationStorage) || intentPrint && annotation.mustBePrinted(annotationStorage)) {
+          opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderForms, annotationStorage).catch(function (reason) {
             (0, _util.warn)("getOperatorList - ignoring annotation data during " + `"${task.name}" task: "${reason}".`);
             return null;
           }));
@@ -3820,9 +3863,17 @@ class Page {
     return this._parsedAnnotations.then(function (annotations) {
       const annotationsData = [];
 
-      for (let i = 0, ii = annotations.length; i < ii; i++) {
-        if (!intent || intent === "display" && annotations[i].viewable || intent === "print" && annotations[i].printable) {
-          annotationsData.push(annotations[i].data);
+      if (annotations.length === 0) {
+        return annotationsData;
+      }
+
+      const intentAny = !!(intent & _util.RenderingIntentFlag.ANY),
+            intentDisplay = !!(intent & _util.RenderingIntentFlag.DISPLAY),
+            intentPrint = !!(intent & _util.RenderingIntentFlag.PRINT);
+
+      for (const annotation of annotations) {
+        if (intentAny || intentDisplay && annotation.viewable || intentPrint && annotation.printable) {
+          annotationsData.push(annotation.data);
         }
       }
 
@@ -4176,7 +4227,7 @@ class PDFDocument {
   }
 
   get xfaFactory() {
-    if (this.pdfManager.enableXfa && this.formInfo.hasXfa && !this.formInfo.hasAcroForm) {
+    if (this.pdfManager.enableXfa && this.catalog.needsRendering && this.formInfo.hasXfa && !this.formInfo.hasAcroForm) {
       const data = this.xfaData;
       return (0, _util.shadow)(this, "xfaFactory", data ? new _factory.XFAFactory(data) : null);
     }
@@ -10103,7 +10154,7 @@ class PartialEvaluator {
     return transferMaps;
   }
 
-  handleTilingType(fn, color, resources, pattern, patternDict, operatorList, task, cacheKey, localTilingPatternCache) {
+  handleTilingType(fn, color, resources, pattern, patternDict, operatorList, task, localTilingPatternCache) {
     const tilingOpList = new _operator_list.OperatorList();
 
     const patternResources = _primitives.Dict.merge({
@@ -10122,8 +10173,8 @@ class PartialEvaluator {
       operatorList.addDependencies(tilingOpList.dependencies);
       operatorList.addOp(fn, tilingPatternIR);
 
-      if (cacheKey) {
-        localTilingPatternCache.set(cacheKey, patternDict.objId, {
+      if (patternDict.objId) {
+        localTilingPatternCache.set(null, patternDict.objId, {
           operatorListIR,
           dict: patternDict
         });
@@ -10548,8 +10599,8 @@ class PartialEvaluator {
     const patternName = args.pop();
 
     if (patternName instanceof _primitives.Name) {
-      const name = patternName.name;
-      const localTilingPattern = localTilingPatternCache.getByName(name);
+      const rawPattern = patterns.getRaw(patternName.name);
+      const localTilingPattern = rawPattern instanceof _primitives.Ref && localTilingPatternCache.getByRef(rawPattern);
 
       if (localTilingPattern) {
         try {
@@ -10560,7 +10611,7 @@ class PartialEvaluator {
         } catch (ex) {}
       }
 
-      const pattern = patterns.get(name);
+      const pattern = this.xref.fetchIfRef(rawPattern);
 
       if (pattern) {
         const dict = (0, _primitives.isStream)(pattern) ? pattern.dict : pattern;
@@ -10568,7 +10619,7 @@ class PartialEvaluator {
 
         if (typeNum === PatternType.TILING) {
           const color = cs.base ? cs.base.getRgb(args, 0) : null;
-          return this.handleTilingType(fn, color, resources, pattern, dict, operatorList, task, name, localTilingPatternCache);
+          return this.handleTilingType(fn, color, resources, pattern, dict, operatorList, task, localTilingPatternCache);
         } else if (typeNum === PatternType.SHADING) {
           const shading = dict.get("Shading");
           const matrix = dict.getArray("Matrix");
@@ -17582,7 +17633,7 @@ var _ccitt = __w_pdfjs_require__(32);
 
 class Jbig2Error extends _util.BaseException {
   constructor(msg) {
-    super(`JBIG2 error: ${msg}`);
+    super(`JBIG2 error: ${msg}`, "Jbig2Error");
   }
 
 }
@@ -20230,20 +20281,25 @@ var _core_utils = __w_pdfjs_require__(9);
 
 class JpegError extends _util.BaseException {
   constructor(msg) {
-    super(`JPEG error: ${msg}`);
+    super(`JPEG error: ${msg}`, "JpegError");
   }
 
 }
 
 class DNLMarkerError extends _util.BaseException {
   constructor(message, scanLines) {
-    super(message);
+    super(message, "DNLMarkerError");
     this.scanLines = scanLines;
   }
 
 }
 
-class EOIMarkerError extends _util.BaseException {}
+class EOIMarkerError extends _util.BaseException {
+  constructor(msg) {
+    super(msg, "EOIMarkerError");
+  }
+
+}
 
 const dctZigZag = new Uint8Array([0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63]);
 const dctCos1 = 4017;
@@ -21554,7 +21610,7 @@ var _arithmetic_decoder = __w_pdfjs_require__(36);
 
 class JpxError extends _util.BaseException {
   constructor(msg) {
-    super(`JPX error: ${msg}`);
+    super(`JPX error: ${msg}`, "JpxError");
   }
 
 }
@@ -29376,12 +29432,17 @@ const getGlyphMapForStandardFonts = (0, _core_utils.getLookupTableFactory)(funct
   t[169] = 171;
   t[170] = 187;
   t[171] = 8230;
+  t[200] = 193;
+  t[203] = 205;
   t[210] = 218;
   t[223] = 711;
   t[224] = 321;
   t[225] = 322;
+  t[226] = 352;
   t[227] = 353;
+  t[228] = 381;
   t[229] = 382;
+  t[233] = 221;
   t[234] = 253;
   t[252] = 263;
   t[253] = 268;
@@ -29391,11 +29452,13 @@ const getGlyphMapForStandardFonts = (0, _core_utils.getLookupTableFactory)(funct
   t[261] = 261;
   t[265] = 280;
   t[266] = 281;
+  t[267] = 282;
   t[268] = 283;
   t[269] = 313;
   t[275] = 323;
   t[276] = 324;
   t[278] = 328;
+  t[283] = 344;
   t[284] = 345;
   t[285] = 346;
   t[286] = 347;
@@ -29611,14 +29674,19 @@ exports.getSupplementalGlyphMapForArialBlack = getSupplementalGlyphMapForArialBl
 const getSupplementalGlyphMapForCalibri = (0, _core_utils.getLookupTableFactory)(function (t) {
   t[1] = 32;
   t[4] = 65;
+  t[6] = 193;
   t[17] = 66;
   t[18] = 67;
+  t[21] = 268;
   t[24] = 68;
   t[28] = 69;
+  t[30] = 201;
+  t[32] = 282;
   t[38] = 70;
   t[39] = 71;
   t[44] = 72;
   t[47] = 73;
+  t[49] = 205;
   t[58] = 74;
   t[60] = 75;
   t[62] = 76;
@@ -29628,26 +29696,35 @@ const getSupplementalGlyphMapForCalibri = (0, _core_utils.getLookupTableFactory)
   t[87] = 80;
   t[89] = 81;
   t[90] = 82;
+  t[92] = 344;
   t[94] = 83;
+  t[97] = 352;
   t[100] = 84;
   t[104] = 85;
   t[115] = 86;
   t[116] = 87;
   t[121] = 88;
   t[122] = 89;
+  t[124] = 221;
   t[127] = 90;
+  t[129] = 381;
   t[258] = 97;
+  t[260] = 225;
   t[268] = 261;
   t[271] = 98;
   t[272] = 99;
   t[273] = 263;
+  t[275] = 269;
   t[282] = 100;
   t[286] = 101;
+  t[288] = 233;
+  t[290] = 283;
   t[295] = 281;
   t[296] = 102;
   t[336] = 103;
   t[346] = 104;
   t[349] = 105;
+  t[351] = 237;
   t[361] = 106;
   t[364] = 107;
   t[367] = 108;
@@ -29659,15 +29736,19 @@ const getSupplementalGlyphMapForCalibri = (0, _core_utils.getLookupTableFactory)
   t[393] = 112;
   t[395] = 113;
   t[396] = 114;
+  t[398] = 345;
   t[400] = 115;
   t[401] = 347;
+  t[403] = 353;
   t[410] = 116;
   t[437] = 117;
   t[448] = 118;
   t[449] = 119;
   t[454] = 120;
   t[455] = 121;
+  t[457] = 253;
   t[460] = 122;
+  t[462] = 382;
   t[463] = 380;
   t[853] = 44;
   t[855] = 58;
@@ -35333,7 +35414,9 @@ class BaseLocalCache {
       (0, _util.unreachable)("Cannot initialize BaseLocalCache.");
     }
 
-    if (!options || !options.onlyRefs) {
+    this._onlyRefs = (options && options.onlyRefs) === true;
+
+    if (!this._onlyRefs) {
       this._nameRefMap = new Map();
       this._imageMap = new Map();
     }
@@ -35342,6 +35425,10 @@ class BaseLocalCache {
   }
 
   getByName(name) {
+    if (this._onlyRefs) {
+      (0, _util.unreachable)("Should not call `getByName` method.");
+    }
+
     const ref = this._nameRefMap.get(name);
 
     if (ref) {
@@ -35428,10 +35515,6 @@ class LocalFunctionCache extends BaseLocalCache {
     });
   }
 
-  getByName(name) {
-    (0, _util.unreachable)("Should not call `getByName` method.");
-  }
-
   set(name = null, ref, data) {
     if (!ref) {
       throw new Error('LocalFunctionCache.set - expected "ref" argument.');
@@ -35478,28 +35561,22 @@ class LocalGStateCache extends BaseLocalCache {
 exports.LocalGStateCache = LocalGStateCache;
 
 class LocalTilingPatternCache extends BaseLocalCache {
-  set(name, ref = null, data) {
-    if (typeof name !== "string") {
-      throw new Error('LocalTilingPatternCache.set - expected "name" argument.');
+  constructor(options) {
+    super({
+      onlyRefs: true
+    });
+  }
+
+  set(name = null, ref, data) {
+    if (!ref) {
+      throw new Error('LocalTilingPatternCache.set - expected "ref" argument.');
     }
 
-    if (ref) {
-      if (this._imageCache.has(ref)) {
-        return;
-      }
-
-      this._nameRefMap.set(name, ref);
-
-      this._imageCache.put(ref, data);
-
+    if (this._imageCache.has(ref)) {
       return;
     }
 
-    if (this._imageMap.has(name)) {
-      return;
-    }
-
-    this._imageMap.set(name, data);
+    this._imageCache.put(ref, data);
   }
 
 }
@@ -39552,12 +39629,12 @@ class OperatorList {
     return (0, _util.shadow)(this, "CHUNK_SIZE_ABOUT", this.CHUNK_SIZE - 5);
   }
 
-  constructor(intent, streamSink) {
+  constructor(intent = 0, streamSink) {
     this._streamSink = streamSink;
     this.fnArray = [];
     this.argsArray = [];
 
-    if (streamSink && !(intent && intent.startsWith("oplist-"))) {
+    if (streamSink && !(intent & _util.RenderingIntentFlag.OPLIST)) {
       this.optimizer = new QueueOptimizer(this);
     } else {
       this.optimizer = new NullOptimizer(this);
@@ -40419,6 +40496,16 @@ class Catalog {
     }
 
     return (0, _util.shadow)(this, "version", version.name);
+  }
+
+  get needsRendering() {
+    const needsRendering = this._catDict.get("NeedsRendering");
+
+    if (!(0, _util.isBool)(needsRendering)) {
+      return (0, _util.shadow)(this, "needsRendering", false);
+    }
+
+    return (0, _util.shadow)(this, "needsRendering", needsRendering);
   }
 
   get collection() {
@@ -59793,7 +59880,8 @@ const StreamKind = {
 };
 
 function wrapReason(reason) {
-  if (typeof reason !== "object" || reason === null) {
+  if (!(reason instanceof Error || typeof reason === "object" && reason !== null)) {
+    (0, _util.warn)('wrapReason: Expected "reason" to be a (possibly cloned) Error.');
     return reason;
   }
 
@@ -60458,8 +60546,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.11.91';
-const pdfjsBuild = '3d18c76a5';
+const pdfjsVersion = '2.11.142';
+const pdfjsBuild = '56e7bb626';
 })();
 
 /******/ 	return __webpack_exports__;
