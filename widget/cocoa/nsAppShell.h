@@ -16,8 +16,9 @@
 #include "nsBaseAppShell.h"
 #include "nsTArray.h"
 
+class ProfilingStack;
+
 namespace mozilla {
-class ProfilingStackOwner;
 class nsAvailableMemoryWatcherBase;
 }
 
@@ -72,7 +73,7 @@ class nsAppShell : public nsBaseAppShell {
   CFRunLoopObserverRef mCFRunLoopObserver;
 
   // Non-null while the native event loop is in the waiting state.
-  mozilla::ProfilingStackOwner* mProfilingStackOwnerWhileWaiting = nullptr;
+  ProfilingStack* mProfilingStackWhileWaiting = nullptr;
 
   // For getting notifications from the OS about memory pressure state changes.
   dispatch_source_t mMemoryPressureSource = nullptr;

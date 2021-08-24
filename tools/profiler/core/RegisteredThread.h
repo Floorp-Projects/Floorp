@@ -11,14 +11,12 @@
 #include "ThreadInfo.h"
 
 #include "mozilla/NotNull.h"
-#include "mozilla/ProfilerLabels.h"  // for ProfilingStackOwner
+#include "mozilla/ProfilerThreadRegistration.h"
 #include "mozilla/RefPtr.h"
 #include "nsIEventTarget.h"
 #include "nsIThread.h"
 
-namespace mozilla {
-class ProfilingStackOwner;
-}
+class ProfilingStack;
 
 // This class contains the state for a single thread that is accessible without
 // protection from gPSMutex in platform.cpp. Because there is no external
@@ -79,18 +77,12 @@ class RacyRegisteredThread final {
   ProfilerThreadId ThreadId() const { return mThreadId; }
 
   class ProfilingStack& ProfilingStack() {
-    return mProfilingStackOwner->ProfilingStack();
+    return mProfilingStack;
   }
-  const class ProfilingStack& ProfilingStack() const {
-    return mProfilingStackOwner->ProfilingStack();
-  }
-
-  mozilla::ProfilingStackOwner& ProfilingStackOwner() {
-    return *mProfilingStackOwner;
-  }
+  const class ProfilingStack& ProfilingStack() const { return mProfilingStack; }
 
  private:
-  mozilla::NotNull<RefPtr<mozilla::ProfilingStackOwner>> mProfilingStackOwner;
+  class ProfilingStack& mProfilingStack;
 
   // mThreadId contains the thread ID of the current thread. It is safe to read
   // this from multiple threads concurrently, as it will never be mutated.
