@@ -10196,10 +10196,10 @@ bool BytecodeEmitter::emitInitializeStaticFields(ListNode* classMembers) {
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   // Note: this method uses the ObjLiteralWriter and emits ObjLiteralStencil
   // objects into the GCThingList, which will evaluate them into real GC objects
-  // during JSScript::fullyInitFromEmitter. Eventually we want OBJLITERAL to be
-  // a real opcode, but for now, performance constraints limit us to evaluating
-  // object literals at the end of parse, when we're allowed to allocate GC
-  // things.
+  // or shapes during JSScript::fullyInitFromEmitter. Eventually we want
+  // OBJLITERAL to be a real opcode, but for now, performance constraints limit
+  // us to evaluating object literals at the end of parse, when we're allowed to
+  // allocate GC things.
   //
   // There are four cases here, in descending order of preference:
   //
@@ -10222,10 +10222,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
   //    occurs in a non-run-once (non-singleton) context. In this case, we can
   //    use the ObjLiteral functionality to describe an *empty* object (all
   //    values left undefined) with the right fields, which will become a
-  //    JSOp::NewObject opcode using this template object to speed the creation
-  //    of the object each time it executes (stealing its shape, etc.). The
-  //    emitted bytecode still needs InitProp ops to set the values in this
-  //    case.
+  //    JSOp::NewObject opcode using the object's shape to speed up the creation
+  //    of the object each time it executes. The emitted bytecode still needs
+  //    InitProp ops to set the values in this case.
   //
   // 4. Any other case. As a fallback, we use NewInit to create a new, empty
   //    object (i.e., `{}`) and then emit bytecode to initialize its properties
