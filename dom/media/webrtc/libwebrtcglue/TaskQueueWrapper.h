@@ -30,16 +30,40 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
   ~TaskQueueWrapper() = default;
 
   void Delete() override {
-    MOZ_ASSERT(!mTaskQueue->IsOnCurrentThread(),
-               "TaskQueue::AwaitIdle must not be called on itself");
-    // Must block this thread until shutdown is complete.
-    {
-      auto hasShutdown = mHasShutdown.Lock();
-      *hasShutdown = true;
-      mTaskQueue->BeginShutdown();
+    RefPtr<Runnable> deleteRunnable = NS_NewRunnableFunction(__func__, [this] {
+      MOZ_RELEASE_ASSERT(!mTaskQueue->IsOnCurrentThread(),
+                         "Cannot AwaitIdle() on ourselves. Will deadlock.");
+      // Must block this thread until shutdown is complete.
+      {
+        auto hasShutdown = mHasShutdown.Lock();
+        *hasShutdown = true;
+        mTaskQueue->BeginShutdown();
+      }
+      mTaskQueue->AwaitIdle();
+      delete this;
+    });
+
+    if (mTaskQueue->IsOnCurrentThread() || NS_IsMainThread()) {
+      // TaskQueue::AwaitIdle on itself will cause a deadlock, and we don't want
+      // to block on main thread. Dispatching to a background thread if
+      // possible.
+      if (NS_SUCCEEDED(NS_DispatchBackgroundTask(
+              deleteRunnable, NS_DISPATCH_EVENT_MAY_BLOCK))) {
+        return;
+      }
     }
-    mTaskQueue->AwaitIdle();
-    delete this;
+
+    if (mTaskQueue->IsOnCurrentThread()) {
+      // Dispatching to a background thread failed. We must be in shutdown. Try
+      // to dispatch to main. This should work as mTaskQueue should block
+      // xpcom-shutdown-threads.
+      if (NS_SUCCEEDED(NS_DispatchToMainThread(deleteRunnable))) {
+        return;
+      }
+    }
+
+    // We are either on a suitable thread or everything else has failed.
+    deleteRunnable->Run();
   }
 
   already_AddRefed<Runnable> CreateTaskRunner(
