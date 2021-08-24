@@ -641,6 +641,8 @@ skip script test262/intl402/DisplayNames/prototype/of/type-calendar-valid.js
 
 # Tests not yet updated for https://github.com/tc39/proposal-intl-numberformat-v3
 skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
+skip script test262/intl402/NumberFormat/test-option-useGrouping.js
+skip script test262/intl402/NumberFormat/prototype/resolvedOptions/basic.js
 
 
 ##############################################

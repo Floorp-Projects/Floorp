@@ -549,16 +549,44 @@ static mozilla::intl::NumberFormat* NewNumberFormat(
     return nullptr;
   }
 
-  using Grouping = mozilla::intl::NumberFormatOptions::Grouping;
+  if (value.isString()) {
+    JSLinearString* useGrouping = value.toString()->ensureLinear(cx);
+    if (!useGrouping) {
+      return nullptr;
+    }
 
-  Grouping grouping;
-  if (value.toBoolean()) {
-    grouping = Grouping::Auto;
+    using Grouping = mozilla::intl::NumberFormatOptions::Grouping;
+
+    Grouping grouping;
+    if (StringEqualsLiteral(useGrouping, "auto")) {
+      grouping = Grouping::Auto;
+    } else if (StringEqualsLiteral(useGrouping, "always")) {
+      grouping = Grouping::Always;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(useGrouping, "min2"));
+      grouping = Grouping::Min2;
+    }
+
+    options.mGrouping = grouping;
   } else {
-    grouping = Grouping::Never;
-  }
+    MOZ_ASSERT(value.isBoolean());
+#ifdef NIGHTLY_BUILD
+    // The caller passes the string "always" instead of |true| when the
+    // NumberFormat V3 spec is being used.
+    MOZ_ASSERT(value.toBoolean() == false);
+#endif
 
-  options.mGrouping = grouping;
+    using Grouping = mozilla::intl::NumberFormatOptions::Grouping;
+
+    Grouping grouping;
+    if (value.toBoolean()) {
+      grouping = Grouping::Auto;
+    } else {
+      grouping = Grouping::Never;
+    }
+
+    options.mGrouping = grouping;
+  }
 
   if (!GetProperty(cx, internals, internals, cx->names().notation, &value)) {
     return nullptr;
