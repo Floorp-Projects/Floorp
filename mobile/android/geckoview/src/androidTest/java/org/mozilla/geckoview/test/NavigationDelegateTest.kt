@@ -19,17 +19,11 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
-import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.ContentDelegate
-import org.mozilla.geckoview.GeckoSession.HistoryDelegate
-import org.mozilla.geckoview.GeckoSession.Loader
-import org.mozilla.geckoview.GeckoSession.NavigationDelegate
+import org.mozilla.geckoview.GeckoSession.*
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate
-import org.mozilla.geckoview.GeckoSession.ProgressDelegate
-import org.mozilla.geckoview.GeckoSession.TextInputDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
+import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.UiThreadUtils
 
 @RunWith(AndroidJUnit4::class)
@@ -57,7 +51,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                                    expectedError: Int,
                                    errorPageUrl: String?) {
         sessionRule.delegateDuringNextWait(
-                object : ProgressDelegate, NavigationDelegate, ContentDelegate {
+                object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
                     @AssertCalled(count = 1, order = [1])
                     override fun onLoadRequest(session: GeckoSession,
                                                request: LoadRequest):
@@ -95,7 +89,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         if (errorPageUrl != null) {
-            sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
+            sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate, Callbacks.NavigationDelegate {
                 @AssertCalled(count = 1, order = [1])
                 override fun onLocationChange(session: GeckoSession, url: String?) {
                     assertThat("URL should match", url, equalTo(testLoader.getUri()))
@@ -126,7 +120,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                                         expectedError: Int,
                                         errorPageUrl: String?) {
         sessionRule.delegateDuringNextWait(
-                object : ProgressDelegate, NavigationDelegate, ContentDelegate {
+                object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
 
                     @AssertCalled(false)
                     override fun onPageStart(session: GeckoSession, url: String) {
@@ -149,10 +143,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 })
 
         sessionRule.session.loadUri(testUri)
-        sessionRule.waitUntilCalled(NavigationDelegate::class, "onLoadError")
+        sessionRule.waitUntilCalled(Callbacks.NavigationDelegate::class, "onLoadError")
 
         if (errorPageUrl != null) {
-            sessionRule.waitUntilCalled(object: ContentDelegate {
+            sessionRule.waitUntilCalled(object: Callbacks.ContentDelegate {
                 @AssertCalled(count = 1)
                 override fun onTitleChange(session: GeckoSession, title: String?) {
                     assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
@@ -209,19 +203,13 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        testLoadExpectError(TestLoader()
-                    .uri("file:///")
-                    .flags(GeckoSession.LOAD_FLAGS_EXTERNAL),
+        testLoadExpectError(TestLoader().uri("file:///").flags(LOAD_FLAGS_EXTERNAL),
                 WebRequestError.ERROR_CATEGORY_UNKNOWN,
                 WebRequestError.ERROR_UNKNOWN)
-        testLoadExpectError(TestLoader()
-                    .uri("resource://gre/")
-                    .flags(GeckoSession.LOAD_FLAGS_EXTERNAL),
+        testLoadExpectError(TestLoader().uri("resource://gre/").flags(LOAD_FLAGS_EXTERNAL),
                 WebRequestError.ERROR_CATEGORY_UNKNOWN,
                 WebRequestError.ERROR_UNKNOWN)
-        testLoadExpectError(TestLoader()
-                    .uri("about:about")
-                    .flags(GeckoSession.LOAD_FLAGS_EXTERNAL),
+        testLoadExpectError(TestLoader().uri("about:about").flags(LOAD_FLAGS_EXTERNAL),
                 WebRequestError.ERROR_CATEGORY_UNKNOWN,
                 WebRequestError.ERROR_UNKNOWN)
     }
@@ -259,7 +247,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         mainSession.waitForJS("document.addCertException(false)")
         mainSession.delegateDuringNextWait(
-                object : ProgressDelegate, NavigationDelegate, ContentDelegate {
+                object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
                     @AssertCalled(count = 1, order = [1])
                     override fun onPageStart(session: GeckoSession, url: String) {
                         assertThat("URI should be " + uri, url, equalTo(uri))
@@ -267,7 +255,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
                     @AssertCalled(count = 1, order = [2])
                     override fun onSecurityChange(session: GeckoSession,
-                                                  securityInfo: ProgressDelegate.SecurityInformation) {
+                                                  securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
                         assertThat("Should be exception", securityInfo.isException, equalTo(true))
                         assertThat("Should not be secure", securityInfo.isSecure, equalTo(false))
                     }
@@ -304,7 +292,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 WebRequestError.ERROR_CATEGORY_SECURITY,
                 WebRequestError.ERROR_SECURITY_SSL)
 
-        mainSession.delegateDuringNextWait(object : ProgressDelegate, NavigationDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 return null
@@ -339,7 +327,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.loadUri(insecureUri)
         mainSession.waitForPageStop()
 
-        mainSession.forCallbacksDuringWait(object : NavigationDelegate {
+        mainSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
@@ -353,7 +341,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.loadUri(secureUri)
         mainSession.waitForPageStop()
 
-        mainSession.forCallbacksDuringWait(object : NavigationDelegate {
+        mainSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 return null
@@ -374,7 +362,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         privateSession.waitForPageStop()
 
         var onLoadCalledCounter = 0
-        privateSession.forCallbacksDuringWait(object : NavigationDelegate {
+        privateSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 return null
@@ -401,7 +389,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         privateSession.loadUri(insecureUri)
         privateSession.waitForPageStop()
 
-        privateSession.forCallbacksDuringWait(object : NavigationDelegate {
+        privateSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
@@ -413,7 +401,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.loadUri(secureUri)
         mainSession.waitForPageStop()
 
-        mainSession.forCallbacksDuringWait(object : NavigationDelegate {
+        mainSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 return null
@@ -444,7 +432,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(IFRAME_UNKNOWN_PROTOCOL)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest) : GeckoResult<AllowOrDeny>? {
                 assertThat("URI should not be null", request.uri, notNullValue())
@@ -471,7 +459,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(TRACKERS_PATH)
 
         sessionRule.waitUntilCalled(
-                object : ContentBlocking.Delegate {
+                object : Callbacks.ContentBlockingDelegate {
             @AssertCalled(count = 3)
             override fun onContentBlocked(session: GeckoSession,
                                           event: ContentBlocking.BlockEvent) {
@@ -493,7 +481,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : ContentBlocking.Delegate {
+                object : Callbacks.ContentBlockingDelegate {
             @AssertCalled(false)
             override fun onContentBlocked(session: GeckoSession,
                                           event: ContentBlocking.BlockEvent) {
@@ -528,7 +516,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadUri(uri)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2, order = [1, 2])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -543,7 +531,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                         equalTo(forEachCall(true, false)))
                 assertThat("Target should not be null", request.target, notNullValue())
                 assertThat("Target should match", request.target,
-                        equalTo(NavigationDelegate.TARGET_WINDOW_CURRENT))
+                        equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
                 assertThat("Redirect flag is set", request.isRedirect,
                         equalTo(forEachCall(false, true)))
                 return null
@@ -565,7 +553,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         // We shouldn't be firing onLoadRequest for iframes, including redirects.
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -611,7 +599,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         }
 
         sessionRule.delegateDuringNextWait(
-                object : NavigationDelegate {
+                object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2, order = [1, 2])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -626,7 +614,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                         equalTo(forEachCall(true, false)))
                 assertThat("Target should not be null", request.target, notNullValue())
                 assertThat("Target should match", request.target,
-                        equalTo(NavigationDelegate.TARGET_WINDOW_CURRENT))
+                        equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
                 assertThat("Redirect flag is set", request.isRedirect,
                         equalTo(forEachCall(false, true)))
 
@@ -638,7 +626,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : ProgressDelegate {
+                object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, equalTo(uri))
@@ -660,7 +648,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadUri(uri)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2, order = [1, 2])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -689,7 +677,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : NavigationDelegate {
+                object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
                                      error: WebRequestError): GeckoResult<String>? {
@@ -721,7 +709,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : NavigationDelegate {
+                object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
                                      error: WebRequestError): GeckoResult<String>? {
@@ -752,7 +740,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : NavigationDelegate {
+                object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
                                      error: WebRequestError): GeckoResult<String>? {
@@ -779,7 +767,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : NavigationDelegate {
+                object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
                                      error: WebRequestError): GeckoResult<String>? {
@@ -810,7 +798,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : NavigationDelegate {
+                object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadError(session: GeckoSession, uri: String?,
                                      error: WebRequestError): GeckoResult<String>? {
@@ -941,7 +929,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should now be reported as VR",
                 getUserAgent(), containsString(vrSubStr))
 
-        sessionRule.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 sessionRule.session.settings.userAgentOverride = overrideUserAgent
                 return null
@@ -954,7 +942,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should be reported as override after being set in onLoadRequest",
                 getUserAgent(), equalTo(overrideUserAgent))
 
-        sessionRule.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 sessionRule.session.settings.userAgentOverride = null
                 return null
@@ -1012,7 +1000,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1026,7 +1014,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                         equalTo(true))
                 assertThat("Target should not be null", request.target, notNullValue())
                 assertThat("Target should match", request.target,
-                           equalTo(NavigationDelegate.TARGET_WINDOW_CURRENT))
+                           equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
                 assertThat("Redirect flag is not set", request.isRedirect, equalTo(false))
                 assertThat("Should not have a user gesture", request.hasUserGesture, equalTo(false))
                 return null
@@ -1066,7 +1054,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadUri(dataUrl)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 assertThat("URL should match the provided data URL", url, equalTo(dataUrl))
@@ -1079,7 +1067,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @NullDelegate(NavigationDelegate::class)
+    @NullDelegate(GeckoSession.NavigationDelegate::class)
     @Test fun load_withoutNavigationDelegate() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
@@ -1092,14 +1080,14 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
     }
 
-    @NullDelegate(NavigationDelegate::class)
+    @NullDelegate(GeckoSession.NavigationDelegate::class)
     @Test fun load_canUnsetNavigationDelegate() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         // Test that if we unset the navigation delegate during a load, the load still proceeds.
         var onLocationCount = 0
-        sessionRule.session.navigationDelegate = object : NavigationDelegate {
+        sessionRule.session.navigationDelegate = object : Callbacks.NavigationDelegate {
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 onLocationCount++
             }
@@ -1127,7 +1115,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.load(Loader().data(dataString, mimeType))
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate, ContentDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate, Callbacks.ContentDelegate {
             @AssertCalled
             override fun onTitleChange(session: GeckoSession, title: String?) {
                 assertThat("Title should match", title, equalTo("TheTitle"))
@@ -1150,7 +1138,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.load(Loader().data("Hello, World!", null))
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 assertThat("URL should be a data URL", url, startsWith("data:"))
@@ -1173,7 +1161,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.load(Loader().data(bytes, "text/html"))
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate, ContentDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate, Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onTitleChange(session: GeckoSession, title: String?) {
                 assertThat("Title should match", title, equalTo("Hello, world!"))
@@ -1209,7 +1197,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.load(Loader().data(bytes, mimeType))
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 assertThat("URL should match", url, equalTo(createDataUri(bytes, mimeType)))
@@ -1241,7 +1229,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.reload()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1250,7 +1238,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Trigger URL should be null", request.triggerUri,
                            nullValue())
                 assertThat("Target should match", request.target,
-                           equalTo(NavigationDelegate.TARGET_WINDOW_CURRENT))
+                           equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
                 assertThat("Load should not be direct", request.isDirectNavigation,
                         equalTo(false))
                 return null
@@ -1288,9 +1276,9 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
         })
@@ -1298,7 +1286,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.goBack()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 0, order = [1])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1309,7 +1297,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
@@ -1332,7 +1320,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.goForward()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 0, order = [1])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1343,7 +1331,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
 
@@ -1368,7 +1356,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        sessionRule.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1385,7 +1373,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
@@ -1410,7 +1398,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.evaluateJS("window.open('newSession_child.html', '_blank')")
 
-        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1419,7 +1407,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Trigger URL should match", request.triggerUri,
                            endsWith(NEW_SESSION_HTML_PATH))
                 assertThat("Target should be correct", request.target,
-                           equalTo(NavigationDelegate.TARGET_WINDOW_NEW))
+                           equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
                 assertThat("Load should not be direct", request.isDirectNavigation,
                         equalTo(false))
                 return null
@@ -1456,7 +1444,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
-        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             // We get two onLoadRequest calls for the link click,
             // one when loading the URL and one when opening a new window.
             @AssertCalled(count = 1, order = [1])
@@ -1467,7 +1455,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Trigger URL should be null", request.triggerUri,
                            endsWith(NEW_SESSION_HTML_PATH))
                 assertThat("Target should be correct", request.target,
-                           equalTo(NavigationDelegate.TARGET_WINDOW_NEW))
+                           equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
                 return null
             }
 
@@ -1482,7 +1470,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     private fun delegateNewSession(settings: GeckoSessionSettings = mainSession.settings): GeckoSession {
         val newSession = sessionRule.createClosedSession(settings)
 
-        sessionRule.session.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession> {
                 return GeckoResult.fromValue(newSession)
@@ -1509,7 +1497,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         // NEW_SESSION_CHILD_HTML_PATH
         newSession.waitForPageStop()
 
-        newSession.forCallbacksDuringWait(object : ProgressDelegate {
+        newSession.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(NEW_SESSION_CHILD_HTML_PATH))
@@ -1570,7 +1558,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.session.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
@@ -1589,7 +1577,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         // Assert that onNewSession was not called for the link click.
-        sessionRule.session.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.session.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1618,7 +1606,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.evaluateJS("""
             document.querySelector('input[type=text]').focus()
         """)
-        sessionRule.session.waitUntilCalled(TextInputDelegate::class,
+        sessionRule.session.waitUntilCalled(GeckoSession.TextInputDelegate::class,
                                             "restartInput")
 
         val time = SystemClock.uptimeMillis()
@@ -1628,7 +1616,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                                               KeyEvent.changeAction(keyEvent,
                                                                     KeyEvent.ACTION_UP))
 
-        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
@@ -1637,7 +1625,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Trigger URL should match", request.triggerUri,
                            endsWith("form_blank.html"))
                 assertThat("Target should be correct", request.target,
-                           equalTo(NavigationDelegate.TARGET_WINDOW_NEW))
+                           equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
                 return null
             }
 
@@ -1705,7 +1693,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             .uri(uri)
             .referrer(sessionRule.session)
             .flags(GeckoSession.LOAD_FLAGS_NONE))
-        newSession.waitUntilCalled(object : NavigationDelegate {
+        newSession.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 return null
@@ -1766,22 +1754,22 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         testLoaderEquals(
                 Loader().uri("http://test-uri-equals.com")
-                        .flags(GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
-                        .headerFilter(GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE)
+                        .flags(LOAD_FLAGS_BYPASS_CLASSIFIER)
+                        .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                         .referrer("test-referrer"),
                 Loader().uri("http://test-uri-equals.com")
-                        .flags(GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
-                        .headerFilter(GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE)
+                        .flags(LOAD_FLAGS_BYPASS_CLASSIFIER)
+                        .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                         .referrer("test-referrer"),
                 true)
         testLoaderEquals(
                 Loader().uri("http://test-uri-equals.com")
-                        .flags(GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
-                        .headerFilter(GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE)
+                        .flags(LOAD_FLAGS_BYPASS_CLASSIFIER)
+                        .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                         .referrer(sessionRule.session),
                 Loader().uri("http://test-uri-equals.com")
-                        .flags(GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
-                        .headerFilter(GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE)
+                        .flags(LOAD_FLAGS_BYPASS_CLASSIFIER)
+                        .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
                         .referrer("test-referrer"),
                 false)
 
@@ -1967,7 +1955,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.session.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession> {
                 return GeckoResult.fromValue(sessionRule.createOpenSession())
@@ -1976,7 +1964,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
-        sessionRule.session.waitUntilCalled(NavigationDelegate::class,
+        sessionRule.session.waitUntilCalled(GeckoSession.NavigationDelegate::class,
                                             "onNewSession")
         UiThreadUtils.loopUntilIdle(sessionRule.env.defaultTimeoutMillis)
     }
@@ -1994,7 +1982,11 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         val controller = sessionRule.runtime.webExtensionController
 
-        sessionRule.delegateUntilTestEnd(object : WebExtensionController.PromptDelegate {
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtensionController.PromptDelegate::class,
+                controller::setPromptDelegate,
+                { controller.promptDelegate = null },
+                object : WebExtensionController.PromptDelegate {
             @AssertCalled
             override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
                 return GeckoResult.allow()
@@ -2026,7 +2018,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         settings.aboutConfigEnabled = true
 
         var currentUrl: String? = null
-        mainSession.delegateUntilTestEnd(object: NavigationDelegate {
+        mainSession.delegateUntilTestEnd(object: GeckoSession.NavigationDelegate {
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 currentUrl = url
             }
@@ -2097,7 +2089,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.evaluateJS("location.hash = 'test1';")
 
-        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -2108,14 +2100,14 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 assertThat("URI should match", url, endsWith("#test1"))
             }
         })
 
         sessionRule.session.evaluateJS("location.hash = 'test2';")
 
-        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -2124,7 +2116,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 assertThat("URI should match", url, endsWith("#test2"))
             }
         })
@@ -2138,7 +2130,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
-        sessionRule.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
                 assertThat("Session should not be null", session, notNullValue())
@@ -2152,7 +2144,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
         sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
-        sessionRule.waitUntilCalled(object : HistoryDelegate, NavigationDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.All {
             @AssertCalled(count = 1)
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
                 assertThat("Session should not be null", session, notNullValue())
@@ -2164,14 +2156,14 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Cannot go forward", canGoForward, equalTo(false))
             }
             @AssertCalled(count = 1)
-            override fun onHistoryStateChange(session: GeckoSession, state: HistoryDelegate.HistoryList) {
+            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
                 assertThat("History should have two entries", state.size, equalTo(2))
             }
         })
         sessionRule.session.purgeHistory()
-        sessionRule.waitUntilCalled(object : HistoryDelegate, NavigationDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.All {
             @AssertCalled(count = 1)
-            override fun onHistoryStateChange(session: GeckoSession, state: HistoryDelegate.HistoryList) {
+            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
                 assertThat("History should have one entry", state.size, equalTo(1))
             }
             @AssertCalled(count = 1)
@@ -2198,7 +2190,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         mainSession.synthesizeTap(50, 50)
 
-        sessionRule.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("Should have a user gesture", request.hasUserGesture, equalTo(true))
@@ -2216,7 +2208,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        sessionRule.session.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("URLs should match", request.uri, endsWith(forEachCall(HELLO_HTML_PATH, HELLO2_HTML_PATH)))
@@ -2235,7 +2227,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         val expectedUri = createDataUri(dataBytes, "*/*")
         val loader = Loader().data(dataBytes, "*/*")
 
-        sessionRule.session.delegateUntilTestEnd(object : NavigationDelegate {
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("URLs should match", request.uri, equalTo(expectedUri))
@@ -2255,7 +2247,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
 
         sessionRule.session.load(loader)
-        sessionRule.waitUntilCalled(NavigationDelegate::class, "onLoadError")
+        sessionRule.waitUntilCalled(Callbacks.NavigationDelegate::class, "onLoadError")
     }
 
     @Test
@@ -2269,7 +2261,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(DATA_URI_PATH)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.session.delegateUntilTestEnd(object : NavigationDelegate {
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 return GeckoResult.deny()
@@ -2283,7 +2275,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test
     fun loadShortDataUriToplevelIndirect() {
-        sessionRule.session.delegateUntilTestEnd(object : NavigationDelegate {
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 return GeckoResult.allow()
@@ -2334,7 +2326,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     fun loadLongDataUriNonToplevel() {
         val dataUri = createLargeHighEntropyImageDataUri()
 
-        sessionRule.session.delegateUntilTestEnd(object : NavigationDelegate {
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 return GeckoResult.allow()

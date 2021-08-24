@@ -13,9 +13,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assume.assumeThat
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.MediaDelegate
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.util.Callbacks
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -24,7 +23,7 @@ class MediaDelegateTest : BaseSessionTest() {
 
     private fun requestRecordingPermission(allowAudio: Boolean, allowCamera: Boolean) {
 
-        mainSession.delegateDuringNextWait(object : PermissionDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
             override fun onMediaPermissionRequest(
                     session: GeckoSession, uri: String,
@@ -56,7 +55,7 @@ class MediaDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.delegateDuringNextWait(object : MediaDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.MediaDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
             override fun onRecordingStatusChanged(session: GeckoSession,
                                                 devices:  Array<org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice>) {
