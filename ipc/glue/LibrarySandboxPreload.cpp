@@ -27,10 +27,15 @@ PathString GetSandboxedRLBoxPath() {
   return libFile->NativePath();
 }
 
-PRLibrary* PreloadLibrary(const nsCString& path) {
+PRLibrary* PreloadLibrary(const PathString& path) {
   PRLibSpec libSpec;
+#ifdef XP_WIN
+  libSpec.type = PR_LibSpec_PathnameU;
+  libSpec.value.pathname_u = path.get();
+#else
   libSpec.type = PR_LibSpec_Pathname;
   libSpec.value.pathname = path.get();
+#endif
   PRLibrary* ret = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY);
   return ret;
 }
@@ -38,9 +43,9 @@ PRLibrary* PreloadLibrary(const nsCString& path) {
 void PreloadSandboxedDynamicLibrary() {
   // The process level sandbox does not allow loading of dynamic libraries.
   // This preloads wasm sandboxed libraries before the process level sandbox is
-  // enabled. Currently, this is only needed for Linux as Mac allows loading
-  // libraries from the package file.
-#if defined(XP_LINUX) && defined(MOZ_USING_WASM_SANDBOXING)
+  // enabled. Technically, this is only needed for Linux, but also allows to
+  // avoid loading/unloading the library repeatedly on other platforms.
+#if defined(MOZ_USING_WASM_SANDBOXING)
   if (!PreloadLibrary(GetSandboxedRLBoxPath())) {
     MOZ_CRASH("Library preload failure: Failed to load librlbox\n");
   }
