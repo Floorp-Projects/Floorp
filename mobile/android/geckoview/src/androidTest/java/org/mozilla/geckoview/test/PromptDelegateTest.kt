@@ -3,14 +3,11 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
-import org.mozilla.geckoview.GeckoSession.ProgressDelegate
 import org.mozilla.geckoview.GeckoSession.PromptDelegate
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthPrompt
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.util.Callbacks
 
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,7 +16,6 @@ import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.Autocomplete
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -28,7 +24,7 @@ class PromptDelegateTest : BaseSessionTest() {
         // Ensure popup blocking is enabled for this test.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to true))
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate, NavigationDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate, Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onPopupPrompt(session: GeckoSession, prompt: PromptDelegate.PopupPrompt)
                     : GeckoResult<PromptDelegate.PromptResponse>? {
@@ -56,14 +52,14 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         sessionRule.session.loadTestPath(POPUP_HTML_PATH)
-        sessionRule.waitUntilCalled(NavigationDelegate::class, "onNewSession")
+        sessionRule.waitUntilCalled(Callbacks.NavigationDelegate::class, "onNewSession")
     }
 
     @Test fun popupTestBlock() {
         // Ensure popup blocking is enabled for this test.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to true))
 
-        sessionRule.delegateUntilTestEnd(object : PromptDelegate, NavigationDelegate {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate, Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onPopupPrompt(session: GeckoSession, prompt: PromptDelegate.PopupPrompt)
                     : GeckoResult<PromptDelegate.PromptResponse>? {
@@ -97,7 +93,7 @@ class PromptDelegateTest : BaseSessionTest() {
     @Test fun alertTest() {
         sessionRule.session.evaluateJS("alert('Alert!');")
 
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onAlertPrompt(session: GeckoSession, prompt: PromptDelegate.AlertPrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Message should match", "Alert!", equalTo(prompt.message))
@@ -106,90 +102,8 @@ class PromptDelegateTest : BaseSessionTest() {
         })
     }
 
-    // This test checks that saved logins are returned to the app when calling onAuthPrompt
-    @Test fun loginStorageHttpAuthWithPassword() {
-        mainSession.loadTestPath("/basic-auth/foo/bar")
-        sessionRule.delegateDuringNextWait(object : Autocomplete.StorageDelegate {
-            @AssertCalled
-            override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
-                return GeckoResult.fromValue(arrayOf(
-                    Autocomplete.LoginEntry.Builder()
-                        .origin(GeckoSessionTestRule.TEST_ENDPOINT)
-                        .formActionOrigin(GeckoSessionTestRule.TEST_ENDPOINT)
-                        .httpRealm("Fake Realm")
-                        .username("test-username")
-                        .password("test-password")
-                        .formActionOrigin(null)
-                        .guid("test-guid")
-                        .build()
-                ));
-            }
-        })
-        sessionRule.waitUntilCalled(object : PromptDelegate, Autocomplete.StorageDelegate {
-            @AssertCalled
-            override fun onAuthPrompt(session: GeckoSession, prompt: AuthPrompt): GeckoResult<PromptResponse>? {
-                assertThat("Saved login should appear here",
-                    prompt.authOptions.username, equalTo("test-username"))
-                assertThat("Saved login should appear here",
-                    prompt.authOptions.password, equalTo("test-password"))
-                return null
-            }
-        })
-    }
-
-    // This test checks that we store login information submitted through HTTP basic auth
-    // This also tests that the login save prompt gets automatically dismissed if
-    // the login information is incorrect.
-    @Test fun loginStorageHttpAuth() {
-        sessionRule.setPrefsUntilTestEnd(mapOf(
-            "signon.rememberSignons" to true))
-        val result = GeckoResult<PromptDelegate.BasePrompt>()
-        val promptInstanceDelegate = object : PromptDelegate.PromptInstanceDelegate {
-            var prompt: PromptDelegate.BasePrompt? = null
-            override fun onPromptDismiss(prompt: PromptDelegate.BasePrompt) {
-                result.complete(prompt)
-            }
-        }
-
-        sessionRule.delegateUntilTestEnd(object : PromptDelegate, Autocomplete.StorageDelegate {
-            @AssertCalled
-            override fun onAuthPrompt(session: GeckoSession, prompt: AuthPrompt): GeckoResult<PromptResponse>? {
-                return GeckoResult.fromValue(prompt.confirm("foo", "bar"));
-            }
-
-            @AssertCalled
-            override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
-                return GeckoResult.fromValue(arrayOf());
-            }
-
-            @AssertCalled
-            override fun onLoginSave(
-                session: GeckoSession,
-                request: PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>
-            ): GeckoResult<PromptResponse>? {
-                val authInfo = request.options[0].value
-                assertThat("auth matches", authInfo.formActionOrigin, isEmptyOrNullString())
-                assertThat("auth matches", authInfo.httpRealm, equalTo("Fake Realm"))
-                assertThat("auth matches", authInfo.origin, equalTo(GeckoSessionTestRule.TEST_ENDPOINT))
-                assertThat("auth matches", authInfo.username, equalTo("foo"))
-                assertThat("auth matches", authInfo.password, equalTo("bar"))
-                promptInstanceDelegate.prompt = request
-                request.setDelegate(promptInstanceDelegate)
-                return GeckoResult()
-            }
-        })
-
-        mainSession.loadTestPath("/basic-auth/foo/bar")
-
-        // The server we try to hit will always reject the login so we should
-        // get a request to reauth which should dismiss the prompt
-        val actualPrompt = sessionRule.waitForResult(result)
-
-        assertThat("Prompt object should match", actualPrompt, equalTo(promptInstanceDelegate.prompt))
-    }
-
     @Test fun dismissAuthTest() {
-        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 2)
             override fun onAuthPrompt(session: GeckoSession, prompt: PromptDelegate.AuthPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 //TODO: Figure out some better testing here.
@@ -208,7 +122,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onButtonPrompt(session: GeckoSession, prompt: PromptDelegate.ButtonPrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Message should match", "Confirm?", equalTo(prompt.message))
@@ -220,7 +134,7 @@ class PromptDelegateTest : BaseSessionTest() {
                 sessionRule.session.waitForJS("confirm('Confirm?')") as Boolean,
                 equalTo(true))
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onButtonPrompt(session: GeckoSession, prompt: PromptDelegate.ButtonPrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Message should match", "Confirm?", equalTo(prompt.message))
@@ -247,7 +161,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         val result = GeckoResult<Void>()
-        sessionRule.delegateUntilTestEnd(object: ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object: Callbacks.ProgressDelegate {
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("Only HELLO_HTML_PATH should load", url, endsWith(HELLO_HTML_PATH))
                 result.complete(null)
@@ -257,7 +171,7 @@ class PromptDelegateTest : BaseSessionTest() {
         val promptResult = GeckoResult<PromptDelegate.PromptResponse>()
         val promptResult2 = GeckoResult<PromptDelegate.PromptResponse>()
 
-        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 2)
             override fun onRepostConfirmPrompt(session: GeckoSession, prompt: PromptDelegate.RepostConfirmPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 // We have to return something here because otherwise the delegate will be invoked
@@ -269,7 +183,7 @@ class PromptDelegateTest : BaseSessionTest() {
         // This should trigger a confirm resubmit prompt
         sessionRule.session.reload();
 
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onRepostConfirmPrompt(session: GeckoSession, prompt: PromptDelegate.RepostConfirmPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 promptResult.complete(prompt.confirm(AllowOrDeny.DENY))
@@ -281,7 +195,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         // Trigger it again, this time the load should go through
         sessionRule.session.reload();
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onRepostConfirmPrompt(session: GeckoSession, prompt: PromptDelegate.RepostConfirmPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 promptResult2.complete(prompt.confirm(AllowOrDeny.ALLOW))
@@ -302,7 +216,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         val result = GeckoResult<Void>()
-        sessionRule.delegateUntilTestEnd(object: ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object: Callbacks.ProgressDelegate {
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("Only HELLO2_HTML_PATH should load", url, endsWith(HELLO2_HTML_PATH))
                 result.complete(null)
@@ -312,7 +226,7 @@ class PromptDelegateTest : BaseSessionTest() {
         val promptResult = GeckoResult<PromptDelegate.PromptResponse>()
         val promptResult2 = GeckoResult<PromptDelegate.PromptResponse>()
 
-        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 2)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 // We have to return something here because otherwise the delegate will be invoked
@@ -324,7 +238,7 @@ class PromptDelegateTest : BaseSessionTest() {
         // This will try to load "hello.html" but will be denied, if the request
         // goes through anyway the onLoadRequest delegate above will throw an exception
         sessionRule.session.evaluateJS("document.querySelector('#navigateAway').click()")
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 promptResult.complete(prompt.confirm(AllowOrDeny.DENY))
@@ -337,7 +251,7 @@ class PromptDelegateTest : BaseSessionTest() {
         // This request will go through and end the test. Doing the negative case first will
         // ensure that if either of this tests fail the test will fail.
         sessionRule.session.evaluateJS("document.querySelector('#navigateAway2').click()")
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 promptResult2.complete(prompt.confirm(AllowOrDeny.ALLOW))
@@ -353,7 +267,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onTextPrompt(session: GeckoSession, prompt: PromptDelegate.TextPrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Message should match", "Prompt:", equalTo(prompt.message))
@@ -376,7 +290,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.session.evaluateJS("document.getElementById('selectexample').click();")
 
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 return GeckoResult.fromValue(prompt.dismiss())
@@ -390,7 +304,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(PROMPT_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onColorPrompt(session: GeckoSession, prompt: PromptDelegate.ColorPrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Value should match", "#ffffff", equalTo(prompt.defaultValue))
@@ -427,7 +341,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.session.evaluateJS("document.getElementById('dateexample').click();")
 
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 return GeckoResult.fromValue(prompt.dismiss())
@@ -443,7 +357,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.session.evaluateJS("document.getElementById('fileexample').click();")
 
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onFilePrompt(session: GeckoSession, prompt: PromptDelegate.FilePrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Length of mimeTypes should match", 2, equalTo(prompt.mimeTypes!!.size))
@@ -462,7 +376,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         val shareText = "Example share text"
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Text field is not null", prompt.text, notNullValue())
@@ -487,7 +401,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         val shareUrl = "https://example.com/"
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Text field is null", prompt.text, nullValue())
@@ -512,7 +426,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         val shareTitle = "Title!"
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Text field is null", prompt.text, nullValue())
@@ -537,7 +451,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         val shareUrl = "https://www.example.com"
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 return GeckoResult.fromValue(prompt.confirm(PromptDelegate.SharePrompt.Result.FAILURE))
@@ -560,7 +474,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         val shareUrl = "https://www.example.com"
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 return GeckoResult.fromValue(prompt.confirm(PromptDelegate.SharePrompt.Result.ABORT))
@@ -583,7 +497,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         val shareUrl = "https://www.example.com"
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 return GeckoResult.fromValue(prompt.dismiss())
@@ -604,7 +518,7 @@ class PromptDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 0)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 return GeckoResult.fromValue(prompt.dismiss())
@@ -628,7 +542,7 @@ class PromptDelegateTest : BaseSessionTest() {
         // Invalid port should cause URL parser to fail.
         val shareUrl = "http://www.example.com:123456"
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 0)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 return GeckoResult.fromValue(prompt.dismiss())
@@ -651,7 +565,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         val shareUrl = "https://www.example.com"
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 0)
             override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 return GeckoResult.fromValue(prompt.dismiss())
