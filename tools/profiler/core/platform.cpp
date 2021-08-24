@@ -5450,7 +5450,8 @@ void profiler_unregister_thread() {
   ThreadRegistration::UnregisterThread();
 }
 
-static void locked_unregister_thread(PSLockRef lock) {
+static void locked_unregister_thread(
+    PSLockRef lock, ThreadRegistration::OnThreadRef aOnThreadRef) {
   if (!TLSRegisteredThread::IsTLSInited()) {
     return;
   }
@@ -5464,54 +5465,48 @@ static void locked_unregister_thread(PSLockRef lock) {
   // We don't call RegisteredThread::StopJSSampling() here; there's no point
   // doing that for a JS thread that is in the process of disappearing.
 
-  if (RegisteredThread* registeredThread =
-          TLSRegisteredThread::RegisteredThread(lock)) {
-    MOZ_RELEASE_ASSERT(
-        IsRegisteredThreadInRegisteredThreadsList(lock, registeredThread),
-        "Thread being unregistered is not in registered thread list even "
-        "though its TLS is non-null");
-    MOZ_RELEASE_ASSERT(
-        registeredThread->Info().ThreadId() == profiler_current_thread_id(),
-        "Thread being unregistered has changed its TID");
-    const ThreadRegistrationInfo& info = registeredThread->Info();
+  ThreadRegistration::OnThreadRef::RWOnThreadWithLock lockedThreadData =
+      aOnThreadRef.LockedRWOnThread();
 
-    DEBUG_LOG("profiler_unregister_thread: %s", info.Name());
+  RegisteredThread* registeredThread = &lockedThreadData->RegisteredThreadRef();
 
-    if (ActivePS::Exists(lock)) {
-      ActivePS::UnregisterThread(lock, registeredThread);
-    }
+  lockedThreadData->ClearIsBeingProfiledAndProfiledThreadData(lock);
+  lockedThreadData->SetRegisteredThread(nullptr);
 
-    ThreadRegistration::WithOnThreadRef(
-        [&](ThreadRegistration::OnThreadRef threadRegistration) {
-          threadRegistration.WithLockedRWOnThread(
-              [&](ThreadRegistration::LockedRWOnThread& aRW) {
-                aRW.ClearIsBeingProfiledAndProfiledThreadData(lock);
-                aRW.SetRegisteredThread(nullptr);
-              });
-        });
+  MOZ_RELEASE_ASSERT(
+      IsRegisteredThreadInRegisteredThreadsList(lock, registeredThread),
+      "Thread being unregistered is not in registered thread list even "
+      "though its TLS is non-null");
+  MOZ_RELEASE_ASSERT(
+      lockedThreadData->Info().ThreadId() == profiler_current_thread_id(),
+      "Thread being unregistered has changed its TID");
 
-    // Clear the pointer to the RegisteredThread object that we're about to
-    // destroy.
-    TLSRegisteredThread::ResetRegisteredThread(lock);
+  DEBUG_LOG("profiler_unregister_thread: %s", lockedThreadData->Info().Name());
 
-    // Remove the thread from the list of registered threads. This deletes the
-    // registeredThread object.
-    CorePS::RemoveRegisteredThread(lock, registeredThread);
-
-    MOZ_RELEASE_ASSERT(
-        !IsRegisteredThreadInRegisteredThreadsList(lock, registeredThread),
-        "After unregistering, thread should no longer be in the registered "
-        "thread list");
-    MOZ_RELEASE_ASSERT(
-        !TLSRegisteredThread::RegisteredThread(lock),
-        "TLS should have been reset after un-registering thread");
+  if (ActivePS::Exists(lock)) {
+    ActivePS::UnregisterThread(lock, registeredThread);
   }
+
+  // Clear the pointer to the RegisteredThread object that we're about to
+  // destroy.
+  TLSRegisteredThread::ResetRegisteredThread(lock);
+
+  // Remove the thread from the list of registered threads. This deletes the
+  // registeredThread object.
+  CorePS::RemoveRegisteredThread(lock, registeredThread);
+
+  MOZ_RELEASE_ASSERT(
+      !IsRegisteredThreadInRegisteredThreadsList(lock, registeredThread),
+      "After unregistering, thread should no longer be in the registered "
+      "thread list");
+  MOZ_RELEASE_ASSERT(!TLSRegisteredThread::RegisteredThread(lock),
+                     "TLS should have been reset after un-registering thread");
 }
 
 /* static */
 void ThreadRegistry::Unregister(ThreadRegistration::OnThreadRef aOnThreadRef) {
   PSAutoLock psLock;
-  locked_unregister_thread(psLock);
+  locked_unregister_thread(psLock, aOnThreadRef);
 
   LockedRegistry registryLock;
   for (OffThreadRef& thread : sRegistryContainer) {
