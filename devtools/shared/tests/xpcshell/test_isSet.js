@@ -6,6 +6,14 @@
 // Test ThreadSafeDevToolsUtils.isSet
 
 function run_test() {
+  Services.prefs.setBoolPref(
+    "security.allow_parent_unrestricted_js_loads",
+    true
+  );
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
+  });
+
   const { isSet } = DevToolsUtils;
 
   equal(isSet(new Set()), true);
