@@ -243,7 +243,7 @@ void TaskController::RunPoolThread() {
   nsAutoCString threadName;
   threadName.AppendLiteral("TaskController Thread #");
   threadName.AppendInt(static_cast<int64_t>(mThreadPoolIndex));
-  PROFILER_REGISTER_THREAD(threadName.BeginReading());
+  AUTO_PROFILER_REGISTER_THREAD(threadName.BeginReading());
 
   MutexAutoLock lock(mGraphMutex);
   while (true) {
