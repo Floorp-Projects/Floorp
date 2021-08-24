@@ -186,6 +186,7 @@ struct MOZ_STACK_CLASS NumberFormatOptions {
 };
 
 enum class NumberPartType : int16_t {
+  ApproximatelySign,
   Compact,
   Currency,
   Decimal,
@@ -378,6 +379,13 @@ class NumberFormat final {
     if (!formatInternal(number)) {
       return Err(FormatError::InternalError);
     }
+
+    // Non-finite numbers aren't currently supported here. If we ever need to
+    // support those, the |Maybe<double>| argument must be computed here.
+    MOZ_ASSERT(number != "Infinity");
+    MOZ_ASSERT(number != "+Infinity");
+    MOZ_ASSERT(number != "-Infinity");
+    MOZ_ASSERT(number != "NaN");
 
     bool isNegative = !number.empty() && number[0] == '-';
 
