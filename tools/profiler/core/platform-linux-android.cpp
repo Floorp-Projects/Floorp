@@ -74,8 +74,6 @@
 
 using namespace mozilla;
 
-void* GetStackTop(void* aGuess) { return aGuess; }
-
 static void PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext) {
   aRegs.mContext = aContext;
   mcontext_t& mcontext = aContext->uc_mcontext;
