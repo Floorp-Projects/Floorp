@@ -421,6 +421,9 @@ class Preferences final : public nsIPrefService,
   nsresult SavePrefFileBlocking();
   nsresult SavePrefFileAsynchronous();
 
+  // If this is false, only blocking writes, on main thread are allowed.
+  bool AllowOffMainThreadSave();
+
  private:
   virtual ~Preferences();
 
@@ -441,9 +444,6 @@ class Preferences final : public nsIPrefService,
   // Off main thread is only respected for the default aFile value (nullptr).
   nsresult SavePrefFileInternal(nsIFile* aFile, SaveMethod aSaveMethod);
   nsresult WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod);
-
-  // If this is false, only blocking writes, on main thread are allowed.
-  bool AllowOffMainThreadSave();
 
   // Helpers for implementing
   // Register(Prefix)Callback/Unregister(Prefix)Callback.
