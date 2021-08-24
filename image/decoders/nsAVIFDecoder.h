@@ -29,6 +29,7 @@ class nsAVIFDecoder final : public Decoder {
  protected:
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
+  Maybe<Telemetry::HistogramID> SpeedHistogram() const override;
 
  private:
   friend class DecoderFactory;
@@ -46,16 +47,18 @@ class nsAVIFDecoder final : public Decoder {
   enum class NonDecoderResult {
     NeedMoreData,
     MetadataOk,
-    ParseError,
     NoPrimaryItem,
     SizeOverflow,
     OutOfMemory,
     PipeInitError,
     WriteBufferError,
     AlphaYSizeMismatch,
-    AlphaYColorDepthMismatch
+    AlphaYColorDepthMismatch,
+    MetadataImageSizeMismatch,
+    InvalidCICP,
   };
-  using DecodeResult = Variant<NonDecoderResult, Dav1dResult, AOMResult>;
+  using DecodeResult =
+      Variant<Mp4parseStatus, NonDecoderResult, Dav1dResult, AOMResult>;
   DecodeResult Decode(SourceBufferIterator& aIterator, IResumable* aOnResume);
 
   static bool IsDecodeSuccess(const DecodeResult& aResult);

@@ -27,10 +27,17 @@ namespace mozilla {
 
 namespace image {
 
+using Telemetry::LABELS_AVIF_ALPHA;
 using Telemetry::LABELS_AVIF_AOM_DECODE_ERROR;
 using Telemetry::LABELS_AVIF_BIT_DEPTH;
+using Telemetry::LABELS_AVIF_CICP_CP;
+using Telemetry::LABELS_AVIF_CICP_MC;
+using Telemetry::LABELS_AVIF_CICP_TC;
+using Telemetry::LABELS_AVIF_COLR;
 using Telemetry::LABELS_AVIF_DECODE_RESULT;
 using Telemetry::LABELS_AVIF_DECODER;
+using Telemetry::LABELS_AVIF_ISPE;
+using Telemetry::LABELS_AVIF_PIXI;
 using Telemetry::LABELS_AVIF_YUV_COLOR_SPACE;
 
 static LazyLogModule sAVIFLog("AVIFDecoder");
@@ -73,6 +80,23 @@ static Maybe<uint8_t> BitsPerChannelToBitDepth(
   }
 
   return Some(bits_per_channel.data[0]);
+}
+
+static void RecordPixiTelemetry(Maybe<uint8_t>& pixiBitDepth,
+                                uint8_t aBitstreamBitDepth,
+                                const char* aItemName) {
+  if (pixiBitDepth.isNothing()) {
+    AccumulateCategorical(LABELS_AVIF_PIXI::absent);
+  } else if (pixiBitDepth == Some(aBitstreamBitDepth)) {
+    AccumulateCategorical(LABELS_AVIF_PIXI::valid);
+  } else {
+    MOZ_ASSERT(pixiBitDepth.isSome());
+    MOZ_LOG(sAVIFLog, LogLevel::Error,
+            ("%s item pixi bit depth (%hhu) doesn't match "
+             "bitstream (%hhu)",
+             aItemName, *pixiBitDepth, aBitstreamBitDepth));
+    AccumulateCategorical(LABELS_AVIF_PIXI::bitstream_mismatch);
+  }
 }
 
 // Translate the MIAF/HEIF-based orientation transforms (imir, irot) into
@@ -170,15 +194,20 @@ Orientation GetImageOrientation(const Mp4parseAvifImage& image) {
 
 class AVIFParser {
  public:
-  static AVIFParser* Create(const Mp4parseIo* aIo) {
+  static Mp4parseStatus Create(const Mp4parseIo* aIo,
+                               UniquePtr<AVIFParser>& aParserOut) {
     MOZ_ASSERT(aIo);
+    MOZ_ASSERT(!aParserOut);
 
     UniquePtr<AVIFParser> p(new AVIFParser(aIo));
-    if (!p->Init()) {
-      return nullptr;
+    Mp4parseStatus status = p->Init();
+
+    if (status == MP4PARSE_STATUS_OK) {
+      MOZ_ASSERT(p->mParser);
+      aParserOut = std::move(p);
     }
-    MOZ_ASSERT(p->mParser);
-    return p.release();
+
+    return status;
   }
 
   ~AVIFParser() {
@@ -213,7 +242,7 @@ class AVIFParser {
              StaticPrefs::image_avif_compliance_strictness()));
   }
 
-  bool Init() {
+  Mp4parseStatus Init() {
     MOZ_ASSERT(!mParser);
 
     Mp4parseAvifParser* parser = nullptr;
@@ -224,11 +253,10 @@ class AVIFParser {
                           &parser);
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] mp4parse_avif_new status: %d", this, status));
-    if (status != MP4PARSE_STATUS_OK) {
-      return false;
+    if (status == MP4PARSE_STATUS_OK) {
+      mParser.reset(parser);
     }
-    mParser.reset(parser);
-    return true;
+    return status;
   }
 
   struct FreeAvifParser {
@@ -240,10 +268,11 @@ class AVIFParser {
   Maybe<Mp4parseAvifImage> mAvifImage;
 };
 
-// Additional AVIF-specific storage for the CICP values (either from the BMFF
+// As well as Maybe<PlanarAlphaData>, add CICP values (either from the BMFF
 // container or the AV1 sequence header) which are used to create the
-// colorspace transform. CICP::MatrixCoefficients is not needed, since the
-// relevant information for YUV -> RGB conversion is stored in mYUVColorSpace.
+// colorspace transform. CICP::MatrixCoefficients is only stored for the sake
+// of telemetry, since the relevant information for YUV -> RGB conversion is
+// stored in mYUVColorSpace.
 //
 // There are three potential sources of color information for an AVIF:
 // 1. ICC profile via a ColourInformationBox (colr) defined in [ISOBMFF]
@@ -293,9 +322,17 @@ class AVIFParser {
 // <https://www.iso.org/standard/81634.html>
 // [ITU-T H.273]: Rec. ITU-T H.273 (12/2016)
 //     <https://www.itu.int/rec/T-REC-H.273-201612-I/en>
-struct AVIFDecodedData : layers::PlanarYCbCrAData {
+struct AVIFDecodedData : layers::PlanarYCbCrData {
+  Maybe<layers::PlanarAlphaData> mAlpha = Nothing();
   CICP::ColourPrimaries mColourPrimaries = CICP::CP_UNSPECIFIED;
   CICP::TransferCharacteristics mTransferCharacteristics = CICP::TC_UNSPECIFIED;
+  CICP::MatrixCoefficients mMatrixCoefficients = CICP::MC_UNSPECIFIED;
+
+  void SetCicpValues(
+      const NclxColourInformation* aNclx,
+      const CICP::ColourPrimaries aAv1ColourPrimaries,
+      const CICP::TransferCharacteristics aAv1TransferCharacteristics,
+      const CICP::MatrixCoefficients aAv1MatrixCoefficients);
 };
 
 // The gfx::YUVColorSpace value is only used in the conversion from YUV -> RGB.
@@ -334,19 +371,20 @@ static gfx::ColorRange GetAVIFColorRange(
       .valueOr(gfx::ColorRange::FULL);
 }
 
-static void SetTransformCicpValues(
+void AVIFDecodedData::SetCicpValues(
     const NclxColourInformation* aNclx,
     const CICP::ColourPrimaries aAv1ColourPrimaries,
     const CICP::TransferCharacteristics aAv1TransferCharacteristics,
-    CICP::ColourPrimaries& aOutColourPrimaries,
-    CICP::TransferCharacteristics& aOutTransferCharacteristics) {
+    const CICP::MatrixCoefficients aAv1MatrixCoefficients) {
   auto cp = CICP::ColourPrimaries::CP_UNSPECIFIED;
   auto tc = CICP::TransferCharacteristics::TC_UNSPECIFIED;
+  auto mc = CICP::MatrixCoefficients::MC_UNSPECIFIED;
 
   if (aNclx) {
     cp = static_cast<CICP::ColourPrimaries>(aNclx->colour_primaries);
     tc = static_cast<CICP::TransferCharacteristics>(
         aNclx->transfer_characteristics);
+    mc = static_cast<CICP::MatrixCoefficients>(aNclx->matrix_coefficients);
   }
 
   if (cp == CICP::ColourPrimaries::CP_UNSPECIFIED) {
@@ -392,8 +430,30 @@ static void SetTransformCicpValues(
              tc, aAv1TransferCharacteristics));
   }
 
-  aOutColourPrimaries = cp;
-  aOutTransferCharacteristics = tc;
+  if (mc == CICP::MatrixCoefficients::MC_UNSPECIFIED) {
+    if (aAv1MatrixCoefficients != CICP::MatrixCoefficients::MC_UNSPECIFIED) {
+      mc = aAv1MatrixCoefficients;
+      MOZ_LOG(sAVIFLog, LogLevel::Info,
+              ("No matrix_coefficients value specified in "
+               "colr box, using AV1 sequence header (%hhu)",
+               mc));
+    } else {
+      mc = CICP::MatrixCoefficients::MC_BT601;
+      MOZ_LOG(sAVIFLog, LogLevel::Warning,
+              ("No matrix_coefficients value specified in "
+               "colr box or AV1 sequence header, using fallback value (%hhu)",
+               mc));
+    }
+  } else if (mc != aAv1MatrixCoefficients) {
+    MOZ_LOG(sAVIFLog, LogLevel::Warning,
+            ("matrix_coefficients mismatch: colr box = %hhu, "
+             "AV1 sequence header = %hhu, using colr box",
+             mc, aAv1TransferCharacteristics));
+  }
+
+  mColourPrimaries = cp;
+  mTransferCharacteristics = tc;
+  mMatrixCoefficients = mc;
 }
 
 // An interface to do decode and get the decoded data
@@ -920,6 +980,8 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = ColorDepthForBitDepth(aPicture->p.bpc);
 
+  MOZ_ASSERT(aPicture->p.bpc == BitDepthForColorDepth(data.mColorDepth));
+
   data.mYUVColorSpace = GetAVIFColorSpace(aNclx, [=]() {
     MOZ_LOG(sAVIFLog, LogLevel::Info,
             ("YUVColorSpace cannot be determined from colr box, using AV1 "
@@ -930,6 +992,7 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
   auto av1ColourPrimaries = CICP::ColourPrimaries::CP_UNSPECIFIED;
   auto av1TransferCharacteristics =
       CICP::TransferCharacteristics::TC_UNSPECIFIED;
+  auto av1MatrixCoefficients = CICP::MatrixCoefficients::MC_UNSPECIFIED;
   Maybe<gfx::ColorRange> av1ColorRange = Nothing();
 
   if (aPicture->seq_hdr && aPicture->seq_hdr->color_description_present) {
@@ -937,20 +1000,22 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
     av1ColourPrimaries = static_cast<CICP::ColourPrimaries>(seq_hdr.pri);
     av1TransferCharacteristics =
         static_cast<CICP::TransferCharacteristics>(seq_hdr.trc);
+    av1MatrixCoefficients = static_cast<CICP::MatrixCoefficients>(seq_hdr.mtrx);
     av1ColorRange = seq_hdr.color_range ? Some(gfx::ColorRange::FULL)
                                         : Some(gfx::ColorRange::LIMITED);
   }
 
-  SetTransformCicpValues(aNclx, av1ColourPrimaries, av1TransferCharacteristics,
-                         data.mColourPrimaries, data.mTransferCharacteristics);
+  data.SetCicpValues(aNclx, av1ColourPrimaries, av1TransferCharacteristics,
+                     av1MatrixCoefficients);
 
   data.mColorRange = GetAVIFColorRange(aNclx, av1ColorRange);
 
   if (aAlphaPlane) {
     MOZ_ASSERT(aAlphaPlane->stride[0] == data.mYStride);
-    data.mAlphaChannel = static_cast<uint8_t*>(aAlphaPlane->data[0]);
-    data.mAlphaSize = gfx::IntSize(aAlphaPlane->p.w, aAlphaPlane->p.h);
-    data.mPremultipliedAlpha = aPremultipliedAlpha;
+    data.mAlpha.emplace();
+    data.mAlpha->mChannel = static_cast<uint8_t*>(aAlphaPlane->data[0]);
+    data.mAlpha->mSize = gfx::IntSize(aAlphaPlane->p.w, aAlphaPlane->p.h);
+    data.mAlpha->mPremultiplied = aPremultipliedAlpha;
   }
 
   return data;
@@ -997,6 +1062,8 @@ AVIFDecodedData AOMDecoder::AOMImageToToDecodedData(
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = ColorDepthForBitDepth(aImage->bit_depth);
 
+  MOZ_ASSERT(aImage->bit_depth == BitDepthForColorDepth(data.mColorDepth));
+
   auto av1ColourPrimaries = static_cast<CICP::ColourPrimaries>(aImage->cp);
   auto av1TransferCharacteristics =
       static_cast<CICP::TransferCharacteristics>(aImage->tc);
@@ -1019,14 +1086,15 @@ AVIFDecodedData AOMDecoder::AOMImageToToDecodedData(
   }
   data.mColorRange = GetAVIFColorRange(aNclx, av1ColorRange);
 
-  SetTransformCicpValues(aNclx, av1ColourPrimaries, av1TransferCharacteristics,
-                         data.mColourPrimaries, data.mTransferCharacteristics);
+  data.SetCicpValues(aNclx, av1ColourPrimaries, av1TransferCharacteristics,
+                     av1MatrixCoefficients);
 
   if (aAlphaPlane) {
     MOZ_ASSERT(aAlphaPlane->stride[AOM_PLANE_Y] == data.mYStride);
-    data.mAlphaChannel = aAlphaPlane->planes[AOM_PLANE_Y];
-    data.mAlphaSize = gfx::IntSize(aAlphaPlane->d_w, aAlphaPlane->d_h);
-    data.mPremultipliedAlpha = aPremultipliedAlpha;
+    data.mAlpha.emplace();
+    data.mAlpha->mChannel = aAlphaPlane->planes[AOM_PLANE_Y];
+    data.mAlpha->mSize = gfx::IntSize(aAlphaPlane->d_w, aAlphaPlane->d_h);
+    data.mAlpha->mPremultiplied = aPremultipliedAlpha;
   }
 
   return data;
@@ -1087,7 +1155,12 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
                : LexerResult(TerminalState::FAILURE);
   }
 
-  MOZ_ASSERT(result.is<Dav1dResult>() || result.is<AOMResult>());
+  MOZ_ASSERT(result.is<Dav1dResult>() || result.is<AOMResult>() ||
+             result.is<Mp4parseStatus>());
+  // If IsMetadataDecode(), a successful parse should return
+  // NonDecoderResult::MetadataOk or else continue to the decode stage
+  MOZ_ASSERT_IF(result.is<Mp4parseStatus>(),
+                result.as<Mp4parseStatus>() != MP4PARSE_STATUS_OK);
   auto rv = LexerResult(IsDecodeSuccess(result) ? TerminalState::SUCCESS
                                                 : TerminalState::FAILURE);
   MOZ_LOG(sAVIFLog, LogLevel::Info,
@@ -1143,9 +1216,11 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   }
 
   Mp4parseIo io = {nsAVIFDecoder::ReadSource, this};
-  UniquePtr<AVIFParser> parser(AVIFParser::Create(&io));
+  UniquePtr<AVIFParser> parser;
+  Mp4parseStatus create_parser_status = AVIFParser::Create(&io, parser);
+
   if (!parser) {
-    return AsVariant(NonDecoderResult::ParseError);
+    return AsVariant(create_parser_status);
   }
 
   const Mp4parseAvifImage* parsedImagePtr = parser->GetImage();
@@ -1236,17 +1311,17 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   MOZ_ASSERT(decodedData.mYUVColorSpace <= gfx::YUVColorSpace::_Last);
 
   // Technically it's valid but we don't handle it now (Bug 1682318).
-  if (decodedData.hasAlpha() && decodedData.mAlphaSize != decodedData.mYSize) {
+  if (decodedData.mAlpha && decodedData.mAlpha->mSize != decodedData.mYSize) {
     return AsVariant(NonDecoderResult::AlphaYSizeMismatch);
   }
 
   if (parsedImageSize.isNothing()) {
-    // Bug 1696045: TODO add telemetry for missing ispe
     MOZ_LOG(sAVIFLog, LogLevel::Error,
             ("[this=%p] Using decoded image size: %d x %d", this,
              decodedData.mPicSize.width, decodedData.mPicSize.height));
     PostSize(decodedData.mPicSize.width, decodedData.mPicSize.height,
              orientation);
+    AccumulateCategorical(LABELS_AVIF_ISPE::absent);
   } else if (decodedData.mPicSize.width != parsedImageSize->width ||
              decodedData.mPicSize.height != parsedImageSize->height) {
     MOZ_LOG(sAVIFLog, LogLevel::Error,
@@ -1254,11 +1329,13 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
              "(%d x %d) != (%d x %d)",
              this, parsedImageSize->width, parsedImageSize->height,
              decodedData.mPicSize.width, decodedData.mPicSize.height));
-    // Bug 1696045: TODO need new error type
-    return AsVariant(NonDecoderResult::ParseError);
+    AccumulateCategorical(LABELS_AVIF_ISPE::bitstream_mismatch);
+    return AsVariant(NonDecoderResult::MetadataImageSizeMismatch);
+  } else {
+    AccumulateCategorical(LABELS_AVIF_ISPE::valid);
   }
 
-  const bool hasAlpha = decodedData.hasAlpha();
+  const bool hasAlpha = decodedData.mAlpha.isSome();
   if (hasAlpha) {
     PostHasTransparency();
   }
@@ -1274,8 +1351,50 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   AccumulateCategorical(
       gColorDepthLabel[static_cast<size_t>(decodedData.mColorDepth)]);
 
+  RecordPixiTelemetry(primaryBitDepth,
+                      BitDepthForColorDepth(decodedData.mColorDepth),
+                      "primary");
+
+  if (decodedData.mAlpha) {
+    AccumulateCategorical(LABELS_AVIF_ALPHA::present);
+    RecordPixiTelemetry(alphaBitDepth,
+                        BitDepthForColorDepth(decodedData.mAlpha->mDepth),
+                        "alpha");
+  } else {
+    AccumulateCategorical(LABELS_AVIF_ALPHA::absent);
+  }
+
   IntSize rgbSize = Size();
   MOZ_ASSERT(rgbSize == decodedData.mPicSize);
+
+  if (parsedImg.nclx_colour_information) {
+    AccumulateCategorical(LABELS_AVIF_COLR::nclx);
+  } else if (parsedImg.icc_colour_information.data) {
+    AccumulateCategorical(LABELS_AVIF_COLR::icc);
+  } else {
+    AccumulateCategorical(LABELS_AVIF_COLR::absent);
+  }
+
+  if (CICP::IsReserved(decodedData.mColourPrimaries)) {
+    AccumulateCategorical(LABELS_AVIF_CICP_CP::RESERVED_REST);
+  } else {
+    AccumulateCategorical(
+        static_cast<LABELS_AVIF_CICP_CP>(decodedData.mColourPrimaries));
+  }
+
+  if (CICP::IsReserved(decodedData.mTransferCharacteristics)) {
+    AccumulateCategorical(LABELS_AVIF_CICP_TC::RESERVED);
+  } else {
+    AccumulateCategorical(
+        static_cast<LABELS_AVIF_CICP_TC>(decodedData.mTransferCharacteristics));
+  }
+
+  if (CICP::IsReserved(decodedData.mMatrixCoefficients)) {
+    AccumulateCategorical(LABELS_AVIF_CICP_MC::RESERVED);
+  } else {
+    AccumulateCategorical(
+        static_cast<LABELS_AVIF_CICP_MC>(decodedData.mMatrixCoefficients));
+  }
 
   // Read color profile
   if (mCMSMode != CMSMode::Off) {
@@ -1284,18 +1403,18 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
 
     // See comment on AVIFDecodedData
     if (parsedImg.icc_colour_information.data) {
-      auto& icc = parsedImg.icc_colour_information;
+      const auto& icc = parsedImg.icc_colour_information;
       mInProfile = qcms_profile_from_memory(icc.data, icc.length);
     } else {
-      auto& cp = decodedData.mColourPrimaries;
-      auto& tc = decodedData.mTransferCharacteristics;
+      const auto& cp = decodedData.mColourPrimaries;
+      const auto& tc = decodedData.mTransferCharacteristics;
 
       if (CICP::IsReserved(cp)) {
         MOZ_LOG(sAVIFLog, LogLevel::Error,
                 ("[this=%p] colour_primaries reserved value (%hhu) is invalid; "
                  "failing",
                  this, cp));
-        return AsVariant(NonDecoderResult::ParseError);
+        return AsVariant(NonDecoderResult::InvalidCICP);
       }
 
       if (CICP::IsReserved(tc)) {
@@ -1303,7 +1422,7 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
                 ("[this=%p] transfer_characteristics reserved value (%hhu) is "
                  "invalid; failing",
                  this, tc));
-        return AsVariant(NonDecoderResult::ParseError);
+        return AsVariant(NonDecoderResult::InvalidCICP);
       }
 
       MOZ_ASSERT(cp != CICP::ColourPrimaries::CP_UNSPECIFIED &&
@@ -1392,10 +1511,10 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     return AsVariant(NonDecoderResult::OutOfMemory);
   }
 
-  if (hasAlpha) {
+  if (decodedData.mAlpha) {
     const auto wantPremultiply =
         !bool(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
-    const bool& hasPremultiply = decodedData.mPremultipliedAlpha;
+    const bool& hasPremultiply = decodedData.mAlpha->mPremultiplied;
 
     PremultFunc premultOp = nullptr;
     if (wantPremultiply && !hasPremultiply) {
@@ -1407,8 +1526,8 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] calling gfx::ConvertYCbCrAToARGB premultOp: %p", this,
              premultOp));
-    gfx::ConvertYCbCrAToARGB(decodedData, format, rgbSize, rgbBuf.get(),
-                             rgbStride.value(), premultOp);
+    gfx::ConvertYCbCrAToARGB(decodedData, *decodedData.mAlpha, format, rgbSize,
+                             rgbBuf.get(), rgbStride.value(), premultOp);
   } else {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] calling gfx::ConvertYCbCrToRGB", this));
@@ -1473,14 +1592,48 @@ bool nsAVIFDecoder::IsDecodeSuccess(const DecodeResult& aResult) {
 
 void nsAVIFDecoder::RecordDecodeResultTelemetry(
     const nsAVIFDecoder::DecodeResult& aResult) {
-  if (aResult.is<NonDecoderResult>()) {
+  if (aResult.is<Mp4parseStatus>()) {
+    switch (aResult.as<Mp4parseStatus>()) {
+      case MP4PARSE_STATUS_OK:
+        MOZ_ASSERT_UNREACHABLE(
+            "Expect NonDecoderResult, Dav1dResult or AOMResult");
+        break;
+      case MP4PARSE_STATUS_OOM:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::out_of_memory);
+        break;
+      case MP4PARSE_STATUS_UNSUPPORTED_A1LX:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_a1lx);
+        break;
+      case MP4PARSE_STATUS_UNSUPPORTED_A1OP:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_a1op);
+        break;
+      case MP4PARSE_STATUS_UNSUPPORTED_CLAP:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_clap);
+        break;
+      case MP4PARSE_STATUS_UNSUPPORTED_GRID:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_grid);
+        break;
+      case MP4PARSE_STATUS_UNSUPPORTED_IPRO:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_ipro);
+        break;
+      case MP4PARSE_STATUS_UNSUPPORTED_LSEL:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_lsel);
+        break;
+      default:
+        MOZ_FALLTHROUGH_ASSERT("unexpected Mp4parseStatus value");
+      case MP4PARSE_STATUS_BAD_ARG:
+      case MP4PARSE_STATUS_INVALID:
+      case MP4PARSE_STATUS_UNSUPPORTED:
+      case MP4PARSE_STATUS_EOF:
+      case MP4PARSE_STATUS_IO:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::parse_error);
+        break;
+    }
+  } else if (aResult.is<NonDecoderResult>()) {
     switch (aResult.as<NonDecoderResult>()) {
       case NonDecoderResult::NeedMoreData:
         break;
       case NonDecoderResult::MetadataOk:
-        break;
-      case NonDecoderResult::ParseError:
-        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::parse_error);
         break;
       case NonDecoderResult::NoPrimaryItem:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::no_primary_item);
@@ -1503,8 +1656,14 @@ void nsAVIFDecoder::RecordDecodeResultTelemetry(
       case NonDecoderResult::AlphaYColorDepthMismatch:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::alpha_y_bpc_mismatch);
         break;
+      case NonDecoderResult::MetadataImageSizeMismatch:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::ispe_mismatch);
+        break;
+      case NonDecoderResult::InvalidCICP:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::invalid_cicp);
+        break;
       default:
-        MOZ_ASSERT_UNREACHABLE("unknown result");
+        MOZ_ASSERT_UNREACHABLE("unknown NonDecoderResult");
         break;
     }
   } else {
@@ -1515,6 +1674,10 @@ void nsAVIFDecoder::RecordDecodeResultTelemetry(
                               ? LABELS_AVIF_DECODE_RESULT::success
                               : LABELS_AVIF_DECODE_RESULT::decode_error);
   }
+}
+
+Maybe<Telemetry::HistogramID> nsAVIFDecoder::SpeedHistogram() const {
+  return Some(Telemetry::IMAGE_DECODE_SPEED_AVIF);
 }
 
 }  // namespace image
