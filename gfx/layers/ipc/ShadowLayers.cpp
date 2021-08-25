@@ -9,6 +9,7 @@
 #include <set>     // for _Rb_tree_const_iterator, etc
 #include <vector>  // for vector
 
+#include "ClientLayerManager.h"  // for ClientLayerManager
 #include "IPDLActor.h"
 #include "ISurfaceAllocator.h"    // for IsSurfaceDescriptorValid
 #include "Layers.h"               // for Layer
