@@ -11,7 +11,6 @@
 #include <stdio.h>                             // for FILE
 #include "mozilla-config.h"                    // for MOZ_DUMP_PAINTING
 #include "CompositableHost.h"                  // for CompositableHost, etc
-#include "RotatedBuffer.h"                     // for RotatedBuffer, etc
 #include "mozilla/Attributes.h"                // for override
 #include "mozilla/RefPtr.h"                    // for RefPtr
 #include "mozilla/gfx/BasePoint.h"             // for BasePoint
