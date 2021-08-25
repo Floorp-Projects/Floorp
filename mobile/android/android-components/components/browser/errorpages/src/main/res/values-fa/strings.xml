@@ -103,13 +103,15 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">آدرس پیدا نشد</string>
     <!-- In the example, the two URLs in markup do not need to be translated. -->
-    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p> مرورگر نتوانست سرور میزبان را برای آدرس ارائه شده پیدا کند. </p>
-      <ul>
-        <li> آدرس را برای خطاهای تایپی از قبیل موارد مقابل بررسی کنید:
-          <strong> ww </strong> .example.com به جای
-          <strong> www </strong> .example.com. </li>
-        <li> اگر قادر به بارگیری هیچ صفحه‌ای نیستید، اطلاعات دستگاه یا اتصال Wi-Fi خود را بررسی کنید. </li>
-      </ul>]]></string>
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>مرورگر نتوانست سرور میزبان را برای آدرس ارائه شده پیدا کند.</p>
+      <ul>
+        <li>آدرس را برای غلط‌تای املایی بررسی کنید، مانند:
+          <strong>ww</strong>.example.com به‌جای
+          <strong>www</strong>.example.com.</li>
+        <li>اگر قادر به بار کردن هیچ صفحه‌ای نیستید، داده دستگاه یا اتصال وای‌فای خود را بررسی کنید.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">اتصال اینترنت در دسترس نیست</string>

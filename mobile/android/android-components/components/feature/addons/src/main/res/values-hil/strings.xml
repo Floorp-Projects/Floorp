@@ -4,8 +4,22 @@
     <string name="mozac_feature_addons_version">Bersyon</string>
     <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">Manunulat</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">Homepage</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">Mga setting</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">On</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Off</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">Detalyado</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">Idugang</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">Kanselahon</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">Kanselahon</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     </resources>
