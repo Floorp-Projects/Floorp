@@ -5,6 +5,7 @@
 
 #include "SplitNodeTransaction.h"
 
+#include "HTMLEditUtils.h"
 #include "mozilla/EditorDOMPoint.h"  // for RangeBoundary, EditorRawDOMPoint
 #include "mozilla/HTMLEditor.h"      // for HTMLEditor
 #include "mozilla/Logging.h"
@@ -40,6 +41,8 @@ SplitNodeTransaction::SplitNodeTransaction(
     const EditorDOMPointBase<PT, CT>& aStartOfRightContent)
     : mHTMLEditor(&aHTMLEditor), mStartOfRightContent(aStartOfRightContent) {
   MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.IsInContentNode());
+  MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsSplittableNode(
+      *aStartOfRightContent.ContainerAsContent()));
 }
 
 std::ostream& operator<<(std::ostream& aStream,

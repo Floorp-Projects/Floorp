@@ -905,12 +905,17 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
         }
         // If the child of current node is not list item nor list element,
         // we should remove it from the DOM tree.
-        else {
+        else if (HTMLEditUtils::IsRemovableNode(*firstChild)) {
           AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
           IgnoredErrorResult ignoredError;
           content->RemoveChild(*firstChild, ignoredError);
           NS_WARNING_ASSERTION(!ignoredError.Failed(),
                                "nsINode::RemoveChild() failed, but ignored");
+        } else {
+          NS_WARNING(
+              "Failed to delete the first child of a list element because the "
+              "list element non-editable");
+          break;
         }
       }
     }

@@ -32,7 +32,10 @@ DeleteNodeTransaction::DeleteNodeTransaction(EditorBase& aEditorBase,
                                              nsIContent& aContentToDelete)
     : mEditorBase(&aEditorBase),
       mContentToDelete(&aContentToDelete),
-      mParentNode(aContentToDelete.GetParentNode()) {}
+      mParentNode(aContentToDelete.GetParentNode()) {
+  MOZ_DIAGNOSTIC_ASSERT_IF(aEditorBase.IsHTMLEditor(),
+                           HTMLEditUtils::IsRemovableNode(aContentToDelete));
+}
 
 std::ostream& operator<<(std::ostream& aStream,
                          const DeleteNodeTransaction& aTransaction) {
