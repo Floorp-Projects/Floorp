@@ -30,6 +30,10 @@
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
 
+#ifdef XP_WIN
+#  include <process.h>
+#endif
+
 namespace mozilla::dom {
 
 typedef nsMainThreadPtrHandle<WebrtcGlobalStatisticsCallback>
