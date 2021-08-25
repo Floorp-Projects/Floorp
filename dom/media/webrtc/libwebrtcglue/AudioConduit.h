@@ -7,6 +7,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/StateMirroring.h"
 #include "mozilla/TimeStamp.h"
 
@@ -198,14 +199,14 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Accessed only on the Call thread.
   webrtc::AudioReceiveStream::Config mRecvStreamConfig;
 
-  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Written only on the Call thread. Guarded by mLock, except for reads on the
   // Call thread.
   webrtc::AudioReceiveStream* mRecvStream;
 
   // Accessed only on the Call thread.
   webrtc::AudioSendStream::Config mSendStreamConfig;
 
-  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Written only on the Call thread. Guarded by mLock, except for reads on the
   // Call thread.
   webrtc::AudioSendStream* mSendStream;
 
@@ -216,18 +217,18 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   RtpPacketQueue mRtpPacketQueue;
 
   // If true => mSendStream started and not stopped
-  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Written only on the Call thread. Guarded by mLock, except for reads on the
   // Call thread.
   bool mSendStreamRunning;
   // If true => mRecvStream started and not stopped
-  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Written only on the Call thread. Guarded by mLock, except for reads on the
   // Call thread.
   bool mRecvStreamRunning;
 
   // Accessed only on the Call thread.
   bool mDtmfEnabled;
 
-  mutable Mutex mMutex;
+  mutable RWLock mLock;
 
   // Call worker thread. All access to mCall->Call() happens here.
   const RefPtr<AbstractThread> mCallThread;
