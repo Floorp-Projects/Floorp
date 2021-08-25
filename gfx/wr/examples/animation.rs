@@ -67,6 +67,7 @@ impl App {
                 is_2d_scale_translation: false,
                 should_snap: false,
             },
+            SpatialTreeItemKey::new(0, 0),
         );
 
         builder.push_simple_stacking_context_with_filters(
