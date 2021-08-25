@@ -38,3 +38,5 @@ JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+
+REQUIRES_UNIFIED_BUILD = True

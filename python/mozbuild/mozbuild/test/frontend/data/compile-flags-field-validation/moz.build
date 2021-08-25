@@ -13,3 +13,5 @@ Library("dummy")
 COMPILE_FLAGS["STL_FLAGS"] = []
 
 UNIFIED_SOURCES += ["test1.c"]
+
+REQUIRES_UNIFIED_BUILD = True

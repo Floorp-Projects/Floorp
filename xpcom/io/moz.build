@@ -153,3 +153,5 @@ LOCAL_INCLUDES += [
     "!..",
     "../build",
 ]
+
+REQUIRES_UNIFIED_BUILD = True

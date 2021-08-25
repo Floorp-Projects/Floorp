@@ -37,3 +37,5 @@ if not CONFIG["JS_STANDALONE"]:
 DEFINES["MOZ_HAS_MOZGLUE"] = True
 
 Library("intlcomponents")
+
+REQUIRES_UNIFIED_BUILD = True

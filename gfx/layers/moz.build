@@ -298,6 +298,7 @@ if CONFIG["MOZ_WAYLAND"]:
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    REQUIRES_UNIFIED_BUILD = True
     EXPORTS.mozilla.layers += [
         "NativeLayerCA.h",
         "SurfacePoolCA.h",

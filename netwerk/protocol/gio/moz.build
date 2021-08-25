@@ -39,3 +39,5 @@ CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Gtk")
+
+REQUIRES_UNIFIED_BUILD = True

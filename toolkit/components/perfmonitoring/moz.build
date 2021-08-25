@@ -21,3 +21,5 @@ LOCAL_INCLUDES += ["/dom/base"]
 FINAL_LIBRARY = "xul"
 
 include("/ipc/chromium/chromium-config.mozbuild")
+
+REQUIRES_UNIFIED_BUILD = True

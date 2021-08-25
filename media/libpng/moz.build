@@ -76,3 +76,5 @@ AllowCompilerWarnings()
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += ['-std=gnu89']
+
+REQUIRES_UNIFIED_BUILD = True

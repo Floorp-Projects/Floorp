@@ -32,3 +32,5 @@ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
         "-Wno-unused-parameter",
     ]
+
+REQUIRES_UNIFIED_BUILD = True

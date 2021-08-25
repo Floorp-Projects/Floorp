@@ -105,3 +105,5 @@ if CONFIG["ENABLE_TESTS"]:
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Installer")
+
+REQUIRES_UNIFIED_BUILD = True

@@ -90,3 +90,5 @@ if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 TEST_DIRS += ["test/gtest"]
+
+REQUIRES_UNIFIED_BUILD = True

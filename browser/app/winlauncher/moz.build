@@ -49,3 +49,5 @@ DisableStlWrapping()
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Launcher Process")
+
+REQUIRES_UNIFIED_BUILD = True
