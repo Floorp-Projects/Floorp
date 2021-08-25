@@ -108,7 +108,6 @@
 #  include "GLContextEGL.h"  // for GLContextEGL::FindVisual()
 #  include "WindowSurfaceX11Image.h"
 #  include "WindowSurfaceX11SHM.h"
-#  include "WindowSurfaceXRender.h"
 #endif
 #ifdef MOZ_WAYLAND
 #  include "nsIClipboard.h"

@@ -874,7 +874,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     }
     case IntID::TouchDeviceSupportPresent:
-      aResult = WidgetUtilsGTK::IsTouchDeviceSupportPresent() ? 1 : 0;
+      aResult = widget::WidgetUtilsGTK::IsTouchDeviceSupportPresent() ? 1 : 0;
       break;
     default:
       aResult = 0;
