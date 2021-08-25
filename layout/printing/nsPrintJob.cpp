@@ -18,6 +18,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/PBrowser.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
