@@ -16,7 +16,6 @@ EXPORTS += [
     "basic/BasicLayers.h",
     "basic/BasicLayersImpl.h",
     "basic/BasicPaintedLayer.h",
-    "client/ClientLayerManager.h",
     "composite/CompositableHost.h",
     "composite/ImageHost.h",
     "CompositorTypes.h",

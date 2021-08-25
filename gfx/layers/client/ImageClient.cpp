@@ -8,7 +8,6 @@
 
 #include <stdint.h>  // for uint32_t
 
-#include "ClientLayerManager.h"  // for ClientLayer
 #include "ImageContainer.h"      // for Image, PlanarYCbCrImage, etc
 #include "ImageTypes.h"          // for ImageFormat::PLANAR_YCBCR, etc
 #include "GLImages.h"            // for SurfaceTextureImage::Data, etc
