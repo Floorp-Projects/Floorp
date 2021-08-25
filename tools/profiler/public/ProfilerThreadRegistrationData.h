@@ -37,6 +37,7 @@
 #ifndef ProfilerThreadRegistrationData_h
 #define ProfilerThreadRegistrationData_h
 
+#include "js/ProfilingFrameIterator.h"
 #include "js/ProfilingStack.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
@@ -68,6 +69,10 @@ class ThreadRegistrationData {
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
+
+  static constexpr size_t MAX_JS_FRAMES = 1024;
+  using JsFrame = JS::ProfilingFrameIterator::Frame;
+  using JsFrameBuffer = JsFrame[MAX_JS_FRAMES];
 
   // `protected` to allow derived classes to read all data members.
  protected:
@@ -104,6 +109,10 @@ class ThreadRegistrationData {
   // JS sampling.
   // Written from thread, read from thread and suspended thread.
   JSContext* mJSContext = nullptr;
+
+  // If mJSContext is not null, this points at the start of a JsFrameBuffer to
+  // be used for on-thread synchronous sampling.
+  JsFrame* mJsFrameBuffer = nullptr;
 
   // The profiler needs to start and stop JS sampling of JS threads at various
   // times. However, the JS engine can only do the required actions on the
@@ -352,6 +361,9 @@ class ThreadRegistrationUnlockedReaderAndAtomicRWOnThread
   // guarantee that they are only modified on this thread.)
 
   [[nodiscard]] JSContext* GetJSContext() const { return mJSContext; }
+
+  // Not null when JSContext is not null. Points at the start of JsFrameBuffer.
+  [[nodiscard]] JsFrame* GetJsFrameBuffer() const { return mJsFrameBuffer; }
 
  protected:
   ThreadRegistrationUnlockedReaderAndAtomicRWOnThread(const char* aName,

@@ -116,6 +116,7 @@ void ThreadRegistrationLockedRWFromAnyThread::
     ClearIsBeingProfiledAndProfiledThreadData(const PSAutoLock&) {
   mIsBeingProfiled = false;
   mProfiledThreadData = nullptr;
+
   // Check invariants.
   MOZ_ASSERT(mIsBeingProfiled == !!mProfiledThreadData);
 }
@@ -125,13 +126,29 @@ void ThreadRegistrationLockedRWOnThread::SetJSContext(JSContext* aJSContext) {
 
   mJSContext = aJSContext;
 
+  // We now have a JSContext, allocate a JsFramesBuffer to allow unlocked
+  // on-thread sampling.
+  MOZ_ASSERT(!mJsFrameBuffer);
+  mJsFrameBuffer = new JsFrame[MAX_JS_FRAMES];
+
   // We give the JS engine a non-owning reference to the ProfilingStack. It's
   // important that the JS engine doesn't touch this once the thread dies.
   js::SetContextProfilingStack(aJSContext, &ProfilingStackRef());
+
+  // Check invariants.
+  MOZ_ASSERT(!!mJSContext == !!mJsFrameBuffer);
 }
 
 void ThreadRegistrationLockedRWOnThread::ClearJSContext() {
   mJSContext = nullptr;
+
+  if (mJsFrameBuffer) {
+    delete[] mJsFrameBuffer;
+    mJsFrameBuffer = nullptr;
+  }
+
+  // Check invariants.
+  MOZ_ASSERT(!!mJSContext == !!mJsFrameBuffer);
 }
 
 void ThreadRegistrationLockedRWOnThread::PollJSSampling() {
