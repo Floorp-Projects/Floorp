@@ -7,12 +7,11 @@
 #ifndef TaskQueue_h_
 #define TaskQueue_h_
 
-#include <queue>
-
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Queue.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskDispatcher.h"
 #include "nsIDelayedRunnableObserver.h"
@@ -166,7 +165,7 @@ class TaskQueue : public AbstractThread,
   } TaskStruct;
 
   // Queue of tasks to run.
-  std::queue<TaskStruct> mTasks;
+  Queue<TaskStruct> mTasks;
 
   // DelayedRunnables (from DelayedDispatch) that are managed by their
   // respective timers, but have not yet run. Accessed only on this
