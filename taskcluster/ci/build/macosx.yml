@@ -57,6 +57,35 @@ macosx64/debug:
             - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
+macosx64-hybrid/plain:
+    description: "MacOS X x64 Hybrid Cross-compile"
+    index:
+        job-name: macosx64-hybrid
+    treeherder:
+        platform: osx-cross/plain
+        symbol: Bp-hybrid
+        tier: 1
+    worker:
+        max-run-time: 5400
+        env:
+            PERFHERDER_EXTRA_OPTIONS: hybrid
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        mozconfig-variant: hybrid
+        extra-config:
+            disable_package_metrics: true
+    use-sccache: true
+    run-on-projects: ['integration']
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
 macosx64/opt:
     description: "MacOS X x64 Cross-compile"
     index:

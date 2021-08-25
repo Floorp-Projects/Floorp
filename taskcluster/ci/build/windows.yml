@@ -174,6 +174,57 @@ win64/debug:
             - nsis-3.01-win
             - upx-3.95-win
 
+win64-hybrid/plain:
+    description: "Win64 Hybrid Plain"
+    index:
+        product: firefox
+        job-name: win64-hybrid-plain
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: Bp-hybrid
+        tier: 1
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: debian11-amd64-build}
+        max-run-time: 7200
+        env:
+            PERFHERDER_EXTRA_OPTIONS: hybrid
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+    run:
+        options: [append-env-variables-from-configs]
+        actions: [get-secrets, build]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_linux_64_builds.py
+        mozconfig-variant: hybrid
+        extra-config:
+            mozconfig_platform: win64
+            env:
+                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
+    use-sccache: true
+    run-on-projects: ['integration']
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-clang-win-cross
+            - linux64-rust-cross
+            - linux64-rust-size
+            - linux64-nasm
+            - linux64-node
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-dump_syms
+            - linux64-wine
+            - linux64-liblowercase
+            - linux64-winchecksec
+            - sysroot-x86_64-linux-gnu
+        fetch:
+            - nsis-3.01-win
+            - upx-3.95-win
+
 win64-fuzzing/debug:
     description: "Win64 Fuzzing Debug"
     index:
