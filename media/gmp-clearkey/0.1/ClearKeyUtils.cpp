@@ -139,6 +139,20 @@ bool ClearKeyUtils::DecryptCbcs(const vector<uint8_t>& aKey,
   const uint32_t totalBlocks = aSubsample.Length() / BLOCK_SIZE;
   uint32_t blocksProcessed = 0;
 
+  if (aSkipByteBlock == 0) {
+    // ISO/IEC 23001 - 7 Section 9.6.1
+    // 'When the fields default_crypt_byte_block and default_skip_byte_block in
+    // a version 1 Track Encryption Box('tenc') are non - zero numbers, pattern
+    // encryption SHALL be applied.'
+    // So if both are 0, then everything is encrypted. Similarly, if skip is 0
+    // and crypt is non-0, everything is encrypted.
+    // In this case we can just decrypt all the blocks in one call. This is the
+    // same outcome as decrypting them using smaller steps, as either way the
+    // CBC result should be the same.
+    MOZ_ASSERT(skipBytes == 0);
+    aCryptByteBlock = totalBlocks;
+  }
+
   while (blocksProcessed < totalBlocks) {
     uint32_t blocksToDecrypt = aCryptByteBlock <= totalBlocks - blocksProcessed
                                    ? aCryptByteBlock
