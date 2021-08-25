@@ -13,7 +13,7 @@
     #ifndef NOMINMAX
     #define NOMINMAX
     #endif
-    #include <Windows.h>
+    #include <windows.h>
     #define LINETERM "\r\n"
 #else
     #include <dlfcn.h>
