@@ -73,7 +73,8 @@ static already_AddRefed<TextureClient> CreateYCbCrTextureClientWithBackend(
   }
 
 #ifdef XP_WIN
-  RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetImageDevice();
+  RefPtr<ID3D11Device> device =
+      mozilla::gfx::DeviceManagerDx::Get()->GetImageDevice();
 
   if (device && aLayersBackend == LayersBackend::LAYERS_D3D11) {
     DXGIYCbCrTextureAllocationHelper helper(clientData, TextureFlags::DEFAULT,
