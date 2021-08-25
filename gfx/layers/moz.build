@@ -389,7 +389,6 @@ UNIFIED_SOURCES += [
     "CanvasRenderer.cpp",
     "client/CanvasClient.cpp",
     "client/CompositableClient.cpp",
-    "client/ContentClient.cpp",
     "client/GPUVideoTextureClient.cpp",
     "client/ImageClient.cpp",
     "client/TextureClientPool.cpp",
