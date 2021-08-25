@@ -31,6 +31,22 @@ together for a single compilation, so sometimes the addition of a new file will 
 to be bumped into a different chunk. If that other chunk doesn't meet the implicit requirements
 of the bumped file, there will be a tough-to-debug compilation failure.
 
+Building outside of the unified environment
+===========================================
+
+As described above, unified builds can cause source files to implicitly depend on each other, which
+not only causes unexpected build failures but also can cause issues when using source-analysis tools.
+To combat this, we'll use a "hybrid" build that attempts to perform a build with as many files compiled
+individually as possible.
+
+Due to the implicit dependency problem, not all modules are able to be compiled in a non-unified
+environment yet. To designate these for the hybrid build, the ``REQUIRES_UNIFIED_BUILD`` option can be
+set in their corresponding ``moz.build`` file.
+
+To build in the hybrid mode, set the following flag in your ``mozconfig``:
+
+``ac_add_options --disable-unified-build``
+
 Other notes:
 ============
 

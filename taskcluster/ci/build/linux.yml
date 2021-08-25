@@ -127,6 +127,48 @@ linux64-plain/opt:
     optimization:
         skip-unless-expanded: null
 
+linux64-hybrid/plain:
+    description: "Linux64 Plain Hybrid"
+    index:
+        product: firefox
+        job-name: linux64-hybrid-plain
+    treeherder:
+        platform: linux64/plain
+        symbol: Bp-hybrid
+        tier: 1
+    worker-type: b-linux
+    worker:
+        docker-image: {in-tree: debian11-amd64-build}
+        max-run-time: 5400
+        env:
+            PERFHERDER_EXTRA_OPTIONS: hybrid
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_linux_64_builds.py
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        tooltool-downloads: public
+        extra-config:
+            disable_package_metrics: true
+        mozconfig-variant: hybrid
+    run-on-projects: ['integration']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-clang
+            - linux64-rust
+            - linux64-nasm
+            - linux64-node
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-dump_syms
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+
 linux64-gcc/opt:
     description: "Linux64 GCC Opt"
     index:
