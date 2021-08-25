@@ -226,8 +226,6 @@ windows32-tests:
     - test-verify-wpt
 
 windows-tests:
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
     # - jittest  # See comment in windows-ccov-tests set.
     - telemetry-tests-client
 
@@ -243,6 +241,8 @@ windows10-tests:
 windows10-2004-tests:
     - cppunit
     - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     - jsreftest
     - marionette
