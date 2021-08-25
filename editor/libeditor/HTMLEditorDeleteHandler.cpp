@@ -4843,7 +4843,7 @@ void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
                                      ErrorResult& aError) {
   nsCOMPtr<nsINode> oldContainer = aFirstChild.GetParentNode();
   if (NS_WARN_IF(oldContainer != aLastChild.GetParentNode()) ||
-      NS_WARN_IF(!aPointToInsert.IsSet()) ||
+      NS_WARN_IF(!aPointToInsert.IsInContentNode()) ||
       NS_WARN_IF(!aPointToInsert.CanContainerHaveChildren())) {
     aError.Throw(NS_ERROR_INVALID_ARG);
     return;
@@ -4864,7 +4864,7 @@ void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
     return;
   }
 
-  nsCOMPtr<nsINode> newContainer = aPointToInsert.GetContainer();
+  nsCOMPtr<nsIContent> newContainer = aPointToInsert.ContainerAsContent();
   nsCOMPtr<nsIContent> nextNode = aPointToInsert.GetChild();
   for (size_t i = children.Length(); i > 0; --i) {
     nsCOMPtr<nsIContent>& child = children[i - 1];
@@ -4873,7 +4873,15 @@ void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
       // touch it.
       continue;
     }
+    if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*child))) {
+      aError.Throw(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return;
+    }
     oldContainer->RemoveChild(*child, aError);
+    if (NS_WARN_IF(Destroyed())) {
+      aError.Throw(NS_ERROR_EDITOR_DESTROYED);
+      return;
+    }
     if (aError.Failed()) {
       NS_WARNING("nsINode::RemoveChild() failed");
       return;
@@ -4892,7 +4900,16 @@ void HTMLEditor::MoveChildrenBetween(nsIContent& aFirstChild,
         return;
       }
     }
+    if (NS_WARN_IF(
+            !EditorUtils::IsEditableContent(*newContainer, EditorType::HTML))) {
+      aError.Throw(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      return;
+    }
     newContainer->InsertBefore(*child, nextNode, aError);
+    if (NS_WARN_IF(Destroyed())) {
+      aError.Throw(NS_ERROR_EDITOR_DESTROYED);
+      return;
+    }
     if (aError.Failed()) {
       NS_WARNING("nsINode::InsertBefore() failed");
       return;
