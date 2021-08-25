@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/HashFunctions.h"
@@ -186,58 +187,48 @@ class nsCStringHashKey : public PLDHashEntryHdr {
 };
 
 /**
- * hashkey wrapper using uint32_t KeyType
+ * hashkey wrapper using integral or enum KeyTypes
  *
  * @see nsTHashtable::EntryType for specification
  */
-class nsUint32HashKey : public PLDHashEntryHdr {
+template <typename T,
+          std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>, int> = 0>
+class nsIntegralHashKey : public PLDHashEntryHdr {
  public:
-  typedef const uint32_t& KeyType;
-  typedef const uint32_t* KeyTypePointer;
+  using KeyType = const T&;
+  using KeyTypePointer = const T*;
 
-  explicit nsUint32HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
-  nsUint32HashKey(nsUint32HashKey&& aOther)
-      : PLDHashEntryHdr(std::move(aOther)), mValue(std::move(aOther.mValue)) {}
-  ~nsUint32HashKey() = default;
-
-  KeyType GetKey() const { return mValue; }
-  bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return *aKey; }
-  enum { ALLOW_MEMMOVE = true };
-
- private:
-  const uint32_t mValue;
-};
-
-/**
- * hashkey wrapper using uint64_t KeyType
- *
- * @see nsTHashtable::EntryType for specification
- */
-class nsUint64HashKey : public PLDHashEntryHdr {
- public:
-  typedef const uint64_t& KeyType;
-  typedef const uint64_t* KeyTypePointer;
-
-  explicit nsUint64HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
-  nsUint64HashKey(nsUint64HashKey&& aOther)
-      : PLDHashEntryHdr(std::move(aOther)), mValue(std::move(aOther.mValue)) {}
-  ~nsUint64HashKey() = default;
+  explicit nsIntegralHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  nsIntegralHashKey(nsIntegralHashKey&& aOther) noexcept
+      : PLDHashEntryHdr(std::move(aOther)), mValue(aOther.mValue) {}
+  ~nsIntegralHashKey() = default;
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return PLDHashNumber(*aKey);
+    return mozilla::HashGeneric(*aKey);
   }
   enum { ALLOW_MEMMOVE = true };
 
  private:
-  const uint64_t mValue;
+  const T mValue;
 };
+
+/**
+ * hashkey wrapper using uint32_t KeyType
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+using nsUint32HashKey = nsIntegralHashKey<uint32_t>;
+
+/**
+ * hashkey wrapper using uint64_t KeyType
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+using nsUint64HashKey = nsIntegralHashKey<uint64_t>;
 
 /**
  * hashkey wrapper using float KeyType
@@ -272,28 +263,7 @@ class nsFloatHashKey : public PLDHashEntryHdr {
  *
  * @see nsTHashtable::EntryType for specification
  */
-class IntPtrHashKey : public PLDHashEntryHdr {
- public:
-  typedef const intptr_t& KeyType;
-  typedef const intptr_t* KeyTypePointer;
-
-  explicit IntPtrHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
-  IntPtrHashKey(IntPtrHashKey&& aOther)
-      : PLDHashEntryHdr(std::move(aOther)), mValue(aOther.mValue) {}
-  ~IntPtrHashKey() = default;
-
-  KeyType GetKey() const { return mValue; }
-  bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return mozilla::HashGeneric(*aKey);
-  }
-  enum { ALLOW_MEMMOVE = true };
-
- private:
-  const intptr_t mValue;
-};
+using IntPtrHashKey = nsIntegralHashKey<intptr_t>;
 
 /**
  * hashkey wrapper using nsISupports* KeyType

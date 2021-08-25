@@ -59,7 +59,7 @@ template <class KeyClass, class ClassType>
 using nsRefPtrHashtable = nsRefCountedHashtable<KeyClass, RefPtr<ClassType>>;
 
 namespace mozilla::detail {
-template <class KeyType>
+template <class KeyType, class = void>
 struct nsKeyClass;
 }  // namespace mozilla::detail
 
