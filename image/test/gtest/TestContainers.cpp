@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 
-#include "WindowRenderer.h"
+#include "BasicLayers.h"
 #include "Common.h"
 #include "imgIContainer.h"
 #include "ImageFactory.h"
@@ -52,11 +52,12 @@ TEST_F(ImageContainers, RasterImageContainer) {
   RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
   tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
 
-  RefPtr<WindowRenderer> renderer = new FallbackRenderer;
+  RefPtr<layers::LayerManager> layerManager =
+      new layers::BasicLayerManager(layers::BasicLayerManager::BLM_OFFSCREEN);
 
   // Get at native size.
   RefPtr<layers::ImageContainer> nativeContainer =
-      image->GetImageContainer(renderer, imgIContainer::FLAG_SYNC_DECODE);
+      image->GetImageContainer(layerManager, imgIContainer::FLAG_SYNC_DECODE);
   ASSERT_TRUE(nativeContainer != nullptr);
   IntSize containerSize = nativeContainer->GetCurrentSize();
   EXPECT_EQ(testCase.mSize.width, containerSize.width);
@@ -68,7 +69,7 @@ TEST_F(ImageContainers, RasterImageContainer) {
   requestedSize.Scale(2, 2);
   RefPtr<layers::ImageContainer> upscaleContainer;
   drawResult = image->GetImageContainerAtSize(
-      renderer, requestedSize, Nothing(), Nothing(),
+      layerManager, requestedSize, Nothing(), Nothing(),
       imgIContainer::FLAG_SYNC_DECODE |
           imgIContainer::FLAG_HIGH_QUALITY_SCALING,
       getter_AddRefs(upscaleContainer));
@@ -84,7 +85,7 @@ TEST_F(ImageContainers, RasterImageContainer) {
   requestedSize.height /= 2;
   RefPtr<layers::ImageContainer> downscaleContainer;
   drawResult = image->GetImageContainerAtSize(
-      renderer, requestedSize, Nothing(), Nothing(),
+      layerManager, requestedSize, Nothing(), Nothing(),
       imgIContainer::FLAG_SYNC_DECODE |
           imgIContainer::FLAG_HIGH_QUALITY_SCALING,
       getter_AddRefs(downscaleContainer));
@@ -97,7 +98,7 @@ TEST_F(ImageContainers, RasterImageContainer) {
   // Get at native size again. Should give same container.
   RefPtr<layers::ImageContainer> againContainer;
   drawResult = image->GetImageContainerAtSize(
-      renderer, testCase.mSize, Nothing(), Nothing(),
+      layerManager, testCase.mSize, Nothing(), Nothing(),
       imgIContainer::FLAG_SYNC_DECODE, getter_AddRefs(againContainer));
   EXPECT_EQ(drawResult, ImgDrawResult::SUCCESS);
   ASSERT_EQ(nativeContainer.get(), againContainer.get());

@@ -10,10 +10,9 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/dom/Animation.h"  // for Animation
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
-#include "mozilla/ScrollPositionUpdate.h"  // for ScrollPositionUpdate
-#include "nsRefPtrHashtable.h"             // for nsRefPtrHashtable
-#include "gfxContext.h"
+#include "nsRefPtrHashtable.h"  // for nsRefPtrHashtable
 
+class gfxContext;
 namespace mozilla {
 namespace layers {
 class LayerManager;
@@ -174,12 +173,6 @@ class WindowRenderer : public FrameRecorder {
   virtual void WaitOnTransactionProcessed() {}
 
   virtual bool IsCompositingCheap() { return true; }
-
-  /**
-   * returns the maximum texture size on this layer backend, or INT32_MAX
-   * if there is no maximum
-   */
-  virtual int32_t GetMaxTextureSize() const { return INT32_MAX; }
 
   /**
    * Return the name of the layer manager's backend.

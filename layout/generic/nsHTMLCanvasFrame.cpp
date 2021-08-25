@@ -16,6 +16,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
 #include "mozilla/layers/RenderRootStateManager.h"
+#include "BasicLayers.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
