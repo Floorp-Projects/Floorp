@@ -25,6 +25,7 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Unused.h"
+#include "BasicLayers.h"
 #include "PuppetWidget.h"
 #include "nsContentUtils.h"
 #include "nsIWidgetListener.h"
