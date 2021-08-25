@@ -1424,6 +1424,11 @@ nsresult CanonicalBrowsingContext::PendingRemotenessChange::FinishTopContent() {
                         "We shouldn't be trying to change the remoteness of "
                         "non-remote iframes");
 
+  // Abort if our ContentParent died while process switching.
+  if (mContentParent && NS_WARN_IF(mContentParent->IsDead())) {
+    return NS_ERROR_FAILURE;
+  }
+
   // While process switching, we need to check if any of our ancestors are
   // discarded or no longer current, in which case the process switch needs to
   // be aborted.
@@ -1544,6 +1549,13 @@ nsresult CanonicalBrowsingContext::PendingRemotenessChange::FinishSubframe() {
 
   RefPtr<BrowserParent> embedderBrowser = embedderWindow->GetBrowserParent();
   if (NS_WARN_IF(!embedderBrowser)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If we're creating a new remote browser, and the host process is already
+  // dead, abort the process switch.
+  if (mContentParent != embedderBrowser->Manager() &&
+      NS_WARN_IF(mContentParent->IsDead())) {
     return NS_ERROR_FAILURE;
   }
 
