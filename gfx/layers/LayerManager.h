@@ -56,6 +56,7 @@ class DrawTarget;
 namespace layers {
 
 class AsyncPanZoomController;
+class BasicLayerManager;
 class ClientLayerManager;
 class HostLayerManager;
 class Layer;
@@ -164,6 +165,7 @@ class LayerManager : public WindowRenderer {
 
   virtual LayerManagerComposite* AsLayerManagerComposite() { return nullptr; }
 
+  virtual BasicLayerManager* AsBasicLayerManager() { return nullptr; }
   virtual HostLayerManager* AsHostLayerManager() { return nullptr; }
 
   virtual WebRenderLayerManager* AsWebRenderLayerManager() { return nullptr; }
@@ -402,6 +404,12 @@ class LayerManager : public WindowRenderer {
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) {
     return true;
   }
+
+  /**
+   * returns the maximum texture size on this layer backend, or INT32_MAX
+   * if there is no maximum
+   */
+  virtual int32_t GetMaxTextureSize() const = 0;
 
   /**
    * This setter can be used anytime. The user data for all keys is
