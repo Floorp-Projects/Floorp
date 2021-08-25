@@ -236,8 +236,6 @@ bool gfxPlatformMac::UsesTiling() const {
   return true;
 }
 
-bool gfxPlatformMac::ContentUsesTiling() const { return UsesTiling(); }
-
 bool gfxPlatformMac::CreatePlatformFontList() {
   return gfxPlatformFontList::Initialize(new gfxMacPlatformFontList);
 }

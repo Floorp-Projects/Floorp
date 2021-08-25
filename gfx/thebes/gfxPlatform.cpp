@@ -2862,36 +2862,7 @@ bool gfxPlatform::UsesOffMainThreadCompositing() {
 }
 
 bool gfxPlatform::UsesTiling() const {
-  bool usesSkia = GetDefaultContentBackend() == BackendType::SKIA;
-
-  // We can't just test whether the PaintThread is initialized here because
-  // this function is used when initializing the PaintThread. So instead we
-  // check the conditions that enable OMTP with parallel painting.
-  bool usesPOMTP = XRE_IsContentProcess() && gfxVars::UseOMTP() &&
-                   (StaticPrefs::layers_omtp_paint_workers_AtStartup() == -1 ||
-                    StaticPrefs::layers_omtp_paint_workers_AtStartup() > 1);
-
-  return StaticPrefs::layers_enable_tiles_AtStartup() ||
-         (StaticPrefs::layers_enable_tiles_if_skia_pomtp_AtStartup() &&
-          usesSkia && usesPOMTP);
-}
-
-bool gfxPlatform::ContentUsesTiling() const {
-  BackendPrefsData data = GetBackendPrefs();
-  BackendType contentBackend = GetContentBackendPref(data.mContentBitmask);
-  if (contentBackend == BackendType::NONE) {
-    contentBackend = data.mContentDefault;
-  }
-
-  bool contentUsesSkia = contentBackend == BackendType::SKIA;
-  bool contentUsesPOMTP =
-      gfxVars::UseOMTP() &&
-      (StaticPrefs::layers_omtp_paint_workers_AtStartup() == -1 ||
-       StaticPrefs::layers_omtp_paint_workers_AtStartup() > 1);
-
-  return StaticPrefs::layers_enable_tiles_AtStartup() ||
-         (StaticPrefs::layers_enable_tiles_if_skia_pomtp_AtStartup() &&
-          contentUsesSkia && contentUsesPOMTP);
+  return StaticPrefs::layers_enable_tiles_AtStartup();
 }
 
 /***

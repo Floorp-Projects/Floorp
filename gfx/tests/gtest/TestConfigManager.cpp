@@ -150,9 +150,6 @@ class MockGfxInfo final : public nsIGfxInfo {
   NS_IMETHOD GetUsesTiling(bool* aUsesTiling) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  NS_IMETHOD GetContentUsesTiling(bool* aUsesTiling) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   NS_IMETHOD GetTargetFrameRate(uint32_t* aTargetFrameRate) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

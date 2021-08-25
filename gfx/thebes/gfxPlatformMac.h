@@ -38,7 +38,6 @@ class gfxPlatformMac : public gfxPlatform {
   }
 
   bool UsesTiling() const override;
-  bool ContentUsesTiling() const override;
 
   already_AddRefed<gfxASurface> CreateOffscreenSurface(
       const IntSize& aSize, gfxImageFormat aFormat) override;

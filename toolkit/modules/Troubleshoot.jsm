@@ -608,7 +608,6 @@ var dataProviders = {
       DWriteVersion: "directWriteVersion",
       cleartypeParameters: "clearTypeParameters",
       UsesTiling: "usesTiling",
-      ContentUsesTiling: "contentUsesTiling",
       TargetFrameRate: "targetFrameRate",
       windowProtocol: null,
       desktopEnvironment: null,

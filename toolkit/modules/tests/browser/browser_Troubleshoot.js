@@ -620,9 +620,6 @@ const SNAPSHOT_SCHEMA = {
         usesTiling: {
           type: "boolean",
         },
-        contentUsesTiling: {
-          type: "boolean",
-        },
         clearTypeParameters: {
           type: "string",
         },
