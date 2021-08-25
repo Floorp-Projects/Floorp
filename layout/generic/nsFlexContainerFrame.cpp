@@ -153,14 +153,6 @@ static nscoord PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
   return aContainerSize - aFlexRelativeCoord;
 }
 
-// Add two nscoord values, using CheckedInt to handle integer overflow.
-// This function returns the sum of its two args -- but if we trigger integer
-// overflow while adding them, then this function returns nscoord_MAX instead.
-static nscoord AddChecked(nscoord aFirst, nscoord aSecond) {
-  CheckedInt<nscoord> checkedResult = CheckedInt<nscoord>(aFirst) + aSecond;
-  return checkedResult.isValid() ? checkedResult.value() : nscoord_MAX;
-}
-
 // Check if the size is auto or it is a keyword in the block axis.
 // |aIsInline| should represent whether aSize is in the inline axis, from the
 // perspective of the writing mode of the flex item that the size comes from.
@@ -927,7 +919,7 @@ class nsFlexContainerFrame::FlexLine final {
   // Returns the sum of our FlexItems' outer hypothetical main sizes plus the
   // sum of main axis {row,column}-gaps between items.
   // ("outer" = margin-box, and "hypothetical" = before flexing)
-  nscoord TotalOuterHypotheticalMainSize() const {
+  AuCoord64 TotalOuterHypotheticalMainSize() const {
     return mTotalOuterHypotheticalMainSize;
   }
 
@@ -960,27 +952,13 @@ class nsFlexContainerFrame::FlexLine final {
       mNumFrozenItems++;
     }
 
-    // Note: If our flex item is (or contains) a table with
-    // "table-layout:fixed", it may have a value near nscoord_MAX as its
-    // hypothetical main size. This means we can run into absurdly large sizes
-    // here, even when the author didn't explicitly specify anything huge.
-    // We'd really rather not allow that to cause integer overflow (e.g. we
-    // don't want that to make mTotalOuterHypotheticalMainSize overflow to a
-    // negative value), because that'd make us incorrectly think that we should
-    // grow our flex items rather than shrink them when it comes time to
-    // resolve flexible items. Hence, we sum up the hypothetical sizes using a
-    // helper function AddChecked() to avoid overflow.
-    mTotalItemMBP =
-        AddChecked(mTotalItemMBP, lastItem.MarginBorderPaddingSizeInMainAxis());
-
-    mTotalOuterHypotheticalMainSize =
-        AddChecked(mTotalOuterHypotheticalMainSize, lastItem.OuterMainSize());
+    mTotalItemMBP += lastItem.MarginBorderPaddingSizeInMainAxis();
+    mTotalOuterHypotheticalMainSize += lastItem.OuterMainSize();
 
     // If the item added was not the first item in the line, we add in any gap
     // space as needed.
     if (NumItems() >= 2) {
-      mTotalOuterHypotheticalMainSize =
-          AddChecked(mTotalOuterHypotheticalMainSize, mMainGapSize);
+      mTotalOuterHypotheticalMainSize += mMainGapSize;
     }
   }
 
@@ -1060,7 +1038,12 @@ class nsFlexContainerFrame::FlexLine final {
   // {row,columnm}-gaps between items.
   // (i.e. their flex base sizes, clamped via their min/max-size properties,
   // plus their main-axis margin/border/padding, plus the sum of the gaps.)
-  nscoord mTotalOuterHypotheticalMainSize = 0;
+  //
+  // This variable uses a 64-bit coord type to avoid integer overflow in case
+  // several of the individual items have huge hypothetical main sizes, which
+  // can happen with percent-width table-layout:fixed descendants. We have to
+  // avoid integer overflow in order to shrink items properly in that scenario.
+  AuCoord64 mTotalOuterHypotheticalMainSize = 0;
 
   nscoord mLineCrossSize = 0;
   nscoord mFirstBaselineOffset = nscoord_MIN;
@@ -3003,6 +2986,13 @@ void FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
 
 void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
                                       ComputedFlexLineInfo* aLineInfo) {
+  // In this function, we use 64-bit coord type to avoid integer overflow in
+  // case several of the individual items have huge hypothetical main sizes,
+  // which can happen with percent-width table-layout:fixed descendants. Here we
+  // promote the container's main size to 64-bit to make the arithmetic
+  // convenient.
+  AuCoord64 flexContainerMainSize(aFlexContainerMainSize);
+
   // Before we start resolving sizes: if we have an aLineInfo structure to fill
   // out, we inform it of each item's base size, and we initialize the "delta"
   // for each item to 0. (And if the flex algorithm wants to grow or shrink the
@@ -3018,7 +3008,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
   // Determine whether we're going to be growing or shrinking items.
   const bool isUsingFlexGrow =
-      (mTotalOuterHypotheticalMainSize < aFlexContainerMainSize);
+      (mTotalOuterHypotheticalMainSize < flexContainerMainSize);
 
   if (aLineInfo) {
     aLineInfo->mGrowthState =
@@ -3044,11 +3034,10 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
   // Subtract space occupied by our items' margins/borders/padding/gaps, so
   // we can just be dealing with the space available for our flex items' content
   // boxes.
-  nscoord spaceAvailableForFlexItemsContentBoxes =
-      aFlexContainerMainSize - (mTotalItemMBP + SumOfGaps());
+  const AuCoord64 spaceAvailableForFlexItemsContentBoxes =
+      flexContainerMainSize - AuCoord64(mTotalItemMBP + SumOfGaps());
 
-  nscoord origAvailableFreeSpace;
-  bool isOrigAvailFreeSpaceInitialized = false;
+  Maybe<AuCoord64> origAvailableFreeSpace;
 
   // NOTE: I claim that this chunk of the algorithm (the looping part) needs to
   // run the loop at MOST NumItems() times.  This claim should hold up
@@ -3062,7 +3051,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
     // flex base size, and subtract all the used main sizes from our
     // total amount of space to determine the 'available free space'
     // (positive or negative) to be distributed among our flexible items.
-    nscoord availableFreeSpace = spaceAvailableForFlexItemsContentBoxes;
+    AuCoord64 availableFreeSpace = spaceAvailableForFlexItemsContentBoxes;
     for (FlexItem& item : Items()) {
       if (!item.IsFrozen()) {
         item.SetMainSize(item.FlexBaseSize());
@@ -3070,7 +3059,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
       availableFreeSpace -= item.MainSize();
     }
 
-    FLEX_LOG(" available free space = %d", availableFreeSpace);
+    FLEX_LOG(" available free space = %" PRId64, availableFreeSpace.value);
 
     // The sign of our free space should agree with the type of flexing
     // (grow/shrink) that we're doing (except if we've had integer overflow;
@@ -3084,11 +3073,10 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
     // If we have any free space available, give each flexible item a portion
     // of availableFreeSpace.
-    if (availableFreeSpace != 0) {
+    if (availableFreeSpace != AuCoord64(0)) {
       // The first time we do this, we initialize origAvailableFreeSpace.
-      if (!isOrigAvailFreeSpaceInitialized) {
-        origAvailableFreeSpace = availableFreeSpace;
-        isOrigAvailFreeSpaceInitialized = true;
+      if (!origAvailableFreeSpace) {
+        origAvailableFreeSpace.emplace(availableFreeSpace);
       }
 
       // STRATEGY: On each item, we compute & store its "share" of the total
@@ -3161,14 +3149,14 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
           // (Their flex factors add up to something less than 1.)
           // Hence, make sure we don't distribute any more than the portion of
           // our original free space that these items actually want.
-          nscoord totalDesiredPortionOfOrigFreeSpace =
-              NSToCoordRound(origAvailableFreeSpace * flexFactorSum);
+          auto totalDesiredPortionOfOrigFreeSpace =
+              AuCoord64::FromRound(*origAvailableFreeSpace * flexFactorSum);
 
           // Clamp availableFreeSpace to be no larger than that ^^.
           // (using min or max, depending on sign).
           // This should not change the sign of availableFreeSpace (except
           // possibly by setting it to 0), as enforced by this assertion:
-          NS_ASSERTION(totalDesiredPortionOfOrigFreeSpace == 0 ||
+          NS_ASSERTION(totalDesiredPortionOfOrigFreeSpace == AuCoord64(0) ||
                            ((totalDesiredPortionOfOrigFreeSpace > 0) ==
                             (availableFreeSpace > 0)),
                        "When we reduce available free space for flex "
@@ -3202,7 +3190,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
             // To avoid rounding issues, we compute the change in size for this
             // item, and then subtract it from the remaining available space.
-            nscoord sizeDelta = 0;
+            AuCoord64 sizeDelta = 0;
             if (IsFinite(weightSum)) {
               double myShareOfRemainingSpace = item.ShareOfWeightSoFar();
 
@@ -3215,23 +3203,24 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
                 // availableFreeSpace from integer*1.0 --> double --> integer)
                 sizeDelta = availableFreeSpace;
               } else if (myShareOfRemainingSpace > 0.0) {
-                sizeDelta = NSToCoordRound(availableFreeSpace *
-                                           myShareOfRemainingSpace);
+                sizeDelta = AuCoord64::FromRound(availableFreeSpace *
+                                                 myShareOfRemainingSpace);
               }
             } else if (item.GetWeight(isUsingFlexGrow) == largestWeight) {
               // Total flexibility is infinite, so we're just distributing
               // the available space equally among the items that are tied for
               // having the largest weight (and this is one of those items).
-              sizeDelta = NSToCoordRound(availableFreeSpace /
-                                         double(numItemsWithLargestWeight));
+              sizeDelta = AuCoord64::FromRound(
+                  availableFreeSpace / double(numItemsWithLargestWeight));
               numItemsWithLargestWeight--;
             }
 
             availableFreeSpace -= sizeDelta;
 
-            item.SetMainSize(item.MainSize() + sizeDelta);
-            FLEX_LOG("  flex item %p receives %d, for a total of %d",
-                     item.Frame(), sizeDelta, item.MainSize());
+            item.SetMainSize(item.MainSize() +
+                             nscoord(sizeDelta.ToMinMaxClamped()));
+            FLEX_LOG("  flex item %p receives %" PRId64 ", for a total of %d",
+                     item.Frame(), sizeDelta.value, item.MainSize());
           }
         }
 
@@ -4129,21 +4118,16 @@ void nsFlexContainerFrame::GenerateFlexLines(
     // this was the first item on the line.
     if (wrapThreshold != NS_UNCONSTRAINEDSIZE &&
         curLine->Items().Length() > 1) {
-      // If the line will be longer than wrapThreshold because of the newly
-      // appended item, then wrap and move the item to a new line.
-      //
-      // NOTE: We have to account for the fact that the item's outer
-      // hypothetical main-size might be huge, if our item is (or contains) a
-      // table with "table-layout:fixed". So we use AddChecked() rather than
-      // (possibly-overflowing) normal addition, to be sure we don't make the
-      // wrong judgement about whether the item fits on this line.
-      nscoord newOuterSize =
-          AddChecked(curLine->TotalOuterHypotheticalMainSize(),
-                     curLine->Items().LastElement().OuterMainSize());
+      // If the line will be longer than wrapThreshold or at least as long as
+      // nscoord_MAX because of the newly appended item, then wrap and move the
+      // item to a new line.
+      auto newOuterSize = curLine->TotalOuterHypotheticalMainSize();
+      newOuterSize += curLine->Items().LastElement().OuterMainSize();
 
-      // Account for gap between this line's previous item and this item
-      newOuterSize = AddChecked(newOuterSize, aMainGapSize);
-      if (newOuterSize == nscoord_MAX || newOuterSize > wrapThreshold) {
+      // Account for gap between this line's previous item and this item.
+      newOuterSize += aMainGapSize;
+
+      if (newOuterSize >= nscoord_MAX || newOuterSize > wrapThreshold) {
         curLine = ConstructNewFlexLine();
 
         // Get the previous line after adding a new line because the address can
@@ -4230,8 +4214,8 @@ nscoord nsFlexContainerFrame::GetMainSizeFromReflowInput(
 
 // Returns the largest outer hypothetical main-size of any line in |aLines|.
 // (i.e. the hypothetical main-size of the largest line)
-static nscoord GetLargestLineMainSize(nsTArray<FlexLine>& aLines) {
-  nscoord largestLineOuterSize = 0;
+static AuCoord64 GetLargestLineMainSize(nsTArray<FlexLine>& aLines) {
+  AuCoord64 largestLineOuterSize = 0;
   for (const FlexLine& line : aLines) {
     largestLineOuterSize =
         std::max(largestLineOuterSize, line.TotalOuterHypotheticalMainSize());
@@ -4265,8 +4249,9 @@ nscoord nsFlexContainerFrame::ComputeMainSize(
   // Column-oriented case, with auto BSize:
   // Resolve auto BSize to the largest FlexLine length, clamped to our
   // computed min/max main-size properties.
-  nscoord largestLineOuterSize = GetLargestLineMainSize(aLines);
-  return NS_CSS_MINMAX(largestLineOuterSize, aReflowInput.ComputedMinBSize(),
+  const AuCoord64 largestLineMainSize = GetLargestLineMainSize(aLines);
+  return NS_CSS_MINMAX(nscoord(largestLineMainSize.ToMinMaxClamped()),
+                       aReflowInput.ComputedMinBSize(),
                        aReflowInput.ComputedMaxBSize());
 }
 
