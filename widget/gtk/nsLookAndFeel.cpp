@@ -29,6 +29,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/WidgetUtilsGtk.h"
 #include "ScreenHelperGTK.h"
 #include "nsNativeBasicThemeGTK.h"
 
@@ -872,6 +873,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 1;
       break;
     }
+    case IntID::TouchDeviceSupportPresent:
+      aResult = WidgetUtilsGTK::IsTouchDeviceSupportPresent() ? 1 : 0;
+      break;
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;

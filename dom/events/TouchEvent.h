@@ -94,7 +94,6 @@ class TouchEvent : public UIEvent {
                       bool aMetaKey, TouchList* aTouches,
                       TouchList* aTargetTouches, TouchList* aChangedTouches);
 
-  static bool PlatformSupportsTouch();
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
   static bool PrefEnabled(nsIDocShell* aDocShell);
   static bool LegacyAPIEnabled(JSContext* aCx, JSObject* aGlobal);
