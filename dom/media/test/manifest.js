@@ -1967,6 +1967,152 @@ var gEMETests = [
     sessionCount: 1,
     duration: 2.08,
   },
+  // The following cbcs files are created using shaka-packager using commands like
+  // ./packager-win.exe 'in=bipbop_2s.mp4,stream=audio,init_segment=bipbop_cbcs_1_9_audio_init.mp4,segment_template=bipbop_cbcs_1_9_audio_$Number$.m4s' \
+  // 'in=bipbop_2s.mp4,stream=video,init_segment=bipbop_cbcs_1_9_video_init.mp4,segment_template=bipbop_cbcs_1_9_video_$Number$.m4s' --protection_scheme cbcs \
+  // --enable_raw_key_encryption --keys label=:key_id=7e571d047e571d047e571d047e571d21:key=7e5744447e5744447e5744447e574421 --iv 11223344556677889900112233445566 \
+  // --clear_lead 0 --crypt_byte_block 1 --skip_byte_block 9
+  // See bug 1726202 for more details on their creation.
+  {
+    name: "mp4 h264 + aac clearkey cbcs 1:9 pattern",
+    tracks: [
+      {
+        name: "video",
+        type: 'video/mp4; codecs="avc1.4d4015"',
+        fragments: [
+          "bipbop_cbcs_1_9_video_init.mp4",
+          "bipbop_cbcs_1_9_video_1.m4s",
+        ],
+      },
+      {
+        name: "audio",
+        type: 'audio/mp4; codecs="mp4a.40.2"',
+        fragments: [
+          "bipbop_cbcs_1_9_audio_init.mp4",
+          "bipbop_cbcs_1_9_audio_1.m4s",
+        ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d047e571d047e571d047e571d21": "7e5744447e5744447e5744447e574421",
+    },
+    sessionType: "temporary",
+    sessionCount: 2,
+    duration: 2.04,
+  },
+  {
+    name: "mp4 h264 + aac clearkey cbcs 5:5 pattern",
+    tracks: [
+      {
+        name: "video",
+        type: 'video/mp4; codecs="avc1.4d4015"',
+        fragments: [
+          "bipbop_cbcs_5_5_video_init.mp4",
+          "bipbop_cbcs_5_5_video_1.m4s",
+        ],
+      },
+      {
+        name: "audio",
+        type: 'audio/mp4; codecs="mp4a.40.2"',
+        fragments: [
+          "bipbop_cbcs_5_5_audio_init.mp4",
+          "bipbop_cbcs_5_5_audio_1.m4s",
+        ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d047e571d047e571d047e571d21": "7e5744447e5744447e5744447e574421",
+    },
+    sessionType: "temporary",
+    sessionCount: 2,
+    duration: 2.04,
+  },
+  {
+    name: "mp4 h264 + aac clearkey cbcs 10:0 pattern",
+    tracks: [
+      {
+        name: "video",
+        type: 'video/mp4; codecs="avc1.4d4015"',
+        fragments: [
+          "bipbop_cbcs_10_0_video_init.mp4",
+          "bipbop_cbcs_10_0_video_1.m4s",
+        ],
+      },
+      {
+        name: "audio",
+        type: 'audio/mp4; codecs="mp4a.40.2"',
+        fragments: [
+          "bipbop_cbcs_10_0_audio_init.mp4",
+          "bipbop_cbcs_10_0_audio_1.m4s",
+        ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d047e571d047e571d047e571d21": "7e5744447e5744447e5744447e574421",
+    },
+    sessionType: "temporary",
+    sessionCount: 2,
+    duration: 2.04,
+  },
+  {
+    name: "mp4 h264 + aac clearkey cbcs 7:7 pattern",
+    tracks: [
+      {
+        name: "video",
+        type: 'video/mp4; codecs="avc1.4d4015"',
+        fragments: [
+          "bipbop_cbcs_7_7_video_init.mp4",
+          "bipbop_cbcs_7_7_video_1.m4s",
+        ],
+      },
+      {
+        name: "audio",
+        type: 'audio/mp4; codecs="mp4a.40.2"',
+        fragments: [
+          "bipbop_cbcs_7_7_audio_init.mp4",
+          "bipbop_cbcs_7_7_audio_1.m4s",
+        ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d047e571d047e571d047e571d21": "7e5744447e5744447e5744447e574421",
+    },
+    sessionType: "temporary",
+    sessionCount: 2,
+    duration: 2.04,
+  },
+  {
+    name: "mp4 h264 + aac clearkey cbcs 9:8 pattern",
+    tracks: [
+      {
+        name: "video",
+        type: 'video/mp4; codecs="avc1.4d4015"',
+        fragments: [
+          "bipbop_cbcs_9_8_video_init.mp4",
+          "bipbop_cbcs_9_8_video_1.m4s",
+        ],
+      },
+      {
+        name: "audio",
+        type: 'audio/mp4; codecs="mp4a.40.2"',
+        fragments: [
+          "bipbop_cbcs_9_8_audio_init.mp4",
+          "bipbop_cbcs_9_8_audio_1.m4s",
+        ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d047e571d047e571d047e571d21": "7e5744447e5744447e5744447e574421",
+    },
+    sessionType: "temporary",
+    sessionCount: 2,
+    duration: 2.04,
+  },
 ];
 
 var gEMENonMSEFailTests = [
