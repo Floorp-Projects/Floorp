@@ -90,7 +90,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="16dp"
-            android:text="@string/dialog_addtohomescreen_tracking_protection"
+            android:text="@string/dialog_addtohomescreen_tracking_protection2"
             android:textColor="@color/home_screen_dialog_warning_text"
             android:textSize="14sp"
             android:fontFamily="@string/font_roboto_regular" />

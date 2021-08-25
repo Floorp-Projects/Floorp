@@ -86,7 +86,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:fontFamily="@string/font_roboto_regular"
-            android:text="@string/dialog_addtohomescreen_tracking_protection"
+            android:text="@string/dialog_addtohomescreen_tracking_protection2"
             android:textColor="@color/photonWhite"
             android:textSize="14sp"
             app:layout_constraintBottom_toBottomOf="@id/homescreen_dialog_block_icon"
