@@ -47,6 +47,18 @@ build with jemalloc disabled (`ac_add_options --disable-jemalloc`). You
 also need the fix to [Bug
 719427](https://bugzilla.mozilla.org/show_bug.cgi?id=719427 "https://bugzilla.mozilla.org/show_bug.cgi?id=719427")
 
+## Kernel stacks
+Under "File" -> "Recording Options" you can enable "Record Kernel Callstacks".
+To get full symbols and not just the exported ones, you'll to install the matching
+[Kernel Debug Kit](https://developer.apple.com/download/all/?q=Kernel%20Debug%20Kit).
+Instruments uses Spotlight to find the dSYMs with the matching uuid so if the
+symbols are still not showing up it may help to move the appropriate dSYM file
+to a place where Spotlight will notice it. You can double check the uuid of the
+kernel in `/System/Library/Kernels` with `dwarfdump --uuid` and check that
+Spotlight knows about the file with `mdls`.
+
+## Misc
+
 The `DTPerformanceSession` api can be used to control profiling from
 applications like the old CHUD API we use in Shark builds. [Bug
 667036](https://bugzilla.mozilla.org/show_bug.cgi?id=667036 "https://bugzilla.mozilla.org/show_bug.cgi?id=667036")
