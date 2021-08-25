@@ -63,6 +63,7 @@ elif CONFIG["OS_TARGET"] == "Linux":
             "fallback/FallbackBattery.cpp",
         ]
 elif CONFIG["OS_TARGET"] == "WINNT":
+    REQUIRES_UNIFIED_BUILD = True
     UNIFIED_SOURCES += [
         "fallback/FallbackScreenConfiguration.cpp",
         "fallback/FallbackVibration.cpp",

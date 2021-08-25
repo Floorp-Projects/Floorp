@@ -19,3 +19,5 @@ def NoVisibilityFlags():
 UNIFIED_SOURCES += ["test1.c"]
 
 NoVisibilityFlags()
+
+REQUIRES_UNIFIED_BUILD = True

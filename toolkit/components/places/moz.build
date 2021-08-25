@@ -85,3 +85,5 @@ with Files("**"):
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += ["-Wno-error=shadow"]
+
+REQUIRES_UNIFIED_BUILD = True

@@ -38,3 +38,5 @@ LOCAL_INCLUDES += [
     "/gfx/2d/",
     "/netwerk/base/",
 ]
+
+REQUIRES_UNIFIED_BUILD = True

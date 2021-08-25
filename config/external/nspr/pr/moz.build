@@ -254,3 +254,5 @@ EXPORTS.nspr.private += [
     "/nsprpub/pr/include/private/pprthred.h",
     "/nsprpub/pr/include/private/prpriv.h",
 ]
+
+REQUIRES_UNIFIED_BUILD = True

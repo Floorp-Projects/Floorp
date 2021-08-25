@@ -1417,6 +1417,12 @@ VARIABLES = {
 
         """,
     ),
+    "REQUIRES_UNIFIED_BUILD": (
+        bool,
+        bool,
+        """Whether this module requires building in unified environment.
+        """,
+    ),
     "IS_RUST_LIBRARY": (
         bool,
         bool,

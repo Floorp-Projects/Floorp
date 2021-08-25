@@ -74,3 +74,5 @@ DIRS += [
 ]
 
 FINAL_LIBRARY = "mozglue"
+
+REQUIRES_UNIFIED_BUILD = True

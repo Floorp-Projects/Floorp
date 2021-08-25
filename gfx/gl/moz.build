@@ -55,6 +55,7 @@ EXPORTS += [
 
 # Win32 is a special snowflake, for ANGLE
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    REQUIRES_UNIFIED_BUILD = True
     EXPORTS += [
         "GLContextWGL.h",
         "SharedSurfaceANGLE.h",  # Needs <windows.h> for `HANDLE`.

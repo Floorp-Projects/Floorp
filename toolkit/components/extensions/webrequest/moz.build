@@ -58,3 +58,5 @@ FINAL_LIBRARY = "xul"
 
 with Files("**"):
     BUG_COMPONENT = ("WebExtensions", "Request Handling")
+
+REQUIRES_UNIFIED_BUILD = True
