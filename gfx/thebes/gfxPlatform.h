@@ -658,12 +658,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   virtual bool UsesTiling() const;
 
   /**
-   * Returns whether the content process will use tiling for layers. This is
-   * only used by about:support.
-   */
-  virtual bool ContentUsesTiling() const;
-
-  /**
    * Returns a logger if one is available and logging is enabled
    */
   static mozilla::LogModule* GetLog(eGfxLog aWhichLog);

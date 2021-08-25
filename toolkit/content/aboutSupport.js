@@ -686,7 +686,6 @@ var snapshotFormatters = {
       ["windowProtocol", "graphics-window-protocol"],
       ["desktopEnvironment", "graphics-desktop-environment"],
       "usesTiling",
-      "contentUsesTiling",
       "targetFrameRate",
     ];
     for (let feature of featureKeys) {
