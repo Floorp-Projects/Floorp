@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -21,6 +22,8 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
@@ -189,5 +192,36 @@ object TestHelper {
         val canvas = Canvas(bitmap)
         canvas.drawColor(Color.GREEN)
         return bitmap
+    }
+
+    fun isPackageInstalled(packageName: String): Boolean {
+        return try {
+            val packageManager = InstrumentationRegistry.getInstrumentation().context.packageManager
+            packageManager.getApplicationInfo(packageName, 0).enabled
+        } catch (exception: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
+    fun assertExternalAppOpens(appPackageName: String) {
+        if (isPackageInstalled(appPackageName)) {
+            Intents.intended(IntentMatchers.toPackage(appPackageName))
+        } else {
+            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            mDevice.waitNotNull(
+                Until.findObject(By.text("Could not open file")),
+                waitingTime
+            )
+        }
+    }
+
+    fun returnToBrowser() {
+        val urlBar =
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view"))
+        do {
+            mDevice.pressBack()
+        } while (
+            !urlBar.waitForExists(waitingTime)
+        )
     }
 }

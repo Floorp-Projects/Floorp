@@ -25,14 +25,18 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
+import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.TestHelper.restartApp
+import org.mozilla.fenix.helpers.TestHelper.returnToBrowser
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -238,10 +242,13 @@ class SmokeTest {
     @Test
     // Verifies the History menu opens from a tab's 3 dot menu
     fun openMainMenuHistoryItemTest() {
-        homeScreen {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openHistory {
-            verifyHistoryMenuView()
+            verifyHistoryListExists()
         }
     }
 
@@ -249,7 +256,10 @@ class SmokeTest {
     @Test
     // Verifies the Bookmarks menu opens from a tab's 3 dot menu
     fun openMainMenuBookmarksItemTest() {
-        homeScreen {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openBookmarks {
             verifyBookmarksMenuView()
@@ -260,7 +270,10 @@ class SmokeTest {
     // Verifies the Synced tabs menu or Sync Sign In menu opens from a tab's 3 dot menu.
     // The test is assuming we are NOT signed in.
     fun openMainMenuSyncItemTest() {
-        homeScreen {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openSyncSignIn {
             verifySyncSignInMenuHeader()
@@ -272,7 +285,10 @@ class SmokeTest {
     // caution when making changes to it, so they don't block the builds
     // Verifies the Settings menu opens from a tab's 3 dot menu
     fun openMainMenuSettingsItemTest() {
-        homeScreen {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openSettings {
             verifySettingsView()
@@ -359,6 +375,37 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.bookmarkPage {
             verifySnackBarText("Bookmark saved!")
+        }
+    }
+
+    @Test
+    // Verifies the Open in app button when an app is installed
+    fun mainMenuOpenInAppTest() {
+        val youtubeUrl = "m.youtube.com"
+        if (isPackageInstalled(YOUTUBE_APP)) {
+            navigationToolbar {
+            }.enterURLAndEnterToBrowser(youtubeUrl.toUri()) {
+                verifyNotificationDotOnMainMenu()
+            }.openThreeDotMenu {
+            }.clickOpenInApp {
+                assertExternalAppOpens(YOUTUBE_APP)
+                returnToBrowser()
+                verifyUrl(youtubeUrl)
+            }
+        }
+    }
+
+    @Test
+    // Verifies the Desktop site toggle in a tab's 3 dot menu
+    fun mainMenuDesktopSiteTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openThreeDotMenu {
+        }.switchDesktopSiteMode {
+        }.openThreeDotMenu {
+            verifyDesktopSiteModeEnabled(true)
         }
     }
 

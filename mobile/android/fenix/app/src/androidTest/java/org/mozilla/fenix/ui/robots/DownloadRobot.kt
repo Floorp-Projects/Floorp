@@ -28,6 +28,7 @@ import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -42,7 +43,7 @@ class DownloadRobot {
 
     fun verifyDownloadNotificationPopup() = assertDownloadNotificationPopup()
 
-    fun verifyPhotosAppOpens() = assertPhotosOpens()
+    fun verifyPhotosAppOpens() = assertExternalAppOpens(GOOGLE_APPS_PHOTOS)
 
     fun verifyDownloadedFileName(fileName: String) {
         mDevice.findObject(UiSelector().text(fileName)).waitForExists(waitingTime)
@@ -143,18 +144,6 @@ private fun clickOpenButton() =
     onView(withId(R.id.download_dialog_action_button)).check(
         matches(isDisplayed())
     )
-
-private fun assertPhotosOpens() {
-    if (isPackageInstalled(GOOGLE_APPS_PHOTOS)) {
-        Intents.intended(IntentMatchers.toPackage(GOOGLE_APPS_PHOTOS))
-    } else {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.waitNotNull(
-            Until.findObject(By.text("Could not open file")),
-            TestAssetHelper.waitingTime
-        )
-    }
-}
 
 private fun downloadedFile(fileName: String) = onView(withText(fileName))
 
