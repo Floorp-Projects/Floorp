@@ -34,6 +34,11 @@ class PlainObject : public NativeObject {
 #endif
 
  public:
+  static inline js::PlainObject* createWithShape(JSContext* cx,
+                                                 JS::Handle<Shape*> shape,
+                                                 gc::AllocKind kind,
+                                                 NewObjectKind newKind);
+
   static inline js::PlainObject* createWithShape(
       JSContext* cx, JS::Handle<Shape*> shape,
       NewObjectKind newKind = GenericObject);

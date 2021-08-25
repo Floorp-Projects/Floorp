@@ -164,7 +164,7 @@ PlainObject* js::NewPlainObject(JSContext* cx, NewObjectKind newKind) {
     return nullptr;
   }
 
-  return PlainObject::createWithShape(cx, shape, newKind);
+  return PlainObject::createWithShape(cx, shape, allocKind, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithAllocKind(JSContext* cx,
@@ -176,7 +176,7 @@ PlainObject* js::NewPlainObjectWithAllocKind(JSContext* cx,
     return nullptr;
   }
 
-  return PlainObject::createWithShape(cx, shape, newKind);
+  return PlainObject::createWithShape(cx, shape, allocKind, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithProto(JSContext* cx, HandleObject proto,
@@ -194,7 +194,7 @@ PlainObject* js::NewPlainObjectWithProto(JSContext* cx, HandleObject proto,
     return nullptr;
   }
 
-  return PlainObject::createWithShape(cx, shape, newKind);
+  return PlainObject::createWithShape(cx, shape, allocKind, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
@@ -211,7 +211,7 @@ PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
     return nullptr;
   }
 
-  return PlainObject::createWithShape(cx, shape, newKind);
+  return PlainObject::createWithShape(cx, shape, allocKind, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,

@@ -25,12 +25,12 @@
 #include "vm/NativeObject-inl.h"  // js::NativeObject::{create,setLastProperty}
 
 /* static */ inline js::PlainObject* js::PlainObject::createWithShape(
-    JSContext* cx, JS::Handle<Shape*> shape, NewObjectKind newKind) {
+    JSContext* cx, JS::Handle<Shape*> shape, gc::AllocKind kind,
+    NewObjectKind newKind) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
   gc::InitialHeap heap = GetInitialHeap(newKind, &PlainObject::class_);
 
-  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(gc::CanChangeToBackgroundAllocKind(kind, shape->getObjectClass()));
+  MOZ_ASSERT(gc::CanChangeToBackgroundAllocKind(kind, &PlainObject::class_));
   kind = gc::ForegroundToBackgroundAllocKind(kind);
 
   NativeObject* obj = NativeObject::create(cx, kind, heap, shape);
@@ -39,6 +39,12 @@
   }
 
   return &obj->as<PlainObject>();
+}
+
+/* static */ inline js::PlainObject* js::PlainObject::createWithShape(
+    JSContext* cx, JS::Handle<Shape*> shape, NewObjectKind newKind) {
+  gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+  return createWithShape(cx, shape, kind, newKind);
 }
 
 /* static */ inline js::PlainObject* js::PlainObject::createWithTemplate(
