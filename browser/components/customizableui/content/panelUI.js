@@ -468,6 +468,9 @@ const PanelUI = {
       if (aAnchor.getAttribute("tabspecific")) {
         tempPanel.setAttribute("tabspecific", true);
       }
+      if (aAnchor.getAttribute("locationspecific")) {
+        tempPanel.setAttribute("locationspecific", true);
+      }
       if (this._disableAnimations) {
         tempPanel.setAttribute("animate", "false");
       }
