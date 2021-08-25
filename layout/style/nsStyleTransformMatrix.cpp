@@ -374,7 +374,9 @@ static void ProcessRotate3D(Matrix4x4& aMatrix, float aX, float aY, float aZ,
   aMatrix = temp * aMatrix;
 }
 
-static void ProcessPerspective(Matrix4x4& aMatrix, const StyleGenericPerspectiveFunction<Length>& aPerspective) {
+static void ProcessPerspective(
+    Matrix4x4& aMatrix,
+    const StyleGenericPerspectiveFunction<Length>& aPerspective) {
   if (aPerspective.IsNone()) {
     return;
   }
