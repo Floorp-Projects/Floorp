@@ -158,7 +158,6 @@ enum class CompositableType : uint8_t {
   UNKNOWN,
   CONTENT_TILED,   // tiled painted layer
   IMAGE,           // image with single buffering
-  IMAGE_BRIDGE,    // ImageBridge protocol
   CONTENT_SINGLE,  // painted layer interface, single buffering
   CONTENT_DOUBLE,  // painted layer interface, double buffering
   COUNT
