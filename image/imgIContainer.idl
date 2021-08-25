@@ -29,6 +29,7 @@ namespace gfx {
 class SourceSurface;
 }
 
+class WindowRenderer;
 namespace layers {
 class LayerManager;
 class ImageContainer;
@@ -72,6 +73,7 @@ native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
 [ptr] native ImageContainer(mozilla::layers::ImageContainer);
 [ref] native ImageRegion(mozilla::image::ImageRegion);
 [ptr] native LayerManager(mozilla::layers::LayerManager);
+[ptr] native WindowRenderer(mozilla::WindowRenderer);
 native Orientation(mozilla::image::Orientation);
 native ImageResolution(mozilla::image::Resolution);
 [ref] native TimeStamp(mozilla::TimeStamp);
@@ -328,15 +330,15 @@ interface imgIContainer : nsISupports
    *
    * Avoid calling this unless you're actually going to layerize this image.
    *
-   * @param aManager The LayerManager which will be used to create the
-   *                 ImageContainer.
+   * @param aRenderer The WindowRenderer which will be used to render the
+   *                  ImageContainer.
    * @param aFlags Decoding / drawing flags (in other words, FLAG_* flags).
    *               Currently only FLAG_SYNC_DECODE and FLAG_SYNC_DECODE_IF_FAST
    *               are supported.
    * @return An ImageContainer for the current frame, or nullptr if one could
    *         not be created.
    */
-  [noscript, notxpcom] TempRefImageContainer getImageContainer(in LayerManager aManager,
+  [noscript, notxpcom] TempRefImageContainer getImageContainer(in WindowRenderer aRenderer,
                                                                in uint32_t aFlags);
 
   /**
@@ -348,8 +350,8 @@ interface imgIContainer : nsISupports
    *
    * Avoid calling this unless you're actually going to layerize this image.
    *
-   * @param aManager The LayerManager which will be used to create the
-   *                 ImageContainer.
+   * @param aRenderer The WindowRenderer which will be used to render the
+   *                  ImageContainer.
    * @param aSVGContext If specified, SVG-related rendering context, such as
    *                    overridden attributes on the image document's root <svg>
    *                    node, and the size of the viewport that the full image
@@ -361,7 +363,7 @@ interface imgIContainer : nsISupports
    *                   May be null depending on the draw result.
    * @return The draw result for the current frame.
    */
-  [noscript, notxpcom] ImgDrawResult getImageContainerAtSize(in LayerManager aManager,
+  [noscript, notxpcom] ImgDrawResult getImageContainerAtSize(in WindowRenderer aRenderer,
                                                              [const] in nsIntSize aSize,
                                                              [const] in MaybeSVGImageContext aSVGContext,
                                                              [const] in MaybeImageIntRegion aRegion,

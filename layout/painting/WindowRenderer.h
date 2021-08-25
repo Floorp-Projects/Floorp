@@ -175,6 +175,12 @@ class WindowRenderer : public FrameRecorder {
   virtual bool IsCompositingCheap() { return true; }
 
   /**
+   * returns the maximum texture size on this layer backend, or INT32_MAX
+   * if there is no maximum
+   */
+  virtual int32_t GetMaxTextureSize() const { return INT32_MAX; }
+
+  /**
    * Return the name of the layer manager's backend.
    */
   virtual void GetBackendName(nsAString& aName) = 0;

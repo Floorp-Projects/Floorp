@@ -780,7 +780,7 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
 
 //******************************************************************************
 Tuple<ImgDrawResult, IntSize> VectorImage::GetImageContainerSize(
-    LayerManager* aManager, const IntSize& aSize, uint32_t aFlags) {
+    WindowRenderer* aRenderer, const IntSize& aSize, uint32_t aFlags) {
   if (mError) {
     return MakeTuple(ImgDrawResult::BAD_IMAGE, IntSize(0, 0));
   }
@@ -795,7 +795,7 @@ Tuple<ImgDrawResult, IntSize> VectorImage::GetImageContainerSize(
     return MakeTuple(ImgDrawResult::NOT_SUPPORTED, IntSize(0, 0));
   }
 
-  if (aManager->GetBackendType() != LayersBackend::LAYERS_WR) {
+  if (aRenderer->GetBackendType() != LayersBackend::LAYERS_WR) {
     return MakeTuple(ImgDrawResult::NOT_SUPPORTED, IntSize(0, 0));
   }
 
@@ -827,8 +827,8 @@ VectorImage::IsImageContainerAvailable(LayerManager* aManager,
 
 //******************************************************************************
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
-VectorImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags) {
-  MOZ_ASSERT(aManager->GetBackendType() != LayersBackend::LAYERS_WR,
+VectorImage::GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) {
+  MOZ_ASSERT(aRenderer->GetBackendType() != LayersBackend::LAYERS_WR,
              "WebRender should always use GetImageContainerAvailableAtSize!");
   return nullptr;
 }
@@ -845,7 +845,7 @@ VectorImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 
 //******************************************************************************
 NS_IMETHODIMP_(ImgDrawResult)
-VectorImage::GetImageContainerAtSize(layers::LayerManager* aManager,
+VectorImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
                                      const gfx::IntSize& aSize,
                                      const Maybe<SVGImageContext>& aSVGContext,
                                      const Maybe<ImageIntRegion>& aRegion,
@@ -857,7 +857,7 @@ VectorImage::GetImageContainerAtSize(layers::LayerManager* aManager,
   // The aspect ratio flag was already handled as part of the SVG context
   // restriction above.
   uint32_t flags = aFlags & ~(FLAG_FORCE_PRESERVEASPECTRATIO_NONE);
-  auto rv = GetImageContainerImpl(aManager, aSize,
+  auto rv = GetImageContainerImpl(aRenderer, aSize,
                                   newSVGContext ? newSVGContext : aSVGContext,
                                   aRegion, flags, aOutContainer);
 

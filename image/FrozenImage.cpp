@@ -61,10 +61,9 @@ FrozenImage::IsImageContainerAvailable(LayerManager* aManager,
 }
 
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
-FrozenImage::GetImageContainer(layers::LayerManager* aManager,
-                               uint32_t aFlags) {
+FrozenImage::GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) {
   if (IsNonAnimated()) {
-    return InnerImage()->GetImageContainer(aManager, aFlags);
+    return InnerImage()->GetImageContainer(aRenderer, aFlags);
   }
   // XXX(seth): GetImageContainer does not currently support anything but the
   // current frame. We work around this by always returning null, but if it ever
@@ -86,7 +85,7 @@ FrozenImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
-FrozenImage::GetImageContainerAtSize(layers::LayerManager* aManager,
+FrozenImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
                                      const gfx::IntSize& aSize,
                                      const Maybe<SVGImageContext>& aSVGContext,
                                      const Maybe<ImageIntRegion>& aRegion,
@@ -94,7 +93,7 @@ FrozenImage::GetImageContainerAtSize(layers::LayerManager* aManager,
                                      layers::ImageContainer** aOutContainer) {
   if (IsNonAnimated()) {
     return InnerImage()->GetImageContainerAtSize(
-        aManager, aSize, aSVGContext, aRegion, aFlags, aOutContainer);
+        aRenderer, aSize, aSVGContext, aRegion, aFlags, aOutContainer);
   }
 
   // XXX(seth): GetImageContainer does not currently support anything but the
