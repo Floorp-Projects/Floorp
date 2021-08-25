@@ -260,6 +260,7 @@ def original_path():
 
 @depends(host, when="--enable-bootstrap")
 @imports("os")
+@imports("traceback")
 @imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
 @imports(_from="__builtin__", _import="Exception")
 def bootstrap_toolchain_tasks(host):
@@ -272,6 +273,8 @@ def bootstrap_toolchain_tasks(host):
     try:
         return namespace(prefix=prefix, tasks=toolchain_task_definitions())
     except Exception:
+        message = traceback.format_exc()
+        log.warning(message)
         return None
 
 
