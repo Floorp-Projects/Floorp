@@ -132,21 +132,34 @@ static MOZ_ALWAYS_INLINE Shape* GetPlainObjectShapeWithProto(
                                       TaggedProto(proto), nfixed);
 }
 
-static MOZ_ALWAYS_INLINE Shape* GetPlainObjectShapeWithDefaultProto(
+// static
+Shape* GlobalObject::createPlainObjectShapeWithDefaultProto(
     JSContext* cx, gc::AllocKind kind) {
+  PlainObjectSlotsKind slotsKind = PlainObjectSlotsKindFromAllocKind(kind);
+  HeapPtr<Shape*>& shapeRef =
+      cx->global()->data().plainObjectShapesWithDefaultProto[slotsKind];
+  MOZ_ASSERT(!shapeRef);
+
   JSObject* proto = GlobalObject::getOrCreatePrototype(cx, JSProto_Object);
   if (!proto) {
     return nullptr;
   }
 
-  return GetPlainObjectShapeWithProto(cx, proto, kind);
+  Shape* shape = GetPlainObjectShapeWithProto(cx, proto, kind);
+  if (!shape) {
+    return nullptr;
+  }
+
+  shapeRef.init(shape);
+  return shape;
 }
 
 PlainObject* js::NewPlainObject(JSContext* cx, NewObjectKind newKind) {
   constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT0;
   MOZ_ASSERT(gc::GetGCObjectKind(&PlainObject::class_) == allocKind);
 
-  RootedShape shape(cx, GetPlainObjectShapeWithDefaultProto(cx, allocKind));
+  RootedShape shape(
+      cx, GlobalObject::getPlainObjectShapeWithDefaultProto(cx, allocKind));
   if (!shape) {
     return nullptr;
   }
@@ -157,7 +170,8 @@ PlainObject* js::NewPlainObject(JSContext* cx, NewObjectKind newKind) {
 PlainObject* js::NewPlainObjectWithAllocKind(JSContext* cx,
                                              gc::AllocKind allocKind,
                                              NewObjectKind newKind) {
-  RootedShape shape(cx, GetPlainObjectShapeWithDefaultProto(cx, allocKind));
+  RootedShape shape(
+      cx, GlobalObject::getPlainObjectShapeWithDefaultProto(cx, allocKind));
   if (!shape) {
     return nullptr;
   }
@@ -167,6 +181,7 @@ PlainObject* js::NewPlainObjectWithAllocKind(JSContext* cx,
 
 PlainObject* js::NewPlainObjectWithProto(JSContext* cx, HandleObject proto,
                                          NewObjectKind newKind) {
+  // Use a faster path if |proto| is %Object.prototype% (the common case).
   if (proto && proto == cx->global()->maybeGetPrototype(JSProto_Object)) {
     return NewPlainObject(cx, newKind);
   }
@@ -186,6 +201,7 @@ PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
                                                      HandleObject proto,
                                                      gc::AllocKind allocKind,
                                                      NewObjectKind newKind) {
+  // Use a faster path if |proto| is %Object.prototype% (the common case).
   if (proto && proto == cx->global()->maybeGetPrototype(JSProto_Object)) {
     return NewPlainObjectWithAllocKind(cx, allocKind, newKind);
   }

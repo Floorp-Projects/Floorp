@@ -1192,6 +1192,10 @@ void GlobalObjectData::trace(JSTracer* trc) {
 
   TraceNullableEdge(trc, &arrayShapeWithDefaultProto, "global-array-shape");
 
+  for (auto& shape : plainObjectShapesWithDefaultProto) {
+    TraceNullableEdge(trc, &shape, "global-plain-shape");
+  }
+
   if (regExpStatics) {
     regExpStatics->trace(trc);
   }
