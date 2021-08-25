@@ -232,9 +232,6 @@ windows-tests:
     - marionette
     - mochitest-chrome
     - telemetry-tests-client
-    - test-verify
-    - test-verify-gpu
-    - test-verify-wpt
 
 windows-ccov-tests:
     # jittest run on regular windows builds is redundant with SM(p), so we omit
@@ -263,6 +260,9 @@ windows10-2004-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
+    - test-verify
+    - test-verify-gpu
+    - test-verify-wpt
     - xpcshell
 
 windows10-64-2004-failure-tests:
