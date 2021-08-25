@@ -27,8 +27,7 @@
     async function runTests() {
       // Register our observer to know when the link lookup is complete.
       let testURI = NetUtil.newURI(getHttpUrl("bug293235_p2.html"));
-      let os = Cc["@mozilla.org/observer-service;1"].
-               getService(Ci.nsIObserverService);
+      let os = SpecialPowers.Services.obs;
       // Load a test page containing a link that should be initially
       // blue, per the :link style.
       await new Promise(resolve => {

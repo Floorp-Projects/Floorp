@@ -40,11 +40,9 @@
       // Change the data for each of the form fields, and reload.
       $("text").value = "text value";
       $("checkbox").checked = true;
-      var file = Cc["@mozilla.org/file/directory_service;1"]
-             .getService(Ci.nsIProperties)
-             .get("TmpD", Ci.nsIFile);
+      var file = SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
       file.append("294258_test.file");
-      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
       let filePath = file.path;
       $("file").value = filePath;
       $("textarea").value = "textarea value";

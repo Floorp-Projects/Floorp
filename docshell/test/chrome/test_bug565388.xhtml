@@ -42,19 +42,15 @@ function test() {
       }
     },
 
-    QueryInterface(iid) {
-      if (iid.equals(Ci.nsIWebProgressListener) ||
-          iid.equals(Ci.nsISupportsWeakReference))
-        return this;
-      throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-    }
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIWebProgressListener",
+      "nsISupportsWeakReference",
+    ]),
   }
 
   var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
                           .getService(Ci.nsIPrincipal);
-  var webNav = Cc["@mozilla.org/appshell/appShellService;1"]
-                 .getService(Ci.nsIAppShellService)
-                 .createWindowlessBrowser(true);
+  var webNav = SpecialPowers.Services.appShell.createWindowlessBrowser(true);
   var docShell = webNav.docShell;
   docShell.createAboutBlankContentViewer(systemPrincipal, systemPrincipal);
   var win = docShell.contentViewer.DOMDocument.defaultView;

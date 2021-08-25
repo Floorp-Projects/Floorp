@@ -60,16 +60,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
         this.finish(false);
     },
 
-    QueryInterface(iid) {
-      if (iid.equals(Ci.nsIWebProgressListener) ||
-          iid.equals(Ci.nsISupportsWeakReference))
-        return this;
-      throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-    }
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIWebProgressListener",
+      "nsISupportsWeakReference",
+    ]),
   }
 
-  var webNav = Cc["@mozilla.org/appshell/appShellService;1"].
-      getService(Ci.nsIAppShellService).createWindowlessBrowser(true);
+  var webNav = SpecialPowers.Services.appShell.createWindowlessBrowser(true);
   let docShell = webNav.docShell;
   let system = Cc["@mozilla.org/systemprincipal;1"].getService(Ci.nsIPrincipal);
   docShell.createAboutBlankContentViewer(system, system);
