@@ -342,6 +342,9 @@ class LookAndFeel {
     /** The horizontal scrollbar height, in CSS pixels. */
     SystemHorizontalScrollbarHeight,
 
+    /** A boolean value to determine whether a touch device is present */
+    TouchDeviceSupportPresent,
+
     /*
      * Not an ID; used to define the range of valid IDs.  Must be last.
      */

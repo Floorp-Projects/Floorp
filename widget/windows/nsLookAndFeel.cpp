@@ -591,6 +591,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
           static_cast<int32_t>(widget::WinUtils::GetAllPointerCapabilities());
       break;
     }
+    case IntID::TouchDeviceSupportPresent:
+      aResult = WinUtils::IsTouchDeviceSupportPresent() ? 1 : 0;
+      break;
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;
