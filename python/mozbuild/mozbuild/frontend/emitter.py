@@ -649,8 +649,6 @@ class TreeMetadataEmitter(LoggingMixin):
         host_linkables = []
         wasm_linkables = []
 
-        unified_build = context.config.substs.get("ENABLE_UNIFIED_BUILD", False)
-
         def add_program(prog, var):
             if var.startswith("HOST_"):
                 host_linkables.append(prog)
@@ -1131,13 +1129,7 @@ class TreeMetadataEmitter(LoggingMixin):
                         self._asm_compile_dirs.add(context.objdir)
                     arglist = [context, list(files), canonical_suffix]
                     if variable.startswith("UNIFIED_"):
-                        if (
-                            unified_build is False
-                            and context.get("REQUIRES_UNIFIED_BUILD", False) is False
-                        ):
-                            arglist.append(1)
-                        else:
-                            arglist.append(context.get("FILES_PER_UNIFIED_FILE", 16))
+                        arglist.append(context.get("FILES_PER_UNIFIED_FILE", 16))
                     obj = cls(*arglist)
                     srcs = list(obj.files)
                     if isinstance(obj, UnifiedSources) and obj.have_unified_mapping:
