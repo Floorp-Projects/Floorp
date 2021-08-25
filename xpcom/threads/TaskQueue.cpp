@@ -59,7 +59,7 @@ nsresult TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
   }
 
   LogRunnable::LogDispatch(aRunnable);
-  mTasks.push({std::move(aRunnable), aFlags});
+  mTasks.Push({std::move(aRunnable), aFlags});
 
   if (mIsRunning) {
     return NS_OK;
@@ -87,7 +87,7 @@ void TaskQueue::AwaitIdleLocked() {
                 !AbstractThread::GetCurrent()->HasTailTasksFor(this));
 
   mQueueMonitor.AssertCurrentThreadOwns();
-  MOZ_ASSERT(mIsRunning || mTasks.empty());
+  MOZ_ASSERT(mIsRunning || mTasks.IsEmpty());
   while (mIsRunning) {
     mQueueMonitor.Wait();
   }
@@ -170,7 +170,7 @@ RefPtr<ShutdownPromise> TaskQueue::BeginShutdown() {
 
 bool TaskQueue::IsEmpty() {
   MonitorAutoLock mon(mQueueMonitor);
-  return mTasks.empty();
+  return mTasks.IsEmpty();
 }
 
 bool TaskQueue::IsCurrentThreadIn() const {
@@ -183,14 +183,14 @@ nsresult TaskQueue::Runner::Run() {
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     MOZ_ASSERT(mQueue->mIsRunning);
-    if (mQueue->mTasks.empty()) {
+    if (mQueue->mTasks.IsEmpty()) {
       mQueue->mIsRunning = false;
       mQueue->MaybeResolveShutdown();
       mon.NotifyAll();
       return NS_OK;
     }
-    event = std::move(mQueue->mTasks.front());
-    mQueue->mTasks.pop();
+    event = std::move(mQueue->mTasks.FirstElement());
+    mQueue->mTasks.Pop();
   }
   MOZ_ASSERT(event.event);
 
@@ -218,7 +218,7 @@ nsresult TaskQueue::Runner::Run() {
 
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
-    if (mQueue->mTasks.empty()) {
+    if (mQueue->mTasks.IsEmpty()) {
       // No more events to run. Exit the task runner.
       mQueue->mIsRunning = false;
       mQueue->MaybeResolveShutdown();
@@ -236,7 +236,7 @@ nsresult TaskQueue::Runner::Run() {
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     rv = mQueue->mTarget->Dispatch(
-        this, mQueue->mTasks.front().flags | NS_DISPATCH_AT_END);
+        this, mQueue->mTasks.FirstElement().flags | NS_DISPATCH_AT_END);
   }
   if (NS_FAILED(rv)) {
     // Failed to dispatch, shutdown!
