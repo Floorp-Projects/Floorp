@@ -160,7 +160,7 @@ class WindowGlobalParent final : public WindowContext,
 
   already_AddRefed<mozilla::dom::Promise> DrawSnapshot(
       const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
-      mozilla::ErrorResult& aRv);
+      bool aResetScrollPosition, mozilla::ErrorResult& aRv);
 
   already_AddRefed<Promise> GetSecurityInfo(ErrorResult& aRv);
 
