@@ -285,6 +285,7 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
 #if defined(ANDROID)
   return NS_ERROR_FAILURE;
 #endif
+
   bool usePrefDir =
       StaticPrefs::browser_download_improvements_to_download_panel();
 #ifdef XP_MACOSX
@@ -325,31 +326,85 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
         // This is just the OS default location, so fall out
         break;
     }
-  }
-
-  if (!dir) {
-#ifdef XP_MACOSX
-    // Default to the OS X default download location.
-    rv = NS_GetSpecialDirectory(NS_OSX_DEFAULT_DOWNLOAD_DIR,
-                                getter_AddRefs(dir));
-#elif defined(XP_WIN)
-    rv = NS_GetSpecialDirectory(
-        StaticPrefs::browser_download_improvements_to_download_panel()
-            ? NS_WIN_DEFAULT_DOWNLOAD_DIR
-            : NS_OS_TEMP_DIR,
-        getter_AddRefs(dir));
-#elif defined(XP_UNIX)
-    rv = NS_GetSpecialDirectory(
-        StaticPrefs::browser_download_improvements_to_download_panel()
-            ? NS_UNIX_DEFAULT_DOWNLOAD_DIR
-            : NS_OS_TEMP_DIR,
-        getter_AddRefs(dir));
-#else
-    // On all other platforms, we default to the systems temporary directory.
+    if (!dir) {
+      rv = NS_GetSpecialDirectory(NS_OS_DEFAULT_DOWNLOAD_DIR,
+                                  getter_AddRefs(dir));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  } else {
     rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
-#endif
-
     NS_ENSURE_SUCCESS(rv, rv);
+
+#if !defined(XP_MACOSX) && defined(XP_UNIX)
+    // Ensuring that only the current user can read the file names we end up
+    // creating. Note that creating directories with a specified permission is
+    // only supported on Unix platform right now. That's why the above check
+    // exists.
+
+    uint32_t permissions;
+    rv = dir->GetPermissions(&permissions);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (permissions != PR_IRWXU) {
+      const char* userName = PR_GetEnv("USERNAME");
+      if (!userName || !*userName) {
+        userName = PR_GetEnv("USER");
+      }
+      if (!userName || !*userName) {
+        userName = PR_GetEnv("LOGNAME");
+      }
+      if (!userName || !*userName) {
+        userName = "mozillaUser";
+      }
+
+      nsAutoString userDir;
+      userDir.AssignLiteral("mozilla_");
+      userDir.AppendASCII(userName);
+      userDir.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
+
+      int counter = 0;
+      bool pathExists;
+      nsCOMPtr<nsIFile> finalPath;
+
+      while (true) {
+        nsAutoString countedUserDir(userDir);
+        countedUserDir.AppendInt(counter, 10);
+        dir->Clone(getter_AddRefs(finalPath));
+        finalPath->Append(countedUserDir);
+
+        rv = finalPath->Exists(&pathExists);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (pathExists) {
+          // If this path has the right permissions, use it.
+          rv = finalPath->GetPermissions(&permissions);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // Ensuring the path is writable by the current user.
+          bool isWritable;
+          rv = finalPath->IsWritable(&isWritable);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          if (permissions == PR_IRWXU && isWritable) {
+            dir = finalPath;
+            break;
+          }
+        }
+
+        rv = finalPath->Create(nsIFile::DIRECTORY_TYPE, PR_IRWXU);
+        if (NS_SUCCEEDED(rv)) {
+          dir = finalPath;
+          break;
+        }
+        if (rv != NS_ERROR_FILE_ALREADY_EXISTS) {
+          // Unexpected error.
+          return rv;
+        }
+        counter++;
+      }
+    }
+
+#endif
   }
 
   NS_ASSERTION(dir, "Somehow we didn't get a download directory!");

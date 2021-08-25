@@ -34,6 +34,8 @@
  */
 #define NS_OS_DESKTOP_DIR "Desk"
 
+#define NS_OS_DEFAULT_DOWNLOAD_DIR "DfltDwnld"
+
 /* Property returns the directory in which the procces was started from.
  */
 #define NS_OS_CURRENT_PROCESS_DIR "CurProcD"
@@ -71,7 +73,6 @@
 
 #if defined(MOZ_WIDGET_COCOA)
 #  define NS_MAC_USER_LIB_DIR "ULibDir"
-#  define NS_OSX_DEFAULT_DOWNLOAD_DIR "DfltDwnld"
 #  define NS_OSX_LOCAL_APPLICATIONS_DIR "LocApp"
 #  define NS_OSX_USER_PREFERENCES_DIR "UsrPrfs"
 #  define NS_OSX_PICTURE_DOCUMENTS_DIR "Pct"
@@ -88,10 +89,8 @@
 #    define NS_WIN_LOW_INTEGRITY_TEMP_BASE "LowTmpDBase"
 #  endif
 #  define NS_WIN_COOKIES_DIR "CookD"
-#  define NS_WIN_DEFAULT_DOWNLOAD_DIR "DfltDwnld"
 #elif defined(XP_UNIX)
 #  define NS_UNIX_HOME_DIR NS_OS_HOME_DIR
-#  define NS_UNIX_DEFAULT_DOWNLOAD_DIR "DfltDwnld"
 #endif
 
 #endif
