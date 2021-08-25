@@ -406,12 +406,6 @@ class LayerManager : public WindowRenderer {
   }
 
   /**
-   * returns the maximum texture size on this layer backend, or INT32_MAX
-   * if there is no maximum
-   */
-  virtual int32_t GetMaxTextureSize() const = 0;
-
-  /**
    * This setter can be used anytime. The user data for all keys is
    * initially null. Ownership pases to the layer manager.
    */

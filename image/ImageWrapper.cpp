@@ -172,8 +172,8 @@ ImageWrapper::IsImageContainerAvailable(LayerManager* aManager,
 }
 
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
-ImageWrapper::GetImageContainer(LayerManager* aManager, uint32_t aFlags) {
-  return mInnerImage->GetImageContainer(aManager, aFlags);
+ImageWrapper::GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) {
+  return mInnerImage->GetImageContainer(aRenderer, aFlags);
 }
 
 NS_IMETHODIMP_(bool)
@@ -184,13 +184,13 @@ ImageWrapper::IsImageContainerAvailableAtSize(LayerManager* aManager,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
-ImageWrapper::GetImageContainerAtSize(layers::LayerManager* aManager,
+ImageWrapper::GetImageContainerAtSize(WindowRenderer* aRenderer,
                                       const gfx::IntSize& aSize,
                                       const Maybe<SVGImageContext>& aSVGContext,
                                       const Maybe<ImageIntRegion>& aRegion,
                                       uint32_t aFlags,
                                       layers::ImageContainer** aOutContainer) {
-  return mInnerImage->GetImageContainerAtSize(aManager, aSize, aSVGContext,
+  return mInnerImage->GetImageContainerAtSize(aRenderer, aSize, aSVGContext,
                                               aRegion, aFlags, aOutContainer);
 }
 

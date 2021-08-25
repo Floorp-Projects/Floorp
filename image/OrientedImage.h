@@ -41,14 +41,13 @@ class OrientedImage : public ImageWrapper {
   IsImageContainerAvailable(layers::LayerManager* aManager,
                             uint32_t aFlags) override;
   NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
-  GetImageContainer(layers::LayerManager* aManager, uint32_t aFlags) override;
+  GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) override;
   NS_IMETHOD_(bool)
   IsImageContainerAvailableAtSize(layers::LayerManager* aManager,
                                   const gfx::IntSize& aSize,
                                   uint32_t aFlags) override;
   NS_IMETHOD_(ImgDrawResult)
-  GetImageContainerAtSize(layers::LayerManager* aManager,
-                          const gfx::IntSize& aSize,
+  GetImageContainerAtSize(WindowRenderer* aRenderer, const gfx::IntSize& aSize,
                           const Maybe<SVGImageContext>& aSVGContext,
                           const Maybe<ImageIntRegion>& aRegion, uint32_t aFlags,
                           layers::ImageContainer** aOutContainer) override;

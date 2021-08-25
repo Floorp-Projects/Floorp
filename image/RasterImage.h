@@ -322,7 +322,7 @@ class RasterImage final : public ImageResource,
                    uint32_t aFlags) override;
 
   Tuple<ImgDrawResult, gfx::IntSize> GetImageContainerSize(
-      layers::LayerManager* aManager, const gfx::IntSize& aSize,
+      WindowRenderer* aRenderer, const gfx::IntSize& aSize,
       uint32_t aFlags) override;
 
   //////////////////////////////////////////////////////////////////////////////

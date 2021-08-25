@@ -171,7 +171,7 @@ DynamicImage::IsImageContainerAvailable(LayerManager* aManager,
 }
 
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
-DynamicImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags) {
+DynamicImage::GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) {
   return nullptr;
 }
 
@@ -183,7 +183,7 @@ DynamicImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
-DynamicImage::GetImageContainerAtSize(layers::LayerManager* aManager,
+DynamicImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
                                       const gfx::IntSize& aSize,
                                       const Maybe<SVGImageContext>& aSVGContext,
                                       const Maybe<ImageIntRegion>& aRegion,
