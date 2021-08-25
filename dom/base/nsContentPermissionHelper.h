@@ -60,7 +60,11 @@ class nsContentPermissionUtils {
   static uint32_t ConvertPermissionRequestToArray(
       nsTArray<PermissionRequest>& aSrcArray, nsIMutableArray* aDesArray);
 
-  static uint32_t ConvertArrayToPermissionRequest(
+  // Converts blindly, that is, strings are not matched against any list.
+  //
+  // @param aSrcArray needs to contain elements of type
+  // `nsIContentPermissionType`.
+  static void ConvertArrayToPermissionRequest(
       nsIArray* aSrcArray, nsTArray<PermissionRequest>& aDesArray);
 
   static nsresult CreatePermissionArray(const nsACString& aType,
