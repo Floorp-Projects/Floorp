@@ -43,6 +43,7 @@ class CrossProcessPaint;
 enum class CrossProcessPaintFlags {
   None = 0,
   DrawView = 1 << 1,
+  ResetScrollPosition = 1 << 2,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CrossProcessPaintFlags)

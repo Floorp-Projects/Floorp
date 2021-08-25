@@ -132,8 +132,20 @@ class TabBase {
     let scale = options?.scale || win.devicePixelRatio;
     let rect = options?.rect && win.DOMRect.fromRect(options.rect);
 
+    // We only allow mozilla addons to use the resetScrollPosition option,
+    // since it's not standardized.
+    let resetScrollPosition = false;
+    if (!context.extension.restrictSchemes) {
+      resetScrollPosition = !!options?.resetScrollPosition;
+    }
+
     let wgp = this.browsingContext.currentWindowGlobal;
-    let image = await wgp.drawSnapshot(rect, scale * zoom, "white");
+    let image = await wgp.drawSnapshot(
+      rect,
+      scale * zoom,
+      "white",
+      resetScrollPosition
+    );
 
     let doc = Services.appShell.hiddenDOMWindow.document;
     let canvas = doc.createElement("canvas");

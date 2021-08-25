@@ -1612,13 +1612,14 @@ class SpecialPowersChild extends JSWindowActorChild {
     });
   }
 
-  snapshotContext(target, rect, background) {
+  snapshotContext(target, rect, background, resetScrollPosition = false) {
     let browsingContext = this._browsingContextForTarget(target);
 
     return this.sendQuery("Snapshot", {
       browsingContext,
       rect,
       background,
+      resetScrollPosition,
     }).then(imageData => {
       return this.contentWindow.createImageBitmap(imageData);
     });
