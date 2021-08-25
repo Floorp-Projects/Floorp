@@ -272,7 +272,6 @@ if CONFIG["MOZ_X11"]:
     ]
     SOURCES += [
         "basic/TextureClientX11.cpp",
-        "basic/X11BasicCompositor.cpp",
         "basic/X11TextureSourceBasic.cpp",
         "composite/X11TextureHost.cpp",
         "ipc/ShadowLayerUtilsX11.cpp",
