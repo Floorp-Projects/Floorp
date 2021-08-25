@@ -5512,8 +5512,6 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
                                      StackCaptureOptions aCaptureOptions) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock;
-
   if (!profiler_is_active() ||
       aCaptureOptions == StackCaptureOptions::NoStack) {
     return false;
