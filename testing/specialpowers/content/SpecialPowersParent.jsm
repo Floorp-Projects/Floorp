@@ -1246,10 +1246,15 @@ class SpecialPowersParent extends JSWindowActorParent {
         }
 
         case "Snapshot": {
-          let { browsingContext, rect, background } = aMessage.data;
+          let {
+            browsingContext,
+            rect,
+            background,
+            resetScrollPosition,
+          } = aMessage.data;
 
           return browsingContext.currentWindowGlobal
-            .drawSnapshot(rect, 1.0, background)
+            .drawSnapshot(rect, 1.0, background, resetScrollPosition)
             .then(async image => {
               let hiddenFrame = new HiddenFrame();
               let win = await hiddenFrame.get();

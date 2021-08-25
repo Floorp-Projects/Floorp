@@ -43,7 +43,7 @@
     // be visually in the middle of the root scroll frame, but should still be at the
     // top of the snapshot (since snapshots with a rect are taken relative to the document).
     var rect = new window.DOMRect(0, 0, 500, 2000);
-    let image = await SpecialPowers.snapshotContext(window, rect, "rgb(255, 255, 255)");
+    let image = await SpecialPowers.snapshotContext(window, rect, "rgb(255, 255, 255)", true);
     testWrapCx.drawImage(image, 0, 0);
 
     var refCanvas = make_canvas();
