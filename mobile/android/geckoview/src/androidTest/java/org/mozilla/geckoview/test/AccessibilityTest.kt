@@ -1179,7 +1179,7 @@ class AccessibilityTest : BaseSessionTest() {
                                id: Int = View.NO_ID): Int {
             val info = createNodeInfo(id)
             return (if (cond(info) && info.className != "android.webkit.WebView" ) 1 else 0) + (if (info.childCount > 0)
-                (0 until info.childCount).sumBy {
+                (0 until info.childCount).sumOf {
                     countAutoFillNodes(cond, info.getChildId(it))
                 } else 0)
         }
