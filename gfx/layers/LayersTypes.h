@@ -23,7 +23,12 @@
 #endif
 #define MOZ_LAYERS_LOG(_args) \
   MOZ_LOG(LayerManager::GetLog(), LogLevel::Debug, _args)
-#define MOZ_LAYERS_LOG_IF_SHADOWABLE(layer, _args)
+#define MOZ_LAYERS_LOG_IF_SHADOWABLE(layer, _args)             \
+  do {                                                         \
+    if (layer->AsShadowableLayer()) {                          \
+      MOZ_LOG(LayerManager::GetLog(), LogLevel::Debug, _args); \
+    }                                                          \
+  } while (0)
 
 #define INVALID_OVERLAY -1
 
