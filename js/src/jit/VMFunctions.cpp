@@ -157,6 +157,10 @@ struct TypeToDataType<HandleString> {
   static const DataType result = Type_Handle;
 };
 template <>
+struct TypeToDataType<HandleAtom> {
+  static const DataType result = Type_Handle;
+};
+template <>
 struct TypeToDataType<HandlePropertyName> {
   static const DataType result = Type_Handle;
 };
@@ -246,6 +250,11 @@ template <>
 struct TypeToArgProperties<HandleString> {
   static const uint32_t result =
       TypeToArgProperties<JSString*>::result | VMFunctionData::ByRef;
+};
+template <>
+struct TypeToArgProperties<HandleAtom> {
+  static const uint32_t result =
+      TypeToArgProperties<JSAtom*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandlePropertyName> {
@@ -367,6 +376,10 @@ struct TypeToRootType<HandleObject> {
 };
 template <>
 struct TypeToRootType<HandleString> {
+  static const uint32_t result = VMFunctionData::RootString;
+};
+template <>
+struct TypeToRootType<HandleAtom> {
   static const uint32_t result = VMFunctionData::RootString;
 };
 template <>
