@@ -4047,14 +4047,23 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 return method
 
             if dispatches:
+                if hasReply:
+                    ondeadactor = [StmtReturn(_Result.RouteError)]
+                else:
+                    ondeadactor = [
+                        self.logMessage(
+                            None, ExprAddrOf(msgvar), "Ignored message for dead actor"
+                        ),
+                        StmtReturn(_Result.Processed),
+                    ]
+
                 method.addcode(
                     """
                     int32_t route__ = ${msgvar}.routing_id();
                     if (MSG_ROUTING_CONTROL != route__) {
                         IProtocol* routed__ = Lookup(route__);
                         if (!routed__ || !routed__->GetLifecycleProxy()) {
-                            ${logignored}
-                            return MsgProcessed;
+                            $*{ondeadactor}
                         }
 
                         RefPtr<mozilla::ipc::ActorLifecycleProxy> proxy__ =
@@ -4064,9 +4073,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                     """,
                     msgvar=msgvar,
-                    logignored=self.logMessage(
-                        None, ExprAddrOf(msgvar), "Ignored message for dead actor"
-                    ),
+                    ondeadactor=ondeadactor,
                     name=name,
                     args=[p.name for p in params],
                 )
