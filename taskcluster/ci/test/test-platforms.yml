@@ -167,7 +167,6 @@ windows10-64-ccov-qr/opt:
     build-platform: win64-ccov/opt
     test-sets:
         - desktop-screenshot-capture
-        - windows-tests
         - windows-ccov-tests
         - windows10-tests
         - ccov-code-coverage-tests
@@ -177,14 +176,12 @@ windows10-64-ccov-qr/opt:
 windows10-64-qr/debug:
     build-platform: win64/debug
     test-sets:
-        - windows-tests
         - windows10-tests
 
 windows10-64-qr/opt:
     build-platform: win64/opt
     test-sets:
         - windows-talos
-        - windows-tests
         - windows10-tests
         - raptor-firefox
         - browsertime
@@ -205,7 +202,6 @@ windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
         - windows-talos
-        - windows-tests
         - windows10-tests
         - raptor-chrome
         - raptor-firefox
@@ -214,13 +210,11 @@ windows10-64-shippable-qr/opt:
 windows10-64-devedition-qr/opt:
     build-platform: win64-devedition/opt
     test-sets:
-        - windows-tests
         - windows10-tests
 
 windows10-64-asan-qr/opt:
     build-platform: win64-asan/opt
     test-sets:
-        - windows-tests
         - windows10-tests
 
 windows10-64-mingwclang-qr/debug:
