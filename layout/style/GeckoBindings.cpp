@@ -51,7 +51,6 @@
 #include "mozilla/Keyframe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ShadowParts.h"
 #include "mozilla/StaticPresData.h"
@@ -1559,18 +1558,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet* aPropertySet,
   void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr) {               \
     ptr->~nsStyle##name();                                             \
   }
-
-void Gecko_Construct_AutoProfilerLabel(AutoProfilerLabel* aAutoLabel,
-                                       JS::ProfilingCategoryPair aCatPair) {
-  new (aAutoLabel) AutoProfilerLabel(
-      "", nullptr, aCatPair,
-      uint32_t(
-          js::ProfilingStackFrame::Flags::LABEL_DETERMINED_BY_CATEGORY_PAIR));
-}
-
-void Gecko_Destroy_AutoProfilerLabel(AutoProfilerLabel* aAutoLabel) {
-  aAutoLabel->~AutoProfilerLabel();
-}
 
 bool Gecko_DocumentRule_UseForPresentation(
     const Document* aDocument, const nsACString* aPattern,
