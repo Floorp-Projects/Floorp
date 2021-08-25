@@ -42,13 +42,6 @@ class gfxPlatformGtk final : public gfxPlatform {
   static int32_t GetFontScaleDPI();
   static double GetFontScaleFactor();
 
-#ifdef MOZ_X11
-  void GetAzureBackendInfo(mozilla::widget::InfoObject& aObj) override {
-    gfxPlatform::GetAzureBackendInfo(aObj);
-    aObj.DefineProperty("CairoUseXRender", mozilla::gfx::gfxVars::UseXRender());
-  }
-#endif
-
   bool UseImageOffscreenSurfaces();
 
   gfxImageFormat GetOffscreenFormat() override;
