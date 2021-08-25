@@ -32,11 +32,6 @@
   background-color: GrayText;
 }
 
-.downloadProgress:not([value="0"])::-moz-progress-bar {
-  margin: -1px;
-  height: 8px;
-}
-
 .downloadProgress:indeterminate::-moz-progress-bar {
   width: calc(100% + 2px);
   /* Make a white reflecting animation.
