@@ -122,8 +122,10 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
   RenderDocumentFlags renderDocFlags = RenderDocumentFlags::None;
   if (!(aFlags & CrossProcessPaintFlags::DrawView)) {
     renderDocFlags = (RenderDocumentFlags::IgnoreViewportScrolling |
-                      RenderDocumentFlags::ResetViewportScrolling |
                       RenderDocumentFlags::DocumentRelative);
+    if (aFlags & CrossProcessPaintFlags::ResetScrollPosition) {
+      renderDocFlags |= RenderDocumentFlags::ResetViewportScrolling;
+    }
   }
 
   // Perform the actual rendering

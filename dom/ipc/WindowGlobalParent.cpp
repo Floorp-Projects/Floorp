@@ -930,7 +930,7 @@ void WindowGlobalParent::PermitUnload(std::function<void(bool)>&& aResolver) {
 
 already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
     const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
-    mozilla::ErrorResult& aRv) {
+    bool aResetScrollPosition, mozilla::ErrorResult& aRv) {
   nsIGlobalObject* global = GetParentObject();
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -949,6 +949,8 @@ already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
   if (!aRect) {
     // If no explicit Rect was passed, we want the currently visible viewport.
     flags = gfx::CrossProcessPaintFlags::DrawView;
+  } else if (aResetScrollPosition) {
+    flags = gfx::CrossProcessPaintFlags::ResetScrollPosition;
   }
 
   if (!gfx::CrossProcessPaint::Start(this, aRect, (float)aScale, color, flags,
