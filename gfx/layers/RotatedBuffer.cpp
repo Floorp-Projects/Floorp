@@ -11,9 +11,7 @@
 #include <algorithm>  // for max
 #include <utility>    // for Move
 
-#include "BasicImplData.h"    // for BasicImplData
-#include "BasicLayersImpl.h"  // for ToData
-#include "Layers.h"           // for PaintedLayer, Layer, etc
+#include "Layers.h"  // for PaintedLayer, Layer, etc
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"         // for gfxPlatform
 #include "gfxUtils.h"            // for gfxUtils
@@ -201,36 +199,6 @@ static bool IsClippingCheap(gfx::DrawTarget* aTarget,
   // translation, and the visible region is simple.
   return !aTarget->GetTransform().HasNonIntegerTranslation() &&
          aRegion.GetNumRects() <= 1;
-}
-
-void RotatedBuffer::DrawTo(PaintedLayer* aLayer, DrawTarget* aTarget,
-                           float aOpacity, CompositionOp aOp,
-                           SourceSurface* aMask, const Matrix* aMaskTransform) {
-  bool clipped = false;
-
-  // If the entire buffer is valid, we can just draw the whole thing,
-  // no need to clip. But we'll still clip if clipping is cheap ---
-  // that might let us copy a smaller region of the buffer.
-  // Also clip to the visible region if we're told to.
-  if (!aLayer->GetValidRegion().Contains(BufferRect()) ||
-      (ToData(aLayer)->GetClipToVisibleRegion() &&
-       !aLayer->GetVisibleRegion().ToUnknownRegion().Contains(BufferRect())) ||
-      IsClippingCheap(aTarget,
-                      aLayer->GetLocalVisibleRegion().ToUnknownRegion())) {
-    // We don't want to draw invalid stuff, so we need to clip. Might as
-    // well clip to the smallest area possible --- the visible region.
-    // Bug 599189 if there is a non-integer-translation transform in aTarget,
-    // we might sample pixels outside GetLocalVisibleRegion(), which is wrong
-    // and may cause gray lines.
-    gfxUtils::ClipToRegion(aTarget,
-                           aLayer->GetLocalVisibleRegion().ToUnknownRegion());
-    clipped = true;
-  }
-
-  DrawBufferWithRotation(aTarget, aOpacity, aOp, aMask, aMaskTransform);
-  if (clipped) {
-    aTarget->PopClip();
-  }
 }
 
 void RotatedBuffer::UpdateDestinationFrom(const RotatedBuffer& aSource,

@@ -9,7 +9,6 @@
 
 #include <utility>
 
-#include "BasicLayers.h"
 #include "GLConsts.h"
 #include "InputData.h"
 #include "LiveResizeListener.h"
@@ -432,13 +431,6 @@ void nsBaseWidget::FreeLocalesChangedObserver() {
 
 nsBaseWidget::~nsBaseWidget() {
   IMEStateManager::WidgetDestroyed(this);
-
-  if (mWindowRenderer && mWindowRenderer->AsLayerManager()) {
-    if (BasicLayerManager* mgr =
-            mWindowRenderer->AsLayerManager()->AsBasicLayerManager()) {
-      mgr->ClearRetainerWidget();
-    }
-  }
 
   FreeLocalesChangedObserver();
   FreeShutdownObserver();
@@ -885,28 +877,10 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
   if (renderer->AsFallback()) {
     mRenderer = renderer->AsFallback();
     mRenderer->SetTarget(aTarget, aDoubleBuffering);
-    return;
-  }
-  LayerManager* lm = renderer ? renderer->AsLayerManager() : nullptr;
-  NS_ASSERTION(
-      !lm || lm->GetBackendType() == LayersBackend::LAYERS_BASIC,
-      "AutoLayerManagerSetup instantiated for non-basic layer backend!");
-  if (lm) {
-    mLayerManager = lm->AsBasicLayerManager();
-    if (mLayerManager) {
-      mLayerManager->SetDefaultTarget(aTarget);
-      mLayerManager->SetDefaultTargetConfiguration(aDoubleBuffering,
-                                                   ROTATION_0);
-    }
   }
 }
 
 nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup() {
-  if (mLayerManager) {
-    mLayerManager->SetDefaultTarget(nullptr);
-    mLayerManager->SetDefaultTargetConfiguration(
-        mozilla::layers::BufferMode::BUFFER_NONE, ROTATION_0);
-  }
   if (mRenderer) {
     mRenderer->SetTarget(nullptr, mozilla::layers::BufferMode::BUFFER_NONE);
   }

@@ -54,7 +54,6 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "imgIContainer.h"
-#include "BasicLayers.h"
 #include "nsBoxFrame.h"
 #include "nsImageFrame.h"
 #include "nsSubDocumentFrame.h"
