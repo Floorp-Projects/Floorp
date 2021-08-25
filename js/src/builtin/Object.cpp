@@ -1160,7 +1160,7 @@ PlainObject* js::ObjectCreateImpl(JSContext* cx, HandleObject proto,
                                   NewObjectKind newKind) {
   // Give the new object a small number of fixed slots, like we do for empty
   // object literals ({}).
-  gc::AllocKind allocKind = GuessObjectGCKind(0);
+  gc::AllocKind allocKind = NewObjectGCKind();
   return NewPlainObjectWithProtoAndAllocKind(cx, proto, allocKind, newKind);
 }
 
