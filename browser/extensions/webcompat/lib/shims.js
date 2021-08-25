@@ -40,6 +40,7 @@ class Shim {
 
     this.branches = opts.branches;
     this.bug = opts.bug;
+    this.isGoogleTrendsDFPIFix = opts.custom == "google-trends-dfpi-fix";
     this.file = opts.file;
     this.hosts = opts.hosts;
     this.id = opts.id;
@@ -48,6 +49,7 @@ class Shim {
     this.name = opts.name;
     this.notHosts = opts.notHosts;
     this.onlyIfBlockedByETP = opts.onlyIfBlockedByETP;
+    this.onlyIfDFPIActive = opts.onlyIfDFPIActive;
     this._options = opts.options || {};
     this.needsShimHelpers = opts.needsShimHelpers;
     this.platform = opts.platform || "all";
@@ -65,11 +67,16 @@ class Shim {
 
     const pref = `disabled_shims.${this.id}`;
 
+    this.redirectsRequests = !!this.file;
+
     for (const match of matches) {
       if (!match.types) {
         this.matches.push({ patterns: [match], types: ["script"] });
       } else {
         this.matches.push(match);
+      }
+      if (match.target) {
+        this.redirectsRequests = true;
       }
     }
 
@@ -333,19 +340,29 @@ class Shims {
       }
     }
 
+    function addTypePatterns(type, patterns, set) {
+      if (!set.has(type)) {
+        set.set(type, { patterns: new Set() });
+      }
+      const allSet = set.get(type).patterns;
+      for (const pattern of patterns) {
+        allSet.add(pattern);
+      }
+    }
+
     const allMatchTypePatterns = new Map();
+    const allHeaderChangingMatchTypePatterns = new Map();
     const allLogos = [];
     for (const shim of this.shims.values()) {
       const { logos, matches } = shim;
       allLogos.push(...logos);
-      for (const { patterns, types } of matches || []) {
+      for (const { patterns, target, types } of matches || []) {
         for (const type of types) {
-          if (!allMatchTypePatterns.has(type)) {
-            allMatchTypePatterns.set(type, { patterns: new Set() });
+          if (shim.isGoogleTrendsDFPIFix) {
+            addTypePatterns(type, patterns, allHeaderChangingMatchTypePatterns);
           }
-          const allSet = allMatchTypePatterns.get(type).patterns;
-          for (const pattern of patterns) {
-            allSet.add(pattern);
+          if (target || shim.file) {
+            addTypePatterns(type, patterns, allMatchTypePatterns);
           }
         }
       }
@@ -372,6 +389,26 @@ class Shims {
         { urls, types: ["image"] },
         ["blocking"]
       );
+    }
+
+    if (allHeaderChangingMatchTypePatterns) {
+      for (const [
+        type,
+        { patterns },
+      ] of allHeaderChangingMatchTypePatterns.entries()) {
+        const urls = Array.from(patterns);
+        debug("Shimming these", type, "URLs:", urls);
+        browser.webRequest.onBeforeSendHeaders.addListener(
+          this._onBeforeSendHeaders.bind(this),
+          { urls, types: [type] },
+          ["blocking", "requestHeaders"]
+        );
+        browser.webRequest.onHeadersReceived.addListener(
+          this._onHeadersReceived.bind(this),
+          { urls, types: [type] },
+          ["blocking", "responseHeaders"]
+        );
+      }
     }
 
     if (!allMatchTypePatterns.size) {
@@ -495,6 +532,13 @@ class Shims {
         continue;
       }
 
+      if (shim.onlyIfDFPIActive) {
+        const isPB = (await browser.tabs.get(details.tabId)).incognito;
+        if (!(await browser.trackingProtection.isDFPIActive(isPB))) {
+          continue;
+        }
+      }
+
       if (!shim.logos.includes(logo)) {
         continue;
       }
@@ -505,6 +549,96 @@ class Shims {
     }
 
     return { cancel: true };
+  }
+
+  async _onHeadersReceived(details) {
+    await this._haveCheckedEnabledPref;
+
+    for (const shim of this.shims.values()) {
+      await shim.ready;
+
+      if (!shim.enabled) {
+        continue;
+      }
+
+      if (shim.onlyIfDFPIActive) {
+        const isPB = (await browser.tabs.get(details.tabId)).incognito;
+        if (!(await browser.trackingProtection.isDFPIActive(isPB))) {
+          continue;
+        }
+      }
+
+      if (shim.isGoogleTrendsDFPIFix) {
+        if (shim.GoogleNidCookieToUse) {
+          continue;
+        }
+
+        for (const header of details.responseHeaders) {
+          if (header.name == "set-cookie") {
+            shim.GoogleNidCookieToUse = header.value;
+            return { redirectUrl: details.url };
+          }
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  async _onBeforeSendHeaders(details) {
+    await this._haveCheckedEnabledPref;
+
+    const { frameId, requestHeaders, tabId } = details;
+
+    if (!this.enabled) {
+      return { requestHeaders };
+    }
+
+    for (const shim of this.shims.values()) {
+      await shim.ready;
+
+      if (!shim.enabled) {
+        continue;
+      }
+
+      if (shim.isGoogleTrendsDFPIFix) {
+        const value = shim.GoogleNidCookieToUse;
+
+        if (!value) {
+          continue;
+        }
+
+        let found;
+        for (let header of requestHeaders) {
+          if (header.name.toLowerCase() === "cookie") {
+            header.value = value;
+            found = true;
+          }
+        }
+        if (!found) {
+          requestHeaders.push({ name: "Cookie", value });
+        }
+
+        browser.tabs
+          .get(tabId)
+          .then(({ url }) => {
+            debug(
+              `Google Trends dFPI fix used on tab ${tabId} frame ${frameId} (${url})`
+            );
+          })
+          .catch(() => {});
+
+        const warning = `Working around Google Trends tracking protection breakage. See https://bugzilla.mozilla.org/show_bug.cgi?id=${shim.bug} for details.`;
+        browser.tabs
+          .executeScript(tabId, {
+            code: `console.warn(${JSON.stringify(warning)})`,
+            runAt: "document_start",
+          })
+          .catch(() => {});
+      }
+    }
+
+    return { requestHeaders };
   }
 
   async _ensureShimForRequestOnTab(details) {
@@ -536,8 +670,15 @@ class Shims {
     for (const shim of this.shims.values()) {
       await shim.ready;
 
-      if (!shim.enabled) {
+      if (!shim.enabled || !shim.redirectsRequests) {
         continue;
+      }
+
+      if (shim.onlyIfDFPIActive) {
+        const isPB = (await browser.tabs.get(details.tabId)).incognito;
+        if (!(await browser.trackingProtection.isDFPIActive(isPB))) {
+          continue;
+        }
       }
 
       // Do not apply the shim if it is only meant to apply when strict mode ETP
