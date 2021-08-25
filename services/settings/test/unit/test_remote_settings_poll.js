@@ -723,34 +723,34 @@ add_task(async function test_client_error() {
     TELEMETRY_HISTOGRAM_SYNC_KEY
   );
 
+  const collectionDetails = {
+    id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
+    last_modified: 42,
+    host: "localhost",
+    bucket: "main",
+    collection: "some-entry",
+  };
   server.registerPathHandler(
     CHANGES_PATH,
-    serveChangesEntries(10000, [
-      {
-        id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
-        last_modified: 42,
-        host: "localhost",
-        bucket: "main",
-        collection: "some-entry",
-      },
-    ])
+    serveChangesEntries(10000, [collectionDetails])
   );
   const c = RemoteSettings("some-entry");
   c.maybeSync = () => {
-    throw new Error("boom");
+    throw new RemoteSettingsClient.CorruptedDataError("main/some-entry");
   };
 
-  let notificationObserved = false;
+  let notificationsObserved = [];
   const observer = {
     observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, "remote-settings:changes-poll-end");
-      notificationObserved = true;
+      Services.obs.removeObserver(this, aTopic);
+      notificationsObserved.push([aTopic, aSubject.wrappedJSObject]);
     },
   };
   Services.obs.addObserver(observer, "remote-settings:changes-poll-end");
+  Services.obs.addObserver(observer, "remote-settings:sync-error");
   Services.prefs.setIntPref(PREF_LAST_ETAG, 42);
 
-  // pollChanges() fails with adequate error and no notification.
+  // pollChanges() fails with adequate error and a sync-error notification.
   let error;
   try {
     await RemoteSettings.pollChanges();
@@ -758,11 +758,25 @@ add_task(async function test_client_error() {
     error = e;
   }
 
-  Assert.ok(
-    !notificationObserved,
-    "a notification should not have been observed"
+  Assert.equal(
+    notificationsObserved.length,
+    1,
+    "only the error notification should not have been observed"
   );
-  Assert.ok(/boom/.test(error.message), "original client error is thrown");
+  console.log(notificationsObserved);
+  let [topicObserved, subjectObserved] = notificationsObserved[0];
+  Assert.equal(topicObserved, "remote-settings:sync-error");
+  Assert.ok(
+    subjectObserved.error instanceof RemoteSettingsClient.CorruptedDataError,
+    `original error is provided (got ${subjectObserved.error})`
+  );
+  Assert.deepEqual(
+    subjectObserved.error.details,
+    collectionDetails,
+    "information about collection is provided"
+  );
+
+  Assert.ok(/Corrupted/.test(error.message), "original client error is thrown");
   // When an error occurs, last etag was not overwritten.
   Assert.equal(Services.prefs.getIntPref(PREF_LAST_ETAG), 42);
   // ensure that we've accumulated the correct telemetry
