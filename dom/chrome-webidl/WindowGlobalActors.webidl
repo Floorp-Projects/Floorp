@@ -128,10 +128,6 @@ interface WindowGlobalParent : WindowContext {
    * @param scale The scale to render the window at. Use devicePixelRatio
    * to have comparable rendering to the OS.
    * @param backgroundColor The background color to use.
-   * @param resetScrollPosition If true, temporarily resets the scroll position
-   * of the root scroll frame to 0, such that position:fixed elements are drawn
-   * at their initial position. This parameter only takes effect when passing a
-   * non-null rect.
    *
    * This API can only be used in the parent process, as content processes
    * cannot access the rendering of out of process iframes. This API works
@@ -140,8 +136,7 @@ interface WindowGlobalParent : WindowContext {
   [Throws]
   Promise<ImageBitmap> drawSnapshot(DOMRect? rect,
                                     double scale,
-                                    UTF8String backgroundColor,
-                                    optional boolean resetScrollPosition = false);
+                                    UTF8String backgroundColor);
 
   /**
    * Fetches the securityInfo object for this window. This function will
