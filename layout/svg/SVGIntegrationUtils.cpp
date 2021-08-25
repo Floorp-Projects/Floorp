@@ -952,18 +952,9 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
     }
 
     if (shouldPushMask) {
-      if (aParams.layerManager &&
-          aParams.layerManager->GetRoot()->GetContentFlags() &
-              Layer::CONTENT_COMPONENT_ALPHA) {
-        context.PushGroupAndCopyBackground(
-            gfxContentType::COLOR_ALPHA,
-            opacityApplied ? 1.0 : maskUsage.opacity, maskSurface,
-            maskTransform);
-      } else {
-        context.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
-                                      opacityApplied ? 1.0 : maskUsage.opacity,
-                                      maskSurface, maskTransform);
-      }
+      context.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
+                                    opacityApplied ? 1.0 : maskUsage.opacity,
+                                    maskSurface, maskTransform);
     }
   }
 
