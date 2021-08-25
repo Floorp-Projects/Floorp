@@ -179,7 +179,8 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest {
 };
 
 /**
- * RemotePermissionRequest will send a prompt ipdl request to b2g process.
+ * RemotePermissionRequest will send a prompt ipdl request to the chrome process
+ * (https://wiki.mozilla.org/Security/Sandbox/Process_model#Chrome_process_.28Parent.29).
  */
 class RemotePermissionRequest final
     : public mozilla::dom::PContentPermissionRequestChild {
