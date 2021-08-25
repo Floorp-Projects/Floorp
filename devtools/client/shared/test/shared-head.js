@@ -642,7 +642,7 @@ function isFissionEnabled() {
 }
 
 function isServerTargetSwitchingEnabled() {
-  return Services.prefs.getBoolPref("devtools.target-switching.server.enabled");
+  return Services.prefs.getBoolPref(TARGET_SWITCHING_PREF);
 }
 
 /**
