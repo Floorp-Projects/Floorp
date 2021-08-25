@@ -493,18 +493,6 @@ inline T* NewBuiltinClassInstance(JSContext* cx, gc::AllocKind allocKind,
 // Used to optimize calls to (new Object())
 bool NewObjectScriptedCall(JSContext* cx, MutableHandleObject obj);
 
-/*
- * As for gc::GetGCObjectKind, where numElements is a guess at the final size of
- * the object, zero if the final size is unknown. This should only be used for
- * objects that do not require any fixed slots.
- */
-static inline gc::AllocKind GuessObjectGCKind(size_t numElements) {
-  if (numElements) {
-    return gc::GetGCObjectKind(numElements);
-  }
-  return gc::AllocKind::OBJECT4;
-}
-
 static inline gc::AllocKind GuessArrayGCKind(size_t numElements) {
   if (numElements) {
     return gc::GetGCArrayKind(numElements);
