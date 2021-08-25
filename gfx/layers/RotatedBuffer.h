@@ -99,15 +99,6 @@ class RotatedBuffer : public BorrowDrawTarget {
       const gfx::Matrix* aMaskTransform = nullptr) const;
 
   /**
-   * Complete the drawing operation. The region to draw must have been
-   * drawn before this is called. The contents of the buffer are drawn
-   * to aTarget.
-   */
-  void DrawTo(PaintedLayer* aLayer, gfx::DrawTarget* aTarget, float aOpacity,
-              gfx::CompositionOp aOp, gfx::SourceSurface* aMask,
-              const gfx::Matrix* aMaskTransform);
-
-  /**
    * Update the specified region of this rotated buffer with the contents
    * of a source rotated buffer.
    */

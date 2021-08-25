@@ -56,7 +56,6 @@ class DrawTarget;
 namespace layers {
 
 class AsyncPanZoomController;
-class BasicLayerManager;
 class ClientLayerManager;
 class HostLayerManager;
 class Layer;
@@ -165,7 +164,6 @@ class LayerManager : public WindowRenderer {
 
   virtual LayerManagerComposite* AsLayerManagerComposite() { return nullptr; }
 
-  virtual BasicLayerManager* AsBasicLayerManager() { return nullptr; }
   virtual HostLayerManager* AsHostLayerManager() { return nullptr; }
 
   virtual WebRenderLayerManager* AsWebRenderLayerManager() { return nullptr; }

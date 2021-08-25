@@ -6,7 +6,6 @@
 
 #include "WebRenderLayerManager.h"
 
-#include "BasicLayers.h"
 #include "Layers.h"
 
 #include "GeckoProfiler.h"
