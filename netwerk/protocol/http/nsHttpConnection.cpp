@@ -1924,12 +1924,8 @@ nsresult nsHttpConnection::OnSocketWritable() {
     }
 
     if (!again && mWaitingFor0RTTResponse) {
-      // Continue waiting; In case of 0RTT we want to poll for READ. We need
-      // to poll the socket to be able to drive the handshake, but we do not
-      // want to poll for WRITE because during 0RTT we can write data, but
-      // we do not want to write data.
-      // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1382886#c38)
-      rv = mSocketIn->AsyncWait(this, 0, 0, nullptr);
+      // Continue waiting;
+      rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
     }
     if (NS_FAILED(rv)) {
       // if the transaction didn't want to write any more data, then
@@ -1937,12 +1933,8 @@ nsresult nsHttpConnection::OnSocketWritable() {
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         rv = NS_OK;
         if (mWaitingFor0RTTResponse) {
-          // Continue waiting; In case of 0RTT we want to poll for READ. We
-          // need to poll the socket to be able to drive the handshake, but
-          // we do not want to poll for WRITE because during 0RTT we can
-          // write data, but we do not want to write data.
-          // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1382886#c38)
-          rv = mSocketIn->AsyncWait(this, 0, 0, nullptr);
+          // Continue waiting;
+          rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
         }
       }
       again = false;
@@ -1963,12 +1955,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
 
       if (mWaitingFor0RTTResponse) {
         // Wait for tls handshake to finish or waiting for connect.
-        // In case of 0RTT we want to poll for READ. We need
-        // to poll the socket to be able to drive the handshake, but we do not
-        // want to poll for WRITE because during 0RTT we can write data, but
-        // we do not want to write data.
-        // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1382886#c38)
-        rv = mSocketIn->AsyncWait(this, 0, 0, nullptr);
+        rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
       } else if (mTransaction) {  // in case the ReadSegments stack called
                                   // CloseTransaction()
         //
@@ -2426,13 +2413,7 @@ nsHttpConnection::OnInputStreamReady(nsIAsyncInputStream* in) {
     return NS_OK;
   }
 
-  nsresult rv = NS_OK;
-  if (mWaitingFor0RTTResponse) {
-    // During 0RTT we poll for READ but we want actually to write
-    rv = OnSocketWritable();
-  } else {
-    rv = OnSocketReadable();
-  }
+  nsresult rv = OnSocketReadable();
   if (NS_FAILED(rv)) CloseTransaction(mTransaction, rv);
 
   return NS_OK;
