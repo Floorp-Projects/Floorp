@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <Windows.h>
+#include <windows.h>
 
 #ifdef VERBOSE_LOGGING
 #define VERBOSE_LOG(...) { printf(__VA_ARGS__); }
