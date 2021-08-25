@@ -147,14 +147,30 @@ function getChannelId(context, requestId) {
   return wrapper?.channel?.QueryInterface(Ci.nsIIdentChannel)?.channelId;
 }
 
+var dFPIPrefName = "network.cookie.cookieBehavior";
+var dFPIPbPrefName = "network.cookie.cookieBehavior.pbmode";
+var dFPIStatus;
+function updateDFPIStatus() {
+  dFPIStatus = {
+    nonPbMode: 5 == Services.prefs.getIntPref(dFPIPrefName),
+    pbMode: 5 == Services.prefs.getIntPref(dFPIPbPrefName),
+  };
+}
+
 this.trackingProtection = class extends ExtensionAPI {
   onShutdown(isAppShutdown) {
     if (manager) {
       manager.stop();
     }
+    Services.prefs.removeObserver(dFPIPrefName, updateDFPIStatus);
+    Services.prefs.removeObserver(dFPIPbPrefName, updateDFPIStatus);
   }
 
   getAPI(context) {
+    Services.prefs.addObserver(dFPIPrefName, updateDFPIStatus);
+    Services.prefs.addObserver(dFPIPbPrefName, updateDFPIStatus);
+    updateDFPIStatus();
+
     return {
       trackingProtection: {
         async shim(allowListId, patterns, notHosts) {
@@ -175,6 +191,12 @@ this.trackingProtection = class extends ExtensionAPI {
             return false;
           }
           return manager.wasChannelIdUnblocked(channelId);
+        },
+        async isDFPIActive(isPrivate) {
+          if (isPrivate) {
+            return dFPIStatus.pbMode;
+          }
+          return dFPIStatus.nonPbMode;
         },
       },
     };
