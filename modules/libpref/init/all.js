@@ -214,7 +214,7 @@ pref("security.osreauthenticator.password_last_changed_lo", 0);
 pref("security.osreauthenticator.password_last_changed_hi", 0);
 
 pref("security.crash_tracking.js_load_1.prevCrashes", 0);
-pref("security.crash_tracking.js_load_1.maxCrashes", 1);
+pref("security.crash_tracking.js_load_1.maxCrashes", 0);
 
 pref("general.useragent.compatMode.firefox", false);
 
