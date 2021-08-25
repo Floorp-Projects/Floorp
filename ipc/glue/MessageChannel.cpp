@@ -2039,7 +2039,9 @@ void MessageChannel::DispatchAsyncMessage(ActorLifecycleProxy* aProxy,
   MOZ_RELEASE_ASSERT(!aMsg.is_interrupt() && !aMsg.is_sync());
 
   if (aMsg.routing_id() == MSG_ROUTING_NONE) {
-    MOZ_CRASH("unhandled special message!");
+    NS_WARNING("unhandled special message!");
+    MaybeHandleError(MsgNotKnown, aMsg, "DispatchAsyncMessage");
+    return;
   }
 
   Result rv;
