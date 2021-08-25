@@ -567,8 +567,8 @@ load 1001258-1.html
 load 1001994.html
 skip-if(ThreadSanitizer) load chrome://reftest/content/crashtests/layout/generic/crashtests/1003441.xhtml
 load 1015562.html
-asserts(1-2) load 1015563-1.html
-asserts(1-2) load 1015563-2.html
+load 1015563-1.html
+load 1015563-2.html
 load 1015844.html
 asserts-if(Android,0-358) pref(font.size.inflation.minTwips,200) load 1032450.html # Bug 1607658
 load 1032613-1.svg
@@ -701,7 +701,7 @@ load 1474768.html
 load 1478178.html
 load 1483972.html
 load 1486457.html
-asserts(6) load 1488762-1.html # asserts from integer overflow & bogus sizes
+asserts(2-4) load 1488762-1.html # asserts from integer overflow & bogus sizes
 load 1489287.html
 load 1489863.html
 load 1489770.html
