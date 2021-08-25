@@ -14,12 +14,11 @@
 
 #include "mozilla/Attributes.h"
 #include "nsIContent.h"
+#include "nsIMutationObserver.h"
 
 #include "nsTextFragment.h"
 #include "nsError.h"
 #include "nsCycleCollectionParticipant.h"
-
-#include "mozilla/dom/ShadowRoot.h"
 
 namespace mozilla {
 namespace dom {
@@ -73,8 +72,7 @@ ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 8);
 
 #undef CHARACTER_DATA_FLAG_BIT
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CharacterData : public nsIContent {
  public:
@@ -236,7 +234,6 @@ class CharacterData : public nsIContent {
   already_AddRefed<nsAtom> GetCurrentValueAtom();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_CharacterData_h */
