@@ -6,8 +6,9 @@
 
 #include "LayerTransactionChild.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/mozalloc.h"  // for operator delete, etc
-#include "nsTArray.h"          // for nsTArray
+#include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
+#include "mozilla/mozalloc.h"             // for operator delete, etc
+#include "nsTArray.h"                     // for nsTArray
 #include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {

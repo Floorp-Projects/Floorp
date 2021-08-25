@@ -24,6 +24,7 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
+#include "mozilla/layers/ShadowLayers.h"    // for ShadowLayerForwarder, etc
 #include "mozilla/mozalloc.h"               // for operator new
 #include "gfxEnv.h"
 #include "nsCOMPtr.h"  // for already_AddRefed
@@ -100,6 +101,17 @@ already_AddRefed<gfxXlibSurface> SurfaceDescriptorX11::OpenForeign() const {
   if (mGLXPixmap) surf->BindGLXPixmap(mGLXPixmap);
 
   return surf->CairoStatus() ? nullptr : surf.forget();
+}
+
+/*static*/
+void ShadowLayerForwarder::PlatformSyncBeforeUpdate() {
+  if (UsingXCompositing()) {
+    // If we're using X surfaces, then we need to finish all pending
+    // operations on the back buffers before handing them to the
+    // parent, otherwise the surface might be used by the parent's
+    // Display in between two operations queued by our Display.
+    FinishX(DefaultXDisplay());
+  }
 }
 
 /*static*/
