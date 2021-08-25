@@ -25,9 +25,9 @@
 #include "vm/NativeObject-inl.h"  // js::NativeObject::{create,setLastProperty}
 
 /* static */ inline js::PlainObject* js::PlainObject::createWithShape(
-    JSContext* cx, JS::Handle<Shape*> shape) {
+    JSContext* cx, JS::Handle<Shape*> shape, NewObjectKind newKind) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
-  gc::InitialHeap heap = GetInitialHeap(GenericObject, &PlainObject::class_);
+  gc::InitialHeap heap = GetInitialHeap(newKind, &PlainObject::class_);
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
   MOZ_ASSERT(gc::CanChangeToBackgroundAllocKind(kind, shape->getObjectClass()));
