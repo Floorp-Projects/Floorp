@@ -27,6 +27,7 @@ from ..frontend.data import (
     LocalInclude,
     Program,
     Sources,
+    SandboxedWasmLibrary,
     UnifiedSources,
 )
 from mozbuild.base import ExecutionSummary
@@ -109,7 +110,7 @@ class VisualStudioBackend(CommonBackend):
             # for us instead.
             self._process_unified_sources(obj)
 
-        elif isinstance(obj, Library):
+        elif isinstance(obj, Library) and not isinstance(obj, SandboxedWasmLibrary):
             self._libs_to_paths[obj.basename] = reldir
 
         elif isinstance(obj, Program) or isinstance(obj, HostProgram):
