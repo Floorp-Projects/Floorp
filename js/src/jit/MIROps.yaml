@@ -1777,7 +1777,7 @@
 
 - name: NewPrivateName
   arguments:
-    name: PropertyName*
+    name: JSAtom*
   result_type: Symbol
   possibly_calls: true
 

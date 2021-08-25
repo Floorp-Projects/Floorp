@@ -577,8 +577,7 @@ static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
   return false;
 }
 
-static inline JS::Symbol* NewPrivateName(JSContext* cx,
-                                         HandlePropertyName name) {
+static inline JS::Symbol* NewPrivateName(JSContext* cx, HandleAtom name) {
   return JS::Symbol::new_(cx, JS::SymbolCode::PrivateNameSymbol, name);
 }
 
