@@ -8,7 +8,6 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include <stddef.h>              // for size_t
-#include "ClientLayerManager.h"  // for ClientLayerManager
 #include "base/task.h"           // for NewRunnableMethod, etc
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/layers/CompositorManagerChild.h"
