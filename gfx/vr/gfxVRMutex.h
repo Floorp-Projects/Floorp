@@ -7,6 +7,10 @@
 #ifndef GFX_VR_MUTEX_H
 #define GFX_VR_MUTEX_H
 
+#if defined(XP_WIN)
+#  include "nsTString.h"
+#endif
+
 namespace mozilla {
 namespace gfx {
 
