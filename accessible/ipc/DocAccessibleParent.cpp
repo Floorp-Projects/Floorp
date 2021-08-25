@@ -18,6 +18,7 @@
 #  include "Compatibility.h"
 #  include "mozilla/mscom/PassthruProxy.h"
 #  include "mozilla/mscom/Ptr.h"
+#  include "mozilla/StaticPrefs_accessibility.h"
 #  include "nsWinUtils.h"
 #  include "RootAccessible.h"
 #else
