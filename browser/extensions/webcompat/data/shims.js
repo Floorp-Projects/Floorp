@@ -370,12 +370,27 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "GoogleTrends",
+    platform: "all",
+    name: "GoogleTrends",
+    bug: "1624914",
+    custom: "google-trends-dfpi-fix",
+    onlyIfDFPIActive: true,
+    matches: [
+      {
+        patterns: ["*://trends.google.com/trends/embed*"],
+        types: ["sub_frame"],
+      },
+    ],
+  },
+  {
     id: "IASPET",
     platform: "all",
     name: "Integral Ad Science PET",
     bug: "1713701",
     file: "iaspet.js",
     matches: ["*://cdn.adsafeprotected.com/iasPET.1.js"],
+    onlyIfBlockedByETP: true,
   },
   {
     id: "MNet",
