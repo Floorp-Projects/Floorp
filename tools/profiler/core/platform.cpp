@@ -1442,7 +1442,8 @@ class Registers {
 #if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
   // This contains all the registers, which means it duplicates the four fields
   // above. This is ok.
-  ucontext_t* mContext;  // The context from the signal handler.
+  ucontext_t* mContext;  // The context from the signal handler or below.
+  ucontext_t mContextSyncStorage;  // Storage for sync stack unwinding.
 #endif
 };
 
@@ -1852,17 +1853,20 @@ static void StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP,
 static void DoFramePointerBacktrace(
     PSLockRef aLock,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
-    Registers aRegs, NativeStack& aNativeStack,
+    const Registers& aRegs, NativeStack& aNativeStack,
     StackWalkControl* aStackWalkControlIfSupported) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
 
+  // Make a local copy of the Registers, to allow modifications.
+  Registers regs = aRegs;
+
   // Start with the current function. We use 0 as the frame number here because
   // the FramePointerStackWalk() call below will use 1..N. This is a bit weird
   // but it doesn't matter because StackWalkCallback() doesn't use the frame
   // number argument.
-  StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
+  StackWalkCallback(/* frameNum */ 0, regs.mPC, regs.mSP, &aNativeStack);
 
   const void* const stackEnd = aThreadData.StackTop();
 
@@ -1870,12 +1874,12 @@ static void DoFramePointerBacktrace(
   void* previousResumeSp = nullptr;
 
   for (;;) {
-    if (!(aRegs.mSP && aRegs.mSP <= aRegs.mFP && aRegs.mFP <= stackEnd)) {
+    if (!(regs.mSP && regs.mSP <= regs.mFP && regs.mFP <= stackEnd)) {
       break;
     }
     FramePointerStackWalk(StackWalkCallback,
                           uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount),
-                          &aNativeStack, reinterpret_cast<void**>(aRegs.mFP),
+                          &aNativeStack, reinterpret_cast<void**>(regs.mFP),
                           const_cast<void*>(stackEnd));
 
     if constexpr (!StackWalkControl::scIsSupported) {
@@ -1914,9 +1918,9 @@ static void DoFramePointerBacktrace(
         break;
       }
       // Prepare context to resume stack walking.
-      aRegs.mPC = (Address)pc;
-      aRegs.mSP = (Address)sp;
-      aRegs.mFP = (Address)resumePoint->resumeBp;
+      regs.mPC = (Address)pc;
+      regs.mSP = (Address)sp;
+      regs.mFP = (Address)resumePoint->resumeBp;
 
       previousResumeSp = sp;
     }
