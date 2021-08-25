@@ -2014,7 +2014,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
     // function returns a primary type, which is the case for all asm.js
     // exported functions, the returned value is discarded and an empty
     // object is returned instead.
-    PlainObject* obj = NewBuiltinClassInstance<PlainObject>(cx);
+    PlainObject* obj = NewPlainObject(cx);
     if (!obj) {
       return false;
     }

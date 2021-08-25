@@ -80,7 +80,7 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
   }
   ScopedICUObject<UCalendar, ucal_close> toClose(cal);
 
-  RootedObject info(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedObject info(cx, NewPlainObject(cx));
   if (!info) {
     return false;
   }
@@ -491,7 +491,7 @@ bool js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject info(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedObject info(cx, NewPlainObject(cx));
   if (!info) {
     return false;
   }

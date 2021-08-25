@@ -226,7 +226,7 @@ static JSObject* CreateReflectObject(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  return NewTenuredObjectWithGivenProto<PlainObject>(cx, proto);
+  return NewPlainObjectWithProto(cx, proto, TenuredObject);
 }
 
 static const ClassSpec ReflectClassSpec = {CreateReflectObject, nullptr,

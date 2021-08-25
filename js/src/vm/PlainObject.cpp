@@ -124,6 +124,18 @@ static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
   return true;
 }
 
+PlainObject* js::NewPlainObject(JSContext* cx, NewObjectKind newKind) {
+  return NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
+}
+
+PlainObject* js::NewPlainObjectWithProto(JSContext* cx, HandleObject proto,
+                                         NewObjectKind newKind) {
+  constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT0;
+  MOZ_ASSERT(gc::GetGCObjectKind(&PlainObject::class_) == allocKind);
+  return NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
+                                                      newKind);
+}
+
 PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
                                               IdValuePair* properties,
                                               size_t nproperties,

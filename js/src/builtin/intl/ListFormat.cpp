@@ -330,7 +330,7 @@ static bool FormatListToParts(JSContext* cx, UListFormatter* lf,
   RootedValue val(cx);
 
   auto AppendPart = [&](FieldType type, size_t beginIndex, size_t endIndex) {
-    singlePart = NewBuiltinClassInstance<PlainObject>(cx);
+    singlePart = NewPlainObject(cx);
     if (!singlePart) {
       return false;
     }

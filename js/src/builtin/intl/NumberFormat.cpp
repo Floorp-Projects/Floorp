@@ -260,8 +260,7 @@ bool js::intl_availableMeasurementUnits(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  RootedObject measurementUnits(
-      cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+  RootedObject measurementUnits(cx, NewPlainObjectWithProto(cx, nullptr));
   if (!measurementUnits) {
     return false;
   }
@@ -1215,7 +1214,7 @@ ArrayObject* NumberFormatFields::toArray(JSContext* cx,
 
     MOZ_ASSERT(lastEndIndex < endIndex);
 
-    singlePart = NewBuiltinClassInstance<PlainObject>(cx);
+    singlePart = NewPlainObject(cx);
     if (!singlePart) {
       return nullptr;
     }
@@ -1420,7 +1419,7 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
 
     MOZ_ASSERT(lastEndIndex < endIndex);
 
-    singlePart = NewBuiltinClassInstance<PlainObject>(cx);
+    singlePart = NewPlainObject(cx);
     if (!singlePart) {
       return false;
     }

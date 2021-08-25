@@ -1823,10 +1823,12 @@ JS_PUBLIC_API JSObject* JS_NewObject(JSContext* cx, const JSClass* clasp) {
   CHECK_THREAD(cx);
 
   if (!clasp) {
-    clasp = &PlainObject::class_; /* default class is Object */
+    // Default class is Object.
+    return NewPlainObject(cx);
   }
 
   MOZ_ASSERT(clasp != &JSFunction::class_);
+  MOZ_ASSERT(clasp != &PlainObject::class_);
   MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
   return NewBuiltinClassInstance(cx, clasp);
@@ -1841,10 +1843,12 @@ JS_PUBLIC_API JSObject* JS_NewObjectWithGivenProto(JSContext* cx,
   cx->check(proto);
 
   if (!clasp) {
-    clasp = &PlainObject::class_; /* default class is Object */
+    // Default class is Object.
+    return NewPlainObjectWithProto(cx, proto);
   }
 
   MOZ_ASSERT(clasp != &JSFunction::class_);
+  MOZ_ASSERT(clasp != &PlainObject::class_);
   MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
   return NewObjectWithGivenProto(cx, clasp, proto);
@@ -1855,7 +1859,7 @@ JS_PUBLIC_API JSObject* JS_NewPlainObject(JSContext* cx) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  return NewBuiltinClassInstance<PlainObject>(cx);
+  return NewPlainObject(cx);
 }
 
 JS_PUBLIC_API JSObject* JS_NewObjectForConstructor(JSContext* cx,

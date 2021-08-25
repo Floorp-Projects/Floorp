@@ -425,7 +425,7 @@ void Module::initGCMallocBytesExcludingCode() {
 // segment/function body.
 bool Module::extractCode(JSContext* cx, Tier tier,
                          MutableHandleValue vp) const {
-  RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject result(cx, NewPlainObject(cx));
   if (!result) {
     return false;
   }
@@ -459,7 +459,7 @@ bool Module::extractCode(JSContext* cx, Tier tier,
   }
 
   for (const CodeRange& p : metadata(tier).codeRanges) {
-    RootedObject segment(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+    RootedObject segment(cx, NewPlainObjectWithProto(cx, nullptr));
     if (!segment) {
       return false;
     }
@@ -1132,9 +1132,9 @@ static bool CreateExportObject(
   uint8_t propertyAttr = JSPROP_ENUMERATE;
 
   if (metadata.isAsmJS()) {
-    exportObj = NewBuiltinClassInstance<PlainObject>(cx);
+    exportObj = NewPlainObject(cx);
   } else {
-    exportObj = NewObjectWithGivenProto<PlainObject>(cx, nullptr);
+    exportObj = NewPlainObjectWithProto(cx, nullptr);
     propertyAttr |= JSPROP_READONLY | JSPROP_PERMANENT;
   }
   if (!exportObj) {

@@ -87,7 +87,7 @@ bool SimpleCount::report(JSContext* cx, CountBase& countBase,
                          MutableHandleValue report) {
   Count& count = static_cast<Count&>(countBase);
 
-  RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }
@@ -274,7 +274,7 @@ bool ByCoarseType::report(JSContext* cx, CountBase& countBase,
                           MutableHandleValue report) {
   Count& count = static_cast<Count&>(countBase);
 
-  RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }
@@ -364,7 +364,7 @@ static PlainObject* countMapToObject(JSContext* cx, Map& map, GetName getName) {
           compareEntries<typename Map::Entry>);
   }
 
-  RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     return nullptr;
   }
@@ -414,7 +414,7 @@ static PlainObject* countMap16ToObject(JSContext* cx, Map& map,
           compareEntries<typename Map::Entry>);
   }
 
-  RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     return nullptr;
   }
@@ -736,7 +736,7 @@ bool ByUbinodeType::report(JSContext* cx, CountBase& countBase,
   }
 
   // Now build the result by iterating over the sorted vector.
-  RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }
