@@ -376,7 +376,11 @@ class CorePS {
                "CorePS must be created from the main thread");
   }
 
-  ~CorePS() {}
+  ~CorePS() {
+#ifdef USE_LUL_STACKWALK
+    delete sInstance->mLul;
+#endif
+  }
 
  public:
   static void Create(PSLockRef aLock) {
@@ -414,8 +418,8 @@ class CorePS {
     // - CorePS::mInterposeObserver
 
 #if defined(USE_LUL_STACKWALK)
-    if (sInstance->mLul) {
-      aLulSize += sInstance->mLul->SizeOfIncludingThis(aMallocSizeOf);
+    if (lul::LUL* lulPtr = sInstance->mLul; lulPtr) {
+      aLulSize += lulPtr->SizeOfIncludingThis(aMallocSizeOf);
     }
 #endif
   }
@@ -493,13 +497,14 @@ class CorePS {
   }
 
 #ifdef USE_LUL_STACKWALK
-  static lul::LUL* Lul(PSLockRef) {
-    MOZ_ASSERT(sInstance);
-    return sInstance->mLul.get();
+  static lul::LUL* Lul() {
+    MOZ_RELEASE_ASSERT(sInstance);
+    return sInstance->mLul;
   }
-  static void SetLul(PSLockRef, UniquePtr<lul::LUL> aLul) {
-    MOZ_ASSERT(sInstance);
-    sInstance->mLul = std::move(aLul);
+  static void SetLul(UniquePtr<lul::LUL> aLul) {
+    MOZ_RELEASE_ASSERT(sInstance);
+    MOZ_RELEASE_ASSERT(
+        sInstance->mLul.compareExchange(nullptr, aLul.release()));
   }
 #endif
 
@@ -533,7 +538,8 @@ class CorePS {
 
 #ifdef USE_LUL_STACKWALK
   // LUL's state. Null prior to the first activation, non-null thereafter.
-  UniquePtr<lul::LUL> mLul;
+  // Owned by this CorePS.
+  mozilla::Atomic<lul::LUL*> mLul;
 #endif
 
   // Process name, provided by child process initialization code.
@@ -2202,7 +2208,8 @@ static void DoLULBacktrace(
   }
 
   size_t framePointerFramesAcquired = 0;
-  lul::LUL* lul = CorePS::Lul(aLock);
+  lul::LUL* lul = CorePS::Lul();
+  MOZ_RELEASE_ASSERT(lul);
   lul->Unwind(reinterpret_cast<uintptr_t*>(aNativeStack.mPCs),
               reinterpret_cast<uintptr_t*>(aNativeStack.mSPs),
               &aNativeStack.mCount, &framePointerFramesAcquired,
@@ -3882,7 +3889,7 @@ void SamplerThread::Run() {
         // involves doing I/O (fprintf, __android_log_print, etc.) and so
         // can't safely be done from the critical section inside
         // SuspendAndSampleAndResumeThread, which is why it is done here.
-        lul::LUL* lul = CorePS::Lul(lock);
+        lul::LUL* lul = CorePS::Lul();
         if (lul) {
           lul->MaybeShowStats();
         }
