@@ -31,7 +31,7 @@ html|img#editBookmarkPanelFavicon[src] {
 }
 
 #editBookmarkPanelImage {
-  border-radius: 2px;
+  border-radius: 4px;
   height: 150px;
   background-image: -moz-element(#editBookmarkPanelImageCanvas);
   background-repeat: no-repeat;
