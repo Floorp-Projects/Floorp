@@ -9,7 +9,7 @@
 
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_section_header_layout"
-        android:title="@string/preference_category_tracking_protection2">
+        android:title="@string/preference_category_tracking_protection3">
 
         <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="true"

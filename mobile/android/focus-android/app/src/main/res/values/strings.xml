@@ -154,7 +154,7 @@
     <string name="preference_mozilla_summary">About %1$s, help</string>
 
     <!-- Preference category for ad blocking and enhanced tracking protection settings -->
-    <string name="preference_category_tracking_protection2"> EnhancedTracking Protection</string>
+    <string name="preference_category_tracking_protection3">Enhanced Tracking Protection</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Web Content</string>
