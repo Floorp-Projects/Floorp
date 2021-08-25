@@ -1,12 +1,14 @@
 {
     "stages": "4",
     "pgo" : true,
+    "build_wasm": true,
     "build_libcxx": true,
     "build_type": "Release",
     "assertions": false,
     "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
     "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
     "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
     "patches": [
     ]
 }
