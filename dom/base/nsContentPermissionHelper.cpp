@@ -170,7 +170,7 @@ uint32_t nsContentPermissionUtils::ConvertPermissionRequestToArray(
 }
 
 /* static */
-uint32_t nsContentPermissionUtils::ConvertArrayToPermissionRequest(
+void nsContentPermissionUtils::ConvertArrayToPermissionRequest(
     nsIArray* aSrcArray, nsTArray<PermissionRequest>& aDesArray) {
   uint32_t len = 0;
   aSrcArray->GetLength(&len);
@@ -198,7 +198,6 @@ uint32_t nsContentPermissionUtils::ConvertArrayToPermissionRequest(
 
     aDesArray.AppendElement(PermissionRequest(type, options));
   }
-  return len;
 }
 
 static std::map<PContentPermissionRequestParent*, TabId>&
