@@ -7,8 +7,8 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
-#include <stddef.h>              // for size_t
-#include "base/task.h"           // for NewRunnableMethod, etc
+#include <stddef.h>     // for size_t
+#include "base/task.h"  // for NewRunnableMethod, etc
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"

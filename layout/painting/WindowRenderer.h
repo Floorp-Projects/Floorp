@@ -10,9 +10,10 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/dom/Animation.h"  // for Animation
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
-#include "nsRefPtrHashtable.h"  // for nsRefPtrHashtable
+#include "mozilla/ScrollPositionUpdate.h"  // for ScrollPositionUpdate
+#include "nsRefPtrHashtable.h"             // for nsRefPtrHashtable
+#include "gfxContext.h"
 
-class gfxContext;
 namespace mozilla {
 namespace layers {
 class LayerManager;
