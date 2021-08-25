@@ -3798,6 +3798,7 @@ void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
                     CanNurseryAllocateFinalizedClass(clasp) ||
                     clasp->isProxyObject());
 
+  MOZ_ASSERT(!shape->isDictionary());
   MOZ_ASSERT(!shape->realm()->hasObjectPendingMetadata());
 
   // Non-native classes manage their own data and slots, so numFixedSlots is

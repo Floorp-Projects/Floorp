@@ -5062,8 +5062,8 @@ JSObject* js::CreateThisWithTemplate(JSContext* cx,
     ar.emplace(cx, templateObject);
   }
 
-  NewObjectKind newKind = GenericObject;
-  return CopyTemplateObject(cx, templateObject.as<PlainObject>(), newKind);
+  RootedShape shape(cx, templateObject->shape());
+  return PlainObject::createWithShape(cx, shape);
 }
 
 ArrayObject* js::NewArrayOperation(
