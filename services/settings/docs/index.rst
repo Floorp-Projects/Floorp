@@ -324,6 +324,8 @@ The polling for changes process sends two notifications that observers can regis
 
 * ``remote-settings:changes-poll-start``: Polling for changes is starting. triggered either by the scheduled timer or a push broadcast.
 * ``remote-settings:changes-poll-end``: Polling for changes has ended
+* ``remote-settings:sync-error``: A synchronization error occured. Notification subject provides information about the error and affected
+  collection in the ``wrappedJSObject`` attribute.
 
 .. code-block:: javascript
 
