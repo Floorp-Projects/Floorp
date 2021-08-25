@@ -7,8 +7,8 @@
 #include "PersistentBufferProvider.h"
 
 #include "Layers.h"
-#include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Maybe.h"

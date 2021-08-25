@@ -46,7 +46,6 @@
 #include "mozilla/layers/LayerManagerComposite.h"  // for HostLayer
 #include "mozilla/layers/LayersMessages.h"  // for SpecificLayerAttributes, CompositorAnimations (ptr only), ContainerLayerAt...
 #include "mozilla/layers/LayersTypes.h"  // for EventRegions, operator<<, CompositionPayload, CSSTransformMatrix, MOZ_LAYE...
-#include "mozilla/layers/ShadowLayers.h"  // for ShadowableLayer
 #include "nsBaseHashtable.h"  // for nsBaseHashtable<>::Iterator, nsBaseHashtable<>::LookupResult
 #include "nsISupportsUtils.h"              // for NS_ADDREF, NS_RELEASE
 #include "nsPrintfCString.h"               // for nsPrintfCString
@@ -1158,8 +1157,6 @@ void Layer::Dump(std::stringstream& aStream, const char* aPrefix,
   bool dumpCompositorTexture = gfxEnv::DumpCompositorTextures() &&
                                AsHostLayer() &&
                                AsHostLayer()->GetCompositableHost();
-  bool dumpClientTexture = gfxEnv::DumpPaint() && AsShadowableLayer() &&
-                           AsShadowableLayer()->GetCompositableClient();
   nsCString layerId(Name());
   layerId.Append('-');
   layerId.AppendInt((uint64_t)this);
@@ -1167,7 +1164,7 @@ void Layer::Dump(std::stringstream& aStream, const char* aPrefix,
   if (aDumpHtml) {
     aStream << nsPrintfCString(R"(<li><a id="%p" )", this).get();
 #ifdef MOZ_DUMP_PAINTING
-    if (dumpCompositorTexture || dumpClientTexture) {
+    if (dumpCompositorTexture) {
       aStream << nsPrintfCString(R"lit(href="javascript:ViewImage('%s')")lit",
                                  layerId.BeginReading())
                      .get();
@@ -1180,29 +1177,11 @@ void Layer::Dump(std::stringstream& aStream, const char* aPrefix,
 #ifdef MOZ_DUMP_PAINTING
   if (dumpCompositorTexture) {
     AsHostLayer()->GetCompositableHost()->Dump(aStream, aPrefix, aDumpHtml);
-  } else if (dumpClientTexture) {
-    if (aDumpHtml) {
-      aStream << nsPrintfCString(R"(<script>array["%s"]=")",
-                                 layerId.BeginReading())
-                     .get();
-    }
-    AsShadowableLayer()->GetCompositableClient()->Dump(
-        aStream, aPrefix, aDumpHtml, TextureDumpMode::DoNotCompress);
-    if (aDumpHtml) {
-      aStream << R"(";</script>)";
-    }
   }
 #endif
 
   if (aDumpHtml) {
     aStream << "</a>";
-#ifdef MOZ_DUMP_PAINTING
-    if (dumpClientTexture) {
-      aStream << nsPrintfCString("<br><img id=\"%s\">\n",
-                                 layerId.BeginReading())
-                     .get();
-    }
-#endif
   }
 
   if (Layer* mask = GetMaskLayer()) {

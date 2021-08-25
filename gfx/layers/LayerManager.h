@@ -72,8 +72,6 @@ class RefLayer;
 class HostLayer;
 class FocusTarget;
 class KnowsCompositor;
-class ShadowableLayer;
-class ShadowLayerForwarder;
 class LayerManagerComposite;
 class TransactionIdAllocator;
 class FrameUniformityData;

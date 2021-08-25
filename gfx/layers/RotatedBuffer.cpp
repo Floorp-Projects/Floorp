@@ -26,7 +26,6 @@
 #include "mozilla/gfx/Point.h"      // for IntSize
 #include "mozilla/gfx/Rect.h"       // for Rect, IntRect
 #include "mozilla/gfx/Types.h"      // for ExtendMode::ExtendMode::CLAMP, etc
-#include "mozilla/layers/ShadowLayers.h"   // for ShadowableLayer
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "nsLayoutUtils.h"                 // for invalidation debugging
 
