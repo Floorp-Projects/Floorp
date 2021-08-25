@@ -732,7 +732,11 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
                                       const JSClass* clasp, gc::AllocKind kind,
                                       NewObjectKind newKind,
                                       ObjectFlags objectFlags = {}) {
+  // Some classes have specialized allocation functions and shouldn't end up
+  // here.
   MOZ_ASSERT(clasp != &ArrayObject::class_);
+  MOZ_ASSERT(clasp != &PlainObject::class_);
+
   MOZ_ASSERT_IF(clasp == &JSFunction::class_,
                 kind == gc::AllocKind::FUNCTION ||
                     kind == gc::AllocKind::FUNCTION_EXTENDED);
