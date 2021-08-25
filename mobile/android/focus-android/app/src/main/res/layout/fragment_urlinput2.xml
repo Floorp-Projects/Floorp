@@ -29,6 +29,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_weight="0.9"
+            android:paddingEnd="24dp"
+            android:paddingStart="24dp"
             android:contentDescription="@string/app_name"
             android:focusable="false"
             android:src="@drawable/wordmark2" />
