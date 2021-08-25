@@ -45,8 +45,7 @@
         }
       };
 
-      let os = Cc["@mozilla.org/observer-service;1"].
-        getService(Ci.nsIObserverService);
+      let os = SpecialPowers.Services.obs;
       os.addObserver(observer, "content-document-global-created");
 
       BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html");

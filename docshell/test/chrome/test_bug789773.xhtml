@@ -40,12 +40,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
       if (req.name.includes("mozilla.html") && (stateFlags & Ci.nsIWebProgressListener.STATE_STOP))
         finishTest();
     },
-    QueryInterface(iid) {
-      if (iid.equals(Ci.nsISupportsWeakReference) ||
-          iid.equals(Ci.nsIWebProgressListener))
-        return this;
-      throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-    }
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIWebProgressListener",
+      "nsISupportsWeakReference",
+    ]),
   }
 
    // Add our progress listener

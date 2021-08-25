@@ -30,8 +30,7 @@
       SimpleTest.executeSoon(function () {
         // First focus the parent window and then close this one.
         SimpleTest.waitForFocus(function() {
-          let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
-                       .getService(Ci.nsIWindowWatcher);
+          let ww = SpecialPowers.Services.ww;
           ww.registerNotification(function windowObs(subject, topic, data) {
             if (topic == "domwindowclosed") {
               ww.unregisterNotification(windowObs);
@@ -49,4 +48,3 @@
     }
   ]]></script>
 </window>
-
