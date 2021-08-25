@@ -11,11 +11,6 @@ with Files("apz/**"):
     BUG_COMPONENT = ("Core", "Panning and Zooming")
 
 EXPORTS += [
-    "basic/BasicCanvasLayer.h",
-    "basic/BasicImplData.h",
-    "basic/BasicLayers.h",
-    "basic/BasicLayersImpl.h",
-    "basic/BasicPaintedLayer.h",
     "composite/CompositableHost.h",
     "composite/ImageHost.h",
     "CompositorTypes.h",
@@ -386,13 +381,7 @@ UNIFIED_SOURCES += [
     "apz/util/TouchCounter.cpp",
     "AxisPhysicsModel.cpp",
     "AxisPhysicsMSDModel.cpp",
-    "basic/BasicCanvasLayer.cpp",
-    "basic/BasicColorLayer.cpp",
-    "basic/BasicContainerLayer.cpp",
-    "basic/BasicImages.cpp",
-    "basic/BasicLayerManager.cpp",
     "basic/BasicLayersImpl.cpp",
-    "basic/BasicPaintedLayer.cpp",
     "basic/TextureHostBasic.cpp",
     "BSPTree.cpp",
     "BufferTexture.cpp",
@@ -523,7 +512,6 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     "basic/BasicCompositor.cpp",
-    "basic/BasicImageLayer.cpp",
     "client/TextureClient.cpp",
     "ImageContainer.cpp",
     "PersistentBufferProvider.cpp",

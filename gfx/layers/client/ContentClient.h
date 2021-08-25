@@ -210,28 +210,6 @@ class ContentClient : public CompositableClient {
   BufferSizePolicy mBufferSizePolicy;
 };
 
-// Thin wrapper around DrawTargetRotatedBuffer, for on-mtc
-class ContentClientBasic final : public ContentClient {
- public:
-  explicit ContentClientBasic(gfx::BackendType aBackend);
-
-  void DrawTo(PaintedLayer* aLayer, gfx::DrawTarget* aTarget, float aOpacity,
-              gfx::CompositionOp aOp, gfx::SourceSurface* aMask,
-              const gfx::Matrix* aMaskTransform);
-
-  TextureInfo GetTextureInfo() const override {
-    MOZ_CRASH("GFX: Should not be called on non-remote ContentClient");
-  }
-
- protected:
-  RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
-                                     const gfx::IntRect& aRect,
-                                     uint32_t aFlags) override;
-
- private:
-  gfx::BackendType mBackend;
-};
-
 /**
  * A ContentClient backed by a RemoteRotatedBuffer.
  *
