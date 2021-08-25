@@ -109,6 +109,12 @@ void omta_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 
 #pragma pop_macro("TRANSPARENT")
 
+template struct mozilla::wr::Point2D<int32_t, mozilla::wr::DevicePixel>;
+template struct mozilla::wr::Point2D<int, mozilla::wr::WorldPixel>;
+template struct mozilla::wr::Point2D<float, mozilla::wr::WorldPixel>;
+template struct mozilla::wr::Box2D<int32_t, mozilla::wr::DevicePixel>;
+template struct mozilla::wr::Box2D<int, mozilla::wr::LayoutPixel>;
+
 // More functions invoked from Rust code. These are down here because they
 // refer to data structures from webrender_ffi_generated.h
 extern "C" {
