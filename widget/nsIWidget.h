@@ -54,7 +54,6 @@ class nsIContent;
 class ViewWrapper;
 class nsIScreen;
 class nsIRunnable;
-class nsUint64HashKey;
 
 namespace mozilla {
 class NativeEventData;
