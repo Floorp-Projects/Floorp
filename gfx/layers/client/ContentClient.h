@@ -8,7 +8,6 @@
 #define MOZILLA_GFX_CONTENTCLIENT_H
 
 #include <stdint.h>         // for uint32_t
-#include "RotatedBuffer.h"  // for RotatedBuffer, etc
 #include "gfxTypes.h"
 #include "gfxPlatform.h"                        // for gfxPlatform
 #include "mozilla/Assertions.h"                 // for MOZ_CRASH
@@ -140,24 +139,6 @@ class ContentClient : public CompositableClient {
       PaintState& aPaintState,
       nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
 
-  /**
-   * Fetch a DrawTarget for rendering. The DrawTarget remains owned by
-   * this. See notes on BorrowDrawTargetForQuadrantUpdate.
-   * May return null. If the return value is non-null, it must be
-   * 'un-borrowed' using ReturnDrawTarget.
-   *
-   * If PAINT_CAN_DRAW_ROTATED was specified for BeginPaint, then the caller
-   * must call this function repeatedly (with an iterator) until it returns
-   * nullptr. The caller should draw the mDrawRegion of the iterator instead
-   * of mRegionToDraw in the PaintState.
-   *
-   * @param aPaintState Paint state data returned by a call to BeginPaint
-   * @param aIter Paint state iterator. Only required if PAINT_CAN_DRAW_ROTATED
-   * was specified to BeginPaint.
-   */
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(
-      PaintState& aPaintState, RotatedBuffer::DrawIterator* aIter = nullptr);
-
   void ReturnDrawTarget(gfx::DrawTarget*& aReturned);
 
   enum {
@@ -196,17 +177,6 @@ class ContentClient : public CompositableClient {
    */
   virtual void FinalizeFrame(PaintState& aPaintState) {}
 
-  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const { return mBuffer; }
-
-  /**
-   * Create a new rotated buffer for the specified content type, buffer rect,
-   * and buffer flags.
-   */
-  virtual RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
-                                             const gfx::IntRect& aRect,
-                                             uint32_t aFlags) = 0;
-
-  RefPtr<RotatedBuffer> mBuffer;
   BufferSizePolicy mBufferSizePolicy;
 };
 
@@ -255,17 +225,6 @@ class ContentClientRemoteBuffer : public ContentClient {
   virtual nsIntRegion GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
                                        const nsIntRegion& aVisibleRegion);
 
-  RefPtr<RotatedBuffer> CreateBuffer(gfxContentType aType,
-                                     const gfx::IntRect& aRect,
-                                     uint32_t aFlags) override;
-
-  RefPtr<RotatedBuffer> CreateBufferInternal(const gfx::IntRect& aRect,
-                                             gfx::SurfaceFormat aFormat,
-                                             TextureFlags aFlags);
-
-  RemoteRotatedBuffer* GetRemoteBuffer() const {
-    return static_cast<RemoteRotatedBuffer*>(mBuffer.get());
-  }
 
   bool mIsNewBuffer;
 };
@@ -296,8 +255,6 @@ class ContentClientDoubleBuffered : public ContentClientRemoteBuffer {
 
   void FinalizeFrame(PaintState& aPaintState) override;
 
-  RefPtr<RotatedBuffer> GetFrontBuffer() const override { return mFrontBuffer; }
-
   TextureInfo GetTextureInfo() const override {
     return TextureInfo(CompositableType::CONTENT_DOUBLE, mTextureFlags);
   }
@@ -305,7 +262,6 @@ class ContentClientDoubleBuffered : public ContentClientRemoteBuffer {
  private:
   void EnsureBackBufferIfFrontBuffer();
 
-  RefPtr<RemoteRotatedBuffer> mFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
   bool mFrontAndBackBufferDiffer;
 };
