@@ -274,9 +274,16 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::Windowframe:
       color = GetColorFromNSColor(NSColor.windowFrameColor);
       break;
-    case ColorID::Window:
-      color = GetColorFromNSColor(NSColor.windowBackgroundColor);
+    case ColorID::Window: {
+      if (@available(macOS 10.14, *)) {
+        color = GetColorFromNSColor(NSColor.windowBackgroundColor);
+      } else {
+        // On 10.13 and below, NSColor.windowBackgroundColor is transparent black.
+        // Use a light grey instead (taken from macOS 11.5).
+        color = NS_RGB(0xF6, 0xF6, 0xF6);
+      }
       break;
+    }
     case ColorID::Field:
     case ColorID::MozCombobox:
       color = GetColorFromNSColor(NSColor.controlBackgroundColor);
