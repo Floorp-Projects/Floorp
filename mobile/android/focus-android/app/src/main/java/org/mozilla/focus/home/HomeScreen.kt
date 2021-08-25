@@ -11,32 +11,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import mozilla.components.feature.top.sites.TopSite
-import org.mozilla.focus.topsites.TopSiteMenuItem
+import kotlinx.coroutines.DelicateCoroutinesApi
+import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.focus.components
 import org.mozilla.focus.topsites.TopSites
 
 /**
  * The home screen.
- *
- * @param topSites List of [TopSite] to display.
- * @param topSitesMenuItems List of [TopSiteMenuItem] to display in a top site dropdown menu.
- * @param onTopSiteClick Invoked when the user clicks on a top site.
  */
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
-fun HomeScreen(
-    topSites: List<TopSite>,
-    topSitesMenuItems: List<TopSiteMenuItem>,
-    onTopSiteClick: (TopSite) -> Unit = {}
-) {
+fun HomeScreen() {
+    val topSitesState = components.appStore.observeAsComposableState { state -> state.topSites }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        val topSites = topSitesState.value!!
+
         if (topSites.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            TopSites(
-                topSites = topSites,
-                menuItems = topSitesMenuItems,
-                onTopSiteClick = onTopSiteClick
-            )
+            TopSites(topSites = topSites)
         }
     }
 }

@@ -9,11 +9,20 @@ import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
@@ -21,15 +30,20 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.android.synthetic.main.fragment_search_suggestions.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
+import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.focus.R
 import org.mozilla.focus.components
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
 import org.mozilla.focus.theme.FocusTheme
+import org.mozilla.focus.topsites.TopSites
 import kotlin.coroutines.CoroutineContext
 
 class SearchSuggestionsFragment : Fragment(), CoroutineScope {
@@ -124,26 +138,54 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 private fun SearchOverlay(
     viewModel: SearchSuggestionsViewModel
 ) {
+    val topSitesState =
+        components.appStore.observeAsComposableState { state -> state.topSites }
     val state = viewModel.state.observeAsState()
+    val query = viewModel.searchQuery.observeAsState()
+
+    val topSites = topSitesState.value!!
 
     when (state.value) {
-        is State.Disabled -> { /* Not implemented in Compose, still handled by the View implementation */ }
-        is State.NoSuggestionsAPI -> { /* Not implemented in Compose, still handled by the View implementation */ }
-        State.ReadyForSuggestions -> SearchSuggestions(viewModel)
+        is State.Disabled,
+        is State.NoSuggestionsAPI -> {
+            if (query.value.isNullOrEmpty() && topSites.isNotEmpty()) {
+                TopSitesOverlay(topSites = topSites)
+            }
+        }
+        is State.ReadyForSuggestions -> {
+            if (query.value.isNullOrEmpty() && topSites.isNotEmpty()) {
+                TopSitesOverlay(topSites = topSites)
+            } else {
+                SearchSuggestions(
+                    text = query.value ?: "",
+                    onSuggestionClicked = { suggestion ->
+                        viewModel.selectSearchSuggestion(
+                            suggestion.title!!
+                        )
+                    },
+                    onAutoComplete = { suggestion ->
+                        val editSuggestion = suggestion.editSuggestion ?: return@SearchSuggestions
+                        viewModel.setAutocompleteSuggestion(editSuggestion)
+                    }
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun SearchSuggestions(
-    viewModel: SearchSuggestionsViewModel
+    text: String,
+    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
+    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
     val context = LocalContext.current
     val components = components
-    val query = viewModel.searchQuery.observeAsState()
 
     val icon = ContextCompat.getDrawable(LocalContext.current, R.drawable.mozac_ic_search)
         ?.toBitmap()
@@ -163,19 +205,30 @@ private fun SearchSuggestions(
 
     FocusTheme {
         AwesomeBar(
-            text = query.value ?: "",
-            providers = listOf(
-                provider
-            ),
-            onSuggestionClicked = { suggestion ->
-                viewModel.selectSearchSuggestion(
-                    suggestion.title!!
-                )
-            },
-            onAutoComplete = { suggestion ->
-                val text = suggestion.editSuggestion ?: return@AwesomeBar
-                viewModel.setAutocompleteSuggestion(text)
-            }
+            text = text,
+            providers = listOf(provider),
+            onSuggestionClicked = onSuggestionClicked,
+            onAutoComplete = onAutoComplete
         )
+    }
+}
+
+@Composable
+private fun TopSitesOverlay(
+    topSites: List<TopSite>
+) {
+    FocusTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colors.background),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            TopSites(topSites = topSites)
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
     }
 }

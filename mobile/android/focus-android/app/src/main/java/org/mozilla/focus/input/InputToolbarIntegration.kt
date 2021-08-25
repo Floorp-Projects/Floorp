@@ -42,11 +42,17 @@ class InputToolbarIntegration(
             hint = ContextCompat.getColor(toolbar.context, R.color.photonLightGrey05),
             text = ContextCompat.getColor(toolbar.context, R.color.primaryText)
         )
+
         toolbar.setOnEditListener(object : Toolbar.OnEditListener {
+            override fun onStartEditing() {
+                fragment.onStartEditing()
+            }
+
             override fun onTextChanged(text: String) {
                 fragment.onTextChange(text)
             }
         })
+
         toolbar.setOnUrlCommitListener { url ->
             fragment.onCommit(url)
             false

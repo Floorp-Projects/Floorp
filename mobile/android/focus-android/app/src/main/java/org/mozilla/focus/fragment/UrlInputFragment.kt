@@ -14,17 +14,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.stringResource
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.fragment_urlinput2.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.state.action.ContentAction
@@ -34,11 +31,9 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
-import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.ThreadUtils
-import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
@@ -52,7 +47,6 @@ import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.topsites.DefaultTopSitesView
-import org.mozilla.focus.topsites.TopSiteMenuItem
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
@@ -251,35 +245,7 @@ class UrlInputFragment :
         val view = inflater.inflate(R.layout.fragment_urlinput2, container, false)
 
         val topSites = view.findViewById<ComposeView>(R.id.topSites)
-        topSites.setContent {
-            val topSitesState = requireComponents.appStore.observeAsComposableState { state -> state.topSites }
-
-            HomeScreen(
-                topSites = topSitesState.value!!,
-                topSitesMenuItems = listOfNotNull(
-                    TopSiteMenuItem(
-                        title = stringResource(R.string.remove_top_site),
-                        onClick = { topSite ->
-                            Shortcuts.shortcutRemovedCounter["removed_from_home_screen"].add()
-
-                            viewLifecycleOwner.lifecycleScope.launch(IO) {
-                                requireComponents.topSitesUseCases.removeTopSites(topSite)
-                            }
-                        }
-                    )
-                ),
-                onTopSiteClick = { topSite ->
-                    Shortcuts.shortcutOpenedCounter.add()
-
-                    requireComponents.tabsUseCases.addTab(
-                        url = topSite.url,
-                        source = SessionState.Source.Internal.HomeScreen,
-                        selectTab = true,
-                        private = true
-                    )
-                }
-            )
-        }
+        topSites.setContent { HomeScreen() }
 
         return view
     }
@@ -702,6 +668,12 @@ class UrlInputFragment :
             if (!searchTerms.isNullOrEmpty()) {
                 requireComponents.store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, searchTerms))
             }
+        }
+    }
+
+    internal fun onStartEditing() {
+        if (tab != null) {
+            searchViewContainer?.isVisible = true
         }
     }
 

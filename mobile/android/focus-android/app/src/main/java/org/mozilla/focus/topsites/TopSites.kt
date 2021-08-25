@@ -27,26 +27,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.ktx.kotlin.getRepresentativeCharacter
 import mozilla.components.ui.colors.PhotonColors
+import org.mozilla.focus.GleanMetrics.Shortcuts
+import org.mozilla.focus.R
+import org.mozilla.focus.components
 
 /**
  * A list of top sites.
  *
  * @param topSites List of [TopSite] to display.
- * @param menuItems List of [TopSiteMenuItem] to display in a top site dropdown menu.
- * @param onTopSiteClick Invoked when the user clicks on a top site.
  */
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
-fun TopSites(
-    topSites: List<TopSite>,
-    menuItems: List<TopSiteMenuItem>,
-    onTopSiteClick: (TopSite) -> Unit = {}
-) {
+fun TopSites(topSites: List<TopSite>) {
+    val components = components
+
     Row(
         modifier = Modifier
             .padding(horizontal = 10.dp)
@@ -57,8 +63,28 @@ fun TopSites(
         topSites.forEach { topSite ->
             TopSiteItem(
                 topSite = topSite,
-                menuItems = menuItems,
-                onTopSiteClick = onTopSiteClick
+                menuItems = listOfNotNull(
+                    TopSiteMenuItem(
+                        title = stringResource(R.string.remove_top_site),
+                        onClick = { item ->
+                            Shortcuts.shortcutRemovedCounter["removed_from_home_screen"].add()
+
+                            GlobalScope.launch(Dispatchers.IO) {
+                                components.topSitesUseCases.removeTopSites(item)
+                            }
+                        }
+                    )
+                ),
+                onTopSiteClick = { item ->
+                    Shortcuts.shortcutOpenedCounter.add()
+
+                    components.tabsUseCases.addTab(
+                        url = item.url,
+                        source = SessionState.Source.Internal.HomeScreen,
+                        selectTab = true,
+                        private = true
+                    )
+                }
             )
         }
     }
