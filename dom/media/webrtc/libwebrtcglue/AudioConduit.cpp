@@ -443,7 +443,8 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
   }
 
   // If the Mutex is taken, skip this chunk to avoid blocking the audio thread.
-  if (!mMutex.TryLock()) {
+  MutexAutoTryLock tryLock(mMutex);
+  if (!tryLock) {
     CSFLogError(LOGTAG, "%s Conduit going through negotiation ", __FUNCTION__);
     return kMediaConduitPlayoutError;
   }
@@ -451,7 +452,6 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
   // Conduit should have reception enabled before we ask for decoded
   // samples
   if (!mRecvStreamRunning) {
-    mMutex.Unlock();
     CSFLogError(LOGTAG, "%s Engine not Receiving ", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
@@ -462,8 +462,6 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
   // less stable).
   auto info = static_cast<webrtc::internal::AudioReceiveStream*>(mRecvStream)
                   ->GetAudioFrameWithInfo(samplingFreqHz, frame);
-
-  mMutex.Unlock();
 
   if (info == webrtc::AudioMixer::Source::AudioFrameInfo::kError) {
     CSFLogError(LOGTAG, "%s Getting audio frame failed", __FUNCTION__);
