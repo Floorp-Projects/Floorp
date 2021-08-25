@@ -5661,7 +5661,7 @@
 # 2 = Strict: reject violations of "should" specification directives
 - name: image.avif.compliance_strictness
   type: RelaxedAtomicInt32
-  value: 1
+  value: 0
   mirror: always
 
 # Whether we apply container-level transforms like mirroring and rotation
