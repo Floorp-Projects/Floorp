@@ -158,12 +158,12 @@ void ImageResource::SetCurrentImage(layers::ImageContainer* aContainer,
 }
 
 ImgDrawResult ImageResource::GetImageContainerImpl(
-    layers::LayerManager* aManager, const gfx::IntSize& aSize,
+    WindowRenderer* aRenderer, const gfx::IntSize& aSize,
     const Maybe<SVGImageContext>& aSVGContext,
     const Maybe<ImageIntRegion>& aRegion, uint32_t aFlags,
     layers::ImageContainer** aOutContainer) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(aRenderer);
   MOZ_ASSERT((aFlags &
               ~(FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST | FLAG_RECORD_BLOB |
                 FLAG_ASYNC_NOTIFY | FLAG_HIGH_QUALITY_SCALING)) == FLAG_NONE,
@@ -171,7 +171,7 @@ ImgDrawResult ImageResource::GetImageContainerImpl(
 
   ImgDrawResult drawResult;
   gfx::IntSize size;
-  Tie(drawResult, size) = GetImageContainerSize(aManager, aSize, aFlags);
+  Tie(drawResult, size) = GetImageContainerSize(aRenderer, aSize, aFlags);
   if (drawResult != ImgDrawResult::SUCCESS) {
     return drawResult;
   }

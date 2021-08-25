@@ -426,12 +426,11 @@ class ImageResource : public Image {
    * best effort estimate.
    */
   virtual Tuple<ImgDrawResult, gfx::IntSize> GetImageContainerSize(
-      layers::LayerManager* aManager, const gfx::IntSize& aSize,
-      uint32_t aFlags) {
+      WindowRenderer* aRenderer, const gfx::IntSize& aSize, uint32_t aFlags) {
     return MakeTuple(ImgDrawResult::NOT_SUPPORTED, gfx::IntSize(0, 0));
   }
 
-  ImgDrawResult GetImageContainerImpl(layers::LayerManager* aManager,
+  ImgDrawResult GetImageContainerImpl(WindowRenderer* aRenderer,
                                       const gfx::IntSize& aSize,
                                       const Maybe<SVGImageContext>& aSVGContext,
                                       const Maybe<ImageIntRegion>& aRegion,
