@@ -58,3 +58,5 @@ MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
 SPHINX_TREES["/l10n"] = "docs"
 
 FINAL_LIBRARY = "xul"
+
+REQUIRES_UNIFIED_BUILD = True

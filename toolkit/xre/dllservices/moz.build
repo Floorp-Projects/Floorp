@@ -35,3 +35,5 @@ TEST_DIRS += [
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
+
+REQUIRES_UNIFIED_BUILD = True

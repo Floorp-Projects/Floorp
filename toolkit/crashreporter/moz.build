@@ -139,3 +139,5 @@ GeneratedFile(
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Crash Reporting")
+
+REQUIRES_UNIFIED_BUILD = True

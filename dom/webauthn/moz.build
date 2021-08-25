@@ -74,6 +74,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
+    REQUIRES_UNIFIED_BUILD = True
     EXPORTS.mozilla.dom += [
         "WinWebAuthnManager.h",
     ]

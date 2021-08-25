@@ -36,3 +36,5 @@ UNIFIED_SOURCES += [
 DisableStlWrapping()
 
 include("/mozglue/build/replace_malloc.mozbuild")
+
+REQUIRES_UNIFIED_BUILD = True

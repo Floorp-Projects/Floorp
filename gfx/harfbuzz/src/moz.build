@@ -125,3 +125,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['UNICODE'] = True
+
+REQUIRES_UNIFIED_BUILD = True

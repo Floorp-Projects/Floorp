@@ -77,3 +77,5 @@ FINAL_LIBRARY = "xul"
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Security: CAPS")
+
+REQUIRES_UNIFIED_BUILD = True

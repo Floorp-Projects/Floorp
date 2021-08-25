@@ -11,3 +11,5 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += ["TestAboutThirdParty.cpp"]
 
 FINAL_LIBRARY = "xul-gtest"
+
+REQUIRES_UNIFIED_BUILD = True

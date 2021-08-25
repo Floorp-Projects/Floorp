@@ -25,3 +25,5 @@ EXPORTS.woff2 += [
 AllowCompilerWarnings()
 
 Library('woff2')
+
+REQUIRES_UNIFIED_BUILD = True

@@ -38,3 +38,5 @@ LOCAL_INCLUDES += [
     "../style",
     "/dom/base",
 ]
+
+REQUIRES_UNIFIED_BUILD = True

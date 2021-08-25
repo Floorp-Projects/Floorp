@@ -29,3 +29,5 @@ UNIFIED_SOURCES = [
     "Script.cpp",
     "Source.cpp",
 ]
+
+REQUIRES_UNIFIED_BUILD = True

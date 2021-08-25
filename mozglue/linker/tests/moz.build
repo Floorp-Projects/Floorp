@@ -21,3 +21,5 @@ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += ["-Wno-error=shadow"]
 
 ASFLAGS += ["-I", SRCDIR]
+
+REQUIRES_UNIFIED_BUILD = True

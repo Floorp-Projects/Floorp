@@ -45,3 +45,5 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["test/gtest"]
+
+REQUIRES_UNIFIED_BUILD = True
