@@ -90,7 +90,7 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
                    uint32_t aFlags) override;
 
   Tuple<ImgDrawResult, gfx::IntSize> GetImageContainerSize(
-      layers::LayerManager* aManager, const gfx::IntSize& aSize,
+      WindowRenderer* aRenderer, const gfx::IntSize& aSize,
       uint32_t aFlags) override;
 
   /**
