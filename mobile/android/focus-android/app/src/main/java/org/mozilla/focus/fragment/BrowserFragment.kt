@@ -190,6 +190,7 @@ class BrowserFragment :
                     ),
                 engineView!!,
                 requireComponents.contextMenuUseCases,
+                tabId,
                 additionalNote = { hitResult -> getAdditionalNote(hitResult) }
             ),
             this, view
