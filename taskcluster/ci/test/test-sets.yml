@@ -230,7 +230,6 @@ windows-tests:
     - firefox-ui-functional-remote
     # - jittest  # See comment in windows-ccov-tests set.
     - marionette
-    - mochitest-chrome
     - telemetry-tests-client
 
 windows-ccov-tests:
@@ -249,6 +248,7 @@ windows10-2004-tests:
     - jsreftest
     - mochitest-a11y
     - mochitest-browser-chrome
+    - mochitest-chrome
     - mochitest-chrome-gpu
     - mochitest-devtools-chrome
     - mochitest-media
