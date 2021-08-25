@@ -178,7 +178,7 @@ void TabCapturer::CaptureFrameNow() {
     // XXX This would be more efficient if it returned a MozPromise, and
     // even more if we used CrossProcessPaint directly and returned a surface.
     RefPtr<dom::Promise> promise =
-        wgp->DrawSnapshot(nullptr, 1.0, "white"_ns, IgnoreErrors());
+        wgp->DrawSnapshot(nullptr, 1.0, "white"_ns, false, IgnoreErrors());
     if (!promise) {
       return;
     }
