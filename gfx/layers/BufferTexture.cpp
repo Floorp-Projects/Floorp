@@ -99,6 +99,13 @@ class ShmemTextureData : public BufferTextureData {
   mozilla::ipc::Shmem mShmem;
 };
 
+static bool UsingX11Compositor() {
+#ifdef MOZ_WIDGET_GTK
+  return gfx::gfxVars::UseXRender();
+#endif
+  return false;
+}
+
 bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
                                   LayersBackend aLayersBackend,
                                   bool aSupportsTextureDirectMapping) {
@@ -107,7 +114,7 @@ bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
   }
 
   return aLayersBackend != LayersBackend::LAYERS_BASIC ||
-         aFormat == gfx::SurfaceFormat::UNKNOWN;
+         UsingX11Compositor() || aFormat == gfx::SurfaceFormat::UNKNOWN;
 }
 
 BufferTextureData* BufferTextureData::Create(

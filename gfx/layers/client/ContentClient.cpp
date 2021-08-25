@@ -92,6 +92,11 @@ already_AddRefed<ContentClient> ContentClient::CreateContentClient(
       useDoubleBuffering = true;
     } else
 #  endif
+        // We can't use double buffering when using image content with
+        // Xrender support on Linux, as ContentHostDoubleBuffered is not
+        // suited for direct uploads to the server.
+        if (!gfxPlatformGtk::GetPlatform()->UseImageOffscreenSurfaces() ||
+            !gfxVars::UseXRender())
 #endif
     {
       useDoubleBuffering = backend == LayersBackend::LAYERS_BASIC;

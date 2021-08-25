@@ -46,9 +46,9 @@ struct AsyncClipboardData {
   ClipboardDataType mDataType;
 };
 
-static void wayland_clipboard_contents_received_async(
+static void wayland_clipboard_contents_received(
     GtkClipboard* clipboard, GtkSelectionData* selection_data, gpointer data) {
-  LOGCLIP(("wayland_clipboard_contents_received_async() selection_data = %p\n",
+  LOGCLIP(("wayland_clipboard_contents_received() selection_data = %p\n",
            selection_data));
   AsyncClipboardData* fastTrack = static_cast<AsyncClipboardData*>(data);
   fastTrack->mRetrievalContex->TransferAsyncClipboardData(
@@ -157,7 +157,7 @@ GdkAtom* nsRetrievalContextWaylandAsync::GetTargets(int32_t aWhichClipboard,
   mClipboardRequestNumber++;
   gtk_clipboard_request_contents(
       gtk_clipboard_get(selection), gdk_atom_intern("TARGETS", FALSE),
-      wayland_clipboard_contents_received_async,
+      wayland_clipboard_contents_received,
       new AsyncClipboardData(CLIPBOARD_TARGETS, mClipboardRequestNumber, this));
 
   if (!WaitForClipboardContent()) {
@@ -196,7 +196,7 @@ const char* nsRetrievalContextWaylandAsync::GetClipboardData(
   mClipboardRequestNumber++;
   gtk_clipboard_request_contents(
       gtk_clipboard_get(selection), gdk_atom_intern(aMimeType, FALSE),
-      wayland_clipboard_contents_received_async,
+      wayland_clipboard_contents_received,
       new AsyncClipboardData(CLIPBOARD_DATA, mClipboardRequestNumber, this));
 
   if (!WaitForClipboardContent()) {

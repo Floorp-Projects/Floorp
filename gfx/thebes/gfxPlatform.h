@@ -312,7 +312,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   const char* GetAzureCanvasBackend() const;
   const char* GetAzureContentBackend() const;
 
-  void GetAzureBackendInfo(mozilla::widget::InfoObject& aObj);
+  virtual void GetAzureBackendInfo(mozilla::widget::InfoObject& aObj);
   void GetApzSupportInfo(mozilla::widget::InfoObject& aObj);
   void GetTilesSupportInfo(mozilla::widget::InfoObject& aObj);
   void GetFrameStats(mozilla::widget::InfoObject& aObj);
