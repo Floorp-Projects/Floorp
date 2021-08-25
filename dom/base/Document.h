@@ -3645,7 +3645,7 @@ class Document : public nsINode,
 
   // Return true if there is transient user gesture activation and it hasn't yet
   // timed out.
-  bool HasValidTransientUserGestureActivation();
+  bool HasValidTransientUserGestureActivation() const;
 
   // Return true.
   bool ConsumeTransientUserGestureActivation();
