@@ -61,7 +61,6 @@ class gfxVarReceiver;
   _(ScreenDepth, int32_t, 0)                                       \
   _(GREDirectory, nsString, nsString())                            \
   _(ProfDirectory, nsString, nsString())                           \
-  _(UseOMTP, bool, false)                                          \
   _(AllowD3D11KeyedMutex, bool, false)                             \
   _(SystemTextQuality, int32_t, 5 /* CLEARTYPE_QUALITY */)         \
   _(SystemTextClearTypeLevel, float, 1.0f)                         \
