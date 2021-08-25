@@ -107,7 +107,7 @@ void AnonymizeOriginString(nsACString& aOriginString) {
 #ifdef XP_WIN
 void CacheUseDOSDevicePathSyntaxPrefValue() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   if (gUseDOSDevicePathSyntax == -1) {
     bool useDOSDevicePathSyntax =
