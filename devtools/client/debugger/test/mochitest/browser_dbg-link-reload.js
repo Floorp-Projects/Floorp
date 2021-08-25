@@ -7,12 +7,6 @@
  * It seems to cause different codepath compared to F5.
  */
 add_task(async function() {
-  // Disable bfcache for Fission for now.
-  // If Fission is disabled, the pref is no-op.
-  await SpecialPowers.pushPrefEnv({
-    set: [["fission.bfcacheInParent", false]],
-  });
-
   const dbg = await initDebugger("doc-reload-link.html", "doc-reload-link.html");
   const {
     selectors: { getSelectedSource, getIsPaused, getCurrentThread },
