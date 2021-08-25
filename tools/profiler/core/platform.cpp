@@ -1857,7 +1857,6 @@ static void StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP,
 
 #if defined(USE_FRAME_POINTER_STACK_WALK)
 static void DoFramePointerBacktrace(
-    PSLockRef aLock,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const Registers& aRegs, NativeStack& aNativeStack,
     StackWalkControl* aStackWalkControlIfSupported) {
@@ -1936,7 +1935,6 @@ static void DoFramePointerBacktrace(
 
 #if defined(USE_MOZ_STACK_WALK)
 static void DoMozStackWalkBacktrace(
-    PSLockRef aLock,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const Registers& aRegs, NativeStack& aNativeStack,
     StackWalkControl* aStackWalkControlIfSupported) {
@@ -2035,7 +2033,6 @@ static void DoMozStackWalkBacktrace(
 
 #ifdef USE_EHABI_STACKWALK
 static void DoEHABIBacktrace(
-    PSLockRef aLock,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const Registers& aRegs, NativeStack& aNativeStack,
     StackWalkControl* aStackWalkControlIfSupported) {
@@ -2070,7 +2067,6 @@ MOZ_ASAN_BLACKLIST static void ASAN_memcpy(void* aDst, const void* aSrc,
 #  endif
 
 static void DoLULBacktrace(
-    PSLockRef aLock,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const Registers& aRegs, NativeStack& aNativeStack,
     StackWalkControl* aStackWalkControlIfSupported) {
@@ -2226,7 +2222,6 @@ static void DoLULBacktrace(
 
 #ifdef HAVE_NATIVE_UNWIND
 static void DoNativeBacktrace(
-    PSLockRef aLock,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
     const Registers& aRegs, NativeStack& aNativeStack,
     StackWalkControl* aStackWalkControlIfSupported) {
@@ -2236,16 +2231,16 @@ static void DoNativeBacktrace(
   // ordering that matters is that LUL must precede FRAME_POINTER, because on
   // Linux they can both be present.
 #  if defined(USE_LUL_STACKWALK)
-  DoLULBacktrace(aLock, aThreadData, aRegs, aNativeStack,
+  DoLULBacktrace(aThreadData, aRegs, aNativeStack,
                  aStackWalkControlIfSupported);
 #  elif defined(USE_EHABI_STACKWALK)
-  DoEHABIBacktrace(aLock, aThreadData, aRegs, aNativeStack,
+  DoEHABIBacktrace(aThreadData, aRegs, aNativeStack,
                    aStackWalkControlIfSupported);
 #  elif defined(USE_FRAME_POINTER_STACK_WALK)
-  DoFramePointerBacktrace(aLock, aThreadData, aRegs, aNativeStack,
+  DoFramePointerBacktrace(aThreadData, aRegs, aNativeStack,
                           aStackWalkControlIfSupported);
 #  elif defined(USE_MOZ_STACK_WALK)
-  DoMozStackWalkBacktrace(aLock, aThreadData, aRegs, aNativeStack,
+  DoMozStackWalkBacktrace(aThreadData, aRegs, aNativeStack,
                           aStackWalkControlIfSupported);
 #  else
 #    error "Invalid configuration"
@@ -2291,7 +2286,7 @@ static inline void DoSharedSample(
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
   if (captureNative) {
-    DoNativeBacktrace(aLock, aThreadData, aRegs, nativeStack,
+    DoNativeBacktrace(aThreadData, aRegs, nativeStack,
                       stackWalkControlIfSupported);
 
     MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aThreadData, aRegs,
@@ -5689,10 +5684,10 @@ static void profiler_suspend_and_sample_thread(
       // suspend_and_sample_thread as other stackwalking methods may not be
       // initialized.
 #  if defined(USE_FRAME_POINTER_STACK_WALK)
-      DoFramePointerBacktrace(aLock, aThreadData, aRegs, nativeStack,
+      DoFramePointerBacktrace(aThreadData, aRegs, nativeStack,
                               stackWalkControlIfSupported);
 #  elif defined(USE_MOZ_STACK_WALK)
-      DoMozStackWalkBacktrace(aLock, aThreadData, aRegs, nativeStack,
+      DoMozStackWalkBacktrace(aThreadData, aRegs, nativeStack,
                               stackWalkControlIfSupported);
 #  else
 #    error "Invalid configuration"
