@@ -123,30 +123,79 @@ static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
   return true;
 }
 
+static MOZ_ALWAYS_INLINE Shape* GetPlainObjectShapeWithProto(
+    JSContext* cx, JSObject* proto, gc::AllocKind kind) {
+  MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(&PlainObject::class_) == 0,
+             "all slots can be used for properties");
+  uint32_t nfixed = GetGCKindSlots(kind);
+  return SharedShape::getInitialShape(cx, &PlainObject::class_, cx->realm(),
+                                      TaggedProto(proto), nfixed);
+}
+
+static MOZ_ALWAYS_INLINE Shape* GetPlainObjectShapeWithDefaultProto(
+    JSContext* cx, gc::AllocKind kind) {
+  JSObject* proto = GlobalObject::getOrCreatePrototype(cx, JSProto_Object);
+  if (!proto) {
+    return nullptr;
+  }
+
+  return GetPlainObjectShapeWithProto(cx, proto, kind);
+}
+
 PlainObject* js::NewPlainObject(JSContext* cx, NewObjectKind newKind) {
-  return NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
+  constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT0;
+  MOZ_ASSERT(gc::GetGCObjectKind(&PlainObject::class_) == allocKind);
+
+  RootedShape shape(cx, GetPlainObjectShapeWithDefaultProto(cx, allocKind));
+  if (!shape) {
+    return nullptr;
+  }
+
+  return PlainObject::createWithShape(cx, shape, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithAllocKind(JSContext* cx,
                                              gc::AllocKind allocKind,
                                              NewObjectKind newKind) {
-  return NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind);
+  RootedShape shape(cx, GetPlainObjectShapeWithDefaultProto(cx, allocKind));
+  if (!shape) {
+    return nullptr;
+  }
+
+  return PlainObject::createWithShape(cx, shape, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithProto(JSContext* cx, HandleObject proto,
                                          NewObjectKind newKind) {
+  if (proto && proto == cx->global()->maybeGetPrototype(JSProto_Object)) {
+    return NewPlainObject(cx, newKind);
+  }
+
   constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT0;
   MOZ_ASSERT(gc::GetGCObjectKind(&PlainObject::class_) == allocKind);
-  return NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
-                                                      newKind);
+
+  RootedShape shape(cx, GetPlainObjectShapeWithProto(cx, proto, allocKind));
+  if (!shape) {
+    return nullptr;
+  }
+
+  return PlainObject::createWithShape(cx, shape, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
                                                      HandleObject proto,
                                                      gc::AllocKind allocKind,
                                                      NewObjectKind newKind) {
-  return NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
-                                                      newKind);
+  if (proto && proto == cx->global()->maybeGetPrototype(JSProto_Object)) {
+    return NewPlainObjectWithAllocKind(cx, allocKind, newKind);
+  }
+
+  RootedShape shape(cx, GetPlainObjectShapeWithProto(cx, proto, allocKind));
+  if (!shape) {
+    return nullptr;
+  }
+
+  return PlainObject::createWithShape(cx, shape, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
