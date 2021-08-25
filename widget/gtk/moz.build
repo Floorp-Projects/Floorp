@@ -111,7 +111,6 @@ if CONFIG["MOZ_X11"]:
         "WindowSurfaceX11.cpp",
         "WindowSurfaceX11Image.cpp",
         "WindowSurfaceX11SHM.cpp",
-        "WindowSurfaceXRender.cpp",
     ]
     EXPORTS.mozilla.widget += [
         "CompositorWidgetChild.h",
