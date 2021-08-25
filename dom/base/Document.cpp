@@ -15922,7 +15922,7 @@ void Document::ClearUserGestureActivation() {
   }
 }
 
-bool Document::HasValidTransientUserGestureActivation() {
+bool Document::HasValidTransientUserGestureActivation() const {
   RefPtr<WindowContext> wc = GetWindowContext();
   return wc && wc->HasValidTransientUserGestureActivation();
 }
