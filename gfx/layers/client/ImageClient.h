@@ -23,7 +23,6 @@
 namespace mozilla {
 namespace layers {
 
-class ClientLayer;
 class CompositableForwarder;
 class Image;
 class ImageContainer;
@@ -56,8 +55,8 @@ class ImageClient : public CompositableClient {
   virtual bool UpdateImage(ImageContainer* aContainer,
                            uint32_t aContentFlags) = 0;
 
-  void SetLayer(ClientLayer* aLayer) { mLayer = aLayer; }
-  ClientLayer* GetLayer() const { return mLayer; }
+  void SetLayer(ShadowableLayer* aLayer) { mLayer = aLayer; }
+  ShadowableLayer* GetLayer() const { return mLayer; }
 
   /**
    * asynchronously remove all the textures used by the image client.
@@ -82,7 +81,7 @@ class ImageClient : public CompositableClient {
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
               CompositableType aType);
 
-  ClientLayer* mLayer;
+  ShadowableLayer* mLayer;
   CompositableType mType;
   uint32_t mLastUpdateGenerationCounter;
 };
