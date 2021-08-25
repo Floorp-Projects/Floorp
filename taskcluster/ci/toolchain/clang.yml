@@ -74,6 +74,7 @@ linux64-clang-12-mingw-x86:
             - linux64-gcc-7
             - linux64-binutils
             - linux64-toolchain-sysroot
+            - wasm32-wasi-compiler-rt
 
 linux64-clang-12-mingw-x64:
     description: "MinGW-Clang 12 x64 toolchain build"
@@ -100,6 +101,7 @@ linux64-clang-12-mingw-x64:
             - linux64-gcc-7
             - linux64-binutils
             - linux64-toolchain-sysroot
+            - wasm32-wasi-compiler-rt
 
 linux64-clang-10:
     description: "Clang 10 toolchain build"
