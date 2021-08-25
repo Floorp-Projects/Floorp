@@ -199,13 +199,10 @@ async function waitForProtocolAppChooserDialog(browser, state) {
   );
 }
 
-async function promiseDownloadFinished(list, stopFromOpening) {
+async function promiseDownloadFinished(list) {
   return new Promise(resolve => {
     list.addView({
       onDownloadChanged(download) {
-        if (stopFromOpening) {
-          download.launchWhenSucceeded = false;
-        }
         info("Download changed!");
         if (download.succeeded || download.error) {
           info("Download succeeded or errored");
