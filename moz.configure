@@ -179,6 +179,17 @@ add_old_configure_assignment("DEVELOPER_OPTIONS", developer_options)
 set_config("DEVELOPER_OPTIONS", developer_options)
 
 
+# hybrid build handling
+# ==============================================================
+
+option(
+    "--disable-unified-build",
+    help="Enable building modules that are not marked with `REQUIRES_UNIFIED_BUILD` in non unified context",
+)
+
+set_config("ENABLE_UNIFIED_BUILD", True, when="--disable-unified-build")
+
+
 option(
     env="MOZ_FETCHES_DIR",
     nargs=1,
