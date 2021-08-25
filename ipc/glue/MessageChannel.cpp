@@ -2110,7 +2110,8 @@ bool MessageChannel::ShouldDeferInterruptMessage(const Message& aMsg,
   // MessageChannel.h. "Remote" stack depth means our side, and "local" means
   // the other side.
   if (aMsg.interrupt_remote_stack_depth_guess() ==
-      RemoteViewOfStackDepth(aStackDepth)) {
+          RemoteViewOfStackDepth(aStackDepth) ||
+      mInterruptStack.empty()) {
     return false;
   }
 
