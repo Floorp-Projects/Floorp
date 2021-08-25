@@ -342,6 +342,11 @@ function remoteSettingsFunction() {
         UptakeTelemetry.STATUS.SYNC_ERROR,
         syncTelemetryArgs
       );
+      // Notify potential observers of the error.
+      Services.obs.notifyObservers(
+        { wrappedJSObject: { error: firstError } },
+        "remote-settings:sync-error"
+      );
       // Rethrow the first observed error
       throw firstError;
     }
