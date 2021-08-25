@@ -331,7 +331,6 @@ class nsAutoRetainUIKitObject {
           << "Window context problem 2 " << backingSize;
       return;
     }
-    dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
     targetContext = gfxContext::CreateOrNull(dt);
   } else {
     MOZ_ASSERT_UNREACHABLE("COREGRAPHICS is the only supported backend");
