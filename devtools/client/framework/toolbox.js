@@ -3216,27 +3216,13 @@ Toolbox.prototype = {
     }
 
     // We may need to hide/show the frames button now.
-    const wasVisible = this.frameButton.isVisible;
-    const wasDisabled = this.frameButton.disabled;
     this.updateFrameButton();
 
-    const toolbarUpdate = () => {
-      if (
-        this.frameButton.isVisible === wasVisible &&
-        this.frameButton.disabled === wasDisabled
-      ) {
-        return;
-      }
-      this.component.setToolboxButtons(this.toolbarButtons);
-    };
-
-    // If we are navigating/reloading, however (in which case data.destroyAll
-    // will be true), we should debounce the update to avoid unnecessary
-    // flickering/rendering.
-    if (data.destroyAll && !this.debouncedToolbarUpdate) {
+    // Debounce the update to avoid unnecessary flickering/rendering.
+    if (!this.debouncedToolbarUpdate) {
       this.debouncedToolbarUpdate = debounce(
         () => {
-          toolbarUpdate();
+          this.component.setToolboxButtons(this.toolbarButtons);
           this.debouncedToolbarUpdate = null;
         },
         200,
@@ -3246,8 +3232,6 @@ Toolbox.prototype = {
 
     if (this.debouncedToolbarUpdate) {
       this.debouncedToolbarUpdate();
-    } else {
-      toolbarUpdate();
     }
   },
 
