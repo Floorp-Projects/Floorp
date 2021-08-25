@@ -118,8 +118,7 @@ async function captureScreenshot(args, browsingContext) {
       const snapshot = await browsingContext.currentWindowGlobal.drawSnapshot(
         rect,
         actualRatio,
-        "rgb(255,255,255)",
-        args.fullpage
+        "rgb(255,255,255)"
       );
 
       const fileScale = args.fileScale || actualRatio;

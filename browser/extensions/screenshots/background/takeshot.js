@@ -40,7 +40,6 @@ this.takeshot = (function() {
         height: pos.height,
       };
       options.rect = rectangle;
-      options.resetScrollPosition = true;
 
       // To avoid creating extremely large images (which causes
       // performance problems), we set the devicePixelRatio to 1.
