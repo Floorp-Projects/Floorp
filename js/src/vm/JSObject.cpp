@@ -883,7 +883,7 @@ bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
   gc::AllocKind allocKind = NewObjectGCKind();
   NewObjectKind newKind = GenericObject;
 
-  JSObject* obj = NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind);
+  JSObject* obj = NewPlainObjectWithAllocKind(cx, allocKind, newKind);
   if (!obj) {
     return false;
   }
@@ -899,7 +899,16 @@ JSObject* js::CreateThis(JSContext* cx, const JSClass* newclasp,
           cx, callee, JSCLASS_CACHED_PROTO_KEY(newclasp), &proto)) {
     return nullptr;
   }
+
   gc::AllocKind kind = NewObjectGCKind();
+
+  if (newclasp == &PlainObject::class_) {
+    if (proto) {
+      return NewPlainObjectWithProtoAndAllocKind(cx, proto, kind);
+    }
+    return NewPlainObjectWithAllocKind(cx, kind);
+  }
+
   return NewObjectWithClassProto(cx, newclasp, proto, kind);
 }
 

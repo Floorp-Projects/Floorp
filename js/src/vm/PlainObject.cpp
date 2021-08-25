@@ -43,10 +43,9 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
   PlainObject* res;
   if (proto) {
     js::gc::AllocKind allocKind = NewObjectGCKind();
-    res = NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
-                                                       newKind);
+    res = NewPlainObjectWithProtoAndAllocKind(cx, proto, allocKind, newKind);
   } else {
-    res = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
+    res = NewPlainObject(cx, newKind);
   }
 
   MOZ_ASSERT_IF(res, res->nonCCWRealm() == callee->realm());
@@ -128,10 +127,24 @@ PlainObject* js::NewPlainObject(JSContext* cx, NewObjectKind newKind) {
   return NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
 }
 
+PlainObject* js::NewPlainObjectWithAllocKind(JSContext* cx,
+                                             gc::AllocKind allocKind,
+                                             NewObjectKind newKind) {
+  return NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind);
+}
+
 PlainObject* js::NewPlainObjectWithProto(JSContext* cx, HandleObject proto,
                                          NewObjectKind newKind) {
   constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT0;
   MOZ_ASSERT(gc::GetGCObjectKind(&PlainObject::class_) == allocKind);
+  return NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
+                                                      newKind);
+}
+
+PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
+                                                     HandleObject proto,
+                                                     gc::AllocKind allocKind,
+                                                     NewObjectKind newKind) {
   return NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
                                                       newKind);
 }
@@ -141,8 +154,8 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
                                               size_t nproperties,
                                               NewObjectKind newKind) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-  RootedPlainObject obj(
-      cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind));
+  RootedPlainObject obj(cx,
+                        NewPlainObjectWithAllocKind(cx, allocKind, newKind));
   if (!obj || !AddPlainObjectProperties(cx, obj, properties, nproperties)) {
     return nullptr;
   }

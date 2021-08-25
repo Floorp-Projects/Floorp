@@ -74,9 +74,21 @@ extern PlainObject* CreateThisForFunction(JSContext* cx,
 extern PlainObject* NewPlainObject(JSContext* cx,
                                    NewObjectKind newKind = GenericObject);
 
+// Like NewPlainObject, but uses the given AllocKind. This allows creating an
+// object with fixed slots available for properties.
+extern PlainObject* NewPlainObjectWithAllocKind(
+    JSContext* cx, gc::AllocKind allocKind,
+    NewObjectKind newKind = GenericObject);
+
 // Create a new PlainObject with the given |proto| as prototype.
 extern PlainObject* NewPlainObjectWithProto(
     JSContext* cx, HandleObject proto, NewObjectKind newKind = GenericObject);
+
+// Like NewPlainObjectWithProto, but uses the given AllocKind. This allows
+// creating an object with fixed slots available for properties.
+extern PlainObject* NewPlainObjectWithProtoAndAllocKind(
+    JSContext* cx, HandleObject proto, gc::AllocKind allocKind,
+    NewObjectKind newKind = GenericObject);
 
 extern PlainObject* NewPlainObjectWithProperties(JSContext* cx,
                                                  IdValuePair* properties,
