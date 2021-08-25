@@ -165,7 +165,7 @@ bool js::FromPropertyDescriptorToObject(JSContext* cx,
                                         Handle<PropertyDescriptor> desc,
                                         MutableHandleValue vp) {
   // Step 2-3.
-  RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }

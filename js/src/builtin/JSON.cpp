@@ -901,7 +901,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     // function is present.
 
     /* Step 9. */
-    wrapper = NewBuiltinClassInstance<PlainObject>(cx);
+    wrapper = NewPlainObject(cx);
     if (!wrapper) {
       return false;
     }
@@ -1043,7 +1043,7 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
 }
 
 static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
-  RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }

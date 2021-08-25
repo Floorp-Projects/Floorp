@@ -360,7 +360,7 @@ JSObject* js::NewTenuredObjectWithFunctionPrototype(
   if (!proto) {
     return nullptr;
   }
-  return NewTenuredObjectWithGivenProto<PlainObject>(cx, proto);
+  return NewPlainObjectWithProto(cx, proto, TenuredObject);
 }
 
 static JSObject* CreateGeneratorFunction(JSContext* cx, JSProtoKey key) {

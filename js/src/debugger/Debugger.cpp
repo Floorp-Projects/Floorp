@@ -1409,7 +1409,7 @@ bool Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp) {
 
     vp.setObject(*dobj);
   } else if (vp.isMagic()) {
-    RootedPlainObject optObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    RootedPlainObject optObj(cx, NewPlainObject(cx));
     if (!optObj) {
       return false;
     }
@@ -2084,9 +2084,7 @@ struct MOZ_STACK_CLASS Completion::BuildValueMatcher {
   }
 
  private:
-  NativeObject* newObject() const {
-    return NewBuiltinClassInstance<PlainObject>(cx);
-  }
+  NativeObject* newObject() const { return NewPlainObject(cx); }
 
   bool add(HandleNativeObject obj, PropertyName* name,
            HandleValue value) const {
@@ -6657,7 +6655,7 @@ bool Builder::Object::defineProperty(JSContext* cx, const char* name,
 Builder::Object Builder::newObject(JSContext* cx) {
   AutoRealm ar(cx, debuggerObject);
 
-  RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject obj(cx, NewPlainObject(cx));
 
   // If the allocation failed, this will return a false Object, as the spec
   // promises.
@@ -6865,7 +6863,7 @@ static bool DefineStringProperty(JSContext* cx, HandleObject obj,
 }
 
 JSObject* GarbageCollectionEvent::toJSObject(JSContext* cx) const {
-  RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedObject obj(cx, NewPlainObject(cx));
   RootedValue gcCycleNumberVal(cx, NumberValue(majorGCNumber_));
   if (!obj ||
       !DefineStringProperty(cx, obj, cx->names().nonincrementalReason,
@@ -6885,8 +6883,7 @@ JSObject* GarbageCollectionEvent::toJSObject(JSContext* cx) const {
 
   size_t idx = 0;
   for (auto range = collections.all(); !range.empty(); range.popFront()) {
-    RootedPlainObject collectionObj(cx,
-                                    NewBuiltinClassInstance<PlainObject>(cx));
+    RootedPlainObject collectionObj(cx, NewPlainObject(cx));
     if (!collectionObj) {
       return nullptr;
     }

@@ -70,6 +70,14 @@ extern PlainObject* CreateThisForFunction(JSContext* cx,
                                           JS::Handle<JSObject*> newTarget,
                                           NewObjectKind newKind);
 
+// Create a new PlainObject with %Object.prototype% as prototype.
+extern PlainObject* NewPlainObject(JSContext* cx,
+                                   NewObjectKind newKind = GenericObject);
+
+// Create a new PlainObject with the given |proto| as prototype.
+extern PlainObject* NewPlainObjectWithProto(
+    JSContext* cx, HandleObject proto, NewObjectKind newKind = GenericObject);
+
 extern PlainObject* NewPlainObjectWithProperties(JSContext* cx,
                                                  IdValuePair* properties,
                                                  size_t nproperties,

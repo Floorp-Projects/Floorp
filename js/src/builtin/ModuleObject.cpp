@@ -2040,8 +2040,7 @@ JSObject* js::GetOrCreateModuleMetaObject(JSContext* cx,
     return obj;
   }
 
-  RootedObject metaObject(cx,
-                          NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+  RootedObject metaObject(cx, NewPlainObjectWithProto(cx, nullptr));
   if (!metaObject) {
     return nullptr;
   }

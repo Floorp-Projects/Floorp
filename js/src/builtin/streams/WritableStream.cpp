@@ -69,7 +69,7 @@ bool WritableStream::constructor(JSContext* cx, unsigned argc, Value* vp) {
   // Implicit in the spec: argument default values.
   Rooted<Value> underlyingSink(cx, args.get(0));
   if (underlyingSink.isUndefined()) {
-    JSObject* emptyObj = NewBuiltinClassInstance<PlainObject>(cx);
+    JSObject* emptyObj = NewPlainObject(cx);
     if (!emptyObj) {
       return false;
     }
@@ -78,7 +78,7 @@ bool WritableStream::constructor(JSContext* cx, unsigned argc, Value* vp) {
 
   Rooted<Value> strategy(cx, args.get(1));
   if (strategy.isUndefined()) {
-    JSObject* emptyObj = NewBuiltinClassInstance<PlainObject>(cx);
+    JSObject* emptyObj = NewPlainObject(cx);
     if (!emptyObj) {
       return false;
     }

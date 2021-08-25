@@ -903,7 +903,7 @@ JSObject* GlobalObject::getOrCreateRealmKeyObject(
     return key;
   }
 
-  PlainObject* key = NewBuiltinClassInstance<PlainObject>(cx);
+  PlainObject* key = NewPlainObject(cx);
   if (!key) {
     return nullptr;
   }
@@ -947,7 +947,7 @@ NativeObject* GlobalObject::getIntrinsicsHolder(JSContext* cx,
   }
 
   Rooted<NativeObject*> intrinsicsHolder(
-      cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, nullptr));
+      cx, NewPlainObjectWithProto(cx, nullptr, TenuredObject));
   if (!intrinsicsHolder) {
     return nullptr;
   }

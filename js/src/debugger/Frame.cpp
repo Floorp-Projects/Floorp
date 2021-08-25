@@ -1045,8 +1045,7 @@ Result<Completion> js::DebuggerGenericEval(
 
   // If evalWithBindings, create the inner environment.
   if (bindings) {
-    RootedPlainObject nenv(cx,
-                           NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+    RootedPlainObject nenv(cx, NewPlainObjectWithProto(cx, nullptr));
     if (!nenv) {
       return cx->alreadyReportedError();
     }

@@ -95,7 +95,7 @@ JS_PUBLIC_API JSObject* JS::NewReadableDefaultStreamObject(
   if (underlyingSource) {
     sourceVal.setObject(*underlyingSource);
   } else {
-    JSObject* source = NewBuiltinClassInstance<PlainObject>(cx);
+    JSObject* source = NewPlainObject(cx);
     if (!source) {
       return nullptr;
     }

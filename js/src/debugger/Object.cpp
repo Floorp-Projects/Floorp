@@ -1363,7 +1363,7 @@ struct DebuggerObject::PromiseReactionRecordBuilder
 
   bool then(JSContext* cx, HandleObject resolve, HandleObject reject,
             HandleObject result) override {
-    RootedPlainObject record(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    RootedPlainObject record(cx, NewPlainObject(cx));
     if (!record) {
       return false;
     }

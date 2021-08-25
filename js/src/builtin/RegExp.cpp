@@ -46,7 +46,7 @@ using JS::RegExpFlags;
 static PlainObject* CreateGroupsObject(JSContext* cx,
                                        HandlePlainObject groupsTemplate) {
   if (groupsTemplate->inDictionaryMode()) {
-    return NewObjectWithGivenProto<PlainObject>(cx, nullptr);
+    return NewPlainObjectWithProto(cx, nullptr);
   }
 
   // The groups template object is stored in RegExpShared, which is shared
