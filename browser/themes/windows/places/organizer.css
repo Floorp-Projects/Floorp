@@ -22,7 +22,7 @@
   --organizer-toolbar-field-background: Field;
   --organizer-toolbar-field-background-focused: Field;
   --organizer-toolbar-field-border-color: ThreeDShadow;
-  --organizer-toolbar-field-focus-border-color: transparent;
+  --organizer-toolbar-field-focus-border-color: var(--organizer-outline-color);
   --organizer-toolbar-field-focus-box-shadow: unset;
   --organizer-pane-field-border-color: ThreeDShadow;
 }
@@ -49,7 +49,7 @@
     --organizer-toolbar-field-background-focused: Field;
     --organizer-toolbar-field-border-color: transparent;
     --organizer-toolbar-field-focus-border-color: color-mix(in srgb, var(--organizer-outline-color) 50%, transparent);
-    --organizer-toolbar-field-focus-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23), 0 0 0 1px var(--organizer-toolbar-field-focus-border-color) inset;
+    --organizer-toolbar-field-focus-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
     --organizer-pane-field-border-color: color-mix(in srgb, currentColor 41%, transparent);
   }
 
@@ -72,12 +72,6 @@
       --organizer-toolbar-field-background-focused: rgb(66,65,77);
       scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
     }
-  }
-}
-
-@media (prefers-contrast) {
-  #searchFilter[focused] {
-    outline: 2px solid var(--organizer-outline-color);
   }
 }
 
@@ -196,7 +190,9 @@
 #searchFilter[focused] {
   box-shadow: var(--organizer-toolbar-field-focus-box-shadow);
   background-color: var(--organizer-toolbar-field-background-focused);
-  border-color: var(--organizer-toolbar-field-focus-border-color);
+  border-color: transparent;
+  outline: 2px solid var(--organizer-toolbar-field-focus-border-color);
+  outline-offset: -2px;
 }
 
 /* Sidebar and splitter */
