@@ -7,14 +7,10 @@ import React from "react";
 describe("<DSLinkMenu>", () => {
   let wrapper;
   let parentNode;
-  let fakeDocument;
-  let fakeWindow;
 
   describe("DS link menu actions", () => {
     beforeEach(() => {
-      fakeDocument = { l10n: { translateFragment: sinon.stub() } };
-      fakeWindow = { document: fakeDocument };
-      wrapper = mount(<DSLinkMenu windowObj={fakeWindow} />);
+      wrapper = mount(<DSLinkMenu />);
       parentNode = wrapper.getDOMNode().parentNode;
     });
 
@@ -35,18 +31,28 @@ describe("<DSLinkMenu>", () => {
     });
 
     it("Should add active on Menu Show", async () => {
+      wrapper.instance().nextAnimationFrame = () => {};
       await wrapper.instance().onMenuShow();
       wrapper.update();
       assert.equal(parentNode.className, "active");
     });
 
     it("Should add last-item to support resized window", async () => {
-      fakeWindow = { scrollMaxX: "20", document: fakeDocument };
+      const fakeWindow = { scrollMaxX: "20" };
       wrapper = mount(<DSLinkMenu windowObj={fakeWindow} />);
       parentNode = wrapper.getDOMNode().parentNode;
+      wrapper.instance().nextAnimationFrame = () => {};
       await wrapper.instance().onMenuShow();
       wrapper.update();
       assert.equal(parentNode.className, "last-item active");
+    });
+
+    it("Should call rAF from nextAnimationFrame", () => {
+      const fakeWindow = { requestAnimationFrame: sinon.stub() };
+      wrapper = mount(<DSLinkMenu windowObj={fakeWindow} />);
+
+      wrapper.instance().nextAnimationFrame();
+      assert.calledOnce(fakeWindow.requestAnimationFrame);
     });
 
     it("should remove .active and .last-item classes from the parent component", () => {
@@ -64,6 +70,7 @@ describe("<DSLinkMenu>", () => {
     it("should add .active and .last-item classes to the parent component", async () => {
       const instance = wrapper.instance();
       const add = sinon.stub();
+      instance.nextAnimationFrame = () => {};
       instance.contextMenuButtonRef = {
         current: { parentElement: { parentElement: { classList: { add } } } },
       };
@@ -73,7 +80,7 @@ describe("<DSLinkMenu>", () => {
 
     it("should parse args for fluent correctly ", () => {
       const title = '"fluent"';
-      wrapper = mount(<DSLinkMenu title={title} windowObj={fakeWindow} />);
+      wrapper = mount(<DSLinkMenu title={title} />);
 
       const button = wrapper.find(
         "button[data-l10n-id='newtab-menu-content-tooltip']"
