@@ -33,8 +33,6 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-UserDataKey gfxContext::sDontUseAsSourceKey;
-
 #ifdef DEBUG
 #  define CURRENTSTATE_CHANGED() CurrentState().mContentChanged = true;
 #else
@@ -687,29 +685,6 @@ void gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity,
                                        const Matrix& aMaskTransform) {
   mDT->PushLayer(content == gfxContentType::COLOR, aOpacity, aMask,
                  aMaskTransform);
-}
-
-void gfxContext::PushGroupAndCopyBackground(gfxContentType content,
-                                            Float aOpacity,
-                                            SourceSurface* aMask,
-                                            const Matrix& aMaskTransform) {
-  IntRect clipExtents;
-  if (mDT->GetFormat() != SurfaceFormat::B8G8R8X8) {
-    gfxRect clipRect = GetClipExtents(gfxContext::eDeviceSpace);
-    clipRect.RoundOut();
-    clipExtents = IntRect::Truncate(clipRect.X(), clipRect.Y(),
-                                    clipRect.Width(), clipRect.Height());
-  }
-  bool pushOpaqueWithCopiedBG = (mDT->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-                                 mDT->GetOpaqueRect().Contains(clipExtents)) &&
-                                !mDT->GetUserData(&sDontUseAsSourceKey);
-
-  if (pushOpaqueWithCopiedBG) {
-    mDT->PushLayer(true, aOpacity, aMask, aMaskTransform, IntRect(), true);
-  } else {
-    mDT->PushLayer(content == gfxContentType::COLOR, aOpacity, aMask,
-                   aMaskTransform, IntRect(), false);
-  }
 }
 
 void gfxContext::PopGroupAndBlend() { mDT->PopLayer(); }

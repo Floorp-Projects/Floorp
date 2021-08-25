@@ -426,20 +426,6 @@ class gfxContext final {
       mozilla::gfx::SourceSurface* aMask = nullptr,
       const mozilla::gfx::Matrix& aMaskTransform = mozilla::gfx::Matrix());
 
-  /**
-   * Like PushGroupForBlendBack, but if the current surface is
-   * gfxContentType::COLOR and content is gfxContentType::COLOR_ALPHA, makes the
-   * pushed surface gfxContentType::COLOR instead and copies the contents of the
-   * current surface to the pushed surface. This is good for pushing opacity
-   * groups, since blending the group back to the current surface with some
-   * alpha applied will give the correct results and using an opaque pushed
-   * surface gives better quality and performance.
-   */
-  void PushGroupAndCopyBackground(
-      gfxContentType content = gfxContentType::COLOR,
-      mozilla::gfx::Float aOpacity = 1.0f,
-      mozilla::gfx::SourceSurface* aMask = nullptr,
-      const mozilla::gfx::Matrix& aMaskTransform = mozilla::gfx::Matrix());
   void PopGroupAndBlend();
 
   mozilla::gfx::Point GetDeviceOffset() const;
@@ -465,8 +451,6 @@ class gfxContext final {
    */
   void CopyAsDataURI();
 #endif
-
-  static mozilla::gfx::UserDataKey sDontUseAsSourceKey;
 
  private:
   /**

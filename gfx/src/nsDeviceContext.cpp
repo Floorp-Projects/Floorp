@@ -190,14 +190,6 @@ already_AddRefed<gfxContext> nsDeviceContext::CreateRenderingContextCommon(
     return nullptr;
   }
 
-#ifdef XP_MACOSX
-  // The CGContextRef provided by PMSessionGetCGGraphicsContext is
-  // write-only, so we need to prevent gfxContext::PushGroupAndCopyBackground
-  // trying to read from it or else we'll crash.
-  // XXXjwatt Consider adding a MakeDrawTarget override to PrintTargetCG and
-  // moving this AddUserData call there.
-  dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
-#endif
   dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
 
   RefPtr<gfxContext> pContext = gfxContext::CreateOrNull(dt);
