@@ -892,7 +892,7 @@ nsresult HTMLEditor::EnsureNoPaddingBRElementForEmptyEditor() {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::DeleteNodeWithTransaction() failed");
+                       "HTMLEditor::DeleteNodeWithTransaction() failed");
   return rv;
 }
 

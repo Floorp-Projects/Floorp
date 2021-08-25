@@ -80,22 +80,37 @@ class HTMLEditUtils final {
   /*
    * IsRemovalNode() returns true when parent of aContent is editable even
    * if aContent isn't editable.
+   * This is a valid method to check it if you find the content from point
+   * of view of siblings or parents of aContent.
+   * Note that padding `<br>` element for empty editor and manual native
+   * anonymous content should be deletable even after `HTMLEditor` is destroyed
+   * because they are owned/managed by `HTMLEditor`.
    */
   static bool IsRemovableNode(const nsIContent& aContent) {
-    return aContent.GetParentNode() && aContent.GetParentNode()->IsEditable() &&
-           &aContent != aContent.OwnerDoc()->GetBody() &&
-           &aContent != aContent.OwnerDoc()->GetDocumentElement();
+    return EditorUtils::IsPaddingBRElementForEmptyEditor(aContent) ||
+           aContent.IsRootOfNativeAnonymousSubtree() ||
+           (aContent.GetParentNode() &&
+            aContent.GetParentNode()->IsEditable() &&
+            &aContent != aContent.OwnerDoc()->GetBody() &&
+            &aContent != aContent.OwnerDoc()->GetDocumentElement());
   }
 
   /**
    * IsRemovableFromParentNode() returns true when aContent is editable, has a
    * parent node and the parent node is also editable.
+   * This is a valid method to check it if you find the content from point
+   * of view of descendants of aContent.
+   * Note that padding `<br>` element for empty editor and manual native
+   * anonymous content should be deletable even after `HTMLEditor` is destroyed
+   * because they are owned/managed by `HTMLEditor`.
    */
   static bool IsRemovableFromParentNode(const nsIContent& aContent) {
-    return aContent.IsEditable() && aContent.GetParentNode() &&
-           aContent.GetParentNode()->IsEditable() &&
-           &aContent != aContent.OwnerDoc()->GetBody() &&
-           &aContent != aContent.OwnerDoc()->GetDocumentElement();
+    return EditorUtils::IsPaddingBRElementForEmptyEditor(aContent) ||
+           aContent.IsRootOfNativeAnonymousSubtree() ||
+           (aContent.IsEditable() && aContent.GetParentNode() &&
+            aContent.GetParentNode()->IsEditable() &&
+            &aContent != aContent.OwnerDoc()->GetBody() &&
+            &aContent != aContent.OwnerDoc()->GetDocumentElement());
   }
 
   /**
