@@ -72,9 +72,6 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Telemetry.h"
-#ifdef MOZ_WIDGET_GTK
-#  include "basic/X11BasicCompositor.h"  // for X11BasicCompositor
-#endif
 #include "nsCOMPtr.h"         // for already_AddRefed
 #include "nsDebug.h"          // for NS_ASSERTION, etc
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
@@ -1394,14 +1391,7 @@ RefPtr<Compositor> CompositorBridgeParent::NewCompositor(
           new CompositorOGL(this, mWidget, mEGLSurfaceSize.width,
                             mEGLSurfaceSize.height, mUseExternalSurfaceSize);
     } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
-#ifdef MOZ_WIDGET_GTK
-      if (gfxVars::UseXRender()) {
-        compositor = new X11BasicCompositor(this, mWidget);
-      } else
-#endif
-      {
-        compositor = new BasicCompositor(this, mWidget);
-      }
+      compositor = new BasicCompositor(this, mWidget);
 #ifdef XP_WIN
     } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11) {
       compositor = new CompositorD3D11(this, mWidget);
