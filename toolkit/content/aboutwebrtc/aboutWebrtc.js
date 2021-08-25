@@ -258,6 +258,8 @@ class ShowTab extends Control {
   const content = document.querySelector("#content");
   content.append(peerConnections, connectionLog, userPrefs);
 
+  // This does not handle the auto-refresh, only the manual refreshes needed
+  // for certain user actions, and the initial population of the data
   function refresh() {
     const pcDiv = renderElements("div", { className: "stats" }, [
       renderElements("span", { className: "section-heading" }, [
@@ -312,22 +314,40 @@ class ShowTab extends Control {
   }
   refresh();
 
+  async function translate(element) {
+    const frag = document.createDocumentFragment();
+    frag.append(element);
+    await document.l10n.translateFragment(frag);
+    return frag;
+  }
+
   window.setInterval(
     async history => {
-      userPrefs.replaceWith((userPrefs = renderUserPrefs()));
       const reports = await getStats();
-      reports.forEach(report => {
-        const replace = (id, renderFunc) => {
-          const elem = document.getElementById(`${id}: ${report.pcid}`);
-          if (elem) {
-            elem.replaceWith(renderFunc(report, history));
-          }
-        };
-        replace("ice-stats", renderICEStats);
-        replace("rtp-stats", renderRTPStats);
-        replace("bandwidth-stats", renderBandwidthStats);
-        replace("frame-stats", renderFrameRateStats);
-      });
+
+      const translateSection = async (report, id, renderFunc) => {
+        const element = document.getElementById(`${id}: ${report.pcid}`);
+        const result =
+          element && (await translate(renderFunc(report, history)));
+        return { element, translated: result };
+      };
+
+      const sections = (
+        await Promise.all(
+          reports.flatMap(report => [
+            translateSection(report, "ice-stats", renderICEStats),
+            translateSection(report, "rtp-stats", renderRTPStats),
+            translateSection(report, "bandwidth-stats", renderBandwidthStats),
+            translateSection(report, "frame-stats", renderFrameRateStats),
+          ])
+        )
+      ).filter(({ element }) => element);
+
+      document.l10n.pauseObserving();
+      for (const { element, translated } of sections) {
+        element.replaceWith(translated);
+      }
+      document.l10n.resumeObserving();
     },
     500,
     {}
