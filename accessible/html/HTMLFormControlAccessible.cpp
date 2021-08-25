@@ -5,6 +5,7 @@
 
 #include "HTMLFormControlAccessible.h"
 
+#include "DocAccessible-inl.h"
 #include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsEventShell.h"
