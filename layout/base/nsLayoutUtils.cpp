@@ -8412,8 +8412,7 @@ void nsLayoutUtils::DoLogTestDataForPaint(LayerManager* aManager,
                                           const std::string& aKey,
                                           const std::string& aValue) {
   MOZ_ASSERT(nsLayoutUtils::IsAPZTestLoggingEnabled(), "don't call me");
-  if (WebRenderLayerManager* wrlm =
-                 aManager->AsWebRenderLayerManager()) {
+  if (WebRenderLayerManager* wrlm = aManager->AsWebRenderLayerManager()) {
     wrlm->LogTestDataForCurrentPaint(aScrollId, aKey, aValue);
   }
 }
