@@ -2591,7 +2591,7 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
     MOZ_ASSERT(sCreatedFirstContentProcess);
     MOZ_ASSERT(!mPrefSerializer);
     MOZ_ASSERT(mLifecycleState != LifecycleState::LAUNCHING);
-    return true;
+    return mLaunchResolvedOk;
   }
   mLaunchResolved = true;
 
@@ -2675,6 +2675,8 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
             ((mLaunchYieldTS - mLaunchTS) + (TimeStamp::Now() - launchResumeTS))
                 .ToMilliseconds()));
   }
+
+  mLaunchResolvedOk = true;
   return true;
 }
 
@@ -2747,6 +2749,7 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mCreatedPairedMinidumps(false),
       mShutdownPending(false),
       mLaunchResolved(false),
+      mLaunchResolvedOk(false),
       mIsRemoteInputEventQueueEnabled(false),
       mIsInputPriorityEventEnabled(false),
       mIsInPool(false),
@@ -7124,7 +7127,7 @@ void ContentParent::AddBrowsingContextGroup(BrowsingContextGroup* aGroup) {
 void ContentParent::RemoveBrowsingContextGroup(BrowsingContextGroup* aGroup) {
   MOZ_DIAGNOSTIC_ASSERT(aGroup);
   // Remove the group from our list. This is called from the
-  // BrowisngContextGroup when unsubscribing, so we don't need to do it here.
+  // BrowsingContextGroup when unsubscribing, so we don't need to do it here.
   if (mGroups.EnsureRemoved(aGroup) && CanSend()) {
     // If we're removing the entry for the first time, tell the content process
     // to clean up the group.
