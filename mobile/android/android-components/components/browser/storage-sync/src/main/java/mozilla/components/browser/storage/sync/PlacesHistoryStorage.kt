@@ -263,14 +263,18 @@ open class PlacesHistoryStorage(
         key: HistoryMetadataKey,
         observation: HistoryMetadataObservation
     ) {
-        handlePlacesExceptions("noteHistoryMetadataObservation") {
-            places.writer().noteHistoryMetadataObservation(key.into(), observation.into())
+        withContext(writeScope.coroutineContext) {
+            handlePlacesExceptions("noteHistoryMetadataObservation") {
+                places.writer().noteHistoryMetadataObservation(key.into(), observation.into())
+            }
         }
     }
 
     override suspend fun deleteHistoryMetadataOlderThan(olderThan: Long) {
-        handlePlacesExceptions("deleteHistoryMetadataOlderThan") {
-            places.writer().deleteHistoryMetadataOlderThan(olderThan)
+        withContext(writeScope.coroutineContext) {
+            handlePlacesExceptions("deleteHistoryMetadataOlderThan") {
+                places.writer().deleteHistoryMetadataOlderThan(olderThan)
+            }
         }
     }
 }
