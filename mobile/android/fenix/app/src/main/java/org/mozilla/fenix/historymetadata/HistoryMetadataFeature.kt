@@ -15,6 +15,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentStore
+import kotlin.math.max
 
 /**
  * View-bound feature that retrieves a list of history metadata and dispatches updates to the
@@ -41,6 +42,21 @@ class HistoryMetadataFeature(
             val historyMetadata = historyMetadataStorage.getHistoryMetadataSince(Long.MIN_VALUE)
                 .filter { it.totalViewTime > 0 && it.key.searchTerm != null }
                 .groupBy { it.key.searchTerm!! }
+                .mapValues { group ->
+                    // Within a group, we dedupe entries based on their url so we don't display
+                    // a page multiple times in the same group, and we sum up the total view time
+                    // of deduped entries while making sure to keep the latest updatedAt value.
+                    val metadataInGroup = group.value
+                    val metadataUrlGroups = metadataInGroup.groupBy { metadata -> metadata.key.url }
+                    metadataUrlGroups.map { metadata ->
+                        metadata.value.reduce { acc, elem ->
+                            acc.copy(
+                                totalViewTime = acc.totalViewTime + elem.totalViewTime,
+                                updatedAt = max(acc.updatedAt, elem.updatedAt)
+                            )
+                        }
+                    }
+                }
                 .map { (title, data) ->
                     HistoryMetadataGroup(
                         title = title,
