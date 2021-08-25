@@ -6909,7 +6909,7 @@ nsPoint nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther,
     } else {
       nsPoint newOffset(0, 0);
       root = f;
-      f = nsLayoutUtils::GetCrossDocParentFrame(f, &newOffset);
+      f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f, &newOffset);
       int32_t newAPD = f ? f->PresContext()->AppUnitsPerDevPixel() : 0;
       if (!f || newAPD != currAPD) {
         // Convert docOffset to the right APD and add it to offset.
