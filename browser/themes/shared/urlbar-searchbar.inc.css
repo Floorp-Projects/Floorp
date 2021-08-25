@@ -73,7 +73,8 @@
   border-color: var(--toolbar-field-focus-border-color);
 }
 
-#urlbar[focused="true"] > #urlbar-background {
+#urlbar[focused="true"] > #urlbar-background,
+#searchbar:focus-within {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
 }
 
@@ -82,17 +83,17 @@
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.13);
 }
 
-/* We draw the searchbar's border as a combination of its 1px unfocused border
-   and a 1px inset box-shadow. If we did it all as a border, the searchbar's
+/* We draw the searchbar's border as an outline. If we did it as a border, the searchbar's
    contents would shift when its border-width expanded by 1px when focused.
    Removing the border when focused would also shift contents. #urlbar gets
    around this problem by applying its border to #urlbar-background, which is
    positioned absolutely. We don't plan on changing the searchbar's UX
    significantly, so it's better to avoid that extra complexity. */
 #searchbar:focus-within {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23),
-              0 0 0 1px var(--toolbar-field-focus-border-color) inset;
-  border-color: var(--toolbar-field-focus-border-color);
+  outline: var(--focus-outline);
+  outline-offset: -2px;
+  outline-color: var(--toolbar-field-focus-border-color);
+  border-color: transparent;
 }
 
 #urlbar:is([focused="true"], [open]),
