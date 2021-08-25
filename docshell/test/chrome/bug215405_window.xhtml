@@ -32,17 +32,17 @@
 
     var gBrowser;
     var gTestsIterator;
-    var scrollX = 0;
-    var scrollY = 0;
+    var currScrollX = 0;
+    var currScrollY = 0;
 
     function finish() {
       gBrowser.removeEventListener("pageshow", eventListener, true);
       // Work around bug 467960
       if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-        var history = gBrowser.browsingContext.sessionHistory;
+        let history = gBrowser.browsingContext.sessionHistory;
         history.purgeHistory(history.count);
       } else {
-        var history = gBrowser.webNavigation.sessionHistory;
+        let history = gBrowser.webNavigation.sessionHistory;
         history.legacySHistory.purgeHistory(history.count);
       }
 
@@ -87,11 +87,11 @@
       gBrowser.contentWindow.scrollBy(scrollToX, scrollToY);
 
       // Save the scroll position for future comparison
-      scrollX = gBrowser.contentWindow.scrollX;
-      scrollY = gBrowser.contentWindow.scrollY;
-      isnot(scrollX, originalXPosition,
+      currScrollX = gBrowser.contentWindow.scrollX;
+      currScrollY = gBrowser.contentWindow.scrollY;
+      isnot(currScrollX, originalXPosition,
             testName + " failed to scroll window horizontally");
-      isnot(scrollY, originalYPosition,
+      isnot(currScrollY, originalYPosition,
             testName + " failed to scroll window vertically");
 
       // Load a new document into the browser
@@ -108,9 +108,9 @@
 
       // First uncacheable page will now be reloaded. Check scroll position
       // restored, and form contents not
-      is(gBrowser.contentWindow.scrollX, scrollX, testName +
+      is(gBrowser.contentWindow.scrollX, currScrollX, testName +
          " horizontal axis scroll position not correctly restored");
-      is(gBrowser.contentWindow.scrollY, scrollY, testName +
+      is(gBrowser.contentWindow.scrollY, currScrollY, testName +
          " vertical axis scroll position not correctly restored");
       var formValue = gBrowser.contentDocument.getElementById("inp").value;
       isnot(formValue, text, testName + " form value incorrectly restored");
@@ -137,11 +137,11 @@
       gBrowser.contentWindow.scrollBy(scrollToX, scrollToY);
 
       // Save the scroll position for future comparison
-      scrollX = gBrowser.contentWindow.scrollX;
-      scrollY = gBrowser.contentWindow.scrollY;
-      isnot(scrollX, originalXPosition,
+      currScrollX = gBrowser.contentWindow.scrollX;
+      currScrollY = gBrowser.contentWindow.scrollY;
+      isnot(currScrollX, originalXPosition,
             testName + " failed to scroll window horizontally");
-      isnot(scrollY, originalYPosition,
+      isnot(currScrollY, originalYPosition,
             testName + " failed to scroll window vertically");
 
       BrowserTestUtils.loadURI(gBrowser, simple);
@@ -155,11 +155,11 @@
 
       // First page will now be reloaded. Check scroll position
       // and form contents are restored
-      is(gBrowser.contentWindow.scrollX, scrollX, testName +
+      is(gBrowser.contentWindow.scrollX, currScrollX, testName +
          " horizontal axis scroll position not correctly restored");
-      is(gBrowser.contentWindow.scrollY, scrollY, testName +
+      is(gBrowser.contentWindow.scrollY, currScrollY, testName +
          " vertical axis scroll position not correctly restored");
-      var formValue = gBrowser.contentDocument.getElementById("inp").value;
+      formValue = gBrowser.contentDocument.getElementById("inp").value;
       is(formValue, text, testName + " form value not correctly restored");
 
       Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");

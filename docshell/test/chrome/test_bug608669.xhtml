@@ -42,8 +42,7 @@ function* doTest() {
     }
   };
 
-  var os = Cc["@mozilla.org/observer-service;1"].
-    getService(Ci.nsIObserverService);
+  var os = SpecialPowers.Services.obs;
   os.addObserver(observer, "chrome-document-global-created");
   os.addObserver(observer, "content-document-global-created");
 

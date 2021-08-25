@@ -16,8 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=846906
   /** Test for Bug 846906 **/
   SimpleTest.waitForExplicitFinish();
 
-  var appShellService = Cc["@mozilla.org/appshell/appShellService;1"]
-                          .getService(Ci.nsIAppShellService);
+  var appShellService = SpecialPowers.Services.appShell;
   ok(appShellService, "Should be able to get app shell service");
 
   var windowlessBrowser = appShellService.createWindowlessBrowser();

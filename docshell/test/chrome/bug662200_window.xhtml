@@ -68,8 +68,8 @@
         onNavComplete: nextTest
       };
       waitForPageEvents(navData);
-      var link = TestWindow.getDocument().getElementById("link");
-      var event = TestWindow.getDocument().createEvent("MouseEvents");
+      link = TestWindow.getDocument().getElementById("link");
+      event = TestWindow.getDocument().createEvent("MouseEvents");
       event.initMouseEvent("click", true, true, TestWindow.getWindow(),
                            0, 0, 0, 0, 0, false, false, false, false, 0, null);
       link.dispatchEvent(event);
