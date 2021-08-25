@@ -9,8 +9,8 @@ origin:
   description: wasm2c fork used for rlbox sandboxing
   url: https://github.com/PLSysSec/wasm2c_sandbox_compiler
 
-  release: commit b785706fd885ffb4255639c31249ba7040b3b83f (2021-08-18T21:38:59Z).
-  revision: b785706fd885ffb4255639c31249ba7040b3b83f
+  release: commit 8e81237c485f9282a4c176be50bd3c1f8a3ed7d7 (2021-08-24T09:37:16Z).
+  revision: 8e81237c485f9282a4c176be50bd3c1f8a3ed7d7
 
   license: Apache-2.0
   license-file: LICENSE
