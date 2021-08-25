@@ -172,7 +172,7 @@ static JSObject* InterpretObjLiteralObj(
   gc::AllocKind allocKind = AllocKindForObjectLiteral(propertyCount);
 
   RootedPlainObject obj(
-      cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, TenuredObject));
+      cx, NewPlainObjectWithAllocKind(cx, allocKind, TenuredObject));
   if (!obj) {
     return nullptr;
   }
