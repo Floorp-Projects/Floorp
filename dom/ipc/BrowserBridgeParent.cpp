@@ -34,6 +34,8 @@ nsresult BrowserBridgeParent::InitWithProcess(
     const WindowGlobalInit& aWindowInit, uint32_t aChromeFlags, TabId aTabId) {
   MOZ_ASSERT(!CanSend(),
              "This should be called before the object is connected to IPC");
+  MOZ_DIAGNOSTIC_ASSERT(!aContentParent->IsLaunching());
+  MOZ_DIAGNOSTIC_ASSERT(!aContentParent->IsDead());
 
   RefPtr<CanonicalBrowsingContext> browsingContext =
       CanonicalBrowsingContext::Get(aWindowInit.context().mBrowsingContextId);
