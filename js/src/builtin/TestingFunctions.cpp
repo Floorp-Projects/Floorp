@@ -3781,8 +3781,7 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
     uint32_t inlineFrameNo = 0;
     for (auto& inlineFrame : frame) {
       // Object holding frame info.
-      RootedObject inlineFrameInfo(cx,
-                                   NewBuiltinClassInstance<PlainObject>(cx));
+      RootedObject inlineFrameInfo(cx, NewPlainObject(cx));
       if (!inlineFrameInfo) {
         return false;
       }
@@ -3863,7 +3862,7 @@ class ShellAllocationMetadataBuilder : public AllocationMetadataBuilder {
 
 JSObject* ShellAllocationMetadataBuilder::build(
     JSContext* cx, HandleObject, AutoEnterOOMUnsafeRegion& oomUnsafe) const {
-  RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     oomUnsafe.crash("ShellAllocationMetadataBuilder::build");
   }
@@ -5392,7 +5391,7 @@ static bool FindPath(JSContext* cx, unsigned argc, Value* vp) {
   // array in start-to-target order.
   for (size_t i = 0; i < length; i++) {
     // Build an object describing the node and edge.
-    RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    RootedObject obj(cx, NewPlainObject(cx));
     if (!obj) {
       return false;
     }
@@ -5606,7 +5605,7 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
       path->ensureDenseInitializedLength(0, pathLength);
 
       for (size_t k = 0; k < pathLength; k++) {
-        RootedPlainObject part(cx, NewBuiltinClassInstance<PlainObject>(cx));
+        RootedPlainObject part(cx, NewPlainObject(cx));
         if (!part) {
           return false;
         }

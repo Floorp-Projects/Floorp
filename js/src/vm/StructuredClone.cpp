@@ -2697,7 +2697,7 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
           (tag == SCTAG_ARRAY_OBJECT)
               ? (JSObject*)NewDenseUnallocatedArray(
                     context(), NativeEndian::swapFromLittleEndian(data))
-              : (JSObject*)NewBuiltinClassInstance<PlainObject>(context());
+              : (JSObject*)NewPlainObject(context());
       if (!obj || !objs.append(ObjectValue(*obj))) {
         return false;
       }

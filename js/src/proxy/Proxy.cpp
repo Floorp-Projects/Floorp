@@ -114,7 +114,7 @@ static bool ProxyDefineOnExpando(JSContext* cx, HandleObject proxy, HandleId id,
   RootedObject expando(cx, proxy->as<ProxyObject>().expando().toObjectOrNull());
 
   if (!expando) {
-    expando = NewObjectWithGivenProto<PlainObject>(cx, nullptr);
+    expando = NewPlainObjectWithProto(cx, nullptr);
     if (!expando) {
       return false;
     }

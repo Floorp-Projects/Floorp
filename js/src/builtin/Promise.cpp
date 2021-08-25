@@ -3664,7 +3664,7 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
   // Steps 7-8 (moved below).
 
   // Step 9.
-  RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+  RootedPlainObject obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }

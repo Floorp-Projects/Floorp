@@ -113,7 +113,7 @@ bool ReadableStream::constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
   // Implicit in the spec: argument default values.
   Rooted<Value> underlyingSource(cx, args.get(0));
   if (underlyingSource.isUndefined()) {
-    JSObject* emptyObj = NewBuiltinClassInstance<PlainObject>(cx);
+    JSObject* emptyObj = NewPlainObject(cx);
     if (!emptyObj) {
       return false;
     }
@@ -122,7 +122,7 @@ bool ReadableStream::constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
 
   Rooted<Value> strategy(cx, args.get(1));
   if (strategy.isUndefined()) {
-    JSObject* emptyObj = NewBuiltinClassInstance<PlainObject>(cx);
+    JSObject* emptyObj = NewPlainObject(cx);
     if (!emptyObj) {
       return false;
     }
@@ -385,7 +385,7 @@ static bool ReadableStream_pipeTo(JSContext* cx, unsigned argc, Value* vp) {
   // Implicit in the spec: argument default values.
   Rooted<Value> options(cx, args.get(1));
   if (options.isUndefined()) {
-    JSObject* emptyObj = NewBuiltinClassInstance<PlainObject>(cx);
+    JSObject* emptyObj = NewPlainObject(cx);
     if (!emptyObj) {
       return false;
     }

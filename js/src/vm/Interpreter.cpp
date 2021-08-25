@@ -885,7 +885,7 @@ PlainObject* js::ObjectWithProtoOperation(JSContext* cx, HandleValue val) {
   }
 
   RootedObject proto(cx, val.toObjectOrNull());
-  return NewObjectWithGivenProto<PlainObject>(cx, proto);
+  return NewPlainObjectWithProto(cx, proto);
 }
 
 JSObject* js::FunWithProtoOperation(JSContext* cx, HandleFunction fun,
@@ -5035,7 +5035,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   }
 
   MOZ_ASSERT(JSOp(*pc) == JSOp::NewInit);
-  return NewBuiltinClassInstanceWithKind<PlainObject>(cx, GenericObject);
+  return NewPlainObject(cx);
 }
 
 JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
