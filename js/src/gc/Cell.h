@@ -221,7 +221,7 @@ struct Cell {
 
  protected:
   uintptr_t address() const;
-  inline TenuredChunk* chunk() const;
+  inline ChunkBase* chunk() const;
 
  private:
   // Cells are destroyed by the GC. Do not delete them directly.
@@ -235,6 +235,10 @@ class TenuredCell : public Cell {
   MOZ_ALWAYS_INLINE bool isTenured() const {
     MOZ_ASSERT(!IsInsideNursery(this));
     return true;
+  }
+
+  TenuredChunk* chunk() const {
+    return static_cast<TenuredChunk*>(Cell::chunk());
   }
 
   // Mark bit management.
@@ -347,11 +351,11 @@ inline uintptr_t Cell::address() const {
   return addr;
 }
 
-TenuredChunk* Cell::chunk() const {
+ChunkBase* Cell::chunk() const {
   uintptr_t addr = uintptr_t(this);
   MOZ_ASSERT(addr % CellAlignBytes == 0);
   addr &= ~ChunkMask;
-  return reinterpret_cast<TenuredChunk*>(addr);
+  return reinterpret_cast<ChunkBase*>(addr);
 }
 
 inline StoreBuffer* Cell::storeBuffer() const { return chunk()->storeBuffer; }
