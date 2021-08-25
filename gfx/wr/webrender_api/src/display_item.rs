@@ -115,6 +115,26 @@ impl SpaceAndClipInfo {
     }
 }
 
+/// Defines a caller provided key that is unique for a given spatial node, and is stable across
+/// display lists. WR uses this to determine which spatial nodes are added / removed for a new
+/// display list. The content itself is arbitrary and opaque to WR, the only thing that matters
+/// is that it's unique and stable between display lists.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke, Default, Eq, Hash)]
+pub struct SpatialTreeItemKey {
+    key0: u64,
+    key1: u64,
+}
+
+impl SpatialTreeItemKey {
+    pub fn new(key0: u64, key1: u64) -> Self {
+        SpatialTreeItemKey {
+            key0,
+            key1,
+        }
+    }
+}
+
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub enum SpatialTreeItem {
@@ -293,6 +313,9 @@ pub struct StickyFrameDescriptor {
     /// `previously_applied_offset.y`. A negative y component corresponds to the upward offset
     /// applied due to bottom-stickiness. The x-axis works analogously.
     pub previously_applied_offset: LayoutVector2D,
+
+    /// A unique (per-pipeline) key for this spatial that is stable across display lists.
+    pub key: SpatialTreeItemKey,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
@@ -318,6 +341,8 @@ pub struct ScrollFrameDescriptor {
     /// should be added to those display item coordinates in order to get a
     /// normalized value that is consistent across display lists.
     pub external_scroll_offset: LayoutVector2D,
+    /// A unique (per-pipeline) key for this spatial that is stable across display lists.
+    pub key: SpatialTreeItemKey,
 }
 
 /// A solid or an animating color to draw (may not actually be a rectangle due to complex clips)
@@ -830,6 +855,8 @@ pub struct ReferenceFrame {
     /// matrix.
     pub transform: ReferenceTransformBinding,
     pub id: SpatialId,
+    /// A unique (per-pipeline) key for this spatial that is stable across display lists.
+    pub key: SpatialTreeItemKey,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]

@@ -79,7 +79,7 @@ use crate::resource_cache::ImageRequest;
 use crate::scene::{Scene, ScenePipeline, BuiltScene, SceneStats, StackingContextHelpers};
 use crate::scene_builder_thread::Interners;
 use crate::space::SpaceSnapper;
-use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind};
+use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind, SpatialNodeUid};
 use crate::tile_cache::TileCacheBuilder;
 use euclid::approxeq::ApproxEq;
 use std::{f32, mem, usize};
@@ -789,6 +789,7 @@ impl<'a> SceneBuilder<'a> {
             parent_node_index,
             sticky_frame_info,
             info.id.pipeline_id(),
+            info.key,
         );
         self.id_to_index_mapper.add_spatial_node(info.id, index);
     }
@@ -853,6 +854,7 @@ impl<'a> SceneBuilder<'a> {
             transform,
             info.reference_frame.kind,
             info.origin.to_vector(),
+            SpatialNodeUid::external(info.reference_frame.key),
         );
     }
 
@@ -879,6 +881,7 @@ impl<'a> SceneBuilder<'a> {
             info.scroll_sensitivity,
             ScrollFrameKind::Explicit,
             info.external_scroll_offset,
+            SpatialNodeUid::external(info.key),
         );
     }
 
@@ -926,6 +929,7 @@ impl<'a> SceneBuilder<'a> {
                 should_snap: false
             },
             bounds.min.to_vector(),
+            SpatialNodeUid::root_reference_frame(iframe_pipeline_id),
         );
 
         let iframe_rect = LayoutRect::from_size(bounds.size());
@@ -943,6 +947,7 @@ impl<'a> SceneBuilder<'a> {
                 is_root_pipeline,
             },
             LayoutVector2D::zero(),
+            SpatialNodeUid::root_scroll_frame(iframe_pipeline_id),
         );
 
         // Get a clip-chain id for the root clip for this pipeline. We will
@@ -2333,6 +2338,7 @@ impl<'a> SceneBuilder<'a> {
         source_transform: PropertyBinding<LayoutTransform>,
         kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
+        uid: SpatialNodeUid,
     ) -> SpatialNodeIndex {
         let index = self.spatial_tree.add_reference_frame(
             parent_index,
@@ -2341,6 +2347,7 @@ impl<'a> SceneBuilder<'a> {
             kind,
             origin_in_parent_reference_frame,
             pipeline_id,
+            uid,
         );
         self.id_to_index_mapper.add_spatial_node(reference_frame_id, index);
 
@@ -2368,6 +2375,7 @@ impl<'a> SceneBuilder<'a> {
                 should_snap: false,
             },
             LayoutVector2D::zero(),
+            SpatialNodeUid::root_reference_frame(pipeline_id),
         );
 
         let viewport_rect = self.snap_rect(
@@ -2387,6 +2395,7 @@ impl<'a> SceneBuilder<'a> {
                 is_root_pipeline: true,
             },
             LayoutVector2D::zero(),
+            SpatialNodeUid::root_scroll_frame(pipeline_id),
         );
     }
 
@@ -2534,6 +2543,7 @@ impl<'a> SceneBuilder<'a> {
         scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
+        uid: SpatialNodeUid,
     ) -> SpatialNodeIndex {
         let node_index = self.spatial_tree.add_scroll_frame(
             parent_node_index,
@@ -2544,6 +2554,7 @@ impl<'a> SceneBuilder<'a> {
             scroll_sensitivity,
             frame_kind,
             external_scroll_offset,
+            uid,
         );
         self.id_to_index_mapper.add_spatial_node(new_node_id, node_index);
         node_index
