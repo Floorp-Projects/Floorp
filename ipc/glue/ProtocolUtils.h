@@ -83,7 +83,6 @@ enum {
 class MessageLoop;
 class PickleIterator;
 class nsISerialEventTarget;
-class nsUint32HashKey;
 
 namespace mozilla {
 class SchedulerGroup;
