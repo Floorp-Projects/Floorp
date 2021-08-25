@@ -17,7 +17,6 @@
 #include "nsLayoutUtils.h"
 #include "gfxContext.h"
 #include "SVGPaintServerFrame.h"
-#include "BasicLayers.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/CSSClipPathInstance.h"
