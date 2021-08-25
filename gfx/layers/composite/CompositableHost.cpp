@@ -110,9 +110,6 @@ already_AddRefed<CompositableHost> CompositableHost::Create(
     const TextureInfo& aTextureInfo, bool aUseWebRender) {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
-    case CompositableType::IMAGE_BRIDGE:
-      NS_ERROR("Cannot create an image bridge compositable this way");
-      break;
     case CompositableType::CONTENT_TILED:
       result = new TiledContentHost(aTextureInfo);
       break;
