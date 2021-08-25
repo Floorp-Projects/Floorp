@@ -28,7 +28,6 @@ struct nsFont;
 class ServoComputedData;
 
 namespace mozilla {
-class AutoProfilerLabel;
 class ComputedStyle;
 class SeenPtrs;
 class ServoElementSnapshot;
@@ -523,10 +522,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet*, nsCSSPropertyID);
   void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr);
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-
-void Gecko_Construct_AutoProfilerLabel(mozilla::AutoProfilerLabel*,
-                                       JS::ProfilingCategoryPair);
-void Gecko_Destroy_AutoProfilerLabel(mozilla::AutoProfilerLabel*);
 
 bool Gecko_DocumentRule_UseForPresentation(
     const mozilla::dom::Document*, const nsACString* aPattern,
