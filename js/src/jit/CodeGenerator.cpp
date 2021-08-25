@@ -12331,7 +12331,7 @@ void CodeGenerator::visitCheckPrivateFieldCache(LCheckPrivateFieldCache* ins) {
 void CodeGenerator::visitNewPrivateName(LNewPrivateName* ins) {
   pushArg(ImmGCPtr(ins->mir()->name()));
 
-  using Fn = JS::Symbol* (*)(JSContext*, HandlePropertyName);
+  using Fn = JS::Symbol* (*)(JSContext*, HandleAtom);
   callVM<Fn, NewPrivateName>(ins);
 }
 

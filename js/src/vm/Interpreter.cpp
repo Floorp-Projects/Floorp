@@ -2031,6 +2031,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
   RootedValue rootValue0(cx), rootValue1(cx);
   RootedObject rootObject0(cx), rootObject1(cx);
   RootedFunction rootFunction0(cx);
+  RootedAtom rootAtom0(cx);
   RootedPropertyName rootName0(cx);
   RootedId rootId0(cx);
   RootedScript rootScript0(cx);
@@ -2398,7 +2399,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(CheckPrivateField)
 
     CASE(NewPrivateName) {
-      ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
+      ReservedRooted<JSAtom*> name(&rootAtom0, script->getAtom(REGS.pc));
 
       auto* symbol = NewPrivateName(cx, name);
       if (!symbol) {

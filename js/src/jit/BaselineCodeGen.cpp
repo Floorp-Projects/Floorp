@@ -3249,7 +3249,7 @@ bool BaselineCodeGen<Handler>::emit_NewPrivateName() {
 
   pushScriptNameArg(R0.scratchReg(), R1.scratchReg());
 
-  using Fn = JS::Symbol* (*)(JSContext*, HandlePropertyName);
+  using Fn = JS::Symbol* (*)(JSContext*, HandleAtom);
   if (!callVM<Fn, NewPrivateName>()) {
     return false;
   }
