@@ -21,6 +21,7 @@
 #include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #if defined(XP_WIN)
+#  include "mozilla/WinHeaderOnlyUtils.h"
 #  include "WinUtils.h"
 #  include <wininet.h>
 #endif
