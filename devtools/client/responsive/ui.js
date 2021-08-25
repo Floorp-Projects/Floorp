@@ -1049,6 +1049,7 @@ class ResponsiveUI {
       }
 
       await this.restoreActorState(isTargetSwitching);
+      this.emitForTests("responsive-ui-target-switch-done");
     }
   }
   // This just needed to setup watching for network resources,

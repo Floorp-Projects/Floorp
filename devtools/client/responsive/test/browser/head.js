@@ -607,9 +607,15 @@ function waitForViewportScroll(ui) {
 }
 
 async function load(browser, url) {
-  const loaded = BrowserTestUtils.browserLoaded(browser, false, null, false);
+  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
+    browser,
+    false,
+    null,
+    false
+  );
+  const onTargetSwitch = waitForTargetSwitch(browser);
   BrowserTestUtils.loadURI(browser, url);
-  await loaded;
+  await Promise.all([onBrowserLoaded, onTargetSwitch]);
 }
 
 /**
@@ -622,15 +628,32 @@ async function reloadViewport(ui) {
 }
 
 function back(browser) {
-  const shown = waitForPageShow(browser);
+  const promises = [waitForTargetSwitch(browser), waitForPageShow(browser)];
   browser.goBack();
-  return shown;
+  return Promise.all(promises);
 }
 
 function forward(browser) {
-  const shown = waitForPageShow(browser);
+  const promises = [waitForTargetSwitch(browser), waitForPageShow(browser)];
   browser.goForward();
-  return shown;
+  return Promise.all(promises);
+}
+
+async function waitForTargetSwitch(browser) {
+  const targetSwitchDisabled = !isServerTargetSwitchingEnabled();
+  if (targetSwitchDisabled) {
+    // If server-side target switching is disabled assume no target switch.
+    return;
+  }
+
+  const tab = gBrowser.getTabForBrowser(browser);
+  const ui = ResponsiveUIManager.getResponsiveUIForTab(tab);
+  if (!ui) {
+    return;
+  }
+
+  info("Waiting for Responsive UI target switch");
+  await ui.once("responsive-ui-target-switch-done");
 }
 
 function addDeviceForTest(device) {
