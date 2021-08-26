@@ -3525,8 +3525,8 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
                                    const LambdaFunctionInfo& info) {
   uint32_t flagsAndArgs =
       info.flags.toRaw() | (info.nargs << JSFunction::ArgCountShift);
-  masm.store32(Imm32(flagsAndArgs),
-               Address(output, JSFunction::offsetOfFlagsAndArgCount()));
+  masm.storeValue(JS::PrivateUint32Value(flagsAndArgs),
+                  Address(output, JSFunction::offsetOfFlagsAndArgCount()));
   masm.storePtr(ImmGCPtr(info.baseScript),
                 Address(output, JSFunction::offsetOfBaseScript()));
   masm.storePtr(envChain, Address(output, JSFunction::offsetOfEnvironment()));
