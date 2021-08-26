@@ -7,6 +7,7 @@
 #include "KnowsCompositor.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 namespace mozilla {
 namespace layers {
