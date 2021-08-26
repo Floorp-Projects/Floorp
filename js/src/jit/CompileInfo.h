@@ -15,7 +15,6 @@
 
 #include "jit/CompileWrappers.h"  // CompileRuntime
 #include "jit/JitFrames.h"        // MinJITStackSize
-#include "jit/shared/Assembler-shared.h"
 #include "js/TypeDecls.h"         // jsbytecode
 #include "vm/BindingKind.h"       // BindingLocation
 #include "vm/BytecodeUtil.h"      // JSOp
@@ -54,13 +53,6 @@ inline unsigned CountArgSlots(JSScript* script, JSFunction* fun) {
   // Note: when updating this, please also update the assert in
   // SnapshotWriter::startFrame
   return StartArgSlot(script) + (fun ? fun->nargs() + 1 : 0);
-}
-
-inline unsigned CountArgSlots(JSScript* script, bool hasFun,
-                              uint32_t funArgCount) {
-  // Same as the previous function, for use when the JSFunction is not
-  // available.
-  return StartArgSlot(script) + (hasFun ? funArgCount + 1 : 0);
 }
 
 // Contains information about the compilation source for IR being generated.
@@ -158,13 +150,10 @@ class CompileInfo {
 
   JSScript* script() const { return script_; }
   bool compilingWasm() const { return script() == nullptr; }
+  JSFunction* funMaybeLazy() const { return fun_; }
   ModuleObject* module() const { return script_->module(); }
   jsbytecode* osrPc() const { return osrPc_; }
   InlineScriptTree* inlineScriptTree() const { return inlineScriptTree_; }
-
-  // It's not safe to access the JSFunction off main thread.
-  bool hasFunMaybeLazy() const { return fun_; }
-  ImmGCPtr funMaybeLazy() const { return ImmGCPtr(fun_); }
 
   const char* filename() const { return script_->filename(); }
 
@@ -196,7 +185,7 @@ class CompileInfo {
     return 2;
   }
   uint32_t thisSlot() const {
-    MOZ_ASSERT(hasFunMaybeLazy());
+    MOZ_ASSERT(funMaybeLazy());
     MOZ_ASSERT(nimplicit_ > 0);
     return nimplicit_ - 1;
   }
@@ -220,7 +209,7 @@ class CompileInfo {
   uint32_t stackSlot(uint32_t i) const { return firstStackSlot() + i; }
 
   uint32_t totalSlots() const {
-    MOZ_ASSERT(script() && hasFunMaybeLazy());
+    MOZ_ASSERT(script() && funMaybeLazy());
     return nimplicit() + nargs() + nlocals();
   }
 
@@ -264,7 +253,7 @@ class CompileInfo {
 
     // Formal argument slots.
     if (slot >= firstArgSlot()) {
-      MOZ_ASSERT(hasFunMaybeLazy());
+      MOZ_ASSERT(funMaybeLazy());
       MOZ_ASSERT(slot - firstArgSlot() < nargs());
 
       // Preserve formal arguments if they might be read when creating a rest or
@@ -277,7 +266,7 @@ class CompileInfo {
     }
 
     // |this| slot is observable but it can be recovered.
-    if (hasFunMaybeLazy() && slot == thisSlot()) {
+    if (funMaybeLazy() && slot == thisSlot()) {
       return SlotObservableKind::ObservableRecoverable;
     }
 
@@ -300,7 +289,7 @@ class CompileInfo {
     // The arguments object is observable. If it does not escape, it can
     // be recovered.
     if (needsArgsObj() && slot == argsObjSlot()) {
-      MOZ_ASSERT(hasFunMaybeLazy());
+      MOZ_ASSERT(funMaybeLazy());
       return SlotObservableKind::ObservableRecoverable;
     }
 

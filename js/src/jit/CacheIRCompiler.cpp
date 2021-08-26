@@ -1922,17 +1922,6 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     return false;
   }
 
-  if (kind == GuardClassKind::JSFunction) {
-    if (objectGuardNeedsSpectreMitigations(objId)) {
-      masm.branchTestObjIsFunction(Assembler::NotEqual, obj, scratch, obj,
-                                   failure->label());
-    } else {
-      masm.branchTestObjIsFunctionNoSpectreMitigations(
-          Assembler::NotEqual, obj, scratch, failure->label());
-    }
-    return true;
-  }
-
   const JSClass* clasp = nullptr;
   switch (kind) {
     case GuardClassKind::Array:
@@ -1956,14 +1945,15 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::WindowProxy:
       clasp = cx_->runtime()->maybeWindowProxyClass();
       break;
+    case GuardClassKind::JSFunction:
+      clasp = &JSFunction::class_;
+      break;
     case GuardClassKind::Set:
       clasp = &SetObject::class_;
       break;
     case GuardClassKind::Map:
       clasp = &MapObject::class_;
       break;
-    default:
-      MOZ_ASSERT_UNREACHABLE();
   }
   MOZ_ASSERT(clasp);
 
@@ -3313,8 +3303,8 @@ bool CacheIRCompiler::emitLoadFunctionLengthResult(ObjOperandId objId) {
     return false;
   }
 
-  // Get the JSFunction flags and arg count.
-  masm.load32(Address(obj, JSFunction::offsetOfFlagsAndArgCount()), scratch);
+  // Get the JSFunction flags.
+  masm.load16ZeroExtend(Address(obj, JSFunction::offsetOfFlags()), scratch);
 
   // Functions with a SelfHostedLazyScript must be compiled with the slow-path
   // before the function length is known. If the length was previously resolved,

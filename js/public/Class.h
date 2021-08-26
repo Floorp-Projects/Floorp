@@ -33,9 +33,9 @@ namespace js {
 
 class PropertyResult;
 
-// These are equal to js::FunctionClass / js::ExtendedFunctionClass.
+// This is equal to JSFunction::class_.  Use it in places where you don't want
+// to #include jsfun.h.
 extern JS_PUBLIC_DATA const JSClass* const FunctionClassPtr;
-extern JS_PUBLIC_DATA const JSClass* const FunctionExtendedClassPtr;
 
 }  // namespace js
 
@@ -686,9 +686,7 @@ struct alignas(js::gc::JSClassAlignBytes) JSClass {
 
   bool emulatesUndefined() const { return flags & JSCLASS_EMULATES_UNDEFINED; }
 
-  bool isJSFunction() const {
-    return this == js::FunctionClassPtr || this == js::FunctionExtendedClassPtr;
-  }
+  bool isJSFunction() const { return this == js::FunctionClassPtr; }
 
   bool nonProxyCallable() const {
     MOZ_ASSERT(!isProxyObject());

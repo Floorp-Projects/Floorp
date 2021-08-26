@@ -185,7 +185,7 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
     osrBlock->initSlot(info().argsObjSlot(), argsObj);
   }
 
-  if (info().hasFunMaybeLazy()) {
+  if (info().funMaybeLazy()) {
     // Initialize |this| parameter.
     MParameter* thisv = MParameter::New(alloc(), MParameter::THIS_SLOT);
     osrBlock->add(thisv);
@@ -438,7 +438,7 @@ bool WarpBuilder::buildPrologue() {
     return false;
   }
 
-  if (info().hasFunMaybeLazy()) {
+  if (info().funMaybeLazy()) {
     // Initialize |this|.
     MParameter* param = MParameter::New(alloc(), MParameter::THIS_SLOT);
     current->add(param);
@@ -1873,7 +1873,7 @@ bool WarpBuilder::build_SuperCall(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_FunctionThis(BytecodeLocation loc) {
-  MOZ_ASSERT(info().hasFunMaybeLazy());
+  MOZ_ASSERT(info().funMaybeLazy());
 
   if (script_->strict()) {
     // No need to wrap primitive |this| in strict mode.
@@ -2631,7 +2631,7 @@ bool WarpBuilder::build_Instanceof(BytecodeLocation loc) {
 
 bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
   MOZ_ASSERT(script_->isFunction());
-  MOZ_ASSERT(info().hasFunMaybeLazy());
+  MOZ_ASSERT(info().funMaybeLazy());
 
   if (scriptSnapshot()->isArrowFunction()) {
     MDefinition* callee = getCallee();
