@@ -744,7 +744,11 @@ void RemoteAccessible::AtkKeyBinding(nsString& aBinding) {
   Unused << mDoc->SendAtkKeyBinding(mID, &aBinding);
 }
 
-double RemoteAccessible::CurValue() {
+double RemoteAccessible::CurValue() const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::CurValue();
+  }
+
   double val = UnspecifiedNaN<double>();
   Unused << mDoc->SendCurValue(mID, &val);
   return val;
@@ -756,19 +760,31 @@ bool RemoteAccessible::SetCurValue(double aValue) {
   return success;
 }
 
-double RemoteAccessible::MinValue() {
+double RemoteAccessible::MinValue() const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::MinValue();
+  }
+
   double val = UnspecifiedNaN<double>();
   Unused << mDoc->SendMinValue(mID, &val);
   return val;
 }
 
-double RemoteAccessible::MaxValue() {
+double RemoteAccessible::MaxValue() const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::MaxValue();
+  }
+
   double val = UnspecifiedNaN<double>();
   Unused << mDoc->SendMaxValue(mID, &val);
   return val;
 }
 
-double RemoteAccessible::Step() {
+double RemoteAccessible::Step() const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::Step();
+  }
+
   double step = UnspecifiedNaN<double>();
   Unused << mDoc->SendStep(mID, &step);
   return step;

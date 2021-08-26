@@ -239,11 +239,11 @@ KeyBinding AccessKey();
 KeyBinding KeyboardShortcut();
 void AtkKeyBinding(nsString& aBinding);
 
-double CurValue();
+double CurValue() const override;
+double MinValue() const override;
+double MaxValue() const override;
+double Step() const override;
 bool SetCurValue(double aValue);
-double MinValue();
-double MaxValue();
-double Step();
 
 void TakeFocus();
 RemoteAccessible* FocusedChild();
