@@ -386,7 +386,7 @@ bool nsDisplayButtonBorder::CreateWebRenderCommands(
   aBuilder.StartGroup(this);
   const nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
   bool snap;
-  nsRegion visible = GetBounds(aDisplayListBuilder, &snap);
+  nsRect visible = GetBounds(aDisplayListBuilder, &snap);
   nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
       aBuilder, aSc, visible, mFrame, buttonRect);
 
