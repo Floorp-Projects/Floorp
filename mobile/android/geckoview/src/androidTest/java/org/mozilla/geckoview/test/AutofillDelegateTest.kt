@@ -243,7 +243,7 @@ class AutofillDelegateTest : BaseSessionTest() {
                            root: Autofill.Node? = null): Int {
         val node = if (root !== null) root else mainSession.autofillSession.root
         return (if (cond(node)) 1 else 0) +
-                node.children.sumOf {
+                node.children.sumBy {
                     countAutofillNodes(cond, it) }
     }
 
