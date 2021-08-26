@@ -15,7 +15,6 @@ include protocol PBrowser;
 include protocol PCanvas;
 include protocol PCompositorManager;
 include protocol PCompositorWidget;
-include protocol PLayerTransaction;
 include protocol PTexture;
 include protocol PWebGL;
 include protocol PWebRenderBridge;
@@ -99,7 +98,6 @@ struct FrameStats {
   manages PAPZ;
   manages PAPZCTreeManager;
   // A Compositor manages a single Layer Manager (PLayerTransaction)
-  manages PLayerTransaction;
   manages PTexture;
   manages PCompositorWidget;
   manages PWebRenderBridge;
@@ -208,11 +206,6 @@ parent:
 
   sync StopFrameTimeRecording(uint32_t startIndex)
     returns (float[] intervals);
-
-  // layersBackendHints is an ordered list of preffered backends where
-  // layersBackendHints[0] is the best backend. If any hints are LayersBackend::LAYERS_NONE
-  // that hint is ignored.
-  async PLayerTransaction(LayersBackend[] layersBackendHints, LayersId id);
 
   // Notify the compositor that a region of the screen has been invalidated.
   async NotifyRegionInvalidated(nsIntRegion region);

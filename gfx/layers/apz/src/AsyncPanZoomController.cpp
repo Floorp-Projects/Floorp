@@ -69,7 +69,6 @@
 #include "mozilla/layers/APZUtils.h"        // for AsyncTransform
 #include "mozilla/layers/CompositorController.h"  // for CompositorController
 #include "mozilla/layers/DirectionUtils.h"  // for GetAxis{Start,End,Length,Scale}
-#include "mozilla/layers/LayerTransactionParent.h"  // for LayerTransactionParent
 #include "mozilla/layers/MetricsSharingController.h"  // for MetricsSharingController
 #include "mozilla/mozalloc.h"                         // for operator new, etc
 #include "mozilla/Unused.h"                           // for unused
@@ -3660,7 +3659,6 @@ Maybe<CSSPoint> AsyncPanZoomController::GetCurrentAnimationDestination(
 ParentLayerPoint
 AsyncPanZoomController::AdjustHandoffVelocityForOverscrollBehavior(
     ParentLayerPoint& aHandoffVelocity) const {
-
   ParentLayerPoint residualVelocity;
   ScrollDirections handoffDirections = GetAllowedHandoffDirections();
   if (!handoffDirections.contains(ScrollDirection::eHorizontal)) {

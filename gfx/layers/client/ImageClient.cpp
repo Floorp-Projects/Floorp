@@ -23,7 +23,8 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"  // for CompositableType, etc
 #include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/LayersSurfaces.h"    // for SurfaceDescriptor, etc
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/layers/TextureClient.h"     // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"  // for SurfaceTextureClient
 #include "mozilla/mozalloc.h"                 // for operator delete, etc
