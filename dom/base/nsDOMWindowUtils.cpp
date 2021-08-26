@@ -8,6 +8,7 @@
 
 #include "MobileViewportManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "nsPresContext.h"
 #include "nsCaret.h"
 #include "nsContentList.h"

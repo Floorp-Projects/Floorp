@@ -74,6 +74,7 @@ class CompositorAnimations;
 class CanvasLayer;
 class RefLayer;
 class HostLayer;
+class ShadowableLayer;
 class SpecificLayerAttributes;
 class Compositor;
 class TransformData;
@@ -916,6 +917,12 @@ class Layer {
    * LayerComposite.  Can be used anytime.
    */
   virtual HostLayer* AsHostLayer() { return nullptr; }
+
+  /**
+   * Dynamic cast to a ShadowableLayer.  Return null if this is not a
+   * ShadowableLayer.  Can be used anytime.
+   */
+  virtual ShadowableLayer* AsShadowableLayer() { return nullptr; }
 
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,

@@ -6,6 +6,7 @@
 #include "HostWebGLContext.h"
 
 #include "CompositableHost.h"
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/LayersSurfaces.h"
 
 #include "MozFramebuffer.h"

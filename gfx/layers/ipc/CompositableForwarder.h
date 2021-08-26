@@ -22,6 +22,7 @@ class CompositableClient;
 class CompositableHandle;
 class ImageContainer;
 class PTextureChild;
+class ShadowLayerForwarder;
 class SurfaceDescriptorTiles;
 class TextureClient;
 class ThebesBufferData;
@@ -110,6 +111,8 @@ class CompositableForwarder : public KnowsCompositor {
   void AssertInForwarderThread() { MOZ_ASSERT(InForwarderThread()); }
 
   static uint32_t GetMaxFileDescriptorsPerMessage();
+
+  virtual ShadowLayerForwarder* AsLayerForwarder() { return nullptr; }
 
  protected:
   nsTArray<RefPtr<TextureClient>> mTexturesToRemove;
