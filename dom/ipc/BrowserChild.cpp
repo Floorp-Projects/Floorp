@@ -92,6 +92,7 @@
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/InputAPZContext.h"
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "nsBrowserStatusFilter.h"
 #include "nsColorPickerProxy.h"

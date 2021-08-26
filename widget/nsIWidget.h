@@ -81,6 +81,7 @@ class CompositorBridgeChild;
 struct FrameMetrics;
 class LayerManager;
 class LayerManagerComposite;
+class PLayerTransactionChild;
 class WebRenderBridgeChild;
 }  // namespace layers
 namespace gfx {
@@ -380,6 +381,7 @@ class nsIWidget : public nsISupports {
   typedef mozilla::layers::LayerManagerComposite LayerManagerComposite;
   typedef mozilla::layers::LayersBackend LayersBackend;
   typedef mozilla::layers::LayersId LayersId;
+  typedef mozilla::layers::PLayerTransactionChild PLayerTransactionChild;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::ZoomConstraints ZoomConstraints;
   typedef mozilla::widget::IMEEnabled IMEEnabled;
