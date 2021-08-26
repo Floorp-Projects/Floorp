@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schema": 1629359843447,
+      "schema": 1629878249723,
       "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
       "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
       "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
@@ -14,9 +14,9 @@
         "mimetype": "application/x-pem-file"
       },
       "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
-      "crlite_enrolled": false,
+      "crlite_enrolled": true,
       "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
-      "last_modified": 1629705463487
+      "last_modified": 1629943052272
     },
     {
       "schema": 1628258299195,
