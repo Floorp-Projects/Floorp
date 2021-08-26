@@ -2647,16 +2647,10 @@ static nsresult GetPartialTextRect(RectCallback* aCallback,
   if (textFrame) {
     nsIFrame* relativeTo =
         nsLayoutUtils::GetContainingBlockForClientRect(textFrame);
-
-    for (nsTextFrame* f = textFrame->FindContinuationForOffset(aStartOffset); f;
+    for (nsTextFrame* f = textFrame; f;
          f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
       int32_t fstart = f->GetContentOffset(), fend = f->GetContentEnd();
-      if (fend <= aStartOffset) {
-        continue;
-      }
-      if (fstart >= aEndOffset) {
-        break;
-      }
+      if (fend <= aStartOffset || fstart >= aEndOffset) continue;
 
       // Calculate the text content offsets we'll need if text is requested.
       int32_t textContentStart = fstart;
