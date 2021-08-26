@@ -2129,7 +2129,7 @@ static void DoLULBacktrace(
 #  endif
 
   // Copy up to N_STACK_BYTES from rsp-REDZONE upwards, but not going past the
-  // stack's registered top point.  Do some basic sanity checks too.  This
+  // stack's registered top point.  Do some basic validity checks too.  This
   // assumes that the TaggedUWord holding the stack pointer value is valid, but
   // it should be, since it was constructed that way in the code just above.
 
@@ -2189,7 +2189,14 @@ static void DoLULBacktrace(
     uintptr_t nToCopy = 0;
     if (start < end) {
       nToCopy = end - start;
-      if (nToCopy > lul::N_STACK_BYTES) nToCopy = lul::N_STACK_BYTES;
+      if (nToCopy >= 1024u * 1024u) {
+        // start is abnormally far from end, possibly due to some special code
+        // that uses a separate stack elsewhere (e.g.: rr). In this case we just
+        // give up on this sample.
+        nToCopy = 0;
+      } else if (nToCopy > lul::N_STACK_BYTES) {
+        nToCopy = lul::N_STACK_BYTES;
+      }
     }
     MOZ_ASSERT(nToCopy <= lul::N_STACK_BYTES);
     stackImg.mLen = nToCopy;
