@@ -989,10 +989,6 @@ static JSFunction* CreateFunctionFast(JSContext* cx,
     fun->initAtom(atom);
   }
 
-  if (flags.isExtended()) {
-    fun->initializeExtended();
-  }
-
   return fun;
 }
 
@@ -1107,10 +1103,10 @@ static bool InstantiateModuleObject(JSContext* cx,
 }
 
 static Shape* GetFunctionShape(JSContext* cx, const JSClass* clasp,
-                               HandleObject proto) {
-  return SharedShape::getInitialShape(cx, clasp, cx->realm(),
-                                      TaggedProto(proto), /* nfixed = */ 0,
-                                      ObjectFlags());
+                               HandleObject proto, gc::AllocKind kind) {
+  size_t nfixed = GetGCKindSlots(kind);
+  return SharedShape::getInitialShape(
+      cx, clasp, cx->realm(), TaggedProto(proto), nfixed, ObjectFlags());
 }
 
 // Instantiate JSFunctions for each FunctionBox.
@@ -1133,13 +1129,15 @@ static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
     return false;
   }
 
-  RootedShape functionShape(cx, GetFunctionShape(cx, &FunctionClass, proto));
+  RootedShape functionShape(
+      cx, GetFunctionShape(cx, &FunctionClass, proto, gc::AllocKind::FUNCTION));
   if (!functionShape) {
     return false;
   }
 
-  RootedShape extendedShape(
-      cx, GetFunctionShape(cx, &ExtendedFunctionClass, proto));
+  RootedShape extendedShape(cx,
+                            GetFunctionShape(cx, &ExtendedFunctionClass, proto,
+                                             gc::AllocKind::FUNCTION_EXTENDED));
   if (!extendedShape) {
     return false;
   }
