@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Acerca de %1$s, ayuda</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Protección de rastreo</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Protección de rastreo aumentada</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Contenido web</string>
@@ -527,9 +527,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NO</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">El acceso directo se abrirá con la protección de rastreo desactivada</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">El acceso directo se abrirá con la protección de rastreo aumentada desactivada</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -689,11 +689,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">¿El sitio se comporta de manera inesperada?\n Pruebe desactivar la Protección de rastreo</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">¿Al sitio le falta contenido o funciona raro?\n
-    Probá desactivar la protección de rastreo</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Obtenga acceso con un toque a los sitios que más usa %1$s Menú > Añadir a la Pantalla de inicio\n]]></string>
@@ -718,12 +713,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Desactivar los consejos en la pantalla de inicio</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">¿Querés mantener desactivada la protección de rastreo para un sitio en el que confiás?\n
-        Agregalo a los sitios permitidos en Ajustes
-    </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
@@ -808,7 +797,4 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Eliminar</string>
 
-    <!-- Text for context menu additional note.
-    %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">Las imágenes guardadas y compartidas &lt;b&gt;no serán&lt;/b&gt; borradas al borrar el historial de %1s</string>
-</resources>
+    </resources>

@@ -726,6 +726,11 @@ The new line here must be kept as the second half of the string is clickable for
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">Ebbene sì, abbiamo un nuovo look! Ulteriori informazioni su questo e altri aggiornamenti di %1$s.</string>
 
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Crea scorciatoie ai siti che visiti più frequentemente:\n
+   Seleziona Aggiungi alle scorciatoie dal menu di %1$s</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Aperta nuova scheda</string>
 
@@ -803,4 +808,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Top Sites -->
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Rimuovi</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Le immagini salvate e condivise &lt;b&gt;non verranno eliminate&lt;/b&gt; quando si elimina la cronologia di %1$s.</string>
 </resources>

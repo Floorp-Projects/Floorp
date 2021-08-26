@@ -725,6 +725,11 @@ The new line here must be kept as the second half of the string is clickable for
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">當然，我們有全新設計！了解更多 %1$s 的新鮮事。</string>
 
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">對您常造訪的網站建立捷徑:\n
+選擇 %1$s 選單的「新增捷徑」</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">已開啟新分頁</string>
 
@@ -805,5 +810,5 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">清除 %1$s 瀏覽紀錄時，&lt;b&gt;將不會&lt;/b&gt;刪除儲存或分享的圖片。</string>
+    <string name="contextmenu_erased_images_note2">清除 %1$s 瀏覽紀錄時，&lt;b&gt;將不會&lt;/b&gt;刪除已儲存或分享的圖片</string>
 </resources>

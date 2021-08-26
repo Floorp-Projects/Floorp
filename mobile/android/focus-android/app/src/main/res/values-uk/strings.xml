@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Про %1$s, допомога</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Захист від стеження</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Розширений захист від стеження</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Веб-вміст</string>
@@ -527,9 +527,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">НІ</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Ярлик буде відкриватися з вимкненим захистом від стеження</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Ярлик відкриватиметься з вимкненим Розширеним захистом від стеження</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -689,10 +689,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Неочікувана поведінка сайту?\n Спробуйте вимкнути захист від стеження</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">Сайт виглядає чи поводиться дивно?\n
-    Спробуйте вимкнути захист від стеження</string>
+    <string name="tip_disable_tracking_protection3">Сайт виглядає чи поводиться дивно?\n
+    Спробуйте вимкнути Розширений захист від стеження</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -721,13 +721,18 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">Хочете вимкнути захист від стеження для довіреного сайту?\n
+    <string name="tip_explain_allowlist3">Хочете вимкнути Розширений захист від стеження для довіреного сайту?\n
         Додайте його до списку винятків у налаштуваннях
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">Оновлений зовнішній вигляд! Ознайомтеся докладніше про це, а також про інші оновлення в %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Створюйте ярлики для найвідвідуваніших сайтів:\n
+    Виберіть Додати до ярликів у меню %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Відкрито нову вкладку</string>
@@ -809,5 +814,5 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">Збережені та спільні зображення &lt;b&gt;не будуть&lt;/b&gt; видалені, якщо ви зітрете історію %1s</string>
+    <string name="contextmenu_erased_images_note2">Збережені та спільні зображення &lt;b&gt;не будуть видалені&lt;/b&gt;, якщо ви зітрете історію %1$s</string>
 </resources>

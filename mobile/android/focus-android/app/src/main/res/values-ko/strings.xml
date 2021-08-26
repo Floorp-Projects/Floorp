@@ -725,6 +725,11 @@ The new line here must be kept as the second half of the string is clickable for
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">네, 새로운 모습으로 바뀌었습니다! 이에 대해 더 읽어보고 %1$s의 다른 업데이트도 살펴 보세요.</string>
 
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">가장 많이 방문하는 사이트에 대한 바로가기 만들기:\n
+    %1$s 메뉴에서 바로가기 추가를 선택하세요.</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">새 탭 열림</string>
 
@@ -806,5 +811,5 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">%1s 기록을 지울때 저장 및 공유된 이미지는 &lt;b&gt;삭제되지 않습니다&lt;/b&gt;.</string>
+    <string name="contextmenu_erased_images_note2">%1$s 기록을 지울 때 저장 및 공유된 이미지는 &lt;b&gt;삭제되지 않습니다&lt;/b&gt;.</string>
 </resources>

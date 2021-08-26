@@ -690,6 +690,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Ce site ne se comporte pas comme prévu ?\nEssayer de désactiver la protection contre le pistage</string>
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection2">Ce site se comporte bizarrement ou du contenu manque ?\n
+Essayez de désactiver la protection contre le pistage</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Accédez rapidement à vos sites favoris%1$s Menu > Ajouter à l’écran d’accueil]]></string>
@@ -707,8 +712,27 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Ouvrir un lien dans un nouvel onglet\n Effectuez un appui long sur un lien dans une page</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Vous voulez voir la version complète d’un site ?\n
+Activez la version ordinateur à partir du menu %1$s</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Désactiver les conseils sur l’écran de démarrage</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist2">Vous voulez désactiver la protection contre le pistage pour un site de confiance ?\n
+Ajoutez-le à la liste d’autorisation dans les paramètres</string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Mais oui, nous avons un nouveau look rafraichi ! En savoir plus à ce sujet et sur d’autres mises à jour de %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Créez des raccourcis vers les sites que vous visitez le plus :
+    Sélectionnez « Ajouter aux raccourcis » dans le menu de %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nouvel onglet ouvert</string>
@@ -735,6 +759,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Supprimer tous les sites web</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Bloquer les cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Voulez-vous bloquer les cookies ?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">L’onglet a planté</string>
     <!-- Headline for the tab crash report screen -->
@@ -752,6 +782,16 @@
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Traqueurs bloqués depuis le %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Contenu</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Publicité</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Réseaux sociaux</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Statistiques</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="enhanced_tracking_protection">Protection renforcée contre le pistage</string>
     <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->

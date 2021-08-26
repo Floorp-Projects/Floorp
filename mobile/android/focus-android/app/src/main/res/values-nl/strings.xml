@@ -730,6 +730,11 @@ The new line here must be kept as the second half of the string is clickable for
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">Inderdaad, we hebben een frisse nieuwe uitstraling! Meer info hierover en over andere updates van %1$s.</string>
 
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Maak snelkoppelingen voor de websites die u het meest bezoekt:\n
+    Selecteer in het %1$s-menu ‘Toevoegen aan snelkoppelingen’</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nieuw tabblad geopend</string>
 
@@ -807,4 +812,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Top Sites -->
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Verwijderen</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Opgeslagen en gedeelde afbeeldingen &lt;b&gt;worden niet&lt;/b&gt; verwijderd als u geschiedenis van %1$s wist</string>
 </resources>

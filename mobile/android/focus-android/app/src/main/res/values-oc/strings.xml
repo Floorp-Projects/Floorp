@@ -688,6 +688,9 @@
     <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
     <string name="preference_block_cookies_title">Blocar los cookies</string>
 
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Volètz blocar los cookies ?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">L’onglet a plantat</string>
     <!-- Headline for the tab crash report screen -->
@@ -705,6 +708,8 @@
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Traçadors blocats dempuèi lo %s</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">Contengut</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->

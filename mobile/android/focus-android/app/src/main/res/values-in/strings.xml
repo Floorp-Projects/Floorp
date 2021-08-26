@@ -1,152 +1,432 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Batal</string>
-  <string name="action_ok">Oke</string>
-  <string name="action_save">Simpan</string>
-  <string name="urlbar_hint">Cari atau masukkan alamat</string>
-  <string name="teaser">Penjelajahan pribadi otomatis.\nJelajahi. Hapus. Ulangi.</string>
-  <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
-  <string name="feedback_erase_custom_tab">Riwayat penjelajahan tab telah dihapus.</string>
-  <string name="search_hint">Cari %1$s</string>
-  <string name="menu_share">Bagikan…</string>
-  <string name="menu_report_site_issue">Laporkan Masalah Situs</string>
-  <string name="menu_open_with_default_browser2">Buka di %1$s</string>
-  <string name="menu_open_with_a_browser2">Buka di…</string>
-  <string name="menu_add_to_home_screen">Tambahkan ke Beranda</string>
-  <string name="menu_whats_new">Yang Baru</string>
-  <string name="menu_settings">Setelan</string>
-  <string name="menu_about">Tentang</string>
-  <string name="menu_help">Bantuan</string>
-  <string name="menu_rights">Hak Anda</string>
-  <string name="menu_trackers_blocked_title">Pelacak terblokir</string>
-  <string name="menu_trackers_blocked_subtitle">Menonaktifkan ini mungkin membantu memecahkan masalah beberapa situs</string>
-  <string name="menu_content_blocking">Pemblokiran Konten</string>
-  <string name="menu_content_blocking_subtitle">Nonaktifkan untuk memecahkan masalah beberapa situs</string>
-  <string name="menu_custom_tab_branding">Diberdayakan oleh %1$s</string>
-  <string name="share_dialog_title">Bagikan via</string>
-  <string name="notification_erase_text">Hapus riwayat penjelajahan</string>
-  <string name="notification_action_open">Buka</string>
-  <string name="notification_action_erase_and_open">Hapus dan Buka</string>
-  <string name="shortcut_erase_short_label">Hapus</string>
-  <string name="shortcut_erase_long_label">Hapus riwayat penjelajahan</string>
-  <string name="shortcut_erase_and_open_short_label">Hapus &amp; buka</string>
-  <string name="shortcut_erase_and_open_long_label">Hapus dan buka %1$s</string>
-  <string name="text_selection_search_action">Mencari Secara Pribadi</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Privasi &amp; Keamanan</string>
-  <string name="preference_privacy_and_security_summary">Pelacakan, kuki, pilihan data</string>
-  <string name="preference_search_summary">Atur baku, lengkapi otomatis</string>
-  <string name="preference_mozilla_summary">Tentang %1$s, bantuan</string>
-  <string name="preference_category_tracking_protection">Perlindungan Pelacakan</string>
-  <string name="preference_category_web_content">Konten Web</string>
-  <string name="preference_category_switching_apps">Mengganti Aplikasi</string>
-  <string name="preference_category_general">Umum</string>
-  <string name="preference_general_summary">Peramban, tab, dan bahasa baku</string>
-  <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
-  <string name="preference_category_search">Cari</string>
-  <string name="preference_show_search_suggestions">Dapatkan saran pencarian</string>
-  <string name="preference_show_search_suggestions_summary">%1$s akan mengirim apa yang Anda ketik di bilah alamat ke mesin pencari Anda</string>
-  <string name="preference_search_engine_default">Baku</string>
-  <string name="preference_search_engine_label">Mesin pencari</string>
-  <string name="preference_state_on">Aktif</string>
-  <string name="preference_state_off">Nonaktif</string>
-  <string name="preference_subitem_autocomplete">Lengkapi-otomatis URL</string>
-  <string name="preference_switch_autocomplete_topsites">Untuk Situs teratas</string>
-  <string name="preference_autocomplete_topsite_summary">Aktifkan untuk melengkapi secara otomatis lebih dari 450 URL populer di bilah alamat.</string>
-  <string name="preference_switch_autocomplete_user_list">Untuk Situs yang Anda Tambahkan</string>
-  <string name="preference_autocomplete_user_list_summary">Aktikan lengkapi otomatis untuk lebih dari 450 URL populer di bilah alamat.</string>
-  <string name="preference_category_autocomplete_manage_sites">Kelola situs</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Kelola situs</string>
-  <string name="preference_autocomplete_action_add">+ Tambah URL ubahsuai</string>
-  <string name="preference_autocomplete_title_add">Tambah URL ubahsuai</string>
-  <string name="custom_autocomplete_quick_add">Tambahkan URL kustom</string>
-  <string name="add_custom_autocomplete_label">Tambahkan tautan untuk dilengkapi secara otomatis</string>
-  <string name="preference_category_cookies">Kuki dan Data Situs</string>
-  <string name="preference_category_data_choices">Pilihan Data</string>
-  <string name="preference_autocomplete_title_remove">Hapus URLs ubahsuai</string>
-  <string name="preference_autocomplete_learn_more">Pelajari lebih lanjut</string>
-  <string name="preference_autocomplete_custom_summary">Tambahkan dan kelola lengkapi-otomatis URL ubahsuai.</string>
-  <string name="preference_autocomplete_add_title">URL untuk ditambahkan</string>
-  <string name="preference_autocomplete_add_hint">Tempel atau masukkan URL</string>
-  <string name="preference_autocomplete_add_example2">Contoh: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Contoh: contoh.id</string>
-  <string name="preference_autocomplete_add_confirmation">URL ubahsuai baru ditambahkan.</string>
-  <string name="preference_autocomplete_menu_remove">Hapus</string>
-  <string name="preference_autocomplete_action_remove_content_description">Hapus</string>
-  <string name="preference_autocomplete_add_error">Periksa ulang URL yang Anda masukkan.</string>
-  <string name="preference_language">Bahasa</string>
-  <string name="preference_language_systemdefault">Bawaan sistem</string>
-  <string name="preference_category_privacy">Privasi</string>
-  <string name="preference_privacy_block_ads">Blokir pelacak iklan</string>
-  <string name="preference_privacy_block_ads_summary">Beberapa iklan melacak kunjungan situs, meski Anda tidak mengklik iklan</string>
-  <string name="preference_privacy_block_analytics">Blokir pelacak analitik</string>
-  <string name="preference_privacy_block_analytics_summary">Digunakan untuk mengumpulkan, menganalisis, dan mengukur kegiatan seperti mengetuk dan menggulir</string>
-  <string name="preference_privacy_block_social">Blokir pelacak sosial</string>
-  <string name="preference_privacy_block_social_summary">Disematkan pada situs untuk melacak kunjungan Anda dan menampilkan fungsi seperti tombol berbagi</string>
-  <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
-  <string name="preference_privacy_block_content_summary2">Mengaktifkan fitur ini mungkin menyebabkan beberapa laman bertindak tidak terduga</string>
-  <string name="preference_privacy_category_cookies">Blokir kuki</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Tidak</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Hanya blokir kuki pelacak pihak ke-3</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Hanya blokir kuki pihak ke-3</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Ya</string>
-  <string name="preference_security_biometric">Gunakan sidik jari untuk membuka aplikasi</string>
-  <string name="preference_security_biometric_summary">Sidik jari Anda dapat membuka %1$s jika URL sudah dibuka di aplikasi. Mode siluman akan aktif.</string>
-  <string name="preference_privacy_secure_mode">Mode Siluman</string>
-  <string name="preference_privacy_stealth_summary">Sembunyikan laman web saat berpindah aplikasi dan blokir tangkapan layar.</string>
-  <string name="preference_category_security">Keamanan</string>
-  <string name="preference_category_performance">Kinerja</string>
-  <string name="preference_performance_block_webfonts">Blokir fon Web</string>
-  <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
-  <string name="preference_performance_block_javascript">Blokir JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Laman dapat dimuat lebih cepat, namun bisa juga bertindak tanpa diduga-duga</string>
-  <string name="preference_default_browser2">Jadikan %1$s peramban baku</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Kirim data penggunaan</string>
-  <string name="preference_mozilla_telemetry_summary">Pelajari lebih lanjut</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla berusaha untuk mengumpulkan hanya apa yang kami perlu untuk sediakan dan meningkatkan %1$s untuk setiap orang.</string>
-  <string name="preference_privacy_notice">Kebijakan Privasi</string>
-  <string name="preference_about">Tentang %1$s</string>
-  <string name="preference_search_installed_search_engines">Mesin pencari terpasang</string>
-  <string name="preference_search_restore">Pulihkan mesin pencari baku</string>
-  <string name="preference_search_add2">+ Tambahkan mesin pencari lainnya</string>
-  <string name="preference_search_remove_title">Hapus mesin pencari</string>
-  <string name="preference_search_remove">Hapus</string>
-  <string name="preference_homescreen_tips">Tampilkan kiat beranda</string>
-  <string name="action_option_add_search_engine">Tambah mesin pencari</string>
-  <string name="search_add_manually_name_hint">Nama mesin pencari</string>
-  <string name="search_add_manually_string">String pencarian untuk digunakan</string>
-  <string name="search_add_manually_save">Simpan</string>
-  <string name="search_add_manually_example">Contoh: contoh.id/search/?q=%s</string>
-  <string name="search_add_confirmation">Mesin pencari baru ditambahkan.</string>
-  <string name="search_add_error_empty_name">Masukkan nama mesin pencari</string>
-  <string name="search_add_error_duplicate_name">Mesin pencari yang terpasang telah menggunakan nama tersebut.</string>
-  <string name="search_add_error_empty_search">Masukkan string pencarian</string>
-  <string name="search_add_error_format">Periksa apakah string pencarian cocok dengan format Contoh</string>
-  <string name="content_description_clear_input">Bersihkan masukan</string>
-  <string name="content_description_dismiss_input">Tutup</string>
-  <string name="content_description_erase">Hapus riwayat penjelajahan</string>
-  <string name="content_description_tab_counter">Tab terbuka: %1$s</string>
-  <string name="content_description_lock">Sambungan aman</string>
-  <string name="accessibility_announcement_loading">Memuat</string>
-  <string name="accessibility_announcement_loading_finished">Situs web dimuat</string>
-  <string name="content_description_menu">Opsi lainnya</string>
-  <string name="indicator_content_description_menu">Tombol opsi lainnya</string>
-  <string name="content_description_forward">Navigasi ke selanjutnya</string>
-  <string name="content_description_reload">Muat ulang situs web</string>
-  <string name="content_description_back">Arahkan kembali</string>
-  <string name="content_description_stop">Berhenti memuat situs web</string>
-  <string name="content_description_customtab_exit">Kembali ke aplikasi sebelumnya</string>
-  <string name="content_description_trackers_blocked">Jumlah pelacak terblokir</string>
-  <string name="content_description_blocking_switch">Blokir pelacak</string>
-  <string name="your_rights">Hak Anda</string>
-  <string name="external_app_prompt_title">Buka tautan di aplikasi lainnya</string>
-  <string name="external_app_prompt">Anda dapat meninggalkan %1$s untuk membuka tautan ini di %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Temukan aplikasi yang dapat membuka tautan</string>
-  <string name="external_app_prompt_no_app">Tak ada satu pun aplikasi di perangkat Anda dapat membuka tautan ini. Anda dapat meninggalkan %1$s untuk mencari di %2$s untuk mendapatkan aplikasi yang mampu.</string>
-  <string name="external_multiple_apps_matched_exit">Keluar dari Penjelajahan Pribadi?</string>
-  <string name="download_snackbar_finished">%1$s selesai</string>
-  <string name="download_snackbar_open">Buka</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Batal</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">Oke</string>
+
+    <string name="action_save">Simpan</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Cari atau masukkan alamat</string>
+
+    <string name="teaser">Penjelajahan pribadi otomatis.\nJelajahi. Hapus. Ulangi.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
+    <string name="feedback_erase2">Riwayat penjelajahan dihapus</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Riwayat penjelajahan tab telah dihapus.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Cari %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Bagikan…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Laporkan Masalah Situs</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Buka di %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Buka di…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Tambahkan ke Beranda</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Tambahkan ke Pintasan</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Hapuskan dari Pintasan</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Yang Baru</string>
+    <string name="menu_settings">Setelan</string>
+    <string name="menu_about">Tentang</string>
+    <string name="menu_help">Bantuan</string>
+    <string name="menu_rights">Hak Anda</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Pelacak terblokir</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Menonaktifkan ini mungkin membantu memecahkan masalah beberapa situs</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Pemblokiran Konten</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Nonaktifkan untuk memecahkan masalah beberapa situs</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Diberdayakan oleh %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Bagikan via</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Hapus riwayat penjelajahan</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Buka</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Hapus dan Buka</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Hapus</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Hapus riwayat penjelajahan</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Hapus &amp; buka</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Hapus dan buka %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Mencari Secara Pribadi</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Privasi &amp; Keamanan</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Pelacakan, kuki, pilihan data</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Atur baku, lengkapi otomatis</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Tentang %1$s, bantuan</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_tracking_protection">Perlindungan Pelacakan</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Konten Web</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Mengganti Aplikasi</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Umum</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Peramban, tab, dan bahasa baku</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
+
+    <string name="preference_category_search">Cari</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Dapatkan saran pencarian</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s akan mengirim apa yang Anda ketik di bilah alamat ke mesin pencari Anda</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Baku</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Mesin pencari</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Aktif</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Nonaktif</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Lengkapi-otomatis URL</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Untuk Situs teratas</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Aktifkan untuk melengkapi secara otomatis lebih dari 450 URL populer di bilah alamat.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Untuk Situs yang Anda Tambahkan</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Aktikan lengkapi otomatis untuk lebih dari 450 URL populer di bilah alamat.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Kelola situs</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Kelola situs</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Tambah URL ubahsuai</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Tambah URL ubahsuai</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Tambahkan URL kustom</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Tambahkan tautan untuk dilengkapi secara otomatis</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Kuki dan Data Situs</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Pilihan Data</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Hapus URLs ubahsuai</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Pelajari lebih lanjut</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Tambahkan dan kelola lengkapi-otomatis URL ubahsuai.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL untuk ditambahkan</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Tempel atau masukkan URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Contoh: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Contoh: contoh.id</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">URL ubahsuai baru ditambahkan.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Hapus</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Hapus</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Periksa ulang URL yang Anda masukkan.</string>
+
+    <string name="preference_language">Bahasa</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Bawaan sistem</string>
+
+    <string name="preference_category_privacy">Privasi</string>
+    <string name="preference_privacy_block_ads">Blokir pelacak iklan</string>
+    <string name="preference_privacy_block_ads_summary">Beberapa iklan melacak kunjungan situs, meski Anda tidak mengklik iklan</string>
+    <string name="preference_privacy_block_analytics">Blokir pelacak analitik</string>
+    <string name="preference_privacy_block_analytics_summary">Digunakan untuk mengumpulkan, menganalisis, dan mengukur kegiatan seperti mengetuk dan menggulir</string>
+    <string name="preference_privacy_block_social">Blokir pelacak sosial</string>
+    <string name="preference_privacy_block_social_summary">Disematkan pada situs untuk melacak kunjungan Anda dan menampilkan fungsi seperti tombol berbagi</string>
+    <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
+    <string name="preference_privacy_block_content_summary2">Mengaktifkan fitur ini mungkin menyebabkan beberapa laman bertindak tidak terduga</string>
+    <string name="preference_privacy_category_cookies">Blokir kuki</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Hanya blokir kuki pelacak pihak ke-3</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Hanya blokir kuki pihak ke-3</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Gunakan sidik jari untuk membuka aplikasi</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Sidik jari Anda dapat membuka %1$s jika URL sudah dibuka di aplikasi. Mode siluman akan aktif.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Mode Siluman</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Sembunyikan laman web saat berpindah aplikasi dan blokir tangkapan layar.</string>
+
+    <string name="preference_category_security">Keamanan</string>
+
+    <string name="preference_category_performance">Kinerja</string>
+    <string name="preference_performance_block_webfonts">Blokir fon Web</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
+
+    <string name="preference_performance_block_javascript">Blokir JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Laman dapat dimuat lebih cepat, namun bisa juga bertindak tanpa diduga-duga</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Jadikan %1$s peramban baku</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Kirim data penggunaan</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Pelajari lebih lanjut</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla berusaha untuk mengumpulkan hanya apa yang kami perlu untuk sediakan dan meningkatkan %1$s untuk setiap orang.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Kebijakan Privasi</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Tentang %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Mesin pencari terpasang</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Pulihkan mesin pencari baku</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Tambahkan mesin pencari lainnya</string>
+    <string name="preference_search_remove_title">Hapus mesin pencari</string>
+    <string name="preference_search_remove">Hapus</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Tampilkan kiat beranda</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Tambah mesin pencari</string>
+
+    <string name="search_add_manually_name_hint">Nama mesin pencari</string>
+    <string name="search_add_manually_string">String pencarian untuk digunakan</string>
+    <string name="search_add_manually_save">Simpan</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Contoh: contoh.id/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Mesin pencari baru ditambahkan.</string>
+
+    <string name="search_add_error_empty_name">Masukkan nama mesin pencari</string>
+    <string name="search_add_error_duplicate_name">Mesin pencari yang terpasang telah menggunakan nama tersebut.</string>
+
+    <string name="search_add_error_empty_search">Masukkan string pencarian</string>
+
+    <string name="search_add_error_format">Periksa apakah string pencarian cocok dengan format Contoh</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Bersihkan masukan</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Tutup</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Hapus riwayat penjelajahan</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Tab terbuka: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Sambungan aman</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Memuat</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Situs web dimuat</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Opsi lainnya</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Tombol opsi lainnya</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Navigasi ke selanjutnya</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Muat ulang situs web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Arahkan kembali</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Berhenti memuat situs web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Kembali ke aplikasi sebelumnya</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Jumlah pelacak terblokir</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Blokir pelacak</string>
+
+    <string name="your_rights">Hak Anda</string>
+
+    <string name="external_app_prompt_title">Buka tautan di aplikasi lainnya</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Anda dapat meninggalkan %1$s untuk membuka tautan ini di %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Temukan aplikasi yang dapat membuka tautan</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Tak ada satu pun aplikasi di perangkat Anda dapat membuka tautan ini. Anda dapat meninggalkan %1$s untuk mencari di %2$s untuk mendapatkan aplikasi yang mampu.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Keluar dari Penjelajahan Pribadi?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s selesai</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Buka</string>
 
 
 
@@ -176,91 +456,226 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Perkuat privasi Anda</string>
-  <string name="firstrun_defaultbrowser_text2">Bawa penjelajahan pribadi ke tingkat berikutnya. Blokir iklan dan konten lainnya yang dapat melacak Anda di seluruh situs dan memperlambat waktu buka halaman.</string>
-  <string name="firstrun_search_title">Pencarian Anda, cara Anda</string>
-  <string name="firstrun_search_text">Mencari sesuatu yang berbeda? Pilih mesin pencari baku lainnya di Setelan.</string>
-  <string name="firstrun_shortcut_title">Tambahkan pintasan ke layar Beranda</string>
-  <string name="firstrun_shortcut_text">Kembali ke situs favorit Anda di %1$s dengan cepat. Cukup pilih \"Tambahkan ke layar Beranda\" dari menu %1$s.</string>
-  <string name="firstrun_privacy_title">Jadikan privasi menjadi kebiasaan</string>
-  <string name="firstrun_privacy_text">Atur %1$s sebagai peramban utama Anda dan dapatkan keuntungan penjelajahan pribadi ketika Anda membuka laman web dari aplikasi lainnya.</string>
-  <string name="firstrun_close_button">Oke, beres!</string>
-  <string name="firstrun_skip_button">Lewati</string>
-  <string name="firstrun_next_button">Lanjutkan</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Tambah</string>
-  <string name="dialog_addtohomescreen_action_cancel">Batal</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Pintasan akan terbuka dengan Perlindungan Pelacakan dinonaktifkan</string>
-  <string name="notification_browsing_session_channel_name">Sesi penjelajahan pribadi</string>
-  <string name="notification_browsing_session_channel_description">Notifikasi memungkinkan Anda menghapus sesi %1$s Anda dengan sekali sentuh. Anda tak perlu membuka aplikasi atau melihat apa yang berjalan di peramban Anda.</string>
-  <string name="tabs_tray_action_erase">Hapus riwayat penjelajahan</string>
-  <string name="download_firefox">Unduh Firefox</string>
-  <string name="your_rights_content1">%1$s adalah perangkat lunak bebas dan sumber terbuka yang dibuat oleh Mozilla dan kontributor lainnya.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Perkuat privasi Anda</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Bawa penjelajahan pribadi ke tingkat berikutnya. Blokir iklan dan konten lainnya yang dapat melacak Anda di seluruh situs dan memperlambat waktu buka halaman.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Pencarian Anda, cara Anda</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Mencari sesuatu yang berbeda? Pilih mesin pencari baku lainnya di Setelan.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Tambahkan pintasan ke layar Beranda</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Kembali ke situs favorit Anda di %1$s dengan cepat. Cukup pilih \&quot;Tambahkan ke layar Beranda\&quot; dari menu %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Jadikan privasi menjadi kebiasaan</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Atur %1$s sebagai peramban utama Anda dan dapatkan keuntungan penjelajahan pribadi ketika Anda membuka laman web dari aplikasi lainnya.</string>
+
+    <string name="firstrun_close_button">Oke, beres!</string>
+    <string name="firstrun_skip_button">Lewati</string>
+    <string name="firstrun_next_button">Lanjutkan</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Tambah</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Batal</string>
+
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Pintasan akan terbuka dengan Perlindungan Pelacakan dinonaktifkan</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Sesi penjelajahan pribadi</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Notifikasi memungkinkan Anda menghapus sesi %1$s Anda dengan sekali sentuh. Anda tak perlu membuka aplikasi atau melihat apa yang berjalan di peramban Anda.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Hapus riwayat penjelajahan</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Unduh Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s adalah perangkat lunak bebas dan sumber terbuka yang dibuat oleh Mozilla dan kontributor lainnya.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Nama pengguna</string>
-  <string name="gv_prompt_password_hint">Sandi</string>
-  <string name="gv_prompt_clear">Bersihkan</string>
-  <string name="security_popup_secure_connection">Sambungan Aman</string>
-  <string name="security_popup_insecure_connection">Sambungan Tidak Aman</string>
-  <string name="security_popup_security_verified">Diverifikasi oleh: %1$s</string>
-  <string name="site_security_icon_content_description">Keamanan Situs</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL sudah tersedia</string>
-  <string name="find_in_page">Temukan di Laman</string>
-  <string name="find_in_page_input">Temukan di laman</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d dari %2$d</string>
-  <string name="accessibility_next_result">Temukan hasil selanjutnya</string>
-  <string name="accessibility_previous_result">Temukan hasil sebelumnya</string>
-  <string name="accessibility_dismiss_find_in_page">Tutup temukan di laman</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Nama pengguna</string>
+    <string name="gv_prompt_password_hint">Sandi</string>
+    <string name="gv_prompt_clear">Bersihkan</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Sambungan Aman</string>
+    <string name="security_popup_insecure_connection">Sambungan Tidak Aman</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Diverifikasi oleh: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Keamanan Situs</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL sudah tersedia</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Temukan di Laman</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Temukan di laman</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d dari %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Temukan hasil selanjutnya</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Temukan hasil sebelumnya</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Tutup temukan di laman</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Minta situs desktop</string>
-  <string name="custom_tab_copy_url_action">URL tersalin</string>
-  <string name="preference_advanced_summary">Alat pengembang</string>
-  <string name="preference_category_advanced">Lanjutan</string>
-  <string name="preference_remote_debugging">Pengawakutuan jarak jauh melalui USB/Wi-Fi</string>
-  <string name="biometric_auth_title">Buka %1$s</string>
-  <string name="biometric_auth_description">Sentuh sensor sidik jari untuk melanjutkan.</string>
-  <string name="biometric_auth_new_session">Sesi Baru</string>
-  <string name="biometric_auth_image_description">Ikon sidik jari</string>
-  <string name="biometric_auth_not_recognized_error">Sidik jari tidak dikenali. Coba lagi.</string>
-  <string name="biometric_auth_moved_too_quickly">Jari bergerak terlalu cepat. Coba lagi.</string>
-  <string name="enable_search_suggestion_title">Ingin mengaktifkan saran pencarian?</string>
-  <string name="enable_search_suggestion_subtitle">Untuk mendapatkan saran pencarian, %1$s perlu mengirim apa yang Anda ketik di bilah alamat ke mesin pencari pilihan Anda. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Pelajari lebih lanjut</string>
-  <string name="enable_search_suggestions_no">Tidak</string>
-  <string name="enable_search_suggestions_yes">Ya</string>
-  <string name="no_suggestions_message">Beberapa mesin pencari tidak dapat menampilkan saran pencarian.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Tutup</string>
-  <string name="tip_disable_tracking_protection">Situs bertindak tidak terduga?\n Matikan Perlindungan Pelacakan</string>
-  <string name="tip_add_to_homescreen">Akses satu ketukan ke situs yang sering digunakan%1$s Menu &gt; Tambahkan ke Beranda</string>
-  <string name="tip_set_default_browser">Buka setiap tautan di %1$s\n Atur %1$s sebagai peramban baku</string>
-  <string name="tip_autocomplete_url">Lengkapi otomatis URL untuk situs yang sering dikunjungi\n Ketuk lama URL di bilah alamat</string>
-  <string name="tip_open_in_new_tab">Buka tautan di tab baru\n Tekan lama tautan di laman</string>
-  <string name="tip_request_desktop">Lebih suka melihat situs desktop?%1$s Menu &gt; Minta situs desktop</string>
-  <string name="tip_disable_tips2">Nonaktifkan tips ini pada layar mulai</string>
-  <string name="tip_explain_allowlist">Situs tepercaya?\nSertakan dalam Daftar yang diizinkan yang akan menonaktifkan Perlindungan Pelacakan pada situs yang Anda tahu dan tepercaya.</string>
-  <string name="new_tab_opened_snackbar">Tab baru dibuka</string>
-  <string name="open_new_tab_snackbar">Tukar</string>
-  <string name="preference_open_new_tab">Alihkan tautan langsung ke tab baru</string>
-  <string name="preference_category_safe_browsing">Penjelajahan Aman</string>
-  <string name="preference_safe_browsing_title">Blokir situs yang mungkin berbahaya serta penipuan</string>
-  <string name="preference_safe_browsing_summary">Blokir situs penipuan dan penyerangan yang dilaporkan, situs malware, dan situs perangkat lunak yang tidak diinginkan.</string>
-  <string name="preference_exceptions">Pengecualian</string>
-  <string name="preference_exceptions_description">Anda telah menonaktifkan Pemblokiran Konten untuk situs ini.</string>
-  <string name="preference_exceptions_menu_remove">Hapus</string>
-  <string name="preference_exceptions_remove_all_button_label">Hapus semua situs web</string>
-  <string name="tab_crash_report_title">Tab Mogok</string>
-  <string name="tab_crash_report_headline">Maaf. Kami mengalami masalah dengan tab ini.</string>
-  <string name="tab_crash_report_description">Sebagai peramban pribadi, kami tidak pernah menyimpan dan tidak dapat mengembalikan tab ini.</string>
-  <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Minta situs desktop</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL tersalin</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Alat pengembang</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Lanjutan</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Pengawakutuan jarak jauh melalui USB/Wi-Fi</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Buka %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Sentuh sensor sidik jari untuk melanjutkan.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Sesi Baru</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Ikon sidik jari</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Sidik jari tidak dikenali. Coba lagi.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Jari bergerak terlalu cepat. Coba lagi.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Tidak</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Ya</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Beberapa mesin pencari tidak dapat menampilkan saran pencarian.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Tutup</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Situs bertindak tidak terduga?\n Matikan Perlindungan Pelacakan</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Akses satu ketukan ke situs yang sering digunakan%1$s Menu > Tambahkan ke Beranda]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Buka setiap tautan di %1$s\n Atur %1$s sebagai peramban baku</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Lengkapi otomatis URL untuk situs yang sering dikunjungi\n Ketuk lama URL di bilah alamat</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Buka tautan di tab baru\n Tekan lama tautan di laman</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Nonaktifkan tips ini pada layar mulai</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Tab baru dibuka</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Tukar</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Alihkan tautan langsung ke tab baru</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Penjelajahan Aman</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Blokir situs yang mungkin berbahaya serta penipuan</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Blokir situs penipuan dan penyerangan yang dilaporkan, situs malware, dan situs perangkat lunak yang tidak diinginkan.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Pengecualian</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Anda telah menonaktifkan Pemblokiran Konten untuk situs ini.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Hapus</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Hapus semua situs web</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Tab Mogok</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Maaf. Kami mengalami masalah dengan tab ini.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Sebagai peramban pribadi, kami tidak pernah menyimpan dan tidak dapat mengembalikan tab ini.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Kirim laporan kerusakan ke Mozilla</string>
-</resources>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Kirim laporan kerusakan ke Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    </resources>

@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Dodaj na domač zaslon</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Dodaj med bližnjice</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Odstrani iz bližnjic</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Kaj je novega</string>
     <string name="menu_settings">Nastavitve</string>
@@ -207,6 +212,9 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Dodaj URL po meri</string>
 
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Dodaj spletni naslov</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Dodaj URL po meri</string>
 
@@ -273,10 +281,9 @@
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
+    <string name="preference_privacy_should_block_cookies_no_option2">Ne, hvala</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Zavračaj samo sledilne piškotke tretjih strani</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Zavračaj samo piškotke tretjih strani</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Da</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Uporabljaj prstni odtis za odklepanje aplikacije</string>
@@ -329,6 +336,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Nameščeni iskalniki</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Izberi iskalnik</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Ponastavi privzete iskalnike</string>
 
@@ -337,6 +347,11 @@
     <string name="preference_search_add2">+ Dodaj drug iskalnik</string>
     <string name="preference_search_remove_title">Odstrani iskalnike</string>
     <string name="preference_search_remove">Odstrani</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Dodaj drug iskalnik</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Izberite želeni iskalnik:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -498,8 +513,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Dodaj</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">DA</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Prekliči</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NE</string>
 
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
@@ -639,17 +660,11 @@
     <string name="biometric_auth_moved_too_quickly">Prst se je premaknil prehitro. Poskusite znova.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Želite vključiti predloge iskalnika?</string>
+    <string name="enable_search_suggestion_title2">Prikaži predloge iskanja?</string>
 
     <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">Da pridobi predloge iskanja, mora %1$s besede, ki jih natipkate v naslovno vrstico, poslati izbranemu iskalniku. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Več o tem</string>
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Da pridobi predloge iskanja, mora %1$s besede, ki jih natipkate v naslovno vrstico, pošiljati iskalniku.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ne</string>
@@ -686,16 +701,8 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Odprite povezavo v novem zavihku\n Pridržite prst na katerikoli povezavi na strani</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Želite uporabljati polno različico strani?%1$s Meni > Zahtevaj stran za namizja]]></string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Izključi namige na začetnem zaslonu</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Zaupanja vredna stran?\n Seznam dovoljenih onemogoči zaščito pred sledenjem za strani, ki jih poznate in jim zaupate.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Odprt nov zavihek</string>
@@ -736,4 +743,36 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Pošlji poročilo o sesutju Mozilli</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Vsebina</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Oglasi</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Družbeni</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analitika</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Izboljšana zaščita pred sledenjem</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Zaščite za to spletno mesto so IZKLJUČENE</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Zaščite za to spletno mesto so VKLJUČENE</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Povezava je varna</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Povezava ni varna</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Nazaj</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Odstrani</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note">Ob izbrisu zgodovine %1$sa shranjene in deljene slike &lt;b&gt;ne bodo&lt;/b&gt; izbrisane</string>
 </resources>
