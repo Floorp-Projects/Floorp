@@ -905,15 +905,6 @@ js::PropertyName* js::GetClonedSelfHostedFunctionName(const JSFunction* fun) {
   return name.toString()->asAtom().asPropertyName();
 }
 
-js::PropertyName* js::GetClonedSelfHostedFunctionNameOffMainThread(
-    JSFunction* fun) {
-  Value name = fun->getExtendedSlotOffMainThread(LAZY_FUNCTION_NAME_SLOT);
-  if (!name.isString()) {
-    return nullptr;
-  }
-  return name.toString()->asAtom().asPropertyName();
-}
-
 bool js::IsExtendedUnclonedSelfHostedFunctionName(JSAtom* name) {
   if (name->length() < 2) {
     return false;
