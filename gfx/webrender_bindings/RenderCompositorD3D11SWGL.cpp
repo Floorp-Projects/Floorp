@@ -10,7 +10,6 @@
 
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/Effects.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "RenderCompositorRecordedFrame.h"
 

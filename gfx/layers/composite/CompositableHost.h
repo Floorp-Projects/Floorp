@@ -48,7 +48,6 @@ class CompositableParentManager;
 class WebRenderImageHost;
 class ContentHost;
 class ContentHostTexture;
-class HostLayerManager;
 struct EffectChain;
 
 struct ImageCompositeNotificationInfo {
@@ -240,8 +239,6 @@ class CompositableHost {
   virtual uint32_t GetDroppedFrames() { return 0; }
 
  protected:
-  HostLayerManager* GetLayerManager() const;
-
  protected:
   TextureInfo mTextureInfo;
   AsyncCompositableRef mAsyncRef;

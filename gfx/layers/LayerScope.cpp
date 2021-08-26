@@ -18,7 +18,6 @@
 
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/TextureHostOGL.h"
 
 #include "gfxContext.h"
@@ -741,8 +740,6 @@ NS_IMPL_ISUPPORTS(DebugDataSender::SendTask, nsIRunnable);
 class SenderHelper {
   // Sender public APIs
  public:
-  static void SendLayer(LayerComposite* aLayer, int aWidth, int aHeight);
-
   static void SendEffectChain(gl::GLContext* aGLContext,
                               const EffectChain& aEffectChain, int aWidth = 0,
                               int aHeight = 0);
@@ -794,47 +791,6 @@ void SenderHelper::ClearSentTextureIds() { sSentTextureIds.clear(); }
 bool SenderHelper::HasTextureIdBeenSent(GLuint aTextureId) {
   return std::find(sSentTextureIds.begin(), sSentTextureIds.end(),
                    aTextureId) != sSentTextureIds.end();
-}
-
-void SenderHelper::SendLayer(LayerComposite* aLayer, int aWidth, int aHeight) {
-  MOZ_ASSERT(aLayer && aLayer->GetLayer());
-  if (!aLayer || !aLayer->GetLayer()) {
-    return;
-  }
-
-  switch (aLayer->GetLayer()->GetType()) {
-    case Layer::TYPE_COLOR: {
-      EffectChain effect;
-      aLayer->GenEffectChain(effect);
-
-      LayerScope::DrawBegin();
-      LayerScope::DrawEnd(nullptr, effect, aWidth, aHeight);
-      break;
-    }
-    case Layer::TYPE_IMAGE:
-    case Layer::TYPE_CANVAS:
-    case Layer::TYPE_PAINTED: {
-      // Get CompositableHost and Compositor
-      CompositableHost* compHost = aLayer->GetCompositableHost();
-      TextureSourceProvider* provider = compHost->GetTextureSourceProvider();
-      Compositor* comp = provider->AsCompositor();
-      // Send EffectChain only for CompositorOGL
-      if (LayersBackend::LAYERS_OPENGL == comp->GetBackendType()) {
-        CompositorOGL* compOGL = comp->AsCompositorOGL();
-        EffectChain effect;
-        // Generate primary effect (lock and gen)
-        AutoLockCompositableHost lock(compHost);
-        aLayer->GenEffectChain(effect);
-
-        LayerScope::DrawBegin();
-        LayerScope::DrawEnd(compOGL->gl(), effect, aWidth, aHeight);
-      }
-      break;
-    }
-    case Layer::TYPE_CONTAINER:
-    default:
-      break;
-  }
 }
 
 void SenderHelper::SendColor(void* aLayerRef, const DeviceColor& aColor,
@@ -1538,25 +1494,6 @@ void LayerScope::DrawEnd(gl::GLContext* aGLContext,
       new DebugGLDrawData(draws.mOffsetX, draws.mOffsetY, draws.mMVMatrix,
                           draws.mRects, draws.mLayerRects, draws.mTextureRects,
                           draws.mTexIDs, aEffectChain.mLayerRef));
-}
-
-/*static*/
-void LayerScope::SendLayer(LayerComposite* aLayer, int aWidth, int aHeight) {
-  // Protect this public function
-  if (!CheckSendable()) {
-    return;
-  }
-  SenderHelper::SendLayer(aLayer, aWidth, aHeight);
-}
-
-/*static*/
-void LayerScope::SendLayerDump(UniquePtr<Packet> aPacket) {
-  // Protect this public function
-  if (!CheckSendable() || !SenderHelper::GetLayersTreeSendable()) {
-    return;
-  }
-  gLayerScopeManager.GetSocketManager()->AppendDebugData(
-      new DebugGLLayersData(std::move(aPacket)));
 }
 
 /*static*/

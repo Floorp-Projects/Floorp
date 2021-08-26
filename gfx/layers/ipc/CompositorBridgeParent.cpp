@@ -38,10 +38,9 @@
 #include "mozilla/layers/APZSampler.h"             // for APZSampler
 #include "mozilla/layers/APZThreadUtils.h"         // for APZThreadUtils
 #include "mozilla/layers/APZUpdater.h"             // for APZUpdater
-#include "mozilla/layers/AsyncCompositionManager.h"
-#include "mozilla/layers/BasicCompositor.h"      // for BasicCompositor
-#include "mozilla/layers/CompositionRecorder.h"  // for CompositionRecorder
-#include "mozilla/layers/Compositor.h"           // for Compositor
+#include "mozilla/layers/BasicCompositor.h"        // for BasicCompositor
+#include "mozilla/layers/CompositionRecorder.h"    // for CompositionRecorder
+#include "mozilla/layers/Compositor.h"             // for Compositor
 #include "mozilla/layers/CompositorAnimationStorage.h"  // for CompositorAnimationStorage
 #include "mozilla/layers/CompositorManagerParent.h"  // for CompositorManagerParent
 #include "mozilla/layers/CompositorOGL.h"            // for CompositorOGL
@@ -52,7 +51,6 @@
 #include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/ImageBridgeParent.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/OMTASampler.h"
@@ -221,7 +219,6 @@ bool CompositorBridgeParentBase::StopSharingMetrics(
 CompositorBridgeParent::LayerTreeState::LayerTreeState()
     : mApzcTreeManagerParent(nullptr),
       mParent(nullptr),
-      mLayerManager(nullptr),
       mContentCompositorBridgeParent(nullptr) {}
 
 CompositorBridgeParent::LayerTreeState::~LayerTreeState() {
@@ -431,8 +428,6 @@ CompositorBridgeParent::~CompositorBridgeParent() {
 void CompositorBridgeParent::ForceIsFirstPaint() {
   if (mWrBridge) {
     mIsForcedFirstPaint = true;
-  } else {
-    mCompositionManager->ForceIsFirstPaint();
   }
 }
 
@@ -455,19 +450,6 @@ void CompositorBridgeParent::StopAndClearResources() {
     mApzUpdater->ClearTree(mRootLayerTreeID);
     mApzUpdater = nullptr;
     mApzcTreeManager = nullptr;
-  }
-
-  // Ensure that the layer manager is destroyed before CompositorBridgeChild.
-  if (mLayerManager) {
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    ForEachIndirectLayerTree([this](LayerTreeState* lts, LayersId) -> void {
-      mLayerManager->ClearCachedResources(lts->mRoot);
-      lts->mLayerManager = nullptr;
-      lts->mParent = nullptr;
-    });
-    mLayerManager->Destroy();
-    mLayerManager = nullptr;
-    mCompositionManager = nullptr;
   }
 
   if (mWrBridge) {
@@ -614,32 +596,19 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvForcePresent() {
   if (mWrBridge) {
     mWrBridge->ScheduleForcedGenerateFrame();
   }
-  // During the shutdown sequence mLayerManager may be null
-  if (mLayerManager) {
-    mLayerManager->ForcePresent();
-  }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvNotifyRegionInvalidated(
     const nsIntRegion& aRegion) {
-  if (mLayerManager) {
-    mLayerManager->AddInvalidRegion(aRegion);
-  }
   return IPC_OK();
 }
 
-void CompositorBridgeParent::Invalidate() {
-  if (mLayerManager) {
-    mLayerManager->InvalidateAll();
-  }
-}
+void CompositorBridgeParent::Invalidate() {}
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvStartFrameTimeRecording(
     const int32_t& aBufferSize, uint32_t* aOutStartIndex) {
-  if (mLayerManager) {
-    *aOutStartIndex = mLayerManager->StartFrameTimeRecording(aBufferSize);
-  } else if (mWrBridge) {
+  if (mWrBridge) {
     *aOutStartIndex = mWrBridge->StartFrameTimeRecording(aBufferSize);
   } else {
     *aOutStartIndex = 0;
@@ -649,9 +618,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvStartFrameTimeRecording(
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvStopFrameTimeRecording(
     const uint32_t& aStartIndex, nsTArray<float>* intervals) {
-  if (mLayerManager) {
-    mLayerManager->StopFrameTimeRecording(aStartIndex, *intervals);
-  } else if (mWrBridge) {
+  if (mWrBridge) {
     mWrBridge->StopFrameTimeRecording(aStartIndex, *intervals);
   }
   return IPC_OK();
@@ -663,8 +630,6 @@ void CompositorBridgeParent::ActorDestroy(ActorDestroyReason why) {
   StopAndClearResources();
 
   RemoveCompositor(mCompositorBridgeID);
-
-  mCompositionManager = nullptr;
 
   {  // scope lock
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
@@ -777,19 +742,6 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
     LayersId aId, bool aIsFirstPaint, const FocusTarget& aFocusTarget,
     bool aScheduleComposite, uint32_t aPaintSequenceNumber,
     bool aIsRepeatTransaction, bool aHitTestUpdate) {
-  if (!aIsRepeatTransaction && mLayerManager && mLayerManager->GetRoot()) {
-    AutoResolveRefLayers resolve(mCompositionManager, this);
-
-    if (mApzUpdater) {
-      mApzUpdater->UpdateFocusState(mRootLayerTreeID, aId, aFocusTarget);
-      if (aHitTestUpdate) {
-        mApzUpdater->UpdateHitTestingTree(
-            mLayerManager->GetRoot(), aIsFirstPaint, aId, aPaintSequenceNumber);
-      }
-    }
-
-    mLayerManager->NotifyShadowTreeTransaction();
-  }
   if (aScheduleComposite) {
     ScheduleComposition();
   }
@@ -806,37 +758,6 @@ void CompositorBridgeParent::ScheduleComposition() {
   } else {
     mCompositorScheduler->ScheduleComposition();
   }
-}
-
-// Go down the composite layer tree, setting properties to match their
-// content-side counterparts.
-/* static */
-void CompositorBridgeParent::SetShadowProperties(Layer* aLayer) {
-  ForEachNode<ForwardIterator>(aLayer, [](Layer* layer) {
-    if (Layer* maskLayer = layer->GetMaskLayer()) {
-      SetShadowProperties(maskLayer);
-    }
-    for (size_t i = 0; i < layer->GetAncestorMaskLayerCount(); i++) {
-      SetShadowProperties(layer->GetAncestorMaskLayerAt(i));
-    }
-
-    // FIXME: Bug 717688 -- Do these updates in
-    // LayerTransactionParent::RecvUpdate.
-    HostLayer* layerCompositor = layer->AsHostLayer();
-    // Set the layerComposite's base transform to the layer's base transform.
-    const auto& animations = layer->GetPropertyAnimationGroups();
-    // If there is any animation, the animation value will override
-    // non-animated value later, so we don't need to set the non-animated
-    // value here.
-    if (animations.IsEmpty()) {
-      layerCompositor->SetShadowBaseTransform(layer->GetBaseTransform());
-      layerCompositor->SetShadowTransformSetByAnimation(false);
-      layerCompositor->SetShadowOpacity(layer->GetOpacity());
-      layerCompositor->SetShadowOpacitySetByAnimation(false);
-    }
-    layerCompositor->SetShadowVisibleRegion(layer->GetVisibleRegion());
-    layerCompositor->SetShadowClipRect(layer->GetClipRect());
-  });
 }
 
 void CompositorBridgeParent::ForceComposeToTarget(DrawTarget* aTarget,
@@ -965,30 +886,11 @@ CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(
   return nullptr;
 }
 
-bool CompositorBridgeParent::CanComposite() {
-  return mLayerManager && mLayerManager->GetRoot() && !mPaused;
-}
+bool CompositorBridgeParent::CanComposite() { return false; }
 
 void CompositorBridgeParent::ScheduleRotationOnCompositorThread(
     const TargetConfig& aTargetConfig, bool aIsFirstPaint) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-
-  if (!aIsFirstPaint && !mCompositionManager->IsFirstPaint() &&
-      mCompositionManager->RequiresReorientation(aTargetConfig.orientation())) {
-    if (mForceCompositionTask != nullptr) {
-      mForceCompositionTask->Cancel();
-    }
-    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod(
-        "layers::CompositorBridgeParent::ForceComposition", this,
-        &CompositorBridgeParent::ForceComposition);
-    mForceCompositionTask = task;
-    if (StaticPrefs::layers_orientation_sync_timeout() == 0) {
-      CompositorThread()->Dispatch(task.forget());
-    } else {
-      CompositorThread()->DelayedDispatch(
-          task.forget(), StaticPrefs::layers_orientation_sync_timeout());
-    }
-  }
 }
 
 bool CompositorBridgeParent::SetTestSampleTime(const LayersId& aId,
@@ -1007,22 +909,6 @@ bool CompositorBridgeParent::SetTestSampleTime(const LayersId& aId,
   if (mWrBridge) {
     mWrBridge->FlushRendering();
     return true;
-  }
-
-  bool testComposite =
-      mCompositionManager && mCompositorScheduler->NeedsComposite();
-
-  // Update but only if we were already scheduled to animate
-  if (testComposite) {
-    AutoResolveRefLayers resolve(mCompositionManager);
-    bool requestNextFrame = mCompositionManager->TransformShadowTree(
-        SampleTime::FromTest(aTime), mVsyncRate);
-    if (!requestNextFrame) {
-      CancelCurrentCompositeTask();
-      // Pretend we composited in case someone is wating for this event.
-      TimeStamp now = TimeStamp::Now();
-      DidComposite(VsyncId(), now, now);
-    }
   }
 
   return true;
@@ -1054,7 +940,7 @@ void CompositorBridgeParent::NotifyJankedAnimations(
     const LayersId& layersId = entry.first;
     const nsTArray<uint64_t>& animations = entry.second;
     if (layersId == mRootLayerTreeID) {
-      if (mLayerManager || mWrBridge) {
+      if (mWrBridge) {
         Unused << SendNotifyJankedAnimations(LayersId{0}, animations);
       }
       // It unlikely happens multiple processes have janked animations at same
@@ -1106,9 +992,6 @@ void CompositorBridgeParent::GetAPZTestData(const LayersId& aLayersId,
 
 void CompositorBridgeParent::GetFrameUniformity(const LayersId& aLayersId,
                                                 FrameUniformityData* aOutData) {
-  if (mCompositionManager) {
-    mCompositionManager->GetFrameUniformity(aOutData);
-  }
 }
 
 void CompositorBridgeParent::SetConfirmedTargetAPZC(
@@ -1132,39 +1015,12 @@ void CompositorBridgeParent::SetConfirmedTargetAPZC(
 
 void CompositorBridgeParent::SetFixedLayerMargins(ScreenIntCoord aTop,
                                                   ScreenIntCoord aBottom) {
-  if (mCompositionManager) {
-    mCompositionManager->SetFixedLayerMargins(aTop, aBottom);
-  }
-
   if (mApzcTreeManager) {
     mApzcTreeManager->SetFixedLayerMargins(aTop, aBottom);
   }
 
   Invalidate();
   ScheduleComposition();
-}
-
-void CompositorBridgeParent::InitializeLayerManager(
-    const nsTArray<LayersBackend>& aBackendHints) {
-  NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");
-  NS_ASSERTION(!mCompositor, "Already initialised mCompositor");
-
-  mCompositor = NewCompositor(aBackendHints);
-  if (!mCompositor) {
-    return;
-  }
-#ifdef XP_WIN
-  if (mCompositor->AsBasicCompositor() && XRE_IsGPUProcess()) {
-    // BasicCompositor does not use CompositorWindow,
-    // then if CompositorWindow exists, it needs to be destroyed.
-    mWidget->AsWindows()->DestroyCompositorWindow();
-  }
-#endif
-  mLayerManager = new LayerManagerComposite(mCompositor);
-  mLayerManager->SetCompositorBridgeID(mCompositorBridgeID);
-
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = mLayerManager;
 }
 
 RefPtr<Compositor> CompositorBridgeParent::NewCompositor(
@@ -1336,7 +1192,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvNotifyChildRecreated(
 void CompositorBridgeParent::NotifyChildCreated(LayersId aChild) {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   sIndirectLayerTrees[aChild].mParent = this;
-  sIndirectLayerTrees[aChild].mLayerManager = mLayerManager;
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvMapAndNotifyChildCreated(
@@ -2072,14 +1927,6 @@ void CompositorBridgeParent::NotifyDidComposite(
   Unused << SendDidComposite(LayersId{0}, aTransactionIds, aCompositeStart,
                              aCompositeEnd);
 
-  if (mLayerManager) {
-    nsTArray<ImageCompositeNotificationInfo> notifications;
-    mLayerManager->ExtractImageCompositeNotifications(&notifications);
-    if (!notifications.IsEmpty()) {
-      Unused << ImageBridgeParent::NotifyImageComposites(notifications);
-    }
-  }
-
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachIndirectLayerTree([&](LayerTreeState* lts,
                                const LayersId& aLayersId) -> void {
@@ -2359,10 +2206,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
     return IPC_OK();
   }
 
-  if (mLayerManager) {
-    mLayerManager->SetCompositionRecorder(
-        MakeUnique<CompositionRecorder>(aRecordingStart));
-  } else if (mWrBridge) {
+  if (mWrBridge) {
     mWrBridge->BeginRecording(aRecordingStart);
   }
 
@@ -2379,10 +2223,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecordingToDisk(
     return IPC_OK();
   }
 
-  if (mLayerManager) {
-    mLayerManager->WriteCollectedFrames();
-    aResolve(true);
-  } else if (mWrBridge) {
+  if (mWrBridge) {
     mWrBridge->WriteCollectedFrames()->Then(
         NS_GetCurrentThread(), __func__,
         [resolve{aResolve}](const bool success) { resolve(success); },
@@ -2403,14 +2244,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecordingToMemory(
     return IPC_OK();
   }
 
-  if (mLayerManager) {
-    Maybe<CollectedFrames> frames = mLayerManager->GetCollectedFrames();
-    if (frames) {
-      aResolve(WrapCollectedFrames(std::move(*frames)));
-    } else {
-      aResolve(Nothing());
-    }
-  } else if (mWrBridge) {
+  if (mWrBridge) {
     RefPtr<CompositorBridgeParent> self = this;
     mWrBridge->GetCollectedFrames()->Then(
         NS_GetCurrentThread(), __func__,

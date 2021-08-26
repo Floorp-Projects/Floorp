@@ -21,7 +21,6 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"    // for OpenMode
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator, etc
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/mozalloc.h"               // for operator new
@@ -38,16 +37,6 @@ class TextureImage;
 }  // namespace gl
 
 namespace layers {
-
-// Return true if we're likely compositing using X and so should use
-// Xlib surfaces in shadow layers.
-static bool UsingXCompositing() {
-  if (!gfxEnv::LayersEnableXlibSurfaces()) {
-    return false;
-  }
-  return (gfxSurfaceType::Xlib ==
-          gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType());
-}
 
 // LookReturn a pointer to |aFormat| that lives in the Xrender library.
 // All code using render formats assumes it doesn't need to copy.
@@ -101,21 +90,6 @@ already_AddRefed<gfxXlibSurface> SurfaceDescriptorX11::OpenForeign() const {
 
   return surf->CairoStatus() ? nullptr : surf.forget();
 }
-
-/*static*/
-void LayerManagerComposite::PlatformSyncBeforeReplyUpdate() {
-  if (UsingXCompositing()) {
-    // If we're using X surfaces, we need to finish all pending
-    // operations on the *front buffers* before handing them back to
-    // the child, even though they will be read operations.
-    // Otherwise, the child might start scribbling on new back buffers
-    // that are still participating in requests as old front buffers.
-    FinishX(DefaultXDisplay());
-  }
-}
-
-/*static*/
-bool LayerManagerComposite::SupportsDirectTexturing() { return false; }
 
 }  // namespace layers
 }  // namespace mozilla

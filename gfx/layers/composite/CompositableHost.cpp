@@ -149,13 +149,6 @@ void CompositableHost::DumpTextureHost(std::stringstream& aStream,
   aStream << gfxUtils::GetAsDataURI(dSurf).get();
 }
 
-HostLayerManager* CompositableHost::GetLayerManager() const {
-  if (!mLayer || !mLayer->Manager()) {
-    return nullptr;
-  }
-  return mLayer->Manager()->AsHostLayerManager();
-}
-
 TextureSourceProvider* CompositableHost::GetTextureSourceProvider() const {
   return mTextureSourceProvider;
 }

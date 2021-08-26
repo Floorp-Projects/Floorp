@@ -27,7 +27,6 @@ class GLContext;
 namespace layers {
 class Compositor;
 class LayerManager;
-class LayerManagerComposite;
 class NativeLayerRoot;
 }  // namespace layers
 namespace gfx {

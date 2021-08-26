@@ -15,13 +15,11 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ContentHost.h"        // for ContentHostBase
 #include "mozilla/layers/ImageBridgeParent.h"  // for ImageBridgeParent
-#include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/LayersTypes.h"     // for MOZ_LAYERS_LOG
-#include "mozilla/layers/TextureHost.h"     // for TextureHost
-#include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
+#include "mozilla/layers/LayersSurfaces.h"     // for SurfaceDescriptor
+#include "mozilla/layers/LayersTypes.h"        // for MOZ_LAYERS_LOG
+#include "mozilla/layers/TextureHost.h"        // for TextureHost
+#include "mozilla/layers/TextureHostOGL.h"     // for TextureHostOGL
 #include "mozilla/layers/TiledContentHost.h"
-#include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/mozalloc.h"  // for operator delete
 #include "mozilla/Unused.h"
 #include "nsDebug.h"   // for NS_WARNING, NS_ASSERTION
@@ -86,28 +84,7 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
 
   switch (aDetail.type()) {
     case CompositableOperationDetail::TOpPaintTextureRegion: {
-      MOZ_LAYERS_LOG(("[ParentSide] Paint PaintedLayer"));
-
-      const OpPaintTextureRegion& op = aDetail.get_OpPaintTextureRegion();
-      Layer* layer = aCompositable->GetLayer();
-      if (!layer || layer->GetType() != Layer::TYPE_PAINTED) {
-        return false;
-      }
-      PaintedLayerComposite* thebes =
-          static_cast<PaintedLayerComposite*>(layer);
-
-      const ThebesBufferData& bufferData = op.bufferData();
-
-      RenderTraceInvalidateStart(thebes, "FF00FF",
-                                 op.updatedRegion().GetBounds());
-
-      if (!aCompositable->UpdateThebes(bufferData, op.updatedRegion(),
-                                       thebes->GetValidRegion())) {
-        return false;
-      }
-
-      RenderTraceInvalidateEnd(thebes, "FF00FF");
-      break;
+      return false;
     }
     case CompositableOperationDetail::TOpUseTiledLayerBuffer: {
       MOZ_LAYERS_LOG(("[ParentSide] Paint TiledLayerBuffer"));
