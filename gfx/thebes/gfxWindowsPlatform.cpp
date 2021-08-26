@@ -1056,9 +1056,7 @@ void gfxWindowsPlatform::FontsPrefsChanged(const char* aPref) {
 
   if (aPref &&
       !strncmp(GFX_CLEARTYPE_PARAMS, aPref, strlen(GFX_CLEARTYPE_PARAMS))) {
-    if (XRE_IsParentProcess()) {
-      gfxDWriteFont::UpdateClearTypeVars();
-    }
+    gfxDWriteFont::UpdateClearTypeVars();
   } else {
     clearTextFontCaches = false;
   }
