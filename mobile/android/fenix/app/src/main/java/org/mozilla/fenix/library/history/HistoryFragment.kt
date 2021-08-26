@@ -138,7 +138,6 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
     }
 
     private fun deleteHistoryItems(items: Set<HistoryItem>) {
-
         updatePendingHistoryToDelete(items)
         undoScope = CoroutineScope(IO)
         undoScope?.allowUndo(
@@ -182,6 +181,8 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
                     setTextColor(requireContext(), R.attr.destructive)
                 }
+        } else {
+            inflater.inflate(R.menu.history_menu, menu)
         }
     }
 
@@ -218,6 +219,10 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             }
 
             showTabTray()
+            true
+        }
+        R.id.history_delete_all -> {
+            historyInteractor.onDeleteAll()
             true
         }
         else -> super.onOptionsItemSelected(item)

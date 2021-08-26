@@ -32,15 +32,6 @@ class HistoryListItemViewHolder(
     init {
         setupMenu()
 
-        binding.deleteButton.setOnClickListener {
-            val selected = selectionHolder.selectedItems
-            if (selected.isEmpty()) {
-                historyInteractor.onDeleteAll()
-            } else {
-                historyInteractor.onDeleteSome(selected)
-            }
-        }
-
         binding.recentlyClosedNavEmpty.recentlyClosedNav.setOnClickListener {
             historyInteractor.onRecentlyClosedClicked()
         }
@@ -49,7 +40,7 @@ class HistoryListItemViewHolder(
     fun bind(
         item: HistoryItem,
         timeGroup: HistoryItemTimeGroup?,
-        showDeleteButton: Boolean,
+        showTopContent: Boolean,
         mode: HistoryFragmentState.Mode,
         isPendingDeletion: Boolean = false
     ) {
@@ -62,7 +53,7 @@ class HistoryListItemViewHolder(
         binding.historyLayout.titleView.text = item.title
         binding.historyLayout.urlView.text = item.url
 
-        toggleTopContent(showDeleteButton, mode === HistoryFragmentState.Mode.Normal)
+        toggleTopContent(showTopContent, mode === HistoryFragmentState.Mode.Normal)
 
         val headerText = timeGroup?.humanReadable(itemView.context)
         toggleHeader(headerText)
@@ -96,19 +87,9 @@ class HistoryListItemViewHolder(
         showTopContent: Boolean,
         isNormalMode: Boolean
     ) {
-        binding.deleteButton.isVisible = showTopContent
         binding.recentlyClosedNavEmpty.recentlyClosedNav.isVisible = showTopContent
 
         if (showTopContent) {
-            binding.deleteButton.run {
-                if (isNormalMode) {
-                    isEnabled = true
-                    alpha = 1f
-                } else {
-                    isEnabled = false
-                    alpha = DELETE_BUTTON_DISABLED_ALPHA
-                }
-            }
             val numRecentTabs = itemView.context.components.core.store.state.closedTabs.size
             binding.recentlyClosedNavEmpty.recentlyClosedTabsDescription.text = String.format(
                 itemView.context.getString(
@@ -123,7 +104,7 @@ class HistoryListItemViewHolder(
                     alpha = 1f
                 } else {
                     isEnabled = false
-                    alpha = DELETE_BUTTON_DISABLED_ALPHA
+                    alpha = DISABLED_BUTTON_ALPHA
                 }
             }
         }
@@ -145,7 +126,7 @@ class HistoryListItemViewHolder(
     }
 
     companion object {
-        const val DELETE_BUTTON_DISABLED_ALPHA = 0.7f
+        const val DISABLED_BUTTON_ALPHA = 0.7f
         const val LAYOUT_ID = R.layout.history_list_item
     }
 }

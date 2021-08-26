@@ -72,7 +72,6 @@ class HistoryRobot {
     }
 
     fun clickDeleteHistoryButton() {
-        mDevice.waitNotNull(Until.findObject(By.text("Delete history")), waitingTime)
         deleteAllHistoryButton().click()
     }
 
@@ -117,7 +116,7 @@ private fun threeDotMenu() = onView(withId(R.id.overflow_menu))
 
 private fun snackBarText() = onView(withId(R.id.snackbar_text))
 
-private fun deleteAllHistoryButton() = onView(withId(R.id.delete_button))
+private fun deleteAllHistoryButton() = onView(withId(R.id.history_delete_all))
 
 private fun assertHistoryMenuView() {
     onView(
