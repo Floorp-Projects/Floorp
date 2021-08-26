@@ -108,8 +108,22 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
     return IPC_OK();
   }
 
+  PLayerTransactionParent* AllocPLayerTransactionParent(
+      const nsTArray<LayersBackend>& aBackendHints,
+      const LayersId& aId) override;
+
+  bool DeallocPLayerTransactionParent(
+      PLayerTransactionParent* aLayers) override;
+
+  void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+                           const TransactionInfo& aInfo,
+                           bool aHitTestUpdate) override;
+  void ScheduleComposite(LayerTransactionParent* aLayerTree) override;
+  void NotifyClearCachedResources(LayerTransactionParent* aLayerTree) override;
   bool SetTestSampleTime(const LayersId& aId, const TimeStamp& aTime) override;
   void LeaveTestMode(const LayersId& aId) override;
+  void ApplyAsyncProperties(LayerTransactionParent* aLayerTree,
+                            TransformsToSkip aSkip) override;
   void SetTestAsyncScrollOffset(const LayersId& aLayersId,
                                 const ScrollableLayerGuid::ViewID& aScrollId,
                                 const CSSPoint& aPoint) override;
@@ -124,6 +138,9 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   void SetConfirmedTargetAPZC(
       const LayersId& aLayersId, const uint64_t& aInputBlockId,
       nsTArray<ScrollableLayerGuid>&& aTargets) override;
+
+  AsyncCompositionManager* GetCompositionManager(
+      LayerTransactionParent* aParent) override;
 
   already_AddRefed<dom::PWebGLParent> AllocPWebGLParent() override;
 
@@ -165,6 +182,11 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   PAPZParent* AllocPAPZParent(const LayersId& aLayersId) override;
   bool DeallocPAPZParent(PAPZParent* aActor) override;
+
+  void UpdatePaintTime(LayerTransactionParent* aLayerTree,
+                       const TimeDuration& aPaintTime) override;
+  void RegisterPayloads(LayerTransactionParent* aLayerTree,
+                        const nsTArray<CompositionPayload>& aPayload) override;
 
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(
       const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize,
