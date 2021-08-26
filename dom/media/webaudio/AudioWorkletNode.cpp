@@ -419,7 +419,7 @@ static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
 // do not run until after ProcessBlocksOnPorts() has returned.
 bool WorkletNodeEngine::CallProcess(AudioNodeTrack* aTrack, JSContext* aCx,
                                     JS::Handle<JS::Value> aCallable) {
-  TRACE();
+  TRACE("AudioWorkletNodeEngine::CallProcess");
 
   JS::RootedVector<JS::Value> argv(aCx);
   if (NS_WARN_IF(!argv.resize(3))) {
@@ -469,7 +469,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                              bool* aFinished) {
   MOZ_ASSERT(aInput.Length() == InputCount());
   MOZ_ASSERT(aOutput.Length() == OutputCount());
-  TRACE();
+  TRACE("WorkletNodeEngine::ProcessBlocksOnPorts");
 
   bool isSilent = true;
   if (mProcessor) {
@@ -656,7 +656,7 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     const GlobalObject& aGlobal, AudioContext& aAudioContext,
     const nsAString& aName, const AudioWorkletNodeOptions& aOptions,
     ErrorResult& aRv) {
-  TRACE_COMMENT("AudioWorkletNode ctor: %s", NS_ConvertUTF16toUTF8(aName).get());
+  TRACE_COMMENT("AudioWorkletNode::Constructor", "%s", NS_ConvertUTF16toUTF8(aName).get());
   /**
    * 1. If nodeName does not exist as a key in the BaseAudioContext’s node
    *    name to parameter descriptor map, throw a InvalidStateError exception
@@ -861,7 +861,7 @@ AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) {
 
 void AudioWorkletNode::DispatchProcessorErrorEvent(
     const ProcessorErrorDetails& aDetails) {
-  TRACE();
+  TRACE("AudioWorkletNode::DispatchProcessorErrorEvent");
   if (HasListenersFor(nsGkAtoms::onprocessorerror)) {
     RootedDictionary<ErrorEventInit> init(RootingCx());
     init.mMessage = aDetails.mMessage;

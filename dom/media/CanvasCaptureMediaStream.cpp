@@ -49,7 +49,8 @@ void OutputStreamDriver::SetImage(RefPtr<layers::Image>&& aImage,
                                   const TimeStamp& aTime) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  TRACE_COMMENT("SourceMediaTrack %p", mSourceStream.get());
+  TRACE_COMMENT("OutputStreamDriverSetImage", "SourceMediaTrack %p",
+                mSourceStream.get());
 
   VideoSegment segment;
   const auto size = aImage->GetSize();

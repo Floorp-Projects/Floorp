@@ -61,7 +61,7 @@ void GraphRunner::Shutdown() {
 
 auto GraphRunner::OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
                                AudioMixer* aMixer) -> IterationResult {
-  TRACE();
+  TRACE("GraphRunner::OneIteration");
 
   MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mThreadState == ThreadState::Wait);
@@ -135,7 +135,7 @@ NS_IMETHODIMP GraphRunner::Run() {
       break;
     }
     MOZ_DIAGNOSTIC_ASSERT(mIterationState.isSome());
-    TRACE();
+    TRACE("GraphRunner::Run");
     mIterationResult = mGraph->OneIterationImpl(mIterationState->StateTime(),
                                                 mIterationState->IterationEnd(),
                                                 mIterationState->Mixer());
