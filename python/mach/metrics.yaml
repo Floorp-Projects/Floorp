@@ -187,3 +187,17 @@ mach.system:
     expires: never
     send_in_pings:
       - usage
+  vscode_running:
+    type: boolean
+    description: True if there is an instance of vscode running.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1717801
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1717801#c1
+    notification_emails:
+      - build-telemetry@mozilla.com
+      - andi@mozilla.com
+    expires: never
+    send_in_pings:
+      - usage
