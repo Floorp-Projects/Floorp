@@ -82,6 +82,7 @@
 #include "ScriptProcessorNode.h"
 #include "StereoPannerNode.h"
 #include "WaveShaperNode.h"
+#include "Tracing.h"
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
 
@@ -978,6 +979,7 @@ nsTArray<RefPtr<mozilla::MediaTrack>> AudioContext::GetAllTracks() const {
 }
 
 already_AddRefed<Promise> AudioContext::Suspend(ErrorResult& aRv) {
+  TRACE();
   RefPtr<Promise> promise = CreatePromise(aRv);
   if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
     return promise.forget();
@@ -1050,6 +1052,7 @@ void AudioContext::ResumeFromChrome() {
 }
 
 already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
+  TRACE();
   RefPtr<Promise> promise = CreatePromise(aRv);
   if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
     return promise.forget();
@@ -1185,6 +1188,7 @@ void AudioContext::ReportBlocked() {
 }
 
 already_AddRefed<Promise> AudioContext::Close(ErrorResult& aRv) {
+  TRACE();
   RefPtr<Promise> promise = CreatePromise(aRv);
   if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
     return promise.forget();
