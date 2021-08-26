@@ -703,6 +703,8 @@ void MediaTransportHandlerSTS::DestroyFinal() { delete this; }
 
 void MediaTransportHandlerSTS::SetProxyConfig(
     NrSocketProxyConfig&& aProxyConfig) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [this, self = RefPtr<MediaTransportHandlerSTS>(this),
@@ -719,6 +721,8 @@ void MediaTransportHandlerSTS::SetProxyConfig(
 void MediaTransportHandlerSTS::EnsureProvisionalTransport(
     const std::string& aTransportId, const std::string& aUfrag,
     const std::string& aPwd, size_t aComponentCount) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -762,6 +766,8 @@ void MediaTransportHandlerSTS::ActivateTransport(
     const nsTArray<uint8_t>& aKeyDer, const nsTArray<uint8_t>& aCertDer,
     SSLKEAType aAuthType, bool aDtlsClient, const DtlsDigestList& aDigests,
     bool aPrivacyRequested) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, keyDer = aKeyDer.Clone(), certDer = aCertDer.Clone(),
@@ -847,6 +853,8 @@ void MediaTransportHandlerSTS::ActivateTransport(
 
 void MediaTransportHandlerSTS::SetTargetForDefaultLocalAddressLookup(
     const std::string& aTargetIp, uint16_t aTargetPort) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -862,6 +870,8 @@ void MediaTransportHandlerSTS::SetTargetForDefaultLocalAddressLookup(
 void MediaTransportHandlerSTS::StartIceGathering(
     bool aDefaultRouteOnly, bool aObfuscateHostAddresses,
     const nsTArray<NrIceStunAddr>& aStunAddrs) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, stunAddrs = aStunAddrs.Clone(),
@@ -892,6 +902,8 @@ void MediaTransportHandlerSTS::StartIceGathering(
 
 void MediaTransportHandlerSTS::StartIceChecks(
     bool aIsControlling, const std::vector<std::string>& aIceOptions) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -937,6 +949,8 @@ void TokenizeCandidate(const std::string& aCandidate,
 void MediaTransportHandlerSTS::AddIceCandidate(
     const std::string& aTransportId, const std::string& aCandidate,
     const std::string& aUfrag, const std::string& aObfuscatedAddress) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -976,6 +990,8 @@ void MediaTransportHandlerSTS::AddIceCandidate(
 }
 
 void MediaTransportHandlerSTS::UpdateNetworkState(bool aOnline) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -990,6 +1006,8 @@ void MediaTransportHandlerSTS::UpdateNetworkState(bool aOnline) {
 
 void MediaTransportHandlerSTS::RemoveTransportsExcept(
     const std::set<std::string>& aTransportIds) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -1030,6 +1048,8 @@ void MediaTransportHandlerSTS::RemoveTransportsExcept(
 
 void MediaTransportHandlerSTS::SendPacket(const std::string& aTransportId,
                                           MediaPacket&& aPacket) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [this, self = RefPtr<MediaTransportHandlerSTS>(this), aTransportId,
@@ -1220,6 +1240,8 @@ void MediaTransportHandler::OnRtcpStateChange(const std::string& aTransportId,
 
 RefPtr<dom::RTCStatsPromise> MediaTransportHandlerSTS::GetIceStats(
     const std::string& aTransportId, DOMHighResTimeStamp aNow) {
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   return mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
