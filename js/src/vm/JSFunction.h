@@ -70,30 +70,26 @@ class JSFunction : public js::NativeObject {
    */
   js::GCPtrValue nativeFuncOrInterpretedEnv_;
 
-  union U {
-    class {
-      friend class JSFunction;
-      // Warning: this |extra| union MUST NOT store a value that could be a
-      // valid BaseScript* pointer! JIT guards depend on this.
-      union {
-        // Information about this function to be used by the JIT, only
-        // used if isBuiltinNative(); use the accessor!
-        const JSJitInfo* jitInfo_;
-        // For wasm/asm.js without a jit entry. Always has the low bit set to
-        // ensure it's never identical to a BaseScript* pointer. See warning
-        // above.
-        uintptr_t taggedWasmFuncIndex_;
-        // for wasm that has been given a jit entry
-        void** wasmJitEntry_;
-      } extra;
-    } native;
-    struct {
-      union {
-        js::BaseScript* script_;
-        js::SelfHostedLazyScript* selfHostedLazy_;
-      } s;
-    } scripted;
-  } u;
+  /*
+   * For native functions this is one of:
+   *
+   *  - JSJitInfo* to be used by the JIT, only used if isBuiltinNative() for
+   *    builtin natives
+   *
+   *  - wasm function index for wasm/asm.js without a jit entry. Always has the
+   *    low bit set to ensure it's never identical to a BaseScript* pointer
+   *
+   *  - a wasm JIT entry
+   *
+   * The JIT depends on none of the above being a valid BaseScript pointer.
+   *
+   * For interpreted functions this is either a BaseScript or the
+   * SelfHostedLazyScript pointer.
+   *
+   * These are all stored as private values, because the JIT assumes that it can
+   * access the SelfHostedLazyScript and BaseScript pointer in the same way.
+   */
+  js::GCPtrValue nativeJitInfoOrInterpretedScript_;
 
   // The `atom_` field can have different meanings depending on the function
   // type and flags. It is used for diagnostics, decompiling, and
@@ -207,9 +203,10 @@ class JSFunction : public js::NativeObject {
 
   bool isLambda() const { return flags().isLambda(); }
 
-  // These methods determine which of the u.scripted.s union arms are active.
-  // For live JSFunctions the pointer values will always be non-null, but due
-  // to partial initialization the GC (and other features that scan the heap
+  // These methods determine which kind of script we hold.
+  //
+  // For live JSFunctions the pointer values will always be non-null, but due to
+  // partial initialization the GC (and other features that scan the heap
   // directly) may still return a null pointer.
   bool hasSelfHostedLazyScript() const {
     return flags().hasSelfHostedLazyScript();
@@ -450,25 +447,26 @@ class JSFunction : public js::NativeObject {
   //
   // A BaseScript is fully initialized before u.script.s.script_ is initialized
   // with a reference to it.
-  bool isIncomplete() const { return isInterpreted() && !u.scripted.s.script_; }
+  bool isIncomplete() const {
+    return isInterpreted() && !nativeJitInfoOrInterpretedScript_.toPrivate();
+  }
 
   JSScript* nonLazyScript() const {
     MOZ_ASSERT(hasBytecode());
-    MOZ_ASSERT(u.scripted.s.script_);
-    return static_cast<JSScript*>(u.scripted.s.script_);
+    return static_cast<JSScript*>(baseScript());
   }
 
   js::SelfHostedLazyScript* selfHostedLazyScript() const {
     MOZ_ASSERT(hasSelfHostedLazyScript());
-    MOZ_ASSERT(u.scripted.s.selfHostedLazy_);
-    return u.scripted.s.selfHostedLazy_;
+    return static_cast<js::SelfHostedLazyScript*>(
+        nativeJitInfoOrInterpretedScript_.toPrivate());
   }
 
   // Access fields defined on both lazy and non-lazy scripts.
   js::BaseScript* baseScript() const {
     MOZ_ASSERT(hasBaseScript());
-    MOZ_ASSERT(u.scripted.s.script_);
-    return u.scripted.s.script_;
+    return static_cast<JSScript*>(
+        nativeJitInfoOrInterpretedScript_.toPrivate());
   }
 
   static bool getLength(JSContext* cx, js::HandleFunction fun,
@@ -512,28 +510,34 @@ class JSFunction : public js::NativeObject {
   void initScript(js::BaseScript* script) {
     MOZ_ASSERT_IF(script, realm() == script->realm());
     MOZ_ASSERT(isInterpreted());
-    u.scripted.s.script_ = script;
+    MOZ_ASSERT_IF(hasBaseScript(),
+                  !baseScript());  // No write barrier required.
+    nativeJitInfoOrInterpretedScript_.unbarrieredSet(JS::PrivateValue(script));
   }
 
   void initSelfHostedLazyScript(js::SelfHostedLazyScript* lazy) {
     MOZ_ASSERT(isSelfHostedBuiltin());
     MOZ_ASSERT(isInterpreted());
+    if (hasBaseScript()) {
+      js::gc::PreWriteBarrier(baseScript());
+    }
     FunctionFlags f = flags();
     f.clearBaseScript();
     f.setSelfHostedLazy();
     setFlags(f);
-    u.scripted.s.selfHostedLazy_ = lazy;
+    nativeJitInfoOrInterpretedScript_.unbarrieredSet(JS::PrivateValue(lazy));
     MOZ_ASSERT(hasSelfHostedLazyScript());
   }
 
   void clearSelfHostedLazyScript() {
-    // Note: The selfHostedLazy_ field is not a GC-thing pointer so we don't
-    // need to trigger barriers.
+    MOZ_ASSERT(isSelfHostedBuiltin());
+    MOZ_ASSERT(isInterpreted());
+    MOZ_ASSERT(!hasBaseScript());  // No write barrier required.
     FunctionFlags f = flags();
     f.clearSelfHostedLazy();
     f.setBaseScript();
     setFlags(f);
-    u.scripted.s.script_ = nullptr;
+    nativeJitInfoOrInterpretedScript_.unbarrieredSet(JS::PrivateValue(nullptr));
     MOZ_ASSERT(isIncomplete());
   }
 
@@ -554,22 +558,24 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(native);
     nativeFuncOrInterpretedEnv_.init(
         JS::PrivateValue(reinterpret_cast<void*>(native)));
-    u.native.extra.jitInfo_ = jitInfo;
+    nativeJitInfoOrInterpretedScript_.unbarrieredSet(
+        JS::PrivateValue(const_cast<JSJitInfo*>(jitInfo)));
   }
-  bool hasJitInfo() const {
-    return isBuiltinNative() && u.native.extra.jitInfo_;
-  }
+  bool hasJitInfo() const { return isBuiltinNative() && jitInfoUnchecked(); }
   const JSJitInfo* jitInfo() const {
     MOZ_ASSERT(hasJitInfo());
-    return u.native.extra.jitInfo_;
+    return jitInfoUnchecked();
   }
   const JSJitInfo* jitInfoUnchecked() const {
-    // Called by Ion off-main thread.
-    return u.native.extra.jitInfo_;
+    // Can be called by Ion off-main thread.
+    return static_cast<const JSJitInfo*>(
+        nativeJitInfoOrInterpretedScript_.toPrivate());
   }
   void setJitInfo(const JSJitInfo* data) {
     MOZ_ASSERT(isBuiltinNative());
-    u.native.extra.jitInfo_ = data;
+    MOZ_ASSERT(data);
+    nativeJitInfoOrInterpretedScript_.unbarrieredSet(
+        JS::PrivateValue(const_cast<JSJitInfo*>(data)));
   }
 
   // wasm functions are always natives and either:
@@ -581,49 +587,40 @@ class JSFunction : public js::NativeObject {
   void setWasmFuncIndex(uint32_t funcIndex) {
     MOZ_ASSERT(isWasm() || isAsmJSNative());
     MOZ_ASSERT(!isWasmWithJitEntry());
-    MOZ_ASSERT(!u.native.extra.taggedWasmFuncIndex_);
+    MOZ_ASSERT(!nativeJitInfoOrInterpretedScript_.toPrivate());
     // See wasmFuncIndex_ comment for why we set the low bit.
-    u.native.extra.taggedWasmFuncIndex_ = (uintptr_t(funcIndex) << 1) | 1;
+    uintptr_t tagged = (uintptr_t(funcIndex) << 1) | 1;
+    nativeJitInfoOrInterpretedScript_.unbarrieredSet(
+        JS::PrivateValue(reinterpret_cast<void*>(tagged)));
   }
   uint32_t wasmFuncIndex() const {
     MOZ_ASSERT(isWasm() || isAsmJSNative());
     MOZ_ASSERT(!isWasmWithJitEntry());
-    MOZ_ASSERT(u.native.extra.taggedWasmFuncIndex_ & 1);
-    return u.native.extra.taggedWasmFuncIndex_ >> 1;
+    uintptr_t tagged = uintptr_t(nativeJitInfoOrInterpretedScript_.toPrivate());
+    MOZ_ASSERT(tagged & 1);
+    return tagged >> 1;
   }
   void setWasmJitEntry(void** entry) {
     MOZ_ASSERT(*entry);
     MOZ_ASSERT(isWasm());
     MOZ_ASSERT(!isWasmWithJitEntry());
     setFlags(flags().setWasmJitEntry());
-    u.native.extra.wasmJitEntry_ = entry;
+    nativeJitInfoOrInterpretedScript_.unbarrieredSet(JS::PrivateValue(entry));
     MOZ_ASSERT(isWasmWithJitEntry());
   }
   void** wasmJitEntry() const {
     MOZ_ASSERT(isWasmWithJitEntry());
-    MOZ_ASSERT(u.native.extra.wasmJitEntry_);
-    return u.native.extra.wasmJitEntry_;
+    return static_cast<void**>(nativeJitInfoOrInterpretedScript_.toPrivate());
   }
 
   bool isDerivedClassConstructor() const;
   bool isSyntheticFunction() const;
 
-  static unsigned offsetOfScript() {
-    static_assert(offsetof(U, scripted.s.script_) ==
-                      offsetof(U, native.extra.wasmJitEntry_),
-                  "scripted.s.script_ must be at the same offset as "
-                  "native.extra.wasmJitEntry_");
-    return offsetof(JSFunction, u.scripted.s.script_);
-  }
   static unsigned offsetOfNativeOrEnv() {
     return offsetof(JSFunction, nativeFuncOrInterpretedEnv_);
   }
-  static unsigned offsetOfBaseScript() {
-    return offsetof(JSFunction, u.scripted.s.script_);
-  }
-
-  static unsigned offsetOfJitInfo() {
-    return offsetof(JSFunction, u.native.extra.jitInfo_);
+  static unsigned offsetOfJitInfoOrScript() {
+    return offsetof(JSFunction, nativeJitInfoOrInterpretedScript_);
   }
 
   inline void trace(JSTracer* trc);
