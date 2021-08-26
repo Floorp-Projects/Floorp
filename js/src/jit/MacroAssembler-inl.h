@@ -584,16 +584,14 @@ void MacroAssembler::branchTestClassIsFunction(Condition cond, Register clasp,
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
   if (cond == Assembler::Equal) {
-    branchPtr(Assembler::Equal, clasp, ImmPtr(&JSFunction::class_), label);
-    branchPtr(Assembler::Equal, clasp, ImmPtr(&FunctionExtended::class_),
-              label);
+    branchPtr(Assembler::Equal, clasp, ImmPtr(&FunctionClass), label);
+    branchPtr(Assembler::Equal, clasp, ImmPtr(&ExtendedFunctionClass), label);
     return;
   }
 
   Label isFunction;
-  branchPtr(Assembler::Equal, clasp, ImmPtr(&JSFunction::class_), &isFunction);
-  branchPtr(Assembler::NotEqual, clasp, ImmPtr(&FunctionExtended::class_),
-            label);
+  branchPtr(Assembler::Equal, clasp, ImmPtr(&FunctionClass), &isFunction);
+  branchPtr(Assembler::NotEqual, clasp, ImmPtr(&ExtendedFunctionClass), label);
   bind(&isFunction);
 }
 
