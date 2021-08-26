@@ -843,10 +843,18 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       }
     };
 
+    nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+    if (!barrier) {
+      LOG(LogLevel::Error,
+          ("Session.InitEncoder %p Failed to get shutdown barrier", this));
+      DoSessionEndTask(NS_ERROR_FAILURE);
+      return;
+    }
+
     nsString name;
     name.AppendPrintf("MediaRecorder::Session %p shutdown", this);
     mShutdownBlocker = MakeAndAddRef<Blocker>(this, name);
-    nsresult rv = GetShutdownBarrier()->AddBlocker(
+    nsresult rv = barrier->AddBlocker(
         mShutdownBlocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
         u"MediaRecorder::Session: shutdown"_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
@@ -988,7 +996,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
               return Shutdown();
             })
         ->Then(mMainThread, __func__, [this, self = RefPtr<Session>(this)] {
-          GetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
+          // Guard against the case where we fail to add a blocker due to being
+          // in XPCOM shutdown. If we're in this state we shouldn't try and get
+          // a shutdown barrier as we'll fail.
+          if (!mShutdownBlocker) {
+            return;
+          }
+          MustGetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
           mShutdownBlocker = nullptr;
         });
   }
