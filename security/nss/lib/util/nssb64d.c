@@ -91,34 +91,63 @@ struct PLBase64DecoderStr {
 
 PR_END_EXTERN_C
 
-/*
- * Table to convert an ascii "code" to its corresponding binary value.
- * For ease of use, the binary values in the table are the actual values
- * PLUS ONE.  This is so that the special value of zero can denote an
- * invalid mapping; that was much easier than trying to fill in the other
- * values with some value other than zero, and to check for it.
+/* A constant time range check for unsigned chars.
+ * Returns 255 if a <= x <= b and 0 otherwise.
+ */
+static inline unsigned char
+ct_u8_in_range(unsigned char x, unsigned char a, unsigned char b)
+{
+    /*  Let x, a, b be ints in {0, 1, ... 255}.
+     *  The value (a - x - 1) is in {-256, ..., 254}, so the low
+     *  8 bits of
+     *      (a - x - 1) >> 8
+     *  are all 1 if a <= x and all 0 if a > x.
+     *
+     *  Likewise the low 8 bits of
+     *      ((a - x - 1) >> 8) & ((x - c - 1) >> 8)
+     *  are all 1 if a <= x <= c and all 0 otherwise.
+     *
+     *  The same is true if we perform the shift after the AND
+     *      ((a - x - 1) & (x - b - 1)) >> 8.
+     */
+    return (unsigned char)(((a - x - 1) & (x - b - 1)) >> 8);
+}
+
+/* Convert a base64 code [A-Za-z0-9+/] to its value in {1, 2, ..., 64}.
+ * The use of 1-64 instead of 0-63 is so that the special value of zero can
+ * denote an invalid mapping; that was much easier than trying to fill in the
+ * other values with some value other than zero, and to check for it.
  * Just remember to SUBTRACT ONE when using the value retrieved.
  */
-static unsigned char base64_codetovaluep1[256] = {
-    /*   0: */ 0, 0, 0, 0, 0, 0, 0, 0,
-    /*   8: */ 0, 0, 0, 0, 0, 0, 0, 0,
-    /*  16: */ 0, 0, 0, 0, 0, 0, 0, 0,
-    /*  24: */ 0, 0, 0, 0, 0, 0, 0, 0,
-    /*  32: */ 0, 0, 0, 0, 0, 0, 0, 0,
-    /*  40: */ 0, 0, 0, 63, 0, 0, 0, 64,
-    /*  48: */ 53, 54, 55, 56, 57, 58, 59, 60,
-    /*  56: */ 61, 62, 0, 0, 0, 0, 0, 0,
-    /*  64: */ 0, 1, 2, 3, 4, 5, 6, 7,
-    /*  72: */ 8, 9, 10, 11, 12, 13, 14, 15,
-    /*  80: */ 16, 17, 18, 19, 20, 21, 22, 23,
-    /*  88: */ 24, 25, 26, 0, 0, 0, 0, 0,
-    /*  96: */ 0, 27, 28, 29, 30, 31, 32, 33,
-    /* 104: */ 34, 35, 36, 37, 38, 39, 40, 41,
-    /* 112: */ 42, 43, 44, 45, 46, 47, 48, 49,
-    /* 120: */ 50, 51, 52, 0, 0, 0, 0, 0,
-    /* 128: */ 0, 0, 0, 0, 0, 0, 0, 0
-    /* and rest are all zero as well */
-};
+static unsigned char
+pl_base64_codetovaluep1(unsigned char code)
+{
+    unsigned char mask;
+    unsigned char res = 0;
+
+    /* The range 'A' to 'Z' is mapped to 1 to 26 */
+    mask = ct_u8_in_range(code, 'A', 'Z');
+    res |= mask & (code - 'A' + 1);
+
+    /* The range 'a' to 'z' is mapped to 27 to 52 */
+    mask = ct_u8_in_range(code, 'a', 'z');
+    res |= mask & (code - 'a' + 27);
+
+    /* The range '0' to '9' is mapped to 53 to 62 */
+    mask = ct_u8_in_range(code, '0', '9');
+    res |= mask & (code - '0' + 53);
+
+    /* The code '+' is mapped to 63 */
+    mask = ct_u8_in_range(code, '+', '+');
+    res |= mask & 63;
+
+    /* The code '/' is mapped to 64 */
+    mask = ct_u8_in_range(code, '/', '/');
+    res |= mask & 64;
+
+    /* All other characters, including '=' are mapped to 0. */
+    return res;
+}
 
 #define B64_PAD '='
 
@@ -134,7 +163,7 @@ pl_base64_decode_4to3(const unsigned char *in, unsigned char *out)
     unsigned char bits;
 
     for (j = 0; j < 4; j++) {
-        bits = base64_codetovaluep1[in[j]];
+        bits = pl_base64_codetovaluep1(in[j]);
         if (bits == 0)
             return -1;
         num = (num << 6) | (bits - 1);
@@ -157,9 +186,9 @@ pl_base64_decode_3to2(const unsigned char *in, unsigned char *out)
     PRUint32 num = 0;
     unsigned char bits1, bits2, bits3;
 
-    bits1 = base64_codetovaluep1[in[0]];
-    bits2 = base64_codetovaluep1[in[1]];
-    bits3 = base64_codetovaluep1[in[2]];
+    bits1 = pl_base64_codetovaluep1(in[0]);
+    bits2 = pl_base64_codetovaluep1(in[1]);
+    bits3 = pl_base64_codetovaluep1(in[2]);
 
     if ((bits1 == 0) || (bits2 == 0) || (bits3 == 0))
         return -1;
@@ -184,8 +213,8 @@ pl_base64_decode_2to1(const unsigned char *in, unsigned char *out)
     PRUint32 num = 0;
     unsigned char bits1, bits2;
 
-    bits1 = base64_codetovaluep1[in[0]];
-    bits2 = base64_codetovaluep1[in[1]];
+    bits1 = pl_base64_codetovaluep1(in[0]);
+    bits2 = pl_base64_codetovaluep1(in[1]);
 
     if ((bits1 == 0) || (bits2 == 0))
         return -1;
@@ -236,7 +265,7 @@ pl_base64_decode_buffer(PLBase64Decoder *data, const unsigned char *in,
              * the processing down doing more complicated checking, but
              * someone else might have different ideas in the future.
              */
-            if (base64_codetovaluep1[*in] > 0 || *in == B64_PAD)
+            if (pl_base64_codetovaluep1(*in) > 0 || *in == B64_PAD)
                 token[i++] = *in;
             in++;
             length--;
@@ -298,7 +327,7 @@ pl_base64_decode_buffer(PLBase64Decoder *data, const unsigned char *in,
      * we would expect to decode, something is wrong.
      */
     while (length > 0) {
-        if (base64_codetovaluep1[*in] > 0)
+        if (pl_base64_codetovaluep1(*in) > 0)
             return PR_FAILURE;
         in++;
         length--;

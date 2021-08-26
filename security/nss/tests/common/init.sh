@@ -91,6 +91,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         FIPSBADPWFILE=${HOSTDIR}/tests.fipsbadpw
         FIPSP12PWFILE=${HOSTDIR}/tests.fipsp12pw
 
+        echo nss > ${PWFILE}
+        echo > ${EMPTY_FILE}
         echo "fIps140" > ${FIPSPWFILE}
         echo "fips104" > ${FIPSBADPWFILE}
         echo "pKcs12fips140" > ${FIPSP12PWFILE}

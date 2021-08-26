@@ -479,9 +479,6 @@ cert_add_cert()
 ##########################################################################
 cert_all_CA()
 {
-    echo nss > ${PWFILE}
-    echo > ${EMPTY_FILE}
-
     ALL_CU_SUBJECT="CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
     cert_CA $CADIR TestCA -x "CTu,CTu,CTu" ${D_CA} "1"
 
