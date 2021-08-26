@@ -9,6 +9,7 @@
 #include "AccAttributes.h"
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
+#include "CacheConstants.h"
 #include "DocAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsAccessibilityService.h"
@@ -958,17 +959,7 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
         }
 #endif
         case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
-          if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-            nsAutoString name;
-            int32_t nameFlag = Name(name);
-            RefPtr<AccAttributes> fields = new AccAttributes();
-            fields->SetAttribute(nsGkAtoms::explicit_name, nameFlag);
-            fields->SetAttribute(nsGkAtoms::name, name);
-            nsTArray<CacheData> data;
-            data.AppendElement(CacheData(
-                IsDoc() ? 0 : reinterpret_cast<uint64_t>(UniqueID()), fields));
-            ipcDoc->SendCache(1, data, true);
-          }
+          SendCacheUpdate(CacheDomain::Name);
           ipcDoc->SendEvent(id, aEvent->GetEventType());
           break;
         }
@@ -2989,12 +2980,35 @@ AccGroupInfo* LocalAccessible::GetGroupInfo() const {
   return mBits.groupInfo;
 }
 
-already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache() {
+void LocalAccessible::SendCacheUpdate(uint64_t aCacheDomain) {
+  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return;
+  }
+
+  if (!IPCAccessibilityActive() || !Document()) {
+    return;
+  }
+
+  DocAccessibleChild* ipcDoc = mDoc->IPCDoc();
+  MOZ_ASSERT(ipcDoc);
+
+  RefPtr<AccAttributes> fields = BundleFieldsForCache(aCacheDomain);
+  nsTArray<CacheData> data;
+  data.AppendElement(
+      CacheData(IsDoc() ? 0 : reinterpret_cast<uint64_t>(UniqueID()), fields));
+  ipcDoc->SendCache(1, data, true);
+}
+
+already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
+    uint64_t aCacheDomain) {
   RefPtr<AccAttributes> fields = new AccAttributes();
-  nsAutoString name;
-  int32_t nameFlag = Name(name);
-  fields->SetAttribute(nsGkAtoms::explicit_name, nameFlag);
-  fields->SetAttribute(nsGkAtoms::name, name);
+
+  if (aCacheDomain & CacheDomain::Name) {
+    nsAutoString name;
+    int32_t nameFlag = Name(name);
+    fields->SetAttribute(nsGkAtoms::explicit_name, nameFlag);
+    fields->SetAttribute(nsGkAtoms::name, name);
+  }
 
   return fields.forget();
 }
