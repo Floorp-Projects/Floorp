@@ -6,7 +6,6 @@
 
 #include "mozilla/gfx/Point.h"
 #include "mozilla/layers/PLayerTransaction.h"
-#include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorTypes.h"
 
@@ -17,9 +16,6 @@ using namespace mozilla::gl;
 
 namespace mozilla {
 namespace layers {
-
-/*static*/
-void ShadowLayerForwarder::PlatformSyncBeforeUpdate() {}
 
 /*static*/
 void LayerManagerComposite::PlatformSyncBeforeReplyUpdate() {}
