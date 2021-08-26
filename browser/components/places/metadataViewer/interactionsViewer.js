@@ -187,7 +187,7 @@ class TableViewer {
 const metadataHandler = new (class extends TableViewer {
   title = "Interactions";
   cssGridTemplateColumns =
-    "max-content fit-content(100%) repeat(5, max-content);";
+    "max-content fit-content(100%) repeat(4, max-content) fit-content(100%);";
 
   /**
    * @see TableViewer.columnMap
@@ -263,16 +263,16 @@ const metadataHandler = new (class extends TableViewer {
     return this.#getRows(
       `SELECT
       m.id,
-      m.place_id, 
+      m.place_id,
       m.referrer_place_id,
       h.origin_id,
-      m.updated_at, 
-      m.total_view_time, 
+      m.updated_at,
+      m.total_view_time,
       h.visit_count,
-      h.frecency, 
-      m.typing_time, 
-      m.key_presses, 
-      vall.visit_dates, 
+      h.frecency,
+      m.typing_time,
+      m.key_presses,
+      vall.visit_dates,
       vall.visit_types
   FROM moz_places_metadata m
   JOIN moz_places h ON h.id = m.place_id
@@ -321,7 +321,7 @@ const snapshotHandler = new (class extends TableViewer {
       "createdAt",
       {
         header: "Created",
-        modifier: c => c.toLocaleString(),
+        modifier: c => c?.toLocaleString() ?? "",
       },
     ],
     [
@@ -335,14 +335,14 @@ const snapshotHandler = new (class extends TableViewer {
       "firstInteractionAt",
       {
         header: "First Interaction",
-        modifier: f => f.toLocaleString(),
+        modifier: f => f?.toLocaleString() ?? "",
       },
     ],
     [
       "lastInteractionAt",
       {
         header: "Latest Interaction",
-        modifier: l => l.toLocaleString(),
+        modifier: l => l?.toLocaleString() ?? "",
       },
     ],
     [
