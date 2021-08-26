@@ -989,7 +989,7 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
       // function. In that case, we need to change the function's name,
       // which is ok because it can't have been exposed to content
       // before.
-      fun->initAtom(name);
+      fun->setAtom(name);
       return true;
     }
 
