@@ -21,16 +21,12 @@ export class DSLinkMenu extends React.PureComponent {
     }
   }
 
-  nextAnimationFrame() {
-    return new Promise(resolve =>
-      this.props.windowObj.requestAnimationFrame(resolve)
-    );
-  }
-
   async onMenuShow() {
     const dsLinkMenuHostDiv = this.contextMenuButtonRef.current.parentElement;
-    // Wait for next frame before computing scrollMaxX to allow fluent menu strings to be visible
-    await this.nextAnimationFrame();
+    // Force translation so we can be sure it's ready before measuring.
+    await this.props.windowObj.document.l10n.translateFragment(
+      dsLinkMenuHostDiv
+    );
     if (this.props.windowObj.scrollMaxX > 0) {
       dsLinkMenuHostDiv.parentElement.classList.add("last-item");
     }
