@@ -30,18 +30,6 @@ bool IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name);
 PropertyName* GetClonedSelfHostedFunctionName(const JSFunction* fun);
 void SetClonedSelfHostedFunctionName(JSFunction* fun, PropertyName* name);
 
-/*
- * Same as GetClonedSelfHostedFunctionName, but `fun` is guaranteed to be an
- * extended function.
- *
- * This function is supposed to be used off-thread, especially the JIT
- * compilation thread, that cannot access JSFunction.flags_, because of
- * a race condition.
- *
- * See Also: WrappedFunction.isExtended_
- */
-PropertyName* GetClonedSelfHostedFunctionNameOffMainThread(JSFunction* fun);
-
 constexpr char ExtendedUnclonedSelfHostedFunctionNamePrefix = '$';
 
 /*
