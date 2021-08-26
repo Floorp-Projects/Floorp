@@ -43,6 +43,9 @@ class AudioWorkletImpl final : public WorkletImpl {
   // Any thread:
   AudioNodeTrack* DestinationTrack() const { return mDestinationTrack; }
 
+  void OnAddModuleStarted() const override;
+  void OnAddModulePromiseSettled() const override;
+
  protected:
   // Execution thread only.
   already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() override;

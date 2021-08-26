@@ -8,6 +8,7 @@
 
 #include "AudioContext.h"
 #include "AudioNodeTrack.h"
+#include "GeckoProfiler.h"
 #include "mozilla/dom/AudioWorkletBinding.h"
 #include "mozilla/dom/AudioWorkletGlobalScope.h"
 #include "mozilla/dom/Worklet.h"
@@ -59,6 +60,22 @@ nsresult AudioWorkletImpl::SendControlMessage(
     already_AddRefed<nsIRunnable> aRunnable) {
   mDestinationTrack->SendRunnable(std::move(aRunnable));
   return NS_OK;
+}
+
+void AudioWorkletImpl::OnAddModuleStarted() const {
+#ifdef MOZ_GECKO_PROFILER
+  profiler_add_marker(
+      ProfilerStringView("AudioWorklet.addModule"),
+      geckoprofiler::category::MEDIA_RT, {MarkerTiming::IntervalStart()});
+#endif
+}
+
+void AudioWorkletImpl::OnAddModulePromiseSettled() const {
+#ifdef MOZ_GECKO_PROFILER
+  profiler_add_marker(
+      ProfilerStringView("AudioWorklet.addModule"),
+      geckoprofiler::category::MEDIA_RT, {MarkerTiming::IntervalEnd()});
+#endif
 }
 
 already_AddRefed<dom::WorkletGlobalScope>
