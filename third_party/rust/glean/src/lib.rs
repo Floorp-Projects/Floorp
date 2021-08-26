@@ -445,8 +445,6 @@ fn initialize_core_metrics(
     }
     core_metrics::internal_metrics::os_version.set_sync(glean, system::get_os_version());
     core_metrics::internal_metrics::architecture.set_sync(glean, system::ARCH.to_string());
-    core_metrics::internal_metrics::device_manufacturer.set_sync(glean, "unknown".to_string());
-    core_metrics::internal_metrics::device_model.set_sync(glean, "unknown".to_string());
 }
 
 /// Sets whether upload is enabled or not.
