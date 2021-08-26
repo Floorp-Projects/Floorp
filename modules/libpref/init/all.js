@@ -4301,8 +4301,6 @@ pref("toolkit.aboutProcesses.showThreads", false);
   pref("toolkit.crashreporter.include_context_heap", true);
 #endif
 
-pref("layers.omtp.enabled", false);
-
 // Support for legacy customizations that rely on checking the
 // user profile directory for these stylesheets:
 //  * userContent.css
