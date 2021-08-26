@@ -106,12 +106,8 @@ function startTest(test, token)
   .then(() => manager.finished(token));
 }
 
-function beginTest() {
-  manager.runTests(EMEmanifest, startTest);
-}
-
 SimpleTest.waitForExplicitFinish();
-SetupEMEPref(beginTest);
+manager.runTests(EMEmanifest, startTest);
 
 </script>
 </pre>

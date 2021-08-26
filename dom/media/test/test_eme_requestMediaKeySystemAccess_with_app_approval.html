@@ -185,24 +185,17 @@ async function testMultipleRequests(testCase) {
   await Promise.all(accessPromises);
 }
 
-async function beginTest() {
-  // The tests rely on prefs being set, so run them in sequence. If we run in
-  // parallel the tests break each other by overriding prefs.
-  for (const testCase of testCases) {
-    await testSingleRequest(testCase);
-  }
-  for (const testCase of testCases) {
-    await testRequestWithInvalidArgs(testCase);
-  }
-  for (const testCase of testCases) {
-    await testMultipleRequests(testCase);
-  }
-  SimpleTest.finish();
+// The tests rely on prefs being set, so run them in sequence. If we run in
+// parallel the tests break each other by overriding prefs.
+for (const testCase of testCases) {
+  add_task(() => testSingleRequest(testCase));
 }
-
-SimpleTest.waitForExplicitFinish();
-SetupEMEPref(beginTest);
-
+for (const testCase of testCases) {
+  add_task(() => testRequestWithInvalidArgs(testCase));
+}
+for (const testCase of testCases) {
+  add_task(() => testMultipleRequests(testCase));
+}
 </script>
 </pre>
 </body>

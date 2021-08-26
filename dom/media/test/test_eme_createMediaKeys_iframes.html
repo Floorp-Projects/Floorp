@@ -44,15 +44,6 @@ async function createMediaKeys(aNavigator) {
 }
 // End helper functions.
 
-// Setup for the tests.
-add_task(async () => {
-  info("Setting up EME prefs");
-  // Wrap EME pref setup in a promise so it plays nice with add_task.
-  return new Promise(r => {
-    SetupEMEPref(r);
-  });
-});
-
 // These tests check that the following work using different iframe combinations
 // - navigator.requestMediaKeySystem(...) successfully grants access.
 // - the resulting MediaKeySystemAccess object's createMediaKeys() creates
