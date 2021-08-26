@@ -31,13 +31,25 @@ function getPath() {
 add_task(async function test_loadFromFile() {
   const previousSession = new JSONFile({ path: getPath() });
   await previousSession.load();
-  previousSession.data.test = true;
+  previousSession.data.test = {
+    slug: "test",
+    active: true,
+    lastSeen: Date.now(),
+  };
   previousSession.saveSoon();
   await previousSession.finalize();
 
   // Create a store and expect to load data from previous session
   const store = new ExperimentStore();
+
   await store.init();
+  await store.ready();
+
+  Assert.equal(
+    previousSession.path,
+    store._store.path,
+    "Should have the same path"
+  );
 
   Assert.ok(
     store.get("test"),
@@ -51,6 +63,7 @@ add_task(async function test_load_from_disk_event() {
       slug: "variant",
       feature: { featureId: "green", enabled: true },
     },
+    lastSeen: Date.now(),
   });
   const stub = sinon.stub();
   const previousSession = new JSONFile({ path: getPath() });
@@ -65,6 +78,14 @@ add_task(async function test_load_from_disk_event() {
   store._onFeatureUpdate("green", stub);
 
   await store.init();
+  await store.ready();
+
+  Assert.equal(
+    previousSession.path,
+    store._store.path,
+    "Should have the same path as previousSession."
+  );
+
   await TestUtils.waitForCondition(() => stub.called, "Stub was called");
 
   Assert.ok(stub.firstCall.args[1], "feature-experiment-loaded");

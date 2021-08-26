@@ -128,8 +128,15 @@ class SharedDataMap extends EventEmitter {
    * @param {string[]} keysToRemove - list of keys to remove from the persistent store
    */
   _removeEntriesByKeys(keysToRemove) {
+    if (!keysToRemove.length) {
+      return;
+    }
     for (let key of keysToRemove) {
-      delete this._store.data[key];
+      try {
+        delete this._store.data[key];
+      } catch (e) {
+        // It's ok if this fails
+      }
     }
     this._store.saveSoon();
   }
