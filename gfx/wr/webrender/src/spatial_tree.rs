@@ -3,15 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle};
-use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollSensitivity, SpatialTreeItemKey};
+use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollSensitivity};
 use api::units::*;
 use euclid::Transform3D;
 use crate::gpu_types::TransformPalette;
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
 use crate::scene::SceneProperties;
-use crate::spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo};
-use crate::spatial_node::{SpatialNodeUid, ScrollFrameKind};
+use crate::spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo, ScrollFrameKind};
 use std::{ops, u32};
 use crate::util::{FastTransform, LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset, scale_factors};
 
@@ -131,10 +130,6 @@ pub struct SpatialTree {
 
     /// Next id to assign when creating a new static coordinate system
     next_static_coord_system_id: u32,
-
-    /// A set of the uids we've encountered for spatial nodes, used to assert that
-    /// we're not seeing duplicates. Likely to be removed once we rely on this feature.
-    spatial_node_uids: FastHashSet<SpatialNodeUid>,
 }
 
 #[derive(Clone)]
@@ -240,7 +235,6 @@ impl SpatialTree {
             pipelines_to_discard: FastHashSet::default(),
             nodes_to_update: Vec::new(),
             next_static_coord_system_id: 0,
-            spatial_node_uids: FastHashSet::default(),
         }
     }
 
@@ -584,7 +578,6 @@ impl SpatialTree {
         scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
-        uid: SpatialNodeUid,
     ) -> SpatialNodeIndex {
         // Scroll frames are only 2d translations - they can't introduce a new static coord system
         let static_coordinate_system_id = self.get_static_coordinate_system_id(parent_index);
@@ -600,7 +593,7 @@ impl SpatialTree {
             external_scroll_offset,
             static_coordinate_system_id,
         );
-        self.add_spatial_node(node, uid)
+        self.add_spatial_node(node)
     }
 
     pub fn add_reference_frame(
@@ -611,7 +604,6 @@ impl SpatialTree {
         kind: ReferenceFrameKind,
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
-        uid: SpatialNodeUid,
     ) -> SpatialNodeIndex {
 
         // Determine if this reference frame creates a new static coordinate system
@@ -661,7 +653,7 @@ impl SpatialTree {
             pipeline_id,
             static_coordinate_system_id,
         );
-        self.add_spatial_node(node, uid)
+        self.add_spatial_node(node)
     }
 
     pub fn add_sticky_frame(
@@ -669,11 +661,9 @@ impl SpatialTree {
         parent_index: SpatialNodeIndex,
         sticky_frame_info: StickyFrameInfo,
         pipeline_id: PipelineId,
-        key: SpatialTreeItemKey,
     ) -> SpatialNodeIndex {
         // Sticky frames are only 2d translations - they can't introduce a new static coord system
         let static_coordinate_system_id = self.get_static_coordinate_system_id(parent_index);
-        let uid = SpatialNodeUid::external(key);
 
         let node = SpatialNode::new_sticky_frame(
             parent_index,
@@ -681,20 +671,11 @@ impl SpatialTree {
             pipeline_id,
             static_coordinate_system_id,
         );
-        self.add_spatial_node(node, uid)
+        self.add_spatial_node(node)
     }
 
-    pub fn add_spatial_node(
-        &mut self,
-        mut node: SpatialNode,
-        uid: SpatialNodeUid,
-    ) -> SpatialNodeIndex {
+    pub fn add_spatial_node(&mut self, mut node: SpatialNode) -> SpatialNodeIndex {
         let index = SpatialNodeIndex::new(self.spatial_nodes.len());
-
-        // TODO(gw): For initial testing, just debug assert that the caller never provides
-        //           a duplicate uid. In future, we'll start to build on this infrastructure
-        //           to retain and cache information across display lists.
-        debug_assert!(self.spatial_node_uids.insert(uid));
 
         // When the parent node is None this means we are adding the root.
         if let Some(parent_index) = node.parent {
@@ -900,7 +881,6 @@ fn add_reference_frame(
     parent: Option<SpatialNodeIndex>,
     transform: LayoutTransform,
     origin_in_parent_reference_frame: LayoutVector2D,
-    key: SpatialTreeItemKey,
 ) -> SpatialNodeIndex {
     cst.add_reference_frame(
         parent,
@@ -912,7 +892,6 @@ fn add_reference_frame(
         },
         origin_in_parent_reference_frame,
         PipelineId::dummy(),
-        SpatialNodeUid::external(key),
     )
 }
 
@@ -950,7 +929,6 @@ fn test_cst_simple_translation() {
         None,
         LayoutTransform::identity(),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 0),
     );
 
     let child1 = add_reference_frame(
@@ -958,7 +936,6 @@ fn test_cst_simple_translation() {
         Some(root),
         LayoutTransform::translation(100.0, 0.0, 0.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 1),
     );
 
     let child2 = add_reference_frame(
@@ -966,7 +943,6 @@ fn test_cst_simple_translation() {
         Some(child1),
         LayoutTransform::translation(0.0, 50.0, 0.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 2),
     );
 
     let child3 = add_reference_frame(
@@ -974,7 +950,6 @@ fn test_cst_simple_translation() {
         Some(child2),
         LayoutTransform::translation(200.0, 200.0, 0.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 3),
     );
 
     cst.update_tree(&SceneProperties::new());
@@ -996,7 +971,6 @@ fn test_cst_simple_scale() {
         None,
         LayoutTransform::identity(),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 0),
     );
 
     let child1 = add_reference_frame(
@@ -1004,7 +978,6 @@ fn test_cst_simple_scale() {
         Some(root),
         LayoutTransform::scale(4.0, 1.0, 1.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 1),
     );
 
     let child2 = add_reference_frame(
@@ -1012,7 +985,6 @@ fn test_cst_simple_scale() {
         Some(child1),
         LayoutTransform::scale(1.0, 2.0, 1.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 2),
     );
 
     let child3 = add_reference_frame(
@@ -1020,7 +992,6 @@ fn test_cst_simple_scale() {
         Some(child2),
         LayoutTransform::scale(2.0, 2.0, 1.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 3),
     );
 
     cst.update_tree(&SceneProperties::new());
@@ -1043,7 +1014,6 @@ fn test_cst_scale_translation() {
         None,
         LayoutTransform::identity(),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 0),
     );
 
     let child1 = add_reference_frame(
@@ -1051,7 +1021,6 @@ fn test_cst_scale_translation() {
         Some(root),
         LayoutTransform::translation(100.0, 50.0, 0.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 1),
     );
 
     let child2 = add_reference_frame(
@@ -1059,7 +1028,6 @@ fn test_cst_scale_translation() {
         Some(child1),
         LayoutTransform::scale(2.0, 4.0, 1.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 2),
     );
 
     let child3 = add_reference_frame(
@@ -1067,7 +1035,6 @@ fn test_cst_scale_translation() {
         Some(child2),
         LayoutTransform::translation(200.0, -100.0, 0.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 3),
     );
 
     let child4 = add_reference_frame(
@@ -1075,7 +1042,6 @@ fn test_cst_scale_translation() {
         Some(child3),
         LayoutTransform::scale(3.0, 2.0, 1.0),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 4),
     );
 
     cst.update_tree(&SceneProperties::new());
@@ -1103,7 +1069,6 @@ fn test_cst_translation_rotate() {
         None,
         LayoutTransform::identity(),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 0),
     );
 
     let child1 = add_reference_frame(
@@ -1111,7 +1076,6 @@ fn test_cst_translation_rotate() {
         Some(root),
         LayoutTransform::rotation(0.0, 0.0, 1.0, Angle::degrees(-90.0)),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 1),
     );
 
     cst.update_tree(&SceneProperties::new());
@@ -1128,7 +1092,6 @@ fn test_is_ancestor1() {
         None,
         LayoutTransform::identity(),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 0),
     );
 
     let child1_0 = add_reference_frame(
@@ -1136,7 +1099,6 @@ fn test_is_ancestor1() {
         Some(root),
         LayoutTransform::identity(),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 1),
     );
 
     let child1_1 = add_reference_frame(
@@ -1144,7 +1106,6 @@ fn test_is_ancestor1() {
         Some(child1_0),
         LayoutTransform::identity(),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 2),
     );
 
     let child2 = add_reference_frame(
@@ -1152,7 +1113,6 @@ fn test_is_ancestor1() {
         Some(root),
         LayoutTransform::identity(),
         LayoutVector2D::zero(),
-        SpatialTreeItemKey::new(0, 3),
     );
 
     st.update_tree(&SceneProperties::new());
@@ -1194,7 +1154,6 @@ fn test_find_scroll_root_simple() {
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0)),
     );
 
     let scroll = st.add_scroll_frame(
@@ -1206,7 +1165,6 @@ fn test_find_scroll_root_simple() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
     );
 
     assert_eq!(st.find_scroll_root(scroll), scroll);
@@ -1227,7 +1185,6 @@ fn test_find_scroll_root_sub_scroll_frame() {
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0)),
     );
 
     let root_scroll = st.add_scroll_frame(
@@ -1239,7 +1196,6 @@ fn test_find_scroll_root_sub_scroll_frame() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
     );
 
     let sub_scroll = st.add_scroll_frame(
@@ -1251,7 +1207,6 @@ fn test_find_scroll_root_sub_scroll_frame() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2)),
     );
 
     assert_eq!(st.find_scroll_root(sub_scroll), root_scroll);
@@ -1272,7 +1227,6 @@ fn test_find_scroll_root_not_scrollable() {
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0)),
     );
 
     let root_scroll = st.add_scroll_frame(
@@ -1284,7 +1238,6 @@ fn test_find_scroll_root_not_scrollable() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
     );
 
     let sub_scroll = st.add_scroll_frame(
@@ -1296,7 +1249,6 @@ fn test_find_scroll_root_not_scrollable() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2)),
     );
 
     assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
@@ -1317,7 +1269,6 @@ fn test_find_scroll_root_too_small() {
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0)),
     );
 
     let root_scroll = st.add_scroll_frame(
@@ -1329,7 +1280,6 @@ fn test_find_scroll_root_too_small() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
     );
 
     let sub_scroll = st.add_scroll_frame(
@@ -1341,7 +1291,6 @@ fn test_find_scroll_root_too_small() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2)),
     );
 
     assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
@@ -1363,7 +1312,6 @@ fn test_find_scroll_root_perspective() {
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0)),
     );
 
     let root_scroll = st.add_scroll_frame(
@@ -1375,7 +1323,6 @@ fn test_find_scroll_root_perspective() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
     );
 
     let perspective = st.add_reference_frame(
@@ -1387,7 +1334,6 @@ fn test_find_scroll_root_perspective() {
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2)),
     );
 
     let sub_scroll = st.add_scroll_frame(
@@ -1399,7 +1345,6 @@ fn test_find_scroll_root_perspective() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3)),
     );
 
     assert_eq!(st.find_scroll_root(sub_scroll), root_scroll);
@@ -1421,7 +1366,6 @@ fn test_find_scroll_root_2d_scale() {
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0)),
     );
 
     let root_scroll = st.add_scroll_frame(
@@ -1433,7 +1377,6 @@ fn test_find_scroll_root_2d_scale() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
     );
 
     let scale = st.add_reference_frame(
@@ -1446,7 +1389,6 @@ fn test_find_scroll_root_2d_scale() {
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2)),
     );
 
     let sub_scroll = st.add_scroll_frame(
@@ -1458,7 +1400,6 @@ fn test_find_scroll_root_2d_scale() {
         ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3)),
     );
 
     assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);

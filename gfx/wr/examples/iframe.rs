@@ -72,7 +72,6 @@ impl Example for App {
                 is_2d_scale_translation: false,
                 should_snap: false,
             },
-            SpatialTreeItemKey::new(0, 0),
         );
 
         // And this is for the root pipeline

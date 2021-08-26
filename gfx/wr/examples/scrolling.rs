@@ -61,7 +61,6 @@ impl Example for App {
                 scrollbox,
                 ScrollSensitivity::ScriptAndInputEvents,
                 LayoutVector2D::zero(),
-                SpatialTreeItemKey::new(0, 0),
             );
             let space_and_clip1 = SpaceAndClipInfo {
                 spatial_id: space1,
@@ -98,7 +97,6 @@ impl Example for App {
                 (0, 100).to(200, 300),
                 ScrollSensitivity::ScriptAndInputEvents,
                 LayoutVector2D::zero(),
-                SpatialTreeItemKey::new(0, 1),
             );
             let space_and_clip2 = SpaceAndClipInfo {
                 spatial_id: space2,
@@ -130,8 +128,7 @@ impl Example for App {
                 SideOffsets2D::new(Some(10.0), None, Some(10.0), None),
                 StickyOffsetBounds::new(-40.0, 60.0),
                 StickyOffsetBounds::new(0.0, 0.0),
-                LayoutVector2D::new(0.0, 0.0),
-                SpatialTreeItemKey::new(0, 2),
+                LayoutVector2D::new(0.0, 0.0)
             );
 
             let info = CommonItemProperties::new(
