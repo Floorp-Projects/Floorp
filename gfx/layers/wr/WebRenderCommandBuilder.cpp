@@ -1836,10 +1836,22 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
             ScrollableLayerGuid::NULL_SCROLL_ID;
         bool transformShouldGetOwnLayer = false;
         if (deferred) {
+          // It's possible the transform's ASR is not only an ancestor of
+          // the item's ASR, but an ancestor of stopAtAsr. In such cases,
+          // don't use the transform at all at this level (it would be
+          // scrolled by stopAtAsr which is incorrect). The transform will
+          // instead be emitted as part of the ancestor WebRenderLayerScrollData
+          // node (the one with stopAtAsr as its item ASR), or one of its
+          // ancetors in turn.
+          if (ActiveScrolledRoot::IsProperAncestor(
+                  deferred->GetActiveScrolledRoot(), stopAtAsr)) {
+            deferred = nullptr;
+          }
+        }
+        if (deferred) {
           if (const auto* asr = deferred->GetActiveScrolledRoot()) {
             deferredId = asr->GetViewId();
           }
-
           if (deferred->GetActiveScrolledRoot() !=
               item->GetActiveScrolledRoot()) {
             transformShouldGetOwnLayer = true;
@@ -1884,7 +1896,8 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
           mLayerScrollData.emplace_back();
           mLayerScrollData.back().Initialize(
               mManager->GetScrollData(), item, descendants, stopAtAsr,
-              aSc.GetDeferredTransformMatrix(), deferredId);
+              deferred ? aSc.GetDeferredTransformMatrix() : Nothing(),
+              deferredId);
         }
       }
     }
