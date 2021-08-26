@@ -1313,9 +1313,7 @@ void gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(
   // xxx - should be carefully pruning the list of fonts, not rebuilding it from scratch
   fl->UpdateFontList();
 
-  // modify a preference that will trigger reflow everywhere
-  fl->ForceGlobalReflow();
-
+  gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::Yes);
   dom::ContentParent::NotifyUpdatedFonts(true);
 }
 

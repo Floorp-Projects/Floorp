@@ -50,7 +50,7 @@ void PostTraversalTask::Run() {
       nsPresContext* pc =
           static_cast<ServoStyleSet*>(mTarget)->GetPresContext();
       if (pc) {
-        pc->ForceReflowForFontInfoUpdate();
+        pc->ForceReflowForFontInfoUpdate(/* aNeedsReframe = */ false);
       }
       break;
   }

@@ -141,6 +141,7 @@ static const uint32_t kDefaultGlyphCacheSize = -1;
 #include "SoftwareVsyncSource.h"
 #include "nscore.h"  // for NS_FREE_PERMANENT_DATA
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "gfxVR.h"
 #include "VRManager.h"
@@ -2260,20 +2261,20 @@ void gfxPlatform::FlushFontAndWordCaches() {
 }
 
 /* static */
-void gfxPlatform::ForceGlobalReflow() {
+void gfxPlatform::ForceGlobalReflow(NeedsReframe aNeedsReframe) {
   MOZ_ASSERT(NS_IsMainThread());
+  const bool reframe = aNeedsReframe == NeedsReframe::Yes;
+  // Send a notification that will be observed by PresShells in this process
+  // only.
+  if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+    char16_t needsReframe[] = {char16_t(reframe), 0};
+    obs->NotifyObservers(nullptr, "font-info-updated", needsReframe);
+  }
   if (XRE_IsParentProcess()) {
-    // Modify a preference that will trigger reflow everywhere (in all
-    // content processes, as well as the parent).
-    static const char kPrefName[] = "font.internaluseonly.changed";
-    bool fontInternalChange = Preferences::GetBool(kPrefName, false);
-    Preferences::SetBool(kPrefName, !fontInternalChange);
-  } else {
-    // Send a notification that will be observed by PresShells in this
-    // process only.
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (obs) {
-      obs->NotifyObservers(nullptr, "font-info-updated", nullptr);
+    // Propagate the change to child processes.
+    for (auto* process :
+         dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
+      Unused << process->SendForceGlobalReflow(reframe);
     }
   }
 }

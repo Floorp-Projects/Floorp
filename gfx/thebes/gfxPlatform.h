@@ -626,7 +626,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    * something about platform settings changes that might have an effect
    * on layout, such as font rendering settings that influence metrics.
    */
-  static void ForceGlobalReflow();
+  enum class NeedsReframe : bool { No, Yes };
+  static void ForceGlobalReflow(NeedsReframe);
 
   static void FlushFontAndWordCaches();
 

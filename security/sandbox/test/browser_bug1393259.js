@@ -97,22 +97,16 @@ add_task(async function() {
         }
       }
 
-      // Pref "font.internaluseonly.changed" is updated when system
-      // fonts change. We use it to wait for changes to be detected
-      // in the browser.
-      let prefBranch = Services.prefs.getBranch("font.internaluseonly.");
-
-      // Returns a promise that resolves when the pref is changed
+      // Returns a promise that resolves when font info is changed.
       let getFontNotificationPromise = () =>
         new Promise(resolve => {
-          let prefObserver = {
-            QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-            observe() {
-              prefBranch.removeObserver("changed", prefObserver);
-              resolve();
-            },
-          };
-          prefBranch.addObserver("changed", prefObserver);
+          const kTopic = "font-info-updated";
+          function observe() {
+            Services.obs.removeObserver(observe, kTopic);
+            resolve();
+          }
+
+          Services.obs.addObserver(observe, kTopic);
         });
 
       let homeDir = Services.dirsvc.get("Home", Ci.nsIFile);

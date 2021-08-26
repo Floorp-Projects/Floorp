@@ -1114,7 +1114,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
  public:
   // Used by the PresShell to force a reflow when some aspect of font info
   // has been updated, potentially affecting font selection and layout.
-  void ForceReflowForFontInfoUpdate();
+  void ForceReflowForFontInfoUpdate(bool aNeedsReframe);
 
   /**
    * Checks for MozAfterPaint listeners on the document
