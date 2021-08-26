@@ -11,7 +11,10 @@ namespace mozilla::media {
 
 nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
   nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
-  MOZ_RELEASE_ASSERT(svc);
+  if (!svc) {
+    // We can fail to get the shutdown service if we're already shutting down.
+    return nullptr;
+  }
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier;
   nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
@@ -21,6 +24,12 @@ nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
     rv = svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
   }
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_RELEASE_ASSERT(barrier);
+  return barrier;
+}
+
+nsCOMPtr<nsIAsyncShutdownClient> MustGetShutdownBarrier() {
+  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
   MOZ_RELEASE_ASSERT(barrier);
   return barrier;
 }
