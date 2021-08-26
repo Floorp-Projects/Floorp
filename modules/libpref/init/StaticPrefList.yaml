@@ -6550,11 +6550,6 @@
   value: -1
   mirror: once
 
-- name: layers.omtp.release-capture-on-main-thread
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: layers.orientation.sync.timeout
   type: RelaxedAtomicUint32
   value: (uint32_t)0
