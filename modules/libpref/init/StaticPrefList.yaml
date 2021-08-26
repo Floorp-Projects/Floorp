@@ -6535,11 +6535,6 @@
   value: -1
   mirror: always
 
-- name: layers.omtp.capture-limit
-  type: uint32_t
-  value: 25 * 1024 * 1024
-  mirror: once
-
 - name: layers.omtp.paint-workers
   type: int32_t
   value: -1
