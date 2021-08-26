@@ -62,7 +62,8 @@ bool AudioWorkletGlobalScope::WrapGlobalObject(
 void AudioWorkletGlobalScope::RegisterProcessor(
     JSContext* aCx, const nsAString& aName,
     AudioWorkletProcessorConstructor& aProcessorCtor, ErrorResult& aRv) {
-  TRACE_COMMENT("RegisterProcessor %s", NS_ConvertUTF16toUTF8(aName).get());
+  TRACE_COMMENT("AudioWorkletGlobalScope::RegisterProcessor", "%s",
+                NS_ConvertUTF16toUTF8(aName).get());
 
   JS::Rooted<JSObject*> processorConstructor(aCx,
                                              aProcessorCtor.CallableOrNull());
@@ -286,7 +287,8 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
     NotNull<StructuredCloneHolder*> aSerializedOptions,
     UniqueMessagePortId& aPortIdentifier,
     JS::MutableHandle<JSObject*> aRetProcessor) {
-  TRACE_COMMENT("AudioWorkletProcessor ctor: %s", NS_ConvertUTF16toUTF8(aName).get());
+  TRACE_COMMENT("AudioWorkletProcessor::ConstructProcessor", "%s",
+                NS_ConvertUTF16toUTF8(aName).get());
   /**
    * See
    * https://webaudio.github.io/web-audio-api/#AudioWorkletProcessor-instantiation

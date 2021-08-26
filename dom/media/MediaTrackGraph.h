@@ -47,7 +47,7 @@ namespace mozilla {
 extern LazyLogModule gMediaTrackGraphLog;
 
 namespace dom {
-enum class AudioContextOperation;
+enum class AudioContextOperation : uint8_t;
 enum class AudioContextOperationFlags;
 enum class AudioContextState : uint8_t;
 }  // namespace dom

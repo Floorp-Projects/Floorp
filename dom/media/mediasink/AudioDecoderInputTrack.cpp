@@ -6,6 +6,7 @@
 
 #include "MediaData.h"
 #include "mozilla/ScopeExit.h"
+#include "Tracing.h"
 
 // Use abort() instead of exception in SoundTouch.
 #define ST_NO_EXCEPTION_HANDLING 1
@@ -238,6 +239,8 @@ void AudioDecoderInputTrack::SetVolumeImpl(float aVolume) {
     Message(AudioDecoderInputTrack* aTrack, float aVolume)
         : ControlMessage(aTrack), mTrack(aTrack), mVolume(aVolume) {}
     void Run() override {
+      TRACE_COMMENT("AudioDecoderInputTrack::SetVolume ControlMessage", "%f",
+                    mVolume);
       LOG_M("Apply volume=%f", mTrack.get(), mVolume);
       mTrack->mVolume = mVolume;
     }
@@ -268,6 +271,8 @@ void AudioDecoderInputTrack::SetPlaybackRateImpl(float aPlaybackRate) {
           mTrack(aTrack),
           mPlaybackRate(aPlaybackRate) {}
     void Run() override {
+      TRACE_COMMENT("AudioDecoderInputTrack::SetPlaybackRate ControlMessage",
+                    "%f", mPlaybackRate);
       LOG_M("Apply playback rate=%f", mTrack.get(), mPlaybackRate);
       mTrack->mPlaybackRate = mPlaybackRate;
       mTrack->SetTempoAndRateForTimeStretcher();
@@ -299,6 +304,8 @@ void AudioDecoderInputTrack::SetPreservesPitchImpl(bool aPreservesPitch) {
           mTrack(aTrack),
           mPreservesPitch(aPreservesPitch) {}
     void Run() override {
+      TRACE_COMMENT("AudioDecoderInputTrack::SetPreservesPitch", "%s",
+                    mPreservesPitch ? "true" : "false")
       LOG_M("Apply preserves pitch=%d", mTrack.get(), mPreservesPitch);
       mTrack->mPreservesPitch = mPreservesPitch;
       mTrack->SetTempoAndRateForTimeStretcher();

@@ -12,6 +12,7 @@
 #include "MediaTrackGraph.h"
 #include "MediaTrackGraphImpl.h"
 #include "MediaTrackListener.h"
+#include "Tracing.h"
 #include "VideoStreamTrack.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
@@ -238,6 +239,7 @@ already_AddRefed<Promise> DOMMediaStream::CountUnderlyingStreams(
     }
 
     void Run() override {
+      TRACE("DOMMediaStream::Counter")
       uint32_t streams =
           mGraph->mTracks.Length() + mGraph->mSuspendedTracks.Length();
       mGraph->DispatchToMainThreadStableState(NS_NewRunnableFunction(

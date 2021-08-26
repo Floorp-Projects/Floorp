@@ -979,7 +979,7 @@ nsTArray<RefPtr<mozilla::MediaTrack>> AudioContext::GetAllTracks() const {
 }
 
 already_AddRefed<Promise> AudioContext::Suspend(ErrorResult& aRv) {
-  TRACE();
+  TRACE("AudioContext::Suspend");
   RefPtr<Promise> promise = CreatePromise(aRv);
   if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
     return promise.forget();
@@ -1052,7 +1052,7 @@ void AudioContext::ResumeFromChrome() {
 }
 
 already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
-  TRACE();
+  TRACE("AudioContext::Resume");
   RefPtr<Promise> promise = CreatePromise(aRv);
   if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
     return promise.forget();
@@ -1188,7 +1188,7 @@ void AudioContext::ReportBlocked() {
 }
 
 already_AddRefed<Promise> AudioContext::Close(ErrorResult& aRv) {
-  TRACE();
+  TRACE("AudioContext::Close");
   RefPtr<Promise> promise = CreatePromise(aRv);
   if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
     return promise.forget();

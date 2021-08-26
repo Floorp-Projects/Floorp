@@ -188,6 +188,7 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
                 mRoutingMode(aRoutingMode) {}
 
           void Run() override {
+            TRACE("UpdateAECSettings");
             mInputProcessing->UpdateAECSettings(mEnable, mUseAecMobile, mLevel,
                                                 mRoutingMode);
           }
@@ -227,6 +228,7 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAGCSettings(
                 mMode(aMode) {}
 
           void Run() override {
+            TRACE("UpdateAGCSettings");
             mInputProcessing->UpdateAGCSettings(mEnable, mMode);
           }
 
@@ -258,7 +260,10 @@ void MediaEngineWebRTCMicrophoneSource::UpdateHPFSettings(bool aEnable) {
                 mInputProcessing(aInputProcessing),
                 mEnable(aEnable) {}
 
-          void Run() override { mInputProcessing->UpdateHPFSettings(mEnable); }
+          void Run() override {
+            TRACE("UpdateHPFSettings");
+            mInputProcessing->UpdateHPFSettings(mEnable);
+          }
 
          protected:
           RefPtr<AudioInputProcessing> mInputProcessing;
@@ -291,6 +296,7 @@ void MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
                 mLevel(aLevel) {}
 
           void Run() override {
+            TRACE("UpdateHPFSettings");
             mInputProcessing->UpdateNSSettings(mEnable, mLevel);
           }
 
@@ -326,6 +332,7 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAPMExtraOptions(
                 mDelayAgnostic(aDelayAgnostic) {}
 
           void Run() override {
+            TRACE("UpdateAPMExtraOptions");
             mInputProcessing->UpdateAPMExtraOptions(mExtendedFilter,
                                                     mDelayAgnostic);
           }
@@ -387,9 +394,16 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
                 mRequestedInputChannelCount(aRequestedInputChannelCount) {}
 
           void Run() override {
-            mInputProcessing->SetPassThrough(mTrack->GraphImpl(), mPassThrough);
-            mInputProcessing->SetRequestedInputChannelCount(
-                mTrack->GraphImpl(), mRequestedInputChannelCount);
+            {
+              TRACE("SetPassThrough")
+              mInputProcessing->SetPassThrough(mTrack->GraphImpl(),
+                                               mPassThrough);
+            }
+            {
+              TRACE("SetRequestedInputChannelCount");
+              mInputProcessing->SetRequestedInputChannelCount(
+                  mTrack->GraphImpl(), mRequestedInputChannelCount);
+            }
           }
 
          protected:
@@ -453,7 +467,10 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
           mInputProcessing(aAudioInputProcessing),
           mInputTrack(aTrack) {}
 
-    void Run() override { mInputProcessing->End(); }
+    void Run() override {
+      TRACE("mInputProcessing::End");
+      mInputProcessing->End();
+    }
 
    protected:
     const RefPtr<AudioInputProcessing> mInputProcessing;
@@ -525,8 +542,10 @@ class StartStopMessage : public ControlMessage {
 
   void Run() override {
     if (mAction == StartStopMessage::Start) {
+      TRACE("InputProcessing::Start")
       mInputProcessing->Start();
     } else if (mAction == StartStopMessage::Stop) {
+      TRACE("InputProcessing::Stop")
       mInputProcessing->Stop();
     } else {
       MOZ_CRASH("Invalid enum value");
@@ -1128,7 +1147,7 @@ void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
                                            const BufferInfo aInfo,
                                            uint32_t aAlreadyBuffered) {
   MOZ_ASSERT(aGraph->OnGraphThread());
-  TRACE();
+  TRACE("AudioInputProcessing::NotifyInputData");
 
   MOZ_ASSERT(mEnabled);
 
@@ -1201,6 +1220,7 @@ void AudioInputTrack::SetInputProcessing(
           mTrack(std::move(aTrack)),
           mProcessing(std::move(aProcessing)) {}
     void Run() override {
+      TRACE("AudioInputTrack::SetInputProcessingImpl");
       mTrack->SetInputProcessingImpl(std::move(mProcessing));
     }
   };
@@ -1228,7 +1248,7 @@ void AudioInputTrack::DestroyImpl() {
 
 void AudioInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                    uint32_t aFlags) {
-  TRACE_COMMENT("AudioInputTrack %p", this);
+  TRACE_COMMENT("AudioInputTrack::ProcessInput", "AudioInputTrack %p", this);
 
   // Check if there is a connected NativeInputTrack
   NativeInputTrack* source = nullptr;
