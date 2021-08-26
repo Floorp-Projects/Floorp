@@ -129,7 +129,7 @@ class nsParser final : public nsIParser,
    */
   virtual void SetDocumentCharset(NotNull<const Encoding*> aCharset,
                                   int32_t aSource,
-                                  bool aChannelHadCharset) override;
+                                  bool aForceAutoDetection) override;
 
   NotNull<const Encoding*> GetDocumentCharset(int32_t& aSource) {
     aSource = mCharsetSource;

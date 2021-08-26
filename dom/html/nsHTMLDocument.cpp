@@ -84,6 +84,7 @@
 #include "nsFocusManager.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Unused.h"
@@ -192,7 +193,10 @@ void nsHTMLDocument::TryReloadCharset(nsIContentViewer* aCv,
     if (kCharsetUninitialized != reloadEncodingSource) {
       aCv->ForgetReloadEncoding();
 
-      if (reloadEncodingSource <= aCharsetSource) return;
+      if (reloadEncodingSource <= aCharsetSource ||
+          !IsAsciiCompatible(aEncoding)) {
+        return;
+      }
 
       if (reloadEncoding && IsAsciiCompatible(reloadEncoding)) {
         aCharsetSource = reloadEncodingSource;
@@ -205,8 +209,15 @@ void nsHTMLDocument::TryReloadCharset(nsIContentViewer* aCv,
 void nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
                                           nsIDocShell* aDocShell,
                                           int32_t& aCharsetSource,
-                                          NotNull<const Encoding*>& aEncoding) {
-  if (aCharsetSource >= kCharsetFromXmlDeclarationUtf16) {
+                                          NotNull<const Encoding*>& aEncoding,
+                                          bool& aForceAutoDetection) {
+  auto resetForce = MakeScopeExit([&] {
+    if (aDocShell) {
+      nsDocShell::Cast(aDocShell)->ResetForcedAutodetection();
+    }
+  });
+
+  if (aCharsetSource >= kCharsetFromOtherComponent) {
     return;
   }
 
@@ -217,19 +228,18 @@ void nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
 
   if (aDocShell && nsDocShell::Cast(aDocShell)->GetForcedAutodetection()) {
     // This is the Character Encoding menu code path in Firefox
-    aEncoding = WINDOWS_1252_ENCODING;
-    aCharsetSource = kCharsetFromPendingUserForcedAutoDetection;
-    nsDocShell::Cast(aDocShell)->ResetForcedAutodetection();
+    aForceAutoDetection = true;
   }
 }
 
 void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
                                       int32_t& aCharsetSource,
-                                      NotNull<const Encoding*>& aEncoding) {
+                                      NotNull<const Encoding*>& aEncoding,
+                                      bool& aForceAutoDetection) {
   if (!aDocShell) {
     return;
   }
-  if (aCharsetSource >= kCharsetFromXmlDeclarationUtf16) {
+  if (aCharsetSource >= kCharsetFromOtherComponent) {
     return;
   }
 
@@ -241,8 +251,7 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
   if (!parentCharset) {
     return;
   }
-  if (kCharsetFromPendingUserForcedAutoDetection == parentSource ||
-      kCharsetFromInitialUserForcedAutoDetection == parentSource ||
+  if (kCharsetFromInitialUserForcedAutoDetection == parentSource ||
       kCharsetFromFinalUserForcedAutoDetection == parentSource) {
     if (WillIgnoreCharsetOverride() ||
         !IsAsciiCompatible(aEncoding) ||  // if channel said UTF-16
@@ -250,7 +259,8 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
       return;
     }
     aEncoding = WrapNotNull(parentCharset);
-    aCharsetSource = kCharsetFromPendingUserForcedAutoDetection;
+    aCharsetSource = kCharsetFromParentFrame;
+    aForceAutoDetection = true;
     return;
   }
 
@@ -421,7 +431,8 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #endif
 
   // These are the charset source and charset for our document
-  int32_t charsetSource;
+  bool forceAutoDetection = false;
+  int32_t charsetSource = kCharsetUninitialized;
   auto encoding = UTF_8_ENCODING;
 
   // For error reporting and referrer policy setting
@@ -430,20 +441,14 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     executor = static_cast<nsHtml5TreeOpExecutor*>(mParser->GetContentSink());
   }
 
-  bool channelHadCharset = false;
   if (forceUtf8) {
     charsetSource = kCharsetFromUtf8OnlyMime;
   } else if (!IsHTMLDocument() || !docShell) {  // no docshell for text/html XHR
     charsetSource =
         IsHTMLDocument() ? kCharsetFromFallback : kCharsetFromDocTypeDefault;
     TryChannelCharset(aChannel, charsetSource, encoding, executor);
-    channelHadCharset = (charsetSource == kCharsetFromChannel);
   } else {
     NS_ASSERTION(docShell, "Unexpected null value");
-
-    charsetSource = kCharsetUninitialized;
-    // Used for .in and .lk TLDs. .jp is handled in the parser.
-    encoding = WINDOWS_1252_ENCODING;
 
     // The following will try to get the character encoding from various
     // sources. Each Try* function will return early if the source is already
@@ -460,12 +465,12 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // interpretation as ASCII and the user can be lured to using the
     // charset menu.
     TryChannelCharset(aChannel, charsetSource, encoding, executor);
-    channelHadCharset = (charsetSource == kCharsetFromChannel);
 
-    TryUserForcedCharset(cv, docShell, charsetSource, encoding);
+    TryUserForcedCharset(cv, docShell, charsetSource, encoding,
+                         forceAutoDetection);
 
     TryReloadCharset(cv, charsetSource, encoding);  // For encoding reload
-    TryParentCharset(docShell, charsetSource, encoding);
+    TryParentCharset(docShell, charsetSource, encoding, forceAutoDetection);
   }
 
   SetDocumentCharacterSetSource(charsetSource);
@@ -479,7 +484,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
   printf(" charset = %s source %d\n", charset.get(), charsetSource);
 #endif
-  mParser->SetDocumentCharset(encoding, charsetSource, channelHadCharset);
+  mParser->SetDocumentCharset(encoding, charsetSource, forceAutoDetection);
   mParser->SetCommand(aCommand);
 
   if (!IsHTMLDocument()) {
