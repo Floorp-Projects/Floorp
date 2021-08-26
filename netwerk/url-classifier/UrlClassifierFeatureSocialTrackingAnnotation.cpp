@@ -40,7 +40,7 @@ StaticRefPtr<UrlClassifierFeatureSocialTrackingAnnotation>
 
 UrlClassifierFeatureSocialTrackingAnnotation::
     UrlClassifierFeatureSocialTrackingAnnotation()
-    : UrlClassifierFeatureBase(
+    : UrlClassifierFeatureAntiTrackingBase(
           nsLiteralCString(SOCIALTRACKING_ANNOTATION_FEATURE_NAME),
           nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_BLOCKLIST),
           nsLiteralCString(URLCLASSIFIER_SOCIALTRACKING_ANNOTATION_ENTITYLIST),

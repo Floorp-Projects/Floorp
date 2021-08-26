@@ -168,5 +168,15 @@ UrlClassifierFeatureBase::GetExceptionHostList(nsACString& aList) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+UrlClassifierFeatureAntiTrackingBase::GetExceptionHostList(nsACString& aList) {
+  if (!StaticPrefs::privacy_antitracking_enableWebcompat()) {
+    aList.Truncate();
+    return NS_OK;
+  }
+
+  return UrlClassifierFeatureBase::GetExceptionHostList(aList);
+}
+
 }  // namespace net
 }  // namespace mozilla

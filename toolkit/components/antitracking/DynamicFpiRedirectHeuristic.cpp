@@ -197,7 +197,8 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
 
   nsresult rv;
 
-  if (!StaticPrefs::
+  if (!StaticPrefs::privacy_antitracking_enableWebcompat() ||
+      !StaticPrefs::
           privacy_restrict3rdpartystorage_heuristic_recently_visited()) {
     return;
   }

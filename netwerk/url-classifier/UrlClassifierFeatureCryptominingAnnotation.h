@@ -15,7 +15,7 @@ namespace mozilla {
 namespace net {
 
 class UrlClassifierFeatureCryptominingAnnotation final
-    : public UrlClassifierFeatureBase {
+    : public UrlClassifierFeatureAntiTrackingBase {
  public:
   static const char* Name();
 

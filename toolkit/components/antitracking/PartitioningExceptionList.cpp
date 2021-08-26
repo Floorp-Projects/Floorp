@@ -59,6 +59,11 @@ NS_IMPL_ISUPPORTS(PartitioningExceptionList,
 
 bool PartitioningExceptionList::Check(const nsACString& aFirstPartyOrigin,
                                       const nsACString& aThirdPartyOrigin) {
+  if (!StaticPrefs::privacy_antitracking_enableWebcompat()) {
+    LOG(("Partition exception list disabled via pref"));
+    return false;
+  }
+
   if (aFirstPartyOrigin.IsEmpty() || aThirdPartyOrigin.IsEmpty()) {
     return false;
   }

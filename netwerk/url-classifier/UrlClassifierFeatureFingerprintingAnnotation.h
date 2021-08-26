@@ -15,7 +15,7 @@ namespace mozilla {
 namespace net {
 
 class UrlClassifierFeatureFingerprintingAnnotation final
-    : public UrlClassifierFeatureBase {
+    : public UrlClassifierFeatureAntiTrackingBase {
  public:
   static const char* Name();
 

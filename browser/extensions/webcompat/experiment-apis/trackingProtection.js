@@ -80,12 +80,16 @@ class Manager {
           } catch (_) {
             return;
           }
-          // if any allowlist unblocks the request entirely, we allow it
-          for (const allowList of this._allowLists.values()) {
-            if (allowList.allows(url, topHost)) {
-              this._unblockedChannelIds.add(channelId);
-              channel.allow();
-              return;
+          // If anti-tracking webcompat is disabled, we only permit replacing
+          // channels, not fully unblocking them.
+          if (Manager.ENABLE_WEBCOMPAT) {
+            // if any allowlist unblocks the request entirely, we allow it
+            for (const allowList of this._allowLists.values()) {
+              if (allowList.allows(url, topHost)) {
+                this._unblockedChannelIds.add(channelId);
+                channel.allow();
+                return;
+              }
             }
           }
           // otherwise, if any allowlist shims the request we say it's replaced
@@ -202,3 +206,10 @@ this.trackingProtection = class extends ExtensionAPI {
     };
   }
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  Manager,
+  "ENABLE_WEBCOMPAT",
+  "privacy.antitracking.enableWebcompat",
+  false
+);

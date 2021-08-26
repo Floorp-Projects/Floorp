@@ -73,6 +73,13 @@ class UrlClassifierFeatureBase : public nsIUrlClassifierFeature,
   nsCString mExceptionHosts;
 };
 
+class UrlClassifierFeatureAntiTrackingBase : public UrlClassifierFeatureBase {
+  using UrlClassifierFeatureBase::UrlClassifierFeatureBase;
+
+  NS_IMETHOD
+  GetExceptionHostList(nsACString& aList) override;
+};
+
 }  // namespace net
 }  // namespace mozilla
 
