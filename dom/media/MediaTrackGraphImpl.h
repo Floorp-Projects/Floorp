@@ -256,9 +256,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
   /**
    * Sets mShutdownBlocker and makes it block shutdown.
-   * Main thread only. Not idempotent.
+   * Main thread only. Not idempotent. Returns true if a blocker was added,
+   * false if this failed.
    */
-  void AddShutdownBlocker();
+  bool AddShutdownBlocker();
 
   /**
    * Removes mShutdownBlocker and unblocks shutdown.
