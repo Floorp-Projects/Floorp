@@ -784,10 +784,11 @@ class nsTextFrame : public nsIFrame {
 
   nsRect WebRenderBounds();
 
-  // Return pointer to an array of all frames in the continuation chain, or
-  // null if we're too short of memory. (This is only meant to be called on the
-  // first text frame in the chain; continuations will always return null.)
-  virtual nsTArray<nsTextFrame*>* GetContinuations();
+  // Find the continuation (which may be this frame itself) containing the
+  // given offset. Note that this may return null, if the offset is beyond the
+  // text covered by the continuation chain.
+  // (To be used only on the first textframe in the chain.)
+  nsTextFrame* FindContinuationForOffset(int32_t aOffset);
 
  protected:
   virtual ~nsTextFrame();
@@ -1009,6 +1010,10 @@ class nsTextFrame : public nsIFrame {
   void ClearFrameOffsetCache();
 
   void ClearMetrics(ReflowOutput& aMetrics);
+
+  // Return pointer to an array of all frames in the continuation chain, or
+  // null if we're too short of memory.
+  nsTArray<nsTextFrame*>* GetContinuations();
 
   // Clear any cached continuations array; this should be called whenever the
   // chain is modified.
