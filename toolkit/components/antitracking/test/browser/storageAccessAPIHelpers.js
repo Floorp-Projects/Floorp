@@ -10,6 +10,11 @@ async function noStorageAccessInitially() {
   ok(!hasAccess, "Doesn't yet have storage access");
 }
 
+async function stillNoStorageAccess() {
+  let hasAccess = await document.hasStorageAccess();
+  ok(!hasAccess, "Still doesn't have storage access");
+}
+
 async function callRequestStorageAccess(callback, expectFail) {
   let dwu = SpecialPowers.getDOMWindowUtils(window);
   let helper = dwu.setHandlingUserInput(true);
