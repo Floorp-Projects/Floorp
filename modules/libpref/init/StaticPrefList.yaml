@@ -1350,6 +1350,15 @@
   value: false
   mirror: always
 
+# Whether or not process selection for subframes will prefer re-using an
+# existing content process over creating a new one. Enabling this pref should
+# reduce the number of processes allocated for non-first-party domains if
+# dom.ipc.processCount.webIsolated > 1.
+- name: browser.tabs.remote.subframesPreferUsed
+  type: bool
+  value: true
+  mirror: always
+
 # When this pref is enabled, opaque response is only allowed to enter the
 # content process if it's a response for media (audio, image, video), CSS, or
 # JavaScript.
