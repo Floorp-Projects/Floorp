@@ -33,8 +33,7 @@ namespace js {
 
 class PropertyResult;
 
-// These are equal to JSFunction::class_ / js::FunctionExtended::class_ for use
-// where you don't want include JSFunction.h.
+// These are equal to js::FunctionClass / js::ExtendedFunctionClass.
 extern JS_PUBLIC_DATA const JSClass* const FunctionClassPtr;
 extern JS_PUBLIC_DATA const JSClass* const FunctionExtendedClassPtr;
 
