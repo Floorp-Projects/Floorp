@@ -29,7 +29,7 @@ fun FocusTheme(
 
 @Composable
 private fun darkColorPalette(): Colors = darkColors(
-    background = colorResource(R.color.photonInk80),
+    background = colorResource(R.color.colorPrimary),
     onBackground = Color.White
 )
 

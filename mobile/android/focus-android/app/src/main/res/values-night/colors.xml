@@ -42,10 +42,10 @@
     <color name="trackingProtectionSheetBackground" tools:ignore="MissingDefaultResource">#1D1133</color>
     <color name="primaryTextColor" tools:ignore="MissingDefaultResource">#FBFBFE</color>
 
-    <color name="colorPrimary">#1D1133</color>
+    <color name="colorPrimary">#271948</color>
     <color name="colorSecondary">#342F6D</color>
     <color name="menuBackground">@color/colorSecondary</color>
-    <color name="toolbarBackground">@color/colorPrimary</color>
+    <color name="toolbarUrlBackground">#1D1133</color>
     <color name="headerGradientStart">#2B2154</color>
     <color name="headerGradientMiddle">#281D4C</color>
     <color name="headerGradientEnd">#2A2051</color>
@@ -62,4 +62,7 @@
     <color name="tip_text_color" tools:ignore="MissingDefaultResource">#BFBFC9</color>
     <color name="tip_deeplink_color" tools:ignore="MissingDefaultResource">#cf3e8c</color>
 
+
+    <!-- Toolbar -->
+    <color name="toolbar_color" tools:ignore="MissingDefaultResource">#271948</color>
 </resources>
