@@ -4,6 +4,7 @@
 
 use api::{CompositeOperator, FilterPrimitive, FilterPrimitiveInput, FilterPrimitiveKind};
 use api::{LineStyle, LineOrientation, ClipMode, MixBlendMode, ColorF, ColorSpace};
+use api::MAX_RENDER_TASK_SIZE;
 use api::units::*;
 use crate::batch::BatchFilter;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
@@ -27,7 +28,6 @@ use crate::render_task_cache::{RenderTaskCacheEntryHandle, RenderTaskCacheKey, R
 use smallvec::SmallVec;
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 8;
-pub const MAX_RENDER_TASK_SIZE: i32 = 16384;
 pub const MAX_BLUR_STD_DEVIATION: f32 = 4.0;
 pub const MIN_DOWNSCALING_RT_SIZE: i32 = 8;
 
