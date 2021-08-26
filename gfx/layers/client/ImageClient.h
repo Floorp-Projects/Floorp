@@ -118,24 +118,6 @@ class ImageClientSingle : public ImageClient {
   nsTArray<Buffer> mBuffers;
 };
 
-/**
- * Image class to be used for async image uploads using the image bridge
- * protocol.
- * We store the ImageBridge id in the TextureClientIdentifier.
- */
-class ImageClientBridge : public ImageClient {
- public:
-  ImageClientBridge(CompositableForwarder* aFwd, TextureFlags aFlags);
-
-  bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) override;
-  bool Connect(ImageContainer* aImageContainer) override { return false; }
-
-  TextureInfo GetTextureInfo() const override { return TextureInfo(mType); }
-
- protected:
-  CompositableHandle mAsyncContainerHandle;
-};
-
 }  // namespace layers
 }  // namespace mozilla
 
