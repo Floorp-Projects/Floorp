@@ -8,29 +8,31 @@
 
 #include "mozilla/ReflowInput.h"
 
+#include <algorithm>
+
+#include "CounterStyleManager.h"
 #include "LayoutLogging.h"
-#include "nsStyleConsts.h"
-#include "nsCSSAnonBoxes.h"
-#include "nsIFrame.h"
-#include "nsIContent.h"
-#include "nsGkAtoms.h"
-#include "nsPresContext.h"
-#include "nsFontMetrics.h"
+#include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/SVGUtils.h"
 #include "nsBlockFrame.h"
-#include "nsLineBox.h"
+#include "nsCSSAnonBoxes.h"
+#include "nsFlexContainerFrame.h"
+#include "nsFontInflationData.h"
+#include "nsFontMetrics.h"
+#include "nsGkAtoms.h"
+#include "nsGridContainerFrame.h"
+#include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsImageFrame.h"
-#include "nsTableFrame.h"
-#include "nsTableCellFrame.h"
 #include "nsIPercentBSizeObserver.h"
 #include "nsLayoutUtils.h"
-#include "nsFontInflationData.h"
+#include "nsLineBox.h"
+#include "nsPresContext.h"
+#include "nsStyleConsts.h"
+#include "nsTableCellFrame.h"
+#include "nsTableFrame.h"
 #include "StickyScrollContainer.h"
-#include "nsIFrameInlines.h"
-#include "CounterStyleManager.h"
-#include <algorithm>
-#include "mozilla/SVGUtils.h"
-#include "mozilla/dom/HTMLInputElement.h"
-#include "nsGridContainerFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -668,6 +670,16 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
                           mStylePosition->mOffset.GetBStart(wm).HasPercent() ||
                           !mStylePosition->mOffset.GetBEnd(wm).IsAuto() ||
                           mFrame->IsXULBoxFrame();
+
+  // If mFrame is a flex item, and mFrame's block axis is the flex container's
+  // main axis (e.g. in a column-oriented flex container with same
+  // writing-mode), then its block-size depends on its CB size, if its
+  // flex-basis has a percentage.
+  if (mFrame->IsFlexItem() &&
+      !nsFlexContainerFrame::IsItemInlineAxisMainAxis(mFrame)) {
+    const auto& flexBasis = mStylePosition->mFlexBasis;
+    dependsOnCBBSize |= (flexBasis.IsSize() && flexBasis.AsSize().HasPercent());
+  }
 
   if (mStyleText->mLineHeight.IsMozBlockHeight()) {
     // line-height depends on block bsize
