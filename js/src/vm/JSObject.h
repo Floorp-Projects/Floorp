@@ -689,12 +689,6 @@ struct JSObject_Slots4 : JSObject {
   void* data[2];
   js::Value fslots[4];
 };
-struct JSObject_Slots6 : JSObject {
-  // Only used for extended functions which are required to have exactly six
-  // fixed slots due to JIT assumptions.
-  void* data[2];
-  js::Value fslots[6];
-};
 struct JSObject_Slots8 : JSObject {
   void* data[2];
   js::Value fslots[8];

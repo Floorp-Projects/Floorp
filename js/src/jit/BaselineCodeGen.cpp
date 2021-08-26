@@ -1140,8 +1140,7 @@ void BaselineCompilerCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   masm.store32(Imm32(0), frame.addressOfFlags());
   if (handler.function()) {
     masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), scratch);
-    masm.unboxObject(Address(scratch, JSFunction::offsetOfEnvironment()),
-                     scratch);
+    masm.loadPtr(Address(scratch, JSFunction::offsetOfEnvironment()), scratch);
     masm.storePtr(scratch, frame.addressOfEnvironmentChain());
   } else {
     masm.storePtr(nonFunctionEnv, frame.addressOfEnvironmentChain());
@@ -1188,11 +1187,10 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   {
     // CalleeToken_Function or CalleeToken_FunctionConstructing.
     masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
-    masm.unboxObject(Address(scratch1, JSFunction::offsetOfEnvironment()),
-                     scratch2);
+    masm.loadPtr(Address(scratch1, JSFunction::offsetOfEnvironment()),
+                 scratch2);
     masm.storePtr(scratch2, frame.addressOfEnvironmentChain());
-    masm.loadPrivate(Address(scratch1, JSFunction::offsetOfJitInfoOrScript()),
-                     scratch1);
+    masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
     masm.jump(&done);
   }
   masm.bind(&notFunction);
@@ -4240,8 +4238,7 @@ void BaselineCompilerCodeGen::loadNumFormalArguments(Register dest) {
 template <>
 void BaselineInterpreterCodeGen::loadNumFormalArguments(Register dest) {
   masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), dest);
-  masm.load32(Address(dest, JSFunction::offsetOfFlagsAndArgCount()), dest);
-  masm.rshift32(Imm32(JSFunction::ArgCountShift), dest);
+  masm.load16ZeroExtend(Address(dest, JSFunction::offsetOfNargs()), dest);
 }
 
 template <typename Handler>
@@ -5550,8 +5547,8 @@ bool BaselineCodeGen<Handler>::emit_SuperFun() {
 
 #ifdef DEBUG
   Label classCheckDone;
-  masm.branchTestObjIsFunction(Assembler::Equal, callee, scratch, callee,
-                               &classCheckDone);
+  masm.branchTestObjClass(Assembler::Equal, callee, &JSFunction::class_,
+                          scratch, callee, &classCheckDone);
   masm.assumeUnreachable("Unexpected non-JSFunction callee in JSOp::SuperFun");
   masm.bind(&classCheckDone);
 #endif
@@ -5896,8 +5893,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   // script does not have a JitScript.
   Label interpret;
   Register scratch1 = regs.takeAny();
-  masm.loadPrivate(Address(callee, JSFunction::offsetOfJitInfoOrScript()),
-                   scratch1);
+  masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
   masm.branchIfScriptHasNoJitScript(scratch1, &interpret);
 
 #ifdef JS_TRACE_LOGGING
@@ -5916,9 +5912,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   // Push |undefined| for all formals.
   Register scratch2 = regs.takeAny();
   Label loop, loopDone;
-  masm.load32(Address(callee, JSFunction::offsetOfFlagsAndArgCount()),
-              scratch2);
-  masm.rshift32(Imm32(JSFunction::ArgCountShift), scratch2);
+  masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch2);
 
   static_assert(sizeof(Value) == 8);
   static_assert(JitStackAlignment == 16 || JitStackAlignment == 8);
@@ -6081,8 +6075,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   // Load script in scratch1.
   masm.unboxObject(
       Address(genObj, AbstractGeneratorObject::offsetOfCalleeSlot()), scratch1);
-  masm.loadPrivate(Address(scratch1, JSFunction::offsetOfJitInfoOrScript()),
-                   scratch1);
+  masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
 
   // Load resume index in scratch2 and mark generator as running.
   Address resumeIndexSlot(genObj,
