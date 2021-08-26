@@ -18,7 +18,6 @@
 #include "mozilla/layers/LayersTypes.h"        // for MOZ_LAYERS_LOG
 #include "mozilla/layers/TextureHost.h"        // for TextureHost
 #include "mozilla/layers/TextureHostOGL.h"     // for TextureHostOGL
-#include "mozilla/layers/TiledContentHost.h"
 #include "mozilla/mozalloc.h"  // for operator delete
 #include "mozilla/Unused.h"
 #include "nsDebug.h"   // for NS_WARNING, NS_ASSERTION
@@ -86,47 +85,7 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
       return false;
     }
     case CompositableOperationDetail::TOpUseTiledLayerBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] Paint TiledLayerBuffer"));
-      const OpUseTiledLayerBuffer& op = aDetail.get_OpUseTiledLayerBuffer();
-      TiledContentHost* tiledHost = aCompositable->AsTiledContentHost();
-
-      NS_ASSERTION(tiledHost, "The compositable is not tiled");
-
-      const SurfaceDescriptorTiles& tileDesc = op.tileLayerDescriptor();
-
-      bool success = tiledHost->UseTiledLayerBuffer(this, tileDesc);
-
-      const nsTArray<TileDescriptor>& tileDescriptors = tileDesc.tiles();
-      for (size_t i = 0; i < tileDescriptors.Length(); i++) {
-        const TileDescriptor& tileDesc = tileDescriptors[i];
-        if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {
-          continue;
-        }
-        const TexturedTileDescriptor& texturedDesc =
-            tileDesc.get_TexturedTileDescriptor();
-        RefPtr<TextureHost> texture =
-            TextureHost::AsTextureHost(texturedDesc.textureParent());
-        if (texture) {
-          texture->SetLastFwdTransactionId(mFwdTransactionId);
-          // Make sure that each texture was handled by the compositable
-          // because the recycling logic depends on it.
-          MOZ_ASSERT(texture->NumCompositableRefs() > 0);
-        }
-        if (texturedDesc.textureOnWhiteParent().isSome()) {
-          texture = TextureHost::AsTextureHost(
-              texturedDesc.textureOnWhiteParent().ref());
-          if (texture) {
-            texture->SetLastFwdTransactionId(mFwdTransactionId);
-            // Make sure that each texture was handled by the compositable
-            // because the recycling logic depends on it.
-            MOZ_ASSERT(texture->NumCompositableRefs() > 0);
-          }
-        }
-      }
-      if (!success) {
-        return false;
-      }
-      break;
+      return false;
     }
     case CompositableOperationDetail::TOpRemoveTexture: {
       const OpRemoveTexture& op = aDetail.get_OpRemoveTexture();
