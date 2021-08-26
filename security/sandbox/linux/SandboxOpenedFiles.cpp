@@ -24,8 +24,8 @@ SandboxOpenedFile::SandboxOpenedFile(SandboxOpenedFile&& aMoved)
       mDup(aMoved.mDup),
       mExpectError(aMoved.mExpectError) {}
 
-SandboxOpenedFile::SandboxOpenedFile(const char* aPath, bool aDup)
-    : mPath(aPath), mDup(aDup), mExpectError(false) {
+SandboxOpenedFile::SandboxOpenedFile(const char* aPath, Dup aDup)
+    : mPath(aPath), mDup(aDup == Dup::YES), mExpectError(false) {
   MOZ_ASSERT(aPath[0] == '/', "path should be absolute");
 
   int fd = open(aPath, O_RDONLY | O_CLOEXEC);
@@ -34,6 +34,9 @@ SandboxOpenedFile::SandboxOpenedFile(const char* aPath, bool aDup)
   }
   mMaybeFd = fd;
 }
+
+SandboxOpenedFile::SandboxOpenedFile(const char* aPath, Error)
+    : mPath(aPath), mMaybeFd(-1), mDup(false), mExpectError(true) {}
 
 int SandboxOpenedFile::GetDesc() const {
   int fd;
