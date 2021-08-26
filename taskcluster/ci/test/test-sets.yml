@@ -231,9 +231,6 @@ windows-ccov-tests:
     # so we have this set that has it and which runs on ccov builds.
     - jittest
 
-windows10-tests:
-    - mochitest-webgl1-core
-
 windows10-2004-tests:
     - cppunit
     - crashtest
@@ -252,6 +249,7 @@ windows10-2004-tests:
     - mochitest-plain-gpu
     - mochitest-remote
     - mochitest-webgpu
+    - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
