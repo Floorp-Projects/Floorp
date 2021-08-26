@@ -146,6 +146,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
     mProcessor.reset();
   }
 
+  nsCString mProcessorName;
   RefPtr<AudioNodeTrack> mDestination;
   nsTArray<uint32_t> mOutputChannelCount;
   nsTArray<NamedAudioParamTimeline> mParamTimelines;
@@ -264,6 +265,7 @@ void WorkletNodeEngine::ConstructProcessor(
     SendProcessorError(aTrack, nullptr);
     return;
   }
+  mProcessorName = NS_ConvertUTF16toUTF8(aName);
   JSContext* cx = api.cx();
   mProcessor.init(cx);
   if (!global->ConstructProcessor(cx, aName, aSerializedOptions,
@@ -419,7 +421,7 @@ static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
 // do not run until after ProcessBlocksOnPorts() has returned.
 bool WorkletNodeEngine::CallProcess(AudioNodeTrack* aTrack, JSContext* aCx,
                                     JS::Handle<JS::Value> aCallable) {
-  TRACE("AudioWorkletNodeEngine::CallProcess");
+  TRACE_COMMENT("AudioWorkletNodeEngine::CallProcess", mProcessorName.get());
 
   JS::RootedVector<JS::Value> argv(aCx);
   if (NS_WARN_IF(!argv.resize(3))) {
@@ -656,7 +658,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     const GlobalObject& aGlobal, AudioContext& aAudioContext,
     const nsAString& aName, const AudioWorkletNodeOptions& aOptions,
     ErrorResult& aRv) {
-  TRACE_COMMENT("AudioWorkletNode::Constructor", "%s", NS_ConvertUTF16toUTF8(aName).get());
+  TRACE_COMMENT("AudioWorkletNode::Constructor", "%s",
+                NS_ConvertUTF16toUTF8(aName).get());
   /**
    * 1. If nodeName does not exist as a key in the BaseAudioContext’s node
    *    name to parameter descriptor map, throw a InvalidStateError exception
