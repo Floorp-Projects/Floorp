@@ -30,8 +30,6 @@ const TEST_URI = `
   </div>
 `;
 
-ignoreGetGridsPromiseRejections();
-
 add_task(async function() {
   await pushPref("devtools.gridinspector.maxHighlighters", 3);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
