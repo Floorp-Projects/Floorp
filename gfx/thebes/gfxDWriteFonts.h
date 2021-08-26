@@ -6,6 +6,7 @@
 #ifndef GFX_WINDOWSDWRITEFONTS_H
 #define GFX_WINDOWSDWRITEFONTS_H
 
+#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 #include <dwrite_1.h>
@@ -84,6 +85,8 @@ class gfxDWriteFont final : public gfxFont {
   gfxFloat MeasureGlyphWidth(uint16_t aGlyph);
 
   DWRITE_MEASURING_MODE GetMeasuringMode() const;
+
+  static mozilla::Atomic<bool> sForceGDIClassicEnabled;
   bool GetForceGDIClassic() const;
 
   RefPtr<IDWriteFontFace> mFontFace;

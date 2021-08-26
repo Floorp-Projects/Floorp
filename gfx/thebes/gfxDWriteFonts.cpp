@@ -135,9 +135,22 @@ void gfxDWriteFont::SystemTextQualityChanged() {
   gfxPlatform::ForceGlobalReflow();
 }
 
+mozilla::Atomic<bool> gfxDWriteFont::sForceGDIClassicEnabled{true};
+
 /* static */
 void gfxDWriteFont::UpdateClearTypeVars() {
-  MOZ_ASSERT(XRE_IsParentProcess());
+  // We don't force GDI classic if the cleartype rendering mode pref is set to
+  // something valid.
+  int32_t renderingModePref =
+      Preferences::GetInt(GFX_CLEARTYPE_PARAMS_MODE, -1);
+  if (renderingModePref < 0 || renderingModePref > 5) {
+    renderingModePref = -1;
+  }
+  sForceGDIClassicEnabled = (renderingModePref == -1);
+
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
 
   if (!Factory::GetDWriteFactory()) {
     return;
@@ -207,9 +220,9 @@ void gfxDWriteFont::UpdateClearTypeVars() {
       pixelGeometry = prefInt;
     }
 
-    prefInt = Preferences::GetInt(GFX_CLEARTYPE_PARAMS_MODE, -1);
-    if (prefInt >= 0 && prefInt <= 5) {
-      renderingMode = prefInt;
+    // renderingModePref is retrieved and validated above.
+    if (renderingModePref != -1) {
+      renderingMode = renderingModePref;
     }
   }
 
@@ -232,6 +245,13 @@ void gfxDWriteFont::UpdateClearTypeVars() {
   if (gfxVars::SystemTextRenderingMode() != renderingMode) {
     gfxVars::SetSystemTextRenderingMode(renderingMode);
   }
+
+  // Set cairo dwrite params in the parent process where it might still be
+  // needed for printing. We use the validated pref int directly for rendering
+  // mode, because a negative (i.e. not set) rendering mode is also used for
+  // deciding on forcing GDI in cairo.
+  cairo_dwrite_set_cleartype_params(gamma, enhancedContrast, clearTypeLevel,
+                                    pixelGeometry, renderingModePref);
 }
 
 UniquePtr<gfxFont> gfxDWriteFont::CopyWithAntialiasOption(
@@ -626,9 +646,9 @@ int32_t gfxDWriteFont::GetGlyphWidth(uint16_t aGID) {
 }
 
 bool gfxDWriteFont::GetForceGDIClassic() const {
-  return static_cast<gfxDWriteFontEntry*>(mFontEntry.get())
+  return sForceGDIClassicEnabled &&
+         static_cast<gfxDWriteFontEntry*>(mFontEntry.get())
              ->GetForceGDIClassic() &&
-         cairo_dwrite_get_cleartype_rendering_mode() < 0 &&
          GetAdjustedSize() <= gfxDWriteFontList::PlatformFontList()
                                   ->GetForceGDIClassicMaxFontSize();
 }
