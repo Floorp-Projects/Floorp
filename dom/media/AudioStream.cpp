@@ -638,6 +638,8 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     mAudioClock.UpdateFrameHistory(aFrames - writer.Available(),
                                    writer.Available());
     if (writer.Available() > 0) {
+      TRACE_COMMENT("AudioStream::DataCallback", "Underrun: %d frames missing",
+                    writer.Available());
       LOGW("lost %d frames", writer.Available());
       writer.WriteZeros(writer.Available());
     }
