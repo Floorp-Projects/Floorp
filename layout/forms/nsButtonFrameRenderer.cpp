@@ -22,10 +22,6 @@
 #include "gfxUtils.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 
-#define ACTIVE "active"
-#define HOVER "hover"
-#define FOCUS "focus"
-
 using namespace mozilla;
 using namespace mozilla::image;
 using namespace mozilla::layers;
