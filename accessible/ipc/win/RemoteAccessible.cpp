@@ -160,7 +160,11 @@ void RemoteAccessible::Value(nsString& aValue) const {
   aValue = (wchar_t*)resultWrap;
 }
 
-double RemoteAccessible::Step() {
+double RemoteAccessible::Step() const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::Step();
+  }
+
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
     return 0;
@@ -394,7 +398,11 @@ nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
   return proxies;
 }
 
-double RemoteAccessible::CurValue() {
+double RemoteAccessible::CurValue() const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::CurValue();
+  }
+
   RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
   if (!acc) {
     return UnspecifiedNaN<double>();
@@ -423,7 +431,11 @@ bool RemoteAccessible::SetCurValue(double aValue) {
   return SUCCEEDED(hr);
 }
 
-double RemoteAccessible::MinValue() {
+double RemoteAccessible::MinValue() const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::MinValue();
+  }
+
   RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
   if (!acc) {
     return UnspecifiedNaN<double>();
@@ -438,7 +450,11 @@ double RemoteAccessible::MinValue() {
   return minimumValue.dblVal;
 }
 
-double RemoteAccessible::MaxValue() {
+double RemoteAccessible::MaxValue() const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::MaxValue();
+  }
+
   RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
   if (!acc) {
     return UnspecifiedNaN<double>();

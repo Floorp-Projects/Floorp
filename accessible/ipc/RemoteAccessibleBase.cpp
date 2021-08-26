@@ -175,6 +175,42 @@ ENameValueFlag RemoteAccessibleBase<Derived>::Name(nsString& aName) const {
   return eNameOK;
 }
 
+template <class Derived>
+double RemoteAccessibleBase<Derived>::CurValue() const {
+  if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
+    return *value;
+  }
+
+  return UnspecifiedNaN<double>();
+}
+
+template <class Derived>
+double RemoteAccessibleBase<Derived>::MinValue() const {
+  if (auto min = mCachedFields->GetAttribute<double>(nsGkAtoms::min)) {
+    return *min;
+  }
+
+  return UnspecifiedNaN<double>();
+}
+
+template <class Derived>
+double RemoteAccessibleBase<Derived>::MaxValue() const {
+  if (auto max = mCachedFields->GetAttribute<double>(nsGkAtoms::max)) {
+    return *max;
+  }
+
+  return UnspecifiedNaN<double>();
+}
+
+template <class Derived>
+double RemoteAccessibleBase<Derived>::Step() const {
+  if (auto step = mCachedFields->GetAttribute<double>(nsGkAtoms::step)) {
+    return *step;
+  }
+
+  return UnspecifiedNaN<double>();
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y

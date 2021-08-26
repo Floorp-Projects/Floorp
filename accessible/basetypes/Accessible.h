@@ -115,6 +115,11 @@ class Accessible {
    */
   virtual ENameValueFlag Name(nsString& aName) const = 0;
 
+  virtual double CurValue() const = 0;
+  virtual double MinValue() const = 0;
+  virtual double MaxValue() const = 0;
+  virtual double Step() const = 0;
+
   // Type "is" methods
 
   bool IsDoc() const { return HasGenericType(eDocument); }

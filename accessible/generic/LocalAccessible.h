@@ -702,10 +702,10 @@ class LocalAccessible : public nsISupports, public Accessible {
   //////////////////////////////////////////////////////////////////////////////
   // Value (numeric value interface)
 
-  virtual double MaxValue() const;
-  virtual double MinValue() const;
-  virtual double CurValue() const;
-  virtual double Step() const;
+  virtual double MaxValue() const override;
+  virtual double MinValue() const override;
+  virtual double CurValue() const override;
+  virtual double Step() const override;
   virtual bool SetCurValue(double aValue);
 
   //////////////////////////////////////////////////////////////////////////////
