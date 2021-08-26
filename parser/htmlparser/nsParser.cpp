@@ -256,7 +256,7 @@ nsParser::SetCommand(eParserCommands aParserCommand) {
  */
 void nsParser::SetDocumentCharset(NotNull<const Encoding*> aCharset,
                                   int32_t aCharsetSource,
-                                  bool aForceAutoDetection) {
+                                  bool aChannelHadCharset) {
   mCharset = aCharset;
   mCharsetSource = aCharsetSource;
   if (mParserContext && mParserContext->mScanner) {
