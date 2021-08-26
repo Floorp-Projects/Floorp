@@ -130,7 +130,6 @@ class TextureSource;
 class DataTextureSource;
 class CompositingRenderTarget;
 class CompositorBridgeParent;
-class LayerManagerComposite;
 class NativeLayer;
 class CompositorOGL;
 class CompositorD3D11;

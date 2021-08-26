@@ -38,8 +38,6 @@ class LayerScope {
   static void DrawEnd(gl::GLContext* aGLContext,
                       const EffectChain& aEffectChain, int aWidth, int aHeight);
 
-  static void SendLayer(LayerComposite* aLayer, int aWidth, int aHeight);
-  static void SendLayerDump(UniquePtr<layerscope::Packet> aPacket);
   static bool CheckSendable();
   static void CleanLayer();
   static void SetHWComposed();

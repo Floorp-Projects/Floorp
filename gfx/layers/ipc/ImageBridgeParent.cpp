@@ -19,7 +19,6 @@
 #include "mozilla/media/MediaSystemResourceManagerParent.h"  // for MediaSystemResourceManagerParent
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/CompositableTransactionParent.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply
 #include "mozilla/layers/PImageBridgeParent.h"
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
@@ -209,13 +208,6 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
     if (dropped) {
       Unused << SendReportFramesDropped(edit.compositable(), dropped);
     }
-  }
-
-  if (!IsSameProcess()) {
-    // Ensure that any pending operations involving back and front
-    // buffers have completed, so that neither process stomps on the
-    // other's buffer contents.
-    LayerManagerComposite::PlatformSyncBeforeReplyUpdate();
   }
 
   return IPC_OK();

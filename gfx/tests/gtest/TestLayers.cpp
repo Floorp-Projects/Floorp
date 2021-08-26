@@ -232,10 +232,6 @@ already_AddRefed<Layer> CreateLayerTree(const char* aLayerTreeDescription,
   if (rootLayer) {
     rootLayer->ComputeEffectiveTransforms(Matrix4x4());
     manager->SetRoot(rootLayer);
-    if (rootLayer->AsHostLayer()) {
-      // Only perform this for LayerManagerComposite
-      CompositorBridgeParent::SetShadowProperties(rootLayer);
-    }
   }
   return rootLayer.forget();
 }

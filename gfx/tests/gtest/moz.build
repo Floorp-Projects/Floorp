@@ -36,7 +36,6 @@ if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
 
 if CONFIG["OS_TARGET"] != "Android":
     UNIFIED_SOURCES += [
-        "TestCompositor.cpp",
         "TestRect.cpp",
         "TestTextureCompatibility.cpp",
     ]

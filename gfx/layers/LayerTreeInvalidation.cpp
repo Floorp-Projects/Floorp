@@ -25,7 +25,6 @@
 #include "nsTArray.h"              // for AutoTArray, nsTArray_Impl
 #include "mozilla/Poison.h"
 #include "mozilla/layers/ImageHost.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "TreeTraversal.h"  // for ForEachNode
 
 // LayerTreeInvalidation debugging
@@ -346,13 +345,6 @@ struct LayerPropertiesBase : public LayerProperties {
   virtual bool ComputeChangeInternal(const char* aPrefix,
                                      nsIntRegion& aOutRegion,
                                      NotifySubDocInvalidationFunc aCallback) {
-    if (mLayer->AsHostLayer() &&
-        !mLayer->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(
-            mVisibleRegion)) {
-      IntRect result = NewTransformedBoundsForLeaf();
-      result = result.Union(OldTransformedBoundsForLeaf());
-      aOutRegion = result;
-    }
     return true;
   }
 
@@ -621,13 +613,7 @@ struct ColorLayerProperties : public LayerPropertiesBase {
   IntRect mBounds;
 };
 
-static ImageHost* GetImageHost(Layer* aLayer) {
-  HostLayer* compositor = aLayer->AsHostLayer();
-  if (compositor) {
-    return static_cast<ImageHost*>(compositor->GetCompositableHost());
-  }
-  return nullptr;
-}
+static ImageHost* GetImageHost(Layer* aLayer) { return nullptr; }
 
 struct ImageLayerProperties : public LayerPropertiesBase {
   explicit ImageLayerProperties(ImageLayer* aImage, bool aIsMask)

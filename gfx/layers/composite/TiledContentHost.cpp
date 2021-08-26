@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TiledContentHost.h"
-#include "PaintedLayerComposite.h"      // for PaintedLayerComposite
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -137,43 +136,7 @@ void TiledContentHost::Detach(Layer* aLayer,
 bool TiledContentHost::UseTiledLayerBuffer(
     ISurfaceAllocator* aAllocator,
     const SurfaceDescriptorTiles& aTiledDescriptor) {
-  HostLayerManager* lm = GetLayerManager();
-  if (!lm) {
-    return false;
-  }
-
-  if (aTiledDescriptor.resolution() < 1) {
-    if (!mLowPrecisionTiledBuffer.UseTiles(aTiledDescriptor, lm, aAllocator)) {
-      return false;
-    }
-  } else {
-    if (!mTiledBuffer.UseTiles(aTiledDescriptor, lm, aAllocator)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-static void UseTileTexture(CompositableTextureHostRef& aTexture,
-                           CompositableTextureSourceRef& aTextureSource,
-                           const IntRect& aUpdateRect,
-                           TextureSourceProvider* aProvider) {
-  MOZ_ASSERT(aTexture);
-  if (!aTexture) {
-    return;
-  }
-
-  if (aProvider) {
-    aTexture->SetTextureSourceProvider(aProvider);
-  }
-
-  if (!aUpdateRect.IsEmpty()) {
-    // For !HasIntermediateBuffer() textures, this is likely a no-op.
-    nsIntRegion region = aUpdateRect;
-    aTexture->Updated(&region);
-  }
-
-  aTexture->PrepareTextureSource(aTextureSource);
+  return false;
 }
 
 class TextureSourceRecycler {
@@ -242,161 +205,6 @@ class TextureSourceRecycler {
   nsTArray<TileHost> mTiles;
   size_t mFirstPossibility;
 };
-
-bool TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
-                                         HostLayerManager* aLayerManager,
-                                         ISurfaceAllocator* aAllocator) {
-  if (mResolution != aTiles.resolution() || aTiles.tileSize() != mTileSize) {
-    Clear();
-  }
-  MOZ_ASSERT(aAllocator);
-  MOZ_ASSERT(aLayerManager);
-  if (!aAllocator || !aLayerManager) {
-    return false;
-  }
-
-  if (aTiles.resolution() == 0 || IsNaN(aTiles.resolution())) {
-    // There are divisions by mResolution so this protects the compositor
-    // process against malicious content processes and fuzzing.
-    return false;
-  }
-
-  TilesPlacement newTiles(aTiles.firstTileX(), aTiles.firstTileY(),
-                          aTiles.retainedWidth(), aTiles.retainedHeight());
-
-  const nsTArray<TileDescriptor>& tileDescriptors = aTiles.tiles();
-
-  TextureSourceRecycler oldRetainedTiles(std::move(mRetainedTiles));
-  mRetainedTiles.SetLength(tileDescriptors.Length());
-
-  AutoTArray<uint64_t, 10> lockedTextureSerials;
-  base::ProcessId lockedTexturePid = 0;
-
-  // Step 1, deserialize the incoming set of tiles into mRetainedTiles, and
-  // attempt to recycle the TextureSource for any repeated tiles.
-  //
-  // Since we don't have any retained 'tile' object, we have to search for
-  // instances of the same TextureHost in the old tile set. The cost of binding
-  // a TextureHost to a TextureSource for gralloc (binding EGLImage to GL
-  // texture) can be really high, so we avoid this whenever possible.
-  for (size_t i = 0; i < tileDescriptors.Length(); i++) {
-    const TileDescriptor& tileDesc = tileDescriptors[i];
-
-    TileHost& tile = mRetainedTiles[i];
-
-    if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {
-      NS_WARNING_ASSERTION(
-          tileDesc.type() == TileDescriptor::TPlaceholderTileDescriptor,
-          "Unrecognised tile descriptor type");
-      continue;
-    }
-
-    const TexturedTileDescriptor& texturedDesc =
-        tileDesc.get_TexturedTileDescriptor();
-
-    tile.mTextureHost =
-        TextureHost::AsTextureHost(texturedDesc.textureParent());
-    if (texturedDesc.readLocked()) {
-      tile.mTextureHost->SetReadLocked();
-      auto actor = tile.mTextureHost->GetIPDLActor();
-      if (actor && tile.mTextureHost->IsDirectMap()) {
-        lockedTextureSerials.AppendElement(
-            TextureHost::GetTextureSerial(actor));
-
-        if (lockedTexturePid) {
-          MOZ_ASSERT(lockedTexturePid == actor->OtherPid());
-        }
-        lockedTexturePid = actor->OtherPid();
-      }
-    }
-
-    if (texturedDesc.textureOnWhiteParent().isSome()) {
-      tile.mTextureHostOnWhite =
-          TextureHost::AsTextureHost(texturedDesc.textureOnWhiteParent().ref());
-      if (texturedDesc.readLockedOnWhite()) {
-        tile.mTextureHostOnWhite->SetReadLocked();
-        auto actor = tile.mTextureHostOnWhite->GetIPDLActor();
-        if (actor && tile.mTextureHostOnWhite->IsDirectMap()) {
-          lockedTextureSerials.AppendElement(
-              TextureHost::GetTextureSerial(actor));
-        }
-      }
-    }
-
-    tile.mTileCoord = newTiles.TileCoord(i);
-
-    // If this same tile texture existed in the old tile set then this will move
-    // the texture source into our new tile.
-    oldRetainedTiles.RecycleTextureSourceForTile(tile);
-
-    // If this tile is in the process of fading, we need to keep that going
-    oldRetainedTiles.RecycleTileFading(tile);
-
-    if (aTiles.isProgressive() && texturedDesc.wasPlaceholder()) {
-      // This is a progressive paint, and the tile used to be a placeholder.
-      // We need to begin fading it in (if enabled via
-      // layers.tiles.fade-in.enabled)
-      tile.mFadeStart = TimeStamp::Now();
-
-      aLayerManager->CompositeUntil(
-          tile.mFadeStart +
-          TimeDuration::FromMilliseconds(
-              StaticPrefs::layers_tiles_fade_in_duration_ms()));
-    }
-  }
-
-#ifdef XP_DARWIN
-  if (lockedTextureSerials.Length() > 0) {
-    TextureSync::SetTexturesLocked(lockedTexturePid, lockedTextureSerials);
-  }
-#endif
-
-  // Step 2, attempt to recycle unused texture sources from the old tile set
-  // into new tiles.
-  //
-  // For gralloc, binding a new TextureHost to the existing TextureSource is the
-  // fastest way to ensure that any implicit locking on the old gralloc image is
-  // released.
-  for (TileHost& tile : mRetainedTiles) {
-    if (!tile.mTextureHost || tile.mTextureSource) {
-      continue;
-    }
-    oldRetainedTiles.RecycleTextureSource(tile);
-  }
-
-  // Step 3, handle the texture uploads, texture source binding and release the
-  // copy-on-write locks for textures with an internal buffer.
-  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-    TileHost& tile = mRetainedTiles[i];
-    if (!tile.mTextureHost) {
-      continue;
-    }
-
-    const TileDescriptor& tileDesc = tileDescriptors[i];
-    const TexturedTileDescriptor& texturedDesc =
-        tileDesc.get_TexturedTileDescriptor();
-
-    UseTileTexture(tile.mTextureHost, tile.mTextureSource,
-                   texturedDesc.updateRect(),
-                   aLayerManager->GetTextureSourceProvider());
-
-    if (tile.mTextureHostOnWhite) {
-      UseTileTexture(tile.mTextureHostOnWhite, tile.mTextureSourceOnWhite,
-                     texturedDesc.updateRect(),
-                     aLayerManager->GetTextureSourceProvider());
-    }
-  }
-
-  mTiles = newTiles;
-  mTileSize = aTiles.tileSize();
-  mTileOrigin = aTiles.tileOrigin();
-  mValidRegion = aTiles.validRegion();
-  mResolution = aTiles.resolution();
-  mFrameResolution = CSSToParentLayerScale2D(aTiles.frameXResolution(),
-                                             aTiles.frameYResolution());
-
-  return true;
-}
 
 void TiledLayerBufferComposite::Clear() {
   mRetainedTiles.Clear();

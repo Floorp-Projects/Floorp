@@ -57,7 +57,6 @@ namespace layers {
 
 class AsyncPanZoomController;
 class ClientLayerManager;
-class HostLayerManager;
 class Layer;
 class LayerMetricsWrapper;
 class PaintedLayer;
@@ -72,7 +71,6 @@ class RefLayer;
 class HostLayer;
 class FocusTarget;
 class KnowsCompositor;
-class LayerManagerComposite;
 class TransactionIdAllocator;
 class FrameUniformityData;
 class PersistentBufferProvider;
@@ -159,10 +157,6 @@ class LayerManager : public WindowRenderer {
   bool IsDestroyed() { return mDestroyed; }
 
   virtual LayerManager* AsLayerManager() override { return this; }
-
-  virtual LayerManagerComposite* AsLayerManagerComposite() { return nullptr; }
-
-  virtual HostLayerManager* AsHostLayerManager() { return nullptr; }
 
   virtual WebRenderLayerManager* AsWebRenderLayerManager() { return nullptr; }
 

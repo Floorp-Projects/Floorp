@@ -78,7 +78,6 @@ class APZCTreeManagerParent;
 class APZSampler;
 class APZTestData;
 class APZUpdater;
-class AsyncCompositionManager;
 class AsyncImagePipelineManager;
 class Compositor;
 class CompositorAnimationStorage;
@@ -87,7 +86,6 @@ class CompositorManagerParent;
 class CompositorVsyncScheduler;
 class FrameUniformityData;
 class GeckoContentController;
-class HostLayerManager;
 class IAPZCTreeManager;
 class Layer;
 class OMTASampler;
@@ -425,8 +423,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
    */
   void ForceIsFirstPaint();
 
-  static void SetShadowProperties(Layer* aLayer);
-
   void NotifyChildCreated(LayersId aChild);
 
   void AsyncRender();
@@ -499,7 +495,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
     RefPtr<GeckoContentController> mController;
     APZCTreeManagerParent* mApzcTreeManagerParent;
     RefPtr<CompositorBridgeParent> mParent;
-    HostLayerManager* mLayerManager;
     RefPtr<WebRenderBridgeParent> mWrBridge;
     // Pointer to the ContentCompositorBridgeParent. Used by APZCs to share
     // their FrameMetrics with the corresponding child process that holds
@@ -667,8 +662,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   void SetEGLSurfaceRect(int x, int y, int width, int height);
 
-  void InitializeLayerManager(const nsTArray<LayersBackend>& aBackendHints);
-
  public:
   void PauseComposition();
   void ResumeComposition();
@@ -725,9 +718,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   template <typename Lambda>
   static inline void ForEachWebRenderBridgeParent(const Lambda& aCallback);
 
-  RefPtr<HostLayerManager> mLayerManager;
   RefPtr<Compositor> mCompositor;
-  RefPtr<AsyncCompositionManager> mCompositionManager;
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<WebRenderBridgeParent> mWrBridge;
   RefPtr<webgpu::WebGPUParent> mWebGPUBridge;
