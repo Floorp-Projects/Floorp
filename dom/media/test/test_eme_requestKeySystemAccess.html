@@ -467,13 +467,10 @@ var tests = [
   },
 ];
 
-function beginTest() {
-  Promise.all(tests.map(Test)).then(function() { SimpleTest.finish(); });
-}
-
 SimpleTest.waitForExplicitFinish();
-SetupEMEPref(beginTest);
-
+Promise.all(tests.map(Test)).then(function() {
+  SimpleTest.finish();
+});
 </script>
 </pre>
 </body>
