@@ -17,7 +17,7 @@ namespace mozilla {
 // In our scenario, the producer threads are real-time, they can't block. The
 // consummer thread runs every now and then and empties the queue to a log
 // file, on disk.
-const size_t MPSC_MSG_RESERVERD = sizeof(std::atomic<void*>);
+const size_t MPSC_MSG_RESERVED = sizeof(std::atomic<void*>);
 
 template <typename T>
 class MPSCQueue {
