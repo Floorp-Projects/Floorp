@@ -3535,8 +3535,10 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
                   Address(output, JSFunction::offsetOfEnvironment()));
   // No post barrier needed because output is guaranteed to be allocated in
   // the nursery.
-  masm.storePtr(ImmGCPtr(info.funUnsafe()->displayAtom()),
-                Address(output, JSFunction::offsetOfAtom()));
+
+  JSAtom* atom = info.funUnsafe()->displayAtom();
+  JS::Value atomValue = atom ? JS::StringValue(atom) : JS::UndefinedValue();
+  masm.storeValue(atomValue, Address(output, JSFunction::offsetOfAtom()));
 }
 
 void CodeGenerator::visitFunctionWithProto(LFunctionWithProto* lir) {
@@ -14793,9 +14795,13 @@ static void BoundFunctionName(MacroAssembler& masm, Register target,
   Label guessed, hasName;
   masm.branchTest32(Assembler::NonZero, targetFlags,
                     Imm32(FunctionFlags::HAS_GUESSED_ATOM), &guessed);
+
   masm.bind(&loadName);
-  masm.loadPtr(Address(target, JSFunction::offsetOfAtom()), output);
-  masm.branchTestPtr(Assembler::NonZero, output, output, &hasName);
+  Address atom(Address(target, JSFunction::offsetOfAtom()));
+  masm.branchTestUndefined(Assembler::Equal, atom, &guessed);
+  masm.unboxString(atom, output);
+  masm.jump(&hasName);
+
   {
     masm.bind(&guessed);
 
@@ -14871,7 +14877,8 @@ void CodeGenerator::visitFinishBoundFunctionInit(
   // Store the target's name atom in the bound function as is.
   BoundFunctionName(masm, target, temp0, temp1, gen->runtime->names(),
                     slowPath);
-  masm.storePtr(temp1, Address(bound, JSFunction::offsetOfAtom()));
+  masm.storeValue(JSVAL_TYPE_STRING, temp1,
+                  Address(bound, JSFunction::offsetOfAtom()));
 
   // Update the bound function's flags.
   BoundFunctionFlagsAndArgCount(masm, temp0, bound, temp1);
