@@ -363,7 +363,7 @@ fn decode_from_slice_to_nscstring_without_bom_handling(
     let mut handle = try_start_bulk_write!(Some(src.len()), dst, NS_ERROR_OUT_OF_MEMORY);
 
     if already_validated != 0 {
-        &mut (handle.as_mut_slice())[..already_validated]
+        (handle.as_mut_slice())[..already_validated]
             .copy_from_slice(&bytes[..already_validated]);
     }
     let mut total_read = already_validated;
@@ -540,7 +540,7 @@ pub fn encode_from_nscstring(
 
     if valid_up_to != 0 {
         // to_mut() shouldn't fail right after setting length.
-        &mut (handle.as_mut_slice())[..valid_up_to].copy_from_slice(&bytes[..valid_up_to]);
+        (handle.as_mut_slice())[..valid_up_to].copy_from_slice(&bytes[..valid_up_to]);
     }
 
     // `total_read` tracks `trail` only but `total_written` tracks the overall situation!
