@@ -41,7 +41,7 @@ StaticRefPtr<UrlClassifierFeatureTrackingAnnotation> gFeatureTrackingAnnotation;
 }  // namespace
 
 UrlClassifierFeatureTrackingAnnotation::UrlClassifierFeatureTrackingAnnotation()
-    : UrlClassifierFeatureBase(
+    : UrlClassifierFeatureAntiTrackingBase(
           nsLiteralCString(TRACKING_ANNOTATION_FEATURE_NAME),
           nsLiteralCString(URLCLASSIFIER_ANNOTATION_BLOCKLIST),
           nsLiteralCString(URLCLASSIFIER_ANNOTATION_ENTITYLIST),

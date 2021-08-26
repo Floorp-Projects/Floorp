@@ -140,23 +140,23 @@ ContentBlocking::AllowAccessFor(
 
   switch (aReason) {
     case ContentBlockingNotifier::eOpener:
-      if (!StaticPrefs::
+      if (!StaticPrefs::privacy_antitracking_enableWebcompat() ||
+          !StaticPrefs::
               privacy_restrict3rdpartystorage_heuristic_window_open()) {
         LOG(
-            ("Bailing out early because the "
-             "privacy.restrict3rdpartystorage.heuristic.window_open preference "
-             "has been disabled"));
+            ("Bailing out early because the window open heuristic is disabled "
+             "by pref"));
         return StorageAccessPermissionGrantPromise::CreateAndReject(false,
                                                                     __func__);
       }
       break;
     case ContentBlockingNotifier::eOpenerAfterUserInteraction:
-      if (!StaticPrefs::
+      if (!StaticPrefs::privacy_antitracking_enableWebcompat() ||
+          !StaticPrefs::
               privacy_restrict3rdpartystorage_heuristic_opened_window_after_interaction()) {
         LOG(
-            ("Bailing out early because the "
-             "privacy.restrict3rdpartystorage.heuristic.opened_window_after_"
-             "interaction preference has been disabled"));
+            ("Bailing out early because the window open after interaction "
+             "heuristic is disabled by pref"));
         return StorageAccessPermissionGrantPromise::CreateAndReject(false,
                                                                     __func__);
       }

@@ -40,7 +40,7 @@ StaticRefPtr<UrlClassifierFeatureFingerprintingAnnotation>
 
 UrlClassifierFeatureFingerprintingAnnotation::
     UrlClassifierFeatureFingerprintingAnnotation()
-    : UrlClassifierFeatureBase(
+    : UrlClassifierFeatureAntiTrackingBase(
           nsLiteralCString(FINGERPRINTING_ANNOTATION_FEATURE_NAME),
           nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_ANNOTATION_BLOCKLIST),
           nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_ANNOTATION_ENTITYLIST),

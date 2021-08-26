@@ -211,7 +211,8 @@ void PrepareForAntiTrackingRedirectHeuristic(nsIChannel* aOldChannel,
     return;
   }
 
-  if (!StaticPrefs::privacy_restrict3rdpartystorage_heuristic_redirect()) {
+  if (!StaticPrefs::privacy_antitracking_enableWebcompat() ||
+      !StaticPrefs::privacy_restrict3rdpartystorage_heuristic_redirect()) {
     return;
   }
 
@@ -316,7 +317,8 @@ void FinishAntiTrackingRedirectHeuristic(nsIChannel* aNewChannel,
     return;
   }
 
-  if (!StaticPrefs::privacy_restrict3rdpartystorage_heuristic_redirect()) {
+  if (!StaticPrefs::privacy_antitracking_enableWebcompat() ||
+      !StaticPrefs::privacy_restrict3rdpartystorage_heuristic_redirect()) {
     return;
   }
 

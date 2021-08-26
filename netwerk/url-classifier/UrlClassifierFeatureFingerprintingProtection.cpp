@@ -39,7 +39,7 @@ StaticRefPtr<UrlClassifierFeatureFingerprintingProtection>
 
 UrlClassifierFeatureFingerprintingProtection::
     UrlClassifierFeatureFingerprintingProtection()
-    : UrlClassifierFeatureBase(
+    : UrlClassifierFeatureAntiTrackingBase(
           nsLiteralCString(FINGERPRINTING_FEATURE_NAME),
           nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_BLOCKLIST),
           nsLiteralCString(URLCLASSIFIER_FINGERPRINTING_ENTITYLIST),
