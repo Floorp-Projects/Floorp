@@ -11,11 +11,7 @@ const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/14235";
 const TEST_URL4 = "https://example.com/14345";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SnapshotSelector: "resource:///modules/SnapshotSelector.jsm",
-});
-
-add_task(async function setup() {
+add_task(async function test_interactions_recent() {
   let now = Date.now();
   await addInteractions([
     { url: TEST_URL1, created_at: now - 2000 },

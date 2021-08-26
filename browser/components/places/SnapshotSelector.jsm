@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
 });
@@ -67,6 +68,11 @@ class SnapshotSelector extends EventEmitter {
      */
     count: undefined,
     /**
+     * Whether to filter adult sites.
+     * @type {boolean}
+     */
+    filterAdult: false,
+    /**
      * The page the snapshots are for.
      * @type {string | undefined}
      */
@@ -88,11 +94,14 @@ class SnapshotSelector extends EventEmitter {
    *   The maximum number of snapshots we ever need to generate. This should not
    *   affect the actual snapshots generated and their order but may speed up
    *   calculations.
+   * @param {boolean} filterAdult
+   *   Whether adult sites should be filtered from the snapshots.
    */
-  constructor(count = 5) {
+  constructor(count = 5, filterAdult = false) {
     super();
     this.#task = new DeferredTask(() => this.#buildSnapshots(), 500);
     this.#context.count = count;
+    this.#context.filterAdult = filterAdult;
     SnapshotSelector.#selectors.add(this);
   }
 
@@ -147,14 +156,22 @@ class SnapshotSelector extends EventEmitter {
     let context = { ...this.#context };
     logConsole.debug("Building snapshots", context);
 
-    // Query for one more than we need in case the current url is returned.
+    // Generally, we query for one more than we need in case the current url is
+    // returned. In the case of filtering out adult sites, we query for a few
+    // more entries than requested, in case the most recent snapshots are all adult.
+    // This may not catch all cases, but saves the complexity of repeated queries.
     let snapshots = await Snapshots.query({
-      limit: context.count + 1,
+      limit: context.filterAdult ? context.count * 4 : context.count + 1,
       type: context.type,
     });
 
     snapshots = snapshots
-      .filter(snapshot => snapshot.url != context.url)
+      .filter(snapshot => {
+        if (snapshot.url == context.url) {
+          return false;
+        }
+        return !context.filterAdult || !FilterAdult.isAdultUrl(snapshot.url);
+      })
       .slice(0, context.count);
 
     this.#snapshotsGenerated(snapshots);
