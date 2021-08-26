@@ -2854,16 +2854,6 @@ class nsDisplayItem : public nsDisplayItemLink {
   nsDisplayItem* GetAbove() { return mAbove; }
 
   /**
-   * Like ComputeVisibility, but does the work that nsDisplayList
-   * does per-item:
-   * -- Intersects GetBounds with aVisibleRegion and puts the result
-   * in mVisibleRect
-   * -- Subtracts bounds from aVisibleRegion if the item is opaque
-   */
-  bool RecomputeVisibility(nsDisplayListBuilder* aBuilder,
-                           nsRegion* aVisibleRegion);
-
-  /**
    * Returns the result of aBuilder->ToReferenceFrame(GetUnderlyingFrame())
    */
   const nsPoint& ToReferenceFrame() const {
