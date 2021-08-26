@@ -208,6 +208,13 @@ bool ActiveScrolledRoot::IsAncestor(const ActiveScrolledRoot* aAncestor,
 }
 
 /* static */
+bool ActiveScrolledRoot::IsProperAncestor(
+    const ActiveScrolledRoot* aAncestor,
+    const ActiveScrolledRoot* aDescendant) {
+  return aAncestor != aDescendant && IsAncestor(aAncestor, aDescendant);
+}
+
+/* static */
 nsCString ActiveScrolledRoot::ToString(
     const ActiveScrolledRoot* aActiveScrolledRoot) {
   nsAutoCString str;

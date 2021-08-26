@@ -278,6 +278,8 @@ struct ActiveScrolledRoot {
 
   static bool IsAncestor(const ActiveScrolledRoot* aAncestor,
                          const ActiveScrolledRoot* aDescendant);
+  static bool IsProperAncestor(const ActiveScrolledRoot* aAncestor,
+                               const ActiveScrolledRoot* aDescendant);
 
   static nsCString ToString(const ActiveScrolledRoot* aActiveScrolledRoot);
 
