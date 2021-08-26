@@ -118,7 +118,9 @@ class StateChangeTask final : public Runnable {
   AudioContextState mNewState;
 };
 
-enum class AudioContextOperation { Suspend, Resume, Close };
+enum class AudioContextOperation : uint8_t { Suspend, Resume, Close };
+static const char* const kAudioContextOptionsStrings[] = {"Suspend", "Resume",
+                                                          "Close"};
 // When suspending or resuming an AudioContext, some operations have to notify
 // the main thread, so that the Promise is resolved, the state is modified, and
 // the statechanged event is sent. Some other operations don't go back to the

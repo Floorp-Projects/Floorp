@@ -1119,8 +1119,9 @@ void MediaPipelineTransmit::PipelineListener::NotifyRealtimeTrackData(
       ("MediaPipeline::NotifyRealtimeTrackData() listener=%p, offset=%" PRId64
        ", duration=%" PRId64,
        this, aOffset, aMedia.GetDuration()));
-  TRACE_COMMENT("%s",
-                aMedia.GetType() == MediaSegment::VIDEO ? "Video" : "Audio");
+  TRACE_COMMENT(
+      "MediaPipelineTransmit::PipelineListener::NotifyRealtimeTrackData", "%s",
+      aMedia.GetType() == MediaSegment::VIDEO ? "Video" : "Audio");
   NewData(aMedia, aGraph->GraphRate());
 }
 
@@ -1135,7 +1136,7 @@ void MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
     return;
   }
 
-  TRACE_COMMENT("Audio");
+  TRACE("MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges (Audio)");
 
   if (mDirectConnect) {
     // ignore non-direct data if we're also getting direct data
@@ -1395,7 +1396,8 @@ class MediaPipelineReceiveAudio::PipelineListener
   }
 
   void NotifyPullImpl(TrackTime aDesiredTime) {
-    TRACE_COMMENT("Listener %p", this);
+    TRACE_COMMENT("PiplineListener::NotifyPullImpl", "PipelineListener %p",
+                  this);
     uint32_t samplesPer10ms = mRate / 100;
 
     // mSource's rate is not necessarily the same as the graph rate, since there

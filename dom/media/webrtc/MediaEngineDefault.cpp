@@ -501,7 +501,8 @@ nsresult MediaEngineDefaultAudioSource::Reconfigure(
 void AudioSourcePullListener::NotifyPull(MediaTrackGraph* aGraph,
                                          TrackTime aEndOfAppendedData,
                                          TrackTime aDesiredTime) {
-  TRACE_COMMENT("SourceMediaTrack %p", mTrack.get());
+  TRACE_COMMENT("SourceMediaTrack::NotifyPull", "SourceMediaTrack %p",
+                mTrack.get());
   AudioSegment segment;
   TrackTicks delta = aDesiredTime - aEndOfAppendedData;
   CheckedInt<size_t> bufferSize(sizeof(int16_t));

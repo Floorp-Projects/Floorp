@@ -606,7 +606,7 @@ void DecodedStream::Stop() {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isSome(), "playback not started.");
 
-  TRACE();
+  TRACE("DecodedStream::Stop");
   LOG_DS(LogLevel::Debug, "Stop()");
 
   DisconnectListener();
@@ -648,7 +648,7 @@ void DecodedStream::DestroyData(UniquePtr<DecodedStreamData>&& aData) {
     return;
   }
 
-  TRACE();
+  TRACE("DecodedStream::DestroyData");
   mOutputListener.Disconnect();
 
   aData->Close();
@@ -735,7 +735,7 @@ void DecodedStream::SendAudio(const PrincipalHandle& aPrincipalHandle) {
     return;
   }
 
-  TRACE();
+  TRACE("DecodedStream::SendAudio");
   // It's OK to hold references to the AudioData because AudioData
   // is ref-counted.
   AutoTArray<RefPtr<AudioData>, 10> audio;
@@ -856,7 +856,7 @@ void DecodedStream::ResetAudio() {
     return;
   }
 
-  TRACE();
+  TRACE("DecodedStream::ResetAudio");
   mData->mAudioTrack->ClearFutureData();
   if (const RefPtr<AudioData>& v = mAudioQueue.PeekFront()) {
     mData->mNextAudioTime = v->mTime;
@@ -875,7 +875,7 @@ void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
     return;
   }
 
-  TRACE();
+  TRACE("DecodedStream::ResetVideo");
   TrackTime cleared = mData->mVideoTrack->ClearFutureData();
   mData->mVideoTrackWritten -= cleared;
   if (mData->mHaveSentFinishVideo && cleared > 0) {
@@ -925,7 +925,7 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
     return;
   }
 
-  TRACE();
+  TRACE("DecodedStream::SendVideo");
   VideoSegment output;
   AutoTArray<RefPtr<VideoData>, 10> video;
 
@@ -1053,7 +1053,7 @@ void DecodedStream::SendData() {
 
 TimeUnit DecodedStream::GetEndTime(TrackType aType) const {
   AssertOwnerThread();
-  TRACE();
+  TRACE("DecodedStream::GetEndTime");
   if (aType == TrackInfo::kAudioTrack && mInfo.HasAudio() && mData) {
     auto t = mStartTime.ref() +
              FramesToTimeUnit(mData->mAudioFramesWritten, mInfo.mAudio.mRate);
@@ -1068,7 +1068,7 @@ TimeUnit DecodedStream::GetEndTime(TrackType aType) const {
 
 TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) const {
   AssertOwnerThread();
-  TRACE();
+  TRACE("DecodedStream::GetPosition");
   // This is only called after MDSM starts playback. So mStartTime is
   // guaranteed to be something.
   MOZ_ASSERT(mStartTime.isSome());
@@ -1108,7 +1108,7 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
 
 void DecodedStream::PlayingChanged() {
   AssertOwnerThread();
-  TRACE();
+  TRACE("DecodedStream::PlayingChanged");
 
   if (!mPlaying) {
     // On seek or pause we discard future frames.

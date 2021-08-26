@@ -74,7 +74,7 @@ class OfflineClockDriver;
 class SystemClockDriver;
 
 namespace dom {
-enum class AudioContextOperation;
+enum class AudioContextOperation : uint8_t;
 }
 
 struct GraphInterface : public nsISupports {

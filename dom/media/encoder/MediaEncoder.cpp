@@ -113,7 +113,8 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
 
   void NotifyQueuedChanges(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override {
-    TRACE_COMMENT("MediaEncoder %p", mMediaEncoder.get());
+    TRACE_COMMENT("MediaEncoder::NotifyQueuedChanges", "%p",
+                  mMediaEncoder.get());
     MOZ_ASSERT(mMediaEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -222,7 +223,8 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
 
   void NotifyQueuedChanges(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override {
-    TRACE_COMMENT("MediaEncoder %p", mMediaEncoder.get());
+    TRACE_COMMENT("MediaEncoder::NotifyQueuedChanges", "%p",
+                  mMediaEncoder.get());
     MOZ_ASSERT(mMediaEncoder);
     MOZ_ASSERT(mMediaEncoder->mVideoEncoder);
     MOZ_ASSERT(mEncoderThread);
@@ -254,7 +256,8 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
 
   void NotifyRealtimeTrackData(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
                                const MediaSegment& aMedia) override {
-    TRACE_COMMENT("MediaEncoder %p", mMediaEncoder.get());
+    TRACE_COMMENT("MediaEncoder::NotifyRealtimeTrackData", "%p",
+                  mMediaEncoder.get());
     MOZ_ASSERT(mMediaEncoder);
     MOZ_ASSERT(mMediaEncoder->mVideoEncoder);
     MOZ_ASSERT(mEncoderThread);
@@ -494,7 +497,10 @@ void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
    public:
     explicit Message(already_AddRefed<Runnable> aRunnable)
         : ControlMessage(nullptr), mRunnable(aRunnable) {}
-    void Run() override { mRunnable->Run(); }
+    void Run() override {
+      TRACE("MediaEncoder::RunOnGraph");
+      mRunnable->Run();
+    }
     const RefPtr<Runnable> mRunnable;
   };
   mGraphTrack->mTrack->GraphImpl()->AppendMessage(
