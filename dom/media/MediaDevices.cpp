@@ -221,7 +221,7 @@ already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
   WindowContext* wc = owner->GetWindowContext();
   if (!wc || !wc->HasValidTransientUserGestureActivation()) {
     p->MaybeRejectWithInvalidStateError(
-        "getDisplayMedia must be called from a user gesture handler.");
+        "getDisplayMedia requires transient activation from a user gesture.");
     return p.forget();
   }
   /* If constraints.video is false, return a promise rejected with a newly
