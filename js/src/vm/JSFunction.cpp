@@ -770,22 +770,19 @@ inline void JSFunction::trace(JSTracer* trc) {
 
   TraceNullableEdge(trc, &atom_, "atom");
 
-  if (isInterpreted()) {
-    // Functions can be be marked as interpreted despite having no script
-    // yet at some points when parsing, and can be lazy with no lazy script
-    // for self-hosted code.
-    if (isIncomplete()) {
-      MOZ_ASSERT(u.scripted.s.script_ == nullptr);
-    } else if (hasBaseScript()) {
-      BaseScript* script = u.scripted.s.script_;
+  // Functions can be be marked as interpreted despite having no script yet at
+  // some points when parsing, and can be lazy with no lazy script for
+  // self-hosted code.
+  MOZ_ASSERT(!nativeJitInfoOrInterpretedScript_.isGCThing());
+  if (isInterpreted() && hasBaseScript()) {
+    if (BaseScript* script = baseScript()) {
       TraceManuallyBarrieredEdge(trc, &script, "script");
       // Self-hosted scripts are shared with workers but are never
       // relocated. Skip unnecessary writes to prevent the possible data race.
-      if (u.scripted.s.script_ != script) {
-        u.scripted.s.script_ = script;
+      if (baseScript() != script) {
+        nativeJitInfoOrInterpretedScript_.set(JS::PrivateValue(script));
       }
     }
-    // NOTE: The u.scripted.s.selfHostedLazy_ does not point to GC things.
   }
 }
 
