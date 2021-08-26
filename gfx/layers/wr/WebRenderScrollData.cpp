@@ -151,7 +151,8 @@ void WebRenderLayerScrollData::Dump(std::ostream& aOut,
     aOut << ", metadata" << i << "=" << aOwner.GetScrollMetadata(mScrollIds[i]);
   }
   if (!mAncestorTransform.IsIdentity()) {
-    aOut << ", ancestorTransform=" << mAncestorTransform;
+    aOut << ", ancestorTransform=" << mAncestorTransform
+         << " (asr=" << mAncestorTransformId << ")";
   }
   if (!mTransform.IsIdentity()) {
     aOut << ", transform=" << mTransform;
