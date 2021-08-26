@@ -625,7 +625,7 @@ SpeechRecognition::StartRecording(RefPtr<AudioStreamTrack>& aTrack) {
   blockerName.AppendPrintf("SpeechRecognition %p shutdown", this);
   mShutdownBlocker =
       MakeAndAddRef<SpeechRecognitionShutdownBlocker>(this, blockerName);
-  media::GetShutdownBarrier()->AddBlocker(
+  media::MustGetShutdownBarrier()->AddBlocker(
       mShutdownBlocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
       u"SpeechRecognition shutdown"_ns);
 
@@ -676,7 +676,8 @@ RefPtr<GenericNonExclusivePromise> SpeechRecognition::StopRecording() {
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [self = RefPtr<SpeechRecognition>(this), this] {
-                media::GetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
+                media::MustGetShutdownBarrier()->RemoveBlocker(
+                    mShutdownBlocker);
                 mShutdownBlocker = nullptr;
 
                 MOZ_DIAGNOSTIC_ASSERT(mCurrentState != STATE_IDLE);
