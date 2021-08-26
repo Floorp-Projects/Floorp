@@ -24,7 +24,6 @@
 #include "mozilla/layers/CompositorTypes.h"  // for CompositableType, etc
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersSurfaces.h"    // for SurfaceDescriptor, etc
-#include "mozilla/layers/ShadowLayers.h"      // for ShadowLayerForwarder
 #include "mozilla/layers/TextureClient.h"     // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"  // for SurfaceTextureClient
 #include "mozilla/mozalloc.h"                 // for operator delete, etc
@@ -47,9 +46,6 @@ already_AddRefed<ImageClient> ImageClient::CreateImageClient(
     case CompositableType::IMAGE:
       result =
           new ImageClientSingle(aForwarder, aFlags, CompositableType::IMAGE);
-      break;
-    case CompositableType::IMAGE_BRIDGE:
-      result = new ImageClientBridge(aForwarder, aFlags);
       break;
     case CompositableType::UNKNOWN:
       result = nullptr;
@@ -276,30 +272,6 @@ ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
       mLayer(nullptr),
       mType(aType),
       mLastUpdateGenerationCounter(0) {}
-
-ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
-                                     TextureFlags aFlags)
-    : ImageClient(aFwd, aFlags, CompositableType::IMAGE_BRIDGE) {}
-
-bool ImageClientBridge::UpdateImage(ImageContainer* aContainer,
-                                    uint32_t aContentFlags) {
-  if (!GetForwarder() || !mLayer) {
-    return false;
-  }
-  if (mAsyncContainerHandle == aContainer->GetAsyncContainerHandle()) {
-    return true;
-  }
-
-  mAsyncContainerHandle = aContainer->GetAsyncContainerHandle();
-  if (!mAsyncContainerHandle) {
-    // If we couldn't contact a working ImageBridgeParent, just return.
-    return true;
-  }
-
-  static_cast<ShadowLayerForwarder*>(GetForwarder())
-      ->AttachAsyncCompositable(mAsyncContainerHandle, mLayer);
-  return true;
-}
 
 }  // namespace layers
 }  // namespace mozilla
