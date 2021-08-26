@@ -1754,6 +1754,10 @@ TEST_F(TlsConnectStreamTls13, EchOuterWith12Max) {
   static const uint8_t supported_vers_12[] = {0x02, 0x03, 0x03};
   DataBuffer buf(supported_vers_12, sizeof(supported_vers_12));
 
+  // The server will set the downgrade sentinel. The client needs
+  // to ignore it for this test.
+  client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_FALSE);
+
   StartConnect();
   MakeTlsFilter<TlsExtensionReplacer>(client_, ssl_tls13_supported_versions_xtn,
                                       buf);

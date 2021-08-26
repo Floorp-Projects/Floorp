@@ -204,6 +204,7 @@ TEST_F(TlsConnectTest, DisableFalseStartOnFallback) {
             SSL_SetCanFalseStartCallback(client_->ssl_fd(), AllowFalseStart,
                                          &false_start_attempted));
 
+  client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_FALSE);
   client_->SetDowngradeCheckVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
                            SSL_LIBRARY_VERSION_TLS_1_2);
