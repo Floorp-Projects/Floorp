@@ -87,13 +87,8 @@ function startTest(test, token)
   TestSetSrc(test, token + "_setSrc");
 }
 
-function beginTest() {
-  manager.runTests(gEMENonMSEFailTests, startTest);
-}
-
 SimpleTest.waitForExplicitFinish();
-SetupEMEPref(beginTest);
-
+manager.runTests(gEMENonMSEFailTests, startTest);
 </script>
 </pre>
 </body>

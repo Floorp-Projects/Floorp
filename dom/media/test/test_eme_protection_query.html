@@ -232,26 +232,19 @@ async function testProtectionQueryWithCaptureStartingBeforeVideo() {
   removeVideo();
 }
 
-function setupEnvironment() {
-  return new Promise(resolve => {
-    SetupEMEPref(async () => {
-      // Need gesture activation for getDisplayMedia.
-      SpecialPowers.wrap(document).notifyUserGestureActivation();
-      // Need test key systems for test key system. Need relaxed navigator
-      // permissions and fake streams for getDisplayMedia.
-      await SpecialPowers.pushPrefEnv({
-        set: [
-          ["media.clearkey.test-key-systems.enabled", true],
-          ["media.navigator.permission.disabled", true],
-          ["media.navigator.streams.fake", true],
-        ],
-      });
-      resolve();
-    });
+add_task(async function setupEnvironment() {
+  // Need gesture activation for getDisplayMedia.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  // Need test key systems for test key system. Need relaxed navigator
+  // permissions and fake streams for getDisplayMedia.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.clearkey.test-key-systems.enabled", true],
+      ["media.navigator.permission.disabled", true],
+      ["media.navigator.streams.fake", true],
+    ],
   });
-}
-
-add_task(setupEnvironment);
+});
 add_task(testProtectionQueryWithCaptureDuringVideo);
 add_task(testProtectionQueryWithCaptureStartingBeforeVideo);
 </script>

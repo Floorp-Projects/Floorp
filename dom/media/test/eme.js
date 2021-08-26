@@ -439,23 +439,6 @@ function SetupEME(v, test, token) {
   return p.promise;
 }
 
-function SetupEMEPref(callback) {
-  var prefs = [
-    ["media.mediasource.enabled", true],
-    ["media.mediasource.webm.enabled", true],
-  ];
-
-  if (
-    SpecialPowers.Services.appinfo.name == "B2G" ||
-    !manifestVideo().canPlayType("video/mp4")
-  ) {
-    // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
-    prefs.push(["media.use-blank-decoder", true]);
-  }
-
-  SpecialPowers.pushPrefEnv({ set: prefs }, callback);
-}
-
 function fetchWithXHR(uri, onLoadFunction) {
   var p = new Promise(function(resolve, reject) {
     var xhr = new XMLHttpRequest();

@@ -26,23 +26,21 @@ function createMediaKeysAndSet() {
 }
 
 function test() {
-  SetupEMEPref(() => {
-    createMediaKeysAndSet()
-      .then((m) => {
-        let video = document.getElementById("v");
-        is(video.mediaKeys, m, "Should have set MediaKeys on media element");
-        // getStatusForPolicy() is not suppored by ClearKey key system.
-        // The promise will always be rejected with NotSupportedError.
-        return video.mediaKeys.getStatusForPolicy({minHdcpVersion: "hdcp-2.0"});
-      })
-      .then((mediaKeyStatus) => {
-        ok(false, "Promise of getStatusForPolicy should not be resolved with clearkey key system");
-      })
-      // Promise rejected with NotSupportedError as expected.
-      .catch(reason => is("NotSupportedError", reason.name,
-                          "Promise should be rejected with NotSupportedError."))
-      .then(() => SimpleTest.finish());
-  });
+  createMediaKeysAndSet()
+    .then((m) => {
+      let video = document.getElementById("v");
+      is(video.mediaKeys, m, "Should have set MediaKeys on media element");
+      // getStatusForPolicy() is not suppored by ClearKey key system.
+      // The promise will always be rejected with NotSupportedError.
+      return video.mediaKeys.getStatusForPolicy({minHdcpVersion: "hdcp-2.0"});
+    })
+    .then((mediaKeyStatus) => {
+      ok(false, "Promise of getStatusForPolicy should not be resolved with clearkey key system");
+    })
+    // Promise rejected with NotSupportedError as expected.
+    .catch(reason => is("NotSupportedError", reason.name,
+                        "Promise should be rejected with NotSupportedError."))
+    .then(() => SimpleTest.finish());
 }
 
 SpecialPowers.pushPrefEnv({"set":

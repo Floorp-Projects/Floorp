@@ -100,13 +100,8 @@ function startTest(test, token)
   .catch(reason => ok(false, reason))
 }
 
-function beginTest() {
-  manager.runTests(gEMETests, startTest);
-}
-
 SimpleTest.waitForExplicitFinish();
-SetupEMEPref(beginTest);
-
+manager.runTests(gEMETests, startTest);
 </script>
 </pre>
 </body>
