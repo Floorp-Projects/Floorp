@@ -101,13 +101,12 @@ class nsIParser : public nsParserBase {
    *  @update  ftang 4/23/99
    *  @param   aCharset- the charest of a document
    *  @param   aCharsetSource- the soure of the chares
-   *  @param   aForceAutoDetection- whether Repair Text Encoding menu item was
-   * invoked
+   *  @param   aChannelHadCharset- whether the channel had charset
    *  @return	 nada
    */
   virtual void SetDocumentCharset(NotNull<const Encoding*> aCharset,
                                   int32_t aSource,
-                                  bool aForceAutoDetection = false) = 0;
+                                  bool aChannelHadCharset = false) = 0;
 
   /**
    * Get the channel associated with this parser

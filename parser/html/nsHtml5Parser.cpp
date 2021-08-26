@@ -95,11 +95,11 @@ nsHtml5Parser::SetCommand(eParserCommands aParserCommand) {
 
 void nsHtml5Parser::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                        int32_t aCharsetSource,
-                                       bool aForceAutoDetection) {
+                                       bool aChannelHadCharset) {
   MOZ_ASSERT(!mExecutor->HasStarted(), "Document charset set too late.");
   MOZ_ASSERT(GetStreamParser(), "Setting charset on a script-only parser.");
   GetStreamParser()->SetDocumentCharset(aEncoding, aCharsetSource,
-                                        aForceAutoDetection);
+                                        aChannelHadCharset);
   mExecutor->SetDocumentCharsetAndSource(aEncoding, aCharsetSource);
 }
 
