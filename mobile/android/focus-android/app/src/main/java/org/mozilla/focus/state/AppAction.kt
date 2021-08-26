@@ -72,6 +72,12 @@ sealed class AppAction : Action {
     internal object ShowFirstRun : AppAction()
 
     /**
+     * Skips the onboarding screen for performance tests. We need to be able to skip the onboarding
+     * screen to get time values for startup.
+     */
+    object SkipOnboardingPerfTest: AppAction()
+
+    /**
      * Opens the tab with the given [tabId] and actively switches to the browser screen if needed.
      */
     data class OpenTab(val tabId: String) : AppAction()

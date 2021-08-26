@@ -23,6 +23,7 @@ import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.navigation.MainActivityNavigation
 import org.mozilla.focus.navigation.Navigator
+import org.mozilla.focus.perf.Performance
 import org.mozilla.focus.session.IntentProcessor
 import org.mozilla.focus.session.ui.TabSheetFragment
 import org.mozilla.focus.shortcut.HomeScreen
@@ -58,6 +59,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
         setContentView(R.layout.activity_main)
+
+        Performance.processIntentIfPerformanceTest(intent, this, components.appStore)
 
         val intent = SafeIntent(intent)
 
