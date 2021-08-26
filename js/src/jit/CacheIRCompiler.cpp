@@ -3303,8 +3303,8 @@ bool CacheIRCompiler::emitLoadFunctionLengthResult(ObjOperandId objId) {
     return false;
   }
 
-  // Get the JSFunction flags.
-  masm.load16ZeroExtend(Address(obj, JSFunction::offsetOfFlags()), scratch);
+  // Get the JSFunction flags and arg count.
+  masm.load32(Address(obj, JSFunction::offsetOfFlagsAndArgCount()), scratch);
 
   // Functions with a SelfHostedLazyScript must be compiled with the slow-path
   // before the function length is known. If the length was previously resolved,
