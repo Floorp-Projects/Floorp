@@ -18,6 +18,7 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.focus.R
+import org.mozilla.focus.theme.resolveAttribute
 
 class NavigationButtonsIntegration(
     val context: Context,
@@ -28,8 +29,8 @@ class NavigationButtonsIntegration(
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 
-    private val enabledColorRes = R.color.colorPrimary
-    private val disabledColorRes = R.color.disabledText
+    private val enabledColorRes = context.theme.resolveAttribute(R.attr.primaryText)
+    private val disabledColorRes = context.theme.resolveAttribute(R.attr.disabled)
 
     init {
 
