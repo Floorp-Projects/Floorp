@@ -1493,13 +1493,13 @@ impl Device {
         // glTexStorage when GL_EXT_texture_storage is also explicitly supported. This is because
         // glTexStorage was added in GLES 3, but GL_EXT_texture_format_BGRA8888 was written against
         // GLES 2 and GL_EXT_texture_storage.
-        // To complicate things even further, Intel BayTrail devices claim to support
-        // both extensions but in practice do not allow BGRA to be used with glTexStorage.
-        let is_intel_baytrail = renderer_name.starts_with("Intel(R) HD Graphics for BayTrail");
+        // To complicate things even further, some Intel devices claim to support both extensions
+        // but in practice do not allow BGRA to be used with glTexStorage.
         let supports_gles_bgra = supports_extension(&extensions, "GL_EXT_texture_format_BGRA8888");
         let supports_texture_storage_with_gles_bgra = supports_gles_bgra
             && supports_extension(&extensions, "GL_EXT_texture_storage")
-            && !is_intel_baytrail;
+            && !renderer_name.starts_with("Intel(R) HD Graphics for BayTrail")
+            && !renderer_name.starts_with("Intel(R) HD Graphics for Atom(TM) x5/x7");
 
         let supports_texture_swizzle = allow_texture_swizzling &&
             match gl.get_type() {
