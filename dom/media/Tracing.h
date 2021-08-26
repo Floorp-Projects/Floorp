@@ -31,33 +31,18 @@ void StartAudioCallbackTracing();
 void StopAudioCallbackTracing();
 
 #ifdef TRACING
-/* TRACE is for use in the real-time audio rendering thread.
- * It would be better to always pass in the thread id. However, the thread an
- * audio callback runs on can change when the underlying audio device change,
- * and also it seems to be called from a thread pool in a round-robin fashion
- * when audio remoting is activated, making the traces unreadable.
- * The thread on which the AudioCallbackDriver::DataCallback is to always
- * be thread 0, and the budget is set to always be thread 1. This allows
- * displaying those elements in two separate lanes.
- * The other thread have "normal" tid. Hashing allows being able to get a
- * string representation that is unique and guaranteed to be portable. */
-#  define TRACE_AUDIO_CALLBACK() \
-    AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE);
-#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)          \
-    AutoTracer budget(gAudioCallbackTraceLogger, "Real-time budget", \
-                      AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
-#  define TRACE_AUDIO_CALLBACK_COMMENT(aFmt, ...)                   \
-    AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, \
-                     AutoTracer::EventType::DURATION, aFmt, ##__VA_ARGS__);
 #  define TRACE() \
     AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE);
 #  define TRACE_COMMENT(aFmt, ...)                                  \
     AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, \
                      AutoTracer::EventType::DURATION, aFmt, ##__VA_ARGS__);
+#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)          \
+    AutoTracer budget(gAudioCallbackTraceLogger, "Real-time budget", \
+                      AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
 #else
 #  define TRACE()
-#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)
 #  define TRACE_COMMENT(aFmt, ...)
+#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)
 #endif
 
 class MOZ_RAII AutoTracer {
