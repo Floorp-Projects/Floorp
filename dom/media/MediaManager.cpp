@@ -2124,7 +2124,7 @@ MediaManager* MediaManager::Get() {
     };
 
     sSingleton->mShutdownBlocker = new Blocker();
-    nsresult rv = media::GetShutdownBarrier()->AddBlocker(
+    nsresult rv = media::MustGetShutdownBarrier()->AddBlocker(
         sSingleton->mShutdownBlocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
         __LINE__, u""_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
@@ -3611,7 +3611,7 @@ void MediaManager::Shutdown() {
             "singleton and thread");
         StaticMutexAutoLock lock(sSingletonMutex);
         // Remove async shutdown blocker
-        media::GetShutdownBarrier()->RemoveBlocker(
+        media::MustGetShutdownBarrier()->RemoveBlocker(
             sSingleton->mShutdownBlocker);
 
         sSingleton = nullptr;
