@@ -117,15 +117,6 @@ impl SpaceAndClipInfo {
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
-pub enum SpatialTreeItem {
-    ScrollFrame(ScrollFrameDescriptor),
-    ReferenceFrame(ReferenceFrameDescriptor),
-    StickyFrame(StickyFrameDescriptor),
-    Invalid,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub enum DisplayItem {
     // These are the "real content" display items
     Rectangle(RectangleDisplayItem),
@@ -151,6 +142,8 @@ pub enum DisplayItem {
     ClipChain(ClipChainItem),
 
     // Spaces and Frames that content can be scoped under.
+    ScrollFrame(ScrollFrameDisplayItem),
+    StickyFrame(StickyFrameDisplayItem),
     Iframe(IframeDisplayItem),
     PushReferenceFrame(ReferenceFrameDisplayListItem),
     PushStackingContext(PushStackingContextDisplayItem),
@@ -199,6 +192,8 @@ pub enum DebugDisplayItem {
     RectClip(RectClipDisplayItem),
     ClipChain(ClipChainItem, Vec<ClipId>),
 
+    ScrollFrame(ScrollFrameDisplayItem),
+    StickyFrame(StickyFrameDisplayItem),
     Iframe(IframeDisplayItem),
     PushReferenceFrame(ReferenceFrameDisplayListItem),
     PushStackingContext(PushStackingContextDisplayItem),
@@ -265,7 +260,7 @@ impl StickyOffsetBounds {
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
-pub struct StickyFrameDescriptor {
+pub struct StickyFrameDisplayItem {
     pub id: SpatialId,
     pub parent_spatial_id: SpatialId,
     pub bounds: LayoutRect,
@@ -302,7 +297,7 @@ pub enum ScrollSensitivity {
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
-pub struct ScrollFrameDescriptor {
+pub struct ScrollFrameDisplayItem {
     /// The id of the space this scroll frame creates
     pub scroll_frame_id: SpatialId,
     /// The size of the contents this contains (so the backend knows how far it can scroll).
@@ -737,10 +732,6 @@ pub struct BackdropFilterDisplayItem {
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct ReferenceFrameDisplayListItem {
-}
-
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
-pub struct ReferenceFrameDescriptor {
     pub origin: LayoutPoint,
     pub parent_spatial_id: SpatialId,
     pub reference_frame: ReferenceFrame,
@@ -1719,9 +1710,11 @@ impl DisplayItem {
             DisplayItem::SetPoints => "set_points",
             DisplayItem::RadialGradient(..) => "radial_gradient",
             DisplayItem::Rectangle(..) => "rectangle",
+            DisplayItem::ScrollFrame(..) => "scroll_frame",
             DisplayItem::SetGradientStops => "set_gradient_stops",
             DisplayItem::ReuseItems(..) => "reuse_item",
             DisplayItem::RetainedItems(..) => "retained_items",
+            DisplayItem::StickyFrame(..) => "sticky_frame",
             DisplayItem::Text(..) => "text",
             DisplayItem::YuvImage(..) => "yuv_image",
             DisplayItem::BackdropFilter(..) => "backdrop_filter",
