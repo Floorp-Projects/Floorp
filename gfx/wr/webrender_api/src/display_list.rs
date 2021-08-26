@@ -1614,7 +1614,6 @@ impl DisplayListBuilder {
         transform_style: di::TransformStyle,
         transform: PropertyBinding<LayoutTransform>,
         kind: di::ReferenceFrameKind,
-        key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
 
@@ -1636,7 +1635,6 @@ impl DisplayListBuilder {
                 },
                 kind,
                 id,
-                key,
             },
         });
         self.push_spatial_tree_item(&descriptor);
@@ -1657,7 +1655,6 @@ impl DisplayListBuilder {
         scale_from: Option<LayoutSize>,
         vertical_flip: bool,
         rotation: di::Rotation,
-        key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
 
@@ -1679,7 +1676,6 @@ impl DisplayListBuilder {
                     should_snap: false,
                 },
                 id,
-                key,
             },
         });
         self.push_spatial_tree_item(&descriptor);
@@ -1853,7 +1849,6 @@ impl DisplayListBuilder {
         frame_rect: LayoutRect,
         scroll_sensitivity: di::ScrollSensitivity,
         external_scroll_offset: LayoutVector2D,
-        key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
         let scroll_frame_id = self.generate_spatial_index();
 
@@ -1872,7 +1867,6 @@ impl DisplayListBuilder {
             external_id,
             scroll_sensitivity,
             external_scroll_offset,
-            key,
         });
 
         self.push_spatial_tree_item(&descriptor);
@@ -1962,7 +1956,6 @@ impl DisplayListBuilder {
         vertical_offset_bounds: di::StickyOffsetBounds,
         horizontal_offset_bounds: di::StickyOffsetBounds,
         previously_applied_offset: LayoutVector2D,
-        key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
         let parent = self.spatial_nodes[parent_spatial_id.0].clone();
@@ -1980,7 +1973,6 @@ impl DisplayListBuilder {
             vertical_offset_bounds,
             horizontal_offset_bounds,
             previously_applied_offset,
-            key,
         });
 
         self.push_spatial_tree_item(&descriptor);
