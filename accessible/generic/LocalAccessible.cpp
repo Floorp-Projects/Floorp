@@ -956,6 +956,7 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           ipcDoc->SendTextSelectionChangeEvent(id, textRangeData);
           break;
         }
+#endif
         case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
           if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
             nsAutoString name;
@@ -971,7 +972,6 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           ipcDoc->SendEvent(id, aEvent->GetEventType());
           break;
         }
-#endif
         default:
           ipcDoc->SendEvent(id, aEvent->GetEventType());
       }
