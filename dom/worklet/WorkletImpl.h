@@ -81,6 +81,16 @@ class WorkletImpl {
 
   bool IsSharedMemoryAllowed() const { return mSharedMemoryAllowed; }
 
+  virtual void OnAddModuleStarted() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    // empty base impl
+  }
+
+  virtual void OnAddModulePromiseSettled() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    // empty base impl
+  }
+
  protected:
   WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
   virtual ~WorkletImpl();
