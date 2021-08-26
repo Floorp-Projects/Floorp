@@ -10519,6 +10519,18 @@
   value: true
   mirror: always
 
+# Controls the anti-tracking webcompat features. This includes:
+# - All URL-Classifier and state partitioning skip lists (prefs and remote
+#   settings)
+# - Storage access heuristics (opener, redirect, etc.)
+# - StorageAccessAPI automatic grants (skips the prompt)
+# - Allowing specific tracking channels on user opt-in (e.g. facebook login
+#   shim).
+- name: privacy.antitracking.enableWebcompat
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Enable the heuristic to allow storage access for recent visited pages
 - name: privacy.restrict3rdpartystorage.heuristic.recently_visited
   type: bool

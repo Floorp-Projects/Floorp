@@ -39,7 +39,7 @@ StaticRefPtr<UrlClassifierFeatureCryptominingProtection>
 
 UrlClassifierFeatureCryptominingProtection::
     UrlClassifierFeatureCryptominingProtection()
-    : UrlClassifierFeatureBase(
+    : UrlClassifierFeatureAntiTrackingBase(
           nsLiteralCString(CRYPTOMINING_FEATURE_NAME),
           nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_BLOCKLIST),
           nsLiteralCString(URLCLASSIFIER_CRYPTOMINING_ENTITYLIST),

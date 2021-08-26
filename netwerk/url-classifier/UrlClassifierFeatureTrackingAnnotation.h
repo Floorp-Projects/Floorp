@@ -15,7 +15,7 @@ namespace mozilla {
 namespace net {
 
 class UrlClassifierFeatureTrackingAnnotation final
-    : public UrlClassifierFeatureBase {
+    : public UrlClassifierFeatureAntiTrackingBase {
  public:
   static const char* Name();
 
