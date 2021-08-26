@@ -228,6 +228,9 @@ class nsTextFrame : public nsIFrame {
 
   nsresult CharacterDataChanged(const CharacterDataChangeInfo&) final;
 
+  nsTextFrame* FirstContinuation() const override {
+    return const_cast<nsTextFrame*>(this);
+  }
   nsTextFrame* GetPrevContinuation() const override { return nullptr; }
   nsTextFrame* GetNextContinuation() const final { return mNextContinuation; }
   void SetNextContinuation(nsIFrame* aNextContinuation) final {
