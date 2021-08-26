@@ -6535,11 +6535,6 @@
   value: -1
   mirror: always
 
-- name: layers.omtp.paint-workers
-  type: int32_t
-  value: -1
-  mirror: once
-
 - name: layers.orientation.sync.timeout
   type: RelaxedAtomicUint32
   value: (uint32_t)0
