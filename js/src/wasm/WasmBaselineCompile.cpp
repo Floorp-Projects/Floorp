@@ -6959,27 +6959,6 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
   }
 
-  void needLoadTemps(const MemoryAccessDesc& access, RegI32* temp1,
-                     RegI32* temp2, RegI32* temp3) {
-#if defined(JS_CODEGEN_ARM)
-    if (IsUnaligned(access)) {
-      switch (access.type()) {
-        case Scalar::Float64:
-          *temp3 = needI32();
-          [[fallthrough]];
-        case Scalar::Float32:
-          *temp2 = needI32();
-          [[fallthrough]];
-        default:
-          *temp1 = needI32();
-          break;
-      }
-    }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    *temp1 = needI32();
-#endif
-  }
-
   [[nodiscard]] bool needTlsForAccess(const AccessCheck& check) {
 #if defined(JS_CODEGEN_X86)
     // x86 requires Tls for memory base
@@ -6992,11 +6971,11 @@ class BaseCompiler final : public BaseCompilerInterface {
   // ptr and dest may be the same iff dest is I32.
   // This may destroy ptr even if ptr and dest are not the same.
   [[nodiscard]] bool load(MemoryAccessDesc* access, AccessCheck* check,
-                          RegI32 tls, RegI32 ptr, AnyReg dest, RegI32 temp1,
-                          RegI32 temp2, RegI32 temp3) {
+                          RegI32 tls, RegI32 ptr, AnyReg dest, RegI32 temp) {
     prepareMemoryAccess(access, check, tls, ptr);
 
 #if defined(JS_CODEGEN_X64)
+    MOZ_ASSERT(temp.isInvalid());
     Operand srcAddr(HeapReg, ptr, TimesOne, access->offset());
 
     if (dest.tag == AnyReg::I64) {
@@ -7005,6 +6984,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       masm.wasmLoad(*access, srcAddr, dest.any());
     }
 #elif defined(JS_CODEGEN_X86)
+    MOZ_ASSERT(temp.isInvalid());
     masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
     Operand srcAddr(ptr, access->offset());
 
@@ -7021,18 +7001,18 @@ class BaseCompiler final : public BaseCompilerInterface {
       switch (dest.tag) {
         case AnyReg::I64:
           masm.wasmUnalignedLoadI64(*access, HeapReg, ptr, ptr, dest.i64(),
-                                    temp1);
+                                    temp);
           break;
         case AnyReg::F32:
           masm.wasmUnalignedLoadFP(*access, HeapReg, ptr, ptr, dest.f32(),
-                                   temp1, temp2, RegI32::Invalid());
+                                   temp);
           break;
         case AnyReg::F64:
           masm.wasmUnalignedLoadFP(*access, HeapReg, ptr, ptr, dest.f64(),
-                                   temp1, temp2, temp3);
+                                   temp);
           break;
         case AnyReg::I32:
-          masm.wasmUnalignedLoad(*access, HeapReg, ptr, ptr, dest.i32(), temp1);
+          masm.wasmUnalignedLoad(*access, HeapReg, ptr, ptr, dest.i32(), temp);
           break;
         default:
           MOZ_CRASH("Unexpected type");
@@ -7045,12 +7025,14 @@ class BaseCompiler final : public BaseCompilerInterface {
       }
     }
 #elif defined(JS_CODEGEN_ARM)
+    MOZ_ASSERT(temp.isInvalid());
     if (dest.tag == AnyReg::I64) {
       masm.wasmLoadI64(*access, HeapReg, ptr, ptr, dest.i64());
     } else {
       masm.wasmLoad(*access, HeapReg, ptr, ptr, dest.any());
     }
 #elif defined(JS_CODEGEN_ARM64)
+    MOZ_ASSERT(temp.isInvalid());
     if (dest.tag == AnyReg::I64) {
       masm.wasmLoadI64(*access, HeapReg, ptr, dest.i64());
     } else {
@@ -7061,13 +7043,6 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
 
     return true;
-  }
-
-  RegI32 needStoreTemp(const MemoryAccessDesc& access, ValType srcType) {
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    return needI32();
-#endif
-    return RegI32::Invalid();
   }
 
   // ptr and src must not be the same register.
@@ -12074,25 +12049,19 @@ RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
 
 bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
                               ValType type) {
-  RegI32 tls, temp1, temp2, temp3;
-  needLoadTemps(*access, &temp1, &temp2, &temp3);
+  RegI32 tls, temp;
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  temp = needI32();
+#endif
 
   switch (type.kind()) {
     case ValType::I32: {
       RegI32 rp = popMemory32Access(access, &check);
-#ifdef JS_CODEGEN_ARM
-      RegI32 rv = IsUnaligned(*access) ? needI32() : rp;
-#else
-      RegI32 rv = rp;
-#endif
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp1, temp2, temp3)) {
+      if (!load(access, &check, tls, rp, AnyReg(rp), temp)) {
         return false;
       }
-      pushI32(rv);
-      if (rp != rv) {
-        freeI32(rp);
-      }
+      pushI32(rp);
       break;
     }
     case ValType::I64: {
@@ -12107,7 +12076,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       rv = needI64();
 #endif
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp1, temp2, temp3)) {
+      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
       }
       pushI64(rv);
@@ -12118,7 +12087,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       RegI32 rp = popMemory32Access(access, &check);
       RegF32 rv = needF32();
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp1, temp2, temp3)) {
+      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
       }
       pushF32(rv);
@@ -12129,7 +12098,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       RegI32 rp = popMemory32Access(access, &check);
       RegF64 rv = needF64();
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp1, temp2, temp3)) {
+      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
       }
       pushF64(rv);
@@ -12141,7 +12110,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       RegI32 rp = popMemory32Access(access, &check);
       RegV128 rv = needV128();
       tls = maybeLoadTlsForAccess(check);
-      if (!load(access, &check, tls, rp, AnyReg(rv), temp1, temp2, temp3)) {
+      if (!load(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
       }
       pushV128(rv);
@@ -12155,9 +12124,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
   }
 
   maybeFree(tls);
-  maybeFree(temp1);
-  maybeFree(temp2);
-  maybeFree(temp3);
+  maybeFree(temp);
 
   return true;
 }
@@ -12178,8 +12145,10 @@ bool BaseCompiler::emitLoad(ValType type, Scalar::Type viewType) {
 
 bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
                                ValType resultType) {
-  RegI32 tls;
-  RegI32 temp = needStoreTemp(*access, resultType);
+  RegI32 tls, temp;
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  temp = needI32();
+#endif
 
   switch (resultType.kind()) {
     case ValType::I32: {

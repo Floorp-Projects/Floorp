@@ -2065,10 +2065,7 @@ void MacroAssembler::wasmUnalignedLoad(const wasm::MemoryAccessDesc& access,
 void MacroAssembler::wasmUnalignedLoadFP(const wasm::MemoryAccessDesc& access,
                                          Register memoryBase, Register ptr,
                                          Register ptrScratch,
-                                         FloatRegister output, Register tmp1,
-                                         Register tmp2, Register tmp3) {
-  MOZ_ASSERT(tmp2 == InvalidReg);
-  MOZ_ASSERT(tmp3 == InvalidReg);
+                                         FloatRegister output, Register tmp1) {
   wasmLoadImpl(access, memoryBase, ptr, ptrScratch, AnyRegister(output), tmp1);
 }
 

@@ -1524,8 +1524,7 @@ void CodeGeneratorMIPSShared::emitWasmLoad(T* lir) {
     if (IsFloatingPointType(mir->type())) {
       masm.wasmUnalignedLoadFP(mir->access(), HeapReg, ToRegister(lir->ptr()),
                                ptrScratch, ToFloatRegister(lir->output()),
-                               ToRegister(lir->getTemp(1)), InvalidReg,
-                               InvalidReg);
+                               ToRegister(lir->getTemp(1)));
     } else {
       masm.wasmUnalignedLoad(mir->access(), HeapReg, ToRegister(lir->ptr()),
                              ptrScratch, ToRegister(lir->output()),
