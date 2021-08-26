@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ADTSDemuxer.h"
-#include "FlacDemuxer.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/ScopeExit.h"
@@ -131,10 +130,6 @@ static bool MatchesMP3(const uint8_t* aData, const uint32_t aLength) {
   return mp3_sniff(aData, (long)aLength);
 }
 
-static bool MatchesFLAC(const uint8_t* aData, const uint32_t aLength) {
-  return mozilla::FlacDemuxer::FlacSniffer(aData, aLength);
-}
-
 static bool MatchesADTS(const uint8_t* aData, const uint32_t aLength) {
   return mozilla::ADTSDemuxer::ADTSSniffer(aData, aLength);
 }
@@ -195,14 +190,6 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
 
   if (MatchesADTS(aData, clampedLength)) {
     aSniffedType.AssignLiteral(AUDIO_AAC);
-    return NS_OK;
-  }
-
-  // Flac frames are generally big, often in excess of 24kB.
-  // Using a size of MAX_BYTES_SNIFFED effectively means that we will only
-  // recognize flac content if it starts with a frame.
-  if (MatchesFLAC(aData, clampedLength)) {
-    aSniffedType.AssignLiteral(AUDIO_FLAC);
     return NS_OK;
   }
 
