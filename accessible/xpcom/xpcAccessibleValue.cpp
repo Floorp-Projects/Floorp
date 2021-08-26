@@ -22,12 +22,7 @@ xpcAccessibleValue::GetMaximumValue(double* aValue) {
     return NS_ERROR_FAILURE;
   }
 
-  double value;
-  if (Intl()->IsLocal()) {
-    value = Intl()->AsLocal()->MaxValue();
-  } else {
-    value = Intl()->AsRemote()->MaxValue();
-  }
+  double value = Intl()->MaxValue();
 
   if (!IsNaN(value)) *aValue = value;
 
@@ -45,12 +40,7 @@ xpcAccessibleValue::GetMinimumValue(double* aValue) {
     return NS_ERROR_FAILURE;
   }
 
-  double value;
-  if (Intl()->IsLocal()) {
-    value = Intl()->AsLocal()->MinValue();
-  } else {
-    value = Intl()->AsRemote()->MinValue();
-  }
+  double value = Intl()->MinValue();
 
   if (!IsNaN(value)) *aValue = value;
 
@@ -68,12 +58,7 @@ xpcAccessibleValue::GetCurrentValue(double* aValue) {
     return NS_ERROR_FAILURE;
   }
 
-  double value;
-  if (Intl()->IsLocal()) {
-    value = Intl()->AsLocal()->CurValue();
-  } else {
-    value = Intl()->AsRemote()->CurValue();
-  }
+  double value = Intl()->CurValue();
 
   if (!IsNaN(value)) *aValue = value;
 
@@ -108,12 +93,7 @@ xpcAccessibleValue::GetMinimumIncrement(double* aValue) {
     return NS_ERROR_FAILURE;
   }
 
-  double value;
-  if (Intl()->IsLocal()) {
-    value = Intl()->AsLocal()->Step();
-  } else {
-    value = Intl()->AsRemote()->Step();
-  }
+  double value = Intl()->Step();
 
   if (!IsNaN(value)) *aValue = value;
 

@@ -188,14 +188,9 @@ enum CheckboxValue {
 - (void)changeValueBySteps:(int)factor {
   MOZ_ASSERT(mGeckoAccessible, "mGeckoAccessible is null");
 
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    double newValue = acc->CurValue() + (acc->Step() * factor);
-    [self setValue:(newValue)];
-  } else {
-    RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-    double newValue = proxy->CurValue() + (proxy->Step() * factor);
-    [self setValue:(newValue)];
-  }
+  double newValue =
+      mGeckoAccessible->CurValue() + (mGeckoAccessible->Step() * factor);
+  [self setValue:(newValue)];
 }
 
 /*
@@ -204,22 +199,14 @@ enum CheckboxValue {
 - (void)setValue:(double)value {
   MOZ_ASSERT(mGeckoAccessible, "mGeckoAccessible is null");
 
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    double min = acc->MinValue();
-    double max = acc->MaxValue();
-    // Because min and max are not required attributes, we first check
-    // if the value is undefined. If this check fails,
-    // the value is defined, and we verify our new value falls
-    // within the bound (inclusive).
-    if ((IsNaN(min) || value >= min) && (IsNaN(max) || value <= max)) {
+  double min = mGeckoAccessible->MinValue();
+  double max = mGeckoAccessible->MaxValue();
+
+  if ((IsNaN(min) || value >= min) && (IsNaN(max) || value <= max)) {
+    if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
       acc->SetCurValue(value);
-    }
-  } else {
-    RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-    double min = proxy->MinValue();
-    double max = proxy->MaxValue();
-    // As above, check if the value is within bounds.
-    if ((IsNaN(min) || value >= min) && (IsNaN(max) || value <= max)) {
+    } else {
+      RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
       proxy->SetCurValue(value);
     }
   }
