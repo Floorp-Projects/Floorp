@@ -64,6 +64,7 @@ button.downloadButton:hover:active,
 
 #downloadsPanel-blockedSubview-buttons {
   display: flex;
+  margin-top: 1.5em;
 }
 
 .downloadBlockedBadge {
@@ -276,14 +277,14 @@ button.downloadButton {
 
 /*** Blocked subview ***/
 #downloadsPanel-blockedSubview-title {
-  font-size: calc(100% / var(--downloads-item-font-size-factor));
+  font-size: calc(100% * var(--downloads-item-font-size-factor));
   margin-bottom: 1.5em;
 }
 
 #downloadsPanel-blockedSubview-details1,
 #downloadsPanel-blockedSubview-details2 {
   font-size: calc(100% * var(--downloads-item-font-size-factor));
-  margin-bottom: 1em;
+  margin-bottom: 0.5em;
   opacity: var(--downloads-item-details-opacity);
 }
 
