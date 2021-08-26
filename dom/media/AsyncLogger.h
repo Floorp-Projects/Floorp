@@ -18,6 +18,7 @@
 #include "mozilla/TimeStamp.h"
 #include "GeckoProfiler.h"
 #include "MPSCQueue.h"
+#include "mozilla/BaseProfilerMarkerTypes.h"
 
 #if defined(_WIN32)
 #  include <process.h>
@@ -27,6 +28,46 @@
 #endif
 
 namespace mozilla {
+
+// Allows writing 0-terminated C-strings in a buffer, and returns the start
+// index of the string that's been appended. Automatically truncates the strings
+// as needed if the storage is too small, returning true when that's the case.
+class MOZ_STACK_CLASS StringWriter {
+ public:
+  StringWriter(char* aMemory, size_t aLength)
+      : mMemory(aMemory), mWriteIndex(0), mLength(aLength) {}
+
+  bool AppendCString(const char* aString, size_t* aIndexStart) {
+    *aIndexStart = mWriteIndex;
+    if (!aString) {
+      return false;
+    }
+    size_t toCopy = strlen(aString);
+    bool truncated = false;
+
+    if (toCopy > Available()) {
+      truncated = true;
+      toCopy = Available() - 1;
+    }
+
+    memcpy(&(mMemory[mWriteIndex]), aString, toCopy);
+    mWriteIndex += toCopy;
+    mMemory[mWriteIndex] = 0;
+    mWriteIndex++;
+
+    return truncated;
+  }
+
+ private:
+  size_t Available() {
+    MOZ_ASSERT(mLength > mWriteIndex);
+    return mLength - mWriteIndex;
+  }
+
+  char* mMemory;
+  size_t mWriteIndex;
+  size_t mLength;
+};
 
 const size_t PAYLOAD_TOTAL_SIZE = 2 << 9;
 
@@ -65,7 +106,9 @@ class AsyncLogger {
    * - End - this marks the end of a temporal region                         \
    * - Complete - this is a timestamp and a length, forming complete a       \
    * temporal region */                                                      \
-  TracingPhase mPhase
+  TracingPhase mPhase;                                                       \
+  /* Offset at which the comment part of the string starts, in mName */      \
+  uint8_t mCommentStart;
 
     MEMBERS_EXCEPT_NAME;
 
@@ -133,13 +176,25 @@ class AsyncLogger {
             std::hash<std::thread::id>{}(std::this_thread::get_id()), aComment);
       } else {
         auto* msg = new MPSCQueue<TracePayload>::Message();
+
         msg->data.mTID = profiler_current_thread_id();
         msg->data.mPhase = aPhase;
         msg->data.mTimestamp = TimeStamp::Now();
         msg->data.mDurationUs = 0;  // unused, duration is end - begin
-        size_t len = std::min(strlen(aName), ArrayLength(msg->data.mName));
-        memcpy(msg->data.mName, aName, len);
-        msg->data.mName[len] = 0;
+
+        StringWriter writer(msg->data.mName, ArrayLength(msg->data.mName));
+
+        size_t commentIndex;
+        DebugOnly<bool> truncated = writer.AppendCString(aName, &commentIndex);
+        MOZ_ASSERT(!truncated, "Tracing payload truncated: name");
+
+        if (aComment) {
+          truncated = writer.AppendCString(aComment, &commentIndex);
+          MOZ_ASSERT(!truncated, "Tracing payload truncated: comment");
+          msg->data.mCommentStart = commentIndex;
+        } else {
+          msg->data.mCommentStart = 0;
+        }
         mMessageQueueProfiler.Push(msg);
       }
     }
@@ -201,9 +256,29 @@ class AsyncLogger {
           }
         }
         {
-          struct BudgetMarker {
+          struct TracingMarkerWithComment {
             static constexpr Span<const char> MarkerTypeName() {
-              return MakeStringSpan("Budget");
+              return MakeStringSpan("Real-Time");
+            }
+            static void StreamJSONMarkerData(
+                baseprofiler::SpliceableJSONWriter& aWriter,
+                const ProfilerString8View& aText) {
+              aWriter.StringProperty("name", aText);
+            }
+            static MarkerSchema MarkerTypeDisplay() {
+              using MS = MarkerSchema;
+              MS schema{MS::Location::markerChart, MS::Location::markerTable};
+              schema.SetChartLabel("{marker.data.name}");
+              schema.SetTableLabel("{marker.name} - {marker.data.name}");
+              schema.AddKeyLabelFormat("name", "Comment",
+                                       MarkerSchema::Format::string);
+              return schema;
+            }
+          };
+
+          struct TracingMarker {
+            static constexpr Span<const char> MarkerTypeName() {
+              return MakeStringSpan("Real-time");
             }
             static void StreamJSONMarkerData(
                 baseprofiler::SpliceableJSONWriter& aWriter) {}
@@ -218,14 +293,29 @@ class AsyncLogger {
           TracePayload message;
           while (mMessageQueueProfiler.Pop(&message) && mRunning) {
             if (message.mPhase != TracingPhase::COMPLETE) {
-              profiler_add_marker(
-                  ProfilerString8View::WrapNullTerminatedString(message.mName),
-                  geckoprofiler::category::MEDIA_RT,
-                  {MarkerThreadId(message.mTID),
-                   (message.mPhase == TracingPhase::BEGIN)
-                       ? MarkerTiming::IntervalStart(message.mTimestamp)
-                       : MarkerTiming::IntervalEnd(message.mTimestamp)},
-                  BudgetMarker{});
+              if (!message.mCommentStart) {
+                profiler_add_marker(
+                    ProfilerString8View::WrapNullTerminatedString(
+                        message.mName),
+                    geckoprofiler::category::MEDIA_RT,
+                    {MarkerThreadId(message.mTID),
+                     (message.mPhase == TracingPhase::BEGIN)
+                         ? MarkerTiming::IntervalStart(message.mTimestamp)
+                         : MarkerTiming::IntervalEnd(message.mTimestamp)},
+                    TracingMarker{});
+              } else {
+                profiler_add_marker(
+                    ProfilerString8View::WrapNullTerminatedString(
+                        message.mName),
+                    geckoprofiler::category::MEDIA_RT,
+                    {MarkerThreadId(message.mTID),
+                     (message.mPhase == TracingPhase::BEGIN)
+                         ? MarkerTiming::IntervalStart(message.mTimestamp)
+                         : MarkerTiming::IntervalEnd(message.mTimestamp)},
+                    TracingMarkerWithComment{},
+                    ProfilerString8View::WrapNullTerminatedString(
+                        &(message.mName[message.mCommentStart])));
+              }
             } else {
               profiler_add_marker(
                   ProfilerString8View::WrapNullTerminatedString(message.mName),
@@ -235,7 +325,7 @@ class AsyncLogger {
                        message.mTimestamp,
                        message.mTimestamp + TimeDuration::FromMicroseconds(
                                                 message.mDurationUs))},
-                  BudgetMarker{});
+                  TracingMarker{});
             }
           }
         }
