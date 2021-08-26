@@ -477,7 +477,7 @@ struct HpkeVector {
     uint32_t test_id = 0;
 
     while (r.NextItem('[', ']')) {
-      HpkeVector vec = { 0 };
+      HpkeVector vec = {0};
       uint32_t fields = 0;
       enum class RequiredFields {
         mode,

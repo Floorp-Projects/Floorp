@@ -164,7 +164,7 @@ static void SHA256_Compress_Generic(SHA256Context *ctx);
 static void SHA256_Update_Generic(SHA256Context *ctx, const unsigned char *input,
                                   unsigned int inputLen);
 
-#if !defined(USE_HW_SHA2) || !defined(IS_LITTLE_ENDIAN)
+#if !defined(USE_HW_SHA2)
 void
 SHA256_Compress_Native(SHA256Context *ctx)
 {
