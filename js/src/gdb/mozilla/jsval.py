@@ -230,3 +230,14 @@ class JSValue(object):
         else:
             value = "unrecognized!"
         return "$JS::Value(%s)" % (value,)
+
+    def is_undefined(self):
+        return self.box.tag() == self.jtc.UNDEFINED
+
+    def get_string(self):
+        assert self.box.tag() == self.jtc.STRING
+        return self.box.as_address().cast(self.cache.JSString_ptr_t)
+
+    def get_private(self):
+        assert self.box.tag() == self.jtc.DOUBLE
+        return self.box.asBits
