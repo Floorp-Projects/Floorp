@@ -78,4 +78,4 @@ pub const OS: &str = "Solaris";
     target_os = "openbsd",
     target_os = "solaris",
 )))]
-pub const OS: &str = "unknown";
+pub const OS: &str = "Unknown";
