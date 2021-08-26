@@ -5494,6 +5494,9 @@ void nsFlexContainerFrame::PopulateReflowOutput(
 void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
     const ReflowInput& aReflowInput, const FlexItem& aItem,
     LogicalPoint& aFramePos, const nsSize& aContainerSize) {
+  FLEX_LOG("Moving flex item %p to its desired position %s", aItem.Frame(),
+           ToString(aFramePos).c_str());
+
   WritingMode outerWM = aReflowInput.GetWritingMode();
 
   // If item is relpos, look up its offsets (cached from prev reflow)
