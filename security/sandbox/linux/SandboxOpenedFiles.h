@@ -29,13 +29,21 @@ namespace mozilla {
 // plugin.  It can be move-constructed but not copied.
 class SandboxOpenedFile final {
  public:
+  enum class Dup { NO, YES };
+  struct Error {};
+
   // This constructor opens the named file and saves the descriptor.
   // If the open fails, IsOpen() will return false and GetDesc() will
-  // quietly return -1.  If aDup is true, GetDesc() will return a
+  // quietly return -1.  If aDup is Dup::YES, GetDesc() will return a
   // dup() of the descriptor every time it's called; otherwise, the
   // first call will return the descriptor and any further calls will
   // log an error message and return -1.
-  explicit SandboxOpenedFile(const char* aPath, bool aDup = false);
+  explicit SandboxOpenedFile(const char* aPath, Dup aDup = Dup::NO);
+
+  // This constructor is for files which the process will try to open
+  // but we don't want to grant access: using it will always fail
+  // (GetDesc will return -1) without logging.
+  SandboxOpenedFile(const char* aPath, Error);
 
   // Simulates opening the pre-opened file; see the constructor's
   // comment for details.  Does not set errno on error, but may modify
