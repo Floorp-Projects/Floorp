@@ -59,6 +59,8 @@
     <color name="snackbarTextColor">#ffffffff</color>
     <color name="snackbarActionText">@color/photonBlue50</color>
 
+    <color name="statusBarBackground">#1D1133</color>
+
     <color name="searchSuggestionsBackground">@color/photonInk80</color>
 
     <color name="searchSuggestionPromptBackground">@color/photonInk80</color>

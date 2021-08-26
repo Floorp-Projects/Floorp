@@ -10,6 +10,7 @@ import android.widget.ListView
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.StatusBarUtils
@@ -32,6 +33,12 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         val statusBarView = view.findViewById<View>(R.id.status_bar_background)
         StatusBarUtils.getStatusBarHeight(statusBarView) { statusBarHeight ->
             statusBarView.layoutParams.height = statusBarHeight
+            statusBarView.setBackgroundColor(
+                ContextCompat.getColor(
+                    view.context,
+                    R.color.statusBarBackground
+                )
+            )
         }
 
         val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
