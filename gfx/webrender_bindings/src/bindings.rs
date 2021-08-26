@@ -446,7 +446,6 @@ pub enum WrAnimationType {
 pub struct WrAnimationProperty {
     effect_type: WrAnimationType,
     id: u64,
-    key: SpatialTreeItemKey,
 }
 
 /// cbindgen:derive-eq=false
@@ -474,13 +473,6 @@ pub struct WrComputedTransformData {
     pub scale_from: LayoutSize,
     pub vertical_flip: bool,
     pub rotation: WrRotation,
-    pub key: SpatialTreeItemKey,
-}
-
-#[repr(C)]
-pub struct WrTransformInfo {
-    pub transform: LayoutTransform,
-    pub key: SpatialTreeItemKey,
 }
 
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void {
@@ -2461,7 +2453,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
     bounds: LayoutRect,
     spatial_id: WrSpatialId,
     params: &WrStackingContextParams,
-    transform: *const WrTransformInfo,
+    transform: *const LayoutTransform,
     filters: *const FilterOp,
     filter_count: usize,
     filter_datas: *const WrFilterData,
@@ -2489,9 +2481,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
         .collect();
 
     let transform_ref = unsafe { transform.as_ref() };
-    let mut transform_binding = transform_ref.map(|info| {
-        (PropertyBinding::Value(info.transform), info.key)
-    });
+    let mut transform_binding = transform_ref.map(|t| PropertyBinding::Value(*t));
 
     let computed_ref = unsafe { params.computed_transform.as_ref() };
     let opacity_ref = unsafe { params.opacity.as_ref() };
@@ -2515,16 +2505,11 @@ pub extern "C" fn wr_dp_push_stacking_context(
                 has_opacity_animation = true;
             }
             WrAnimationType::Transform => {
-                transform_binding = Some(
-                    (
-                        PropertyBinding::Binding(
-                            PropertyBindingKey::new(anim.id),
-                            // Same as above opacity case.
-                            transform_ref.map(|info| info.transform).unwrap_or_else(LayoutTransform::identity),
-                        ),
-                        anim.key,
-                    )
-                );
+                transform_binding = Some(PropertyBinding::Binding(
+                    PropertyBindingKey::new(anim.id),
+                    // Same as above opacity case.
+                    transform_ref.cloned().unwrap_or_else(LayoutTransform::identity),
+                ));
             }
             _ => unreachable!("{:?} should not create a stacking context", anim.effect_type),
         }
@@ -2568,9 +2553,8 @@ pub extern "C" fn wr_dp_push_stacking_context(
             origin,
             wr_spatial_id,
             params.transform_style,
-            transform_binding.0,
+            transform_binding,
             reference_frame_kind,
-            transform_binding.1,
         );
 
         origin = LayoutPoint::zero();
@@ -2589,7 +2573,6 @@ pub extern "C" fn wr_dp_push_stacking_context(
             Some(data.scale_from),
             data.vertical_flip,
             rotation,
-            data.key,
         );
 
         origin = LayoutPoint::zero();
@@ -2744,7 +2727,6 @@ pub extern "C" fn wr_dp_define_sticky_frame(
     vertical_bounds: StickyOffsetBounds,
     horizontal_bounds: StickyOffsetBounds,
     applied_offset: LayoutVector2D,
-    key: SpatialTreeItemKey,
 ) -> WrSpatialId {
     assert!(unsafe { is_in_main_thread() });
     let spatial_id = state.frame_builder.dl_builder.define_sticky_frame(
@@ -2759,7 +2741,6 @@ pub extern "C" fn wr_dp_define_sticky_frame(
         vertical_bounds,
         horizontal_bounds,
         applied_offset,
-        key,
     );
 
     WrSpatialId { id: spatial_id.0 }
@@ -2773,7 +2754,6 @@ pub extern "C" fn wr_dp_define_scroll_layer(
     content_rect: LayoutRect,
     clip_rect: LayoutRect,
     scroll_offset: LayoutPoint,
-    key: SpatialTreeItemKey,
 ) -> WrSpatialId {
     assert!(unsafe { is_in_main_thread() });
 
@@ -2786,7 +2766,6 @@ pub extern "C" fn wr_dp_define_scroll_layer(
         // TODO(gw): We should also update the Gecko-side APIs to provide
         //           this as a vector rather than a point.
         scroll_offset.to_vector(),
-        key,
     );
 
     WrSpatialId::from_webrender(space_and_clip)
