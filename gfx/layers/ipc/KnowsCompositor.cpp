@@ -7,6 +7,7 @@
 #include "KnowsCompositor.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -96,7 +97,7 @@ already_AddRefed<gfx::DrawTarget> GetDrawTargetForDescriptor(
       gfx::BackendType::SKIA, data, rgb.size(), stride, rgb.format());
 }
 
-void DestroySurfaceDescriptor(IShmemAllocator* aAllocator,
+void DestroySurfaceDescriptor(ipc::IShmemAllocator* aAllocator,
                               SurfaceDescriptor* aSurface) {
   MOZ_ASSERT(aSurface);
 
