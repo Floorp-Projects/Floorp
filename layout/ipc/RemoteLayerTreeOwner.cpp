@@ -11,7 +11,6 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/LayerTransactionParent.h"
 #include "nsFrameLoader.h"
 #include "nsStyleStructInlines.h"
 #include "nsSubDocumentFrame.h"

@@ -241,11 +241,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   void PrepareFinalDestroy();
   void AfterDestroy();
 
-  PLayerTransactionChild* AllocPLayerTransactionChild(
-      const nsTArray<LayersBackend>& aBackendHints, const LayersId& aId);
-
-  bool DeallocPLayerTransactionChild(PLayerTransactionChild* aChild);
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvSharedCompositorFrameMetrics(
