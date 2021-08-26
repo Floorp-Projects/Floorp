@@ -74,6 +74,33 @@ add_task(async () => {
 
   async function takeSnapshot(browserWin) {
     let browser = await openBrowserActionPanel(extension, browserWin, true);
+
+    // Ensure there's no pending paint requests.
+    // The below code is a simplified version of promiseAllPaintsDone in
+    // paint_listener.js.
+    await SpecialPowers.spawn(browser, [], async () => {
+      return new Promise(resolve => {
+        function waitForPaints() {
+          // Wait until paint suppression has ended
+          if (SpecialPowers.DOMWindowUtils.paintingSuppressed) {
+            dump`waiting for paint suppression to end...`;
+            content.window.setTimeout(waitForPaints, 0);
+            return;
+          }
+
+          if (SpecialPowers.DOMWindowUtils.isMozAfterPaintPending) {
+            dump`waiting for paint...`;
+            content.window.addEventListener("MozAfterPaint", waitForPaints, {
+              once: true,
+            });
+            return;
+          }
+          resolve();
+        }
+        waitForPaints();
+      });
+    });
+
     const snapshot = await SpecialPowers.spawn(browser, [], async () => {
       return SpecialPowers.snapshotWindowWithOptions(
         content.window,
