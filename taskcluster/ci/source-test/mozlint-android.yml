@@ -34,13 +34,10 @@ lints:
               name: public/code-review/mozlint.json
               path: /builds/worker/mozlint.json
             - name: public/android/geckoview/api.txt
-              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/intermediates/javac/withGeckoBinariesDebug/classes/api.txt
-              type: file
-            - name: public/android/geckoview/api.txt.map
-              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/intermediates/javac/withGeckoBinariesDebug/classes/api.txt.map
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/intermediates/javac/withGeckoBinariesDebug/compileWithGeckoBinariesDebugJavaWithJavac/classes/api.txt
               type: file
             - name: public/android/geckoview/apilint-result.json
-              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/intermediates/javac/withGeckoBinariesDebug/classes/apilint-result.json
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/intermediates/javac/withGeckoBinariesDebug/compileWithGeckoBinariesDebugJavaWithJavac/classes/apilint-result.json
               type: file
             - name: public/android/geckoview/javadoc-results.json
               path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/reports/javadoc-results-withGeckoBinariesDebug.json
