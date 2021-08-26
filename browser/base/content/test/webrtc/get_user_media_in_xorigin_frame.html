@@ -28,10 +28,7 @@ var gStreams = [];
 function requestDevice(aAudio, aVideo, aShare) {
   var opts = {video: aVideo, audio: aAudio};
   if (aShare) {
-    opts.video = {
-      mozMediaSource: aShare,
-      mediaSource: aShare,
-    };
+    opts.video = { mediaSource: aShare };
   } else if (useFakeStreams) {
     opts.fake = true;
   }

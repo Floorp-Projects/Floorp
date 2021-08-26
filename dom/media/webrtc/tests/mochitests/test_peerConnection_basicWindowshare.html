@@ -14,10 +14,7 @@
   runNetworkTest(function (options) {
     const test = new PeerConnectionTest(options);
     const constraints = {
-      video: {
-         mozMediaSource: "window",
-         mediaSource: "window"
-      },
+      video: { mediaSource: "window" },
       fake: false
     };
     test.setMediaConstraints([constraints], []);
