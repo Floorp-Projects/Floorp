@@ -236,3 +236,31 @@ def get_shell_info():
         True if "vscode" in os.getenv("TERM_PROGRAM", "") else False,
         bool(os.getenv("SSH_CLIENT", False)),
     )
+
+
+def get_vscode_running():
+    """Return if the vscode is currently running."""
+    try:
+        import psutil
+    except Exception:
+        psutil = None
+
+    if not psutil:
+        return None
+
+    for proc in psutil.process_iter():
+        try:
+            # On Windows we have "Code.exe"
+            # On MacOS we have "Code Helper (Renderer)"
+            # On Linux we have ""
+            if (
+                proc.name == "Code.exe"
+                or proc.name == "Code Helper (Renderer)"
+                or proc.name == "code"
+            ):
+                return True
+        except Exception:
+            # may not be able to access process info for all processes
+            continue
+
+    return False
