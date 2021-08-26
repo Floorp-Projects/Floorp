@@ -39,4 +39,5 @@ Table of Contents
    debugging
    experiments
    dynamic-result-types
+   preferences
    contact
