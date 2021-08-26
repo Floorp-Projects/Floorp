@@ -27,6 +27,7 @@
 #include "nsIInputStreamPump.h"
 #include "nsNetUtil.h"
 #include "xpcprivate.h"
+#include "mozilla/ScopeExit.h"
 
 namespace mozilla {
 namespace dom {
@@ -79,6 +80,11 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
                                          ErrorResult& aRv) {
     MOZ_ASSERT(aWorklet);
     MOZ_ASSERT(NS_IsMainThread());
+
+    aWorklet->Impl()->OnAddModuleStarted();
+
+    auto promiseSettledGuard =
+        MakeScopeExit([&] { aWorklet->Impl()->OnAddModulePromiseSettled(); });
 
     nsCOMPtr<nsIGlobalObject> global =
         do_QueryInterface(aWorklet->GetParentObject());
@@ -147,6 +153,8 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
       // anyway if aRv is a failure.
       return nullptr;
     }
+
+    promiseSettledGuard.release();
 
     RefPtr<WorkletFetchHandler> handler =
         new WorkletFetchHandler(aWorklet, spec, promise);
@@ -304,6 +312,8 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     MOZ_ASSERT(NS_FAILED(aResult));
     MOZ_ASSERT(NS_IsMainThread());
 
+    mWorklet->Impl()->OnAddModulePromiseSettled();
+
     for (uint32_t i = 0; i < mPromises.Length(); ++i) {
       mPromises[i]->MaybeReject(aResult);
     }
@@ -317,6 +327,8 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
   void ResolvePromises() {
     MOZ_ASSERT(mStatus == ePending);
     MOZ_ASSERT(NS_IsMainThread());
+
+    mWorklet->Impl()->OnAddModulePromiseSettled();
 
     for (uint32_t i = 0; i < mPromises.Length(); ++i) {
       mPromises[i]->MaybeResolveWithUndefined();
