@@ -132,7 +132,7 @@ void gfxDWriteFont::SystemTextQualityChanged() {
   // flush cached stuff that depended on the old setting, and force
   // reflow everywhere to ensure we are using correct glyph metrics.
   gfxPlatform::FlushFontAndWordCaches();
-  gfxPlatform::ForceGlobalReflow();
+  gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::No);
 }
 
 mozilla::Atomic<bool> gfxDWriteFont::sForceGDIClassicEnabled{true};

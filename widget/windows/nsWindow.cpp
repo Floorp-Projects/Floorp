@@ -5048,17 +5048,6 @@ const char16_t* GetQuitType() {
   return nullptr;
 }
 
-static void ForceFontUpdate() {
-  // update device context font cache
-  // Dirty but easiest way:
-  // Changing nsIPrefBranch entry which triggers callbacks
-  // and flows into calling mDeviceContext->FlushFontCache()
-  // to update the font cache in all the instance of Browsers
-  static const char kPrefName[] = "font.internaluseonly.changed";
-  bool fontInternalChange = Preferences::GetBool(kPrefName, false);
-  Preferences::SetBool(kPrefName, !fontInternalChange);
-}
-
 bool nsWindow::ExternalHandlerProcessMessage(UINT aMessage, WPARAM& aWParam,
                                              LPARAM& aLParam,
                                              MSGResult& aResult) {
@@ -5231,7 +5220,9 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           do_GetService("@mozilla.org/gfx/fontenumerator;1", &rv);
       if (NS_SUCCEEDED(rv)) {
         fontEnum->UpdateFontList(&didChange);
-        ForceFontUpdate();
+        if (didChange) {
+          gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::Yes);
+        }
       }  // if (NS_SUCCEEDED(rv))
     } break;
 
