@@ -27,7 +27,6 @@
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ShapeUtils.h"
 #include "mozilla/StaticPrefs_apz.h"

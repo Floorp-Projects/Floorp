@@ -123,7 +123,6 @@ using mozilla::java::GeckoSession;
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorSession.h"
-#include "mozilla/layers/LayerTransactionParent.h"
 #include "mozilla/layers/UiCompositorControllerChild.h"
 #include "nsThreadUtils.h"
 
