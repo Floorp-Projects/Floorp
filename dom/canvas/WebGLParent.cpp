@@ -6,7 +6,6 @@
 #include "WebGLParent.h"
 
 #include "WebGLChild.h"
-#include "mozilla/layers/LayerTransactionParent.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "ImageContainer.h"
 #include "HostWebGLContext.h"

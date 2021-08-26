@@ -85,7 +85,6 @@
 #include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/layers/AxisPhysicsModel.h"
 #include "mozilla/layers/AxisPhysicsMSDModel.h"
-#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 #include "mozilla/Unused.h"
 #include "MobileViewportManager.h"

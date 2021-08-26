@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PCompositorBridge;
-include protocol PLayerTransaction;
 
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SurfaceDescriptor from "mozilla/layers/LayersTypes.h";

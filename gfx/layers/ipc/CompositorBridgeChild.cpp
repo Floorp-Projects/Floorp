@@ -17,8 +17,6 @@
 #include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/LayerManager.h"
-#include "mozilla/layers/LayerTransactionChild.h"
-#include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "mozilla/layers/TextureClient.h"      // for TextureClient
 #include "mozilla/layers/TextureClientPool.h"  // for TextureClientPool
@@ -57,7 +55,6 @@
 
 using mozilla::Unused;
 using mozilla::gfx::GPUProcessManager;
-using mozilla::layers::LayerTransactionChild;
 
 namespace mozilla {
 namespace layers {
@@ -171,14 +168,6 @@ void CompositorBridgeChild::Destroy() {
         NewRunnableMethod("CompositorBridgeChild::PrepareFinalDestroy", selfRef,
                           &CompositorBridgeChild::PrepareFinalDestroy));
     return;
-  }
-
-  AutoTArray<PLayerTransactionChild*, 16> transactions;
-  ManagedPLayerTransactionChild(transactions);
-  for (int i = transactions.Length() - 1; i >= 0; --i) {
-    RefPtr<LayerTransactionChild> layers =
-        static_cast<LayerTransactionChild*>(transactions[i]);
-    layers->Destroy();
   }
 
   AutoTArray<PWebRenderBridgeChild*, 16> wrBridges;
@@ -312,22 +301,6 @@ bool CompositorBridgeChild::CompositorIsInGPUProcess() {
   }
 
   return bridge->OtherPid() != dom::ContentChild::GetSingleton()->OtherPid();
-}
-
-PLayerTransactionChild* CompositorBridgeChild::AllocPLayerTransactionChild(
-    const nsTArray<LayersBackend>& aBackendHints, const LayersId& aId) {
-  LayerTransactionChild* c = new LayerTransactionChild(aId);
-  c->AddIPDLReference();
-
-  return c;
-}
-
-bool CompositorBridgeChild::DeallocPLayerTransactionChild(
-    PLayerTransactionChild* actor) {
-  LayersId childId = static_cast<LayerTransactionChild*>(actor)->GetId();
-  ClearSharedFrameMetricsData(childId);
-  static_cast<LayerTransactionChild*>(actor)->ReleaseIPDLReference();
-  return true;
 }
 
 mozilla::ipc::IPCResult CompositorBridgeChild::RecvInvalidateLayers(
