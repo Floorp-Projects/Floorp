@@ -163,11 +163,14 @@ async function checkData(browser, options) {
   }
 }
 
-add_task(async function testRedirectHeuristic() {
+async function runTestRedirectHeuristic(disableHeuristics) {
   info("Starting Dynamic FPI Redirect Heuristic test...");
 
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.restrict3rdpartystorage.heuristic.recently_visited", true]],
+    set: [
+      ["privacy.restrict3rdpartystorage.heuristic.recently_visited", true],
+      ["privacy.antitracking.enableWebcompat", !disableHeuristics],
+    ],
   });
 
   // mark third-party as tracker
@@ -238,16 +241,30 @@ add_task(async function testRedirectHeuristic() {
     TEST_TOP_PAGE
   );
 
-  info("third-party page should able to access first-party data");
+  info(
+    `third-party page should ${
+      disableHeuristics ? "not " : ""
+    }be able to access first-party data`
+  );
   await checkData(browser, {
     firstParty: "firstParty",
-    thirdParty: "heuristicFirstParty",
+    thirdParty: disableHeuristics ? "" : "heuristicFirstParty",
   });
 
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
 
+  await SpecialPowers.popPrefEnv();
+
   await cleanup();
+}
+
+add_task(async function testRedirectHeuristic() {
+  await runTestRedirectHeuristic(false);
+});
+
+add_task(async function testRedirectHeuristicDisabled() {
+  await runTestRedirectHeuristic(true);
 });
 
 class UpdateEvent extends EventTarget {}
@@ -257,12 +274,13 @@ function waitForEvent(element, eventName) {
   });
 }
 
-add_task(async function testExceptionListPref() {
+async function runTestExceptionListPref(disableHeuristics) {
   info("Starting Dynamic FPI exception list test pref");
 
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.restrict3rdpartystorage.heuristic.recently_visited", false],
+      ["privacy.antitracking.enableWebcompat", !disableHeuristics],
     ],
   });
 
@@ -314,7 +332,7 @@ add_task(async function testExceptionListPref() {
   await Promise.all([
     checkData(browserFirstParty, {
       firstParty: "firstParty",
-      thirdParty: "ExceptionListFirstParty",
+      thirdParty: disableHeuristics ? "thirdParty" : "ExceptionListFirstParty",
     }),
     checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
   ]);
@@ -341,7 +359,7 @@ add_task(async function testExceptionListPref() {
   await Promise.all([
     checkData(browserFirstParty, {
       firstParty: "firstParty",
-      thirdParty: "ExceptionListFirstParty",
+      thirdParty: disableHeuristics ? "thirdParty" : "ExceptionListFirstParty",
     }),
     checkData(browserThirdParty, { firstParty: "ExceptionListFirstParty" }),
   ]);
@@ -350,7 +368,17 @@ add_task(async function testExceptionListPref() {
   BrowserTestUtils.removeTab(tabFirstParty);
   BrowserTestUtils.removeTab(tabThirdParty);
 
+  await SpecialPowers.popPrefEnv();
+
   await cleanup();
+}
+
+add_task(async function testExceptionListPref() {
+  await runTestExceptionListPref(false);
+});
+
+add_task(async function testExceptionListPrefDisabled() {
+  await runTestExceptionListPref(true);
 });
 
 add_task(async function testExceptionListRemoteSettings() {
