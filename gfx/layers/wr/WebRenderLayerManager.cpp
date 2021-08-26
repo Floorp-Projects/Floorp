@@ -76,6 +76,13 @@ bool WebRenderLayerManager::Initialize(
   }
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
+  // Check widget size
+  if (XRE_IsParentProcess() &&
+      (size.width < 0 || size.width > wr::MAX_RENDER_TASK_SIZE ||
+       size.height < 0 || size.height > wr::MAX_RENDER_TASK_SIZE)) {
+    gfxCriticalNote << "Widget size is not valid " << size;
+  }
+
   PWebRenderBridgeChild* bridge =
       aCBChild->SendPWebRenderBridgeConstructor(aLayersId, size, windowKind);
   if (!bridge) {
