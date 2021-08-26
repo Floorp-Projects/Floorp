@@ -3603,8 +3603,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void wasmUnalignedLoadFP(const wasm::MemoryAccessDesc& access,
                            Register memoryBase, Register ptr,
                            Register ptrScratch, FloatRegister output,
-                           Register tmp1, Register tmp2, Register tmp3)
-      DEFINED_ON(mips32, mips64);
+                           Register tmp1) DEFINED_ON(mips32, mips64);
 
   // `ptr` will always be updated.
   void wasmUnalignedLoadI64(const wasm::MemoryAccessDesc& access,
