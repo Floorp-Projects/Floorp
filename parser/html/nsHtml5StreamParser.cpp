@@ -203,6 +203,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mFeedChardet(true),
       mGuessEncoding(true),
       mReparseForbidden(false),
+      mForceAutoDetection(false),
       mChannelHadCharset(false),
       mLastBuffer(nullptr),  // Will be filled when starting
       mExecutor(aExecutor),
@@ -310,8 +311,6 @@ void nsHtml5StreamParser::GuessEncoding(bool aEof, bool aInitial) {
   } else {
     mGuessEncoding = false;
   }
-  bool forced = (mCharsetSource == kCharsetFromPendingUserForcedAutoDetection ||
-                 mCharsetSource == kCharsetFromInitialUserForcedAutoDetection);
   MOZ_ASSERT(
       mCharsetSource != kCharsetFromFinalUserForcedAutoDetection &&
       mCharsetSource != kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
@@ -324,14 +323,15 @@ void nsHtml5StreamParser::GuessEncoding(bool aEof, bool aInitial) {
       mCharsetSource != kCharsetFromFinalAutoDetectionFile);
   auto ifHadBeenForced = mDetector->Guess(EmptyCString(), true);
   auto encoding =
-      forced ? ifHadBeenForced
-             : mDetector->Guess(mTLD, mDecodingLocalFileWithoutTokenizing);
+      mForceAutoDetection
+          ? ifHadBeenForced
+          : mDetector->Guess(mTLD, mDecodingLocalFileWithoutTokenizing);
   int32_t source =
       aInitial
-          ? (forced
+          ? (mForceAutoDetection
                  ? kCharsetFromInitialUserForcedAutoDetection
                  : kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic)
-          : (forced
+          : (mForceAutoDetection
                  ? kCharsetFromFinalUserForcedAutoDetection
                  : (mDecodingLocalFileWithoutTokenizing
                         ? kCharsetFromFinalAutoDetectionFile
@@ -377,7 +377,8 @@ void nsHtml5StreamParser::GuessEncoding(bool aEof, bool aInitial) {
       mCharsetSource = MaybeRollBackSource(source);
       mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
     } else {
-      MOZ_ASSERT(mCharsetSource < kCharsetFromXmlDeclarationUtf16 || forced);
+      MOZ_ASSERT(mCharsetSource < kCharsetFromXmlDeclarationUtf16 ||
+                 mForceAutoDetection);
       // We've already committed to a decoder. Request a reload from the
       // docshell.
       mTreeBuilder->NeedsCharsetSwitchTo(encoding, source, 0);
@@ -452,8 +453,7 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
     mUnicodeDecoder = UTF_8_ENCODING->NewDecoderWithBOMRemoval();
   } else {
     if (mCharsetSource >= kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8) {
-      if (!(mCharsetSource == kCharsetFromPendingUserForcedAutoDetection ||
-            mCharsetSource == kCharsetFromInitialUserForcedAutoDetection)) {
+      if (!mForceAutoDetection) {
         DontGuessEncoding();
       }
       mDecodingLocalFileWithoutTokenizing = false;
@@ -477,6 +477,7 @@ void nsHtml5StreamParser::SetupDecodingFromBom(
   mUnicodeDecoder = mEncoding->NewDecoderWithoutBOMHandling();
   mCharsetSource = kCharsetFromByteOrderMark;
   DontGuessEncoding();
+  mForceAutoDetection = false;
   mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
   mSniffingBuffer = nullptr;
   mMetaScanner = nullptr;
@@ -699,11 +700,7 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
 
     return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
   }
-  bool forced = (mCharsetSource == kCharsetFromPendingUserForcedAutoDetection ||
-                 mCharsetSource == kCharsetFromInitialUserForcedAutoDetection ||
-                 mCharsetSource == kCharsetFromFinalUserForcedAutoDetection);
-  if (!mChannelHadCharset &&
-      (forced || mCharsetSource < kCharsetFromMetaPrescan) &&
+  if ((mForceAutoDetection || mCharsetSource < kCharsetFromMetaPrescan) &&
       (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA)) {
     // Look for XML declaration in text/html.
 
@@ -724,16 +721,12 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
       bufLen = aCountToSniffingLimit;
     }
     const Encoding* encoding = xmldecl_parse(buf, bufLen);
-    if (encoding) {
-      if (forced &&
+    if (encoding && !mChannelHadCharset) {
+      if (mForceAutoDetection &&
           (encoding->IsAsciiCompatible() || encoding == ISO_2022_JP_ENCODING)) {
         // Honor override
-        if (mCharsetSource == kCharsetFromFinalUserForcedAutoDetection) {
-          DontGuessEncoding();
-        } else {
-          FinalizeSniffingWithDetector(aFromSegment, aCountToSniffingLimit,
-                                       false);
-        }
+        FinalizeSniffingWithDetector(aFromSegment, aCountToSniffingLimit,
+                                     false);
         return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
             aFromSegment);
       }
@@ -748,13 +741,10 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
       SniffBOMlessUTF16BasicLatin(buf, bufLen);
     }
   }
-  if (forced && mCharsetSource != kCharsetFromIrreversibleAutoDetection) {
+  if (mForceAutoDetection &&
+      mCharsetSource != kCharsetFromIrreversibleAutoDetection) {
     // neither meta nor XML declaration found, honor override
-    if (mCharsetSource == kCharsetFromFinalUserForcedAutoDetection) {
-      DontGuessEncoding();
-    } else {
-      FinalizeSniffingWithDetector(aFromSegment, aCountToSniffingLimit, false);
-    }
+    FinalizeSniffingWithDetector(aFromSegment, aCountToSniffingLimit, false);
     return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
   }
 
@@ -804,7 +794,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
             break;
           case 0x00:
             if (mCharsetSource < kCharsetFromXmlDeclarationUtf16 &&
-                !mChannelHadCharset) {
+                mCharsetSource != kCharsetFromChannel) {
               mBomState = SEEN_UTF_16_BE_XML_FIRST;
             } else {
               mBomState = BOM_SNIFFING_OVER;
@@ -812,7 +802,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
             break;
           case 0x3C:
             if (mCharsetSource < kCharsetFromXmlDeclarationUtf16 &&
-                !mChannelHadCharset) {
+                mCharsetSource != kCharsetFromChannel) {
               mBomState = SEEN_UTF_16_LE_XML_FIRST;
             } else {
               mBomState = BOM_SNIFFING_OVER;
@@ -936,7 +926,8 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
   MOZ_ASSERT(mCharsetSource != kCharsetFromOtherComponent,
              "kCharsetFromOtherComponent is for XSLT.");
 
-  if (mBomState == BOM_SNIFFING_OVER && mCharsetSource == kCharsetFromChannel) {
+  if (mBomState == BOM_SNIFFING_OVER && mCharsetSource >= kCharsetFromChannel &&
+      !mForceAutoDetection) {
     // There was no BOM and the charset came from channel. mEncoding
     // still contains the charset from the channel as set by an
     // earlier call to SetDocumentCharset(), since we didn't find a BOM and
@@ -946,7 +937,12 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
     return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
   }
 
-  if (!mChannelHadCharset && !mMetaScanner &&
+  MOZ_ASSERT(!(mBomState == BOM_SNIFFING_OVER && mChannelHadCharset &&
+               !mForceAutoDetection),
+             "How come we're running post-BOM sniffing with channel charset unless "
+             "we're also processing forced detection?");
+
+  if (!mMetaScanner &&
       (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA)) {
     mMetaScanner = MakeUnique<nsHtml5MetaScanner>(mTreeBuilder.get());
   }
@@ -954,12 +950,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
   if (mSniffingLength + aFromSegment.Length() >= SNIFFING_BUFFER_SIZE) {
     // this is the last buffer
     uint32_t countToSniffingLimit = SNIFFING_BUFFER_SIZE - mSniffingLength;
-    bool forced =
-        (mCharsetSource == kCharsetFromPendingUserForcedAutoDetection ||
-         mCharsetSource == kCharsetFromInitialUserForcedAutoDetection ||
-         mCharsetSource == kCharsetFromFinalUserForcedAutoDetection);
-    if (!mChannelHadCharset && (mMode == NORMAL || mMode == VIEW_SOURCE_HTML ||
-                                mMode == LOAD_AS_DATA)) {
+    if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA) {
       nsHtml5ByteReadable readable(
           aFromSegment.Elements(),
           aFromSegment.Elements() + countToSniffingLimit);
@@ -972,17 +963,15 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
         return rv;
       }
 
-      if (encoding) {
+      // Ignore encoding from meta if channel had charset and we're here in
+      // order to make forced autodetection work.
+      if (encoding && !mChannelHadCharset) {
         // meta scan successful; honor overrides unless meta is XSS-dangerous
-        if (forced && (encoding->IsAsciiCompatible() ||
-                       encoding == ISO_2022_JP_ENCODING)) {
+        if (mForceAutoDetection && (encoding->IsAsciiCompatible() ||
+                                    encoding == ISO_2022_JP_ENCODING)) {
           // Honor override
-          if (mCharsetSource == kCharsetFromFinalUserForcedAutoDetection) {
-            DontGuessEncoding();
-          } else {
-            FinalizeSniffingWithDetector(aFromSegment, countToSniffingLimit,
-                                         false);
-          }
+          FinalizeSniffingWithDetector(aFromSegment, countToSniffingLimit,
+                                       false);
           return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
               aFromSegment);
         }
@@ -998,8 +987,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
   }
 
   // not the last buffer
-  if (!mChannelHadCharset &&
-      (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA)) {
+  if (mMode == NORMAL || mMode == VIEW_SOURCE_HTML || mMode == LOAD_AS_DATA) {
     nsHtml5ByteReadable readable(
         aFromSegment.Elements(),
         aFromSegment.Elements() + aFromSegment.Length());
@@ -1010,16 +998,11 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
       MarkAsBroken(rv);
       return rv;
     }
-    if (encoding) {
+    // Ignore encoding from meta if channel had charset and we're here in
+    // order to make forced autodetection work.
+    if (encoding && !mChannelHadCharset) {
       // meta scan successful; honor overrides unless meta is XSS-dangerous
-      if ((mCharsetSource == kCharsetFromFinalUserForcedAutoDetection) &&
-          (encoding->IsAsciiCompatible() || encoding == ISO_2022_JP_ENCODING)) {
-        // Honor override
-        return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
-            aFromSegment);
-      }
-      if ((mCharsetSource == kCharsetFromPendingUserForcedAutoDetection ||
-           mCharsetSource == kCharsetFromInitialUserForcedAutoDetection) &&
+      if (mForceAutoDetection &&
           (encoding->IsAsciiCompatible() || encoding == ISO_2022_JP_ENCODING)) {
         FinalizeSniffingWithDetector(aFromSegment, aFromSegment.Length(),
                                      false);
@@ -1370,12 +1353,9 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
     mInitialEncodingWasFromParentFrame = true;
   }
 
-  if (!(mCharsetSource == kCharsetFromPendingUserForcedAutoDetection ||
-        mCharsetSource == kCharsetFromInitialUserForcedAutoDetection ||
-        mCharsetSource == kCharsetFromFinalUserForcedAutoDetection)) {
-    if (mCharsetSource >= kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8) {
-      DontGuessEncoding();
-    }
+  if (!mForceAutoDetection &&
+      mCharsetSource >= kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8) {
+    DontGuessEncoding();
   }
 
   if (mCharsetSource < kCharsetFromUtf8OnlyMime) {
