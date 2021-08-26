@@ -2313,7 +2313,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-amazon-e10s: None
             * browsertime-tp6-essential-chromium-amazon-e10s: None
             * browsertime-tp6-essential-firefox-amazon-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-amazon-e10s: None
             * browsertime-tp6-live-chromium-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
@@ -2324,7 +2324,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-amazon-e10s: None
             * browsertime-tp6-essential-chromium-amazon-e10s: None
             * browsertime-tp6-essential-firefox-amazon-e10s: trunk
-            * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-amazon-fis-e10s: trunk
             * browsertime-tp6-live-chrome-amazon-e10s: None
             * browsertime-tp6-live-chromium-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
@@ -2333,7 +2333,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-amazon-e10s: None
             * browsertime-tp6-essential-chromium-amazon-e10s: None
             * browsertime-tp6-essential-firefox-amazon-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-amazon-e10s: None
             * browsertime-tp6-live-chromium-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
@@ -2362,7 +2362,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-amazon-e10s: None
             * browsertime-tp6-essential-chromium-amazon-e10s: None
             * browsertime-tp6-essential-firefox-amazon-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-amazon-e10s: None
             * browsertime-tp6-live-chromium-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
@@ -2461,7 +2461,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-bing-search-e10s: None
             * browsertime-tp6-essential-chromium-bing-search-e10s: None
             * browsertime-tp6-essential-firefox-bing-search-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-bing-search-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-bing-search-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-bing-search-e10s: None
             * browsertime-tp6-live-chromium-bing-search-e10s: None
             * browsertime-tp6-live-firefox-bing-search-e10s: None
@@ -2470,7 +2470,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-bing-search-e10s: None
             * browsertime-tp6-essential-chromium-bing-search-e10s: None
             * browsertime-tp6-essential-firefox-bing-search-e10s: trunk
-            * browsertime-tp6-essential-firefox-bing-search-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-bing-search-fis-e10s: trunk
             * browsertime-tp6-live-chrome-bing-search-e10s: None
             * browsertime-tp6-live-chromium-bing-search-e10s: None
             * browsertime-tp6-live-firefox-bing-search-e10s: None
@@ -2479,7 +2479,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-bing-search-e10s: None
             * browsertime-tp6-essential-chromium-bing-search-e10s: None
             * browsertime-tp6-essential-firefox-bing-search-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-bing-search-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-bing-search-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-bing-search-e10s: None
             * browsertime-tp6-live-chromium-bing-search-e10s: None
             * browsertime-tp6-live-firefox-bing-search-e10s: None
@@ -2506,7 +2506,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-bing-search-e10s: None
             * browsertime-tp6-essential-chromium-bing-search-e10s: None
             * browsertime-tp6-essential-firefox-bing-search-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-bing-search-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-bing-search-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-bing-search-e10s: None
             * browsertime-tp6-live-chromium-bing-search-e10s: None
             * browsertime-tp6-live-firefox-bing-search-e10s: None
@@ -2604,21 +2604,21 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-cnn-e10s: None
             * browsertime-tp6-essential-chromium-cnn-e10s: None
             * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-tp6-essential-chrome-cnn-e10s: None
             * browsertime-tp6-essential-chromium-cnn-e10s: None
             * browsertime-tp6-essential-firefox-cnn-e10s: trunk
-            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: trunk
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-tp6-essential-chrome-cnn-e10s: None
             * browsertime-tp6-essential-chromium-cnn-e10s: None
             * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-windows10-32-qr/opt
@@ -2641,7 +2641,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-cnn-e10s: None
             * browsertime-tp6-essential-chromium-cnn-e10s: None
             * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
 
@@ -2964,7 +2964,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-fandom-e10s: None
             * browsertime-tp6-essential-chromium-fandom-e10s: None
             * browsertime-tp6-essential-firefox-fandom-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-fandom-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-fandom-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-fandom-e10s: None
             * browsertime-tp6-live-chromium-fandom-e10s: None
             * browsertime-tp6-live-firefox-fandom-e10s: None
@@ -2973,7 +2973,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-fandom-e10s: None
             * browsertime-tp6-essential-chromium-fandom-e10s: None
             * browsertime-tp6-essential-firefox-fandom-e10s: trunk
-            * browsertime-tp6-essential-firefox-fandom-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-fandom-fis-e10s: trunk
             * browsertime-tp6-live-chrome-fandom-e10s: None
             * browsertime-tp6-live-chromium-fandom-e10s: None
             * browsertime-tp6-live-firefox-fandom-e10s: None
@@ -2982,7 +2982,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-fandom-e10s: None
             * browsertime-tp6-essential-chromium-fandom-e10s: None
             * browsertime-tp6-essential-firefox-fandom-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-fandom-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-fandom-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-fandom-e10s: None
             * browsertime-tp6-live-chromium-fandom-e10s: None
             * browsertime-tp6-live-firefox-fandom-e10s: None
@@ -3009,7 +3009,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-fandom-e10s: None
             * browsertime-tp6-essential-chromium-fandom-e10s: None
             * browsertime-tp6-essential-firefox-fandom-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-fandom-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-fandom-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-fandom-e10s: None
             * browsertime-tp6-live-chromium-fandom-e10s: None
             * browsertime-tp6-live-firefox-fandom-e10s: None
@@ -3359,7 +3359,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-google-slides-e10s: None
             * browsertime-tp6-essential-chromium-google-slides-e10s: None
             * browsertime-tp6-essential-firefox-google-slides-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-google-slides-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-google-slides-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-google-slides-e10s: None
             * browsertime-tp6-live-chromium-google-slides-e10s: None
             * browsertime-tp6-live-firefox-google-slides-e10s: None
@@ -3368,7 +3368,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-google-slides-e10s: None
             * browsertime-tp6-essential-chromium-google-slides-e10s: None
             * browsertime-tp6-essential-firefox-google-slides-e10s: trunk
-            * browsertime-tp6-essential-firefox-google-slides-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-google-slides-fis-e10s: trunk
             * browsertime-tp6-live-chrome-google-slides-e10s: None
             * browsertime-tp6-live-chromium-google-slides-e10s: None
             * browsertime-tp6-live-firefox-google-slides-e10s: None
@@ -3377,7 +3377,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-google-slides-e10s: None
             * browsertime-tp6-essential-chromium-google-slides-e10s: None
             * browsertime-tp6-essential-firefox-google-slides-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-google-slides-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-google-slides-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-google-slides-e10s: None
             * browsertime-tp6-live-chromium-google-slides-e10s: None
             * browsertime-tp6-live-firefox-google-slides-e10s: None
@@ -3404,7 +3404,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-google-slides-e10s: None
             * browsertime-tp6-essential-chromium-google-slides-e10s: None
             * browsertime-tp6-essential-firefox-google-slides-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-google-slides-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-google-slides-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-google-slides-e10s: None
             * browsertime-tp6-live-chromium-google-slides-e10s: None
             * browsertime-tp6-live-firefox-google-slides-e10s: None
@@ -3611,7 +3611,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-instagram-e10s: None
             * browsertime-tp6-live-chromium-instagram-e10s: None
             * browsertime-tp6-live-firefox-instagram-e10s: None
@@ -3620,7 +3620,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: trunk
-            * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-instagram-fis-e10s: trunk
             * browsertime-tp6-live-chrome-instagram-e10s: None
             * browsertime-tp6-live-chromium-instagram-e10s: None
             * browsertime-tp6-live-firefox-instagram-e10s: None
@@ -3629,7 +3629,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-instagram-e10s: None
             * browsertime-tp6-live-chromium-instagram-e10s: None
             * browsertime-tp6-live-firefox-instagram-e10s: None
@@ -3656,7 +3656,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-instagram-e10s: None
             * browsertime-tp6-live-chromium-instagram-e10s: None
             * browsertime-tp6-live-firefox-instagram-e10s: None
@@ -4569,7 +4569,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-twitter-e10s: None
             * browsertime-tp6-essential-chromium-twitter-e10s: None
             * browsertime-tp6-essential-firefox-twitter-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-twitter-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-twitter-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-twitter-e10s: None
             * browsertime-tp6-live-chromium-twitter-e10s: None
             * browsertime-tp6-live-firefox-twitter-e10s: None
@@ -4578,7 +4578,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-twitter-e10s: None
             * browsertime-tp6-essential-chromium-twitter-e10s: None
             * browsertime-tp6-essential-firefox-twitter-e10s: trunk
-            * browsertime-tp6-essential-firefox-twitter-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-twitter-fis-e10s: trunk
             * browsertime-tp6-live-chrome-twitter-e10s: None
             * browsertime-tp6-live-chromium-twitter-e10s: None
             * browsertime-tp6-live-firefox-twitter-e10s: None
@@ -4587,7 +4587,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-twitter-e10s: None
             * browsertime-tp6-essential-chromium-twitter-e10s: None
             * browsertime-tp6-essential-firefox-twitter-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-twitter-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-twitter-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-twitter-e10s: None
             * browsertime-tp6-live-chromium-twitter-e10s: None
             * browsertime-tp6-live-firefox-twitter-e10s: None
@@ -4614,7 +4614,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-twitter-e10s: None
             * browsertime-tp6-essential-chromium-twitter-e10s: None
             * browsertime-tp6-essential-firefox-twitter-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-twitter-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-twitter-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-twitter-e10s: None
             * browsertime-tp6-live-chromium-twitter-e10s: None
             * browsertime-tp6-live-firefox-twitter-e10s: None
@@ -4712,7 +4712,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-wikipedia-e10s: None
             * browsertime-tp6-essential-chromium-wikipedia-e10s: None
             * browsertime-tp6-essential-firefox-wikipedia-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-wikipedia-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-wikipedia-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-wikipedia-e10s: None
             * browsertime-tp6-live-chromium-wikipedia-e10s: None
             * browsertime-tp6-live-firefox-wikipedia-e10s: None
@@ -4721,7 +4721,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-wikipedia-e10s: None
             * browsertime-tp6-essential-chromium-wikipedia-e10s: None
             * browsertime-tp6-essential-firefox-wikipedia-e10s: trunk
-            * browsertime-tp6-essential-firefox-wikipedia-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-wikipedia-fis-e10s: trunk
             * browsertime-tp6-live-chrome-wikipedia-e10s: None
             * browsertime-tp6-live-chromium-wikipedia-e10s: None
             * browsertime-tp6-live-firefox-wikipedia-e10s: None
@@ -4730,7 +4730,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-wikipedia-e10s: None
             * browsertime-tp6-essential-chromium-wikipedia-e10s: None
             * browsertime-tp6-essential-firefox-wikipedia-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-wikipedia-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-wikipedia-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-wikipedia-e10s: None
             * browsertime-tp6-live-chromium-wikipedia-e10s: None
             * browsertime-tp6-live-firefox-wikipedia-e10s: None
@@ -4757,7 +4757,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-wikipedia-e10s: None
             * browsertime-tp6-essential-chromium-wikipedia-e10s: None
             * browsertime-tp6-essential-firefox-wikipedia-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-wikipedia-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-wikipedia-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-wikipedia-e10s: None
             * browsertime-tp6-live-chromium-wikipedia-e10s: None
             * browsertime-tp6-live-firefox-wikipedia-e10s: None
@@ -4796,7 +4796,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-yahoo-mail-e10s: None
             * browsertime-tp6-essential-chromium-yahoo-mail-e10s: None
             * browsertime-tp6-essential-firefox-yahoo-mail-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-yahoo-mail-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-yahoo-mail-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-yahoo-mail-e10s: None
             * browsertime-tp6-live-chromium-yahoo-mail-e10s: None
             * browsertime-tp6-live-firefox-yahoo-mail-e10s: None
@@ -4805,7 +4805,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-yahoo-mail-e10s: None
             * browsertime-tp6-essential-chromium-yahoo-mail-e10s: None
             * browsertime-tp6-essential-firefox-yahoo-mail-e10s: trunk
-            * browsertime-tp6-essential-firefox-yahoo-mail-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-yahoo-mail-fis-e10s: trunk
             * browsertime-tp6-live-chrome-yahoo-mail-e10s: None
             * browsertime-tp6-live-chromium-yahoo-mail-e10s: None
             * browsertime-tp6-live-firefox-yahoo-mail-e10s: None
@@ -4814,7 +4814,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-yahoo-mail-e10s: None
             * browsertime-tp6-essential-chromium-yahoo-mail-e10s: None
             * browsertime-tp6-essential-firefox-yahoo-mail-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-yahoo-mail-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-yahoo-mail-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-yahoo-mail-e10s: None
             * browsertime-tp6-live-chromium-yahoo-mail-e10s: None
             * browsertime-tp6-live-firefox-yahoo-mail-e10s: None
@@ -4841,7 +4841,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-essential-chrome-yahoo-mail-e10s: None
             * browsertime-tp6-essential-chromium-yahoo-mail-e10s: None
             * browsertime-tp6-essential-firefox-yahoo-mail-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-yahoo-mail-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-yahoo-mail-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-chrome-yahoo-mail-e10s: None
             * browsertime-tp6-live-chromium-yahoo-mail-e10s: None
             * browsertime-tp6-live-firefox-yahoo-mail-e10s: None
@@ -4981,21 +4981,21 @@ A set of test pages that are run as live sites instead of recorded versions. The
             * browsertime-tp6-essential-chrome-cnn-e10s: None
             * browsertime-tp6-essential-chromium-cnn-e10s: None
             * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-tp6-essential-chrome-cnn-e10s: None
             * browsertime-tp6-essential-chromium-cnn-e10s: None
             * browsertime-tp6-essential-firefox-cnn-e10s: trunk
-            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: trunk
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-tp6-essential-chrome-cnn-e10s: None
             * browsertime-tp6-essential-chromium-cnn-e10s: None
             * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-windows10-32-qr/opt
@@ -5018,7 +5018,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
             * browsertime-tp6-essential-chrome-cnn-e10s: None
             * browsertime-tp6-essential-chromium-cnn-e10s: None
             * browsertime-tp6-essential-firefox-cnn-e10s: mozilla-beta, trunk
-            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-central
+            * browsertime-tp6-essential-firefox-cnn-fis-e10s: mozilla-beta, trunk
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
 
