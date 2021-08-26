@@ -1827,7 +1827,7 @@ JS_PUBLIC_API JSObject* JS_NewObject(JSContext* cx, const JSClass* clasp) {
     return NewPlainObject(cx);
   }
 
-  MOZ_ASSERT(!clasp->isJSFunction());
+  MOZ_ASSERT(clasp != &JSFunction::class_);
   MOZ_ASSERT(clasp != &PlainObject::class_);
   MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
@@ -1847,7 +1847,7 @@ JS_PUBLIC_API JSObject* JS_NewObjectWithGivenProto(JSContext* cx,
     return NewPlainObjectWithProto(cx, proto);
   }
 
-  MOZ_ASSERT(!clasp->isJSFunction());
+  MOZ_ASSERT(clasp != &JSFunction::class_);
   MOZ_ASSERT(clasp != &PlainObject::class_);
   MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
