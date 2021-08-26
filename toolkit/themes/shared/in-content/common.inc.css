@@ -239,6 +239,13 @@
   }
 }
 
+@media not (prefers-contrast) {
+  * {
+    /* accent-color is a property that gets ignored in HCM */
+    accent-color: var(--in-content-accent-color);
+  }
+}
+
 :root {
   font: message-box;
   appearance: none;
