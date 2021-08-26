@@ -816,7 +816,7 @@ JSFunction* GlobalObject::createConstructor(JSContext* cx, Native ctor,
 
 static NativeObject* CreateBlankProto(JSContext* cx, const JSClass* clasp,
                                       HandleObject proto) {
-  MOZ_ASSERT(clasp != &JSFunction::class_);
+  MOZ_ASSERT(!clasp->isJSFunction());
 
   if (clasp == &PlainObject::class_) {
     return NewPlainObjectWithProto(cx, proto, TenuredObject);
