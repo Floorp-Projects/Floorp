@@ -924,6 +924,16 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eARIACheckableBool,
     eARIAReadonly
   },
+  { // meter
+    nsGkAtoms::meter,
+    roles::METER,
+    kUseMapRole,
+    eHasValueMinMax,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    states::READONLY
+  },
   { // navigation
     nsGkAtoms::navigation,
     roles::LANDMARK,
