@@ -52,24 +52,24 @@ pub const ARCH: &str = "x86_64";
     target_arch = "x86_64"
 )))]
 /// `target_arch` when building this crate: unknown!
-pub const ARCH: &str = "Unknown";
+pub const ARCH: &str = "unknown";
 
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 /// Returns Darwin kernel version for MacOS, or NT Kernel version for Windows
 pub fn get_os_version() -> String {
-    whatsys::kernel_version().unwrap_or_else(|| "Unknown".to_owned())
+    whatsys::kernel_version().unwrap_or_else(|| "unknown".to_owned())
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
-/// Returns "Unknown" for platforms other than Linux, MacOS or Windows
+/// Returns "unknown" for platforms other than Linux, MacOS or Windows
 pub fn get_os_version() -> String {
-    "Unknown".to_owned()
+    "unknown".to_owned()
 }
 
 #[cfg(target_os = "linux")]
 /// Returns Linux kernel version, in the format of <Major>.<Minor> e.g. 5.8
 pub fn get_os_version() -> String {
-    parse_linux_os_string(whatsys::kernel_version().unwrap_or_else(|| "Unknown".to_owned()))
+    parse_linux_os_string(whatsys::kernel_version().unwrap_or_else(|| "unknown".to_owned()))
 }
 
 #[cfg(target_os = "linux")]
