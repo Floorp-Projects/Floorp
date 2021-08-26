@@ -10,10 +10,6 @@ const TEST_URL1 = "https://example.com/";
 const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/14235";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SnapshotSelector: "resource:///modules/SnapshotSelector.jsm",
-});
-
 add_task(async function test_setUrlCoalescing() {
   let now = Date.now();
   await addInteractions([

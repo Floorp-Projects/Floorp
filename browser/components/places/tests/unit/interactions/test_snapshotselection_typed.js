@@ -12,7 +12,6 @@ const TEST_URL3 = "https://example.com/14235";
 const TEST_URL4 = "https://example.com/14345";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  SnapshotSelector: "resource:///modules/SnapshotSelector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
 });
