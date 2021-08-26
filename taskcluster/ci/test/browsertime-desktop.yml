@@ -136,22 +136,16 @@ browsertime-tp6-essential:
         - wikipedia
         - yahoo-mail
     run-on-projects:
-        by-variant:
-            fission:
+        by-app:
+            firefox:
                 by-test-platform:
-                    windows.*-32.*: []
-                    default: [mozilla-central]
-            default:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            linux.*shippable.*: [trunk, mozilla-beta]
-                            macosx1014-64-shippable-qr.*: [trunk]
-                            macosx1015.*shippable.*: [trunk, mozilla-beta]
-                            windows10-64.*shippable.*: [trunk, mozilla-beta]
-                            macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                            default: []
+                    linux.*shippable.*: [trunk, mozilla-beta]
+                    macosx1014-64-shippable-qr.*: [trunk]
+                    macosx1015.*shippable.*: [trunk, mozilla-beta]
+                    windows10-64.*shippable.*: [trunk, mozilla-beta]
+                    macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
                     default: []
+            default: []
     variants:
         by-app:
             firefox:

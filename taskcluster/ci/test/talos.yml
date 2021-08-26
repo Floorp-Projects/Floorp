@@ -26,35 +26,21 @@ job-defaults:
                     - talos/linux_config.py
     test-manifest-loader: null  # don't load tests in the taskgraph
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-name:
-                    talos-.*-profiling-fis: []
-                    talos-tabswitch-fis:
-                        by-test-platform:
-                            macosx1014.*: []
-                            (linux1804-64|windows10-64|macosx.*)-shippable-qr/opt: [mozilla-central]
-                            default: []
-                    default:
-                        by-test-platform:
-                            (linux1804-64|windows10-64|macosx.*)-shippable-qr/opt: [mozilla-central]
-                            default: []
+        by-test-name:
+            talos-.*-profiling: []
+            talos-tabswitch:
+                by-test-platform:
+                    windows.*-32.*: []
+                    macosx1014.*: []
+                    (linux|windows10-64|macos)(?!.*shippable).*: []
+                    (linux|windows10-64|macos)(?!.*-qr).*: []
+                    default: [mozilla-beta, trunk]
             default:
-                by-test-name:
-                    talos-.*-profiling: []
-                    talos-tabswitch:
-                        by-test-platform:
-                            windows.*-32.*: []
-                            macosx1014.*: []
-                            (linux|windows10-64|macos)(?!.*shippable).*: []
-                            (linux|windows10-64|macos)(?!.*-qr).*: []
-                            default: [mozilla-beta, trunk]
-                    default:
-                        by-test-platform:
-                            windows.*-32.*: []
-                            (linux|windows10-64|macos)(?!.*shippable).*: []
-                            (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-                            default: [mozilla-beta, trunk]
+                by-test-platform:
+                    windows.*-32.*: []
+                    (linux|windows10-64|macos)(?!.*shippable).*: []
+                    (linux|windows10-64|macosx1015)(?!.*-qr).*: []
+                    default: [mozilla-beta, trunk]
     python-3: true
 
 talos-bcv:
@@ -66,21 +52,15 @@ talos-bcv:
             (linux1804-64|windows10-64|macosx1015-64).*-qr.*: [fission, webrender-sw]
             default: [fission]
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    (linux1804-64|windows10-64|macosx.*)-shippable-qr/opt: [mozilla-central]
+        by-test-platform:
+            (linux|windows10-64|macosx1015-64)(?:shippable-qr|-qr)/.*:
+                by-variant:
+                    webrender-sw: [trunk]
                     default: []
-            default:
-                by-test-platform:
-                    (linux|windows10-64|macosx1015-64)(?:shippable-qr|-qr)/.*:
-                        by-variant:
-                            webrender-sw: [trunk]
-                            default: []
-                    windows.*-32.*: []
-                    (linux|windows10-64|macos)(?!.*shippable).*: []
-                    (linux|windows10-64|macos)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+            windows.*-32.*: []
+            (linux|windows10-64|macos)(?!.*shippable).*: []
+            (linux|windows10-64|macos)(?!.*-qr).*: []
+            default: [mozilla-beta, trunk]
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -135,7 +115,7 @@ talos-damp:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux1804-64|windows10-64)-shippable-qr/opt: [mozilla-central]
+                    (linux1804-64|windows10-64)-shippable-qr/opt: [mozilla-central, autoland]
                     # Bug 1657864 - Disabled on macos for high frequency intermittents
                     default: []
             default:
@@ -289,7 +269,7 @@ talos-g4:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux1804-64|windows10-64|macosx)-shippable-qr/opt: [mozilla-central]
+                    (linux1804-64|windows10-64|macosx)-shippable-qr/opt: [mozilla-central, autoland]
                     default: []
             default:
                 by-test-platform:
@@ -433,17 +413,11 @@ talos-sessionrestore-many-windows:
             (linux1804-64|windows|macosx).*-qr.*: [fission, webrender-sw]
             default: []
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    (linux1804-64|windows10-64|macosx.*)-shippable-qr/opt: [mozilla-central]
-                    default: []
-            default:
-                by-test-platform:
-                    windows.*-32.*/opt: []
-                    (linux|windows10-64|macos)(?!.*shippable).*: []
-                    (linux|windows10-64|macos)(?!.*-qr).*: []
-                    default: [mozilla-central]
+        by-test-platform:
+            windows.*-32.*/opt: []
+            (linux|windows10-64|macos)(?!.*shippable).*: []
+            (linux|windows10-64|macos)(?!.*-qr).*: []
+            default: [mozilla-central, autoland]
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -628,16 +602,10 @@ talos-xperf:
             (linux1804-64|windows|macos).*-qr.*: [fission, webrender-sw]
             default: []
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    (linux1804-64|windows10-64|macosx1015-64)-shippable-qr/opt: [mozilla-central]
-                    default: []
-            default:
-                by-test-platform:
-                    windows.*-32-shippable(?:-qr)?/.*: []
-                    windows10-64-shippable-qr/.*: [mozilla-beta, trunk]
-                    default: []
+        by-test-platform:
+            windows.*-32-shippable(?:-qr)?/.*: []
+            windows10-64-shippable-qr/.*: [mozilla-beta, trunk]
+            default: []
     mozharness:
         extra-options:
             - --suite=xperf
