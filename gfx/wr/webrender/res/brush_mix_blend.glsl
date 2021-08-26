@@ -20,14 +20,13 @@ flat varying vec4 v_backdrop_uv_sample_bounds;
 // brush_image or bug 1630356 for details.
 flat varying vec2 v_perspective_vec;
 #define v_perspective v_perspective_vec.x
-flat varying ivec2 v_op_vec;
-#define v_op v_op_vec.x
 #else
 // Flag to allow perspective interpolation of UV.
 flat varying float v_perspective;
+#endif
+
 // mix-blend op
 flat varying int v_op;
-#endif
 
 #ifdef WR_VERTEX_SHADER
 
@@ -270,13 +269,7 @@ Fragment brush_fs() {
     // Return yellow if none of the branches match (shouldn't happen).
     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);
 
-    // On Android v_op has been packed in to a vector to avoid a driver bug
-    // on Adreno 3xx. However, this runs in to another Adreno 3xx driver bug
-    // where the switch doesn't match any cases. Unpacking the value from the
-    // vec in to a local variable prior to the switch works around this, but
-    // gets optimized away by glslopt. Adding a bitwise AND prevents that.
-    // See bug 1726755.
-    switch (v_op & 0xFF) {
+    switch (v_op) {
         case MixBlendMode_Multiply:
             result.rgb = Multiply(Cb.rgb, Cs.rgb);
             break;
