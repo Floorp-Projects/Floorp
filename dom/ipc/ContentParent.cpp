@@ -918,8 +918,9 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
   }
 
   if (aPreferUsed && numberOfParents) {
-    // For the preloaded browser we don't want to create a new process but
-    // reuse an existing one.
+    // If we prefer re-using existing content processes, we don't want to create
+    // a new process, and instead re-use an existing one, so pretend the process
+    // limit is at the current number of processes.
     aMaxContentParents = numberOfParents;
   }
 
