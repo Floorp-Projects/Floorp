@@ -327,7 +327,7 @@ impl Glean {
             upload_enabled,
             max_events: None,
             delay_ping_lifetime_io: false,
-            app_build: "unknown".into(),
+            app_build: "Unknown".into(),
             use_core_mps: false,
         };
 
