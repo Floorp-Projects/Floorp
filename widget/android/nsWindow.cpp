@@ -34,7 +34,6 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/RenderTrace.h"
 #include "mozilla/widget/AndroidVsync.h"
 #include <algorithm>
 
