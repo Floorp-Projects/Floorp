@@ -42,7 +42,7 @@ mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasParentLog, mozilla::LogLevel::Debug)
 
 namespace mozilla {
-using media::GetShutdownBarrier;
+using media::MustGetShutdownBarrier;
 using media::NewRunnableFrom;
 namespace camera {
 
@@ -232,7 +232,7 @@ void CamerasParent::StopVideoCapture() {
             }
             delete thread;
           }
-          nsresult rv = GetShutdownBarrier()->RemoveBlocker(self);
+          nsresult rv = MustGetShutdownBarrier()->RemoveBlocker(self);
           MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
           Unused << rv;
           return NS_OK;
@@ -1101,7 +1101,7 @@ CamerasParent::CamerasParent()
 
   RefPtr<CamerasParent> self(this);
   NS_DispatchToMainThread(NewRunnableFrom([self]() {
-    nsresult rv = GetShutdownBarrier()->AddBlocker(
+    nsresult rv = MustGetShutdownBarrier()->AddBlocker(
         self, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
