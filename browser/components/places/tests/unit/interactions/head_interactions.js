@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
+  SnapshotSelector: "resource:///modules/SnapshotSelector.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
