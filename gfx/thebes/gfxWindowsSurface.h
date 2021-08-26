@@ -32,9 +32,6 @@ class gfxWindowsSurface : public gfxASurface {
 
   explicit gfxWindowsSurface(cairo_surface_t* csurf);
 
-  virtual already_AddRefed<gfxASurface> CreateSimilarSurface(
-      gfxContentType aType, const mozilla::gfx::IntSize& aSize);
-
   void InitWithDC(uint32_t flags);
 
   virtual ~gfxWindowsSurface();

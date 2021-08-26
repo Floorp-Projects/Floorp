@@ -57,14 +57,9 @@ class gfxXlibSurface final : public gfxASurface {
   static cairo_surface_t* CreateCairoSurface(
       ::Screen* screen, Visual* visual, const mozilla::gfx::IntSize& size,
       Drawable relatedDrawable = X11None);
-  static already_AddRefed<gfxXlibSurface> Create(
-      ::Screen* screen, XRenderPictFormat* format,
-      const mozilla::gfx::IntSize& size, Drawable relatedDrawable = X11None);
 
   virtual ~gfxXlibSurface();
 
-  already_AddRefed<gfxASurface> CreateSimilarSurface(
-      gfxContentType aType, const mozilla::gfx::IntSize& aSize) override;
   void Finish() override;
 
   const mozilla::gfx::IntSize GetSize() const override;
