@@ -15,8 +15,8 @@
    * cycle for an screenshare MediaStream on a video HTMLMediaElement.
    */
   runTest(async function () {
-    var testVideo = createMediaElement('video', 'testVideo');
-    var constraints = {
+    const testVideo = createMediaElement('video', 'testVideo');
+    const constraints = {
       video: {
          mozMediaSource: "window",
          mediaSource: "window"
