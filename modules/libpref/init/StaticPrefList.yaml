@@ -6540,11 +6540,6 @@
   value: 25 * 1024 * 1024
   mirror: once
 
-- name: layers.omtp.dump-capture
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: layers.omtp.paint-workers
   type: int32_t
   value: -1
