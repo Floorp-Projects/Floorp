@@ -21,6 +21,10 @@ AccessibleWrap* ia2AccessibleValue::LocalAcc() {
   return static_cast<MsaaAccessible*>(this)->LocalAcc();
 }
 
+Accessible* ia2AccessibleValue::Acc() {
+  return static_cast<MsaaAccessible*>(this)->Acc();
+}
+
 // IUnknown
 
 STDMETHODIMP
@@ -51,7 +55,7 @@ ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue) {
 
   VariantInit(aCurrentValue);
 
-  AccessibleWrap* valueAcc = LocalAcc();
+  Accessible* valueAcc = Acc();
   if (!valueAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
@@ -84,7 +88,7 @@ ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue) {
 
   VariantInit(aMaximumValue);
 
-  AccessibleWrap* valueAcc = LocalAcc();
+  Accessible* valueAcc = Acc();
   if (!valueAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
@@ -105,7 +109,7 @@ ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue) {
 
   VariantInit(aMinimumValue);
 
-  AccessibleWrap* valueAcc = LocalAcc();
+  Accessible* valueAcc = Acc();
   if (!valueAcc) {
     return CO_E_OBJNOTCONNECTED;
   }
