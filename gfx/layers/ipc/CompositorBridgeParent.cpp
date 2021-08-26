@@ -12,6 +12,7 @@
 #include <utility>   // for pair
 
 #include "apz/src/APZCTreeManager.h"  // for APZCTreeManager
+#include "RenderTrace.h"              // for RenderTraceLayers
 #include "base/process.h"             // for ProcessId
 #include "gfxContext.h"               // for gfxContext
 #include "gfxPlatform.h"              // for gfxPlatform
