@@ -7169,7 +7169,7 @@ void CodeGenerator::visitNewNamedLambdaObject(LNewNamedLambdaObject* lir) {
   using Fn =
       js::NamedLambdaObject* (*)(JSContext*, HandleFunction, gc::InitialHeap);
   OutOfLineCode* ool = oolCallVM<Fn, NamedLambdaObject::createTemplateObject>(
-      lir, ArgList(ImmGCPtr(info.funMaybeLazy()), Imm32(gc::DefaultHeap)),
+      lir, ArgList(info.funMaybeLazy(), Imm32(gc::DefaultHeap)),
       StoreRegisterTo(objReg));
 
   TemplateObject templateObject(lir->mir()->templateObj());
