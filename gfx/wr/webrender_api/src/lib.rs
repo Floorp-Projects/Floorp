@@ -64,6 +64,9 @@ use std::sync::Arc;
 use std::os::raw::c_void;
 use peek_poke::PeekPoke;
 
+/// Defined here for cbindgen
+pub const MAX_RENDER_TASK_SIZE: i32 = 16384;
+
 /// Width and height in device pixels of image tiles.
 pub type TileSize = u16;
 

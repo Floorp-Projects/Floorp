@@ -2661,7 +2661,11 @@ LayoutDeviceIntRect nsWindow::GetClientBounds() {
   }
 
   RECT r;
-  VERIFY(::GetClientRect(mWnd, &r));
+  if (!::GetClientRect(mWnd, &r)) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNoteOnce << "GetClientRect failed " << ::GetLastError();
+    return mBounds;
+  }
 
   LayoutDeviceIntRect bounds = GetBounds();
   LayoutDeviceIntRect rect;
