@@ -67,7 +67,7 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    */
   virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                   int32_t aSource,
-                                  bool aChannelHadCharset) override;
+                                  bool aForceAutoDetection) override;
 
   /**
    * Get the channel associated with this parser
