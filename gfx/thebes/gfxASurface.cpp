@@ -249,24 +249,6 @@ void gfxASurface::Finish() {
   cairo_surface_finish(mSurface);
 }
 
-already_AddRefed<gfxASurface> gfxASurface::CreateSimilarSurface(
-    gfxContentType aContent, const IntSize& aSize) {
-  if (!mSurface || !mSurfaceValid) {
-    return nullptr;
-  }
-
-  cairo_surface_t* surface = cairo_surface_create_similar(
-      mSurface, cairo_content_t(int(aContent)), aSize.width, aSize.height);
-  if (cairo_surface_status(surface)) {
-    cairo_surface_destroy(surface);
-    return nullptr;
-  }
-
-  RefPtr<gfxASurface> result = Wrap(surface, aSize);
-  cairo_surface_destroy(surface);
-  return result.forget();
-}
-
 already_AddRefed<gfxImageSurface> gfxASurface::CopyToARGB32ImageSurface() {
   if (!mSurface || !mSurfaceValid) {
     return nullptr;

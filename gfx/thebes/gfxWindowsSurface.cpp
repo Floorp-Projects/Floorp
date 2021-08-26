@@ -65,42 +65,6 @@ void gfxWindowsSurface::InitWithDC(uint32_t flags) {
   }
 }
 
-already_AddRefed<gfxASurface> gfxWindowsSurface::CreateSimilarSurface(
-    gfxContentType aContent, const mozilla::gfx::IntSize& aSize) {
-  if (!mSurface || !mSurfaceValid) {
-    return nullptr;
-  }
-
-  cairo_surface_t* surface;
-  if (GetContentType() == gfxContentType::COLOR_ALPHA) {
-    // When creating a similar surface to a transparent surface, ensure
-    // the new surface uses a DIB. cairo_surface_create_similar won't
-    // use  a DIB for a gfxContentType::COLOR surface if this surface doesn't
-    // have a DIB (e.g. if we're a transparent window surface). But
-    // we need a DIB to perform well if the new surface is composited into
-    // a surface that's the result of
-    // create_similar(gfxContentType::COLOR_ALPHA) (e.g. a backbuffer for the
-    // window) --- that new surface *would* have a DIB.
-    gfxImageFormat gformat =
-        gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
-    cairo_format_t cformat = GfxFormatToCairoFormat(gformat);
-    surface =
-        cairo_win32_surface_create_with_dib(cformat, aSize.width, aSize.height);
-  } else {
-    surface = cairo_surface_create_similar(
-        mSurface, (cairo_content_t)(int)aContent, aSize.width, aSize.height);
-  }
-
-  if (cairo_surface_status(surface)) {
-    cairo_surface_destroy(surface);
-    return nullptr;
-  }
-
-  RefPtr<gfxASurface> result = Wrap(surface, aSize);
-  cairo_surface_destroy(surface);
-  return result.forget();
-}
-
 gfxWindowsSurface::~gfxWindowsSurface() {
   if (mOwnsDC) {
     if (mWnd)

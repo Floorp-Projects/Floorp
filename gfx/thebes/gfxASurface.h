@@ -74,14 +74,6 @@ class gfxASurface {
   virtual void Finish();
 
   /**
-   * Create an offscreen surface that can be efficiently copied into
-   * this surface (at least if tiling is not involved).
-   * Returns null on error.
-   */
-  virtual already_AddRefed<gfxASurface> CreateSimilarSurface(
-      gfxContentType aType, const mozilla::gfx::IntSize& aSize);
-
-  /**
    * Returns an image surface for this surface, or nullptr if not supported.
    * This will not copy image data, just wraps an image surface around
    * pixel data already available in memory.
