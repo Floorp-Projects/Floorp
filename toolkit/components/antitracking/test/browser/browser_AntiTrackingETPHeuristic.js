@@ -129,6 +129,20 @@ const TEST_CASES = [
       ],
     ],
   },
+  // Tracker(Interacted) -> Non-Tracker (heuristic disabled)
+  {
+    trackersHasUserInteraction: [TEST_3RD_PARTY_DOMAIN],
+    redirects: [TEST_TRACKING_REDIRECT_PAGE, TEST_PAGE],
+    expectedPermissionNumber: 0,
+    expects: [
+      [
+        TEST_DOMAIN,
+        TEST_3RD_PARTY_DOMAIN,
+        Ci.nsIPermissionManager.UNKNOWN_ACTION,
+      ],
+    ],
+    extraPrefs: [["privacy.antitracking.enableWebcompat", false]],
+  },
 ];
 
 async function interactWithSpecificTracker(aTracker) {
@@ -196,6 +210,13 @@ add_task(async function testETPRedirectHeuristic() {
   info("Starting testing ETP redirect heuristic ...");
 
   for (const test of TEST_CASES) {
+    let { extraPrefs } = test;
+    if (extraPrefs) {
+      await SpecialPowers.pushPrefEnv({
+        set: extraPrefs,
+      });
+    }
+
     // First, clear all permissions.
     Services.perms.removeAll();
 
@@ -234,5 +255,9 @@ add_task(async function testETPRedirectHeuristic() {
 
     info("Removing the tab");
     BrowserTestUtils.removeTab(tab);
+
+    if (extraPrefs) {
+      await SpecialPowers.popPrefEnv();
+    }
   }
 });
