@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { safeAsyncMethod } = require("devtools/shared/async-utils");
 const {
   FrontClassWithSpec,
   registerFront,
@@ -147,6 +148,15 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
 }
 
 class LayoutFront extends FrontClassWithSpec(layoutSpec) {
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
+
+    this.getAllGrids = safeAsyncMethod(
+      this.getAllGrids.bind(this),
+      () => this.isDestroyed(),
+      []
+    );
+  }
   /**
    * Get the WalkerFront instance that owns this LayoutFront.
    */
@@ -155,6 +165,9 @@ class LayoutFront extends FrontClassWithSpec(layoutSpec) {
   }
 
   getAllGrids() {
+    if (!this.walkerFront.rootNode) {
+      return [];
+    }
     return this.getGrids(this.walkerFront.rootNode);
   }
 }

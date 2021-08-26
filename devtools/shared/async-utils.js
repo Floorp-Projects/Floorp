@@ -47,9 +47,15 @@ const SWALLOWED_RET = Symbol("swallowed");
  * @param  {Function} shouldSwallow
  *         Function that will run when an error is caught. If it returns true,
  *         the error will be swallowed. Otherwise, it will bubble up.
+ * @param {Mixed} retValue
+ *         Optional value to return when an error is caught and is swallowed.
  * @return {Function} The wrapped method.
  */
-exports.safeAsyncMethod = function(asyncFn, shouldSwallow) {
+exports.safeAsyncMethod = function(
+  asyncFn,
+  shouldSwallow,
+  retValue = SWALLOWED_RET
+) {
   return async function(...args) {
     try {
       const ret = await asyncFn(...args);
@@ -57,7 +63,7 @@ exports.safeAsyncMethod = function(asyncFn, shouldSwallow) {
     } catch (e) {
       if (shouldSwallow()) {
         console.warn("Async method failed in safeAsyncMethod", e);
-        return SWALLOWED_RET;
+        return retValue;
       }
       throw e;
     }
