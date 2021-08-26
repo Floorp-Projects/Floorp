@@ -132,25 +132,28 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     private fun setUiIsValidatingAsync(isValidating: Boolean, saveMenuItem: MenuItem?) {
         val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
+        val updateViews = {
+            // Disable text entry until done validating
+            val viewGroup = view as ViewGroup
+            enableAllSubviews(!isValidating, viewGroup)
+
+            saveMenuItem?.isEnabled = !isValidating
+        }
 
         if (isValidating) {
             view?.alpha = DISABLED_ALPHA
             // Delay showing the loading indicator to prevent it flashing on the screen
-            job = scope?.launch {
+            job = scope?.launch(Dispatchers.Main) {
                 delay(LOADING_INDICATOR_DELAY)
                 pref?.setProgressViewShown(isValidating)
+                updateViews()
             }
         } else {
             view?.alpha = 1f
             job?.cancel()
             pref?.setProgressViewShown(isValidating)
+            updateViews()
         }
-
-        // Disable text entry until done validating
-        val viewGroup = view as ViewGroup
-        enableAllSubviews(!isValidating, viewGroup)
-
-        saveMenuItem?.isEnabled = !isValidating
     }
 
     private fun enableAllSubviews(shouldEnable: Boolean, viewGroup: ViewGroup) {
