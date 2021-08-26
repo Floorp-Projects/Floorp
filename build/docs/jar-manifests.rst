@@ -5,8 +5,7 @@ JAR Manifests
 =============
 
 JAR Manifests are plaintext files in the tree that are used to package chrome
-files into the correct JARs, and create
-`Chrome Registration <https://developer.mozilla.org/en-US/docs/Chrome_Registration>`_
+files into the correct JARs, and create :ref:`Chrome Registration <Chrome Registration>`
 manifests. JAR Manifests are commonly named ``jar.mn``. They are
 declared in ``moz.build`` files using the ``JAR_MANIFESTS`` variable.
 
@@ -78,8 +77,7 @@ The above will install all xul files under ``source/tree/location`` as
 Register Chrome
 ===============
 
-`Chrome Registration <https://developer.mozilla.org/en-US/docs/Chrome_Registration>`_
-instructions are marked with a percent sign (``%``) at the beginning of the
+:ref:`Chrome Registration <Chrome Registration>` instructions are marked with a percent sign (``%``) at the beginning of the
 line, and must be part of the definition of a JAR file. Any additional percents
 signs are replaced with an appropriate relative URL of the JAR file being
 packaged::
