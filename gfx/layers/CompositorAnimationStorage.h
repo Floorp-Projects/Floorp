@@ -21,7 +21,6 @@ namespace mozilla {
 namespace layers {
 class Animation;
 class CompositorBridgeParent;
-class Layer;
 class OMTAController;
 
 typedef nsTArray<layers::Animation> AnimationArray;
@@ -157,15 +156,6 @@ class CompositorAnimationStorage final {
                         TimeStamp aPreviousFrameTime,
                         TimeStamp aCurrentFrameTime);
 
-  /**
-   * Non WebRender version of above SampleAnimations.
-   *
-   * Note: This is called only by non WebRender.
-   */
-  bool SampleAnimations(Layer* aRoot, CompositorBridgeParent* aCompositorBridge,
-                        TimeStamp aPreviousFrameTime,
-                        TimeStamp aCurrentFrameTime);
-
   bool HasAnimations() const;
 
   /**
@@ -213,11 +203,6 @@ class CompositorAnimationStorage final {
    */
   void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
                         nscolor aColor);
-
-  bool ApplyAnimatedValue(
-      CompositorBridgeParent* aCompositorBridge, Layer* aLayer,
-      nsCSSPropertyID aProperty, AnimatedValue* aPreviousValue,
-      const nsTArray<RefPtr<RawServoAnimationValue>>& aValues);
 
   void Clear();
 

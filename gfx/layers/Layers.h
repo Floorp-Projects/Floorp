@@ -65,7 +65,6 @@ namespace layers {
 
 class Animation;
 class AsyncPanZoomController;
-class HostLayerManager;
 class PaintedLayer;
 class ContainerLayer;
 class ImageLayer;
@@ -73,7 +72,6 @@ class ColorLayer;
 class CompositorAnimations;
 class CanvasLayer;
 class RefLayer;
-class HostLayer;
 class SpecificLayerAttributes;
 class Compositor;
 class TransformData;
@@ -143,11 +141,6 @@ class Layer {
    * valid to set/get user data from it.
    */
   LayerManager* Manager() { return mManager; }
-
-  /**
-   * This should only be called when changing layer managers from HostLayers.
-   */
-  void SetManager(LayerManager* aManager, HostLayer* aSelf);
 
   enum {
     /**
@@ -910,12 +903,6 @@ class Layer {
    * ColorLayer.
    */
   virtual ImageLayer* AsImageLayer() { return nullptr; }
-
-  /**
-   * Dynamic cast to a LayerComposite.  Return null if this is not a
-   * LayerComposite.  Can be used anytime.
-   */
-  virtual HostLayer* AsHostLayer() { return nullptr; }
 
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,

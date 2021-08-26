@@ -19,10 +19,8 @@
 #include "mozilla/layers/AnimationHelper.h"  // for CompositorAnimationStorage
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZUpdater.h"             // for APZUpdater
-#include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/RemoteContentController.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
@@ -400,10 +398,6 @@ PTextureParent* ContentCompositorBridgeParent::AllocPTextureParent(
   TextureFlags flags = aFlags;
 
   LayersBackend actualBackend = LayersBackend::LAYERS_NONE;
-  if (state && state->mLayerManager) {
-    actualBackend = state->mLayerManager->GetBackendType();
-  }
-
   if (!state) {
     // The compositor was recreated, and we're receiving layers updates for a
     // a layer manager that will soon be discarded or invalidated. We can't

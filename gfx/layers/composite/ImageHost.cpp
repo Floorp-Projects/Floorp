@@ -12,7 +12,6 @@
 #include "ipc/IPCMessageUtils.h"         // for null_t
 #include "mozilla/layers/Compositor.h"   // for Compositor
 #include "mozilla/layers/Effects.h"      // for TexturedEffect, Effect, etc
-#include "mozilla/layers/LayerManagerComposite.h"  // for TexturedEffect, Effect, etc
 #include "nsAString.h"
 #include "nsDebug.h"          // for NS_WARNING, NS_ASSERTION
 #include "nsPrintfCString.h"  // for nsPrintfCString
@@ -68,25 +67,6 @@ void ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures) {
   if (ImagesCount() == 1) {
     SetCurrentTextureHost(GetImage(0)->mTextureHost);
   }
-
-  HostLayerManager* lm = GetLayerManager();
-
-  // Video producers generally send replacement images with the same frameID but
-  // slightly different timestamps in order to sync with the audio clock. This
-  // means that any CompositeUntil() call we made in Composite() may no longer
-  // guarantee that we'll composite until the next frame is ready. Fix that
-  // here.
-  if (lm && mLastFrameID >= 0) {
-    for (const auto& img : Images()) {
-      bool frameComesAfter =
-          img.mFrameID > mLastFrameID || img.mProducerID != mLastProducerID;
-      if (frameComesAfter && !img.mTimeStamp.IsNull()) {
-        lm->CompositeUntil(img.mTimeStamp +
-                           TimeDuration::FromMilliseconds(BIAS_TIME_MS));
-        break;
-      }
-    }
-  }
 }
 
 void ImageHost::SetCurrentTextureHost(TextureHost* aTexture) {
@@ -137,26 +117,16 @@ void ImageHost::RemoveTextureHost(TextureHost* aTexture) {
 
 TimeStamp ImageHost::GetCompositionTime() const {
   TimeStamp time;
-  if (HostLayerManager* lm = GetLayerManager()) {
-    time = lm->GetCompositionTime();
-  }
   return time;
 }
 
 CompositionOpportunityId ImageHost::GetCompositionOpportunityId() const {
   CompositionOpportunityId id;
-  if (HostLayerManager* lm = GetLayerManager()) {
-    id = lm->GetCompositionOpportunityId();
-  }
   return id;
 }
 
 void ImageHost::AppendImageCompositeNotification(
-    const ImageCompositeNotificationInfo& aInfo) const {
-  if (HostLayerManager* lm = GetLayerManager()) {
-    lm->AppendImageCompositeNotification(aInfo);
-  }
-}
+    const ImageCompositeNotificationInfo& aInfo) const {}
 
 TextureHost* ImageHost::GetAsTextureHost(IntRect* aPictureRect) {
   const TimedImage* img = ChooseImage();
@@ -302,29 +272,7 @@ void ImageHost::Composite(Compositor* aCompositor, LayerComposite* aLayer,
 
 bool ImageHost::PrepareToRender(TextureSourceProvider* aProvider,
                                 RenderInfo* aOutInfo) {
-  HostLayerManager* lm = GetLayerManager();
-  if (!lm) {
-    return false;
-  }
-
-  int imageIndex = ChooseImageIndex();
-  if (imageIndex < 0) {
-    return false;
-  }
-
-  if (uint32_t(imageIndex) + 1 < ImagesCount()) {
-    lm->CompositeUntil(GetImage(imageIndex + 1)->mTimeStamp +
-                       TimeDuration::FromMilliseconds(BIAS_TIME_MS));
-  }
-
-  const TimedImage* img = GetImage(imageIndex);
-  img->mTextureHost->SetTextureSourceProvider(aProvider);
-  SetCurrentTextureHost(img->mTextureHost);
-
-  aOutInfo->imageIndex = imageIndex;
-  aOutInfo->img = img;
-  aOutInfo->host = mCurrentTextureHost;
-  return true;
+  return false;
 }
 
 RefPtr<TextureSource> ImageHost::AcquireTextureSource(const RenderInfo& aInfo) {

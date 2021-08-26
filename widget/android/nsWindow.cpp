@@ -79,10 +79,8 @@ using mozilla::gfx::SurfaceFormat;
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 
 #include "nsTArray.h"
 

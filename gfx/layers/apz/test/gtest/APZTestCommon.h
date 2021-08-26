@@ -17,7 +17,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"

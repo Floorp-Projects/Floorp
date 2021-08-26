@@ -14,7 +14,6 @@
 #include "mozilla/layers/Effects.h"
 #include "mozilla/layers/TextureHostOGL.h"
 #include "mozilla/widget/CompositorWidget.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "RenderCompositorRecordedFrame.h"
 
 #if defined(XP_WIN)
@@ -25,6 +24,7 @@
 
 namespace mozilla {
 using namespace layers;
+using namespace gfx;
 
 namespace wr {
 
@@ -324,9 +324,126 @@ void RenderCompositorLayersSWGL::MaybeRequestAllowFrameRecording(
   mCompositor->RequestAllowFrameRecording(aWillRecord);
 }
 
+class WindowLMC : public profiler_screenshots::Window {
+ public:
+  explicit WindowLMC(Compositor* aCompositor) : mCompositor(aCompositor) {}
+
+  already_AddRefed<profiler_screenshots::RenderSource> GetWindowContents(
+      const gfx::IntSize& aWindowSize) override;
+  already_AddRefed<profiler_screenshots::DownscaleTarget> CreateDownscaleTarget(
+      const gfx::IntSize& aSize) override;
+  already_AddRefed<profiler_screenshots::AsyncReadbackBuffer>
+  CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) override;
+
+ protected:
+  Compositor* mCompositor;
+};
+
+class RenderSourceLMC : public profiler_screenshots::RenderSource {
+ public:
+  explicit RenderSourceLMC(CompositingRenderTarget* aRT)
+      : RenderSource(aRT->GetSize()), mRT(aRT) {}
+
+  const auto& RenderTarget() { return mRT; }
+
+ protected:
+  virtual ~RenderSourceLMC() {}
+
+  RefPtr<CompositingRenderTarget> mRT;
+};
+
+class DownscaleTargetLMC : public profiler_screenshots::DownscaleTarget {
+ public:
+  explicit DownscaleTargetLMC(CompositingRenderTarget* aRT,
+                              Compositor* aCompositor)
+      : profiler_screenshots::DownscaleTarget(aRT->GetSize()),
+        mRenderSource(new RenderSourceLMC(aRT)),
+        mCompositor(aCompositor) {}
+
+  already_AddRefed<profiler_screenshots::RenderSource> AsRenderSource()
+      override {
+    return do_AddRef(mRenderSource);
+  }
+
+  bool DownscaleFrom(profiler_screenshots::RenderSource* aSource,
+                     const IntRect& aSourceRect,
+                     const IntRect& aDestRect) override {
+    MOZ_RELEASE_ASSERT(aSourceRect.TopLeft() == IntPoint());
+    MOZ_RELEASE_ASSERT(aDestRect.TopLeft() == IntPoint());
+    RefPtr<CompositingRenderTarget> previousTarget =
+        mCompositor->GetCurrentRenderTarget();
+
+    mCompositor->SetRenderTarget(mRenderSource->RenderTarget());
+    bool result = mCompositor->BlitRenderTarget(
+        static_cast<RenderSourceLMC*>(aSource)->RenderTarget(),
+        aSourceRect.Size(), aDestRect.Size());
+
+    // Restore the old render target.
+    mCompositor->SetRenderTarget(previousTarget);
+
+    return result;
+  }
+
+ protected:
+  virtual ~DownscaleTargetLMC() {}
+
+  RefPtr<RenderSourceLMC> mRenderSource;
+  Compositor* mCompositor;
+};
+
+class AsyncReadbackBufferLMC
+    : public profiler_screenshots::AsyncReadbackBuffer {
+ public:
+  AsyncReadbackBufferLMC(mozilla::layers::AsyncReadbackBuffer* aARB,
+                         Compositor* aCompositor)
+      : profiler_screenshots::AsyncReadbackBuffer(aARB->GetSize()),
+        mARB(aARB),
+        mCompositor(aCompositor) {}
+  void CopyFrom(profiler_screenshots::RenderSource* aSource) override {
+    mCompositor->ReadbackRenderTarget(
+        static_cast<RenderSourceLMC*>(aSource)->RenderTarget(), mARB);
+  }
+  bool MapAndCopyInto(DataSourceSurface* aSurface,
+                      const IntSize& aReadSize) override {
+    return mARB->MapAndCopyInto(aSurface, aReadSize);
+  }
+
+ protected:
+  virtual ~AsyncReadbackBufferLMC() {}
+
+  RefPtr<mozilla::layers::AsyncReadbackBuffer> mARB;
+  Compositor* mCompositor;
+};
+
+already_AddRefed<profiler_screenshots::RenderSource>
+WindowLMC::GetWindowContents(const gfx::IntSize& aWindowSize) {
+  RefPtr<CompositingRenderTarget> rt = mCompositor->GetWindowRenderTarget();
+  if (!rt) {
+    return nullptr;
+  }
+  return MakeAndAddRef<RenderSourceLMC>(rt);
+}
+
+already_AddRefed<profiler_screenshots::DownscaleTarget>
+WindowLMC::CreateDownscaleTarget(const gfx::IntSize& aSize) {
+  RefPtr<CompositingRenderTarget> rt =
+      mCompositor->CreateRenderTarget(IntRect({}, aSize), INIT_MODE_NONE);
+  return MakeAndAddRef<DownscaleTargetLMC>(rt, mCompositor);
+}
+
+already_AddRefed<profiler_screenshots::AsyncReadbackBuffer>
+WindowLMC::CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) {
+  RefPtr<AsyncReadbackBuffer> carb =
+      mCompositor->CreateAsyncReadbackBuffer(aSize);
+  if (!carb) {
+    return nullptr;
+  }
+  return MakeAndAddRef<AsyncReadbackBufferLMC>(carb, mCompositor);
+}
+
 bool RenderCompositorLayersSWGL::MaybeRecordFrame(
     layers::CompositionRecorder& aRecorder) {
-  layers::WindowLMC window(mCompositor);
+  WindowLMC window(mCompositor);
   gfx::IntSize size = GetBufferSize().ToUnknownSize();
   RefPtr<layers::profiler_screenshots::RenderSource> snapshot =
       window.GetWindowContents(size);
@@ -349,7 +466,7 @@ bool RenderCompositorLayersSWGL::MaybeGrabScreenshot(
   if (!mCompositingStarted) {
     return true;
   }
-  layers::WindowLMC window(mCompositor);
+  WindowLMC window(mCompositor);
   mProfilerScreenshotGrabber.MaybeGrabScreenshot(window, aWindowSize);
   return true;
 }

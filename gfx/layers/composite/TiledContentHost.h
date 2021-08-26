@@ -124,9 +124,6 @@ class TiledLayerBufferComposite
   TiledLayerBufferComposite();
   ~TiledLayerBufferComposite();
 
-  bool UseTiles(const SurfaceDescriptorTiles& aTileDescriptors,
-                HostLayerManager* aLayerManager, ISurfaceAllocator* aAllocator);
-
   void Clear();
 
   TileHost GetPlaceholderTile() const { return TileHost(); }
