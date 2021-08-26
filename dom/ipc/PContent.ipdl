@@ -645,7 +645,7 @@ child:
      * This message has raised priority so that it will take precedence over
      * vsync messages to the child.
      */
-    [Priority=mediumhigh] async RebuildFontList(bool aFulLRebuild);
+    [Priority=mediumhigh] async RebuildFontList(bool aFullRebuild);
 
     /**
      * The shared font list has been modified, potentially adding matches
@@ -653,6 +653,12 @@ child:
      * may need to be reflowed.
      */
     async FontListChanged();
+
+    /**
+     * The font list or prefs have been updated in such a way that we might need
+     * to do a reflow and maybe reframe.
+     */
+    async ForceGlobalReflow(bool aNeedsReframe);
 
     /**
      * A new shmem block has been added to the font list; the child process

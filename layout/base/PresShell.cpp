@@ -9932,7 +9932,9 @@ PresShell::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (!nsCRT::strcmp(aTopic, "font-info-updated")) {
-    mPresContext->ForceReflowForFontInfoUpdate();
+    // See how gfxPlatform::ForceGlobalReflow encodes this.
+    bool needsReframe = aData && !!aData[0];
+    mPresContext->ForceReflowForFontInfoUpdate(needsReframe);
     return NS_OK;
   }
 

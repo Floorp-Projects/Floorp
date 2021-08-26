@@ -170,7 +170,7 @@ static void FontListPrefChanged(const char* aPref, void* aData = nullptr) {
                 !strcmp(aPref, "privacy.resistFingerprinting"))) {
     gfxPlatformFontList::PlatformFontList()->SetVisibilityLevel();
     if (XRE_IsParentProcess()) {
-      gfxPlatform::ForceGlobalReflow();
+      gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::No);
     }
   }
 }
@@ -188,7 +188,7 @@ gfxFontListPrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
   FontListPrefChanged(nullptr);
 
   if (XRE_IsParentProcess()) {
-    gfxPlatform::ForceGlobalReflow();
+    gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::No);
   }
   return NS_OK;
 }
@@ -335,9 +335,6 @@ void gfxPlatformFontList::FontWhitelistPrefChanged(const char* aPref,
   pfl->UpdateFontList(true);
   dom::ContentParent::NotifyUpdatedFonts(true);
 }
-
-// number of CSS generic font families
-const uint32_t kNumGenerics = 5;
 
 void gfxPlatformFontList::ApplyWhitelist() {
   uint32_t numFonts = mEnabledFontsList.Length();
@@ -637,7 +634,7 @@ void gfxPlatformFontList::FontListChanged() {
     // safe to use: ensure they all get flushed.
     RebuildLocalFonts(/*aForgetLocalFaces*/ true);
   }
-  ForceGlobalReflow();
+  gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::Yes);
 }
 
 void gfxPlatformFontList::GenerateFontListKey(const nsACString& aKeyName,
@@ -857,7 +854,7 @@ void gfxPlatformFontList::UpdateFontList(bool aFullRebuild) {
     if (mStartedLoadingCmapsFrom != 0xffffffffu) {
       InitializeCodepointsWithNoFonts();
       mStartedLoadingCmapsFrom = 0xffffffffu;
-      gfxPlatform::ForceGlobalReflow();
+      gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::No);
     }
   }
 }
@@ -2491,7 +2488,7 @@ void gfxPlatformFontList::CleanupLoader() {
                     FindFamiliesFlags::eNoAddToNamesMissedWhenSearching));
         });
     if (forceReflow) {
-      ForceGlobalReflow();
+      gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::No);
     }
 
     mOtherNamesMissed = nullptr;
@@ -2521,10 +2518,6 @@ void gfxPlatformFontList::GetPrefsAndStartLoader() {
         "StartLoader callback",
         [delay, fontList = this] { fontList->StartLoader(delay); }));
   }
-}
-
-void gfxPlatformFontList::ForceGlobalReflow() {
-  gfxPlatform::ForceGlobalReflow();
 }
 
 void gfxPlatformFontList::RebuildLocalFonts(bool aForgetLocalFaces) {

@@ -2392,6 +2392,14 @@ mozilla::ipc::IPCResult ContentChild::RecvFontListChanged() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvForceGlobalReflow(
+    bool aNeedsReframe) {
+  gfxPlatform::ForceGlobalReflow(aNeedsReframe ? gfxPlatform::NeedsReframe::Yes
+                                               : gfxPlatform::NeedsReframe::No);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvGeolocationUpdate(
     nsIDOMGeoPosition* aPosition) {
   RefPtr<nsGeolocationService> gs =
