@@ -17,10 +17,7 @@
   runTest(async function () {
     const testVideo = createMediaElement('video', 'testVideo');
     const constraints = {
-      video: {
-         mozMediaSource: "window",
-         mediaSource: "window"
-      },
+      video: { mediaSource: "window" },
       fake: false
     };
 
