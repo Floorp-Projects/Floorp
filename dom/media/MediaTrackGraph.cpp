@@ -1769,7 +1769,7 @@ MediaTrackGraphImpl::Notify(nsITimer* aTimer) {
   return NS_OK;
 }
 
-void MediaTrackGraphImpl::AddShutdownBlocker() {
+bool MediaTrackGraphImpl::AddShutdownBlocker() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mShutdownBlocker);
 
@@ -1787,21 +1787,31 @@ void MediaTrackGraphImpl::AddShutdownBlocker() {
     }
   };
 
+  nsCOMPtr<nsIAsyncShutdownClient> barrier = media::GetShutdownBarrier();
+  if (!barrier) {
+    // We're already shutting down, we won't be able to add a blocker, bail.
+    LOG(LogLevel::Error,
+        ("%p: Couldn't get shutdown barrier, won't add shutdown blocker",
+         this));
+    return false;
+  }
+
   // Blocker names must be distinct.
   nsString blockerName;
   blockerName.AppendPrintf("MediaTrackGraph %p shutdown", this);
   mShutdownBlocker = MakeAndAddRef<Blocker>(this, blockerName);
-  nsresult rv = media::GetShutdownBarrier()->AddBlocker(
-      mShutdownBlocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-      u"MediaTrackGraph shutdown"_ns);
+  nsresult rv = barrier->AddBlocker(mShutdownBlocker,
+                                    NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                                    __LINE__, u"MediaTrackGraph shutdown"_ns);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  return true;
 }
 
 void MediaTrackGraphImpl::RemoveShutdownBlocker() {
   if (!mShutdownBlocker) {
     return;
   }
-  media::GetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
+  media::MustGetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
   mShutdownBlocker = nullptr;
 }
 
@@ -3368,9 +3378,19 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
       mMainThreadGraphTime(0, "MediaTrackGraphImpl::mMainThreadGraphTime"),
       mAudioOutputLatency(0.0),
       mMaxOutputChannelCount(std::min(8u, CubebUtils::MaxNumberOfChannels())) {
-  if (aRunTypeRequested == SINGLE_THREAD && !mGraphRunner) {
-    // Failed to create thread.  Jump to the last phase of the lifecycle.
+  bool failedToGetShutdownBlocker = false;
+  if (!IsNonRealtime()) {
+    failedToGetShutdownBlocker = !AddShutdownBlocker();
+  }
+
+  if ((aRunTypeRequested == SINGLE_THREAD && !mGraphRunner) ||
+      failedToGetShutdownBlocker) {
+    // At least one of the following happened
+    // - Failed to create thread.
+    // - Failed to install a shutdown blocker when one is needed.
+    // Because we have a fail state, jump to last phase of the lifecycle.
     mLifecycleState = LIFECYCLE_WAITING_FOR_TRACK_DESTRUCTION;
+    RemoveShutdownBlocker();  // No-op if blocker wasn't added.
 #ifdef DEBUG
     mCanRunMessagesSynchronously = true;
 #endif
@@ -3394,10 +3414,6 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
   mLastMainThreadUpdate = TimeStamp::Now();
 
   RegisterWeakAsyncMemoryReporter(this);
-
-  if (!IsNonRealtime()) {
-    AddShutdownBlocker();
-  }
 }
 
 #ifdef DEBUG
