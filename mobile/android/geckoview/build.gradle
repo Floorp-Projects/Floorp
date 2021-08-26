@@ -48,15 +48,10 @@ def computeVersionCode() {
     return code;
 }
 
-def getVersionNumber() {
-    def appVersion = getAppVersionWithoutMilestone()
-    def parts = appVersion.split('\\.')
-    def version = parts[0] + "." + parts[1] + "." + getBuildId()
-    if (!mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
-        // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
-        version += "-SNAPSHOT"
-    }
-    return version
+def computeVersionNumber() {
+  def appVersion = getAppVersionWithoutMilestone()
+  def parts = appVersion.split('\\.')
+  return parts[0] + "." + parts[1] + "." + getBuildId()
 }
 
 // Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
@@ -233,30 +228,10 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
 }
 
 configurations {
-    withGeckoBinariesApi {
-        outgoing {
-            if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
-                // The omni build provides glean-native
-                capability("org.mozilla.telemetry:glean-native:${project.ext.gleanVersion}")
-            }
-            afterEvaluate {
-                // Implicit capability
-                capability("org.mozilla.geckoview:${getArtifactId()}:${getVersionNumber()}")
-            }
-        }
-    }
-    // TODO: This is a workaround for a bug that was fixed in Gradle 7.
-    // The variant resolver _should_ pick the RuntimeOnly configuration when building
-    // the tests as those define the implicit :geckoview capability but it doesn't,
-    // so we manually define it here.
-    withGeckoBinariesRuntimeOnly {
-        outgoing {
-            afterEvaluate {
-                // Implicit capability
-                capability("org.mozilla.geckoview:geckoview:${getVersionNumber()}")
-            }
-        }
-    }
+  // No need to include libglean_ffi.so here or for GeckoView consumers.
+  // If those consumers use Glean, they'll get the FFI through GeckoView anyway.
+  all*.exclude group: 'org.mozilla.telemetry', module: 'glean-native'
+  all*.exclude group: 'net.java.dev.jna', module: 'jna'
 }
 
 dependencies {
@@ -265,6 +240,11 @@ dependencies {
     compileOnly "org.checkerframework:checker-compat-qual:2.5.0"
     compileOnly "org.checkerframework:checker-qual:2.5.0"
     compileOnly "org.jetbrains.kotlin:kotlin-annotations-jvm:1.3.70"
+
+    // The Glean Kotlin, which will be re-exported.
+    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+        api "org.mozilla.telemetry:glean:${project.ext.gleanVersion}"
+    }
 
     implementation "androidx.annotation:annotation:1.1.0"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
@@ -360,13 +340,9 @@ android.libraryVariants.all { variant ->
         exclude '**/R.java', '**/BuildConfig.java'
         include 'org/mozilla/geckoview/**.java'
         options.addPathOption('sourcepath', ':').setValue(
-             variant.sourceSets.collect({ it.java.srcDirs }).flatten() +
-             variant.generateBuildConfigProvider.get().sourceOutputDir.asFile.get() +
-             variant.aidlCompileProvider.get().sourceOutputDir.asFile.get()
-        )
-
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-        classpath += variant.javaCompileProvider.get().classpath
+            variant.sourceSets.collect({ it.java.srcDirs }).flatten() +
+            variant.generateBuildConfigProvider.get().sourceOutputDir +
+            variant.aidlCompileProvider.get().sourceOutputDir)
 
         // javadoc 8 has a bug that requires the rt.jar file from the JRE to be
         // in the bootclasspath (https://stackoverflow.com/a/30458820).
@@ -416,7 +392,7 @@ android.libraryVariants.all { variant ->
 }
 
 checkstyle {
-    configDirectory = file(".")
+    configDir = file(".")
     configFile = file("checkstyle.xml")
     toolVersion = "8.36.2"
 }
@@ -443,45 +419,43 @@ android.libraryVariants.all { variant ->
 
 apply plugin: 'maven-publish'
 
-version = getVersionNumber()
-group = 'org.mozilla.geckoview'
-
-def getArtifactId() {
-    def id = "geckoview"
-    // Release artifacts don't specify the channel, for the sake of simplicity.
-    if (mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
-        id += "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
-    }
-
-    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
-        id += "-omni"
-    }
-
-    if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
-        // In automation, per-architecture artifacts identify
-        // the architecture; multi-architecture artifacts don't.
-        // When building locally, we produce a "skinny AAR" with
-        // one target architecture masquerading as a "fat AAR"
-        // to enable Gradle composite builds to substitute this
-        // project into consumers easily.
-        id += "-${mozconfig.substs.ANDROID_CPU_ARCH}"
-    }
-
-    return id
+version = computeVersionNumber()
+if (!mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+    // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
+    version = "${version}-SNAPSHOT"
 }
 
 publishing {
     publications {
         android.libraryVariants.all { variant ->
             "${variant.name}"(MavenPublication) {
-                from components.findByName(variant.name)
-
                 pom {
-                    afterEvaluate {
-                        artifactId = getArtifactId()
+                    groupId = 'org.mozilla.geckoview'
+
+                    def omniSuffix = ""
+                    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+                        omniSuffix = "-omni"
                     }
 
-                    url = 'https://geckoview.dev'
+                    def channelSuffix = ""
+                    // Release artifacts don't specify the channel, for the sake of simplicity.
+                    if (mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
+                        channelSuffix = "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+                    }
+
+                    artifactId = "geckoview$channelSuffix$omniSuffix"
+
+                    if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+                        // In automation, per-architecture artifacts identify
+                        // the architecture; multi-architecture artifacts don't.
+                        // When building locally, we produce a "skinny AAR" with
+                        // one target architecture masquerading as a "fat AAR"
+                        // to enable Gradle composite builds to substitute this
+                        // project into consumers easily.
+                        artifactId = "${artifactId}-${mozconfig.substs.ANDROID_CPU_ARCH}"
+                    }
+
+                    url = 'https://wiki.mozilla.org/Mobile/GeckoView'
 
                     licenses {
                         license {
@@ -503,7 +477,29 @@ publishing {
                             url = 'https://hg.mozilla.org/mozilla-central/'
                         }
                     }
+
+                    // Unfortunately Gradle does not provide a way to expose dependencies for custom
+                    // project types like Android plugins. So we need to add them manually to the POM
+                    // XML here, or use a plugin that achieves the same (like
+                    // https://github.com/wupdigital/android-maven-publish). We elect to do this
+                    // manually since our dependencies are simple and plugins increase our complexity
+                    // surface. This workaround can be removed after this issue is fixed:
+                    // https://github.com/gradle/gradle/issues/1842
+                    withXml {
+                        def dependenciesNode = asNode().appendNode('dependencies')
+
+                        for (configurationName in ["implementation", "api"]) {
+                            configurations.getByName(configurationName).dependencies.each {
+                                def dependencyNode = dependenciesNode.appendNode('dependency')
+                                dependencyNode.appendNode('groupId', it.group)
+                                dependencyNode.appendNode('artifactId', it.name)
+                                dependencyNode.appendNode('version', it.version)
+                            }
+                        }
+                    }
                 }
+
+                artifact tasks["bundle${variant.name.capitalize()}Aar"]
 
                 // Javadoc and sources for developer ergononomics.
                 artifact tasks["javadocJar${variant.name.capitalize()}"]
