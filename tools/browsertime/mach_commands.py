@@ -143,11 +143,9 @@ host_fetches = {
         },
         "ImageMagick": {
             "type": "static-url",
-            # 'url': 'https://imagemagick.org/download/binaries/ImageMagick-7.0.8-39-portable-Q16-x64.zip',  # noqa
-            # imagemagick.org doesn't keep old versions; the mirror below does.
-            "url": "https://ftp.icm.edu.pl/packages/ImageMagick/binaries/ImageMagick-7.0.8-39-portable-Q16-x64.zip",  # noqa
+            "url": "https://download.imagemagick.org/ImageMagick/download/binaries/ImageMagick-7.1.0-4-portable-Q16-x64.zip",  # noqa
             # An extension to `fetch` syntax.
-            "path": "ImageMagick-7.0.8",
+            "path": "ImageMagick-7.1.0",
         },
     },
 }
