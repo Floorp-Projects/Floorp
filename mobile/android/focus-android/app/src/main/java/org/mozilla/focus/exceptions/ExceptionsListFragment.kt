@@ -17,6 +17,7 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -112,6 +113,8 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
             LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         exceptionList.adapter = DomainListAdapter()
         exceptionList.setHasFixedSize(true)
+
+        removeAllExceptions.isVisible = !isSelectionMode()
 
         if (!isSelectionMode()) {
             itemTouchHelper.attachToRecyclerView(exceptionList)
