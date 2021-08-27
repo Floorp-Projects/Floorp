@@ -514,6 +514,7 @@
   MACRO_(useAsm, useAsm, "use asm")                                            \
   MACRO_(useGrouping, useGrouping, "useGrouping")                              \
   MACRO_(useStrict, useStrict, "use strict")                                   \
+  MACRO_(UTC, UTC, "UTC")                                                      \
   MACRO_(void, void_, "void")                                                  \
   MACRO_(value, value, "value")                                                \
   MACRO_(valueOf, valueOf, "valueOf")                                          \

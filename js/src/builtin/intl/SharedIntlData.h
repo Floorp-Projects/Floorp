@@ -16,6 +16,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/GCAPI.h"
 #include "js/GCHashTable.h"
+#include "js/Result.h"
 #include "js/RootingAPI.h"
 #include "js/Utility.h"
 #include "vm/StringType.h"
@@ -71,7 +72,7 @@ class SharedIntlData {
     }
   };
 
- private:
+ public:
   /**
    * Information tracking the set of the supported time zone names, derived
    * from the IANA time zone database <https://www.iana.org/time-zones>.
@@ -113,6 +114,7 @@ class SharedIntlData {
   using TimeZoneMap =
       GCHashMap<TimeZoneName, TimeZoneName, TimeZoneHasher, SystemAllocPolicy>;
 
+ private:
   /**
    * As a threshold matter, available time zones are those time zones ICU
    * supports, via ucal_openTimeZones. But ICU supports additional non-IANA
@@ -176,6 +178,12 @@ class SharedIntlData {
   bool tryCanonicalizeTimeZoneConsistentWithIANA(
       JSContext* cx, JS::Handle<JSString*> timeZone,
       JS::MutableHandle<JSAtom*> result);
+
+  /**
+   * Returns an iterator over all available time zones supported by ICU. The
+   * returned time zone names aren't canonicalized.
+   */
+  JS::Result<TimeZoneSet::Iterator> availableTimeZonesIteration(JSContext* cx);
 
  private:
   using Locale = JSAtom*;
