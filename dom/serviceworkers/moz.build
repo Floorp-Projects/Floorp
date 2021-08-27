@@ -72,6 +72,7 @@ UNIFIED_SOURCES += [
     "ServiceWorkerPrivate.cpp",
     "ServiceWorkerPrivateImpl.cpp",
     "ServiceWorkerProxy.cpp",
+    "ServiceWorkerQuotaUtils.cpp",
     "ServiceWorkerRegisterJob.cpp",
     "ServiceWorkerRegistrar.cpp",
     "ServiceWorkerRegistration.cpp",
