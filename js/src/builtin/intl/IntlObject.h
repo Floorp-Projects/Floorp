@@ -126,6 +126,16 @@ extern const JSClass IntlClass;
                                                          unsigned argc,
                                                          JS::Value* vp);
 
+/**
+ * Returns the list of supported values for the given key. Throws a RangeError
+ * if the key isn't one of {"calendar", "collation", "currency",
+ * "numberingSystem", "timeZone", "unit"}.
+ *
+ * Usage: list = intl_SupportedValuesOf(key)
+ */
+[[nodiscard]] extern bool intl_SupportedValuesOf(JSContext* cx, unsigned argc,
+                                                 JS::Value* vp);
+
 }  // namespace js
 
 #endif /* builtin_intl_IntlObject_h */
