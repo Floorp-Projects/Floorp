@@ -208,6 +208,9 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
+LazyLogModule gRenderThreadLog("WebRenderBridgeParent");
+#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
+
 class ScheduleObserveLayersUpdate : public wr::NotificationHandler {
  public:
   ScheduleObserveLayersUpdate(RefPtr<CompositorBridgeParentBase> aBridge,
@@ -339,6 +342,11 @@ WebRenderBridgeParent::WebRenderBridgeParent(
       mDisablingNativeCompositor(false),
       mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {
   MOZ_ASSERT(mAsyncImageManager);
+  LOG("WebRenderBridgeParent::WebRenderBridgeParent() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   mAsyncImageManager->AddPipeline(mPipelineId, this);
   if (IsRootWebRenderBridgeParent()) {
     MOZ_ASSERT(!mCompositorScheduler);
@@ -363,9 +371,15 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
       mIsFirstPaint(false),
       mSkippedComposite(false),
       mDisablingNativeCompositor(false),
-      mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {}
+      mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {
+  LOG("WebRenderBridgeParent::WebRenderBridgeParent() PipelineId %" PRIx64 "",
+      wr::AsUint64(mPipelineId));
+}
 
-WebRenderBridgeParent::~WebRenderBridgeParent() {}
+WebRenderBridgeParent::~WebRenderBridgeParent() {
+  LOG("WebRenderBridgeParent::WebRenderBridgeParent() PipelineId %" PRIx64 "",
+      wr::AsUint64(mPipelineId));
+}
 
 /* static */
 WebRenderBridgeParent* WebRenderBridgeParent::CreateDestroyed(
@@ -417,6 +431,11 @@ void WebRenderBridgeParent::Destroy() {
   if (mDestroyed) {
     return;
   }
+  LOG("WebRenderBridgeParent::Destroy() PipelineId %" PRIx64 " Id %" PRIx64
+      " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   mDestroyed = true;
   if (mWebRenderBridgeRef) {
     // Break mutual reference
@@ -913,6 +932,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
     return IPC_OK();
   }
 
+  LOG("WebRenderBridgeParent::RecvUpdateResources() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
@@ -953,6 +977,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvDeleteCompositorAnimations(
   if (mDestroyed) {
     return IPC_OK();
   }
+
+  LOG("WebRenderBridgeParent::RecvDeleteCompositorAnimations() PipelineId "
+      "%" PRIx64 " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
 
   // Once mWrEpoch has been rendered, we can delete these compositor animations
   mCompositorAnimationsToDelete.push(
@@ -1203,6 +1232,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     return IPC_OK();
   }
 
+  LOG("WebRenderBridgeParent::RecvSetDisplayList() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   if (!IsRootWebRenderBridgeParent()) {
     CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aTxnURL);
   }
@@ -1346,6 +1380,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     return IPC_OK();
   }
 
+  LOG("WebRenderBridgeParent::RecvEmptyTransaction() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   if (!IsRootWebRenderBridgeParent()) {
     CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aTxnURL);
   }
@@ -1426,6 +1465,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
   if (mDestroyed) {
     return IPC_OK();
   }
+
+  LOG("WebRenderBridgeParent::RecvParentCommands() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
 
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
@@ -1664,6 +1708,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
     return IPC_OK();
   }
 
+  LOG("WebRenderBridgeParent::RecvGetSnapshot() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   // This function should only get called in the root WRBP. If this function
   // gets called in a non-root WRBP, we will set mForceRendering in this WRBP
   // but it will have no effect because CompositeToTarget (which reads the
@@ -1833,6 +1882,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
     return IPC_OK();
   }
 
+  LOG("WebRenderBridgeParent::RecvClearCachedResources() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   // Clear resources
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(true);
@@ -1890,18 +1944,32 @@ wr::Epoch WebRenderBridgeParent::UpdateWebRender(
   // Register pipeline to updated AsyncImageManager.
   mAsyncImageManager->AddPipeline(mPipelineId, this);
 
+  LOG("WebRenderBridgeParent::UpdateWebRender() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   return GetNextWrEpoch();  // Update webrender epoch
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvInvalidateRenderedFrame() {
   // This function should only get called in the root WRBP
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
+  LOG("WebRenderBridgeParent::RecvInvalidateRenderedFrame() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
 
   InvalidateRenderedFrame();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvScheduleComposite() {
+  LOG("WebRenderBridgeParent::RecvScheduleComposite() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   // Caller of LayerManager::ScheduleComposite() expects that it trigger
   // composite. Then we do not want to skip generate frame.
   ScheduleForcedGenerateFrame();
@@ -1950,6 +2018,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvStopCaptureSequence() {
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSyncWithCompositor() {
+  LOG("WebRenderBridgeParent::RecvSyncWithCompositor() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   FlushSceneBuilds();
   if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
     root->FlushFrameGeneration();
@@ -2112,6 +2185,11 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   MOZ_ASSERT(aTarget == nullptr);
   MOZ_ASSERT(aRect == nullptr);
 
+  LOG("WebRenderBridgeParent::CompositeToTarget() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
+
   AUTO_PROFILER_TRACING_MARKER("Paint", "CompositeToTarget", GRAPHICS);
 
   bool paused = true;
@@ -2164,6 +2242,10 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
                                                bool aForceGenerateFrame) {
   // This function should only get called in the root WRBP
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
+  LOG("WebRenderBridgeParent::MaybeGenerateFrame() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
 
   if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
     // Skip WR render during paused state.
@@ -2481,6 +2563,10 @@ void WebRenderBridgeParent::SetClearColor(const gfx::DeviceColor& aColor) {
 
 void WebRenderBridgeParent::Pause() {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
+  LOG("WebRenderBridgeParent::Pause() PipelineId %" PRIx64 " Id %" PRIx64
+      " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
 
   if (!IsRootWebRenderBridgeParent() || mDestroyed) {
     return;
@@ -2491,6 +2577,10 @@ void WebRenderBridgeParent::Pause() {
 
 bool WebRenderBridgeParent::Resume() {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
+  LOG("WebRenderBridgeParent::Resume() PipelineId %" PRIx64 " Id %" PRIx64
+      " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
 
   if (!IsRootWebRenderBridgeParent() || mDestroyed) {
     return false;
@@ -2509,6 +2599,11 @@ void WebRenderBridgeParent::ClearResources() {
   if (!mApi) {
     return;
   }
+
+  LOG("WebRenderBridgeParent::ClearResources() PipelineId %" PRIx64
+      " Id %" PRIx64 " root %d",
+      wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
+      IsRootWebRenderBridgeParent());
 
   wr::Epoch wrEpoch = GetNextWrEpoch();
   mReceivedDisplayList = false;
