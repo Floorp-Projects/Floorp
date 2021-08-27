@@ -428,7 +428,6 @@ bool js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setString(str);
-
   return true;
 }
 
