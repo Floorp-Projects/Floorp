@@ -1,17 +1,12 @@
 {
-    "status": 1,
-    "list": [
+    "recommendations": [
         {
-            "id": 76779,
-            "url": "https://pocket.co/xhJLgl",
-            "domain": "hbr.org",
-            "title": "The Most Common Type of Incompetent Leader",
-            "excerpt": "Absentee leadership rarely comes up in today’s leadership or business literature, but research shows it is alarmingly common.",
-            "image_src": "https://img-getpocket.cdn.mozilla.net/direct?url=https%3A%2F%2Fpocket-image-cache.com%2F1200x%2Ffilters%3Ano_upscale%28%29%3Aformat%28jpg%29%3Aextract_cover%28%29%2Fhttps%253A%252F%252Fhbr.org%252Fresources%252Fimages%252Farticle_assets%252F2018%252F03%252FMar18_30_730266687.jpg&resize=w450",
-            "published_timestamp": "-62169962400",
-            "engagement": "",
-            "dedupe_url": "https://getpocket.com/explore/item/the-most-common-type-of-incompetent-leader?utm_source=pocket-newtab",
-            "sort_id": 0
+            "category": "science",
+            "url": "https://getpocket.com/explore/item/you-think-you-know-what-blue-is-but-you-have-no-idea",
+            "title": "You Think You Know What Blue Is, But You Have No Idea",
+            "imageUrl": "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fpocket-image-cache.com%2F1200x%2Ffilters%3Aformat(jpg)%3Aextract_focal()%2Fhttps%253A%252F%252Fpocket-syndicated-images.s3.amazonaws.com%252Farticles%252F3713%252F1584373694_GettyImages-83522858.jpg",
+            "publisher": "Pocket",
+            "timeToRead": 3
         }
     ]
 }

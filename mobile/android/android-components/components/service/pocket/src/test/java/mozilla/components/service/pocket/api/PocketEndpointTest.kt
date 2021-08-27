@@ -8,9 +8,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.pocket.helpers.PocketTestResource
-import mozilla.components.service.pocket.helpers.TEST_STORIES_COUNT
-import mozilla.components.service.pocket.helpers.TEST_STORIES_LOCALE
-import mozilla.components.service.pocket.helpers.TEST_VALID_API_KEY
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.helpers.assertResponseIsFailure
 import mozilla.components.support.test.mock
@@ -45,22 +42,22 @@ class PocketEndpointTest {
 
     @Test
     fun `WHEN getting stories recommendations and the endpoint returns null THEN a failure is returned`() {
-        whenever(raw.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)).thenReturn(null)
-        assertResponseIsFailure(endpoint.getTopStories(TEST_STORIES_COUNT, TEST_STORIES_LOCALE))
+        whenever(raw.getRecommendedStories()).thenReturn(null)
+        assertResponseIsFailure(endpoint.getTopStories())
     }
 
     @Test
     fun `WHEN getting stories recommendations and the endpoint returns an empty response THEN a failure is returned`() {
-        whenever(raw.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)).thenReturn("")
-        assertResponseIsFailure(endpoint.getTopStories(TEST_STORIES_COUNT, TEST_STORIES_LOCALE))
+        whenever(raw.getRecommendedStories()).thenReturn("")
+        assertResponseIsFailure(endpoint.getTopStories())
     }
 
     @Test
     fun `WHEN the Pocket API returns a String as a response THEN a success with the data is returned`() {
         val expected = PocketTestResource.FIVE_POCKET_STORIES_RECOMMENDATIONS_POCKET_RESPONSE.get()
-        whenever(raw.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)).thenReturn(expected)
+        whenever(raw.getRecommendedStories()).thenReturn(expected)
 
-        val actual = endpoint.getTopStories(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)
+        val actual = endpoint.getTopStories()
         assertEquals(expected, (actual as? PocketResponse.Success)?.data)
     }
 
@@ -68,19 +65,8 @@ class PocketEndpointTest {
     fun `WHEN newInstance is called THEN a new PocketEndpoint is returned as a wrapper over a configured PocketEndpointRaw`() {
         val client: HttpURLConnectionClient = mock()
 
-        val result = PocketEndpoint.newInstance(TEST_VALID_API_KEY, client)
+        val result = PocketEndpoint.newInstance(client)
 
-        assertSame(TEST_VALID_API_KEY, result.rawEndpoint.urls.apiKey)
         assertSame(client, result.rawEndpoint.client)
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `WHEN newInstance is called with a blank API key THEN an exception is thrown`() {
-        PocketEndpoint.newInstance(" ", client)
-    }
-
-    @Test
-    fun `WHEN newInstance is called with valid args THEN no exception is thrown`() {
-        PocketEndpoint.newInstance(TEST_VALID_API_KEY, client)
     }
 }

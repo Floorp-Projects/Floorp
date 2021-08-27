@@ -8,23 +8,18 @@ package mozilla.components.service.pocket
  * A Pocket recommended story.
  *
  * @property id a unique identifier for this recommendation.
- * @property url a "pocket.co" shortlink for the original story's page.
- * @property domain the domain where the story appears, e.g. "bbc.com".
  * @property title the title of the story.
- * @property excerpt a summary of the story.
- * @property imageSrc a url to a still image representing the story.
- * @property publishedTimestamp story publish date. May have a negative value if the date is unknown.
- * @property dedupeUrl the full url to the story's page. Will contain "?utm_source=pocket-newtab".
- * @property sortId the index of this recommendation in the list which is sorted by date added to the API results.
+ * @property publisher the name domain of the publisher, e.g. "The New Yorker" / "nationalgeographic.co.uk"".
+ * @property url a "pocket.co" shortlink for the original story's page.
+ * @property imageUrl a url to a still image representing the story.
+ * @property timeToRead inferred time needed to read the entire story.
+ * @property category topic of interest under which similar stories are grouped.
  */
 data class PocketRecommendedStory(
-    val id: Long,
-    val url: String,
-    val domain: String,
     val title: String,
-    val excerpt: String,
-    val imageSrc: String,
-    val publishedTimestamp: String,
-    val dedupeUrl: String,
-    val sortId: Int
+    val publisher: String,
+    val url: String,
+    val imageUrl: String,
+    val timeToRead: Int,
+    val category: String
 )

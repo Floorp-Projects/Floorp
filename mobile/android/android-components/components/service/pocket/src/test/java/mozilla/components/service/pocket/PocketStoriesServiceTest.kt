@@ -19,7 +19,7 @@ import kotlin.reflect.KVisibility
 
 @RunWith(AndroidJUnit4::class)
 class PocketStoriesServiceTest {
-    private val service = PocketStoriesService(testContext, PocketStoriesConfig("", mock())).also {
+    private val service = PocketStoriesService(testContext, PocketStoriesConfig(mock())).also {
         it.scheduler = mock()
         it.getStoriesUsecase = mock()
     }

@@ -24,7 +24,7 @@ object MockResponses {
         whenever(it.body).thenReturn(body)
     }
 
-    fun getMockResponse(status: Int): Response = mock<Response>().also {
+    private fun getMockResponse(status: Int): Response = mock<Response>().also {
         whenever(it.status).thenReturn(status)
     }
 }

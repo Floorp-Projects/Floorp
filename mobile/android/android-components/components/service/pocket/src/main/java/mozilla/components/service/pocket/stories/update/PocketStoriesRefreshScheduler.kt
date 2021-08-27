@@ -27,8 +27,6 @@ internal class PocketStoriesRefreshScheduler(
         logger.info("Scheduling pocket recommendations background refresh")
 
         val refreshWork = createPeriodicWorkerRequest(
-            storiesCount = pocketStoriesConfig.storiesCount,
-            locale = pocketStoriesConfig.locale,
             frequency = pocketStoriesConfig.frequency
         )
 
@@ -43,19 +41,15 @@ internal class PocketStoriesRefreshScheduler(
 
     @VisibleForTesting
     internal fun createPeriodicWorkerRequest(
-        frequency: Frequency,
-        storiesCount: Int,
-        locale: String
+        frequency: Frequency
     ): PeriodicWorkRequest {
         val constraints = getWorkerConstrains()
-        val extras = getPopulatedWorkerData(storiesCount, locale)
 
         return PeriodicWorkRequestBuilder<RefreshPocketWorker>(
             frequency.repeatInterval,
             frequency.repeatIntervalTimeUnit
         ).apply {
             setConstraints(constraints)
-            setInputData(extras)
             addTag(REFRESH_WORK_TAG)
         }.build()
     }
@@ -64,10 +58,6 @@ internal class PocketStoriesRefreshScheduler(
     internal fun getWorkerConstrains() = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
-
-    @VisibleForTesting
-    internal fun getPopulatedWorkerData(storiesCount: Int, locale: String) =
-        RefreshPocketWorker.getPopulatedWorkerData(storiesCount, locale)
 
     @VisibleForTesting
     internal fun getWorkManager(context: Context) = WorkManager.getInstance(context)

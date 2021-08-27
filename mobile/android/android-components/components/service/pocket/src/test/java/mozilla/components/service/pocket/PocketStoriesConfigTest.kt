@@ -20,14 +20,12 @@ class PocketStoriesConfigTest {
     }
 
     @Test
-    fun `WHEN instantiating a PocketStoriesConfig THEN all but pocketApiKey and client have default values`() {
-        val config = PocketStoriesConfig(pocketApiKey = "mock()", mock())
+    fun `WHEN instantiating a PocketStoriesConfig THEN frequency has a default value`() {
+        val config = PocketStoriesConfig(mock())
 
         val defaultFrequency = Frequency(DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_TIMEUNIT)
         assertEquals(defaultFrequency.repeatInterval, config.frequency.repeatInterval)
         assertEquals(defaultFrequency.repeatIntervalTimeUnit, config.frequency.repeatIntervalTimeUnit)
-        assertEquals(config.storiesCount, DEFAULT_STORIES_COUNT)
-        assertEquals(config.locale, DEFAULT_STORIES_LOCALE)
     }
 
     @Test

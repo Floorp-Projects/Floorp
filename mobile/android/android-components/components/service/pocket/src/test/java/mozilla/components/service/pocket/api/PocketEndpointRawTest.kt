@@ -9,10 +9,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.pocket.helpers.MockResponses
-import mozilla.components.service.pocket.helpers.TEST_STORIES_COUNT
-import mozilla.components.service.pocket.helpers.TEST_STORIES_LOCALE
-import mozilla.components.service.pocket.helpers.TEST_URL
-import mozilla.components.service.pocket.helpers.TEST_VALID_API_KEY
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.helpers.assertRequestParams
 import mozilla.components.service.pocket.helpers.assertResponseIsClosed
@@ -31,10 +27,10 @@ import kotlin.reflect.KVisibility
 
 @RunWith(AndroidJUnit4::class)
 class PocketEndpointRawTest {
+    private val url = "https://mozilla.org".toUri()
 
     private lateinit var endpoint: PocketEndpointRaw
     private lateinit var client: Client
-    private lateinit var urls: PocketURLs
 
     private lateinit var errorResponse: Response
     private lateinit var successResponse: Response
@@ -50,10 +46,7 @@ class PocketEndpointRawTest {
             whenever(it.fetch(any())).thenReturn(defaultResponse)
         }
 
-        urls = mock<PocketURLs>().also {
-            whenever(it.getLocaleStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)).thenReturn(TEST_URL)
-        }
-        endpoint = PocketEndpointRaw(client, urls)
+        endpoint = PocketEndpointRaw(client)
     }
 
     @Test
@@ -62,14 +55,13 @@ class PocketEndpointRawTest {
     }
 
     @Test
-    fun `WHEN requesting global stories recs THEN the global stories recs url is used`() {
-        val expectedUrl = "https://mozilla.org/global-recs"
-        whenever(urls.getLocaleStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)).thenReturn(expectedUrl.toUri())
+    fun `WHEN requesting stories recommendations THEN the firefox android home recommendations url is used`() {
+        val expectedUrl = "https://firefox-android-home-recommendations.getpocket.dev/"
 
         assertRequestParams(
             client,
             makeRequest = {
-                endpoint.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)
+                endpoint.getRecommendedStories()
             },
             assertParams = { request ->
                 assertEquals(expectedUrl, request.url)
@@ -78,57 +70,46 @@ class PocketEndpointRawTest {
     }
 
     @Test
-    fun `WHEN requesting global stories recs and the client throws an IOException THEN null is returned`() {
+    fun `WHEN requesting stories recommendations and the client throws an IOException THEN null is returned`() {
         whenever(client.fetch(any())).thenThrow(IOException::class.java)
-        assertNull(endpoint.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE))
+        assertNull(endpoint.getRecommendedStories())
     }
 
     @Test
-    fun `WHEN requesting global stories recs and the response is null THEN null is returned`() {
+    fun `WHEN requesting stories recommendations and the response is null THEN null is returned`() {
         whenever(client.fetch(any())).thenReturn(null)
-        assertNull(endpoint.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE))
+        assertNull(endpoint.getRecommendedStories())
     }
 
     @Test
-    fun `WHEN requesting global stories recs and the response is not a success THEN null is returned`() {
+    fun `WHEN requesting stories recommendations and the response is not a success THEN null is returned`() {
         whenever(client.fetch(any())).thenReturn(errorResponse)
-        assertNull(endpoint.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE))
+        assertNull(endpoint.getRecommendedStories())
     }
 
     @Test
-    fun `WHEN requesting global stories recs and the response is a success THEN the response body is returned`() {
-        assertSuccessfulRequestReturnsResponseBody(client, endpoint::getGlobalStoriesRecommendations)
+    fun `WHEN requesting stories recommendations and the response is a success THEN the response body is returned`() {
+        assertSuccessfulRequestReturnsResponseBody(client, endpoint::getRecommendedStories)
     }
 
     @Test
-    fun `WHEN requesting global stories recs and the response is an error THEN response is closed`() {
+    fun `WHEN requesting stories recommendations and the response is an error THEN response is closed`() {
         assertResponseIsClosed(client, errorResponse) {
-            endpoint.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)
+            endpoint.getRecommendedStories()
         }
     }
 
     @Test
-    fun `WHEN requesting global stories recs and the response is a success THEN response is closed`() {
+    fun `WHEN requesting stories recommendations and the response is a success THEN response is closed`() {
         assertResponseIsClosed(client, successResponse) {
-            endpoint.getGlobalStoriesRecommendations(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)
+            endpoint.getRecommendedStories()
         }
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun `WHEN newInstance is called with a blank API key THEN an exception is thrown`() {
-        PocketEndpointRaw.newInstance(" ", client)
-    }
-
     @Test
-    fun `WHEN newInstance is called with valid args THEN no exception is thrown`() {
-        PocketEndpointRaw.newInstance(TEST_VALID_API_KEY, client)
-    }
+    fun `WHEN newInstance is called THEN a new instance configured with the client provided is returned`() {
+        val result = PocketEndpointRaw.newInstance(client)
 
-    @Test
-    fun `WHEN newInstance is called THEN a new instance configured with the client and api key provided is returned`() {
-        val result = PocketEndpointRaw.newInstance(TEST_VALID_API_KEY, client)
-
-        assertSame(TEST_VALID_API_KEY, result.urls.apiKey)
         assertSame(client, result.client)
     }
 }

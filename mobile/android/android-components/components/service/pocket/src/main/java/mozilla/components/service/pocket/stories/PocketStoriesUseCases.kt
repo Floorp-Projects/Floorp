@@ -10,7 +10,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.api.PocketEndpoint
 import mozilla.components.service.pocket.api.PocketResponse
-import mozilla.components.support.base.log.Log
+import mozilla.components.service.pocket.logger
 
 /**
  * Possible actions regarding the list of recommended stories.
@@ -21,36 +21,23 @@ class PocketStoriesUseCases {
      * Allows for refreshing the list of pocket stories we have cached.
      *
      * @param context Android Context. Prefer sending application context to limit the possibility of even small leaks.
-     * @param pocketToken Pocket OAuth request token used for downloading recommended stories.
-     * @param pocketItemsCount How many recommended stories to download.
-     *     Once downloaded these stories will replace any that we already had cached.
-     * @param pocketItemsLocale The ISO-639 locale for Pocket recommended stories.
      */
     internal inner class RefreshPocketStories(
         @VisibleForTesting
-        internal val context: Context,
-        @VisibleForTesting
-        internal val pocketItemsCount: Int,
-        @VisibleForTesting
-        internal val pocketItemsLocale: String
+        internal val context: Context
     ) {
         /**
          * Do a full download from Pocket -> persist locally cycle for recommended stories.
          */
         suspend operator fun invoke(): Boolean {
-            val apiKey = pocketApiKey
             val client = fetchClient
-            if (apiKey == null || client == null) {
-                Log.log(
-                    Log.Priority.ERROR,
-                    this.javaClass.simpleName,
-                    message = "Cannot download new stories. Service has incomplete setup"
-                )
+            if (client == null) {
+                logger.error("Cannot download new stories. Service has incomplete setup")
                 return false
             }
 
-            val pocket = getPocketEndpoint(apiKey, client)
-            val response = pocket.getTopStories(pocketItemsCount, pocketItemsLocale)
+            val pocket = getPocketEndpoint(client)
+            val response = pocket.getTopStories()
 
             if (response is PocketResponse.Success) {
                 getPocketRepository(context)
@@ -65,7 +52,7 @@ class PocketStoriesUseCases {
     /**
      * Allows for querying the list of locally available Pocket recommended stories.
      */
-    inner class GetPocketStories(private val context: Context) {
+    internal inner class GetPocketStories(private val context: Context) {
         /**
          * Returns the current locally persisted list of Pocket recommended stories.
          */
@@ -79,20 +66,19 @@ class PocketStoriesUseCases {
     internal fun getPocketRepository(context: Context) = PocketRecommendationsRepository(context)
 
     @VisibleForTesting
-    internal fun getPocketEndpoint(apiKey: String, client: Client) = PocketEndpoint.newInstance(apiKey, client)
+    internal fun getPocketEndpoint(client: Client) = PocketEndpoint.newInstance(client)
 
     internal companion object {
-        @VisibleForTesting internal var pocketApiKey: String? = null
         @VisibleForTesting internal var fetchClient: Client? = null
 
         /**
-         * Convenience method for setting the Pocket api key and the HTTP Client which will be used
-         * for all REST communication with the Pocket server.
+         * Convenience method for setting the the HTTP Client which will be used
+         * for all REST communications with the Pocket server.
          *
-         * Already downloaded data can still be queried but no new data can be downloaded until this data is set.
+         * Already downloaded data can still be queried but no new data can be downloaded until
+         * this parameter is set.
          */
-        internal fun initialize(pocketApiKey: String, client: Client) {
-            this.pocketApiKey = pocketApiKey
+        internal fun initialize(client: Client) {
             this.fetchClient = client
         }
 
@@ -103,7 +89,6 @@ class PocketStoriesUseCases {
          * [initialize] is used again.
          */
         internal fun reset() {
-            pocketApiKey = null
             fetchClient = null
         }
     }

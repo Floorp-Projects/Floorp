@@ -25,7 +25,7 @@ fun <T : Any> assertConstructorsVisibility(assertedClass: KClass<T>, visibility:
 }
 
 fun <T : Any> assertClassVisibility(assertedClass: KClass<T>, visibility: KVisibility) {
-    assertEquals(assertedClass.visibility, visibility)
+    assertEquals(visibility, assertedClass.visibility)
 }
 
 /**
@@ -50,7 +50,7 @@ fun assertRequestParams(client: Client, makeRequest: () -> Unit, assertParams: (
  * @param client the underlying mock client for the raw endpoint making the request.
  * @param makeRequest makes the request using the raw endpoint and returns the body text, or null on error
  */
-fun assertSuccessfulRequestReturnsResponseBody(client: Client, makeRequest: (Int, String) -> String?) {
+fun assertSuccessfulRequestReturnsResponseBody(client: Client, makeRequest: () -> String?) {
     val expectedBody = "{\"jsonStr\": true}"
     val body = mock(Response.Body::class.java).also {
         whenever(it.string()).thenReturn(expectedBody)
@@ -60,7 +60,7 @@ fun assertSuccessfulRequestReturnsResponseBody(client: Client, makeRequest: (Int
     }
     whenever(client.fetch(any())).thenReturn(response)
 
-    assertEquals(expectedBody, makeRequest(TEST_STORIES_COUNT, TEST_STORIES_LOCALE))
+    assertEquals(expectedBody, makeRequest())
 }
 
 /**

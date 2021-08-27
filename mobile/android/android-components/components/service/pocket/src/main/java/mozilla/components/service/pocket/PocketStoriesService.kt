@@ -31,7 +31,7 @@ class PocketStoriesService(
      * making them available for the [getStories] method.
      */
     fun startPeriodicStoriesRefresh() {
-        PocketStoriesUseCases.initialize(pocketStoriesConfig.pocketApiKey, pocketStoriesConfig.client)
+        PocketStoriesUseCases.initialize(pocketStoriesConfig.client)
         scheduler.schedulePeriodicRefreshes(context)
     }
 

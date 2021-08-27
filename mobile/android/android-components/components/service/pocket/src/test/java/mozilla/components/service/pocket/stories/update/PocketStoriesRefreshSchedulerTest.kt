@@ -12,9 +12,6 @@ import androidx.work.WorkManager
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.pocket.Frequency
 import mozilla.components.service.pocket.PocketStoriesConfig
-import mozilla.components.service.pocket.helpers.TEST_STORIES_COUNT
-import mozilla.components.service.pocket.helpers.TEST_STORIES_LOCALE
-import mozilla.components.service.pocket.helpers.TEST_VALID_API_KEY
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.stories.update.RefreshPocketWorker.Companion.REFRESH_WORK_TAG
 import mozilla.components.support.test.any
@@ -25,8 +22,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.mockito.Mockito.anyInt
-import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -46,14 +41,14 @@ class PocketStoriesRefreshSchedulerTest {
         val scheduler = spy(
             PocketStoriesRefreshScheduler(
                 PocketStoriesConfig(
-                    TEST_VALID_API_KEY, client, Frequency(1, TimeUnit.HOURS), TEST_STORIES_COUNT, TEST_STORIES_LOCALE
+                    client, Frequency(1, TimeUnit.HOURS)
                 )
             )
         )
         val workManager = mock<WorkManager>()
         val worker = mock<PeriodicWorkRequest>()
         doReturn(workManager).`when`(scheduler).getWorkManager(any())
-        doReturn(worker).`when`(scheduler).createPeriodicWorkerRequest(any(), anyInt(), anyString())
+        doReturn(worker).`when`(scheduler).createPeriodicWorkerRequest(any())
 
         scheduler.schedulePeriodicRefreshes(testContext)
 
@@ -77,7 +72,7 @@ class PocketStoriesRefreshSchedulerTest {
         val scheduler = spy(PocketStoriesRefreshScheduler(mock()))
 
         val result = scheduler.createPeriodicWorkerRequest(
-            Frequency(1, TimeUnit.HOURS), TEST_STORIES_COUNT, TEST_STORIES_LOCALE
+            Frequency(1, TimeUnit.HOURS)
         )
 
         verify(scheduler).getWorkerConstrains()
@@ -88,11 +83,6 @@ class PocketStoriesRefreshSchedulerTest {
         assertFalse(result.workSpec.constraints.requiresStorageNotLow())
         assertFalse(result.workSpec.constraints.requiresDeviceIdle())
         assertTrue(result.workSpec.constraints.requiredNetworkType == NetworkType.CONNECTED)
-        verify(scheduler).getPopulatedWorkerData(TEST_STORIES_COUNT, TEST_STORIES_LOCALE)
-        assertTrue(
-            listOf(TEST_VALID_API_KEY, TEST_STORIES_COUNT, TEST_STORIES_LOCALE)
-                .containsAll(result.workSpec.input.keyValueMap.values)
-        )
         assertTrue(result.tags.contains(REFRESH_WORK_TAG))
     }
 

@@ -8,6 +8,7 @@ import android.content.Context
 import android.util.AtomicFile
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.logger
 import mozilla.components.support.ktx.android.org.json.mapNotNull
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
@@ -17,7 +18,7 @@ import org.json.JSONObject
 import java.io.File
 
 @VisibleForTesting internal const val STORIES_FILE_NAME = "pocket_recommended.stories"
-@VisibleForTesting internal const val JSON_KEY_ARRAY_STORIES = "list"
+@VisibleForTesting internal const val JSON_KEY_ARRAY_STORIES = "recommendations"
 
 /**
  * Wrapper over our local database.
@@ -73,16 +74,14 @@ internal fun JSONObject.toPocketRecommendedStories(): List<PocketRecommendedStor
 @VisibleForTesting
 internal fun JSONObject.toPocketRecommendedStory(): PocketRecommendedStory? = try {
     PocketRecommendedStory(
-        id = getLong("id"),
-        url = getString("url"),
-        domain = getString("domain"),
         title = getString("title"),
-        excerpt = getString("excerpt"),
-        imageSrc = getString("image_src"),
-        publishedTimestamp = getString("published_timestamp"),
-        dedupeUrl = getString("dedupe_url"),
-        sortId = getInt("sort_id")
+        publisher = getString("publisher"),
+        url = getString("url"),
+        imageUrl = getString("imageUrl"),
+        timeToRead = getInt("timeToRead"),
+        category = getString("category")
     )
 } catch (e: JSONException) {
+    logger.error("Error while parsing persisted JSON story", e)
     null
 }
