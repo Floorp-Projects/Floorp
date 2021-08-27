@@ -897,6 +897,7 @@ STATIC_ATOMS = [
     Atom("onshippingaddresschange", "onshippingaddresschange"),
     Atom("onshippingoptionchange", "onshippingoptionchange"),
     Atom("onshow", "onshow"),
+    Atom("onslotchange", "onslotchange"),
     Atom("onsqueeze", "onsqueeze"),
     Atom("onsqueezeend", "onsqueezeend"),
     Atom("onsqueezestart", "onsqueezestart"),

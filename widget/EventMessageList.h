@@ -457,6 +457,7 @@ NS_EVENT_MESSAGE(eEditorBeforeInput)
 // selection events
 NS_EVENT_MESSAGE(eSelectStart)
 NS_EVENT_MESSAGE(eSelectionChange)
+NS_EVENT_MESSAGE(eSlotChange)
 
 // visibility change
 NS_EVENT_MESSAGE(eVisibilityChange)

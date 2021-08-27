@@ -27,6 +27,7 @@ interface ShadowRoot : DocumentFragment
   [Pref="dom.shadowdom.slot.assign.enabled"]
   readonly attribute SlotAssignmentMode slotAssignment;
   readonly attribute Element host;
+  attribute EventHandler onslotchange;
 
   Element? getElementById(DOMString elementId);
 
