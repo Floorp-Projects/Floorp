@@ -85,6 +85,7 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onselect;
            [Pref="dom.menuitem.enabled"]
            attribute EventHandler onshow;
+           attribute EventHandler onslotchange;
            //(Not implemented)attribute EventHandler onsort;
            attribute EventHandler onstalled;
            attribute EventHandler onsubmit;
