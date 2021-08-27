@@ -9,10 +9,25 @@ const BASE_URL = "https://example.com/browser/browser/modules/test/browser/";
 
 async function play(tab) {
   let browser = tab.linkedBrowser;
+
+  let waitForAudioPromise = BrowserTestUtils.waitForEvent(
+    tab,
+    "TabAttrModified",
+    false,
+    event => {
+      return (
+        event.detail.changed.includes("soundplaying") &&
+        tab.hasAttribute("soundplaying")
+      );
+    }
+  );
+
   await SpecialPowers.spawn(browser, [], async function() {
     let audio = content.document.querySelector("audio");
     await audio.play();
   });
+
+  await waitForAudioPromise;
 }
 
 async function addTab(win = window) {
