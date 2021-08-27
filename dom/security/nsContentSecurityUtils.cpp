@@ -1241,7 +1241,7 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
 #elif defined(FUZZING)
   auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
       aFilename,
-      NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value().get()),
+      NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()).get(),
       "Blocking a script load %s from file %s");
   MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
 #endif
