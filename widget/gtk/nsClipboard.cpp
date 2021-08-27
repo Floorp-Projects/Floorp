@@ -40,7 +40,13 @@
 using namespace mozilla;
 
 // Idle timeout for receiving selection and property notify events (microsec)
-const int kClipboardTimeout = 500000;
+// Right now it's set to 1 sec.
+const int kClipboardTimeout = 1000000;
+
+// Defines how many event loop iterations will be done without sleep.
+// We ususally get data in first 2-3 iterations unless some large object
+// (an image for instance) is transferred through clipboard.
+const int kClipboardFastIterationNum = 3;
 
 // We add this prefix to HTML markup, so that GetHTMLCharset can correctly
 // detect the HTML as UTF-8 encoded.
