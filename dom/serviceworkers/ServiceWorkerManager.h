@@ -254,9 +254,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
 
   int32_t GetPrincipalQuotaUsageCheckCount(nsIPrincipal* aPrincipal);
 
-  void CheckPrincipalQuotaUsage(nsIPrincipal* aPrincipal,
-                                const nsACString& aScope);
-
   // Returns the shutdown state ID (may be an invalid ID if an
   // nsIAsyncShutdownBlocker is not used).
   uint32_t MaybeInitServiceWorkerShutdownProgress() const;
@@ -351,9 +348,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
       nsIServiceWorkerRegistrationInfo* aRegistration);
 
   void NotifyListenersOnUnregister(
-      nsIServiceWorkerRegistrationInfo* aRegistration);
-
-  void NotifyListenersOnQuotaUsageCheckFinish(
       nsIServiceWorkerRegistrationInfo* aRegistration);
 
   void ScheduleUpdateTimer(nsIPrincipal* aPrincipal, const nsACString& aScope);
