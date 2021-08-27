@@ -35,9 +35,6 @@ using namespace layers;
 using namespace gfx;
 namespace wr {
 
-extern LazyLogModule gRenderThreadLog;
-#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
-
 UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   if (!aWidget->GetCompositorOptions().AllowSoftwareWebRenderOGL()) {
@@ -97,12 +94,9 @@ UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
 RenderCompositorOGLSWGL::RenderCompositorOGLSWGL(
     Compositor* aCompositor, const RefPtr<widget::CompositorWidget>& aWidget,
     void* aContext)
-    : RenderCompositorLayersSWGL(aCompositor, aWidget, aContext) {
-  LOG("RenderCompositorOGLSWGL::RenderCompositorOGLSWGL()");
-}
+    : RenderCompositorLayersSWGL(aCompositor, aWidget, aContext) {}
 
 RenderCompositorOGLSWGL::~RenderCompositorOGLSWGL() {
-  LOG("RRenderCompositorOGLSWGL::~RenderCompositorOGLSWGL()");
 #ifdef OZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)GetGLContext());
   DestroyEGLSurface();

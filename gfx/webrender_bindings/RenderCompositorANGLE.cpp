@@ -41,9 +41,6 @@
 namespace mozilla {
 namespace wr {
 
-extern LazyLogModule gRenderThreadLog;
-#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
-
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorANGLE::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
@@ -75,13 +72,9 @@ RenderCompositorANGLE::RenderCompositorANGLE(
       mUseNativeCompositor(true),
       mUsePartialPresent(false),
       mFullRender(false),
-      mDisablingNativeCompositor(false) {
-  LOG("RenderCompositorANGLE::RenderCompositorANGLE()");
-}
+      mDisablingNativeCompositor(false) {}
 
 RenderCompositorANGLE::~RenderCompositorANGLE() {
-  LOG("RenderCompositorANGLE::~RenderCompositorANGLE()");
-
   DestroyEGLSurface();
   MOZ_ASSERT(!mEGLSurface);
 }
@@ -948,7 +941,6 @@ void RenderCompositorANGLE::EnableNativeCompositor(bool aEnable) {
   // XXX Re-enable native compositor is not handled yet.
   MOZ_RELEASE_ASSERT(!mDisablingNativeCompositor);
   MOZ_RELEASE_ASSERT(!aEnable);
-  LOG("RenderCompositorANGLE::EnableNativeCompositor() aEnable %d", aEnable);
 
   if (!UseCompositor()) {
     return;
