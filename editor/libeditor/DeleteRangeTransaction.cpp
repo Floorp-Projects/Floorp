@@ -7,6 +7,8 @@
 
 #include "DeleteNodeTransaction.h"
 #include "DeleteTextTransaction.h"
+#include "EditorUtils.h"
+#include "HTMLEditUtils.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
@@ -29,6 +31,8 @@
 namespace mozilla {
 
 using namespace dom;
+
+using EditorType = EditorUtils::EditorType;
 
 DeleteRangeTransaction::DeleteRangeTransaction(EditorBase& aEditorBase,
                                                const nsRange& aRangeToDelete)
@@ -174,6 +178,12 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteBetween(
 
   // see what kind of node we have
   if (Text* textNode = Text::FromNode(aStart.Container())) {
+    if (mEditorBase->IsHTMLEditor() &&
+        NS_WARN_IF(
+            !EditorUtils::IsEditableContent(*textNode, EditorType::HTML))) {
+      // Just ignore to append the transaction for non-editable node.
+      return NS_OK;
+    }
     // if the node is a chardata node, then delete chardata content
     uint32_t textLengthToDelete;
     if (aStart == aEnd) {
@@ -243,12 +253,11 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteBetween(
   for (nsIContent* child = aStart.GetChildAtOffset();
        child && child != aEnd.GetChildAtOffset();
        child = child->GetNextSibling()) {
+    if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*child))) {
+      continue;  // Should we abort?
+    }
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
         DeleteNodeTransaction::MaybeCreate(*mEditorBase, *child);
-    // XXX This is odd handling.  Even if some children are not editable,
-    //     editor should append transactions because they could be editable
-    //     at undoing/redoing.  Additionally, if the transaction needs to
-    //     delete/restore all nodes, it should at undoing/redoing.
     if (deleteNodeTransaction) {
       DebugOnly<nsresult> rvIgnored = AppendChild(deleteNodeTransaction);
       NS_WARNING_ASSERTION(
@@ -325,20 +334,17 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(
       return NS_ERROR_FAILURE;
     }
 
+    if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*node->AsContent()))) {
+      continue;
+    }
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
         DeleteNodeTransaction::MaybeCreate(*mEditorBase, *node->AsContent());
-    // XXX This is odd handling.  Even if some nodes in the range are not
-    //     editable, editor should append transactions because they could
-    //     at undoing/redoing.  Additionally, if the transaction needs to
-    //     delete/restore all nodes, it should at undoing/redoing.
-    if (!deleteNodeTransaction) {
-      NS_WARNING("DeleteNodeTransaction::MaybeCreate() failed");
-      return NS_ERROR_FAILURE;
+    if (deleteNodeTransaction) {
+      DebugOnly<nsresult> rvIgnored = AppendChild(deleteNodeTransaction);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "DeleteRangeTransaction::AppendChild() failed, but ignored");
     }
-    DebugOnly<nsresult> rvIgnored = AppendChild(deleteNodeTransaction);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "DeleteRangeTransaction::AppendChild() failed, but ignored");
   }
   return NS_OK;
 }
