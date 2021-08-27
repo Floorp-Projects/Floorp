@@ -161,6 +161,21 @@ windows10-32-qr/debug:
         - windows32-tests
         - windows-7-tests
 
+windows10-32-2004-shippable-qr/opt:
+    build-platform: win32-shippable/opt
+    test-sets:
+        - windows32-2004-tests
+
+windows10-32-2004-qr/opt:
+    build-platform: win32/opt
+    test-sets:
+        - windows32-2004-tests
+
+windows10-32-2004-qr/debug:
+    build-platform: win32/debug
+    test-sets:
+        - windows32-2004-tests
+
 # win64
 windows10-64-ccov-qr/opt:
     build-platform: win64-ccov/opt
