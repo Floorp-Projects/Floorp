@@ -13,6 +13,17 @@ function Intl_getCanonicalLocales(locales) {
 }
 
 /**
+ * Intl.supportedValuesOf ( key )
+ */
+function Intl_supportedValuesOf(key) {
+    // Step 1.
+    key = ToString(key);
+
+    // Steps 2-9.
+    return intl_SupportedValuesOf(key);
+}
+
+/**
  * This function is a custom function in the style of the standard Intl.*
  * functions, that isn't part of any spec or proposal yet.
  *
