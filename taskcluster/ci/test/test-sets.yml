@@ -206,18 +206,20 @@ windows-7-tests:
 
 windows32-tests:
     - cppunit
-    - gtest
     - crashtest
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
     # - jittest  # See comment in windows-ccov-tests set.
     - jsreftest
+    - mochitest-plain
+    - mochitest-plain-gpu
+
+windows32-2004-tests:
+    - gtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - marionette
     - mochitest-a11y
     - mochitest-chrome
     - mochitest-chrome-gpu
-    - mochitest-plain
-    - mochitest-plain-gpu
     - mochitest-media
     - mochitest-remote
     - telemetry-tests-client
