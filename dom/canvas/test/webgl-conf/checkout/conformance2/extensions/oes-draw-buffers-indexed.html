@@ -381,14 +381,15 @@ function testColorMaskDrawNoOp() {
     shouldBe('gl.checkFramebufferStatus(gl.FRAMEBUFFER)', 'gl.FRAMEBUFFER_COMPLETE');
 
     gl.drawBuffers(DRAW_BUFFERS);
-    console.log('DRAW_BUFFERS', DRAW_BUFFERS);
+    gl.colorMask(1, 1, 1, 1);
+    gl.disable(gl.BLEND);
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     for (const i of range(NUM_OUTPUTS)) {
         gl.readBuffer(gl.COLOR_ATTACHMENT0+i);
-        wtu.checkCanvasRect(gl, 0, 0, 1, 1, [0, 0, 0, 0], 'initially black');
+        wtu.checkCanvasRect(gl, 0, 0, 1, 1, [0, 0, 0, 0], `COLOR_ATTACHMENT${i} initially black`);
     }
 
     for (const validOutput of range(NUM_OUTPUTS)) {
