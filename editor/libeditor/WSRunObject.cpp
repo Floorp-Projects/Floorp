@@ -73,25 +73,59 @@ template WSRunScanner::TextFragmentData::TextFragmentData(
 template WSRunScanner::TextFragmentData::TextFragmentData(
     const EditorDOMPointInText& aPoint, const Element* aEditingHost);
 
-nsresult WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
-    HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aSplitNode,
-    uint32_t* aSplitOffset) {
-  if (NS_WARN_IF(!aSplitNode) || NS_WARN_IF(!*aSplitNode) ||
-      NS_WARN_IF(!aSplitOffset)) {
-    return NS_ERROR_INVALID_ARG;
+Result<EditorDOMPoint, nsresult>
+WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToSplit,
+    const Element& aSplittingBlockElement) {
+  if (NS_WARN_IF(!aPointToSplit.IsInContentNode()) ||
+      NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(aSplittingBlockElement)) ||
+      NS_WARN_IF(!EditorUtils::IsEditableContent(
+          *aPointToSplit.ContainerAsContent(), EditorType::HTML))) {
+    return Err(NS_ERROR_FAILURE);
   }
 
-  AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), aSplitNode,
-                            aSplitOffset);
+  // The container of aPointToSplit may be not splittable, e.g., selection
+  // may be collapsed **in** a `<br>` element or a comment node.  So, look
+  // for splittable point with climbing the tree up.
+  EditorDOMPoint pointToSplit(aPointToSplit);
+  for (nsIContent* content : aPointToSplit.ContainerAsContent()
+                                 ->InclusiveAncestorsOfType<nsIContent>()) {
+    if (content == &aSplittingBlockElement) {
+      break;
+    }
+    if (HTMLEditUtils::IsSplittableNode(*content)) {
+      break;
+    }
+    pointToSplit.Set(content);
+  }
 
-  nsresult rv = WhiteSpaceVisibilityKeeper::
-      MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
-          aHTMLEditor, EditorDOMPoint(*aSplitNode, *aSplitOffset));
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "WhiteSpaceVisibilityKeeper::"
-                       "MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit() "
-                       "failed");
-  return rv;
+  {
+    AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToSplit);
+
+    nsresult rv = WhiteSpaceVisibilityKeeper::
+        MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(aHTMLEditor,
+                                                          pointToSplit);
+    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::"
+          "MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit() failed");
+      return Err(rv);
+    }
+  }
+
+  if (NS_WARN_IF(!pointToSplit.IsInContentNode()) ||
+      NS_WARN_IF(!pointToSplit.ContainerAsContent()->IsInclusiveDescendantOf(
+          &aSplittingBlockElement)) ||
+      NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(aSplittingBlockElement)) ||
+      NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(
+          *pointToSplit.ContainerAsContent()))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+
+  return pointToSplit;
 }
 
 // static
