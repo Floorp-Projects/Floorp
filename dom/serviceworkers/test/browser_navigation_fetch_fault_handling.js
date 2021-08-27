@@ -104,8 +104,8 @@ const TEST_SW_SETUP = {
 };
 
 const TEST_STORAGE_SETUP = {
-  cacheBytes: 4 * 1024 * 1024,
-  idbBytes: 4 * 1024 * 1024,
+  cacheBytes: 4 * 1024 * 1024, // 4 MiB
+  idbBytes: 4 * 1024 * 1024, // 4 MiB
 };
 
 const FAULTS_BEFORE_MITIGATION = 3;
@@ -139,7 +139,7 @@ async function do_fault_injection_test({
 
   // ## Generate quota usage if appropriate
   if (consumeQuotaOrigin) {
-    await consume_storage(consumeQuotaOrigin, TEST_SW_SETUP);
+    await consume_storage(consumeQuotaOrigin, TEST_STORAGE_SETUP);
   }
 
   // ## Verify normal navigation is served by the SW.
@@ -164,13 +164,17 @@ async function do_fault_injection_test({
   // we expect it happens after navigation fault threshold reached.
   const unregisteredPromise = waitForUnregister(reg.scope);
 
+  // Make sure the test is listening on the finish of quota checking, since we
+  // expect it happens after navigation fault threshold reached.
+  const quotaUsageCheckFinishPromise = waitForQuotaUsageCheckFinish(reg.scope);
+
   // ## Inject faults in a loop until expected mitigation.
   sw.testingInjectCancellation = useError;
   for (let iFault = 0; iFault < FAULTS_BEFORE_MITIGATION; iFault++) {
     info(`## Testing with injected fault number ${iFault + 1}`);
     // We should never have triggered an origin quota usage check before the
     // final fault injection.
-    is(reg.quotaUsageCheckCount, 0, "No quota usage check yet.");
+    is(reg.quotaUsageCheckCount, 0, "No quota usage check yet");
 
     // Make sure our loads encode the specific
     const debugTag = `err=${name}&fault=${iFault + 1}`;
@@ -194,17 +198,23 @@ async function do_fault_injection_test({
   }
 
   await unregisteredPromise;
-  is(reg.unregistered, true, "registration should not exist.");
+  is(reg.unregistered, true, "registration should be unregistered");
+
+  //is(reg.quotaUsageCheckCount, 1, "Quota usage check must be started");
+  await quotaUsageCheckFinishPromise;
 
   if (consumeQuotaOrigin) {
     // Check that there is no longer any storage usaged by the origin in this
     // case.
     const originUsage = await get_qm_origin_usage(TEST_ORIGIN);
-    ok(originUsage > 0, "origin should still have usage until mitigated");
+    ok(
+      is_minimum_origin_usage(originUsage),
+      "origin usage should be mitigated"
+    );
 
     if (consumeQuotaOrigin === SAME_GROUP_ORIGIN) {
       const sameGroupUsage = await get_qm_origin_usage(SAME_GROUP_ORIGIN);
-      ok(sameGroupUsage > 0, "same group should still have usage for now");
+      ok(sameGroupUsage === 0, "same group usage should be mitigated");
     }
   }
 }
@@ -216,12 +226,18 @@ add_task(async function test_navigation_fetch_fault_handling() {
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
       ["dom.serviceWorkers.testing.enabled", true],
       ["dom.serviceWorkers.mitigations.bypass_on_fault", true],
+      ["dom.serviceWorkers.mitigations.group_usage_headroom_kb", 5 * 1024],
+      ["dom.quotaManager.testing", true],
       // We want the temporary global limit to be 10 MiB (the pref is in KiB).
       // This will result in the group limit also being 10 MiB because on small
       // disks we provide a group limit value of min(10 MiB, global limit).
       ["dom.quotaManager.temporaryStorage.fixedLimit", 10 * 1024],
     ],
   });
+
+  // Need to reset the storages to make dom.quotaManager.temporaryStorage.fixedLimit
+  // works.
+  await qm_reset_storage();
 
   const quotaOriginVariations = [
     // Don't put us near the storage limit.
