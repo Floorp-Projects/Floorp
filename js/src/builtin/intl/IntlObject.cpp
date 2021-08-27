@@ -13,6 +13,8 @@
 #include "mozilla/Range.h"
 
 #include <algorithm>
+#include <array>
+#include <cstring>
 #include <iterator>
 
 #include "builtin/Array.h"
@@ -29,13 +31,16 @@
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/GCAPI.h"
 #include "js/GCVector.h"
 #include "js/PropertySpec.h"
 #include "js/Result.h"
 #include "js/StableStringChars.h"
 #include "unicode/ucal.h"
+#include "unicode/ucol.h"
 #include "unicode/udat.h"
 #include "unicode/udatpg.h"
+#include "unicode/uenum.h"
 #include "unicode/uloc.h"
 #include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
@@ -864,6 +869,60 @@ static ArrayObject* CreateArrayFromList(JSContext* cx,
 }
 
 /**
+ * Create an array from an UEnumeration.
+ */
+template <const auto& unsupported>
+static bool EnumerationIntoList(JSContext* cx, const char* type,
+                                UEnumeration* values,
+                                MutableHandle<StringList> list) {
+  while (true) {
+    UErrorCode status = U_ZERO_ERROR;
+    const char* value = uenum_next(values, nullptr, &status);
+    if (U_FAILURE(status)) {
+      intl::ReportInternalError(cx);
+      return false;
+    }
+    if (value == nullptr) {
+      break;
+    }
+
+    // ICU returns old-style keyword values; map them to BCP 47 equivalents.
+    value = uloc_toUnicodeLocaleType(type, value);
+    if (!value) {
+      intl::ReportInternalError(cx);
+      return false;
+    }
+
+    // Skip over known, unsupported values.
+    if (std::any_of(
+            std::begin(unsupported), std::end(unsupported),
+            [value](const auto& e) { return std::strcmp(value, e) == 0; })) {
+      continue;
+    }
+
+    auto* string = NewStringCopyZ<CanGC>(cx, value);
+    if (!string) {
+      return false;
+    }
+    if (!list.append(string)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static void CloseEnumeration(UEnumeration* ptr) {
+  // <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83258> prevents this function
+  // to be a lambda.
+
+  // Tell the analysis the |uenum_close| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  uenum_close(ptr);
+}
+
+/**
  * AvailableCalendars ( )
  */
 static ArrayObject* AvailableCalendars(JSContext* cx) {
@@ -899,6 +958,56 @@ static ArrayObject* AvailableCalendars(JSContext* cx) {
   return CreateArrayFromList(cx, &list);
 }
 
+/**
+ * Returns the list of collation types which mustn't be returned by
+ * |Intl.supportedValuesOf()|.
+ */
+static constexpr auto UnsupportedCollations() {
+  return std::array{
+      "search",
+      "standard",
+  };
+}
+
+/**
+ * AvailableCollations ( )
+ */
+static ArrayObject* AvailableCollations(JSContext* cx) {
+  UErrorCode status = U_ZERO_ERROR;
+  UEnumeration* values = ucol_getKeywordValues("collation", &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return nullptr;
+  }
+  ScopedICUObject<UEnumeration, CloseEnumeration> toClose(values);
+
+  static constexpr auto unsupported = UnsupportedCollations();
+
+  Rooted<StringList> list(cx, StringList(cx));
+  if (!EnumerationIntoList<unsupported>(cx, "co", values, &list)) {
+    return nullptr;
+  }
+
+  // |ucol_getKeywordValues| returns the possible collations for all installed
+  // locales. The root locale is excluded in the list of installed locales, so
+  // we have to explicitly request the available collations of the root locale.
+  //
+  // https://unicode-org.atlassian.net/browse/ICU-21641
+  UEnumeration* rootValues =
+      ucol_getKeywordValuesForLocale("collation", "", false, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return nullptr;
+  }
+  ScopedICUObject<UEnumeration, CloseEnumeration> toCloseRoot(rootValues);
+
+  if (!EnumerationIntoList<unsupported>(cx, "co", rootValues, &list)) {
+    return nullptr;
+  }
+
+  return CreateArrayFromList(cx, &list);
+}
+
 bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -912,6 +1021,8 @@ bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
   ArrayObject* list;
   if (StringEqualsLiteral(key, "calendar")) {
     list = AvailableCalendars(cx);
+  } else if (StringEqualsLiteral(key, "collation")) {
+    list = AvailableCollations(cx);
   } else {
     ReportBadKey(cx, key);
     return false;
