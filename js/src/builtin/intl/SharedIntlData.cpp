@@ -290,6 +290,14 @@ bool js::intl::SharedIntlData::tryCanonicalizeTimeZoneConsistentWithIANA(
   return true;
 }
 
+JS::Result<js::intl::SharedIntlData::TimeZoneSet::Iterator>
+js::intl::SharedIntlData::availableTimeZonesIteration(JSContext* cx) {
+  if (!ensureTimeZones(cx)) {
+    return cx->alreadyReportedError();
+  }
+  return availableTimeZones.iter();
+}
+
 js::intl::SharedIntlData::LocaleHasher::Lookup::Lookup(JSLinearString* locale)
     : js::intl::SharedIntlData::LinearStringLookup(locale) {
   if (isLatin1) {
