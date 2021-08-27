@@ -23,6 +23,7 @@
 #include "builtin/intl/DateTimeFormat.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/NumberFormat.h"
+#include "builtin/intl/NumberingSystemsGenerated.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
@@ -870,6 +871,40 @@ static ArrayObject* CreateArrayFromList(JSContext* cx,
 }
 
 /**
+ * Create an array from a sorted list of strings.
+ */
+template <size_t N>
+static ArrayObject* CreateArrayFromSortedList(
+    JSContext* cx, const std::array<const char*, N>& list) {
+  // Ensure the list is sorted and doesn't contain duplicates.
+#ifdef DEBUG
+  // See bug 1583449 for why the lambda can't be in the MOZ_ASSERT.
+  auto isLargerThanOrEqual = [](const auto& a, const auto& b) {
+    return std::strcmp(a, b) >= 0;
+  };
+#endif
+  MOZ_ASSERT(std::adjacent_find(std::begin(list), std::end(list),
+                                isLargerThanOrEqual) == std::end(list));
+
+  size_t length = std::size(list);
+
+  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, length));
+  if (!array) {
+    return nullptr;
+  }
+  array->ensureDenseInitializedLength(0, length);
+
+  for (size_t i = 0; i < length; ++i) {
+    auto* str = NewStringCopyZ<CanGC>(cx, list[i]);
+    if (!str) {
+      return nullptr;
+    }
+    array->initDenseElement(i, StringValue(str));
+  }
+  return array;
+}
+
+/**
  * Create an array from an UEnumeration.
  */
 template <const auto& unsupported, const auto& missing>
@@ -1114,6 +1149,16 @@ static ArrayObject* AvailableCurrencies(JSContext* cx) {
   return CreateArrayFromList(cx, &list);
 }
 
+/**
+ * AvailableNumberingSystems ( )
+ */
+static ArrayObject* AvailableNumberingSystems(JSContext* cx) {
+  static constexpr std::array numberingSystems = {
+      NUMBERING_SYSTEMS_WITH_SIMPLE_DIGIT_MAPPINGS};
+
+  return CreateArrayFromSortedList(cx, numberingSystems);
+}
+
 bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -1131,6 +1176,8 @@ bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
     list = AvailableCollations(cx);
   } else if (StringEqualsLiteral(key, "currency")) {
     list = AvailableCurrencies(cx);
+  } else if (StringEqualsLiteral(key, "numberingSystem")) {
+    list = AvailableNumberingSystems(cx);
   } else {
     ReportBadKey(cx, key);
     return false;
