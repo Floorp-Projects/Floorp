@@ -25,9 +25,11 @@
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
+#include "ds/Sort.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/GCVector.h"
 #include "js/PropertySpec.h"
 #include "js/Result.h"
 #include "js/StableStringChars.h"
@@ -157,7 +159,7 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static void ReportBadKey(JSContext* cx, HandleString key) {
+static void ReportBadKey(JSContext* cx, JSString* key) {
   if (UniqueChars chars = QuoteString(cx, key, '"')) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
                               chars.get());
@@ -817,6 +819,111 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
   return true;
 }
 
+using StringList = GCVector<JSLinearString*>;
+
+/**
+ * Create a sorted array from a list of strings.
+ */
+static ArrayObject* CreateArrayFromList(JSContext* cx,
+                                        MutableHandle<StringList> list) {
+  // Reserve scratch space for MergeSort().
+  size_t initialLength = list.length();
+  if (!list.growBy(initialLength)) {
+    return nullptr;
+  }
+
+  // Sort all strings in alphabetical order.
+  MOZ_ALWAYS_TRUE(
+      MergeSort(list.begin(), initialLength, list.begin() + initialLength,
+                [](const auto* a, const auto* b, bool* lessOrEqual) {
+                  *lessOrEqual = CompareStrings(a, b) <= 0;
+                  return true;
+                }));
+
+  // Ensure we don't add duplicate entries to the array.
+  auto* end = std::unique(
+      list.begin(), list.begin() + initialLength,
+      [](const auto* a, const auto* b) { return EqualStrings(a, b); });
+
+  // std::unique leaves the elements after |end| with an unspecified value, so
+  // remove them first. And also delete the elements in the scratch space.
+  list.shrinkBy(std::distance(end, list.end()));
+
+  // And finally copy the strings into the result array.
+  auto* array = NewDenseFullyAllocatedArray(cx, list.length());
+  if (!array) {
+    return nullptr;
+  }
+  array->setDenseInitializedLength(list.length());
+
+  for (size_t i = 0; i < list.length(); ++i) {
+    array->initDenseElement(i, StringValue(list[i]));
+  }
+
+  return array;
+}
+
+/**
+ * AvailableCalendars ( )
+ */
+static ArrayObject* AvailableCalendars(JSContext* cx) {
+  Rooted<StringList> list(cx, StringList(cx));
+
+  {
+    // Hazard analysis complains that the mozilla::Result destructor calls a GC
+    // function, which is unsound when returning an unrooted value. Work around
+    // this issue by restricting the lifetime of |keywords| to a separate block.
+    auto keywords = mozilla::intl::Calendar::GetBcp47KeywordValuesForLocale("");
+    if (keywords.isErr()) {
+      intl::ReportInternalError(cx);
+      return nullptr;
+    }
+
+    for (auto keyword : keywords.unwrap()) {
+      if (keyword.isErr()) {
+        intl::ReportInternalError(cx);
+        return nullptr;
+      }
+      const char* calendar = keyword.unwrap().data();
+
+      auto* string = NewStringCopyZ<CanGC>(cx, calendar);
+      if (!string) {
+        return nullptr;
+      }
+      if (!list.append(string)) {
+        return nullptr;
+      }
+    }
+  }
+
+  return CreateArrayFromList(cx, &list);
+}
+
+bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args[0].isString());
+
+  JSLinearString* key = args[0].toString()->ensureLinear(cx);
+  if (!key) {
+    return false;
+  }
+
+  ArrayObject* list;
+  if (StringEqualsLiteral(key, "calendar")) {
+    list = AvailableCalendars(cx);
+  } else {
+    ReportBadKey(cx, key);
+    return false;
+  }
+  if (!list) {
+    return false;
+  }
+
+  args.rval().setObject(*list);
+  return true;
+}
+
 static bool intl_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setString(cx->names().Intl);
@@ -826,6 +933,7 @@ static bool intl_toSource(JSContext* cx, unsigned argc, Value* vp) {
 static const JSFunctionSpec intl_static_methods[] = {
     JS_FN(js_toSource_str, intl_toSource, 0, 0),
     JS_SELF_HOSTED_FN("getCanonicalLocales", "Intl_getCanonicalLocales", 1, 0),
+    JS_SELF_HOSTED_FN("supportedValuesOf", "Intl_supportedValuesOf", 1, 0),
     JS_FS_END};
 
 static const JSPropertySpec intl_static_properties[] = {
