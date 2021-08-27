@@ -90,7 +90,6 @@ class nsClipboard : public nsIClipboard, public nsIObserver {
 };
 
 extern const int kClipboardTimeout;
-extern const int kClipboardFastIterationNum;
 
 GdkAtom GetSelectionAtom(int32_t aWhichClipboard);
 int GetGeckoClipboardType(GtkClipboard* aGtkClipboard);

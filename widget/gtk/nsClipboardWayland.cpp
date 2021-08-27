@@ -340,18 +340,14 @@ char* DataOffer::GetDataAsync(const char* aMimeType, uint32_t* aContentLength) {
                              }),
       nsIEventTarget::NS_DISPATCH_NORMAL);
 
-  int iteration = 1;
   PRTime entryTime = PR_Now();
   while (!mGetterFinished) {
-    if (iteration++ > kClipboardFastIterationNum) {
-      PR_Sleep(PR_MillisecondsToInterval(10)); /* sleep for 10 ms/iteration */
-      if (PR_Now() - entryTime > kClipboardTimeout) {
-        LOGCLIP(("  hit time limit\n"));
-        break;
-      }
+    // check the number of iterations
+    LOGCLIP(("doing iteration...\n"));
+    PR_Sleep(20 * PR_TicksPerSecond() / 1000); /* sleep for 20 ms/iteration */
+    if (PR_Now() - entryTime > kClipboardTimeout) {
+      break;
     }
-    LOGCLIP(("doing iteration %d msec %ld ...\n", (iteration - 1),
-             (PR_Now() - entryTime) / 1000));
     gtk_main_iteration();
   }
 
@@ -870,9 +866,7 @@ nsRetrievalContextWayland::nsRetrievalContextWayland(void)
     : mDisplay(WaylandDisplayGet()),
       mClipboardRequestNumber(0),
       mClipboardData(nullptr),
-      mClipboardDataLength(0),
-      mAsyncDataGetter(
-          StaticPrefs::widget_wayland_async_data_transfer_enabled_AtStartup()) {
+      mClipboardDataLength(0) {
   wl_data_device* dataDevice = wl_data_device_manager_get_data_device(
       mDisplay->GetDataDeviceManager(), mDisplay->GetSeat());
   wl_data_device_add_listener(dataDevice, &data_device_listener, this);
@@ -927,7 +921,7 @@ void nsRetrievalContextWayland::TransferFastTrackClipboard(
 
   if (mClipboardRequestNumber != aClipboardRequestNumber) {
     LOGCLIP(("    request number does not match!\n"));
-    return;
+    NS_WARNING("Received obsoleted clipboard data!");
   }
   LOGCLIP(("    request number matches\n"));
 
@@ -1046,10 +1040,7 @@ const char* nsRetrievalContextWayland::GetClipboardData(
     } else {
       LOGCLIP(
           ("  Getting clipboard data from compositor, MIME %s\n", aMimeType));
-      mClipboardData =
-          mAsyncDataGetter
-              ? dataOffer->GetDataAsync(aMimeType, &mClipboardDataLength)
-              : dataOffer->GetData(aMimeType, &mClipboardDataLength);
+      mClipboardData = dataOffer->GetData(aMimeType, &mClipboardDataLength);
       LOGCLIP(("  Got %d bytes of data, mClipboardData = %p\n",
                mClipboardDataLength, mClipboardData));
     }
