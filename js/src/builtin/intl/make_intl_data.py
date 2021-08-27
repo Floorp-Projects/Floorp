@@ -2954,12 +2954,75 @@ if (typeof reportCompare === "function")
         )
 
 
-def generateTzDataTests(tzdataDir, version, ignoreBackzone, testDir):
-    generateTzDataTestBackwardLinks(tzdataDir, version, ignoreBackzone, testDir)
-    generateTzDataTestNotBackwardLinks(tzdataDir, version, ignoreBackzone, testDir)
-    generateTzDataTestBackzone(tzdataDir, version, ignoreBackzone, testDir)
-    generateTzDataTestBackzoneLinks(tzdataDir, version, ignoreBackzone, testDir)
-    generateTzDataTestVersion(tzdataDir, version, testDir)
+def generateTzDataTestCanonicalZones(
+    tzdataDir, version, ignoreBackzone, ignoreFactory, testDir
+):
+    fileName = "supportedValuesOf-timeZones-canonical.js"
+
+    # Read zone and link infos.
+    (ianaZones, _) = readIANATimeZones(tzdataDir, ignoreBackzone, ignoreFactory)
+
+    # Replace Etc/GMT and Etc/UTC with UTC.
+    ianaZones.remove(Zone("Etc/GMT"))
+    ianaZones.remove(Zone("Etc/UTC"))
+    ianaZones.add(Zone("UTC"))
+
+    # See findIncorrectICUZones() for why Asia/Hanoi has to be special-cased.
+    ianaZones.remove(Zone("Asia/Hanoi"))
+
+    if not ignoreBackzone:
+        comment = """\
+// This file was generated with historical, pre-1970 backzone information
+// respected.
+"""
+    else:
+        comment = """\
+// This file was generated while ignoring historical, pre-1970 backzone
+// information.
+"""
+
+    with io.open(
+        os.path.join(testDir, fileName), mode="w", encoding="utf-8", newline=""
+    ) as f:
+        println = partial(print, file=f)
+
+        println('// |reftest| skip-if(!this.hasOwnProperty("Intl"))')
+        println("")
+        println(generatedFileWarning)
+        println(tzdataVersionComment.format(version))
+        println("")
+        println(comment)
+
+        println("const zones = [")
+        for zone in sorted(ianaZones):
+            println(f'  "{zone}",')
+        println("];")
+
+        println(
+            """
+let supported = [...Intl.supportedValuesOf("timeZone")];
+
+assertEqArray(supported, zones);
+
+if (typeof reportCompare === "function")
+    reportCompare(0, 0, "ok");
+"""
+        )
+
+
+def generateTzDataTests(tzdataDir, version, ignoreBackzone, ignoreFactory, testDir):
+    dtfTestDir = os.path.join(testDir, "DateTimeFormat")
+    if not os.path.isdir(dtfTestDir):
+        raise RuntimeError("not a directory: %s" % dtfTestDir)
+
+    generateTzDataTestBackwardLinks(tzdataDir, version, ignoreBackzone, dtfTestDir)
+    generateTzDataTestNotBackwardLinks(tzdataDir, version, ignoreBackzone, dtfTestDir)
+    generateTzDataTestBackzone(tzdataDir, version, ignoreBackzone, dtfTestDir)
+    generateTzDataTestBackzoneLinks(tzdataDir, version, ignoreBackzone, dtfTestDir)
+    generateTzDataTestVersion(tzdataDir, version, dtfTestDir)
+    generateTzDataTestCanonicalZones(
+        tzdataDir, version, ignoreBackzone, ignoreFactory, testDir
+    )
 
 
 def updateTzdata(topsrcdir, args):
@@ -2973,11 +3036,9 @@ def updateTzdata(topsrcdir, args):
     if not os.path.isdir(icuTzDir):
         raise RuntimeError("not a directory: %s" % icuTzDir)
 
-    dateTimeFormatTestDir = os.path.join(
-        topsrcdir, "js/src/tests/non262/Intl/DateTimeFormat"
-    )
-    if not os.path.isdir(dateTimeFormatTestDir):
-        raise RuntimeError("not a directory: %s" % dateTimeFormatTestDir)
+    intlTestDir = os.path.join(topsrcdir, "js/src/tests/non262/Intl")
+    if not os.path.isdir(intlTestDir):
+        raise RuntimeError("not a directory: %s" % intlTestDir)
 
     tzDir = args.tz
     if tzDir is not None and not (os.path.isdir(tzDir) or os.path.isfile(tzDir)):
@@ -3015,7 +3076,7 @@ def updateTzdata(topsrcdir, args):
                     out,
                 )
                 generateTzDataTests(
-                    TzDataFile(tar), version, ignoreBackzone, dateTimeFormatTestDir
+                    TzDataFile(tar), version, ignoreBackzone, ignoreFactory, intlTestDir
                 )
         elif os.path.isdir(f):
             processTimeZones(
@@ -3028,7 +3089,7 @@ def updateTzdata(topsrcdir, args):
                 out,
             )
             generateTzDataTests(
-                TzDataDir(f), version, ignoreBackzone, dateTimeFormatTestDir
+                TzDataDir(f), version, ignoreBackzone, ignoreFactory, intlTestDir
             )
         else:
             raise RuntimeError("unknown format")
