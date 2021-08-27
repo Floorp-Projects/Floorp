@@ -23,7 +23,9 @@ import org.mozilla.fenix.helpers.click
  */
 class SettingsSubMenuTabsRobot {
 
-    fun verifyOptions() = assertOptions()
+    fun verifyTabViewOptions() = assertTabViewOptions()
+
+    fun verifyCloseTabsOptions() = assertCloseTabsOptions()
 
     fun verifyStartOnHomeOptions() = assertStartOnHomeOptions()
 
@@ -42,10 +44,21 @@ class SettingsSubMenuTabsRobot {
     }
 }
 
-private fun assertOptions() {
-    afterOneDayToggle()
+private fun assertTabViewOptions() {
+    tabViewHeading()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    listToggle()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    gridToggle()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+}
+
+private fun assertCloseTabsOptions() {
+    closeTabsHeading()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    manuallyToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    manualToggle()
+    afterOneDayToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     afterOneWeekToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -64,7 +77,15 @@ private fun assertStartOnHomeOptions() {
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
-private fun manualToggle() = onView(withText("Manually"))
+private fun tabViewHeading() = onView(withText("Tab view"))
+
+private fun listToggle() = onView(withText("List"))
+
+private fun gridToggle() = onView(withText("Grid"))
+
+private fun closeTabsHeading() = onView(withText("Close tabs"))
+
+private fun manuallyToggle() = onView(withText("Manually"))
 
 private fun afterOneDayToggle() = onView(withText("After one day"))
 

@@ -151,17 +151,6 @@ class SettingsBasicsTest {
     }
 
     @Test
-    fun changeCloseTabsSetting() {
-        // Goes through the settings and verified the close tabs setting options.
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openTabsSubMenu {
-            verifyOptions()
-        }
-    }
-
-    @Test
     fun changeAccessibiltySettings() {
         // Goes through the settings and changes the default text on a webpage, then verifies if the text has changed.
         val fenixApp = activityIntentTestRule.activity.applicationContext as FenixApplication
