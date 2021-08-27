@@ -9,43 +9,31 @@
 #include "builtin/intl/IntlObject.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/intl/Calendar.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Range.h"
 
 #include <algorithm>
-#include <array>
-#include <cstring>
 #include <iterator>
 
 #include "builtin/Array.h"
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/DateTimeFormat.h"
-#include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
-#include "builtin/intl/MeasureUnitGenerated.h"
 #include "builtin/intl/NumberFormat.h"
-#include "builtin/intl/NumberingSystemsGenerated.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
-#include "ds/Sort.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/GCAPI.h"
-#include "js/GCVector.h"
 #include "js/PropertySpec.h"
 #include "js/Result.h"
 #include "js/StableStringChars.h"
 #include "unicode/ucal.h"
-#include "unicode/ucol.h"
-#include "unicode/ucurr.h"
 #include "unicode/udat.h"
 #include "unicode/udatpg.h"
-#include "unicode/uenum.h"
 #include "unicode/uloc.h"
 #include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
@@ -169,7 +157,7 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static void ReportBadKey(JSContext* cx, JSString* key) {
+static void ReportBadKey(JSContext* cx, HandleString key) {
   if (UniqueChars chars = QuoteString(cx, key, '"')) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
                               chars.get());
@@ -829,455 +817,6 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
   return true;
 }
 
-using StringList = GCVector<JSLinearString*>;
-
-/**
- * Create a sorted array from a list of strings.
- */
-static ArrayObject* CreateArrayFromList(JSContext* cx,
-                                        MutableHandle<StringList> list) {
-  // Reserve scratch space for MergeSort().
-  size_t initialLength = list.length();
-  if (!list.growBy(initialLength)) {
-    return nullptr;
-  }
-
-  // Sort all strings in alphabetical order.
-  MOZ_ALWAYS_TRUE(
-      MergeSort(list.begin(), initialLength, list.begin() + initialLength,
-                [](const auto* a, const auto* b, bool* lessOrEqual) {
-                  *lessOrEqual = CompareStrings(a, b) <= 0;
-                  return true;
-                }));
-
-  // Ensure we don't add duplicate entries to the array.
-  auto* end = std::unique(
-      list.begin(), list.begin() + initialLength,
-      [](const auto* a, const auto* b) { return EqualStrings(a, b); });
-
-  // std::unique leaves the elements after |end| with an unspecified value, so
-  // remove them first. And also delete the elements in the scratch space.
-  list.shrinkBy(std::distance(end, list.end()));
-
-  // And finally copy the strings into the result array.
-  auto* array = NewDenseFullyAllocatedArray(cx, list.length());
-  if (!array) {
-    return nullptr;
-  }
-  array->setDenseInitializedLength(list.length());
-
-  for (size_t i = 0; i < list.length(); ++i) {
-    array->initDenseElement(i, StringValue(list[i]));
-  }
-
-  return array;
-}
-
-/**
- * Create an array from a sorted list of strings.
- */
-template <size_t N>
-static ArrayObject* CreateArrayFromSortedList(
-    JSContext* cx, const std::array<const char*, N>& list) {
-  // Ensure the list is sorted and doesn't contain duplicates.
-#ifdef DEBUG
-  // See bug 1583449 for why the lambda can't be in the MOZ_ASSERT.
-  auto isLargerThanOrEqual = [](const auto& a, const auto& b) {
-    return std::strcmp(a, b) >= 0;
-  };
-#endif
-  MOZ_ASSERT(std::adjacent_find(std::begin(list), std::end(list),
-                                isLargerThanOrEqual) == std::end(list));
-
-  size_t length = std::size(list);
-
-  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, length));
-  if (!array) {
-    return nullptr;
-  }
-  array->ensureDenseInitializedLength(0, length);
-
-  for (size_t i = 0; i < length; ++i) {
-    auto* str = NewStringCopyZ<CanGC>(cx, list[i]);
-    if (!str) {
-      return nullptr;
-    }
-    array->initDenseElement(i, StringValue(str));
-  }
-  return array;
-}
-
-/**
- * Create an array from an UEnumeration.
- */
-template <const auto& unsupported, const auto& missing>
-static bool EnumerationIntoList(JSContext* cx, UEnumeration* values,
-                                MutableHandle<StringList> list) {
-  while (true) {
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t len;
-    const char* value = uenum_next(values, &len, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-    if (value == nullptr) {
-      break;
-    }
-
-    // Skip over known, unsupported values.
-    if (std::any_of(
-            std::begin(unsupported), std::end(unsupported),
-            [value](const auto& e) { return std::strcmp(value, e) == 0; })) {
-      continue;
-    }
-
-    auto* string = NewStringCopyN<CanGC>(cx, value, size_t(len));
-    if (!string) {
-      return false;
-    }
-    if (!list.append(string)) {
-      return false;
-    }
-  }
-
-  // Add known missing values.
-  for (const char* value : missing) {
-    auto* string = NewStringCopyZ<CanGC>(cx, value);
-    if (!string) {
-      return false;
-    }
-    if (!list.append(string)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/**
- * Create an array from an UEnumeration.
- */
-template <const auto& unsupported>
-static bool EnumerationIntoList(JSContext* cx, const char* type,
-                                UEnumeration* values,
-                                MutableHandle<StringList> list) {
-  while (true) {
-    UErrorCode status = U_ZERO_ERROR;
-    const char* value = uenum_next(values, nullptr, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-    if (value == nullptr) {
-      break;
-    }
-
-    // ICU returns old-style keyword values; map them to BCP 47 equivalents.
-    value = uloc_toUnicodeLocaleType(type, value);
-    if (!value) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    // Skip over known, unsupported values.
-    if (std::any_of(
-            std::begin(unsupported), std::end(unsupported),
-            [value](const auto& e) { return std::strcmp(value, e) == 0; })) {
-      continue;
-    }
-
-    auto* string = NewStringCopyZ<CanGC>(cx, value);
-    if (!string) {
-      return false;
-    }
-    if (!list.append(string)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static void CloseEnumeration(UEnumeration* ptr) {
-  // <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83258> prevents this function
-  // to be a lambda.
-
-  // Tell the analysis the |uenum_close| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
-  uenum_close(ptr);
-}
-
-/**
- * AvailableCalendars ( )
- */
-static ArrayObject* AvailableCalendars(JSContext* cx) {
-  Rooted<StringList> list(cx, StringList(cx));
-
-  {
-    // Hazard analysis complains that the mozilla::Result destructor calls a GC
-    // function, which is unsound when returning an unrooted value. Work around
-    // this issue by restricting the lifetime of |keywords| to a separate block.
-    auto keywords = mozilla::intl::Calendar::GetBcp47KeywordValuesForLocale("");
-    if (keywords.isErr()) {
-      intl::ReportInternalError(cx);
-      return nullptr;
-    }
-
-    for (auto keyword : keywords.unwrap()) {
-      if (keyword.isErr()) {
-        intl::ReportInternalError(cx);
-        return nullptr;
-      }
-      const char* calendar = keyword.unwrap().data();
-
-      auto* string = NewStringCopyZ<CanGC>(cx, calendar);
-      if (!string) {
-        return nullptr;
-      }
-      if (!list.append(string)) {
-        return nullptr;
-      }
-    }
-  }
-
-  return CreateArrayFromList(cx, &list);
-}
-
-/**
- * Returns the list of collation types which mustn't be returned by
- * |Intl.supportedValuesOf()|.
- */
-static constexpr auto UnsupportedCollations() {
-  return std::array{
-      "search",
-      "standard",
-  };
-}
-
-/**
- * AvailableCollations ( )
- */
-static ArrayObject* AvailableCollations(JSContext* cx) {
-  UErrorCode status = U_ZERO_ERROR;
-  UEnumeration* values = ucol_getKeywordValues("collation", &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-  ScopedICUObject<UEnumeration, CloseEnumeration> toClose(values);
-
-  static constexpr auto unsupported = UnsupportedCollations();
-
-  Rooted<StringList> list(cx, StringList(cx));
-  if (!EnumerationIntoList<unsupported>(cx, "co", values, &list)) {
-    return nullptr;
-  }
-
-  // |ucol_getKeywordValues| returns the possible collations for all installed
-  // locales. The root locale is excluded in the list of installed locales, so
-  // we have to explicitly request the available collations of the root locale.
-  //
-  // https://unicode-org.atlassian.net/browse/ICU-21641
-  UEnumeration* rootValues =
-      ucol_getKeywordValuesForLocale("collation", "", false, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-  ScopedICUObject<UEnumeration, CloseEnumeration> toCloseRoot(rootValues);
-
-  if (!EnumerationIntoList<unsupported>(cx, "co", rootValues, &list)) {
-    return nullptr;
-  }
-
-  return CreateArrayFromList(cx, &list);
-}
-
-/**
- * Returns a list of known, unsupported currencies which are returned by
- * |ucurr_openISOCurrencies|.
- */
-static constexpr auto UnsupportedCurrencies() {
-  // "MVP" is also marked with "questionable, remove?" in ucurr.cpp, but only
-  // these two currency codes aren't supported by |Intl.DisplayNames| and
-  // therefore must be excluded by |Intl.supportedValuesOf|.
-  return std::array{
-      "EQE",  // https://unicode-org.atlassian.net/browse/ICU-21686
-      "LSM",  // https://unicode-org.atlassian.net/browse/ICU-21687
-  };
-}
-
-/**
- * Return a list of known, missing currencies which aren't returned by
- * |ucurr_openISOCurrencies|.
- */
-static constexpr auto MissingCurrencies() {
-  return std::array{
-      "UYW",  // https://unicode-org.atlassian.net/browse/ICU-21622
-      "VES",  // https://unicode-org.atlassian.net/browse/ICU-21685
-  };
-}
-
-/**
- * AvailableCurrencies ( )
- */
-static ArrayObject* AvailableCurrencies(JSContext* cx) {
-  UErrorCode status = U_ZERO_ERROR;
-  UEnumeration* values = ucurr_openISOCurrencies(UCURR_ALL, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-  ScopedICUObject<UEnumeration, CloseEnumeration> toClose(values);
-
-  static constexpr auto unsupported = UnsupportedCurrencies();
-  static constexpr auto missing = MissingCurrencies();
-
-  Rooted<StringList> list(cx, StringList(cx));
-  if (!EnumerationIntoList<unsupported, missing>(cx, values, &list)) {
-    return nullptr;
-  }
-
-  return CreateArrayFromList(cx, &list);
-}
-
-/**
- * AvailableNumberingSystems ( )
- */
-static ArrayObject* AvailableNumberingSystems(JSContext* cx) {
-  static constexpr std::array numberingSystems = {
-      NUMBERING_SYSTEMS_WITH_SIMPLE_DIGIT_MAPPINGS};
-
-  return CreateArrayFromSortedList(cx, numberingSystems);
-}
-
-/**
- * AvailableTimeZones ( )
- */
-static ArrayObject* AvailableTimeZones(JSContext* cx) {
-  // Unsorted list of canonical time zone names, possibly containing duplicates.
-  Rooted<StringList> timeZones(cx, StringList(cx));
-
-  intl::SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
-  auto iterResult = sharedIntlData.availableTimeZonesIteration(cx);
-  if (iterResult.isErr()) {
-    return nullptr;
-  }
-  auto iter = iterResult.unwrap();
-
-  RootedAtom validatedTimeZone(cx);
-  RootedAtom ianaTimeZone(cx);
-  for (; !iter.done(); iter.next()) {
-    validatedTimeZone = iter.get();
-
-    // Canonicalize the time zone before adding it to the result array.
-
-    // Some time zone names are canonicalized differently by ICU -- handle those
-    // first.
-    ianaTimeZone.set(nullptr);
-    if (!sharedIntlData.tryCanonicalizeTimeZoneConsistentWithIANA(
-            cx, validatedTimeZone, &ianaTimeZone)) {
-      return nullptr;
-    }
-
-    JSLinearString* timeZone;
-    if (ianaTimeZone) {
-      cx->markAtom(ianaTimeZone);
-
-      timeZone = ianaTimeZone;
-    } else {
-      // Call into ICU to canonicalize the time zone.
-
-      JS::AutoStableStringChars stableChars(cx);
-      if (!stableChars.initTwoByte(cx, validatedTimeZone)) {
-        return nullptr;
-      }
-
-      intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE>
-          canonicalTimeZone(cx);
-      auto result = mozilla::intl::Calendar::GetCanonicalTimeZoneID(
-          stableChars.twoByteRange(), canonicalTimeZone);
-      if (result.isErr()) {
-        intl::ReportInternalError(cx, result.unwrapErr());
-        return nullptr;
-      }
-
-      timeZone = canonicalTimeZone.toString();
-      if (!timeZone) {
-        return nullptr;
-      }
-
-      // Canonicalize both to "UTC" per CanonicalizeTimeZoneName().
-      if (StringEqualsLiteral(timeZone, "Etc/UTC") ||
-          StringEqualsLiteral(timeZone, "Etc/GMT")) {
-        timeZone = cx->names().UTC;
-      }
-    }
-
-    if (!timeZones.append(timeZone)) {
-      return nullptr;
-    }
-  }
-
-  return CreateArrayFromList(cx, &timeZones);
-}
-
-template <size_t N>
-constexpr auto MeasurementUnitNames(const MeasureUnit (&units)[N]) {
-  std::array<const char*, N> array = {};
-  for (size_t i = 0; i < N; ++i) {
-    array[i] = units[i].name;
-  }
-  return array;
-}
-
-/**
- * AvailableUnits ( )
- */
-static ArrayObject* AvailableUnits(JSContext* cx) {
-  static constexpr std::array simpleMeasureUnitNames =
-      MeasurementUnitNames(simpleMeasureUnits);
-
-  return CreateArrayFromSortedList(cx, simpleMeasureUnitNames);
-}
-
-bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isString());
-
-  JSLinearString* key = args[0].toString()->ensureLinear(cx);
-  if (!key) {
-    return false;
-  }
-
-  ArrayObject* list;
-  if (StringEqualsLiteral(key, "calendar")) {
-    list = AvailableCalendars(cx);
-  } else if (StringEqualsLiteral(key, "collation")) {
-    list = AvailableCollations(cx);
-  } else if (StringEqualsLiteral(key, "currency")) {
-    list = AvailableCurrencies(cx);
-  } else if (StringEqualsLiteral(key, "numberingSystem")) {
-    list = AvailableNumberingSystems(cx);
-  } else if (StringEqualsLiteral(key, "timeZone")) {
-    list = AvailableTimeZones(cx);
-  } else if (StringEqualsLiteral(key, "unit")) {
-    list = AvailableUnits(cx);
-  } else {
-    ReportBadKey(cx, key);
-    return false;
-  }
-  if (!list) {
-    return false;
-  }
-
-  args.rval().setObject(*list);
-  return true;
-}
-
 static bool intl_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setString(cx->names().Intl);
@@ -1287,7 +826,6 @@ static bool intl_toSource(JSContext* cx, unsigned argc, Value* vp) {
 static const JSFunctionSpec intl_static_methods[] = {
     JS_FN(js_toSource_str, intl_toSource, 0, 0),
     JS_SELF_HOSTED_FN("getCanonicalLocales", "Intl_getCanonicalLocales", 1, 0),
-    JS_SELF_HOSTED_FN("supportedValuesOf", "Intl_supportedValuesOf", 1, 0),
     JS_FS_END};
 
 static const JSPropertySpec intl_static_properties[] = {
