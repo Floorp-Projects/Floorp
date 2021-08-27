@@ -22,9 +22,7 @@
 
 namespace mozilla {
 
-namespace dom {
-class Element;
-}
+using namespace dom;
 
 class WSRunScanner;
 
@@ -124,15 +122,15 @@ class MOZ_STACK_CLASS WSScanResult final {
   /**
    * The following accessors makes it easier to understand each callers.
    */
-  MOZ_NEVER_INLINE_DEBUG dom::Element* ElementPtr() const {
+  MOZ_NEVER_INLINE_DEBUG Element* ElementPtr() const {
     MOZ_DIAGNOSTIC_ASSERT(mContent->IsElement());
     return mContent->AsElement();
   }
-  MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* BRElementPtr() const {
+  MOZ_NEVER_INLINE_DEBUG HTMLBRElement* BRElementPtr() const {
     MOZ_DIAGNOSTIC_ASSERT(mContent->IsHTMLElement(nsGkAtoms::br));
-    return static_cast<dom::HTMLBRElement*>(mContent.get());
+    return static_cast<HTMLBRElement*>(mContent.get());
   }
-  MOZ_NEVER_INLINE_DEBUG dom::Text* TextPtr() const {
+  MOZ_NEVER_INLINE_DEBUG Text* TextPtr() const {
     MOZ_DIAGNOSTIC_ASSERT(mContent->IsText());
     return mContent->AsText();
   }
@@ -290,10 +288,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
   using WSType = WSScanResult::WSType;
 
   template <typename EditorDOMPointType>
-  WSRunScanner(const dom::Element* aEditingHost,
+  WSRunScanner(const Element* aEditingHost,
                const EditorDOMPointType& aScanStartPoint)
       : mScanStartPoint(aScanStartPoint),
-        mEditingHost(const_cast<dom::Element*>(aEditingHost)),
+        mEditingHost(const_cast<Element*>(aEditingHost)),
         mTextFragmentDataAtStart(mScanStartPoint, mEditingHost) {}
 
   // ScanNextVisibleNodeOrBlockBoundaryForwardFrom() returns the first visible
@@ -305,8 +303,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
       const EditorDOMPointBase<PT, CT>& aPoint) const;
   template <typename PT, typename CT>
   static WSScanResult ScanNextVisibleNodeOrBlockBoundary(
-      const dom::Element* aEditingHost,
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
     return WSRunScanner(aEditingHost, aPoint)
         .ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
@@ -320,8 +317,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
       const EditorDOMPointBase<PT, CT>& aPoint) const;
   template <typename PT, typename CT>
   static WSScanResult ScanPreviousVisibleNodeOrBlockBoundary(
-      const dom::Element* aEditingHost,
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
     return WSRunScanner(aEditingHost, aPoint)
         .ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
@@ -333,7 +329,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   template <typename PT, typename CT>
   static EditorDOMPointInText GetInclusiveNextEditableCharPoint(
-      dom::Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
+      Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
     if (aPoint.IsInTextNode() && !aPoint.IsEndOfContainer() &&
         HTMLEditUtils::IsSimplyEditableNode(*aPoint.ContainerAsText())) {
       return EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset());
@@ -348,7 +344,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   template <typename PT, typename CT>
   static EditorDOMPointInText GetPreviousEditableCharPoint(
-      dom::Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
+      Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
     if (aPoint.IsInTextNode() && !aPoint.IsStartOfContainer() &&
         HTMLEditUtils::IsSimplyEditableNode(*aPoint.ContainerAsText())) {
       return EditorDOMPointInText(aPoint.ContainerAsText(),
@@ -368,17 +364,17 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   template <typename EditorDOMPointType>
   static EditorDOMPointType GetAfterLastVisiblePoint(
-      dom::Text& aTextNode, const dom::Element* aAncestorLimiter);
+      Text& aTextNode, const Element* aAncestorLimiter);
   template <typename EditorDOMPointType>
   static EditorDOMPointType GetFirstVisiblePoint(
-      dom::Text& aTextNode, const dom::Element* aAncestorLimiter);
+      Text& aTextNode, const Element* aAncestorLimiter);
 
   /**
    * GetRangeInTextNodesToForwardDeleteFrom() returns the range to remove
    * text when caret is at aPoint.
    */
   static Result<EditorDOMRangeInTexts, nsresult>
-  GetRangeInTextNodesToForwardDeleteFrom(dom::Element* aEditingHost,
+  GetRangeInTextNodesToForwardDeleteFrom(Element* aEditingHost,
                                          const EditorDOMPoint& aPoint);
 
   /**
@@ -386,7 +382,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * when caret is at aPoint.
    */
   static Result<EditorDOMRangeInTexts, nsresult>
-  GetRangeInTextNodesToBackspaceFrom(dom::Element* aEditingHost,
+  GetRangeInTextNodesToBackspaceFrom(Element* aEditingHost,
                                      const EditorDOMPoint& aPoint);
 
   /**
@@ -395,7 +391,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * be included into the range.
    */
   static EditorDOMRange GetRangesForDeletingAtomicContent(
-      dom::Element* aEditingHost, const nsIContent& aAtomicContent);
+      Element* aEditingHost, const nsIContent& aAtomicContent);
 
   /**
    * GetRangeForDeleteBlockElementBoundaries() returns a range starting from end
@@ -418,8 +414,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
    *                            Otherwise, must not be set.
    */
   static EditorDOMRange GetRangeForDeletingBlockElementBoundaries(
-      const HTMLEditor& aHTMLEditor, const dom::Element& aLeftBlockElement,
-      const dom::Element& aRightBlockElement,
+      const HTMLEditor& aHTMLEditor, const Element& aLeftBlockElement,
+      const Element& aRightBlockElement,
       const EditorDOMPoint& aPointContainingTheOtherBlock);
 
   /**
@@ -429,14 +425,14 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   static Result<bool, nsresult> ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
       const HTMLEditor& aHTMLEditor, nsRange& aRange,
-      const dom::Element* aEditingHost);
+      const Element* aEditingHost);
 
   /**
    * GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries() returns
    * extended range if range boundaries of aRange are in invisible white-spaces.
    */
   static EditorDOMRange GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
-      dom::Element* aEditingHost, const EditorDOMRange& aRange);
+      Element* aEditingHost, const EditorDOMRange& aRange);
 
   /**
    * GetPrecedingBRElementUnlessVisibleContentFound() scans a `<br>` element
@@ -445,9 +441,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * white-spaces between `<br>` element and aPoint.
    */
   template <typename EditorDOMPointType>
-  MOZ_NEVER_INLINE_DEBUG static dom::HTMLBRElement*
+  MOZ_NEVER_INLINE_DEBUG static HTMLBRElement*
   GetPrecedingBRElementUnlessVisibleContentFound(
-      dom::Element* aEditingHost, const EditorDOMPointType& aPoint) {
+      Element* aEditingHost, const EditorDOMPointType& aPoint) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
     // XXX This method behaves differently even in similar point.
     //     If aPoint is in a text node following `<br>` element, reaches the
@@ -538,23 +534,23 @@ class MOZ_STACK_CLASS WSRunScanner final {
     return TextFragmentDataAtStartRef().EndsByBlockBoundary();
   }
 
-  MOZ_NEVER_INLINE_DEBUG dom::Element* StartReasonOtherBlockElementPtr() const {
+  MOZ_NEVER_INLINE_DEBUG Element* StartReasonOtherBlockElementPtr() const {
     return TextFragmentDataAtStartRef().StartReasonOtherBlockElementPtr();
   }
-  MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* StartReasonBRElementPtr() const {
+  MOZ_NEVER_INLINE_DEBUG HTMLBRElement* StartReasonBRElementPtr() const {
     return TextFragmentDataAtStartRef().StartReasonBRElementPtr();
   }
-  MOZ_NEVER_INLINE_DEBUG dom::Element* EndReasonOtherBlockElementPtr() const {
+  MOZ_NEVER_INLINE_DEBUG Element* EndReasonOtherBlockElementPtr() const {
     return TextFragmentDataAtStartRef().EndReasonOtherBlockElementPtr();
   }
-  MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* EndReasonBRElementPtr() const {
+  MOZ_NEVER_INLINE_DEBUG HTMLBRElement* EndReasonBRElementPtr() const {
     return TextFragmentDataAtStartRef().EndReasonBRElementPtr();
   }
 
   /**
    * Active editing host when this instance is created.
    */
-  dom::Element* GetEditingHost() const { return mEditingHost; }
+  Element* GetEditingHost() const { return mEditingHost; }
 
  protected:
   using EditorType = EditorBase::EditorType;
@@ -727,7 +723,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   EditorDOMPointInText GetPreviousCharPointFromPointInText(
       const EditorDOMPointInText& aPoint) const;
 
-  char16_t GetCharAt(dom::Text* aTextNode, uint32_t aOffset) const;
+  char16_t GetCharAt(Text* aTextNode, uint32_t aOffset) const;
 
   /**
    * TextFragmentData stores the information of white-space sequence which
@@ -759,9 +755,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       template <typename EditorDOMPointType>
       static BoundaryData ScanCollapsibleWhiteSpaceStartFrom(
           const EditorDOMPointType& aPoint,
-          const dom::Element&
-              aEditableBlockParentOrTopmostEditableInlineElement,
-          const dom::Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
+          const Element& aEditableBlockParentOrTopmostEditableInlineElement,
+          const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
 
       /**
        * ScanCollapsibleWhiteSpaceEndFrom() returns end boundary data of
@@ -781,9 +776,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       template <typename EditorDOMPointType>
       static BoundaryData ScanCollapsibleWhiteSpaceEndFrom(
           const EditorDOMPointType& aPoint,
-          const dom::Element&
-              aEditableBlockParentOrTopmostEditableInlineElement,
-          const dom::Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
+          const Element& aEditableBlockParentOrTopmostEditableInlineElement,
+          const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
 
       enum class Preformatted : bool { Yes, No };
       BoundaryData()
@@ -825,13 +819,13 @@ class MOZ_STACK_CLASS WSRunScanner final {
                mReason == WSType::OtherBlockBoundary ||
                mReason == WSType::BRElement;
       }
-      MOZ_NEVER_INLINE_DEBUG dom::Element* OtherBlockElementPtr() const {
+      MOZ_NEVER_INLINE_DEBUG Element* OtherBlockElementPtr() const {
         MOZ_DIAGNOSTIC_ASSERT(mReasonContent->IsElement());
         return mReasonContent->AsElement();
       }
-      MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* BRElementPtr() const {
+      MOZ_NEVER_INLINE_DEBUG HTMLBRElement* BRElementPtr() const {
         MOZ_DIAGNOSTIC_ASSERT(mReasonContent->IsHTMLElement(nsGkAtoms::br));
-        return static_cast<dom::HTMLBRElement*>(mReasonContent.get());
+        return static_cast<HTMLBRElement*>(mReasonContent.get());
       }
 
      private:
@@ -891,7 +885,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     TextFragmentData() = delete;
     template <typename EditorDOMPointType>
     TextFragmentData(const EditorDOMPointType& aPoint,
-                     const dom::Element* aEditingHost);
+                     const Element* aEditingHost);
 
     bool IsInitialized() const {
       return mStart.Initialized() && mEnd.Initialized();
@@ -943,17 +937,16 @@ class MOZ_STACK_CLASS WSRunScanner final {
     WSType StartRawReason() const { return mStart.RawReason(); }
     WSType EndRawReason() const { return mEnd.RawReason(); }
 
-    MOZ_NEVER_INLINE_DEBUG dom::Element* StartReasonOtherBlockElementPtr()
-        const {
+    MOZ_NEVER_INLINE_DEBUG Element* StartReasonOtherBlockElementPtr() const {
       return mStart.OtherBlockElementPtr();
     }
-    MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* StartReasonBRElementPtr() const {
+    MOZ_NEVER_INLINE_DEBUG HTMLBRElement* StartReasonBRElementPtr() const {
       return mStart.BRElementPtr();
     }
-    MOZ_NEVER_INLINE_DEBUG dom::Element* EndReasonOtherBlockElementPtr() const {
+    MOZ_NEVER_INLINE_DEBUG Element* EndReasonOtherBlockElementPtr() const {
       return mEnd.OtherBlockElementPtr();
     }
-    MOZ_NEVER_INLINE_DEBUG dom::HTMLBRElement* EndReasonBRElementPtr() const {
+    MOZ_NEVER_INLINE_DEBUG HTMLBRElement* EndReasonBRElementPtr() const {
       return mEnd.BRElementPtr();
     }
 
@@ -1238,7 +1231,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     BoundaryData mStart;
     BoundaryData mEnd;
     NoBreakingSpaceData mNBSPData;
-    RefPtr<const dom::Element> mEditingHost;
+    RefPtr<const Element> mEditingHost;
     mutable Maybe<EditorDOMRange> mLeadingWhiteSpaceRange;
     mutable Maybe<EditorDOMRange> mTrailingWhiteSpaceRange;
     mutable Maybe<VisibleWhiteSpacesData> mVisibleWhiteSpacesData;
@@ -1259,7 +1252,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   // info.
 
   // The editing host when the instance is created.
-  RefPtr<dom::Element> mEditingHost;
+  RefPtr<Element> mEditingHost;
 
  private:
   /**
@@ -1348,14 +1341,18 @@ class WhiteSpaceVisibilityKeeper final {
     return rv;
   }
 
-  // PrepareToSplitAcrossBlocks fixes up ws before and after
-  // {aSplitNode,aSplitOffset} in preparation for a block parent to be split.
-  // Note that the aSplitNode and aSplitOffset are adjusted in response to
-  // any DOM changes we make while adjusting ws.  Example of fixup: normalws
-  // before {aSplitNode,aSplitOffset} needs to end with nbsp.
-  MOZ_CAN_RUN_SCRIPT static nsresult PrepareToSplitAcrossBlocks(
-      HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aSplitNode,
-      uint32_t* aSplitOffset);
+  /**
+   * PrepareToSplitBlockElement() makes sure that the invisible white-spaces
+   * not to become visible and returns splittable point.
+   *
+   * @param aHTMLEditor         The HTML editor.
+   * @param aPointToSplit       The splitting point in aSplittingBlockElement.
+   * @param aSplittingBlockElement  A block element which will be split.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<EditorDOMPoint, nsresult>
+  PrepareToSplitBlockElement(HTMLEditor& aHTMLEditor,
+                             const EditorDOMPoint& aPointToSplit,
+                             const Element& aSplittingBlockElement);
 
   /**
    * MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement() merges
@@ -1375,11 +1372,10 @@ class WhiteSpaceVisibilityKeeper final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
-      HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
-      dom::Element& aRightBlockElement,
-      const EditorDOMPoint& aAtRightBlockChild,
+      HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
+      Element& aRightBlockElement, const EditorDOMPoint& aAtRightBlockChild,
       const Maybe<nsAtom*>& aListElementTagName,
-      const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
+      const HTMLBRElement* aPrecedingInvisibleBRElement);
 
   /**
    * MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement() merges
@@ -1403,11 +1399,11 @@ class WhiteSpaceVisibilityKeeper final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
-      HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
-      dom::Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
+      HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
+      Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
       nsIContent& aLeftContentInBlock,
       const Maybe<nsAtom*>& aListElementTagName,
-      const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
+      const HTMLBRElement* aPrecedingInvisibleBRElement);
 
   /**
    * MergeFirstLineOfRightBlockElementIntoLeftBlockElement() merges first
@@ -1425,10 +1421,9 @@ class WhiteSpaceVisibilityKeeper final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
-      HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
-      dom::Element& aRightBlockElement,
-      const Maybe<nsAtom*>& aListElementTagName,
-      const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
+      HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
+      Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName,
+      const HTMLBRElement* aPrecedingInvisibleBRElement);
 
   /**
    * InsertBRElement() inserts a <br> node at (before) aPointToInsert and delete
@@ -1443,7 +1438,7 @@ class WhiteSpaceVisibilityKeeper final {
    * @return                The new <br> node.  If failed to create new <br>
    *                        node, returns nullptr.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<RefPtr<dom::Element>, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<RefPtr<Element>, nsresult>
   InsertBRElement(HTMLEditor& aHTMLEditor,
                   const EditorDOMPoint& aPointToInsert);
 
