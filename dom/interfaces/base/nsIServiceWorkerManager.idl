@@ -162,6 +162,16 @@ interface nsIServiceWorkerManagerListener : nsISupports
   void onRegister(in nsIServiceWorkerRegistrationInfo aInfo);
 
   void onUnregister(in nsIServiceWorkerRegistrationInfo aInfo);
+
+  /**
+   * Called by ServiceWorker bypass mitigations when checking whether an
+   * origin's quota usage is sufficiently full that we need to clear the origin
+   * (and possibly group's) data as part of our mitigation.
+   * This notification is provided primarily for testing code that needs to wait
+   * for this check to happen but has no other mechanism for knowing it's
+   * completed. Probably not relevant to devtools.
+   */
+  void onQuotaUsageCheckFinish(in nsIServiceWorkerRegistrationInfo aInfo);
 };
 
 [scriptable, builtinclass, uuid(7404c8e8-4d47-4449-8ed1-47d1261d4e33)]
