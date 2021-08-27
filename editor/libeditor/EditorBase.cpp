@@ -3943,6 +3943,10 @@ EditorBase::CreateTransactionForCollapsedRange(
       return deleteTextTransaction.forget();
     }
 
+    if (IsHTMLEditor() &&
+        NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*previousEditableContent))) {
+      return nullptr;
+    }
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
         DeleteNodeTransaction::MaybeCreate(*this, *previousEditableContent);
     if (!deleteNodeTransaction) {
@@ -3987,6 +3991,10 @@ EditorBase::CreateTransactionForCollapsedRange(
       return deleteTextTransaction.forget();
     }
 
+    if (IsHTMLEditor() &&
+        NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*nextEditableContent))) {
+      return nullptr;
+    }
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
         DeleteNodeTransaction::MaybeCreate(*this, *nextEditableContent);
     if (!deleteNodeTransaction) {
@@ -4080,6 +4088,9 @@ EditorBase::CreateTransactionForCollapsedRange(
   }
 
   MOZ_ASSERT(IsHTMLEditor());
+  if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*editableContent))) {
+    return nullptr;
+  }
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
       DeleteNodeTransaction::MaybeCreate(*this, *editableContent);
   NS_WARNING_ASSERTION(deleteNodeTransaction,
