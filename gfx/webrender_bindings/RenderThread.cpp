@@ -59,6 +59,9 @@ MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderRendererMallocSizeOf)
 
 namespace mozilla::wr {
 
+LazyLogModule gRenderThreadLog("RenderThread");
+#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
+
 static StaticRefPtr<RenderThread> sRenderThread;
 static mozilla::BackgroundHangMonitor* sBackgroundHangMonitor;
 
@@ -71,9 +74,14 @@ RenderThread::RenderThread(RefPtr<nsIThread> aThread)
       mRenderTextureMapLock("RenderThread.mRenderTextureMapLock"),
       mHasShutdown(false),
       mHandlingDeviceReset(false),
-      mHandlingWebRenderError(false) {}
+      mHandlingWebRenderError(false) {
+  LOG("RenderThread::RenderThread()");
+}
 
-RenderThread::~RenderThread() { MOZ_ASSERT(mRenderTexturesDeferred.empty()); }
+RenderThread::~RenderThread() {
+  MOZ_ASSERT(mRenderTexturesDeferred.empty());
+  LOG("RenderThread::~RenderThread()");
+}
 
 // static
 RenderThread* RenderThread::Get() { return sRenderThread; }
@@ -82,6 +90,7 @@ RenderThread* RenderThread::Get() { return sRenderThread; }
 void RenderThread::Start() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sRenderThread);
+  LOG("RenderThread::Start()");
 
   RefPtr<nsIThread> thread;
   nsresult rv = NS_NewNamedThread(
@@ -121,6 +130,7 @@ void RenderThread::Start() {
 void RenderThread::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sRenderThread);
+  LOG("RenderThread::ShutDown()");
 
   {
     MutexAutoLock lock(sRenderThread->mRenderTextureMapLock);
@@ -224,6 +234,7 @@ RefPtr<MemoryReportPromise> RenderThread::AccumulateMemoryReport(
 void RenderThread::AddRenderer(wr::WindowId aWindowId,
                                UniquePtr<RendererOGL> aRenderer) {
   MOZ_ASSERT(IsInRenderThread());
+  LOG("RenderThread::AddRenderer() aWindowId %" PRIx64 "", AsUint64(aWindowId));
 
   if (mHasShutdown) {
     return;
@@ -237,6 +248,8 @@ void RenderThread::AddRenderer(wr::WindowId aWindowId,
 
 void RenderThread::RemoveRenderer(wr::WindowId aWindowId) {
   MOZ_ASSERT(IsInRenderThread());
+  LOG("RenderThread::RemoveRenderer() aWindowId %" PRIx64 "",
+      AsUint64(aWindowId));
 
   if (mHasShutdown) {
     return;
@@ -480,6 +493,8 @@ void RenderThread::UpdateAndRender(
   if (renderer->IsPaused()) {
     aRender = false;
   }
+  LOG("RenderThread::UpdateAndRender() aWindowId %" PRIx64 " aRender %d",
+      AsUint64(aWindowId), aRender);
 
   layers::CompositorThread()->Dispatch(
       NewRunnableFunction("NotifyDidStartRenderRunnable", &NotifyDidStartRender,
@@ -543,6 +558,7 @@ void RenderThread::UpdateAndRender(
 
 void RenderThread::Pause(wr::WindowId aWindowId) {
   MOZ_ASSERT(IsInRenderThread());
+  LOG("RenderThread::Pause() aWindowId %" PRIx64 "", AsUint64(aWindowId));
 
   auto it = mRenderers.find(aWindowId);
   MOZ_ASSERT(it != mRenderers.end());
@@ -555,6 +571,7 @@ void RenderThread::Pause(wr::WindowId aWindowId) {
 
 bool RenderThread::Resume(wr::WindowId aWindowId) {
   MOZ_ASSERT(IsInRenderThread());
+  LOG("enderThread::Resume() aWindowId %" PRIx64 "", AsUint64(aWindowId));
 
   auto it = mRenderers.find(aWindowId);
   MOZ_ASSERT(it != mRenderers.end());
@@ -920,6 +937,8 @@ gl::GLContext* RenderThread::SingletonGL() {
 }
 
 void RenderThread::CreateSingletonGL(nsACString& aError) {
+  LOG("RenderThread::CreateSingletonGL()");
+
   mSingletonGL = CreateGLContext(aError);
   mSingletonGLIsForHardwareWebRender = !gfx::gfxVars::UseSoftwareWebRender();
 }
@@ -949,6 +968,8 @@ gl::GLContext* RenderThread::SingletonGLForCompositorOGL() {
 
 void RenderThread::ClearSingletonGL() {
   MOZ_ASSERT(IsInRenderThread());
+  LOG("RenderThread::ClearSingletonGL()");
+
   if (mSurfacePool) {
     mSurfacePool->DestroyGLResourcesForContext(mSingletonGL);
   }
