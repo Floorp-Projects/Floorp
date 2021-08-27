@@ -20,7 +20,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.fragment_urlinput2.*
-import kotlinx.android.synthetic.main.fragment_urlinput2.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -672,6 +671,15 @@ class UrlInputFragment :
     }
 
     private fun openUrl(url: String, searchTerms: String?) {
+        when (url) {
+            "focus:about" -> {
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(Screen.Settings.Page.About)
+                )
+                return
+            }
+        }
+
         if (!searchTerms.isNullOrEmpty()) {
             tab?.let {
                 requireComponents.store.dispatch(ContentAction.UpdateSearchTermsAction(it.id, searchTerms))

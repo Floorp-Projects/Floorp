@@ -191,6 +191,7 @@ private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState 
         Screen.Settings.Page.SearchAutocompleteRemove -> Screen.Settings(
             page = Screen.Settings.Page.SearchAutocompleteList
         )
+        Screen.Settings.Page.About -> Screen.Settings(page = Screen.Settings.Page.Mozilla)
     }
 
     return state.copy(screen = screen)

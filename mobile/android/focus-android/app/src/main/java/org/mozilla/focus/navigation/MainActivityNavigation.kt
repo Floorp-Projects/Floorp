@@ -13,6 +13,7 @@ import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
 import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
 import org.mozilla.focus.exceptions.ExceptionsListFragment
 import org.mozilla.focus.exceptions.ExceptionsRemoveFragment
+import org.mozilla.focus.fragment.AboutFragment
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
@@ -190,6 +191,7 @@ class MainActivityNavigation(
             Screen.Settings.Page.SearchAutocompleteList -> AutocompleteListFragment()
             Screen.Settings.Page.SearchAutocompleteAdd -> AutocompleteAddFragment()
             Screen.Settings.Page.SearchAutocompleteRemove -> AutocompleteRemoveFragment()
+            Screen.Settings.Page.About -> AboutFragment()
         }
 
         val tag = "settings_" + fragment::class.java.simpleName

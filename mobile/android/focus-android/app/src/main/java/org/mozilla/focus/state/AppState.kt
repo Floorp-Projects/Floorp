@@ -77,6 +77,7 @@ sealed class Screen {
             Search,
             Advanced,
             Mozilla,
+            About,
 
             PrivacyExceptions,
             PrivacyExceptionsRemove,
