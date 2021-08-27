@@ -7,7 +7,6 @@ package org.mozilla.fenix.trackingprotection
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.content.blocking.TrackerLog
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.FINGERPRINTERS
@@ -15,7 +14,7 @@ import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.SOCIAL_ME
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.TRACKING_CONTENT
 import java.util.EnumMap
 
-typealias BucketMap = Map<TrackingProtectionCategory, List<String>>
+typealias BucketMap = Map<TrackingProtectionCategory, List<TrackerLog>>
 
 /**
  * Sorts [Tracker]s into different buckets and exposes them as a map.
@@ -85,14 +84,14 @@ class TrackerBuckets {
          * Create an empty mutable map of [TrackingProtectionCategory] to hostnames.
          */
         private fun createMap() =
-            EnumMap<TrackingProtectionCategory, MutableList<String>>(TrackingProtectionCategory::class.java)
+            EnumMap<TrackingProtectionCategory, MutableList<TrackerLog>>(TrackingProtectionCategory::class.java)
 
         /**
          * Add the hostname of the [TrackerLog.url] into the map for the given category
          * from Android Components. The category is transformed into a corresponding Fenix bucket,
          * and the item is discarded if the category doesn't have a match.
          */
-        private fun MutableMap<TrackingProtectionCategory, MutableList<String>>.addTrackerHost(
+        private fun MutableMap<TrackingProtectionCategory, MutableList<TrackerLog>>.addTrackerHost(
             category: TrackingCategory,
             tracker: TrackerLog
         ) {
@@ -107,13 +106,13 @@ class TrackerBuckets {
         }
 
         /**
-         * Add the hostname of the [TrackerLog.url] into the map for the given [TrackingProtectionCategory].
+         * Add the hostname of the [TrackerLog] into the map for the given [TrackingProtectionCategory].
          */
-        private fun MutableMap<TrackingProtectionCategory, MutableList<String>>.addTrackerHost(
+        private fun MutableMap<TrackingProtectionCategory, MutableList<TrackerLog>>.addTrackerHost(
             key: TrackingProtectionCategory,
             tracker: TrackerLog
         ) {
-            getOrPut(key) { mutableListOf() }.add(tracker.url.tryGetHostFromUrl())
+            getOrPut(key) { mutableListOf() }.add(tracker)
         }
     }
 }

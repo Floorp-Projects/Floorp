@@ -27,21 +27,22 @@ class TrackerBucketsTest {
     @Test
     fun `getter accesses corresponding bucket`() {
         val buckets = TrackerBuckets()
+        val google = TrackerLog("https://google.com", listOf(), listOf(FINGERPRINTING))
+        val facebook = TrackerLog("http://facebook.com", listOf(MOZILLA_SOCIAL))
+
         buckets.updateIfNeeded(
             listOf(
-                TrackerLog(
-                    "http://facebook.com",
-                    listOf(MOZILLA_SOCIAL)
-                ),
-                TrackerLog("https://google.com", listOf(), listOf(FINGERPRINTING)),
+                google,
+                facebook,
                 TrackerLog("https://mozilla.com")
             )
         )
 
-        assertEquals(listOf("google.com"), buckets.buckets.blockedBucketMap[FINGERPRINTERS])
+        assertEquals(google, buckets.buckets.blockedBucketMap[FINGERPRINTERS]!!.first())
         assertEquals(
-            listOf("facebook.com"),
+            facebook,
             buckets.buckets.loadedBucketMap[FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS]
+            !!.first()
         )
         assertTrue(buckets.buckets.blockedBucketMap[CRYPTOMINERS].isNullOrEmpty())
         assertTrue(buckets.buckets.loadedBucketMap[CRYPTOMINERS].isNullOrEmpty())
@@ -50,27 +51,27 @@ class TrackerBucketsTest {
     @Test
     fun `sorts trackers into bucket`() {
         val buckets = TrackerBuckets()
+        val google = TrackerLog("https://google.com", listOf(), listOf(FINGERPRINTING))
+        val facebook = TrackerLog("http://facebook.com", listOf(MOZILLA_SOCIAL))
+        val mozilla = TrackerLog("https://mozilla.com")
         buckets.updateIfNeeded(
             listOf(
-                TrackerLog(
-                    "http://facebook.com",
-                    listOf(MOZILLA_SOCIAL)
-                ),
-                TrackerLog("https://google.com", listOf(), listOf(FINGERPRINTING)),
-                TrackerLog("https://mozilla.com")
+                facebook,
+                google,
+                mozilla
             )
         )
 
         assertEquals(
             mapOf(
-                FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf("facebook.com")
+                FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf(facebook)
             ),
             buckets.buckets.loadedBucketMap
         )
 
         assertEquals(
             mapOf(
-                FINGERPRINTERS to listOf("google.com")
+                FINGERPRINTERS to listOf(google)
             ),
             buckets.buckets.blockedBucketMap
         )
@@ -86,24 +87,21 @@ class TrackerBucketsTest {
             SCRIPTS_AND_SUB_RESOURCES
         )
 
-        buckets.updateIfNeeded(
-            listOf(
-                TrackerLog(
-                    url = "http://facebook.com",
-                    cookiesHasBeenBlocked = true,
-                    blockedCategories = acCategories,
-                    loadedCategories = acCategories
-                )
-            )
+        val trackerLog = TrackerLog(
+            url = "http://facebook.com",
+            cookiesHasBeenBlocked = true,
+            blockedCategories = acCategories,
+            loadedCategories = acCategories
         )
+        buckets.updateIfNeeded(listOf(trackerLog))
 
         val expectedBlockedMap =
             mapOf(
-                FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf("facebook.com"),
-                FenixTrackingProtectionCategory.TRACKING_CONTENT to listOf("facebook.com"),
-                FenixTrackingProtectionCategory.FINGERPRINTERS to listOf("facebook.com"),
-                FenixTrackingProtectionCategory.CRYPTOMINERS to listOf("facebook.com"),
-                FenixTrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES to listOf("facebook.com")
+                FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf(trackerLog),
+                FenixTrackingProtectionCategory.TRACKING_CONTENT to listOf(trackerLog),
+                FenixTrackingProtectionCategory.FINGERPRINTERS to listOf(trackerLog),
+                FenixTrackingProtectionCategory.CRYPTOMINERS to listOf(trackerLog),
+                FenixTrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES to listOf(trackerLog)
             )
         val expectedLoadedMap =
             expectedBlockedMap - FenixTrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES

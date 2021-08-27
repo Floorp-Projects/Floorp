@@ -4,21 +4,26 @@
 
 package org.mozilla.fenix.trackingprotection
 
+import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.VisibleForTesting
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.text.HtmlCompat
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentTrackingProtectionPanelBinding
+import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
@@ -53,6 +58,11 @@ interface TrackingProtectionPanelViewInteractor {
      * @param categoryBlocked The trackers from this category were blocked
      */
     fun openDetails(category: TrackingProtectionCategory, categoryBlocked: Boolean)
+
+    /**
+     * Called when the Learn more link for SmartBlock is clicked.
+     */
+    fun onLearnMoreClicked()
 }
 
 /**
@@ -126,10 +136,28 @@ class TrackingProtectionPanelView(
         category: TrackingProtectionCategory,
         categoryBlocked: Boolean
     ) {
+        val containASmartBlockItem = bucketedTrackers.get(category, categoryBlocked).any { it.unBlockedBySmartBlock }
         binding.normalMode.visibility = View.GONE
         binding.detailsMode.visibility = View.VISIBLE
         binding.categoryTitle.setText(category.title)
-        binding.blockingTextList.text = bucketedTrackers.get(category, categoryBlocked).joinToString("\n")
+
+        binding.smartblockDescription.isVisible = containASmartBlockItem
+        binding.smartblockLearnMore.isVisible = containASmartBlockItem
+
+        val trackersList = bucketedTrackers.get(category, categoryBlocked).joinToString("<br/>") {
+            createTrackerItem(it, containASmartBlockItem)
+        }
+
+        binding.blockingTextList.text = HtmlCompat.fromHtml(trackersList, HtmlCompat.FROM_HTML_MODE_COMPACT)
+
+        // show description for SmartBlock tracking content in details
+        if (containASmartBlockItem) {
+            with(binding.smartblockLearnMore) {
+                movementMethod = LinkMovementMethod.getInstance()
+                addUnderline()
+                setOnClickListener { interactor.onLearnMoreClicked() }
+            }
+        }
         binding.categoryDescription.setText(category.description)
         binding.detailsBlockingHeader.setText(
             if (categoryBlocked) {
@@ -141,6 +169,15 @@ class TrackingProtectionPanelView(
 
         binding.detailsBack.requestFocus()
         binding.detailsBack.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
+    }
+
+    private fun createTrackerItem(tracker: TrackerLog, isUnblockedSection: Boolean): String {
+        val space = if (isUnblockedSection) "&nbsp;&nbsp;" else ""
+        return if (tracker.unBlockedBySmartBlock) {
+            "<b>*${tracker.url.tryGetHostFromUrl()}</b>"
+        } else {
+            "$space${tracker.url.tryGetHostFromUrl()}"
+        }
     }
 
     /**

@@ -1439,6 +1439,10 @@
     <string name="etp_redirect_trackers_title">Redirect Trackers</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Clears cookies set by redirects to known tracking websites.</string>
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature -->
+    <string name="preference_etp_smartblock_description">Some trackers marked below have been partially unblocked on this page because you interacted with them *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Learn more</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Support</string>

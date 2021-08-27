@@ -242,6 +242,34 @@
             app:layout_constraintTop_toBottomOf="@id/category_title"
             tools:text="@tools:sample/lorem" />
 
+        <TextView
+            android:id="@+id/smartblock_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="19dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:textColor="?secondaryText"
+            android:drawablePadding="16dp"
+            app:drawableTint="?accent"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/category_description"
+            android:text="@string/preference_etp_smartblock_description" />
+
+        <org.mozilla.fenix.utils.LinkTextView
+            android:id="@+id/smartblock_learn_more"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/preference_etp_smartblock_learn_more"
+            android:textColor="?accent"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/smartblock_description"
+            app:layout_constraintTop_toBottomOf="@id/smartblock_description" />
+
         <View
             android:id="@+id/line_divider_details"
             android:layout_width="match_parent"
@@ -249,33 +277,35 @@
             android:layout_marginTop="12dp"
             android:layout_marginBottom="8dp"
             android:background="?neutralFaded"
-            app:layout_constraintTop_toBottomOf="@id/category_description" />
+            app:layout_constraintTop_toBottomOf="@id/smartblock_learn_more" />
 
-        <TextView
-            android:id="@+id/details_blocking_header"
-            android:accessibilityHeading="true"
-            style="@style/QuickSettingsText"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/tracking_protection_item_height"
-            android:layout_marginStart="52dp"
-            android:layout_marginEnd="26dp"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:text="@string/enhanced_tracking_protection_blocked"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/line_divider_details"
-            tools:targetApi="p" />
-
-        <androidx.core.widget.NestedScrollView
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/blocking_scrollview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fillViewport="true"
             android:scrollbars="vertical"
+            android:orientation="vertical"
+            android:isScrollContainer="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/details_blocking_header"
-            app:layout_constraintTop_toBottomOf="@id/details_blocking_header">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line_divider_details">
+
+            <TextView
+                android:id="@+id/details_blocking_header"
+                android:accessibilityHeading="true"
+                style="@style/QuickSettingsText"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/tracking_protection_item_height"
+                android:layout_marginStart="52dp"
+                android:layout_marginEnd="26dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="@string/enhanced_tracking_protection_blocked"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/blocking_scrollview"
+                tools:targetApi="p" />
 
             <TextView
                 android:id="@+id/blocking_text_list"
@@ -286,6 +316,6 @@
                 android:lineSpacingMultiplier="1.2"
                 android:layout_marginBottom="12dp"
                 tools:text="@tools:sample/lorem/random" />
-        </androidx.core.widget.NestedScrollView>
+        </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

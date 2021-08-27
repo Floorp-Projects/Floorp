@@ -50,7 +50,8 @@ object SupportUtils {
         SEARCH_SUGGESTION("how-search-firefox-preview"),
         CUSTOM_SEARCH_ENGINES("custom-search-engines"),
         SYNC_SETUP("how-set-firefox-sync-firefox-android"),
-        QR_CAMERA_ACCESS("qr-camera-access")
+        QR_CAMERA_ACCESS("qr-camera-access"),
+        SMARTBLOCK("smartblock-enhanced-tracking-protection")
     }
 
     enum class MozillaPage(internal val path: String) {

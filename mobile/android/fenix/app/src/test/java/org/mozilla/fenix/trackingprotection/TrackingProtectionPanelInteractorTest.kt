@@ -48,12 +48,14 @@ class TrackingProtectionPanelInteractorTest {
 
     private lateinit var tab: TabSessionState
 
+    private var learnMoreClicked = false
     private var openSettings = false
     private var gravity = 54
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
+        learnMoreClicked = false
 
         context = spyk(testContext)
         tab = createTab("https://mozilla.org")
@@ -64,6 +66,7 @@ class TrackingProtectionPanelInteractorTest {
             store = store,
             navController = { navController },
             openTrackingProtectionSettings = { openSettings = true },
+            openLearnMoreLink = { learnMoreClicked = true },
             sitePermissions = sitePermissions,
             gravity = gravity,
             getCurrentTab = { tab }
@@ -113,6 +116,13 @@ class TrackingProtectionPanelInteractorTest {
         interactor.selectTrackingProtectionSettings()
 
         assertEquals(true, openSettings)
+    }
+
+    @Test
+    fun `WHEN on the learn more link is clicked THEN onLearnMoreClicked should be invoked`() {
+        interactor.onLearnMoreClicked()
+
+        assertEquals(true, learnMoreClicked)
     }
 
     @Test

@@ -37,6 +37,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
@@ -45,6 +46,7 @@ import org.mozilla.fenix.databinding.FragmentTrackingProtectionBinding
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.settings.SupportUtils
 
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions")
@@ -102,6 +104,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             store = trackingProtectionStore,
             navController = { findNavController() },
             openTrackingProtectionSettings = ::openTrackingProtectionSettings,
+            openLearnMoreLink = ::handleLearnMoreClicked,
             sitePermissions = args.sitePermissions,
             gravity = args.gravity,
             getCurrentTab = ::getCurrentTab
@@ -146,6 +149,16 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         nav(
             R.id.trackingProtectionPanelDialogFragment,
             TrackingProtectionPanelDialogFragmentDirections.actionGlobalTrackingProtectionFragment()
+        )
+    }
+
+    private fun handleLearnMoreClicked() {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+                SupportUtils.SumoTopic.SMARTBLOCK
+            ),
+            newTab = true,
+            from = BrowserDirection.FromTrackingProtectionDialog
         )
     }
 

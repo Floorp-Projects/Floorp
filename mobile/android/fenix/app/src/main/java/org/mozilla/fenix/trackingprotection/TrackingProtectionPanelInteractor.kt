@@ -24,6 +24,7 @@ class TrackingProtectionPanelInteractor(
     private val store: TrackingProtectionStore,
     private val navController: () -> NavController,
     private val openTrackingProtectionSettings: () -> Unit,
+    private val openLearnMoreLink: () -> Unit,
     internal var sitePermissions: SitePermissions?,
     private val gravity: Int,
     private val getCurrentTab: () -> SessionState?
@@ -31,6 +32,10 @@ class TrackingProtectionPanelInteractor(
 
     override fun openDetails(category: TrackingProtectionCategory, categoryBlocked: Boolean) {
         store.dispatch(TrackingProtectionAction.EnterDetailsMode(category, categoryBlocked))
+    }
+
+    override fun onLearnMoreClicked() {
+        openLearnMoreLink()
     }
 
     override fun selectTrackingProtectionSettings() {
