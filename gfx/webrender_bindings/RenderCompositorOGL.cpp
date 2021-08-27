@@ -16,6 +16,9 @@
 
 namespace mozilla::wr {
 
+extern LazyLogModule gRenderThreadLog;
+#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
+
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
@@ -38,11 +41,14 @@ RenderCompositorOGL::RenderCompositorOGL(
     const RefPtr<widget::CompositorWidget>& aWidget)
     : RenderCompositor(aWidget), mGL(aGL) {
   MOZ_ASSERT(mGL);
+  LOG("RenderCompositorOGL::RenderCompositorOGL()");
 
   mIsEGL = aGL->GetContextType() == mozilla::gl::GLContextType::EGL;
 }
 
 RenderCompositorOGL::~RenderCompositorOGL() {
+  LOG("RenderCompositorOGL::~RenderCompositorOGL()");
+
   if (!mGL->MakeCurrent()) {
     gfxCriticalNote
         << "Failed to make render context current during destroying.";
