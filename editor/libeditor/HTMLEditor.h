@@ -1619,10 +1619,9 @@ class HTMLEditor final : public EditorBase,
    *                            If this is not nullptr, the <br> node may be
    *                            removed.
    */
-  template <typename PT, typename CT>
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SplitParagraph(
-      Element& aParentDivOrP,
-      const EditorDOMPointBase<PT, CT>& aStartOfRightNode, nsIContent* aBRNode);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SplitParagraph(Element& aParentDivOrP,
+                 const EditorDOMPoint& aStartOfRightNode, nsIContent* aBRNode);
 
   /**
    * HandleInsertParagraphInParagraph() does the right thing for Enter key
@@ -1641,33 +1640,27 @@ class HTMLEditor final : public EditorBase,
   /**
    * HandleInsertParagraphInHeadingElement() handles insertParagraph command
    * (i.e., handling Enter key press) in a heading element.  This splits
-   * aHeader element at aOffset in aNode.  Then, if right heading element is
+   * aHeader element at aPointToSplit.  Then, if right heading element is
    * empty, it'll be removed and new paragraph is created (its type is decided
    * with default paragraph separator).
    *
    * @param aHeader             The heading element to be split.
-   * @param aNode               Typically, Selection start container,
-   *                            where to be split.
-   * @param aOffset             Typically, Selection start offset in the
-   *                            start container, where to be split.
+   * @param aPointToSplit       The point to split aHeader.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleInsertParagraphInHeadingElement(Element& aHeader, nsINode& aNode,
-                                        uint32_t aOffset);
+  HandleInsertParagraphInHeadingElement(Element& aHeader,
+                                        const EditorDOMPoint& aPointToSplit);
 
   /**
    * HandleInsertParagraphInListItemElement() handles insertParagraph command
    * (i.e., handling Enter key press) in a list item element.
    *
    * @param aListItem           The list item which has the following point.
-   * @param aNode               Typically, Selection start container, where to
-   *                            insert a break.
-   * @param aOffset             Typically, Selection start offset in the
-   *                            start container, where to insert a break.
+   * @param aPointToSplit       The point to split aListItem.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleInsertParagraphInListItemElement(Element& aListItem, nsINode& aNode,
-                                         uint32_t aOffset);
+  HandleInsertParagraphInListItemElement(Element& aListItem,
+                                         const EditorDOMPoint& aPointToSplit);
 
   /**
    * InsertParagraphSeparatorAsSubAction() handles insertPargraph commad

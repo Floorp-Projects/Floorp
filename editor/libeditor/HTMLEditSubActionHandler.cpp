@@ -1570,9 +1570,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   if (maybeNonEditableListItem &&
       HTMLEditUtils::IsSplittableNode(*maybeNonEditableListItem)) {
     nsresult rv = HandleInsertParagraphInListItemElement(
-        *maybeNonEditableListItem,
-        MOZ_KnownLive(*atStartOfSelection.GetContainer()),
-        atStartOfSelection.Offset());
+        *maybeNonEditableListItem, atStartOfSelection);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -1584,10 +1582,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
 
   if (HTMLEditUtils::IsHeader(*editableBlockElement)) {
     // Headers: close (or split) header
-    nsresult rv = HandleInsertParagraphInHeadingElement(
-        *editableBlockElement,
-        MOZ_KnownLive(*atStartOfSelection.GetContainer()),
-        atStartOfSelection.Offset());
+    nsresult rv = HandleInsertParagraphInHeadingElement(*editableBlockElement,
+                                                        atStartOfSelection);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -6540,38 +6536,36 @@ void HTMLEditor::MakeTransitionList(
   }
 }
 
-nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
-                                                           nsINode& aNode,
-                                                           uint32_t aOffset) {
+nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(
+    Element& aHeader, const EditorDOMPoint& aPointToSplit) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   // Remember where the header is
-  nsCOMPtr<nsINode> headerParent = aHeader.GetParentNode();
-  int32_t offset = headerParent ? headerParent->ComputeIndexOf(&aHeader) : -1;
-
-  // Get ws code to adjust any ws
-  nsCOMPtr<nsINode> node = &aNode;
-  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
-      *this, address_of(node), &aOffset);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks() failed");
-    return rv;
-  }
-  if (!node->IsContent()) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks() returned "
-        "Document or something non-content node");
+  EditorDOMPoint atHeader(&aHeader);
+  if (NS_WARN_IF(!atHeader.IsInContentNode())) {
     return NS_ERROR_FAILURE;
   }
 
+  {
+    // Forget child node.
+    AutoEditorDOMPointChildInvalidator rememberOnlyOffset(atHeader);
+  }
+
+  // Get ws code to adjust any ws
+  Result<EditorDOMPoint, nsresult> preparationResult =
+      WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
+          *this, aPointToSplit, aHeader);
+  if (preparationResult.isErr()) {
+    NS_WARNING(
+        "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() failed");
+    return preparationResult.unwrapErr();
+  }
+  EditorDOMPoint pointToSplit = preparationResult.unwrap();
+  MOZ_ASSERT(pointToSplit.IsInContentNode());
+
   // Split the header
-  SplitNodeResult splitHeaderResult =
-      SplitNodeDeepWithTransaction(aHeader, EditorDOMPoint(node, aOffset),
-                                   SplitAtEdges::eAllowToCreateEmptyContainer);
+  SplitNodeResult splitHeaderResult = SplitNodeDeepWithTransaction(
+      aHeader, pointToSplit, SplitAtEdges::eAllowToCreateEmptyContainer);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -6624,13 +6618,11 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
       // Create a paragraph
       nsStaticAtom& paraAtom = DefaultParagraphSeparatorTagName();
       // We want a wrapper element even if we separate with <br>
-      EditorDOMPoint nextToHeader(headerParent,
-                                  AssertedCast<uint32_t>(offset + 1));
       Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
           CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br
                                         ? *nsGkAtoms::p
                                         : MOZ_KnownLive(paraAtom),
-                                    nextToHeader);
+                                    atHeader.NextPoint());
       if (maybeNewParagraphElement.isErr()) {
         NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
         return maybeNewParagraphElement.unwrapErr();
@@ -6667,7 +6659,7 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
   }
 
   // Put selection at front of righthand heading
-  rv = CollapseSelectionToStartOf(aHeader);
+  nsresult rv = CollapseSelectionToStartOf(aHeader);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionToStartOf() failed");
   return rv;
@@ -6876,35 +6868,25 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
   return result;
 }
 
-template <typename PT, typename CT>
-nsresult HTMLEditor::SplitParagraph(
-    Element& aParentDivOrP, const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
-    nsIContent* aNextBRNode) {
+nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
+                                    const EditorDOMPoint& aStartOfRightNode,
+                                    nsIContent* aNextBRNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsCOMPtr<nsINode> selNode = aStartOfRightNode.GetContainer();
-  uint32_t selOffset = aStartOfRightNode.Offset();
-  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
-      *this, address_of(selNode), &selOffset);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_FAILED(rv)) {
+  Result<EditorDOMPoint, nsresult> preparationResult =
+      WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
+          *this, aStartOfRightNode, aParentDivOrP);
+  if (preparationResult.isErr()) {
     NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks() failed");
-    return rv;
+        "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() failed");
+    return preparationResult.unwrapErr();
   }
-  if (!selNode->IsContent()) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks() returned "
-        "Document or something non-content node");
-    return NS_ERROR_FAILURE;
-  }
+  EditorDOMPoint pointToSplit = preparationResult.unwrap();
+  MOZ_ASSERT(pointToSplit.IsInContentNode());
 
   // Split the paragraph.
   SplitNodeResult splitDivOrPResult = SplitNodeDeepWithTransaction(
-      aParentDivOrP, EditorDOMPoint(selNode, selOffset),
-      SplitAtEdges::eAllowToCreateEmptyContainer);
+      aParentDivOrP, pointToSplit, SplitAtEdges::eAllowToCreateEmptyContainer);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -6921,7 +6903,7 @@ nsresult HTMLEditor::SplitParagraph(
   // Get rid of the break, if it is visible (otherwise it may be needed to
   // prevent an empty p).
   if (aNextBRNode && HTMLEditUtils::IsVisibleBRElement(*aNextBRNode)) {
-    rv = DeleteNodeWithTransaction(*aNextBRNode);
+    nsresult rv = DeleteNodeWithTransaction(*aNextBRNode);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -6932,7 +6914,7 @@ nsresult HTMLEditor::SplitParagraph(
   }
 
   // Remove ID attribute on the paragraph from the existing right node.
-  rv = RemoveAttributeWithTransaction(aParentDivOrP, *nsGkAtoms::id);
+  nsresult rv = RemoveAttributeWithTransaction(aParentDivOrP, *nsGkAtoms::id);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -6949,7 +6931,7 @@ nsresult HTMLEditor::SplitParagraph(
   // normal <br> elements for placeholder in this case.  Note that Chromium
   // also behaves so.
   if (splitDivOrPResult.GetPreviousNode()->IsElement()) {
-    rv = InsertBRElementIfEmptyBlockElement(
+    nsresult rv = InsertBRElementIfEmptyBlockElement(
         MOZ_KnownLive(*splitDivOrPResult.GetPreviousNode()->AsElement()));
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::InsertBRElementIfEmptyBlockElement() failed");
@@ -6957,7 +6939,7 @@ nsresult HTMLEditor::SplitParagraph(
     }
   }
   if (splitDivOrPResult.GetNextNode()->IsElement()) {
-    rv = InsertBRElementIfEmptyBlockElement(
+    nsresult rv = InsertBRElementIfEmptyBlockElement(
         MOZ_KnownLive(*splitDivOrPResult.GetNextNode()->AsElement()));
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::InsertBRElementIfEmptyBlockElement() failed");
@@ -6989,9 +6971,8 @@ nsresult HTMLEditor::SplitParagraph(
   return NS_OK;
 }
 
-nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
-                                                            nsINode& aNode,
-                                                            uint32_t aOffset) {
+nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
+    Element& aListItem, const EditorDOMPoint& aPointToSplit) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(HTMLEditUtils::IsListItem(&aListItem));
 
@@ -7087,28 +7068,20 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
 
   // Else we want a new list item at the same list level.  Get ws code to
   // adjust any ws.
-  nsCOMPtr<nsINode> selNode = &aNode;
-  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
-      *this, address_of(selNode), &aOffset);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_FAILED(rv)) {
+  Result<EditorDOMPoint, nsresult> preparationResult =
+      WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
+          *this, aPointToSplit, aListItem);
+  if (preparationResult.isErr()) {
     NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks() failed");
-    return rv;
+        "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() failed");
+    return preparationResult.unwrapErr();
   }
-  if (!selNode->IsContent()) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks() returned "
-        "document node or something non-content node");
-    return NS_ERROR_FAILURE;
-  }
+  EditorDOMPoint pointToSplit = preparationResult.unwrap();
+  MOZ_ASSERT(pointToSplit.IsInContentNode());
 
   // Now split the list item.
-  SplitNodeResult splitListItemResult =
-      SplitNodeDeepWithTransaction(aListItem, EditorDOMPoint(selNode, aOffset),
-                                   SplitAtEdges::eAllowToCreateEmptyContainer);
+  SplitNodeResult splitListItemResult = SplitNodeDeepWithTransaction(
+      aListItem, pointToSplit, SplitAtEdges::eAllowToCreateEmptyContainer);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -7227,7 +7200,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
     }
   }
 
-  rv = CollapseSelectionToStartOf(aListItem);
+  nsresult rv = CollapseSelectionToStartOf(aListItem);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionToStartOf() failed");
   return rv;
