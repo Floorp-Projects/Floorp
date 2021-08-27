@@ -2053,8 +2053,9 @@ bool nsToolkitProfileService::IsSnapEnvironment() {
     return false;
   }
 
-  // snapName as defined on https://snapcraft.io/firefox
-  return (strcmp(snapName, "firefox") == 0);
+  // snapName as defined on e.g.
+  // https://snapcraft.io/firefox or https://snapcraft.io/thunderbird
+  return (strcmp(snapName, MOZ_APP_NAME) == 0);
 }
 
 /**

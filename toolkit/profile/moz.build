@@ -36,6 +36,8 @@ LOCAL_INCLUDES += [
 
 FINAL_LIBRARY = "xul"
 
+DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
+
 JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
