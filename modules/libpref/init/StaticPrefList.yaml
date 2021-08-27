@@ -3221,15 +3221,6 @@
   value: 3
   mirror: always
 
-# This is the group usage head room for service workers.
-# The quota usage mitigation algorithm uses this preference to determine if the
-# origin or also group data should be cleared or not.
-# The default value is 400 MiB.
-- name: dom.serviceWorkers.mitigations.group_usage_headroom_kb
-  type: uint32_t
-  value: 400 * 1024
-  mirror: always
-
 - name: dom.serviceWorkers.testing.enabled
   type: RelaxedAtomicBool
   value: false

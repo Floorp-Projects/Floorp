@@ -94,18 +94,7 @@ async function unregisterAll() {
  */
 function makeRandomBlob(size) {
   const arr = new Uint8Array(size);
-  let offset = 0;
-  /**
-   * getRandomValues will only provide a maximum of 64k of data at a time and
-   * will error if we ask for more, so using a while loop for get a random value
-   * which much larger than 64k.
-   * https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues#exceptions
-   */
-  while (offset < size) {
-    const nextSize = Math.min(size - offset, 65536);
-    window.crypto.getRandomValues(new Uint8Array(arr.buffer, offset, nextSize));
-    offset += nextSize;
-  }
+  window.crypto.getRandomValues(arr);
   return new Blob([arr], { type: "application/octet-stream" });
 }
 
