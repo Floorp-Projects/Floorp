@@ -31,9 +31,6 @@
 namespace mozilla {
 namespace wr {
 
-extern LazyLogModule gRenderThreadLog;
-#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
-
 /* static */
 UniquePtr<DCLayerTree> DCLayerTree::Create(gl::GLContext* aGL,
                                            EGLConfig aEGLConfig,
@@ -69,15 +66,9 @@ DCLayerTree::DCLayerTree(gl::GLContext* aGL, EGLConfig aEGLConfig,
       mDebugVisualRedrawRegions(false),
       mEGLImage(EGL_NO_IMAGE),
       mColorRBO(0),
-      mPendingCommit(false) {
-  LOG("DCLayerTree::DCLayerTree()");
-}
+      mPendingCommit(false) {}
 
-DCLayerTree::~DCLayerTree() {
-  LOG("DCLayerTree::~DCLayerTree()");
-
-  ReleaseNativeCompositorResources();
-}
+DCLayerTree::~DCLayerTree() { ReleaseNativeCompositorResources(); }
 
 void DCLayerTree::ReleaseNativeCompositorResources() {
   const auto gl = GetGLContext();
@@ -175,8 +166,6 @@ DCSurface* DCLayerTree::GetSurface(wr::NativeSurfaceId aId) const {
 }
 
 void DCLayerTree::SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {
-  LOG("DCLayerTree::SetDefaultSwapChain()");
-
   mRootVisual->AddVisual(mDefaultSwapChainVisual, TRUE, nullptr);
   mDefaultSwapChainVisual->SetContent(aSwapChain);
   // Default SwapChain's visual does not need linear interporation.

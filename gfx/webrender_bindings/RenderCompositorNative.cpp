@@ -22,15 +22,10 @@
 
 namespace mozilla::wr {
 
-extern LazyLogModule gRenderThreadLog;
-#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
-
 RenderCompositorNative::RenderCompositorNative(
     const RefPtr<widget::CompositorWidget>& aWidget, gl::GLContext* aGL)
     : RenderCompositor(aWidget),
       mNativeLayerRoot(GetWidget()->GetNativeLayerRoot()) {
-  LOG("RenderCompositorNative::RenderCompositorNative()");
-
 #if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
   auto pool = RenderThread::Get()->SharedSurfacePool();
   if (pool) {
@@ -41,8 +36,6 @@ RenderCompositorNative::RenderCompositorNative(
 }
 
 RenderCompositorNative::~RenderCompositorNative() {
-  LOG("RRenderCompositorNative::~RenderCompositorNative()");
-
   Pause();
   mProfilerScreenshotGrabber.Destroy();
   mNativeLayerRoot->SetLayers({});
