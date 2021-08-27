@@ -9,6 +9,7 @@
 #include "builtin/intl/IntlObject.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/intl/Calendar.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Range.h"
 
@@ -21,6 +22,7 @@
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/DateTimeFormat.h"
+#include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/NumberingSystemsGenerated.h"
@@ -1150,6 +1152,77 @@ static ArrayObject* AvailableNumberingSystems(JSContext* cx) {
   return CreateArrayFromSortedList(cx, numberingSystems);
 }
 
+/**
+ * AvailableTimeZones ( )
+ */
+static ArrayObject* AvailableTimeZones(JSContext* cx) {
+  // Unsorted list of canonical time zone names, possibly containing duplicates.
+  Rooted<StringList> timeZones(cx, StringList(cx));
+
+  intl::SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
+  auto iterResult = sharedIntlData.availableTimeZonesIteration(cx);
+  if (iterResult.isErr()) {
+    return nullptr;
+  }
+  auto iter = iterResult.unwrap();
+
+  RootedAtom validatedTimeZone(cx);
+  RootedAtom ianaTimeZone(cx);
+  for (; !iter.done(); iter.next()) {
+    validatedTimeZone = iter.get();
+
+    // Canonicalize the time zone before adding it to the result array.
+
+    // Some time zone names are canonicalized differently by ICU -- handle those
+    // first.
+    ianaTimeZone.set(nullptr);
+    if (!sharedIntlData.tryCanonicalizeTimeZoneConsistentWithIANA(
+            cx, validatedTimeZone, &ianaTimeZone)) {
+      return nullptr;
+    }
+
+    JSLinearString* timeZone;
+    if (ianaTimeZone) {
+      cx->markAtom(ianaTimeZone);
+
+      timeZone = ianaTimeZone;
+    } else {
+      // Call into ICU to canonicalize the time zone.
+
+      JS::AutoStableStringChars stableChars(cx);
+      if (!stableChars.initTwoByte(cx, validatedTimeZone)) {
+        return nullptr;
+      }
+
+      intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE>
+          canonicalTimeZone(cx);
+      auto result = mozilla::intl::Calendar::GetCanonicalTimeZoneID(
+          stableChars.twoByteRange(), canonicalTimeZone);
+      if (result.isErr()) {
+        intl::ReportInternalError(cx, result.unwrapErr());
+        return nullptr;
+      }
+
+      timeZone = canonicalTimeZone.toString();
+      if (!timeZone) {
+        return nullptr;
+      }
+
+      // Canonicalize both to "UTC" per CanonicalizeTimeZoneName().
+      if (StringEqualsLiteral(timeZone, "Etc/UTC") ||
+          StringEqualsLiteral(timeZone, "Etc/GMT")) {
+        timeZone = cx->names().UTC;
+      }
+    }
+
+    if (!timeZones.append(timeZone)) {
+      return nullptr;
+    }
+  }
+
+  return CreateArrayFromList(cx, &timeZones);
+}
+
 bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -1169,6 +1242,8 @@ bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
     list = AvailableCurrencies(cx);
   } else if (StringEqualsLiteral(key, "numberingSystem")) {
     list = AvailableNumberingSystems(cx);
+  } else if (StringEqualsLiteral(key, "timeZone")) {
+    list = AvailableTimeZones(cx);
   } else {
     ReportBadKey(cx, key);
     return false;
