@@ -1045,7 +1045,7 @@ void JSDependentString::dumpRepresentation(js::GenericPrinter& out,
 }
 #endif
 
-bool js::EqualChars(JSLinearString* str1, JSLinearString* str2) {
+bool js::EqualChars(const JSLinearString* str1, const JSLinearString* str2) {
   MOZ_ASSERT(str1->length() == str2->length());
 
   size_t len = str1->length();
@@ -1117,7 +1117,7 @@ bool js::EqualStrings(JSContext* cx, JSString* str1, JSString* str2,
   return true;
 }
 
-bool js::EqualStrings(JSLinearString* str1, JSLinearString* str2) {
+bool js::EqualStrings(const JSLinearString* str1, const JSLinearString* str2) {
   if (str1 == str2) {
     return true;
   }
@@ -1137,7 +1137,8 @@ int32_t js::CompareChars(const char16_t* s1, size_t len1, JSLinearString* s2) {
              : CompareChars(s1, len1, s2->twoByteChars(nogc), s2->length());
 }
 
-static int32_t CompareStringsImpl(JSLinearString* str1, JSLinearString* str2) {
+static int32_t CompareStringsImpl(const JSLinearString* str1,
+                                  const JSLinearString* str2) {
   size_t len1 = str1->length();
   size_t len2 = str2->length();
 
@@ -1177,6 +1178,17 @@ bool js::CompareStrings(JSContext* cx, JSString* str1, JSString* str2,
 
   *result = CompareStringsImpl(linear1, linear2);
   return true;
+}
+
+int32_t js::CompareStrings(const JSLinearString* str1,
+                           const JSLinearString* str2) {
+  MOZ_ASSERT(str1);
+  MOZ_ASSERT(str2);
+
+  if (str1 == str2) {
+    return 0;
+  }
+  return CompareStringsImpl(str1, str2);
 }
 
 int32_t js::CompareAtoms(JSAtom* atom1, JSAtom* atom2) {
