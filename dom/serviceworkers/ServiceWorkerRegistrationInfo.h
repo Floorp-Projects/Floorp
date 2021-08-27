@@ -261,6 +261,8 @@ class ServiceWorkerRegistrationInfo final
   // call to `aFunc`, so `aFunc` will always get a reference to a non-null
   // pointer.
   void ForEachWorker(void (*aFunc)(RefPtr<ServiceWorkerInfo>&));
+
+  void CheckQuotaUsage();
 };
 
 }  // namespace dom
