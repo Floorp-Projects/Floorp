@@ -24,6 +24,7 @@
 #include "builtin/intl/DateTimeFormat.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
+#include "builtin/intl/MeasureUnitGenerated.h"
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/NumberingSystemsGenerated.h"
 #include "builtin/intl/PluralRules.h"
@@ -1232,6 +1233,25 @@ static ArrayObject* AvailableTimeZones(JSContext* cx) {
   return CreateArrayFromList(cx, &timeZones);
 }
 
+template <size_t N>
+constexpr auto MeasurementUnitNames(const MeasureUnit (&units)[N]) {
+  std::array<const char*, N> array = {};
+  for (size_t i = 0; i < N; ++i) {
+    array[i] = units[i].name;
+  }
+  return array;
+}
+
+/**
+ * AvailableUnits ( )
+ */
+static ArrayObject* AvailableUnits(JSContext* cx) {
+  static constexpr std::array simpleMeasureUnitNames =
+      MeasurementUnitNames(simpleMeasureUnits);
+
+  return CreateArrayFromSortedList(cx, simpleMeasureUnitNames);
+}
+
 bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -1253,6 +1273,8 @@ bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
     list = AvailableNumberingSystems(cx);
   } else if (StringEqualsLiteral(key, "timeZone")) {
     list = AvailableTimeZones(cx);
+  } else if (StringEqualsLiteral(key, "unit")) {
+    list = AvailableUnits(cx);
   } else {
     ReportBadKey(cx, key);
     return false;
