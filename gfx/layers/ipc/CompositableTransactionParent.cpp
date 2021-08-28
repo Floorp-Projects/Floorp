@@ -12,13 +12,12 @@
 #include "mozilla/Assertions.h"      // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"          // for RefPtr
 #include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/ContentHost.h"        // for ContentHostBase
 #include "mozilla/layers/ImageBridgeParent.h"  // for ImageBridgeParent
 #include "mozilla/layers/LayersSurfaces.h"     // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"        // for MOZ_LAYERS_LOG
 #include "mozilla/layers/TextureHost.h"        // for TextureHost
 #include "mozilla/layers/TextureHostOGL.h"     // for TextureHostOGL
-#include "mozilla/mozalloc.h"  // for operator delete
+#include "mozilla/mozalloc.h"                  // for operator delete
 #include "mozilla/Unused.h"
 #include "nsDebug.h"   // for NS_WARNING, NS_ASSERTION
 #include "nsRegion.h"  // for nsIntRegion
@@ -81,12 +80,6 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
   }
 
   switch (aDetail.type()) {
-    case CompositableOperationDetail::TOpPaintTextureRegion: {
-      return false;
-    }
-    case CompositableOperationDetail::TOpUseTiledLayerBuffer: {
-      return false;
-    }
     case CompositableOperationDetail::TOpRemoveTexture: {
       const OpRemoveTexture& op = aDetail.get_OpRemoveTexture();
 
@@ -132,42 +125,6 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
       }
       break;
     }
-    case CompositableOperationDetail::TOpUseComponentAlphaTextures: {
-      const OpUseComponentAlphaTextures& op =
-          aDetail.get_OpUseComponentAlphaTextures();
-      RefPtr<TextureHost> texOnBlack =
-          TextureHost::AsTextureHost(op.textureOnBlackParent());
-      RefPtr<TextureHost> texOnWhite =
-          TextureHost::AsTextureHost(op.textureOnWhiteParent());
-      if (op.readLockedBlack()) {
-        texOnBlack->SetReadLocked();
-      }
-      if (op.readLockedWhite()) {
-        texOnWhite->SetReadLocked();
-      }
-
-      MOZ_ASSERT(texOnBlack && texOnWhite);
-      aCompositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);
-
-      if (texOnBlack) {
-        texOnBlack->SetLastFwdTransactionId(mFwdTransactionId);
-        // Make sure that each texture was handled by the compositable
-        // because the recycling logic depends on it.
-        MOZ_ASSERT(texOnBlack->NumCompositableRefs() > 0);
-      }
-
-      if (texOnWhite) {
-        texOnWhite->SetLastFwdTransactionId(mFwdTransactionId);
-        // Make sure that each texture was handled by the compositable
-        // because the recycling logic depends on it.
-        MOZ_ASSERT(texOnWhite->NumCompositableRefs() > 0);
-      }
-
-      if (UsesImageBridge()) {
-        ScheduleComposition(aCompositable);
-      }
-      break;
-    }
     case CompositableOperationDetail::TOpDeliverAcquireFence: {
       const OpDeliverAcquireFence& op = aDetail.get_OpDeliverAcquireFence();
       RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
@@ -204,8 +161,7 @@ void CompositableParentManager::DestroyActor(const OpDestroy& aOp) {
 }
 
 RefPtr<CompositableHost> CompositableParentManager::AddCompositable(
-    const CompositableHandle& aHandle, const TextureInfo& aInfo,
-    bool aUseWebRender) {
+    const CompositableHandle& aHandle, const TextureInfo& aInfo) {
   if (mCompositables.find(aHandle.Value()) != mCompositables.end()) {
     NS_ERROR("Client should not allocate duplicate handles");
     return nullptr;
@@ -215,8 +171,7 @@ RefPtr<CompositableHost> CompositableParentManager::AddCompositable(
     return nullptr;
   }
 
-  RefPtr<CompositableHost> host =
-      CompositableHost::Create(aInfo, aUseWebRender);
+  RefPtr<CompositableHost> host = CompositableHost::Create(aInfo);
   if (!host) {
     return nullptr;
   }
@@ -226,33 +181,13 @@ RefPtr<CompositableHost> CompositableParentManager::AddCompositable(
 }
 
 RefPtr<CompositableHost> CompositableParentManager::FindCompositable(
-    const CompositableHandle& aHandle, bool aAllowDisablingWebRender) {
+    const CompositableHandle& aHandle) {
   auto iter = mCompositables.find(aHandle.Value());
   if (iter == mCompositables.end()) {
     return nullptr;
   }
 
-  RefPtr<CompositableHost> host = iter->second;
-  if (!aAllowDisablingWebRender) {
-    return host;
-  }
-
-  if (!host->AsWebRenderImageHost() || !host->GetAsyncRef()) {
-    return host;
-  }
-
-  // Try to replace WebRenderImageHost of ImageBridge to ImageHost.
-  RefPtr<CompositableHost> newHost = CompositableHost::Create(
-      host->GetTextureInfo(), /* aUseWebRender */ false);
-  if (!newHost || !newHost->AsImageHost()) {
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    return host;
-  }
-
-  newHost->SetAsyncRef(host->GetAsyncRef());
-  mCompositables[aHandle.Value()] = newHost;
-
-  return newHost;
+  return iter->second;
 }
 
 void CompositableParentManager::ReleaseCompositable(

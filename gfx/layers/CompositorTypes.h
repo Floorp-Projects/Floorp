@@ -156,10 +156,7 @@ enum class EffectTypes : uint8_t {
  */
 enum class CompositableType : uint8_t {
   UNKNOWN,
-  CONTENT_TILED,   // tiled painted layer
-  IMAGE,           // image with single buffering
-  CONTENT_SINGLE,  // painted layer interface, single buffering
-  CONTENT_DOUBLE,  // painted layer interface, double buffering
+  IMAGE,  // image with single buffering
   COUNT
 };
 

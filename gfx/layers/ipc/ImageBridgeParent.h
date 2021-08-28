@@ -86,9 +86,8 @@ class ImageBridgeParent final : public PImageBridgeParent,
       const wr::MaybeExternalImageId& aExternalImageId);
   bool DeallocPTextureParent(PTextureParent* actor);
 
-  mozilla::ipc::IPCResult RecvNewCompositable(
-      const CompositableHandle& aHandle, const TextureInfo& aInfo,
-      const LayersBackend& aLayersBackend);
+  mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
+                                              const TextureInfo& aInfo);
   mozilla::ipc::IPCResult RecvReleaseCompositable(
       const CompositableHandle& aHandle);
 

@@ -88,7 +88,7 @@ class CompositableHost {
   explicit CompositableHost(const TextureInfo& aTextureInfo);
 
   static already_AddRefed<CompositableHost> Create(
-      const TextureInfo& aTextureInfo, bool aUseWebRender);
+      const TextureInfo& aTextureInfo);
 
   virtual CompositableType GetType() = 0;
 

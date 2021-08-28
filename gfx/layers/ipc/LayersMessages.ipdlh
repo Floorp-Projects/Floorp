@@ -346,47 +346,6 @@ union ReadLockDescriptor {
   null_t;
 };
 
-struct TexturedTileDescriptor {
-  PTexture texture;
-  PTexture? textureOnWhite;
-  IntRect updateRect;
-  bool readLocked;
-  bool readLockedOnWhite;
-  bool wasPlaceholder;
-};
-
-struct PlaceholderTileDescriptor {
-};
-
-union TileDescriptor {
-  TexturedTileDescriptor;
-  PlaceholderTileDescriptor;
-};
-
-struct SurfaceDescriptorTiles {
-  nsIntRegion validRegion;
-  TileDescriptor[] tiles;
-  IntPoint    tileOrigin;
-  IntSize     tileSize;
-  int         firstTileX;
-  int         firstTileY;
-  int         retainedWidth;
-  int         retainedHeight;
-  float       resolution;
-  float       frameXResolution;
-  float       frameYResolution;
-  bool        isProgressive;
-};
-
-struct OpUseTiledLayerBuffer {
-  SurfaceDescriptorTiles tileLayerDescriptor;
-};
-
-struct OpPaintTextureRegion {
-  ThebesBufferData bufferData;
-  nsIntRegion updatedRegion;
-};
-
 /**
  * Tells the CompositableHost to remove the corresponding TextureHost
  */
@@ -417,13 +376,6 @@ struct OpUseTexture {
   TimedTexture[] textures;
 };
 
-struct OpUseComponentAlphaTextures {
-  PTexture textureOnBlack;
-  PTexture textureOnWhite;
-  bool readLockedBlack;
-  bool readLockedWhite;
-};
-
 struct OpNotifyNotUsed {
   uint64_t TextureId;
   uint64_t fwdTransactionId;
@@ -442,14 +394,9 @@ struct OpDeliverReleaseFence {
 };
 
 union CompositableOperationDetail {
-  OpPaintTextureRegion;
-
-  OpUseTiledLayerBuffer;
-
   OpRemoveTexture;
 
   OpUseTexture;
-  OpUseComponentAlphaTextures;
 
   OpDeliverAcquireFence;
 };
