@@ -21,7 +21,7 @@ struct nsRadioGroupStruct {
    * A strong pointer to the currently selected radio button.
    */
   RefPtr<HTMLInputElement> mSelectedRadioButton;
-  nsCOMArray<nsIFormControl> mRadioButtons;
+  nsTArray<RefPtr<HTMLInputElement>> mRadioButtons;
   uint32_t mRequiredRadioCount;
   bool mGroupSuffersFromValueMissing;
 };
@@ -36,11 +36,11 @@ void RadioGroupManager::Traverse(RadioGroupManager* tmp,
         cb, "mRadioGroups entry->mSelectedRadioButton");
     cb.NoteXPCOMChild(ToSupports(radioGroup->mSelectedRadioButton));
 
-    uint32_t i, count = radioGroup->mRadioButtons.Count();
+    uint32_t i, count = radioGroup->mRadioButtons.Length();
     for (i = 0; i < count; ++i) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
           cb, "mRadioGroups entry->mRadioButtons[i]");
-      cb.NoteXPCOMChild(radioGroup->mRadioButtons[i]);
+      cb.NoteXPCOMChild(ToSupports(radioGroup->mRadioButtons[i]));
     }
   }
 }
@@ -53,7 +53,7 @@ nsresult RadioGroupManager::WalkRadioGroup(const nsAString& aName,
                                            nsIRadioVisitor* aVisitor) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
 
-  for (int i = 0; i < radioGroup->mRadioButtons.Count(); i++) {
+  for (size_t i = 0; i < radioGroup->mRadioButtons.Length(); i++) {
     if (!aVisitor->Visit(radioGroup->mRadioButtons[i])) {
       return NS_OK;
     }
@@ -97,7 +97,7 @@ nsresult RadioGroupManager::GetNextRadioButton(const nsAString& aName,
     return NS_ERROR_FAILURE;
   }
 
-  int32_t numRadios = radioGroup->mRadioButtons.Count();
+  int32_t numRadios = static_cast<int32_t>(radioGroup->mRadioButtons.Length());
   RefPtr<HTMLInputElement> radio;
   do {
     if (aPrevious) {
@@ -107,11 +107,7 @@ nsresult RadioGroupManager::GetNextRadioButton(const nsAString& aName,
     } else if (++index >= numRadios) {
       index = 0;
     }
-    MOZ_ASSERT(
-        static_cast<nsGenericHTMLFormElement*>(radioGroup->mRadioButtons[index])
-            ->IsHTMLElement(nsGkAtoms::input),
-        "mRadioButtons holding a non-radio button");
-    radio = static_cast<HTMLInputElement*>(radioGroup->mRadioButtons[index]);
+    radio = radioGroup->mRadioButtons[index];
   } while (radio->Disabled() && radio != currentRadio);
 
   radio.forget(aRadioOut);
@@ -121,7 +117,7 @@ nsresult RadioGroupManager::GetNextRadioButton(const nsAString& aName,
 void RadioGroupManager::AddToRadioGroup(const nsAString& aName,
                                         HTMLInputElement* aRadio) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  radioGroup->mRadioButtons.AppendObject(aRadio);
+  radioGroup->mRadioButtons.AppendElement(aRadio);
 
   if (aRadio->IsRequired()) {
     radioGroup->mRequiredRadioCount++;
@@ -131,7 +127,7 @@ void RadioGroupManager::AddToRadioGroup(const nsAString& aName,
 void RadioGroupManager::RemoveFromRadioGroup(const nsAString& aName,
                                              HTMLInputElement* aRadio) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  radioGroup->mRadioButtons.RemoveObject(aRadio);
+  radioGroup->mRadioButtons.RemoveElement(aRadio);
 
   if (aRadio->IsRequired()) {
     MOZ_ASSERT(radioGroup->mRequiredRadioCount != 0,
