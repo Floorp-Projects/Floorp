@@ -163,7 +163,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "gfxPlatform.h"
 #include "Layers.h"
-#include "LayerTreeInvalidation.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -6358,22 +6357,6 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     if (!(aFlags & PaintFlags::PaintSyncDecodeImages) &&
         !frame->HasAnyStateBits(NS_FRAME_UPDATE_LAYER_TREE) &&
         !mNextPaintCompressed) {
-      NotifySubDocInvalidationFunc computeInvalidFunc =
-          presContext->MayHavePaintEventListenerInSubDocument()
-              ? nsPresContext::NotifySubDocInvalidation
-              : 0;
-      bool computeInvalidRect =
-          computeInvalidFunc ||
-          (renderer->GetBackendType() == LayersBackend::LAYERS_BASIC);
-
-      UniquePtr<LayerProperties> props;
-      // For WR, the layermanager has no root layer. We want to avoid
-      // calling ComputeDifferences in that case because it assumes non-null
-      // and crashes.
-      if (computeInvalidRect && layerManager && layerManager->GetRoot()) {
-        props = LayerProperties::CloneFrom(layerManager->GetRoot());
-      }
-
       if (layerManager) {
         MaybeSetupTransactionIdAllocator(layerManager, presContext);
       }
@@ -6381,31 +6364,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
       if (renderer->EndEmptyTransaction((aFlags & PaintFlags::PaintComposite)
                                             ? LayerManager::END_DEFAULT
                                             : LayerManager::END_NO_COMPOSITE)) {
-        nsIntRegion invalid;
-        bool areaOverflowed = false;
-        if (props) {
-          if (!props->ComputeDifferences(layerManager->GetRoot(), invalid,
-                                         computeInvalidFunc)) {
-            areaOverflowed = true;
-          }
-        } else if (layerManager) {
-          LayerProperties::ClearInvalidations(layerManager->GetRoot());
-        }
-        if (props && !areaOverflowed) {
-          if (!invalid.IsEmpty()) {
-            nsIntRect bounds = invalid.GetBounds();
-            nsRect rect(presContext->DevPixelsToAppUnits(bounds.x),
-                        presContext->DevPixelsToAppUnits(bounds.y),
-                        presContext->DevPixelsToAppUnits(bounds.width),
-                        presContext->DevPixelsToAppUnits(bounds.height));
-            if (shouldInvalidate) {
-              aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(
-                  aViewToPaint, rect);
-            }
-            presContext->NotifyInvalidation(
-                layerManager->GetLastTransactionId(), bounds);
-          }
-        } else if (shouldInvalidate) {
+        if (shouldInvalidate) {
           aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
         }
 
@@ -6448,19 +6407,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
 
   bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
 
-  if (!layerManager) {
-    FallbackRenderer* fallback = renderer->AsFallback();
-    MOZ_ASSERT(fallback);
-
-    if (aFlags & PaintFlags::PaintComposite) {
-      nsIntRect bounds = presContext->GetVisibleArea().ToOutsidePixels(
-          presContext->AppUnitsPerDevPixel());
-      fallback->EndTransactionWithColor(bounds, ToDeviceColor(bgcolor));
-    }
-    return;
-  }
-
-  if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+  if (renderer->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
         presContext->GetVisibleArea(), presContext->AppUnitsPerDevPixel());
     WebRenderBackgroundData data(wr::ToLayoutRect(bounds),
@@ -6473,19 +6420,14 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     return;
   }
 
-  RefPtr<ColorLayer> root = layerManager->CreateColorLayer();
-  if (root) {
+  FallbackRenderer* fallback = renderer->AsFallback();
+  MOZ_ASSERT(fallback);
+
+  if (aFlags & PaintFlags::PaintComposite) {
     nsIntRect bounds = presContext->GetVisibleArea().ToOutsidePixels(
         presContext->AppUnitsPerDevPixel());
-    root->SetColor(ToDeviceColor(bgcolor));
-    root->SetVisibleRegion(LayerIntRegion::FromUnknownRegion(bounds));
-    layerManager->SetRoot(root);
+    fallback->EndTransactionWithColor(bounds, ToDeviceColor(bgcolor));
   }
-  MaybeSetupTransactionIdAllocator(layerManager, presContext);
-  layerManager->EndTransaction(nullptr, nullptr,
-                               (aFlags & PaintFlags::PaintComposite)
-                                   ? LayerManager::END_DEFAULT
-                                   : LayerManager::END_NO_COMPOSITE);
 }
 
 // static
