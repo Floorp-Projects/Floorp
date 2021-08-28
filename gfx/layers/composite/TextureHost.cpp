@@ -19,8 +19,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/ImageBridgeParent.h"  // for ImageBridgeParent
 #include "mozilla/layers/LayersSurfaces.h"     // for SurfaceDescriptor, etc
-#include "mozilla/layers/TextureHostBasic.h"
-#include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
+#include "mozilla/layers/TextureHostOGL.h"     // for TextureHostOGL
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureClient.h"
 #ifdef XP_DARWIN
@@ -212,14 +211,8 @@ already_AddRefed<TextureHost> TextureHost::Create(
       break;
 
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
-      if (aBackend == LayersBackend::LAYERS_OPENGL ||
-          aBackend == LayersBackend::LAYERS_WR) {
-        result = CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
-        break;
-      } else {
-        result = CreateTextureHostBasic(aDesc, aDeallocator, aBackend, aFlags);
-        break;
-      }
+      result = CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
+      break;
 
 #ifdef MOZ_X11
     case SurfaceDescriptor::TSurfaceDescriptorX11: {
@@ -884,17 +877,6 @@ static bool IsCompatibleTextureSource(TextureSource* aTexture,
 
 void BufferTextureHost::PrepareTextureSource(
     CompositableTextureSourceRef& aTexture) {
-  // Reuse WrappingTextureSourceYCbCrBasic to reduce memory consumption.
-  if (mFormat == gfx::SurfaceFormat::YUV && !mHasIntermediateBuffer &&
-      aTexture.get() && aTexture->AsWrappingTextureSourceYCbCrBasic() &&
-      aTexture->NumCompositableRefs() <= 1 &&
-      aTexture->GetSize() == GetSize()) {
-    aTexture->AsSourceBasic()->SetBufferTextureHost(this);
-    aTexture->AsDataTextureSource()->SetOwner(this);
-    mFirstSource = aTexture->AsDataTextureSource();
-    mNeedsFullUpdate = true;
-  }
-
   if (!mHasIntermediateBuffer) {
     EnsureWrappingTextureSource();
   }

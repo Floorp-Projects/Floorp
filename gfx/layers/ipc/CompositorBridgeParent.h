@@ -673,9 +673,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void ForceComposition();
   void CancelCurrentCompositeTask();
 
-  RefPtr<Compositor> NewCompositor(
-      const nsTArray<LayersBackend>& aBackendHints);
-
   /**
    * Add a compositor to the global compositor map.
    */

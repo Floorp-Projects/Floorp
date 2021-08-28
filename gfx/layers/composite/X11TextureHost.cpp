@@ -6,9 +6,7 @@
 
 #include "X11TextureHost.h"
 
-#include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/CompositorOGL.h"
-#include "mozilla/layers/X11TextureSourceBasic.h"
 #include "mozilla/layers/X11TextureSourceOGL.h"
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
@@ -35,10 +33,6 @@ bool X11TextureHost::Lock() {
 
   if (!mTextureSource) {
     switch (mCompositor->GetBackendType()) {
-      case LayersBackend::LAYERS_BASIC:
-        mTextureSource = new X11TextureSourceBasic(
-            mCompositor->AsBasicCompositor(), mSurface);
-        break;
       case LayersBackend::LAYERS_OPENGL:
         mTextureSource =
             new X11TextureSourceOGL(mCompositor->AsCompositorOGL(), mSurface);
@@ -69,10 +63,7 @@ SurfaceFormat X11TextureHost::GetFormat() const {
     return SurfaceFormat::UNKNOWN;
   }
   gfxContentType type = mSurface->GetContentType();
-  if (mCompositor->GetBackendType() == LayersBackend::LAYERS_OPENGL) {
-    return X11TextureSourceOGL::ContentTypeToSurfaceFormat(type);
-  }
-  return X11TextureSourceBasic::ContentTypeToSurfaceFormat(type);
+  return X11TextureSourceOGL::ContentTypeToSurfaceFormat(type);
 }
 
 IntSize X11TextureHost::GetSize() const {
@@ -83,21 +74,7 @@ IntSize X11TextureHost::GetSize() const {
 }
 
 already_AddRefed<gfx::DataSourceSurface> X11TextureHost::GetAsSurface() {
-  if (!mTextureSource || !mTextureSource->AsSourceBasic()) {
-    return nullptr;
-  }
-  RefPtr<DrawTarget> tempDT =
-      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(GetSize(),
-                                                                   GetFormat());
-  if (!tempDT) {
-    return nullptr;
-  }
-  RefPtr<SourceSurface> surf =
-      mTextureSource->AsSourceBasic()->GetSurface(tempDT);
-  if (!surf) {
-    return nullptr;
-  }
-  return surf->GetDataSurface();
+  return nullptr;
 }
 
 }  // namespace mozilla::layers
