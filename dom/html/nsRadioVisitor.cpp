@@ -12,48 +12,38 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsRadioVisitor, nsIRadioVisitor)
 
-bool nsRadioSetCheckedChangedVisitor::Visit(nsIFormControl* aRadio) {
-  RefPtr<HTMLInputElement> radio = static_cast<HTMLInputElement*>(aRadio);
-  NS_ASSERTION(radio, "Visit() passed a null button!");
-
-  radio->SetCheckedChangedInternal(mCheckedChanged);
+bool nsRadioSetCheckedChangedVisitor::Visit(HTMLInputElement* aRadio) {
+  NS_ASSERTION(aRadio, "Visit() passed a null button!");
+  aRadio->SetCheckedChangedInternal(mCheckedChanged);
   return true;
 }
 
-bool nsRadioGetCheckedChangedVisitor::Visit(nsIFormControl* aRadio) {
+bool nsRadioGetCheckedChangedVisitor::Visit(HTMLInputElement* aRadio) {
   if (aRadio == mExcludeElement) {
     return true;
   }
 
-  RefPtr<HTMLInputElement> radio = static_cast<HTMLInputElement*>(aRadio);
-  NS_ASSERTION(radio, "Visit() passed a null button!");
-
-  *mCheckedChanged = radio->GetCheckedChanged();
+  NS_ASSERTION(aRadio, "Visit() passed a null button!");
+  *mCheckedChanged = aRadio->GetCheckedChanged();
   return false;
 }
 
-bool nsRadioSetValueMissingState::Visit(nsIFormControl* aRadio) {
+bool nsRadioSetValueMissingState::Visit(HTMLInputElement* aRadio) {
   if (aRadio == mExcludeElement) {
     return true;
   }
 
-  HTMLInputElement* input = static_cast<HTMLInputElement*>(aRadio);
-
-  input->SetValidityState(nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING,
-                          mValidity);
-
-  input->UpdateState(true);
-
+  aRadio->SetValidityState(
+      nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING, mValidity);
+  aRadio->UpdateState(true);
   return true;
 }
 
-bool nsRadioUpdateStateVisitor::Visit(nsIFormControl* aRadio) {
+bool nsRadioUpdateStateVisitor::Visit(HTMLInputElement* aRadio) {
   if (aRadio == mExcludeElement) {
     return true;
   }
 
-  HTMLInputElement* input = static_cast<HTMLInputElement*>(aRadio);
-  input->UpdateState(true);
-
+  aRadio->UpdateState(true);
   return true;
 }
