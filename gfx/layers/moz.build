@@ -114,9 +114,6 @@ EXPORTS.mozilla.layers += [
     "AtomicRefCountedWithFinalize.h",
     "AxisPhysicsModel.h",
     "AxisPhysicsMSDModel.h",
-    "basic/BasicCompositor.h",
-    "basic/MacIOSurfaceTextureHostBasic.h",
-    "basic/TextureHostBasic.h",
     "BSPTree.h",
     "BufferTexture.h",
     "BuildConstants.h",
@@ -247,14 +244,12 @@ EXPORTS.mozilla.layers += [
 if CONFIG["MOZ_X11"]:
     EXPORTS.mozilla.layers += [
         "basic/TextureClientX11.h",
-        "basic/X11TextureSourceBasic.h",
         "composite/X11TextureHost.h",
         "ipc/ShadowLayerUtilsX11.h",
         "opengl/X11TextureSourceOGL.h",
     ]
     SOURCES += [
         "basic/TextureClientX11.cpp",
-        "basic/X11TextureSourceBasic.cpp",
         "composite/X11TextureHost.cpp",
         "ipc/ShadowLayerUtilsX11.cpp",
         "opengl/X11TextureSourceOGL.cpp",
@@ -362,8 +357,6 @@ UNIFIED_SOURCES += [
     "apz/util/TouchCounter.cpp",
     "AxisPhysicsModel.cpp",
     "AxisPhysicsMSDModel.cpp",
-    "basic/BasicLayersImpl.cpp",
-    "basic/TextureHostBasic.cpp",
     "BSPTree.cpp",
     "BufferTexture.cpp",
     "CanvasDrawEventRecorder.cpp",
@@ -476,7 +469,6 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
-    "basic/BasicCompositor.cpp",
     "client/TextureClient.cpp",
     "ImageContainer.cpp",
     "PersistentBufferProvider.cpp",
@@ -490,7 +482,6 @@ DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     SOURCES += [
-        "basic/MacIOSurfaceTextureHostBasic.cpp",
         "opengl/MacIOSurfaceTextureClientOGL.cpp",
         "opengl/MacIOSurfaceTextureHostOGL.cpp",
     ]

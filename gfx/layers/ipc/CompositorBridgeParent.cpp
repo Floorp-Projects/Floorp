@@ -37,7 +37,6 @@
 #include "mozilla/layers/APZSampler.h"             // for APZSampler
 #include "mozilla/layers/APZThreadUtils.h"         // for APZThreadUtils
 #include "mozilla/layers/APZUpdater.h"             // for APZUpdater
-#include "mozilla/layers/BasicCompositor.h"        // for BasicCompositor
 #include "mozilla/layers/CompositionRecorder.h"    // for CompositionRecorder
 #include "mozilla/layers/Compositor.h"             // for Compositor
 #include "mozilla/layers/CompositorAnimationStorage.h"  // for CompositorAnimationStorage
@@ -1020,78 +1019,6 @@ void CompositorBridgeParent::SetFixedLayerMargins(ScreenIntCoord aTop,
 
   Invalidate();
   ScheduleComposition();
-}
-
-RefPtr<Compositor> CompositorBridgeParent::NewCompositor(
-    const nsTArray<LayersBackend>& aBackendHints) {
-  for (size_t i = 0; i < aBackendHints.Length(); ++i) {
-    RefPtr<Compositor> compositor;
-    if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
-      compositor =
-          new CompositorOGL(this, mWidget, mEGLSurfaceSize.width,
-                            mEGLSurfaceSize.height, mUseExternalSurfaceSize);
-    } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
-      compositor = new BasicCompositor(this, mWidget);
-#ifdef XP_WIN
-    } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11) {
-      compositor = new CompositorD3D11(this, mWidget);
-#endif
-    }
-    nsCString failureReason;
-
-    // Some software GPU emulation implementations will happily try to create
-    // unreasonably big surfaces and then fail in awful ways.
-    // Let's at least limit this to the default max texture size we use for
-    // content, anything larger than that will fail to render on the content
-    // side anyway. We can revisit this value and make it even tighter if need
-    // be.
-    const int max_fb_size = 32767;
-    const LayoutDeviceIntSize size = mWidget->GetClientSize();
-    if (size.width > max_fb_size || size.height > max_fb_size) {
-      failureReason = "FEATURE_FAILURE_MAX_FRAMEBUFFER_SIZE";
-      return nullptr;
-    }
-
-    MOZ_ASSERT(!gfxVars::UseWebRender() ||
-               aBackendHints[i] == LayersBackend::LAYERS_BASIC);
-    if (compositor && compositor->Initialize(&failureReason)) {
-      if (failureReason.IsEmpty()) {
-        failureReason = "SUCCESS";
-      }
-
-      // should only report success here
-      if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
-        Telemetry::Accumulate(Telemetry::OPENGL_COMPOSITING_FAILURE_ID,
-                              failureReason);
-      }
-#ifdef XP_WIN
-      else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11) {
-        Telemetry::Accumulate(Telemetry::D3D11_COMPOSITING_FAILURE_ID,
-                              failureReason);
-      }
-#endif
-
-      return compositor;
-    }
-
-    // report any failure reasons here
-    if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
-      gfxCriticalNote << "[OPENGL] Failed to init compositor with reason: "
-                      << failureReason.get();
-      Telemetry::Accumulate(Telemetry::OPENGL_COMPOSITING_FAILURE_ID,
-                            failureReason);
-    }
-#ifdef XP_WIN
-    else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11) {
-      gfxCriticalNote << "[D3D11] Failed to init compositor with reason: "
-                      << failureReason.get();
-      Telemetry::Accumulate(Telemetry::D3D11_COMPOSITING_FAILURE_ID,
-                            failureReason);
-    }
-#endif
-  }
-
-  return nullptr;
 }
 
 CompositorBridgeParent* CompositorBridgeParent::GetCompositorBridgeParent(
