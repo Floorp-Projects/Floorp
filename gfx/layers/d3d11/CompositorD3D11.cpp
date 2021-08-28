@@ -15,8 +15,6 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/Swizzle.h"
-#include "mozilla/layers/ImageHost.h"
-#include "mozilla/layers/ContentHost.h"
 #include "mozilla/layers/Diagnostics.h"
 #include "mozilla/layers/DiagnosticsD3D11.h"
 #include "mozilla/layers/Effects.h"

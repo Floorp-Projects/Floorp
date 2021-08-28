@@ -24,7 +24,6 @@
 #include "nsRect.h"                // for IntRect
 #include "nsTArray.h"              // for AutoTArray, nsTArray_Impl
 #include "mozilla/Poison.h"
-#include "mozilla/layers/ImageHost.h"
 #include "TreeTraversal.h"  // for ForEachNode
 
 // LayerTreeInvalidation debugging
@@ -613,32 +612,16 @@ struct ColorLayerProperties : public LayerPropertiesBase {
   IntRect mBounds;
 };
 
-static ImageHost* GetImageHost(Layer* aLayer) { return nullptr; }
-
 struct ImageLayerProperties : public LayerPropertiesBase {
   explicit ImageLayerProperties(ImageLayer* aImage, bool aIsMask)
       : LayerPropertiesBase(aImage),
         mContainer(aImage->GetContainer()),
-        mImageHost(GetImageHost(aImage)),
         mSamplingFilter(aImage->GetSamplingFilter()),
         mScaleToSize(aImage->GetScaleToSize()),
         mScaleMode(aImage->GetScaleMode()),
         mLastProducerID(-1),
         mLastFrameID(-1),
-        mIsMask(aIsMask) {
-    if (mImageHost) {
-      if (aIsMask) {
-        // Mask layers never set the 'last' producer/frame
-        // id, since they never get composited as their own
-        // layer.
-        mLastProducerID = mImageHost->GetProducerID();
-        mLastFrameID = mImageHost->GetFrameID();
-      } else {
-        mLastProducerID = mImageHost->GetLastProducerID();
-        mLastFrameID = mImageHost->GetLastFrameID();
-      }
-    }
-  }
+        mIsMask(aIsMask) {}
 
   bool ComputeChangeInternal(const char* aPrefix, nsIntRegion& aOutRegion,
                              NotifySubDocInvalidationFunc aCallback) override {
@@ -653,22 +636,16 @@ struct ImageLayerProperties : public LayerPropertiesBase {
     }
 
     ImageContainer* container = imageLayer->GetContainer();
-    ImageHost* host = GetImageHost(imageLayer);
     if (mContainer != container ||
         mSamplingFilter != imageLayer->GetSamplingFilter() ||
         mScaleToSize != imageLayer->GetScaleToSize() ||
-        mScaleMode != imageLayer->GetScaleMode() || host != mImageHost ||
-        (host && host->GetProducerID() != mLastProducerID) ||
-        (host && host->GetFrameID() != mLastFrameID)) {
+        mScaleMode != imageLayer->GetScaleMode()) {
       if (mIsMask) {
         // Mask layers have an empty visible region, so we have to
         // use the image size instead.
         IntSize size;
         if (container) {
           size = container->GetCurrentSize();
-        }
-        if (host) {
-          size = host->GetImageSize();
         }
         IntRect rect(0, 0, size.width, size.height);
         LTI_DUMP(rect, "mask");
@@ -684,37 +661,12 @@ struct ImageLayerProperties : public LayerPropertiesBase {
   }
 
   RefPtr<ImageContainer> mContainer;
-  RefPtr<ImageHost> mImageHost;
   SamplingFilter mSamplingFilter;
   gfx::IntSize mScaleToSize;
   ScaleMode mScaleMode;
   int32_t mLastProducerID;
   int32_t mLastFrameID;
   bool mIsMask;
-};
-
-struct CanvasLayerProperties : public LayerPropertiesBase {
-  explicit CanvasLayerProperties(CanvasLayer* aCanvas)
-      : LayerPropertiesBase(aCanvas), mImageHost(GetImageHost(aCanvas)) {
-    mFrameID = mImageHost ? mImageHost->GetFrameID() : -1;
-  }
-
-  bool ComputeChangeInternal(const char* aPrefix, nsIntRegion& aOutRegion,
-                             NotifySubDocInvalidationFunc aCallback) override {
-    CanvasLayer* canvasLayer = static_cast<CanvasLayer*>(mLayer.get());
-
-    ImageHost* host = GetImageHost(canvasLayer);
-    if (host && host->GetFrameID() != mFrameID) {
-      LTI_DUMP(NewTransformedBoundsForLeaf(), "frameId");
-      aOutRegion = NewTransformedBoundsForLeaf();
-      return true;
-    }
-
-    return true;
-  }
-
-  RefPtr<ImageHost> mImageHost;
-  int32_t mFrameID;
 };
 
 UniquePtr<LayerPropertiesBase> CloneLayerTreePropertiesInternal(
@@ -737,8 +689,6 @@ UniquePtr<LayerPropertiesBase> CloneLayerTreePropertiesInternal(
       return MakeUnique<ImageLayerProperties>(static_cast<ImageLayer*>(aRoot),
                                               aIsMask);
     case Layer::TYPE_CANVAS:
-      return MakeUnique<CanvasLayerProperties>(
-          static_cast<CanvasLayer*>(aRoot));
     case Layer::TYPE_DISPLAYITEM:
     case Layer::TYPE_READBACK:
     case Layer::TYPE_SHADOW:

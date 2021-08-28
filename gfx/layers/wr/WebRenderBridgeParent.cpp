@@ -2611,7 +2611,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvNewCompositable(
   if (mDestroyed) {
     return IPC_OK();
   }
-  if (!AddCompositable(aHandle, aInfo, /* aUseWebRender */ true)) {
+  if (!AddCompositable(aHandle, aInfo)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
