@@ -15,6 +15,10 @@ interface SVGAnimationElement : SVGElement {
 
   readonly attribute SVGElement? targetElement;
 
+  attribute EventHandler onbegin;
+  attribute EventHandler onend;
+  attribute EventHandler onrepeat;
+
   [Throws]
   float getStartTime();
   [BinaryName="getCurrentTimeAsFloat"]
