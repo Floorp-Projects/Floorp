@@ -5,12 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CompositableHost.h"
-#include <map>            // for _Rb_tree_iterator, map, etc
-#include <utility>        // for pair
-#include "ContentHost.h"  // for ContentHostDoubleBuffered, etc
-#include "Effects.h"      // for EffectMask, Effect, etc
+#include <map>        // for _Rb_tree_iterator, map, etc
+#include <utility>    // for pair
+#include "Effects.h"  // for EffectMask, Effect, etc
 #include "gfxUtils.h"
-#include "ImageHost.h"  // for ImageHostBuffered, etc
 #include "Layers.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
@@ -106,26 +104,11 @@ void CompositableHost::RemoveMaskEffect() {
 
 /* static */
 already_AddRefed<CompositableHost> CompositableHost::Create(
-    const TextureInfo& aTextureInfo, bool aUseWebRender) {
+    const TextureInfo& aTextureInfo) {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
     case CompositableType::IMAGE:
-      if (aUseWebRender) {
-        result = new WebRenderImageHost(aTextureInfo);
-      } else {
-        result = new ImageHost(aTextureInfo);
-      }
-      break;
-    case CompositableType::CONTENT_SINGLE:
-      if (aUseWebRender) {
-        result = new WebRenderImageHost(aTextureInfo);
-      } else {
-        result = new ContentHostSingleBuffered(aTextureInfo);
-      }
-      break;
-    case CompositableType::CONTENT_DOUBLE:
-      MOZ_ASSERT(!aUseWebRender);
-      result = new ContentHostDoubleBuffered(aTextureInfo);
+      result = new WebRenderImageHost(aTextureInfo);
       break;
     default:
       NS_ERROR("Unknown CompositableType");

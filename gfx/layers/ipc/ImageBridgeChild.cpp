@@ -291,8 +291,7 @@ void ImageBridgeChild::Connect(CompositableClient* aCompositable,
 
   CompositableHandle handle(id);
   aCompositable->InitIPDL(handle);
-  SendNewCompositable(handle, aCompositable->GetTextureInfo(),
-                      GetCompositorBackendType());
+  SendNewCompositable(handle, aCompositable->GetTextureInfo());
 }
 
 void ImageBridgeChild::ForgetImageContainer(const CompositableHandle& aHandle) {

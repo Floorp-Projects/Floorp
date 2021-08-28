@@ -272,10 +272,8 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvWillClose() {
 }
 
 mozilla::ipc::IPCResult ImageBridgeParent::RecvNewCompositable(
-    const CompositableHandle& aHandle, const TextureInfo& aInfo,
-    const LayersBackend& aLayersBackend) {
-  bool useWebRender = aLayersBackend == LayersBackend::LAYERS_WR;
-  RefPtr<CompositableHost> host = AddCompositable(aHandle, aInfo, useWebRender);
+    const CompositableHandle& aHandle, const TextureInfo& aInfo) {
+  RefPtr<CompositableHost> host = AddCompositable(aHandle, aInfo);
   if (!host) {
     return IPC_FAIL_NO_REASON(this);
   }
