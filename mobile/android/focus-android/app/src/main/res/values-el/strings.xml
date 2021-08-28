@@ -139,8 +139,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Σχετικά με το %1$s, βοήθεια</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Προστασία από καταγραφή</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Ενισχυμένη προστασία από καταγραφή</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Διαδικτυακό περιεχόμενο</string>
@@ -510,9 +510,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">ΟΧΙ</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Η συντόμευση θα ανοίξει χωρίς προστασία από καταγραφή</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Η συντόμευση θα ανοίξει χωρίς ενισχυμένη προστασία από καταγραφή</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -701,6 +701,8 @@
     <string name="tab_crash_report_title">Η καρτέλα κατέρρευσε</string>
     <!-- Headline for the tab crash report screen -->
     <string name="tab_crash_report_headline">Δυστυχώς, αντιμετωπίζουμε πρόβλημα με αυτή την καρτέλα.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Για λόγους ασφαλείας, δεν αποθηκεύουμε ούτε μπορούμε να ανακτήσουμε αυτήν την καρτέλα.</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">Κλείσιμο καρτέλας</string>
 

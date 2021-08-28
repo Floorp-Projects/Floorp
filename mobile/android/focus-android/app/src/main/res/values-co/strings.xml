@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Apprupositu di %1$s, aiutu</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Prutezzione contr’à u spiunagiu</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Prutezzione rinfurzata contr’à u spiunagiu</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Cuntenutu di u Web</string>
@@ -527,9 +527,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">INNÒ</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">L’accurtatoghju s’aprerà cù a prutezzione contr’à u spiunagiu disattivata</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">L’accurtatoghju s’aprerà cù a prutezzione rinfurzata contr’à u spiunagiu disattivata</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -690,10 +690,10 @@
     <string name="tip_disable_tracking_protection">Stu situ ùn si cumporta micca cum’è previstu ?\n
     Pruvate di disattivà a prutezzione contr’à u spiunagiu</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">Ci seria u cuntenutu chì manca o u situ si cumpurteria d’una manera strana ?\n
-    Pruvate di disattivà a prutezzione contr’à u spiunagiu</string>
+    <string name="tip_disable_tracking_protection3">Ci seria u cuntenutu chì manca o u situ si cumpurteria d’una manera strana ?\n
+    Pruvate di disattivà a prutezzione rinfurzata contr’à u spiunagiu</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -726,7 +726,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">Vulete disattivà a prutezzione contr’à u spiunagiu per un situ di cunfidenza chì voi cunniscite ?\n
+    <string name="tip_explain_allowlist3">Vulete disattivà a prutezzione rinfurzata contr’à u spiunagiu per un situ di cunfidenza chì voi cunniscite ?\n
         Aghjunghjelu à a lista di i siti di cunfidenza in e Preferenze
     </string>
 
@@ -814,5 +814,5 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">E fiure sparte o arregistrate &lt;b&gt;ùn sò micca squassate &lt;/b&gt;quandu a crunulogia di %1s hè squassata.</string>
+    <string name="contextmenu_erased_images_note2">E fiure sparte o arregistrate &lt;b&gt;ùn sò micca squassate&lt;/b&gt; quandu a crunulogia di %1$s hè squassata</string>
 </resources>

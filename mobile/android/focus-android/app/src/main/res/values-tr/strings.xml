@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">%1$s hakkında, yardım</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">İzlenme Koruması</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Gelişmiş izlenme koruması</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Web içeriği</string>
@@ -527,9 +527,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">HAYIR</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Kısayolu kullandığınızda İzlenme Koruması kapalı kalacaktır</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Kısayolu kullandığınızda gelişmiş izlenme koruması kapalı kalacaktır</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -689,10 +689,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Düzgün görünmeyen bir site mi var?\n İzlenme Koruması’nı kapatmayı deneyin</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">Düzgün görünmeyen bir site mi var?\n
-    İzlenme Koruması’nı kapatmayı deneyin</string>
+    <string name="tip_disable_tracking_protection3">Düzgün görünmeyen bir site mi var?\n
+    Gelişmiş izlenme korumasını kapatmayı deneyin</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -762,6 +762,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">%s tarihinden beri engellenen takipçi</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">İçerik</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
@@ -789,4 +791,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Top Sites -->
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Kaldır</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">%1$s geçmişini sildiğinizde, kaydettiğiniz ve paylaştığınız resimler &lt;b&gt;silinmeyecektir&lt;/b&gt;</string>
 </resources>

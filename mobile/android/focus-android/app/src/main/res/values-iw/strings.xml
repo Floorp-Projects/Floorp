@@ -134,8 +134,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">על אודות %1$s, עזרה</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">הגנת מעקב</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">הגנת מעקב מתקדמת</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">תוכן מקוון</string>
@@ -511,9 +511,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">לא</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">קיצור הדרך ייפתח ללא הגנת מעקב</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">קיצור הדרך ייפתח ללא הגנת המעקב המתקדמת</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -668,10 +668,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">האתר מתנהג באופן בלתי צפוי?\n ניתן לנסות לבטל את הגנת המעקב</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">חסר תוכן כלשהו באתר, או שהוא מתנהג באופן בלתי צפוי?\n
-    ניתן לנסות לבטל את הגנת המעקב</string>
+    <string name="tip_disable_tracking_protection3">חסר תוכן כלשהו באתר, או שהוא מתנהג באופן בלתי צפוי?\n
+    ניתן לנסות לבטל את הגנת המעקב המתקדמת</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -702,7 +702,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">רוצה שהגנת המעקב תישאר כבויה עבור אתר מהימן כלשהו?\n
+    <string name="tip_explain_allowlist3">רוצה שהגנת המעקב המתקדמת תישאר כבויה עבור אתר מהימן כלשהו?\n
         ניתן להוסיף אותו לרשימת המותרים בהגדרות
     </string>
 

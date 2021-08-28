@@ -689,6 +689,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">¿El sitio se comporta de manera inesperada?\n Pruebe desactivar la Protección de rastreo</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">¿Al sitio le falta contenido o actúa raro?\n
+    Probá desactivar la protección contra rastreo aumentada</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Obtenga acceso con un toque a los sitios que más usa %1$s Menú > Añadir a la Pantalla de inicio\n]]></string>
@@ -714,9 +719,20 @@
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Desactivar los consejos en la pantalla de inicio</string>
 
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">¿Querés mantener la protección contra rastreo aumentada desactivada para un sitio en el que confiás?\n
+        Agregalo a la lista de permitidos en configuración
+    </string>
+
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">¡Sí, tenemos un nuevo look! Leé más sobre esto y otras actualizaciones de %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Creá accesos directos a los sitios que más visitás:\n
+    Seleccioná Agregar a accesos directos en el menú %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nueva pestaña abierta</string>
@@ -797,4 +813,7 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Eliminar</string>
 
-    </resources>
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Las imágenes guardadas y compartidas &lt;b&gt;no serán&lt;/b&gt; borradas al borrar el historial de %1$s</string>
+</resources>

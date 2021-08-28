@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Ynghylch %1$s, cymorth</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Diogelwch rhag Tracio</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Diogelwch Uwch Rhag Tracio</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Cynnwys Gwe</string>
@@ -527,9 +527,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NA</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Bydd y Llwybr Byr yn agor gyda Diogelwch rhag Tracio wedi ei analluogi</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Bydd y Llwybr Byr yn agor gyda Diogelwch rhag Tracio wedi ei analluogi</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -689,10 +689,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Gwefan yn ymddwyn yn anisgwyl?\n Ceisiwch ddiffodd Diogelwch rhag Tracio</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">Gwefan yn brin o gynnwys neu’n ymddwyn yn rhyfedd?
-    Ceisiwch ddiffodd Diogewlch rhag Tracio</string>
+    <string name="tip_disable_tracking_protection3">Gwefan yn brin o gynnwys neu’n ymddwyn yn rhyfedd?
+    Ceisiwch ddiffodd Diogelwch Uwch rhag Tracio</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -721,8 +721,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">Eisiau diffodd Diogelu rhag Tracio ar wefan rydych chi’n ymddiried ynddi?
+    <string name="tip_explain_allowlist3">Eisiau diffodd Diogelwch Uwch rhag Tracio ar wefan rydych chi’n ymddiried ynddi?\n
         Ychwanegwch hi i’r Rhestr Caniatáu yn y Gosodiadau
+    
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.

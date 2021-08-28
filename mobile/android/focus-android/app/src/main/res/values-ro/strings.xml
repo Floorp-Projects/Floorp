@@ -8,7 +8,7 @@
     <!-- Label used for buttons, e.g. in dialogs -->
     <string name="action_cancel">Renunță</string>
     <!-- Label used for buttons, e.g. in dialogs -->
-    <string name="action_ok">Ok</string>
+    <string name="action_ok">OK</string>
 
     <string name="action_save">Salvează</string>
 
@@ -130,9 +130,6 @@
     <!-- About the app and help are links that are inside this menu -->
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Despre %1$s, ajutor</string>
-
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Protecție împotriva urmăririi</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Conținut web</string>
@@ -470,7 +467,7 @@
     <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
     <string name="firstrun_privacy_text">Setează %1$s ca browser implicit și beneficiază de avantajele navigării private atunci când deschizi pagini web din alte aplicații.</string>
 
-    <string name="firstrun_close_button">Ok, am înțeles!</string>
+    <string name="firstrun_close_button">OK, am înțeles!</string>
     <string name="firstrun_skip_button">Omite</string>
     <string name="firstrun_next_button">Înainte</string>
 
@@ -482,10 +479,6 @@
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Renunță</string>
-
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Scurtătura se va deschide cu protecţia împotriva urmăririi dezactivată</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.

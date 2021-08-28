@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">O aplikaci %1$s, nápověda</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Ochrana proti sledování</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Rozšířená ochrana proti sledování</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Webový obsah</string>
@@ -524,9 +524,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NE</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Zkratka se bude otevírat s vypnutou ochranou proti sledování</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Zkratka se bude otevírat s vypnutou ochranou proti sledování</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -686,9 +686,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Nechová se stránka podle očekávání?\n Zkuste vypnout ochranu proti sledování</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">Chybí na stránce nějaký obsah?\n Zkuste vypnout ochranu proti sledování</string>
+    <string name="tip_disable_tracking_protection3">Chybí na stránce nějaký obsah?\n
+Zkuste vypnout ochranu proti sledování</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -717,12 +718,17 @@ Přepněte v nabídce aplikace %1$s na verzi pro počítač.</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">Chcete na stránkách, kterým důvěřujete, vypnout ochranu proti sledování?
-Přidejte je do seznamu výjimek v nastavení.</string>
+    <string name="tip_explain_allowlist3">Chcete na stránkách, kterým důvěřujete, vypnout ochranu proti sledování?
+Přidejte je do seznamu výjimek v nastavení</string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">Ano, máme nový vzhled. Přečtěte si podrobnosti o něm i dalších novinkách v aplikaci %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Vytvořte si zkratky na nejnavštěvovanější stránky:
+V nabídce aplikace %1$s vyberte Přidat zkratku</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nový panel otevřen</string>

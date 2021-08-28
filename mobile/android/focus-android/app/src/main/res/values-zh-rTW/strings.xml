@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">關於 %1$s、使用說明</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">追蹤保護</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">加強型追蹤保護</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">網站內容</string>
@@ -295,7 +295,7 @@
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">若已在程式中開啟網頁，可使用您的指紋直接解鎖 %1$s。也會開啟隱私模式。</string>
+    <string name="preference_security_biometric_summary">若已在程式中開啟網頁，可使用您的指紋直接解鎖 %1$s。也會開啟秘密行動模式。</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -527,9 +527,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">不要</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">使用此捷徑開啟時，將關閉追蹤保護功能</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">使用此捷徑開啟時，將關閉追蹤保護功能</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -548,7 +548,7 @@
     <string name="notification_browsing_session_channel_description">不需要開啟程式或確認瀏覽器中有哪些資料，只要輕鬆一點，就能清除 %1$s 瀏覽階段的通知項目。</string>
 
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
-    <string name="tabs_tray_action_erase">抹除瀏覽紀錄</string>
+    <string name="tabs_tray_action_erase">清除瀏覽紀錄</string>
 
     <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
       item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
@@ -689,9 +689,9 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">網站變得怪怪的？試試關閉追蹤保護功能</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">網站有內容不見，或行為怪怪的？試試關閉追蹤保護功能</string>
+    <string name="tip_disable_tracking_protection3">網站有內容不見，或行為怪怪的？試試關閉加強型追蹤保護功能</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -719,7 +719,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">想要對您信任的網站關閉追蹤保護嗎？到設定當中加入允許清單</string>
+    <string name="tip_explain_allowlist3">想要對您信任的網站關閉加強型追蹤保護嗎？到設定當中加入允許清單</string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
@@ -737,12 +737,12 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="open_new_tab_snackbar">切換</string>
 
     <!-- Preference for switching to a new tab immediately after opening -->
-    <string name="preference_open_new_tab">立即切換到新分頁中的鏈結</string>
+    <string name="preference_open_new_tab">開啟鏈結後，立即切換到該分頁</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_category_safe_browsing">安全瀏覽</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_safe_browsing_title">封鎖可能危險或是詐騙內容的網站</string>
+    <string name="preference_safe_browsing_title">封鎖可能危險或詐騙的網站</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">封鎖已被回報為詐騙、有攻擊性、惡意軟體以及有害軟體的網站。</string>
 
@@ -779,7 +779,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tracking protection bottom sheet -->
 
     <!-- Label for the total number of trackers blocked. %s represents the app install date -->
-    <string name="trackers_count_note">自 %s 起封鎖的追蹤器</string>
+    <string name="trackers_count_note">自 %s起封鎖的追蹤器數量</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">內容</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->

@@ -151,8 +151,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">À propos de %1$s, aide</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Protection contre le pistage</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Protection renforcée contre le pistage</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Contenu web</string>
@@ -528,9 +528,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NON</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Ce raccourci s’ouvrira avec la protection contre le pistage désactivée</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Ce raccourci s’ouvrira avec la protection renforcée contre le pistage désactivée</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -690,10 +690,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Ce site ne se comporte pas comme prévu ?\nEssayer de désactiver la protection contre le pistage</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">Ce site se comporte bizarrement ou du contenu manque ?\n
-Essayez de désactiver la protection contre le pistage</string>
+    <string name="tip_disable_tracking_protection3">Ce site se comporte bizarrement ou du contenu manque ?\n
+Essayez de désactiver la protection renforcée contre le pistage</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -722,7 +722,7 @@ Activez la version ordinateur à partir du menu %1$s</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">Vous voulez désactiver la protection contre le pistage pour un site de confiance ?\n
+    <string name="tip_explain_allowlist3">Vous voulez désactiver la protection renforcée contre le pistage pour un site de confiance ?\n
 Ajoutez-le à la liste d’autorisation dans les paramètres</string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
@@ -812,4 +812,7 @@ Ajoutez-le à la liste d’autorisation dans les paramètres</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Supprimer</string>
 
-    </resources>
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Les images enregistrées ou partagées &lt;b&gt;ne sont pas&lt;/b&gt; supprimées quand vous effacez l’historique de %1$s</string>
+</resources>
