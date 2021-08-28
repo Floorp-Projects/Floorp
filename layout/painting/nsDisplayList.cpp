@@ -50,7 +50,6 @@
 #include "nsIFrameInlines.h"
 #include "nsStyleConsts.h"
 #include "BorderConsts.h"
-#include "LayerTreeInvalidation.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "imgIContainer.h"
@@ -2523,22 +2522,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     return layerManager.forget();
   }
 
-  NotifySubDocInvalidationFunc computeInvalidFunc =
-      presContext->MayHavePaintEventListenerInSubDocument()
-          ? nsPresContext::NotifySubDocInvalidation
-          : nullptr;
-
-  UniquePtr<LayerProperties> props;
-
-  bool computeInvalidRect =
-      (computeInvalidFunc || (!renderer->IsCompositingCheap() &&
-                              renderer->NeedsWidgetInvalidation())) &&
-      widgetTransaction;
-
-  if (computeInvalidRect && layerManager) {
-    props = LayerProperties::CloneFrom(layerManager->GetRoot());
-  }
-
   if (doBeginTransaction) {
     if (aCtx) {
       MOZ_ASSERT(layerManager);
@@ -2587,41 +2570,9 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     TriggerPendingAnimations(*document, renderer->GetAnimationReadyTime());
   }
 
-  nsIntRegion invalid;
-  if (props) {
-    if (!props->ComputeDifferences(layerManager->GetRoot(), invalid,
-                                   computeInvalidFunc)) {
-      invalid = nsIntRect::MaxIntRect();
-    }
-  } else if (widgetTransaction && layerManager) {
-    LayerProperties::ClearInvalidations(layerManager->GetRoot());
-  }
-
   bool shouldInvalidate = renderer->NeedsWidgetInvalidation();
-
   if (view) {
-    if (props) {
-      if (!invalid.IsEmpty()) {
-        nsIntRect bounds = invalid.GetBounds();
-        nsRect rect(presContext->DevPixelsToAppUnits(bounds.x),
-                    presContext->DevPixelsToAppUnits(bounds.y),
-                    presContext->DevPixelsToAppUnits(bounds.width),
-                    presContext->DevPixelsToAppUnits(bounds.height));
-        // Treat the invalid region from the layer manager as being relative to
-        // the widget, rather than relative to the view. (It's unclear whether
-        // this is the right thing to do, but it matches some aspects of
-        // painting more than the alternative would. Moreover, non-zero view to
-        // widget offsets only occur for fractionally-positioned popups, for bad
-        // reasons. See bug 1688899 for details.)
-        // Make the rectangle relative to the view.
-        rect -= view->ViewToWidgetOffset();
-        if (shouldInvalidate) {
-          view->GetViewManager()->InvalidateViewNoSuppression(view, rect);
-        }
-        presContext->NotifyInvalidation(layerManager->GetLastTransactionId(),
-                                        bounds);
-      }
-    } else if (shouldInvalidate) {
+    if (shouldInvalidate) {
       if (!renderer->AsFallback()) {
         view->GetViewManager()->InvalidateView(view);
       } else {
@@ -4984,8 +4935,8 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
 
     aBuilder.PushBoxShadow(deviceBoxRect, deviceClipRect, !BackfaceIsHidden(),
                            deviceBoxRect, wr::ToLayoutVector2D(shadowOffset),
-                           wr::ToColorF(ToDeviceColor(shadowColor)),
-                           blurRadius, spreadRadius, borderRadius,
+                           wr::ToColorF(ToDeviceColor(shadowColor)), blurRadius,
+                           spreadRadius, borderRadius,
                            wr::BoxShadowClipMode::Outset);
   }
 

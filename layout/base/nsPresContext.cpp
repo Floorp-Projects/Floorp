@@ -109,8 +109,6 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-uint8_t gNotifySubDocInvalidationData;
-
 /**
  * Layer UserData for ContainerLayers that want to be notified
  * of local invalidations of them and their descendant layers.
@@ -1999,26 +1997,6 @@ bool nsPresContext::MayHavePaintEventListener() {
   return ::MayHavePaintEventListener(mDocument->GetInnerWindow());
 }
 
-bool nsPresContext::MayHavePaintEventListenerInSubDocument() {
-  if (MayHavePaintEventListener()) {
-    return true;
-  }
-
-  bool result = false;
-  auto recurse = [&result](dom::Document& aSubDoc) {
-    if (nsPresContext* pc = aSubDoc.GetPresContext()) {
-      if (pc->MayHavePaintEventListenerInSubDocument()) {
-        result = true;
-        return CallState::Stop;
-      }
-    }
-    return CallState::Continue;
-  };
-
-  mDocument->EnumerateSubDocuments(recurse);
-  return result;
-}
-
 void nsPresContext::NotifyInvalidation(TransactionId aTransactionId,
                                        const nsIntRect& aRect) {
   // Prevent values from overflow after DevPixelsToAppUnits().
@@ -2074,49 +2052,6 @@ void nsPresContext::NotifyInvalidation(TransactionId aTransactionId,
   TransactionInvalidations* transaction = GetInvalidations(aTransactionId);
   MOZ_ASSERT(transaction);
   transaction->mInvalidations.AppendElement(aRect);
-}
-
-/* static */
-void nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
-                                             const nsIntRegion* aRegion) {
-  ContainerLayerPresContext* data = static_cast<ContainerLayerPresContext*>(
-      aContainer->GetUserData(&gNotifySubDocInvalidationData));
-  if (!data) {
-    return;
-  }
-
-  TransactionId transactionId = aContainer->Manager()->GetLastTransactionId();
-  IntRect visibleBounds =
-      aContainer->GetVisibleRegion().GetBounds().ToUnknownRect();
-
-  if (!aRegion) {
-    IntRect rect(IntPoint(0, 0), visibleBounds.Size());
-    data->mPresContext->NotifyInvalidation(transactionId, rect);
-    return;
-  }
-
-  nsIntPoint topLeft = visibleBounds.TopLeft();
-  for (auto iter = aRegion->RectIter(); !iter.Done(); iter.Next()) {
-    nsIntRect rect(iter.Get());
-    // PresContext coordinate space is relative to the start of our visible
-    // region. Is this really true? This feels like the wrong way to get the
-    // right answer.
-    rect.MoveBy(-topLeft);
-    data->mPresContext->NotifyInvalidation(transactionId, rect);
-  }
-}
-
-void nsPresContext::SetNotifySubDocInvalidationData(
-    ContainerLayer* aContainer) {
-  ContainerLayerPresContext* pres = new ContainerLayerPresContext;
-  pres->mPresContext = this;
-  aContainer->SetUserData(&gNotifySubDocInvalidationData, pres);
-}
-
-/* static */
-void nsPresContext::ClearNotifySubDocInvalidationData(
-    ContainerLayer* aContainer) {
-  aContainer->SetUserData(&gNotifySubDocInvalidationData, nullptr);
 }
 
 class DelayedFireDOMPaintEvent : public Runnable {
