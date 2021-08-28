@@ -35,7 +35,6 @@
 #include "nsLayoutUtils.h"
 #include "nsTHashSet.h"
 #include "WebRenderCanvasRenderer.h"
-#include "LayerTreeInvalidation.h"
 
 namespace mozilla {
 namespace layers {
