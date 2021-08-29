@@ -462,6 +462,9 @@ NS_EVENT_MESSAGE(eSlotChange)
 // visibility change
 NS_EVENT_MESSAGE(eVisibilityChange)
 
+// security policy events
+NS_EVENT_MESSAGE(eSecurityPolicyViolation)
+
 // Details element events.
 NS_EVENT_MESSAGE(eToggle)
 
