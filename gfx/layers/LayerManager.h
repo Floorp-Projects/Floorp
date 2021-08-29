@@ -562,10 +562,6 @@ class LayerManager : public WindowRenderer {
   // used to implement Dump*() and Log*().
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
-  // Print interesting information about this into layerscope packet.
-  // Internally used to implement Dump().
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket);
-
   uint64_t mId;
   bool mInTransaction;
 

@@ -171,9 +171,6 @@ class ReadbackLayer : public Layer {
   virtual void PrintInfo(std::stringstream& aStream,
                          const char* aPrefix) override;
 
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket,
-                          const void* aParent) override;
-
   uint64_t mSequenceCounter;
   UniquePtr<ReadbackSink> mSink;
   gfx::IntSize mSize;
