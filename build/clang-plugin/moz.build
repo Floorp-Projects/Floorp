@@ -60,7 +60,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
 if CONFIG["ENABLE_MOZSEARCH_PLUGIN"]:
     HOST_SOURCES += [
         "mozsearch-plugin/FileOperations.cpp",
-        "mozsearch-plugin/JSONFormatter.cpp",
         "mozsearch-plugin/MozsearchIndexer.cpp",
         "mozsearch-plugin/StringOperations.cpp",
     ]

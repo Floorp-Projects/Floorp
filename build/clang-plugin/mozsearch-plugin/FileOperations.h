@@ -54,9 +54,11 @@ struct AutoLockFile {
   // Check after constructing to ensure the mutex was properly set up.
   bool success();
 
-  // Open the existing analysis file for reading (an empty one is created if
-  // it doesn't already exist). Caller is responsible for fclose'ing it.
-  FILE *openFile();
+  // There used to be an `openFile` method here but we switched to directly
+  // using a std::ifstream for the input file in able to take advantage of its
+  // support for variable length lines (as opposed to fgets which takes a fixed
+  // size buffer).
+
   // Open a new tmp file for writing the new analysis data to. Caller is
   // responsible for fclose'ing it.
   FILE *openTmp();
