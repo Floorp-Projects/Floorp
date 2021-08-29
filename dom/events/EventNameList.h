@@ -233,6 +233,8 @@ EVENT(playing, ePlaying, EventNameType_HTML, eBasicEventClass)
 EVENT(progress, eProgress, EventNameType_HTML, eBasicEventClass)
 EVENT(ratechange, eRateChange, EventNameType_HTML, eBasicEventClass)
 EVENT(reset, eFormReset, EventNameType_HTMLXUL, eBasicEventClass)
+EVENT(securitypolicyviolation, eSecurityPolicyViolation, EventNameType_All,
+      eBasicEventClass)
 EVENT(seeked, eSeeked, EventNameType_HTML, eBasicEventClass)
 EVENT(seeking, eSeeking, EventNameType_HTML, eBasicEventClass)
 EVENT(select, eFormSelect, EventNameType_HTMLXUL, eBasicEventClass)
