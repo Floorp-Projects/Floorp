@@ -78,8 +78,6 @@ class ImageLayer : public Layer {
   ImageLayer(LayerManager* aManager, void* aImplData);
   virtual ~ImageLayer();
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-  void DumpPacket(layerscope::LayersPacket* aPacket,
-                  const void* aParent) override;
 
   RefPtr<ImageContainer> mContainer;
   gfx::SamplingFilter mSamplingFilter;

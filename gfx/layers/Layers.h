@@ -1038,25 +1038,6 @@ class Layer {
   void SetPrevSibling(Layer* aSibling) { mPrevSibling = aSibling; }
 
   /**
-   * Dump information about this layer manager and its managed tree to
-   * aStream.
-   */
-  void Dump(std::stringstream& aStream, const char* aPrefix = "",
-            bool aDumpHtml = false, bool aSorted = false,
-            const Maybe<gfx::Polygon>& aGeometry = Nothing());
-  /**
-   * Dump information about just this layer manager itself to aStream.
-   */
-  void DumpSelf(std::stringstream& aStream, const char* aPrefix = "",
-                const Maybe<gfx::Polygon>& aGeometry = Nothing());
-
-  /**
-   * Dump information about this layer and its child & sibling layers to
-   * layerscope packet.
-   */
-  void Dump(layerscope::LayersPacket* aPacket, const void* aParent);
-
-  /**
    * Log information about this layer manager and its managed tree to
    * the NSPR log (if enabled for "Layers").
    */
@@ -1073,12 +1054,6 @@ class Layer {
   // an implementation that first calls the base implementation then
   // appends additional info to aTo.
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
-
-  // Just like PrintInfo, but this function dump information into layerscope
-  // packet, instead of a StringStream. It is also internally used to implement
-  // Dump();
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket,
-                          const void* aParent);
 
   /**
    * Store display list log.
@@ -1433,9 +1408,6 @@ class PaintedLayer : public Layer {
 
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
-  void DumpPacket(layerscope::LayersPacket* aPacket,
-                  const void* aParent) override;
-
   /**
    * ComputeEffectiveTransforms snaps the ideal transform to get
    * mEffectiveTransform. mResidualTranslation is the translation that should be
@@ -1692,9 +1664,6 @@ class ContainerLayer : public Layer {
   virtual void PrintInfo(std::stringstream& aStream,
                          const char* aPrefix) override;
 
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket,
-                          const void* aParent) override;
-
   /**
    * True for if the container start a new 3D context extended by one
    * or more children.
@@ -1767,9 +1736,6 @@ class ColorLayer : public Layer {
       : Layer(aManager, aImplData), mColor() {}
 
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  void DumpPacket(layerscope::LayersPacket* aPacket,
-                  const void* aParent) override;
 
   gfx::IntRect mBounds;
   gfx::DeviceColor mColor;
@@ -1858,9 +1824,6 @@ class CanvasLayer : public Layer {
   virtual ~CanvasLayer();
 
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  void DumpPacket(layerscope::LayersPacket* aPacket,
-                  const void* aParent) override;
 
   virtual RefPtr<CanvasRenderer> CreateCanvasRendererInternal() = 0;
 
@@ -2009,9 +1972,6 @@ class RefLayer : public ContainerLayer {
         mEventRegionsOverride(EventRegionsOverride::NoOverride) {}
 
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  void DumpPacket(layerscope::LayersPacket* aPacket,
-                  const void* aParent) override;
 
   // 0 is a special value that means "no ID".
   LayersId mId;
