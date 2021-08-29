@@ -7126,6 +7126,34 @@ TEST_F(JsepSessionTest, TestOneWayRtx) {
   }
 }
 
+TEST_F(JsepSessionTest, TestRtxNoSsrcGroup) {
+  mSessionOff->AddTransceiver(new JsepTransceiver(
+      SdpMediaSection::kVideo, SdpDirectionAttribute::kRecvonly));
+
+  OfferAnswer(CHECK_SUCCESS);
+
+  std::string offer = mSessionOff->GetLocalDescription(kJsepDescriptionCurrent);
+  ASSERT_EQ(std::string::npos, offer.find("FID")) << offer;
+
+  std::string answer =
+      mSessionOff->GetRemoteDescription(kJsepDescriptionCurrent);
+  ASSERT_EQ(std::string::npos, answer.find("FID")) << answer;
+}
+
+TEST_F(JsepSessionTest, TestRtxSsrcGroupOnlyOffered) {
+  mSessionOff->AddTransceiver(new JsepTransceiver(
+      SdpMediaSection::kVideo, SdpDirectionAttribute::kSendonly));
+
+  OfferAnswer(CHECK_SUCCESS);
+
+  std::string offer = mSessionOff->GetLocalDescription(kJsepDescriptionCurrent);
+  ASSERT_NE(std::string::npos, offer.find("FID")) << offer;
+
+  std::string answer =
+      mSessionOff->GetRemoteDescription(kJsepDescriptionCurrent);
+  ASSERT_EQ(std::string::npos, answer.find("FID")) << answer;
+}
+
 TEST_F(JsepSessionTest, TestOfferRtxNoMsid) {
   for (auto& codec : mSessionOff->Codecs()) {
     if (codec->mName == "VP8") {
@@ -7147,12 +7175,12 @@ TEST_F(JsepSessionTest, TestOfferRtxNoMsid) {
     }
   }
 
-  // If no MSID is present, we should not have a FID ssrc-group
+  // MSID stream absence should not influence FID ssrc-group
   JsepOfferOptions options;
   std::string offer;
   JsepSession::Result result = mSessionOff->CreateOffer(options, &offer);
   ASSERT_FALSE(result.mError.isSome());
-  ASSERT_EQ(std::string::npos, offer.find("FID")) << offer;
+  ASSERT_NE(std::string::npos, offer.find("FID")) << offer;
 }
 
 TEST_F(JsepSessionTest, TestDuplicatePayloadTypes) {
