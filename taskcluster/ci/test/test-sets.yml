@@ -262,6 +262,29 @@ windows10-2004-tests:
     - test-verify-wpt
     - xpcshell
 
+windows10-64-ccov-tests:
+    - jittest
+    - mochitest-plain
+    - mochitest-browser-chrome
+    - mochitest-devtools-chrome
+    - web-platform-tests
+    - web-platform-tests-reftest
+    - web-platform-tests-wdspec
+    - crashtest
+    - reftest
+    - xpcshell
+
+windows10-64-2004-ccov-tests:
+    - gtest
+    - marionette
+    - test-coverage
+    - test-verify
+    - test-verify-gpu
+    - cppunit
+    - jsreftest
+    - web-platform-tests-crashtest
+    - web-platform-tests-print-reftest
+
 windows10-64-2004-failure-tests:
     - mochitest-browser-chrome-failures
 
