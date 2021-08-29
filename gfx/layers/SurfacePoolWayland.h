@@ -13,6 +13,8 @@
 #include "mozilla/layers/SurfacePool.h"
 #include "mozilla/widget/WaylandBuffer.h"
 
+#include <unordered_map>
+
 namespace mozilla::layers {
 
 class SurfacePoolWayland final : public SurfacePool {
