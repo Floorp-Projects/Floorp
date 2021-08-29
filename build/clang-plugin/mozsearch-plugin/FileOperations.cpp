@@ -75,11 +75,6 @@ bool AutoLockFile::success() {
   return Handle != NULL;
 }
 
-FILE *AutoLockFile::openFile() {
-  int DstDescriptor = _open(Filename.c_str(), _O_RDONLY | _O_CREAT | _O_BINARY, 0666);
-  return _fdopen(DstDescriptor, "rb");
-}
-
 FILE *AutoLockFile::openTmp() {
   int TmpDescriptor = _open((Filename + ".tmp").c_str(), _O_WRONLY | _O_APPEND | _O_CREAT | _O_BINARY, 0666);
   return _fdopen(TmpDescriptor, "ab");
@@ -120,11 +115,6 @@ AutoLockFile::AutoLockFile(const std::string &SrcFile, const std::string &DstFil
 AutoLockFile::~AutoLockFile() { close(FileDescriptor); }
 
 bool AutoLockFile::success() { return FileDescriptor != -1; }
-
-FILE *AutoLockFile::openFile() {
-  int DstDescriptor = open(Filename.c_str(), O_RDONLY | O_CREAT, 0666);
-  return fdopen(DstDescriptor, "rb");
-}
 
 FILE* AutoLockFile::openTmp() {
   int TmpDescriptor = open((Filename + ".tmp").c_str(), O_WRONLY | O_APPEND | O_CREAT, 0666);
