@@ -19,6 +19,6 @@
     <string name="mozac_feature_findindpage_previous_result">Mergi la rezultatul anterior</string>
 
     <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
-    <string name="mozac_feature_findindpage_dismiss">Renunță la căutarea în pagină</string>
+    <string name="mozac_feature_findindpage_dismiss">Înlătură căutarea în pagină</string>
 
 </resources>

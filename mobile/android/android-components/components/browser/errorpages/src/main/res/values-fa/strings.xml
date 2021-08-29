@@ -104,12 +104,12 @@
     <string name="mozac_browser_errorpages_unknown_host_title">آدرس پیدا نشد</string>
     <!-- In the example, the two URLs in markup do not need to be translated. -->
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
-      <p>مرورگر نتوانست سرور میزبان را برای آدرس ارائه شده پیدا کند.</p>
+      <p>مرورگر نتوانست کارساز میزبان را برای آدرس ارائه شده پیدا کند.</p>
       <ul>
-        <li>آدرس را برای غلط‌تای املایی بررسی کنید، مانند:
+        <li>آدرس را برای غلط‌های املایی بررسی کنید، مانند:
           <strong>ww</strong>.example.com به‌جای
           <strong>www</strong>.example.com.</li>
-        <li>اگر قادر به بار کردن هیچ صفحه‌ای نیستید، داده دستگاه یا اتصال وای‌فای خود را بررسی کنید.</li>
+        <li>اگر قادر به بارگزاری هیچ صفحه‌ای نیستید، داده دستگاه یا اتصال وای‌فای خود را بررسی کنید.</li>
       </ul>
     ]]></string>
 
