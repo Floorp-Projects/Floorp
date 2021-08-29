@@ -180,11 +180,7 @@ windows10-32-2004-qr/debug:
 windows10-64-ccov-qr/opt:
     build-platform: win64-ccov/opt
     test-sets:
-        - desktop-screenshot-capture
-        - windows-ccov-tests
-        - ccov-code-coverage-tests
-        - windows10-2004-tests  # For Bug 1723531
-        - web-platform-tests  # For Bug 1723531
+        - windows10-64-ccov-tests  # For Bug 1723531 but without what has been migrated in Bug X so far
 
 windows10-64-qr/opt:
     build-platform: win64/opt
@@ -234,6 +230,11 @@ windows10-32-mingwclang-qr/opt:
         - mingwclang-tests-opt
 
 # win10-64 2004
+windows10-64-2004-ccov-qr/opt:
+    build-platform: win64-ccov/opt
+    test-sets:
+        - windows10-64-2004-ccov-tests
+
 windows10-64-2004-qr/debug:
     build-platform: win64/debug
     test-sets:
