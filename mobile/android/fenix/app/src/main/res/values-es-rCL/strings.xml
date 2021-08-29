@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s en modo privado</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -635,6 +635,16 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Aprender más</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">La aplicación se cerrará para aplicar cambios</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Aceptar</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Cancelar</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Saliendo de la aplicación para aplicar cambios…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Pestañas abiertas</string>
@@ -1124,7 +1134,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Eliminar</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Cancelar</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Cancelar</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Pasando a modo de pantalla completa</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1290,7 +1300,7 @@
     <string name="onboarding_privacy_notice_read_button">Lee nuestro aviso de privacidad</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Cerrar</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Cerrar</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Empezar a navegar</string>
@@ -1420,7 +1430,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Detiene la carga de publicidad, videos y otros contenidos que contienen códigos de seguimiento. Puede afectar la funcionalidad de algunos sitios web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Cada vez que el escudo está de color morado, %s ha bloqueado rastreadores en un sitio. Toca para más información.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Cada vez que el escudo está de color morado, %s ha bloqueado rastreadores en un sitio. Toca para más información.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Las protecciones están activadas para este sitio</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1502,7 +1512,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nunca guardar</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autollenado</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autollenado</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Autocompletar en %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->

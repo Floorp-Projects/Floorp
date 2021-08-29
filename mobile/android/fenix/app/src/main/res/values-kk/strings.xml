@@ -615,6 +615,16 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Бір айдан кейін жабу</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Өшіру</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Белсенді</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox кейде зерттеулерді орнатып, орындай алады.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Көбірек білу</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Ашық беттер</string>
@@ -642,6 +652,8 @@
     <string name="tab_tray_menu_item_share">Барлық беттермен бөлісу</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Жуырда жабылған беттер</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Жақында жабылған</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Тіркелгі баптаулары</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -935,6 +947,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Сөндірулі</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Іске қосулы</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Сөндірулі</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Жинақтар</string>
@@ -1096,7 +1113,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Өшіру</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Бас тарту</string>
+    <string name="tab_collection_dialog_negative">Бас тарту</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Толық экран режиміне өту</string>
@@ -1265,7 +1282,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Біздің жекелік ескертуімізді оқыңыз</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Жабу</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">Жабу</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Шолуды бастау</string>
@@ -1372,6 +1389,9 @@
 
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Баспаны жинаушылар</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Көбірек</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Бұғатталған</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Рұқсат етілген</string>
@@ -1396,7 +1416,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Бақылау коды бар сыртқы жарнама, видео және басқа жа мазмұннын жүктеуіне жол бермейді. Кейбір веб-сайттардың жұмысына әсер етуі мүмкін.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Әр рет қалқан күлгін болған сайын, %s сайттағы трекерлерді бұғаттаған. Қосымша ақпарат алу үшін шертіңіз.</string>
+    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Әр рет қалқан күлгін болған сайын, %s сайттағы трекерлерді бұғаттаған. Қосымша ақпарат алу үшін шертіңіз.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Бұл сайт үшін қорғаныс ІСКЕ ҚОСЫЛҒАН</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1476,7 +1496,10 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ешқашан сақтамау</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Автотолтыру</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Автотолтыру</string>
+
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Басқа қолданбаларда автотолтыру</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Логиндерді синхрондау</string>
@@ -1796,6 +1819,14 @@
 	<string name="top_sites_rename_dialog_ok">ОК</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Бас тарту</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Белсенді емес беттер</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 күн</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 апта</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Веб-сайттар, эл. пошта хаттары және хабарламалардан сілтемелерді Firefox-та автоматты түрде ашылатындай етіп баптау.</string>

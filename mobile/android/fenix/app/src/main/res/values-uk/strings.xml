@@ -302,9 +302,9 @@
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Приватний перегляд</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">Відкривати посилання в приватній вкладці</string>
+    <string name="preferences_open_links_in_a_private_tab">Відкривати посилання у приватній вкладці</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
-    <string name="preferences_allow_screenshots_in_private_mode">Дозволити знімки екрана в приватному перегляді</string>
+    <string name="preferences_allow_screenshots_in_private_mode">Дозволити знімки екрана у приватному перегляді</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">Якщо дозволено, приватні вкладки також будуть видимі, коли відкрито декілька програм</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -607,9 +607,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Сіткою</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
-    <string name="preferences_close_tabs">Закрити вкладки</string>
+    <string name="preferences_close_tabs">Закривати вкладки</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
-    <string name="close_tabs_manually">Вручну</string>
+    <string name="close_tabs_manually">Власноруч</string>
     <!-- Option for auto closing tabs that will auto close tabs after one day -->
     <string name="close_tabs_after_one_day">Через день</string>
     <!-- Option for auto closing tabs that will auto close tabs after one week -->
@@ -627,7 +627,7 @@
     <!-- Option for never starting on the home screen -->
     <string name="start_on_home_never">Ніколи</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
-    <string name="close_tabs_manually_summary">Закрити власноруч</string>
+    <string name="close_tabs_manually_summary">Закривати власноруч</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
     <string name="close_tabs_after_one_day_summary">Закрити через день</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
@@ -644,6 +644,16 @@
     <string name="studies_description">Firefox може час від часу встановлювати та виконувати дослідження.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Докладніше</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Програма припинить застосовувати зміни</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Гаразд</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Скасувати</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application">Закриття програми для застосування змін…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->

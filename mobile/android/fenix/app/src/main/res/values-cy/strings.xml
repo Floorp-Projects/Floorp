@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s Preifat</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -118,6 +118,11 @@
     <string name="recent_tabs_header">Mynd nôl i</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Dangos y cyfan</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Archwiliadau’r gorffennol</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -621,6 +626,26 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Cau ar ôl un mis</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Tynnu</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Gweithredol</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Efallai y bydd Firefox yn gosod a rhedeg astudiaethau o bryd i’w gilydd.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Dysgu rhagor</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Bydd yr ap yn cau er mwyn gosod y newidiadau</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Iawn</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Diddymu</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Yn gadael y rhaglen er mwyn gosod y newidiadau...</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Tabiau agored</string>
@@ -648,6 +673,8 @@
     <string name="tab_tray_menu_item_share">Rhannu pob tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Tabiau wedi’u cau’n ddiweddar</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Caewyd yn ddiweddar</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Gosodiadau cyfrif</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -944,6 +971,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Diffodd</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Ymlaen</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Diffodd</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Casgliadau</string>
@@ -1105,7 +1137,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Dileu</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Diddymu</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Diddymu</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Mynd i’r sgrin lawn</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1272,7 +1304,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="onboarding_privacy_notice_read_button">Darllenwch ein hysbysiad preifatrwydd</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Cau</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Cau</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Cychwyn pori</string>
@@ -1374,6 +1406,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptogloddwyr</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Bysbrintwyr</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Manylion</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Rhwystrwyd</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Caniatawyd</string>
@@ -1399,7 +1434,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Yn rhwystro hysbysebion, fideos, a chynnwys allanol arall rhag llwytho’r hyn sy’n cynnwys cod tracio. Gall effeithio ar rywfaint o ymarferoldeb gwefan.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Bob tro mae’r darian yn biws, mae %s wedi rhwystro tracwyr ar wefan. Tapiwch am ragor o wybodaeth.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Bob tro mae’r darian yn biws, mae %s wedi rhwystro tracwyr ar wefan. Tapiwch am ragor o wybodaeth.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Mae diogelu YMLAEN ar gyfer y wefan hon</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1480,7 +1515,16 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Byth cadw</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Awtolanw</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Awtolanw</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Awtolanw yn %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Llenwch ac chadw enwau defnyddwyr a chyfrineiriau mewn gwefannau tra’n defnyddio %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Awtolanw mewn apiau eraill</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Llenwch enwau defnyddwyr a chyfrineiriau mewn apiau eraill ar eich dyfais.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Cydweddu mewngofnodion</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1663,7 +1707,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Llinyn chwilio i’w ddefnyddio</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Disodli’r ymholiad â “%s”. Enghraifft:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Disodli’r ymholiad â “%s”. Enghraifft:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Dysgu Rhagor</string>
 
@@ -1801,6 +1845,16 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 	<string name="top_sites_rename_dialog_ok">Iawn</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Diddymu</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Tabiau anweithredol</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Mae tabiau ar gael yma am %s. Wedi hynny, bydd y tabiau’n cael eu cau’n awtomatig.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 diwrnod</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 wythnos</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Gosod dolenni o wefannau, e-byst, a negeseuon i agor yn awtomatig yn Firefox.</string>

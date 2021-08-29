@@ -640,6 +640,16 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Dalše informacije</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Nałoženje so skónči, zo bychu so změny wuskutkowali</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">W porjadku</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Přetorhnyć</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application">Nałoženje so kónči, zo bychu so změny wuskutkowali …</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Wočinjene rajtarki</string>

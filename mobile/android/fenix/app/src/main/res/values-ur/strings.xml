@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">نجی %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -111,6 +111,11 @@
     <string name="recent_tabs_header">واپس جائیں</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">تمام دکھائیں</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">ماضی کی تحقیقات</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -595,6 +600,9 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ایک مہینے کے بعد</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">گھر سے شروع کریں۔</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string name="start_on_home_after_four_hours">چار گھنٹے بعد</string>
     <!-- Option for always starting on the home screen -->
@@ -610,6 +618,18 @@
 
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ایک ماہ کے بعد بند کریں</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ہٹائیں</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">فعال</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">مزید سیکھیں</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">ٹھیک ہے</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">منسوخ کریں</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -638,6 +658,8 @@
     <string name="tab_tray_menu_item_share">تمام ٹیبز شیئر کریں</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">حالیہ بند کیے گئے ٹیبز</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">حالیہ بند کی گئی</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">اکاؤنٹ کی سیٹنگز</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -934,6 +956,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">بند</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">چالو</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">بند</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">مجموعے</string>
@@ -1035,6 +1062,11 @@
     <string name="notification_pbm_action_delete_and_open">حذف کریں اور کھولیں</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">مقوی کردہ از</string>
+
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">مارکیٹنگ</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">مجموعہ حذف ہوگیا</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1086,7 +1118,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">مٹائیں</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">منسوخ کریں</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">منسوخ کریں</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">فل سکرین موڈ میں داخل ہو رہا ہے</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1224,7 +1256,7 @@
     <string name="onboarding_privacy_notice_read_button">ہماری رازداری نوٹس پڑھیں</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">بند کریں</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">بند کریں</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">براؤزنگ شروع کریں</string>
@@ -1312,6 +1344,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">کریپٹومینر</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">فنگر پرنٹرز</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">تفصیلات</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">بلاک شدہ</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">‏‏اجازت شدہ</string>
@@ -1405,7 +1440,8 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">کبھِی بھی محفوظ مت کریں</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">آٹوفل</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">آٹوفل</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">لاگ ان کو Sync کریں</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
@@ -1702,6 +1738,14 @@
 	<string name="top_sites_rename_dialog_ok">ٹھیک ہے</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">منسوخ کریں</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">غیر فعال ٹیبز</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 دن</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">۱ ہفتہ</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ہٹائیں</string>

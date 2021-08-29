@@ -659,6 +659,16 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Saper plus</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Le application quitara pro applicar cambiamentos</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Cancellar</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application">Quitar le application pro applicar le modificationes…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Schedas aperte</string>

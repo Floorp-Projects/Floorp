@@ -119,6 +119,11 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Mostrar tudo</string>
 
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Tópicos anteriores</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Abas abertas</string>
@@ -622,6 +627,26 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Fechar após um mês sem uso</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Remover</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Ativado</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">O Firefox pode instalar e executar estudos de vez em quando.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Saiba mais</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">O aplicativo irá fechar para aplicar as alterações</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Cancelar</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application">Fechando o aplicativo para aplicar as alterações…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Abas abertas</string>
@@ -649,6 +674,8 @@
     <string name="tab_tray_menu_item_share">Compartilhar todas as abas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Abas fechadas recentemente</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Fechado recentemente</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Configurações de contas</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -942,6 +969,11 @@
     <string name="delete_browsing_data_quit_on">Ativado</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Desativado</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Ativado</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Desativado</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1272,7 +1304,7 @@
     <string name="onboarding_privacy_notice_read_button">Leia nosso aviso de privacidade</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Fechar</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">Fechar</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Iniciar navegação</string>
@@ -1379,6 +1411,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineradores</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Detalhes</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Bloqueado:</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permitido:</string>
@@ -1404,7 +1439,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contêm código de rastreamento. Pode afetar funcionalidades de alguns sites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Quando o escudo fica roxo, indica que o %s bloqueou rastreadores no site. Toque no escudo para ver mais informações.</string>
+    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Quando o escudo fica roxo, indica que o %s bloqueou rastreadores no site. Toque no escudo para ver mais informações.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">As proteções estão ATIVADAS neste site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1485,7 +1520,16 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nunca salvar</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Preenchimento automático</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Preenchimento automático</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Preenchimento automático no %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Preencha e salve nomes de usuário e senhas em sites ao usar o %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Preenchimento automático em outros aplicativos</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Preencha nomes de usuário e senhas em outros aplicativos no seu dispositivo.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronização de contas</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1806,6 +1850,16 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Cancelar</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Abas inativas</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Abas ficam disponíveis aqui por %s. Após esse período, são fechadas automaticamente.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 dias</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 semana</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Abra links, emails e mensagens automaticamente no Firefox.</string>

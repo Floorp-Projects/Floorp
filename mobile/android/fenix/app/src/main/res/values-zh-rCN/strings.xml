@@ -123,6 +123,11 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">显示全部</string>
 
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">过去探索内容</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">打开的标签页</string>
@@ -650,6 +655,16 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">详细了解</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">应用程序将退出以应用更改</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">确定</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">取消</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application">退出应用程序以应用更改...</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">标签页</string>
@@ -979,6 +994,11 @@
     <string name="delete_browsing_data_quit_on">开启</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">关闭</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">开启</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">关闭</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1430,6 +1450,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">加密货币挖矿程序</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">数字指纹跟踪程序</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">详细信息</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">已拦截</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -1541,6 +1563,13 @@
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">在 %1$s 中自动填充</string>
+
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">在使用 %1$s 时，填充和保存网页中的用户名和密码。</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">在其他应用程序中自动填充</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">在您设备上的其他应用程序中填充用户名和密码。</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">同步登录信息</string>
@@ -1865,6 +1894,8 @@
     <!-- In-activate tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
     <string name="inactive_tabs_title">非活动标签页</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">标签页将在此处保留 %s，之后将自动关闭。</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string name="inactive_tabs_30_days">30 天</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->

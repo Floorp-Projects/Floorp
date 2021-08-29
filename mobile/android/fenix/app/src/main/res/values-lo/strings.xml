@@ -616,6 +616,20 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ປິດຫຼັງຈາກໜຶ່ງເດືອນ</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ລຶບ</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">​ເປີດໃຊ້ງານ</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">ແອັບພລິເຄຊັນຈະອອກເພື່ອນຳໃຊ້ການປ່ຽນແປງ</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">ໂອເຄ</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">ຍົກເລີກ</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ເປີດແທັບ</string>
@@ -643,6 +657,8 @@
     <string name="tab_tray_menu_item_share">ແບ່ງປັນແທັບທັງໝົດ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">ແທັບທີ່ຫາກໍ່ປິດໄປມື້ກີ້ນີ້</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">ຫາກໍ່ປິດໄປມື້ກີ້ນີ້</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">ການຕັ້ງ​ຄ່າ​ບັນ​ຊີ</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -939,6 +955,11 @@
     <string name="delete_browsing_data_quit_on">ເປີດ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">ປິດ</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">ເປີດ</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">ປິດ</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1253,7 +1274,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ອ່ານນະໂຍບາຍຄວາມເປັນສ່ວນຕົວຂອງພວກເຮົາ</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">ປິດ</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">ປິດ</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">ເລີ່ມການທ່ອງເວັບ</string>
@@ -1346,6 +1367,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">ເຄືອງພິມລາຍນິ້ວມື</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">ລາຍລະອຽດ</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">ບັອກແລ້ວ</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">ອະນຸຍາດແລ້ວ</string>
@@ -1429,7 +1453,8 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">ບໍ່ຕ້ອງບັນທຶກ</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">ຕື່ມຂໍ້ມູນອັດຕະໂນມັດ</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">ຕື່ມຂໍ້ມູນອັດຕະໂນມັດ</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync ລັອກອິນ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1574,9 +1599,20 @@
     <string name="credit_cards_biometric_prompt_message">ປົດລັອກເພື່ອເບິ່ງບັດທີ່ທ່ານໄດ້ບັນທຶກໄວ້</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">ຮັກສາບັດເຄດິດຂອງທ່ານ</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">ຕິດຕັ້ງດ່ຽວນີ້</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">ພາຍຫຼັງ</string>
 
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">ປົດລັອກອຸປະກອນຂອງທ່ານ</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">ປົດລັອກເພື່ອໃຊ້ຂໍ້ມູນບັດເຄຣດິດທີ່ໄດ້ເກັບໄວ້</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">ແກ້ໄຂເຄື່ອງມືການຄົ້ນຫາ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">ເພີ່ມ</string>
 
@@ -1598,6 +1634,21 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">ດັດແກ້ລາຍລະອຽດເຄື່ອງມືການຄົ້ນຫາ</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">ລີ້ງຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">ປ້ອນຊື່ເຄື່ອງມືການຄົ້ນຫາ</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">ເຄື່ອງມືການຄົ້ນຫາຊື່ “%s” ແມ່ນມີຢູ່ແລ້ວ.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">ໃສ່ຂໍ້ຄວາມການຄົ້ນຫາ</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">ກວດເບິງວ່າຂໍ້ຄວາມການຄົ້ນຫາກົງກັບຮູບແບບຕົວຢ່າງ</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">ມີຂໍ້ຜິດພາດໃນການເຊື່ອມຕໍ່ໄປຫາ “%s”</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s ສ້າງແລ້ວ</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1605,6 +1656,8 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s ລຶບແລ້ວ</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">ຍິນດີຕ້ອນຮັບສູ່ %s ໂຊມໃຫມ່</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">ກຳລັງອັບເດດ %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1628,6 +1681,8 @@
     <string name="quick_settings_sheet_secure_connection">ການເຊື່ອມຕໍ່ທີປອດໄພ</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">ການເຊື່ອມຕໍ່ທີບໍ່ປອດໄພ</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">ບົດຄວາມຍອດນິຍົມ</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">ເພີ່ມເຂົ້າໄປໃນເວັບຍອດນິຍົມແລ້ວ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
@@ -1673,6 +1728,11 @@
 	<string name="top_sites_rename_dialog_ok">ໂອເຄ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ຍົກເລີກ</string>
+
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 ມື້</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 ອາ​ທິດ</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ລົບ</string>

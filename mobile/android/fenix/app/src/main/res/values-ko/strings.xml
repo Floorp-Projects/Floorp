@@ -652,6 +652,16 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">더 알아보기</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">변경 사항을 적용하기 위해 애플리케이션이 종료됩니다</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">확인</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">취소</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application">변경 사항을 적용하기 위해 애플리케이션을 종료하는 중...</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">열린 탭</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">პირადი %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -115,6 +115,11 @@
     <string name="recent_tabs_header">წინაზე გადასვლა</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">ყველას ჩვენება</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">წარსული ძიებანი</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -621,6 +626,24 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ერთ თვეში დახურვა</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">მოცილება</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">მოქმედი</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox დროდადრო აყენებს და ატარებს კვლევებს.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">ვრცლად</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">პროგრამა დაიხურება ცვლილებების ასახვისთვის</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">კარგი</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">გაუქმება</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">პროგრამა იხურება ცვლილებების ასახვისთვის…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">გახსნილი ჩანართები</string>
@@ -648,6 +671,8 @@
     <string name="tab_tray_menu_item_share">ყველა ჩანართის გაზიარება</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">ბოლოს დახურული ჩანართები</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">ახლახანს დახურული</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">ანგარიშის პარამეტრები</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -943,6 +968,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">გამორთ.</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">ჩართ.</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">გამორთ.</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">კრებულები</string>
@@ -1104,7 +1134,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">წაშლა</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">გაუქმება</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">გაუქმება</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">სრულ ეკრანზე გაშლა</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1270,7 +1300,7 @@
     <string name="onboarding_privacy_notice_read_button">გაეცანით პირადულობის განაცხადს</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">დახურვა</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">დახურვა</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">დაიწყეთ გვერდების მონახულება</string>
@@ -1375,6 +1405,9 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">მომხმარებლის ამომცნობები</string>
 
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">დაწვრილებით</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">შეზღუდული</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">დაშვებული</string>
@@ -1400,7 +1433,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">აჩერებს გარეშე რეკლამების, ვიდეოებისა და სხვა მეთვალყურე კოდის შემცველი შიგთავსის ჩატვირთვას. შეიძლება გავლენა იქონიოს ვებგვერდის ზოგიერთ შესაძლებლობაზე.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">როცა ფარი იისფერია, ნიშნავს რომ %s ზღუდავს მეთვალყურეებს საიტზე. შეეხეთ ვრცლად სანახავად.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">როცა ფარი იისფერია, ნიშნავს რომ %s ზღუდავს მეთვალყურეებს საიტზე. შეეხეთ ვრცლად სანახავად.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">დაცვა ჩართულია ამ საიტზე</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1481,7 +1514,16 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">არასოდეს შეინახოს</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">თვითშევსება</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">თვითშევსება</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s თვითშევსება</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">შეავსეთ ან შეინახეთ სახელები და პაროლები საიტებზე, როცა %1$s გამოიყენება.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">თვითშევსება სხვა პროგრამებში</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">შეავსეთ სახელები და პაროლები თქვენი მოწყობილობის სხვა პროგრამებში.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ანგარიშების დასინქრონება</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1665,7 +1707,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">საძიებო ფრაზა</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">მიუთითეთ „%s“ საძიებო ტექსტად. მაგალითი:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">მიუთითეთ „%s“ საძიებო ტექსტად. მაგალითი:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ვრცლად</string>
 
@@ -1804,6 +1846,16 @@
 	<string name="top_sites_rename_dialog_ok">კარგი</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">გაუქმება</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">უქმი ჩანართები</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">ჩანართები აქ დარჩება %s. შემდეგ კი თავადვე დაიხურება.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 დღე</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 კვირა</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">მითითება რომ ბმულები ვებსაიტებიდან, ელფოსტიდან და შეტყობინებებიდან, გაიხსნას პირდაპირ Firefox-ში.</string>

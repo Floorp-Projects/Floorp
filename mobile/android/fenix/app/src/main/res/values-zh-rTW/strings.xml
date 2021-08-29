@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -119,6 +119,11 @@
     <string name="recent_tabs_header">回到先前開啟頁面</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">顯示全部</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">過去的探索內容</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -631,6 +636,26 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">1 個月後關閉</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">移除</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">進行中</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox 會不定時安裝並執行使用者研究。</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">了解更多</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">應用程式將結束以套用變更</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">確定</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">取消</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">結束應用程式讓變更生效…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">開啟分頁</string>
@@ -658,6 +683,8 @@
     <string name="tab_tray_menu_item_share">分享所有分頁</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">最近關閉的分頁</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">最近關閉的分頁</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">帳號設定</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -957,6 +984,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">關閉</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">開啟</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">關閉</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">收藏集</string>
@@ -1133,7 +1165,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">刪除</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">取消</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">取消</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">進入全螢幕模式</string>
 
@@ -1302,7 +1334,7 @@
     <string name="onboarding_privacy_notice_read_button">閱讀我們的隱私權公告</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">關閉</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">關閉</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">開始上網</string>
@@ -1404,6 +1436,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">加密貨幣採礦程式</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">數位指紋追蹤程式</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">詳細資訊</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">已封鎖</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">已允許</string>
@@ -1428,7 +1463,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">防止載入含有追蹤碼的外部廣告、影片及其他內容。可能會影響某些網站功能。</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">盾牌變成紫色時，代表 %s 封鎖了網站中的追蹤器。可點擊圖示取得更多資訊。</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">盾牌變成紫色時，代表 %s 封鎖了網站中的追蹤器。可點擊圖示取得更多資訊。</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">已開啟此網站的追蹤保護</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1510,7 +1545,16 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">永不儲存</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">自動填寫</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">自動填寫</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">自動填入 %1$s 欄位</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">使用 %1$s 時自動填寫並儲存網站使用者名稱與密碼。</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">在其他應用程式中也自動填寫</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">使用其他裝置中的其他應用程式時也自動填寫使用者名稱與密碼。</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">同步登入資訊</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1693,7 +1737,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">要使用的搜尋字串</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">用「%s」取代查詢關鍵字。例如:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">用「%s」取代查詢關鍵字。例如:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">了解更多</string>
 
@@ -1830,6 +1874,16 @@
 	<string name="top_sites_rename_dialog_ok">確定</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">取消</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">閒置分頁</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">分頁將於此處停留 %s，超過之後將自動關閉。</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 天</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 週</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">設定使用 Firefox 自動開啟網站、郵件、簡訊當中的鏈結。</string>

@@ -119,6 +119,11 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Tümünü göster</string>
 
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Geçmiş keşifler</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Açık sekmeler</string>
@@ -623,6 +628,26 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Bir ay sonra kapat</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Kaldır</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Etkin</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox zaman zaman araştırmalar yükleyip çalıştırabilir.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Daha fazla bilgi al</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Değişiklikleri uygulamak için uygulama kapanacak</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Tamam</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">İptal</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application">Değişiklikleri uygulamak için uygulamadan çıkılıyor…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Açık sekmeler</string>
@@ -650,6 +675,8 @@
     <string name="tab_tray_menu_item_share">Tüm sekmeleri paylaş</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Son kapatılan sekmeler</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Son kapatılanlar</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Hesap ayarları</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -944,6 +971,11 @@
     <string name="delete_browsing_data_quit_on">Açık</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Kapalı</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Açık</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Kapalı</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1272,7 +1304,7 @@
     <string name="onboarding_privacy_notice_read_button">Gizlilik bildirimimizi okuyun</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Kapat</string>
+    <string name="onboarding_close" tools:ignore="UnusedResources">Kapat</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Gezinmeye başla</string>
@@ -1375,6 +1407,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kripto madencileri</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Parmak izi toplayıcılar</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Ayrıntılar</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Engellenenler</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">İzin verilenler</string>
@@ -1399,7 +1434,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Takip kodu içeren reklamların, videoların ve diğer içeriklerin yüklenmesini engeller. Bazı sitelerin işlevlerini etkileyebilir.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Kalkan mor olduğunda %s bir sitedeki takipçileri engellemiş demektir. Daha fazla bilgi için dokunun.</string>
+    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Kalkan mor olduğunda %s bir sitedeki takipçileri engellemiş demektir. Daha fazla bilgi için dokunun.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Bu sitede korumalar AÇIK</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1481,7 +1516,16 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Asla kaydetme</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Otomatik doldur</string>
+    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Otomatik doldur</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s ile otomatik doldur</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s kullanırken web sitelerinde kullanıcı adı ve parolalar doldurulup kaydedilsin.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Diğer uygulamalarda otomatik doldur</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Cihazınızdaki diğer uygulamalarda kullanıcı adı ve parolalar doldurulsun.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Hesapları eşitle</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1664,7 +1708,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Kullanılacak arama dizgisi</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Sorguyu “%s” ile değiştirin. Örnek:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Sorguyu “%s” ile değiştirin. Örnek:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Daha fazla bilgi al</string>
 
@@ -1801,6 +1845,16 @@
 	<string name="top_sites_rename_dialog_ok">Tamam</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">İptal</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Pasif sekmeler</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Sekmeler burada %s kalacaktır. Bu sürenin sonunda sekmeler otomatik olarak kapatılacaktır.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 gün</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 hafta</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Web siteleri, e-postalar ve mesajlardaki bağlantılar otomatik olarak Firefox’ta açılsın.</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s riêng tư</string>
@@ -118,6 +118,11 @@
     <string name="recent_tabs_header">Quay lại trang trước</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Hiển thị tất cả</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Nội dung khám phá trước đây</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -620,6 +625,25 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Đóng sau một tháng</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Xóa</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Hoạt động</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox có thể cài đặt và chạy các nghiên cứu theo thời gian.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Tìm hiểu thêm</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Ứng dụng sẽ thoát để áp dụng các thay đổi</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Hủy bỏ</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Đang thoát ứng dụng để áp dụng các thay đổi…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Các thẻ đang mở</string>
@@ -647,6 +671,8 @@
     <string name="tab_tray_menu_item_share">Chia sẻ tất cả các thẻ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Các thẻ đã đóng gần đây</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Đã đóng gần đây</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Cài đặt tài khoản</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -941,6 +967,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Tắt</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Bật</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Tắt</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Bộ sưu tập</string>
@@ -1101,7 +1132,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Xóa</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Hủy bỏ</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Hủy bỏ</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Đã vào chế độ toàn màn hình</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1265,7 +1296,7 @@
     <string name="onboarding_privacy_notice_read_button">Đọc thông báo bảo mật của chúng tôi</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Đóng</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Đóng</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Bắt đầu duyệt web</string>
@@ -1368,6 +1399,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Tiền điện tử</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Vân tay</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Chi tiết</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Đã chặn</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Đã cho phép</string>
@@ -1392,7 +1426,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Dừng quảng cáo bên ngoài, video và nội dung khác từ tải có chứa mã theo dõi. Có thể ảnh hưởng đến một số chức năng trang web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Mỗi khi tấm khiên có màu tím, %s đã chặn trình theo dõi trên một trang web. Chạm để biết thêm.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Mỗi khi tấm khiên có màu tím, %s đã chặn trình theo dõi trên một trang web. Chạm để biết thêm.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Bảo vệ đã BẬT cho trang web này</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1473,7 +1507,16 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Không bao giờ lưu</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Tự động điền</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Tự động điền</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Tự động điền trong %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Điền và lưu tên người dùng và mật khẩu trong các trang web khi sử dụng %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Tự động điền vào các ứng dụng khác</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Điền tên người dùng và mật khẩu vào các ứng dụng khác trên thiết bị của bạn.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Đồng bộ hóa thông tin đăng nhập</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1654,7 +1697,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Chuỗi tìm kiếm để sử dụng</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Thay thế chuỗi truy vấn thành “%s”. Ví dụ:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Thay thế chuỗi truy vấn thành “%s”. Ví dụ:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Tìm hiểu thêm</string>
 
@@ -1791,6 +1834,16 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Huỷ bỏ</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Thẻ không hoạt động</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Các thẻ có sẵn ở đây trong %s. Sau thời gian đó, các thẻ sẽ tự động bị đóng.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 ngày</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 tuần</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Đặt các liên kết từ trang web, email và tin nhắn để tự động mở trong Firefox.</string>

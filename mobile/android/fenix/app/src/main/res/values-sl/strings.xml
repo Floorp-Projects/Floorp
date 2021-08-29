@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Zasebni %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -114,6 +114,11 @@
 
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Prikaži vse</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Prejšnja odkritja</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -623,6 +628,26 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Zapri po enem mesecu</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Odstrani</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Dejavna</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox lahko občasno namesti in zažene raziskave.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Več o tem</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Aplikacija se bo zaprla za uveljavitev sprememb</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">V redu</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Prekliči</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Zapiranje aplikacije za uveljavitev sprememb …</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Odprti zavihki</string>
@@ -650,6 +675,8 @@
     <string name="tab_tray_menu_item_share">Deli vse zavihke</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nedavno zaprti zavihki</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Nedavno zaprto</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Nastavitve računa</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -948,6 +975,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Izključeno</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Vključeno</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Izključeno</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Zbirke</string>
@@ -1109,7 +1141,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Izbriši</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Prekliči</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Prekliči</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Vstop v celozaslonski način</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1276,7 +1308,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Preberite naše obvestilo o zasebnosti</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Zapri</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Zapri</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Začnite brskati</string>
@@ -1379,6 +1411,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kriptorudarje</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Sledilce prstnih odtisov</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Podrobnosti</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Zavrnjeno</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Dovoljeno</string>
@@ -1403,7 +1438,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Preprečuje nalaganje zunanjih oglasov, videoposnetkov in druge vsebine, ki vsebuje sledilno kodo. Lahko vpliva na delovanje nekaterih spletnih strani.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Vsakič, ko je ščit obarvan vijolično, %s zavrača sledilce na spletnem mestu. Tapnite za več informacij.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Vsakič, ko je ščit obarvan vijolično, %s zavrača sledilce na spletnem mestu. Tapnite za več informacij.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Zaščite za to spletno mesto so VKLJUČENE</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1488,7 +1523,13 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nikoli ne shranjuj</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Samodejno izpolnjevanje</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Samodejno izpolnjevanje</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Samodejno izpolni v %1$su</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Samodejno izpolni v drugih aplikacijah</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinhronizacija prijav</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1670,7 +1711,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Iskalni niz za uporabo</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Zamenjajte poizvedbo z &quot;%s&quot;. Primer: \nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Zamenjajte poizvedbo z &quot;%s&quot;. Primer: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Več o tem</string>
 
@@ -1811,6 +1852,16 @@
 	<string name="top_sites_rename_dialog_ok">V redu</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Prekliči</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Nedejavni zavihki</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Zavihki so tukaj na voljo %s. Po tem času se samodejno zaprejo.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 dni</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 teden</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Nastavite, naj se povezave s spletnih strani, e-pošte in sporočil samodejno odpirajo v Firefoxu.</string>
