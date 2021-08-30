@@ -21,6 +21,8 @@
 
 #include <stdint.h>
 
+#include "wasm/WasmIntrinsicGenerated.h"
+
 namespace js {
 namespace wasm {
 
@@ -939,17 +941,16 @@ enum class ThreadOp {
 };
 
 enum class IntrinsicOp {
-  // ------------------------------------------------------------------------
-  // These operators are emitted internally when compiling intrinsic modules
-  // and are rejected by wasm validation.  They are prefixed by
-  // IntrinsicPrefix.
+// ------------------------------------------------------------------------
+// These operators are emitted internally when compiling intrinsic modules
+// and are rejected by wasm validation.  They are prefixed by
+// IntrinsicPrefix. See wasm/WasmIntrinsic.yaml for the list.
+#define DECL_INTRINSIC_OP(op, export, sa_name, abitype, entry, idx) \
+  op = idx,  // NOLINT
+  FOR_EACH_INTRINSIC(DECL_INTRINSIC_OP)
+#undef DECL_INTRINSIC_OP
 
-  // i8vecmul(dest: i32, src1: i32, src2: i32, len: i32)
-  //  Performs pairwise multiplication of two i8 vectors of 'len' specified at
-  //  'src1' and 'src2'. Output is written to 'dest'. This is used as a
-  //  basic self-test for intrinsics.
-  I8VecMul = 0x0,
-
+  // Op limit.
   Limit
 };
 
