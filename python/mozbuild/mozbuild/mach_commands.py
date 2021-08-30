@@ -417,7 +417,7 @@ class Warnings(MachCommandBase):
     def database_path(self, command_context):
         return command_context._get_state_filename("warnings.json")
 
-    def database(self, command_context):
+    def get_warnings_database(self, command_context):
         from mozbuild.compilation.warnings import WarningsDatabase
 
         path = self.database_path(command_context)
@@ -448,7 +448,7 @@ class Warnings(MachCommandBase):
         "recent report.",
     )
     def summary(self, command_context, directory=None, report=None):
-        database = self.database(command_context)
+        database = self.get_warnings_database(command_context)
 
         if directory:
             dirpath = self.join_ensure_dir(command_context.topsrcdir, directory)
@@ -489,7 +489,7 @@ class Warnings(MachCommandBase):
         "recent report.",
     )
     def list(self, command_context, directory=None, flags=None, report=None):
-        database = self.database(command_context)
+        database = self.get_warnings_database(command_context)
 
         by_name = sorted(database.warnings)
 
