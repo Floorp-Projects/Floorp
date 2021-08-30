@@ -62,7 +62,7 @@ macro_rules! using_opcode_database {
                 (DynamicImport, dynamic_import, NULL, 1, 1, 1, JOF_BYTE),
                 (ImportMeta, import_meta, NULL, 1, 0, 1, JOF_BYTE),
                 (NewInit, new_init, NULL, 1, 0, 1, JOF_BYTE|JOF_IC),
-                (NewObject, new_object, NULL, 5, 0, 1, JOF_OBJECT|JOF_IC),
+                (NewObject, new_object, NULL, 5, 0, 1, JOF_SHAPE|JOF_IC),
                 (Object, object, NULL, 5, 0, 1, JOF_OBJECT),
                 (ObjWithProto, obj_with_proto, NULL, 1, 1, 1, JOF_BYTE),
                 (InitProp, init_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_IC),
@@ -346,6 +346,9 @@ const JOF_TWO_UINT8: u32 = 23;
 
 /// An embedded ScopeCoordinate immediate that may traverse DebugEnvironmentProxies
 const JOF_DEBUGCOORD: u32 = 24;
+
+/// uint32_t shape index
+const JOF_SHAPE: u32 = 25;
 
 /// mask for above immediate types
 const JOF_TYPEMASK: u32 = 0xFF;
