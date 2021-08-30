@@ -615,20 +615,22 @@ extern "C" fn audiounit_output_callback(
             cubeb_log!("Dropping {} frames in input buffer.", popped_frames);
         }
 
-        let input_frames = if input_frames_needed > buffered_input_frames {
+        let input_frames = if input_frames_needed > buffered_input_frames
+            && (stm.switching_device.load(Ordering::SeqCst)
+                || stm.reinit_pending.load(Ordering::SeqCst)
+                || stm.frames_read.load(Ordering::SeqCst) == 0)
+        {
             // The silent frames will be inserted in `get_linear_data` below.
             let silent_frames_to_push = input_frames_needed - buffered_input_frames;
             cubeb_log!(
-                "({:p}) Missing Frames: {}, will append {} frames of input silence.",
+                "({:p}) Missing Frames: {} will append {} frames of input silence.",
                 stm.core_stream_data.stm_ptr,
                 if stm.frames_read.load(Ordering::SeqCst) == 0 {
-                    "input hasn't started"
+                    "input hasn't started,"
                 } else if stm.switching_device.load(Ordering::SeqCst) {
-                    "device switching"
-                } else if stm.reinit_pending.load(Ordering::SeqCst) {
-                    "reinit pending"
+                    "device switching,"
                 } else {
-                    "not enough buffered frames"
+                    "reinit pending,"
                 },
                 silent_frames_to_push
             );
