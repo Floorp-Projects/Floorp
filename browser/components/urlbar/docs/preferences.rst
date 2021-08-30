@@ -64,26 +64,8 @@ Hidden
 These preferences are normally hidden, and should not be used unless you really
 know what you are doing.
 
-browser.urlbar.speculativeConnect.enabled (boolean, default: true)
-  Speculative connections allow to resolve domains pre-emptively when the user
-  is likely to pick a result from the Address Bar. This allows for faster
-  navigation.
-
 browser.urlbar.accessibility.tabToSearch.announceResults (boolean: default: true)
   Whether we announce to screen readers when tab-to-search results are inserted.
-
-browser.urlbar.quicksuggest.log (boolean, default: false)
-  Whether to show QuickSuggest related logs, by default only logs Warnings.
-
-browser.urlbar.switchTabs.adoptIntoActiveWindow (boolean, default: false)
-  When using switch to tabs, if set to true this will move the tab into the
-  active window, instead of just switching to it.
-
-browser.urlbar.trimURLs (boolean, default: true)
-  Clean-up URLs when showing them in the Address Bar.
-
-browser.urlbar.sponsoredTopSites (boolean, default: false)
-  Whether top sites may include sponsored ones.
 
 browser.urlbar.autoFill (boolean, default: true)
   Autofill is the the feature that automatically completes domains and URLs that
@@ -132,8 +114,9 @@ browser.urlbar.formatting.enabled (boolean, default: true)
   field. This should usually be enabled for security reasons.
 
 browser.urlbar.maxCharsForSearchSuggestions (integer, default: 100)
-  When fetching search suggestion results, we truncate the user's search string
-  to this number of characters.
+  As a user privacy measure, we don't fetch results from remote services for
+  searches that start by pasting a string longer than this. The pref name
+  indicates search suggestions, but this is used for all remote results.
 
 browser.urlbar.maxHistoricalSearchSuggestions (integer, default: 2)
   The maximum number of form history results to include as search history.
@@ -141,8 +124,24 @@ browser.urlbar.maxHistoricalSearchSuggestions (integer, default: 2)
 browser.urlbar.maxRichResults (integer, default: 10)
   The maximum number of results in the urlbar popup.
 
+browser.urlbar.merino.enabled (boolean, default: false)
+  Whether Merino is enabled as a quick suggest source.
+
 browser.urlbar.openintab (boolean, default: false)
   Whether address bar results should be opened in new tabs by default.
+
+browser.urlbar.quicksuggest.enabled (boolean, default: false)
+  Whether the quick suggest feature is enabled, i.e., sponsored and recommended
+  results related to the user's search string.
+
+browser.urlbar.quicksuggest.log (boolean, default: false)
+  Whether to show QuickSuggest related logs, by default only logs Warnings.
+
+browser.urlbar.quicksuggest.remoteSettings.enabled (boolean, default: true)
+  Whether remote settings is enabled as a quick suggest source.
+
+browser.urlbar.quicksuggest.shouldShowOnboardingDialog (boolean, default: true)
+  Whether to show the quick suggest onboarding dialog.
 
 browser.urlbar.richSuggestions.tail (boolean, default: true)
   If true, we show tail search suggestions when available.
@@ -151,6 +150,21 @@ browser.urlbar.searchTips.test.ignoreShowLimits (boolean, default: false)
   Disables checks that prevent search tips being shown, thus showing them every
   time the newtab page or the default search engine homepage is opened.
   This is useful for testing purposes.
+
+browser.urlbar.speculativeConnect.enabled (boolean, default: true)
+  Speculative connections allow to resolve domains pre-emptively when the user
+  is likely to pick a result from the Address Bar. This allows for faster
+  navigation.
+
+browser.urlbar.sponsoredTopSites (boolean, default: false)
+  Whether top sites may include sponsored ones.
+
+browser.urlbar.switchTabs.adoptIntoActiveWindow (boolean, default: false)
+  When using switch to tabs, if set to true this will move the tab into the
+  active window, instead of just switching to it.
+
+browser.urlbar.trimURLs (boolean, default: true)
+  Clean-up URLs when showing them in the Address Bar.
 
 keyword.enabled (boolean, default: true)
   By default, when the search string is not recognized as a potential url,
