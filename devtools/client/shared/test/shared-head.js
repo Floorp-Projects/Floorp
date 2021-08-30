@@ -58,6 +58,12 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
+loader.lazyRequireGetter(
+  this,
+  "ResponsiveUIManager",
+  "devtools/client/responsive/manager"
+);
+
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
 const URL_ROOT = CHROME_URL_ROOT.replace(
@@ -470,50 +476,15 @@ var refreshTab = async function(tab = gBrowser.selectedTab) {
  * @return a promise that resolves when the page has fully loaded.
  */
 async function navigateTo(uri, { isErrorPage = false } = {}) {
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
-  const target = toolbox.target;
+  const browser = gBrowser.selectedBrowser;
 
-  // If we're switching origins, we need to wait for the 'switched-target'
-  // event to make sure everything is ready.
-  // Navigating from/to pages loaded in the parent process, like about:robots,
-  // also spawn new targets.
-  // (If target switching is disabled, the toolbox will reboot)
-  const onTargetSwitched = toolbox.commands.targetCommand.once(
-    "switched-target"
-  );
-  // Otherwise, if we don't switch target, it is safe to wait for the dom-complete
-  // DOCUMENT_EVENT resource (or dom-loading if we're navigating to an error page, where
-  // dom-complete won't be emitted).
-  const documentEventName = isErrorPage ? "dom-loading" : "dom-complete";
-  const {
-    onResource: onTopLevelDomEvent,
-  } = await toolbox.commands.resourceCommand.waitForNextResource(
-    toolbox.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.targetFront.isTopLevel && resource.name === documentEventName,
-    }
-  );
-
-  // If the current top-level target follows the window global lifecycle, a
-  // target switch will occur regardless of process changes.
-  const targetFollowsWindowLifecycle =
-    target.targetForm.followWindowGlobalLifeCycle;
-
-  // Register panel-specific listeners, which would be useful to wait
-  // for panel-specific events.
-  const onPanelReloaded = waitForPanelReload(
-    toolbox.currentToolId,
-    toolbox.target,
-    toolbox.getCurrentPanel()
-  );
+  const waitForDevToolsReload = await watchForDevToolsReload(browser, {
+    isErrorPage,
+  });
 
   uri = uri.replaceAll("\n", "");
   info(`Navigating to "${uri}"`);
-  const browser = gBrowser.selectedBrowser;
-  const currentPID = browser.browsingContext.currentWindowGlobal.osPid;
-  const currentBrowsingContextID = browser.browsingContext.id;
+
   const onBrowserLoaded = BrowserTestUtils.browserLoaded(
     browser,
     // includeSubFrames
@@ -538,37 +509,252 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   await onBrowserLoaded;
   info(`→ page loaded`);
 
-  // Compare the PIDs (and not the toolbox's targets) as PIDs are updated also immediately,
-  // while target may be updated slightly later.
-  const switchedToAnotherProcess =
-    currentPID !== browser.browsingContext.currentWindowGlobal.osPid;
-  const switchedToAnotherBrowsingContext =
-    currentBrowsingContextID !== browser.browsingContext.id;
+  await waitForDevToolsReload();
+}
 
-  if (onPanelReloaded) {
-    info(`Waiting for ${toolbox.currentToolId} to be reloaded…`);
-    await onPanelReloaded();
-    info(`→ panel reloaded`);
+/**
+ * This method should be used to watch for completion of any browser navigation
+ * performed with a DevTools UI.
+ *
+ * It should watch for:
+ * - Toolbox reload
+ * - Toolbox commands reload
+ * - RDM reload
+ * - RDM commands reload
+ *
+ * And it should work both for target switching or old-style navigations.
+ *
+ * This method, similarly to all the other watch* navigation methods in this file,
+ * is async but returns another method which should be called after the navigation
+ * is done. Browser navigation might be monitored differently depending on the
+ * situation, so it's up to the caller to handle it as needed.
+ *
+ * Typically, this would be used as follows:
+ * ```
+ *   async function someNavigationHelper(browser) {
+ *     const waitForDevToolsFn = await watchForDevToolsReload(browser);
+ *
+ *     // This step should wait for the load to be completed from the browser's
+ *     // point of view, so that waitForDevToolsFn can compare pIds, browsing
+ *     // contexts etc... and check if we should expect a target switch
+ *     await performBrowserNavigation(browser);
+ *
+ *     await waitForDevToolsFn();
+ *   }
+ * ```
+ */
+async function watchForDevToolsReload(browser, { isErrorPage = false } = {}) {
+  const waitForToolboxReload = await watchForToolboxReload(browser, {
+    isErrorPage,
+  });
+  const waitForResponsiveReload = await watchForResponsiveReload(browser, {
+    isErrorPage,
+  });
+
+  return async function() {
+    info("Wait for the toolbox to reload");
+    await waitForToolboxReload();
+
+    info("Wait for Responsive UI to reload");
+    await waitForResponsiveReload();
+  };
+}
+
+/**
+ * Start watching for the toolbox reload to be completed:
+ * - watch for the toolbox's commands to be fully reloaded
+ * - watch for the toolbox's current panel to be reloaded
+ */
+async function watchForToolboxReload(browser, { isErrorPage } = {}) {
+  const tab = gBrowser.getTabForBrowser(browser);
+  const toolbox = await gDevTools.getToolboxForTab(tab);
+  if (!toolbox) {
+    // No toolbox to wait for
+    return function() {};
+  }
+  const currentToolId = toolbox.currentToolId;
+  const panel = toolbox.getCurrentPanel();
+
+  const waitForCurrentPanelReload = watchForPanelReload(currentToolId, panel);
+  const waitForToolboxCommandsReload = await watchForCommandsReload(
+    toolbox.commands,
+    { isErrorPage }
+  );
+  const checkTargetSwitching = await watchForTargetSwitching(
+    toolbox.commands,
+    browser
+  );
+
+  return async function() {
+    const isTargetSwitching = checkTargetSwitching();
+
+    info(`Waiting for toolbox commands to be reloaded…`);
+    await waitForToolboxCommandsReload(isTargetSwitching);
+
+    // TODO: We should wait for all loaded panels to reload here, because some
+    // of them might still perform background updates.
+    if (waitForCurrentPanelReload) {
+      info(`Waiting for ${toolbox.currentToolId} to be reloaded…`);
+      await waitForCurrentPanelReload();
+      info(`→ panel reloaded`);
+    }
+  };
+}
+
+/**
+ * Start watching for Responsive UI (RDM) reload to be completed:
+ * - watch for the Responsive UI's commands to be fully reloaded
+ * - watch for the Responsive UI's target switch to be done
+ */
+async function watchForResponsiveReload(browser, { isErrorPage } = {}) {
+  const tab = gBrowser.getTabForBrowser(browser);
+  const ui = ResponsiveUIManager.getResponsiveUIForTab(tab);
+
+  if (!ui) {
+    // No responsive UI to wait for
+    return function() {};
   }
 
-  // If:
-  // - the tab navigated to another process, or,
-  // - the tab navigated to another browsing context, or,
-  // - if the old target follows the window lifecycle
-  // then, expect a target switching.
-  if (
-    switchedToAnotherProcess ||
-    targetFollowsWindowLifecycle ||
-    switchedToAnotherBrowsingContext
-  ) {
-    info(`Waiting for target switch…`);
-    await onTargetSwitched;
-    info(`→ switched-target emitted`);
-  } else {
-    info(`Waiting for '${documentEventName}' resource…`);
-    await onTopLevelDomEvent;
-    info(`→ 'dom-complete' resource emitted`);
+  const onResponsiveTargetSwitch = ui.once("responsive-ui-target-switch-done");
+  const waitForResponsiveCommandsReload = await watchForCommandsReload(
+    ui.commands,
+    { isErrorPage }
+  );
+  const checkTargetSwitching = await watchForTargetSwitching(
+    ui.commands,
+    browser
+  );
+
+  return async function() {
+    const isTargetSwitching = checkTargetSwitching();
+
+    info(`Waiting for responsive ui commands to be reloaded…`);
+    await waitForResponsiveCommandsReload(isTargetSwitching);
+
+    if (isTargetSwitching) {
+      await onResponsiveTargetSwitch;
+    }
+  };
+}
+
+function watchForPanelReload(toolId, panel) {
+  if (toolId == "inspector") {
+    const markuploaded = panel.once("markuploaded");
+    const onNewRoot = panel.once("new-root");
+    const onUpdated = panel.once("inspector-updated");
+    const onReloaded = panel.once("reloaded");
+
+    return async function() {
+      info("Waiting for markup view to load after navigation.");
+      await markuploaded;
+
+      info("Waiting for new root.");
+      await onNewRoot;
+
+      info("Waiting for inspector to update after new-root event.");
+      await onUpdated;
+
+      info("Waiting for inspector updates after page reload");
+      await onReloaded;
+    };
+  } else if (toolId == "netmonitor") {
+    const onReloaded = panel.once("reloaded");
+    return async function() {
+      info("Waiting for netmonitor updates after page reload");
+      await onReloaded;
+    };
+  } else if (toolId == "accessibility") {
+    const onReloaded = panel.once("reloaded");
+    return async function() {
+      info("Waiting for accessibility updates after page reload");
+      await onReloaded;
+    };
   }
+  return null;
+}
+
+/**
+ * Watch for a Commands instance to be reloaded after a navigation.
+ *
+ * As for other navigation watch* methods, this should be called before the
+ * navigation starts, and the function it returns should be called after the
+ * navigation is done from a Browser point of view.
+ *
+ * !!! The wait function expects a `isTargetSwitching` argument to be provided,
+ * which needs to be monitored using watchForTargetSwitching !!!
+ */
+async function watchForCommandsReload(commands, { isErrorPage = false } = {}) {
+  // If we're switching origins, we need to wait for the 'switched-target'
+  // event to make sure everything is ready.
+  // Navigating from/to pages loaded in the parent process, like about:robots,
+  // also spawn new targets.
+  // (If target switching is disabled, the toolbox will reboot)
+  const onTargetSwitched = commands.targetCommand.once("switched-target");
+
+  // Otherwise, if we don't switch target, it is safe to wait for the dom-complete
+  // DOCUMENT_EVENT resource (or dom-loading if we're navigating to an error page, where
+  // dom-complete won't be emitted).
+  const documentEventName = isErrorPage ? "dom-loading" : "dom-complete";
+  const {
+    onResource: onTopLevelDomEvent,
+  } = await commands.resourceCommand.waitForNextResource(
+    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate: resource =>
+        resource.targetFront.isTopLevel && resource.name === documentEventName,
+    }
+  );
+
+  return async function(isTargetSwitching) {
+    if (typeof isTargetSwitching === "undefined") {
+      throw new Error("isTargetSwitching was not provided to the wait method");
+    }
+
+    if (isTargetSwitching) {
+      info(`Waiting for target switch…`);
+      await onTargetSwitched;
+      info(`→ switched-target emitted`);
+    } else {
+      info(`Waiting for '${documentEventName}' resource…`);
+      await onTopLevelDomEvent;
+      info(`→ 'dom-complete' resource emitted`);
+    }
+
+    return isTargetSwitching;
+  };
+}
+
+/**
+ * Watch if an upcoming navigation will trigger a target switching, for the
+ * provided Commands instance and the provided Browser.
+ *
+ * As for other navigation watch* methods, this should be called before the
+ * navigation starts, and the function it returns should be called after the
+ * navigation is done from a Browser point of view.
+ */
+async function watchForTargetSwitching(commands, browser) {
+  browser = browser || gBrowser.selectedBrowser;
+  const currentPID = browser.browsingContext.currentWindowGlobal.osPid;
+  const currentBrowsingContextID = browser.browsingContext.id;
+
+  // If the current top-level target follows the window global lifecycle, a
+  // target switch will occur regardless of process changes.
+  const targetFollowsWindowLifecycle =
+    commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle;
+
+  return function() {
+    // Compare the PIDs (and not the toolbox's targets) as PIDs are updated also immediately,
+    // while target may be updated slightly later.
+    const switchedProcess =
+      currentPID !== browser.browsingContext.currentWindowGlobal.osPid;
+    const switchedBrowsingContext =
+      currentBrowsingContextID !== browser.browsingContext.id;
+
+    return (
+      targetFollowsWindowLifecycle || switchedProcess || switchedBrowsingContext
+    );
+  };
 }
 
 /**
@@ -593,48 +779,6 @@ async function createAndAttachTargetForTab(tab) {
   const target = commands.targetCommand.targetFront;
   await target.attach();
   return target;
-}
-
-/**
- * Return a function, specific for each panel, in order
- * to wait for any update which may happen when reloading a page.
- */
-function waitForPanelReload(currentToolId, target, panel) {
-  if (currentToolId == "inspector") {
-    const inspector = panel;
-    const markuploaded = inspector.once("markuploaded");
-    const onNewRoot = inspector.once("new-root");
-    const onUpdated = inspector.once("inspector-updated");
-    const onReloaded = inspector.once("reloaded");
-
-    return async function() {
-      info("Waiting for markup view to load after navigation.");
-      await markuploaded;
-
-      info("Waiting for new root.");
-      await onNewRoot;
-
-      info("Waiting for inspector to update after new-root event.");
-      await onUpdated;
-
-      info("Waiting for inspector updates after page reload");
-      await onReloaded;
-    };
-  } else if (currentToolId == "netmonitor") {
-    const monitor = panel;
-    const onReloaded = monitor.once("reloaded");
-    return async function() {
-      info("Waiting for netmonitor updates after page reload");
-      await onReloaded;
-    };
-  } else if (currentToolId == "accessibility") {
-    const onReloaded = panel.once("reloaded");
-    return async function() {
-      info("Waiting for accessibility updates after page reload");
-      await onReloaded;
-    };
-  }
-  return null;
 }
 
 function isFissionEnabled() {
