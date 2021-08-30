@@ -486,16 +486,14 @@ abstract class BaseBrowserFragment :
                 val dynamicDownloadDialog = DynamicDownloadDialog(
                     context = context,
                     downloadState = downloadState,
-                    metrics = requireComponents.analytics.metrics,
                     didFail = downloadJobStatus == DownloadState.Status.FAILED,
                     tryAgain = downloadFeature::tryAgain,
                     onCannotOpenFile = {
                         showCannotOpenFileError(binding.browserLayout, context, it)
                     },
                     binding = binding.viewDynamicDownloadDialog,
-                    toolbarHeight = toolbarHeight,
-                    onDismiss = { sharedViewModel.downloadDialogState.remove(downloadState.sessionId) }
-                )
+                    toolbarHeight = toolbarHeight
+                ) { sharedViewModel.downloadDialogState.remove(downloadState.sessionId) }
 
                 dynamicDownloadDialog.show()
                 browserToolbarView.expand()
@@ -887,7 +885,6 @@ abstract class BaseBrowserFragment :
         DynamicDownloadDialog(
             context = context,
             downloadState = savedDownloadState.first,
-            metrics = requireComponents.analytics.metrics,
             didFail = savedDownloadState.second,
             tryAgain = onTryAgain,
             onCannotOpenFile = {

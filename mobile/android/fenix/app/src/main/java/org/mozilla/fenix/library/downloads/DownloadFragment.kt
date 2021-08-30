@@ -32,8 +32,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.FragmentDownloadsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.filterNotExistsOnDisk
@@ -48,7 +46,6 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     private lateinit var downloadStore: DownloadFragmentStore
     private lateinit var downloadView: DownloadView
     private lateinit var downloadInteractor: DownloadInteractor
-    private lateinit var metrics: MetricController
     private var undoScope: CoroutineScope? = null
     private var pendingDownloadDeletionJob: (suspend () -> Unit)? = null
     private lateinit var downloadsUseCases: DownloadsUseCases
@@ -128,13 +125,9 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-
-        metrics = requireComponents.analytics.metrics
-        metrics.track(Event.DownloadsScreenOpened)
     }
 
     private fun displayDeleteAll() {
-        metrics.track(Event.DownloadsItemDeleted)
         activity?.let { activity ->
             AlertDialog.Builder(activity).apply {
                 setMessage(R.string.download_delete_all_dialog)
@@ -166,8 +159,6 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
      * (itemView.overflow_menu) this [items].size() will be 1.
      */
     private fun deleteDownloadItems(items: Set<DownloadItem>) {
-        metrics.track(Event.DownloadsItemDeleted)
-
         updatePendingDownloadToDelete(items)
         undoScope = CoroutineScope(IO)
         undoScope?.allowUndo(
@@ -276,8 +267,6 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
                 )
             )
         }
-
-        metrics.track(Event.DownloadsItemOpened)
     }
 
     /**
