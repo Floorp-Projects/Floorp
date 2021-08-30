@@ -49,7 +49,27 @@
         app:iconSpaceReserved="false">
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_enable_top_frecent_sites"
-            android:title="@string/top_sites_toggle_top_frecent_sites" />
+            android:title="@string/top_sites_toggle_top_frecent_sites_2" />
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_recent_tabs"
+            android:title="@string/customize_toggle_jump_back_in"
+            app:isPreferenceVisible="false" />
+
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_recent_bookmarks"
+            android:title="@string/customize_toggle_recently_saved_bookmarks"
+            app:isPreferenceVisible="false" />
+
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_history_metadata_feature"
+            android:title="@string/customize_toggle_recently_visited"
+            app:isPreferenceVisible="false" />
+
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_pocket_homescreen_recommendations"
+            android:title="@string/customize_toggle_pocket"
+            app:isPreferenceVisible="false" />
+
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

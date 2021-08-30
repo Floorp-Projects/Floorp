@@ -257,7 +257,7 @@ class HomeFragment : Fragment() {
             view = binding.root
         )
 
-        if (FeatureFlags.showRecentTabsFeature) {
+        if (requireContext().settings().showRecentTabsFeature) {
             recentTabsListFeature.set(
                 feature = RecentTabsListFeature(
                     browserStore = components.core.store,
@@ -268,7 +268,7 @@ class HomeFragment : Fragment() {
             )
         }
 
-        if (FeatureFlags.recentBookmarksFeature) {
+        if (requireContext().settings().showRecentBookmarksFeature) {
             recentBookmarksFeature.set(
                 feature = RecentBookmarksFeature(
                     homeStore = homeFragmentStore,
@@ -852,6 +852,13 @@ class HomeFragment : Fragment() {
                             HomeFragmentDirections.actionGlobalSettingsFragment()
                         )
                         requireComponents.analytics.metrics.track(Event.HomeMenuSettingsItemClicked)
+                    }
+                    HomeMenu.Item.CustomizeHome -> {
+                        hideOnboardingIfNeeded()
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalCustomizationFragment()
+                        )
                     }
                     is HomeMenu.Item.SyncAccount -> {
                         hideOnboardingIfNeeded()

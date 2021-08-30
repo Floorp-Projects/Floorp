@@ -1108,6 +1108,26 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the recent tabs functionality should be visible.
+     * Returns true if the [FeatureFlags.showRecentTabsFeature] and [R.string.pref_key_recent_tabs] are true.
+     */
+    var showRecentTabsFeature by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_recent_tabs),
+        default = FeatureFlags.showRecentTabsFeature,
+        featureFlag = FeatureFlags.showRecentTabsFeature
+    )
+
+    /**
+     * Indicates if the recent saved bookmarks functionality should be visible.
+     * Returns true if the [FeatureFlags.showRecentTabsFeature] and [R.string.pref_key_recent_bookmarks] are true.
+     */
+    var showRecentBookmarksFeature by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_recent_bookmarks),
+        default = FeatureFlags.recentBookmarksFeature,
+        featureFlag = FeatureFlags.recentBookmarksFeature
+    )
+
+    /**
      * Storing desktop item checkbox value in the home screen menu.
      * If set to true, next opened tab from home screen will be opened in desktop mode.
      */

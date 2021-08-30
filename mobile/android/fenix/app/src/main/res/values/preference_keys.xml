@@ -147,6 +147,8 @@
     <string name="pref_key_dynamic_toolbar" translatable="false">pref_key_dynamic_toolbar</string>
     <string name="pref_key_swipe_toolbar_switch_tabs" translatable="false">pref_key_swipe_toolbar_switch_tabs</string>
     <string name="pref_key_swipe_toolbar_show_tabs" translatable="false">pref_key_swipe_toolbar_show_tabs</string>
+    <string name="pref_key_recent_tabs" translatable="false">pref_key_recent_tabs</string>
+    <string name="pref_key_recent_bookmarks" translatable="false">pref_key_recent_bookmarks</string>
 
     <!-- Tracking Protection Settings -->
     <string name="pref_key_etp_learn_more" translatable="false">pref_key_etp_learn_more</string>

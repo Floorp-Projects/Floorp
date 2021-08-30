@@ -58,6 +58,9 @@
         android:id="@+id/action_global_settingsFragment"
         app:destination="@id/settingsFragment" />
     <action
+        android:id="@+id/action_global_customizationFragment"
+        app:destination="@id/customizationFragment" />
+    <action
         android:id="@+id/action_global_privateBrowsingFragment"
         app:destination="@id/privateBrowsingFragment" />
     <action
@@ -199,6 +202,9 @@
         <action
             android:id="@+id/action_browserFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_customFragment"
+            app:destination="@id/customizationFragment" />
         <action
             android:id="@+id/action_browserFragment_to_createShortcutFragment"
             app:destination="@id/createShortcutFragment" />

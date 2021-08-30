@@ -338,6 +338,18 @@ class DefaultBrowserToolbarMenuControllerTest {
     }
 
     @Test
+    fun `WHEN CustomizeHome menu item is pressed THEN menu item is handled`() = runBlockingTest {
+        val item = ToolbarMenu.Item.CustomizeHome
+
+        val controller = createController(scope = this, store = browserStore)
+        controller.handleToolbarItemInteraction(item)
+
+        val directions = BrowserFragmentDirections.actionBrowserFragmentToCustomFragment()
+
+        verify { navController.navigate(directions, null) }
+    }
+
+    @Test
     fun `WHEN bookmark menu item is pressed THEN navigate to bookmarks page`() = runBlockingTest {
         val item = ToolbarMenu.Item.Bookmarks
 

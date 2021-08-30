@@ -34,6 +34,7 @@ import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.experiments.ExperimentBranch
@@ -308,6 +309,14 @@ open class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.Settings)
     }
 
+    val customizeHomeItem = BrowserMenuImageText(
+        label = context.getString(R.string.browser_menu_customize_home),
+        imageResource = R.drawable.ic_customize,
+        iconTintColorResource = primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.CustomizeHome)
+    }
+
     val bookmarksItem = BrowserMenuImageTextCheckboxButton(
         imageResource = R.drawable.ic_bookmarks_menu,
         iconTintColorResource = primaryTextColor(),
@@ -372,6 +381,7 @@ open class DefaultToolbarMenu(
                 addToTopSitesItem,
                 saveToCollectionItem,
                 BrowserMenuDivider(),
+                if (FeatureFlags.customizeHome) customizeHomeItem else null,
                 settingsItem,
                 if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
                 if (shouldUseBottomToolbar) BrowserMenuDivider() else null,

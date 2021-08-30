@@ -144,6 +144,30 @@ class CustomizationFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().showTopFrecentSites
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_recent_tabs).apply {
+            isVisible = FeatureFlags.showRecentTabsFeature
+            isChecked = context.settings().showRecentTabsFeature
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_recent_bookmarks).apply {
+            isVisible = FeatureFlags.recentBookmarksFeature
+            isChecked = context.settings().showRecentBookmarksFeature
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_pocket_homescreen_recommendations).apply {
+            isVisible = false
+            isChecked = context.settings().pocketRecommendations
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_history_metadata_feature).apply {
+            isVisible = FeatureFlags.historyMetadataUIFeature
+            isChecked = context.settings().historyMetadataUIFeature
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     private fun setupGesturesCategory() {

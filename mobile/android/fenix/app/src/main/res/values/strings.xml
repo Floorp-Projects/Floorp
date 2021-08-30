@@ -194,7 +194,8 @@
     <string name="browser_menu_add">Add</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Edit</string>
-
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Customize home</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Home screen</string>
@@ -381,6 +382,16 @@
     <string name="customize_addon_collection_user_hint">Collection owner (User ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Add-on collection modified. Quitting the application to apply changes…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Jump back in</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_saved_bookmarks">Recently saved</string>
+    <!-- Title for the customize home screen section with recently visited. -->
+    <string name="customize_toggle_recently_visited">Recently visited</string>
+    <!-- Title for the customize home screen section with pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1810,8 +1821,10 @@
     <string name="top_sites_max_limit_content_2">To add a new top site, remove one. Touch and hold the site and select remove.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, Got It</string>
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Show most visited top sites</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Show most visited sites</string>
+    <string name="top_sites_toggle_top_frecent_sites" moz:removedIn="93" tools:ignore="UnusedResources">Show most visited sites</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Name</string>
 	<!-- Hint for renaming title of a top site -->

@@ -58,4 +58,9 @@ object FeatureFlags {
      * Enables showing the home screen behind the search dialog
      */
     val showHomeBehindSearch = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables customizing the home screen
+     */
+    val customizeHome = Config.channel.isNightlyOrDebug
 }
