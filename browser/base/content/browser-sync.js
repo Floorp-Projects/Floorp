@@ -197,13 +197,16 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     }
   }
 
-  _appendMessageLabel(messageAttr, appendTo = null) {
+  _createNoSyncedTabsElement(messageAttr, appendTo = null) {
     if (!appendTo) {
       appendTo = this.tabsList;
     }
-    let message = this.tabsList.getAttribute(messageAttr);
+
     let messageLabel = document.createXULElement("label");
-    messageLabel.textContent = message;
+    document.l10n.setAttributes(
+      messageLabel,
+      this.tabsList.getAttribute(messageAttr)
+    );
     appendTo.appendChild(messageLabel);
     return messageLabel;
   }
@@ -229,7 +232,10 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     container.appendChild(clientItem);
 
     if (!client.tabs.length) {
-      let label = this._appendMessageLabel("notabsforclientlabel", container);
+      let label = this._createNoSyncedTabsElement(
+        "notabsforclientlabel",
+        container
+      );
       label.setAttribute("class", "PanelUI-remotetabs-notabsforclient-label");
     } else {
       // If this page will display all tabs, show no additional buttons.
@@ -294,8 +300,6 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
   }
 
   _createShowMoreSyncedTabsElement(clientId) {
-    let labelAttr = "showMoreLabel";
-    let tooltipAttr = "showMoreTooltipText";
     let showCount = Infinity;
 
     let showMoreItem = document.createXULElement("toolbarbutton");
@@ -305,12 +309,8 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       "subviewbutton-nav",
       "subviewbutton-nav-down"
     );
-    let label = gSync.fluentStrings.formatValueSync(
-      this.tabsList.getAttribute(labelAttr)
-    );
-    showMoreItem.setAttribute("label", label);
-    let tooltipText = this.tabsList.getAttribute(tooltipAttr);
-    showMoreItem.setAttribute("tooltiptext", tooltipText);
+    document.l10n.setAttributes(showMoreItem, "appmenu-remote-tabs-showmore");
+
     showMoreItem.addEventListener("click", e => {
       e.preventDefault();
       e.stopPropagation();
