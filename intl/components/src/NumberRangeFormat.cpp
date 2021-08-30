@@ -5,7 +5,8 @@
 #include "mozilla/intl/NumberRangeFormat.h"
 
 #include "mozilla/intl/NumberFormat.h"
-#include "NumberFormatFields.h"
+#include "mozilla/intl/NumberFormatFields.h"
+#include "NumberFormatFieldsUtil.h"
 #include "NumberFormatterSkeleton.h"
 #include "ScopedICUObject.h"
 
