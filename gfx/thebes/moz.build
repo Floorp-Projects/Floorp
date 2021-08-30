@@ -112,7 +112,6 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     EXPORTS += [
         "gfxFT2FontBase.h",
-        "gfxGdkNativeRenderer.h",
         "gfxPlatformGtk.h",
     ]
     EXPORTS.mozilla.gfx += [
@@ -123,7 +122,6 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
         "gfxFcPlatformFontList.cpp",
         "gfxFT2FontBase.cpp",
         "gfxFT2Utils.cpp",
-        "gfxGdkNativeRenderer.cpp",
         "gfxPlatformGtk.cpp",
         "PrintTargetPDF.cpp",
         "PrintTargetPS.cpp",
@@ -131,14 +129,12 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
 
     if CONFIG["MOZ_X11"]:
         EXPORTS += [
-            "gfxXlibNativeRenderer.h",
             "gfxXlibSurface.h",
         ]
         EXPORTS.mozilla.gfx += [
             "XlibDisplay.h",
         ]
         SOURCES += [
-            "gfxXlibNativeRenderer.cpp",
             "gfxXlibSurface.cpp",
             "XlibDisplay.cpp",
         ]
