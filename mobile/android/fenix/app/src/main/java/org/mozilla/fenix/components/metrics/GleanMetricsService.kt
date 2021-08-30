@@ -8,7 +8,6 @@ import android.content.Context
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.GleanMetrics.AboutPage
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.AndroidKeystoreExperiment
@@ -533,12 +532,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TopSiteSwipeCarousel -> EventWrapper(
             { TopSites.swipeCarousel.record(it) },
             { TopSites.swipeCarouselKeys.valueOf(it) }
-        )
-        is Event.SupportTapped -> EventWrapper<NoExtraKeys>(
-            { AboutPage.supportTapped.record(it) }
-        )
-        is Event.PrivacyNoticeTapped -> EventWrapper<NoExtraKeys>(
-            { AboutPage.privacyNoticeTapped.record(it) }
         )
         is Event.PocketTopSiteClicked -> EventWrapper<NoExtraKeys>(
             { Pocket.pocketTopSiteClicked.record(it) }

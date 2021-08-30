@@ -198,13 +198,7 @@ class AboutFragment : Fragment(), AboutPageListener {
                         WhatsNew.userViewedWhatsNew(requireContext())
                         requireComponents.analytics.metrics.track(Event.WhatsNewTapped)
                     }
-                    SUPPORT -> {
-                        requireComponents.analytics.metrics.track(Event.SupportTapped)
-                    }
-                    PRIVACY_NOTICE -> {
-                        requireComponents.analytics.metrics.track(Event.PrivacyNoticeTapped)
-                    }
-                    LICENSING_INFO, RIGHTS -> {} // no telemetry needed
+                    SUPPORT, PRIVACY_NOTICE, LICENSING_INFO, RIGHTS -> {} // no telemetry needed
                 }
 
                 openLinkInNormalTab(item.url)
