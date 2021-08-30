@@ -437,12 +437,35 @@ this.FormAutofillUtils = {
     return doc.querySelectorAll("input, select");
   },
 
+  /**
+   *  Determines if an element is visually hidden or not.
+   *
+   * NOTE: this does not encompass every possible way of hiding an element.
+   * Instead, we check some of the more common methods of hiding for performance reasons.
+   * See Bug 1727832 for follow up.
+   * @param {HTMLElement} element
+   * @returns {boolean}
+   */
+  isFieldVisible(element) {
+    if (element.hidden) {
+      return false;
+    }
+    if (element.style.display == "none") {
+      return false;
+    }
+    return true;
+  },
+
   ALLOWED_TYPES: ["text", "email", "tel", "number", "month"],
   isFieldEligibleForAutofill(element) {
     let tagName = element.tagName;
     if (tagName == "INPUT") {
       // `element.type` can be recognized as `text`, if it's missing or invalid.
       if (!this.ALLOWED_TYPES.includes(element.type)) {
+        return false;
+      }
+      // If the field is visually invisible, we do not want to autofill into it.
+      if (!this.isFieldVisible(element)) {
         return false;
       }
     } else if (tagName != "SELECT") {
