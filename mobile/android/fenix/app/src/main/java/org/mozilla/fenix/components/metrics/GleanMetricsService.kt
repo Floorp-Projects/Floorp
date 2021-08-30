@@ -23,7 +23,6 @@ import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.CustomTab
-import org.mozilla.fenix.GleanMetrics.DownloadsMisc
 import org.mozilla.fenix.GleanMetrics.DownloadsManagement
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
@@ -436,9 +435,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.MediaPictureInPictureState -> EventWrapper<NoExtraKeys>(
             { MediaState.pictureInPicture.record(it) }
-        )
-        is Event.DownloadAdded -> EventWrapper<NoExtraKeys>(
-            { DownloadsMisc.downloadAdded.record(it) }
         )
         is Event.DownloadsScreenOpened -> EventWrapper<NoExtraKeys>(
             { DownloadsManagement.downloadsScreenOpened.record(it) }

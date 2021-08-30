@@ -115,7 +115,6 @@ sealed class Event {
     object MediaStopState : Event()
     object MediaFullscreenState : Event()
     object MediaPictureInPictureState : Event()
-    object DownloadAdded : Event()
     object DownloadsScreenOpened : Event()
     object DownloadsItemOpened : Event()
     object DownloadsItemDeleted : Event()

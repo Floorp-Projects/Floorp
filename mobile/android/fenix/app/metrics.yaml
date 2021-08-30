@@ -3659,21 +3659,6 @@ logins:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
-downloads_misc:
-  download_added:
-    type: event
-    description:
-      A counter for how many times something is downloaded in the app.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/11578
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/16730
-      - https://github.com/mozilla-mobile/fenix/pull/18143
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-07-01"
-
 downloads_management:
   downloads_screen_opened:
     type: event

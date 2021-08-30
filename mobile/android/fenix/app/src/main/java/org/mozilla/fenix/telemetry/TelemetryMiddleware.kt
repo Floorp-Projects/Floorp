@@ -59,9 +59,7 @@ class TelemetryMiddleware(
                     }
                 }
             }
-            is DownloadAction.AddDownloadAction -> {
-                metrics.track(Event.DownloadAdded)
-            }
+            is DownloadAction.AddDownloadAction -> { /* NOOP */ }
             is EngineAction.KillEngineSessionAction -> {
                 val tab = context.state.findTabOrCustomTab(action.tabId)
                 onEngineSessionKilled(context.state, tab)

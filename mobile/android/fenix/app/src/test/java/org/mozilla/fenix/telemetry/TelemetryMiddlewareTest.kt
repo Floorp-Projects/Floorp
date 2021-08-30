@@ -11,7 +11,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -202,13 +201,6 @@ class TelemetryMiddlewareTest {
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
         verify(exactly = 0) { metrics.track(Event.UriOpened) }
         verify(exactly = 1) { metrics.track(Event.NormalAndPrivateUriOpened) }
-    }
-
-    @Test
-    fun `WHEN a download is added THEN the downloads count is updated`() {
-        store.dispatch(DownloadAction.AddDownloadAction(mock())).joinBlocking()
-
-        verify { metrics.track(Event.DownloadAdded) }
     }
 
     @Test
