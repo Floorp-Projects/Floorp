@@ -57,7 +57,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   // nsIForm
   NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const override;
-  NS_IMETHOD_(uint32_t) GetElementCount() const override;
   NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl) override;
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const override;
 
