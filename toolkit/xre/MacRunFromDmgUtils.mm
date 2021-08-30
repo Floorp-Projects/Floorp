@@ -95,6 +95,42 @@ static bool AskUserIfWeShouldInstall() {
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
+static void ShowInstallFailedDialog() {
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  // Try to get the localized strings:
+  nsTArray<nsCString> resIds = {
+      "branding/brand.ftl"_ns,
+      "toolkit/global/run-from-dmg.ftl"_ns,
+  };
+  RefPtr<intl::Localization> l10n = intl::Localization::Create(resIds, true);
+
+  ErrorResult rv;
+  nsAutoCString mozTitle, mozMessage;
+  l10n->FormatValueSync("install-failed-title"_ns, {}, mozTitle, rv);
+  if (rv.Failed()) {
+    return;
+  }
+  l10n->FormatValueSync("install-failed-message"_ns, {}, mozMessage, rv);
+  if (rv.Failed()) {
+    return;
+  }
+
+  NSString* title = [NSString stringWithUTF8String:reinterpret_cast<const char*>(mozTitle.get())];
+  NSString* message =
+      [NSString stringWithUTF8String:reinterpret_cast<const char*>(mozMessage.get())];
+
+  NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+
+  [alert setAlertStyle:NSAlertStyleWarning];
+  [alert setMessageText:title];
+  [alert setInformativeText:message];
+
+  [alert runModal];
+
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
+}
+
 bool IsAppRunningFromDmg() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
