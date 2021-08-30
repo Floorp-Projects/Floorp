@@ -1,152 +1,449 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="action_cancel">Бас тарту</string>
-  <string name="action_ok">ОК</string>
-  <string name="action_save">Сақтау</string>
-  <string name="urlbar_hint">Іздеу немесе адрес</string>
-  <string name="teaser">Автоматты түрдегі жекелік шолу.\nШолу. Өшіру. Қайталау.</string>
-  <string name="feedback_erase">Сіздің шолу тарихыңыз өшірілді.</string>
-  <string name="feedback_erase_custom_tab">Беттің шолу тарихы өшірілді.</string>
-  <string name="search_hint">%1$s іздеу</string>
-  <string name="menu_share">Бөлісу…</string>
-  <string name="menu_report_site_issue">Сайт мәселесі жөнінде хабарлау</string>
-  <string name="menu_open_with_default_browser2">%1$s көмегімен ашу</string>
-  <string name="menu_open_with_a_browser2">Көмегімен ашу…</string>
-  <string name="menu_add_to_home_screen">Үй экранына қосу</string>
-  <string name="menu_whats_new">Не жаңалық</string>
-  <string name="menu_settings">Баптаулар</string>
-  <string name="menu_about">Осы туралы</string>
-  <string name="menu_help">Көмек</string>
-  <string name="menu_rights">Құқықтарыңыз</string>
-  <string name="menu_trackers_blocked_title">Блокталған трекерлер</string>
-  <string name="menu_trackers_blocked_subtitle">Бұл мүмкіндікті өшіру кейбір сайт мәселелерін шешуі мүмкін</string>
-  <string name="menu_content_blocking">Құраманы бұғаттау</string>
-  <string name="menu_content_blocking_subtitle">Кейбір сайттарды жөндеу үшін өшіру</string>
-  <string name="menu_custom_tab_branding">%1$s негізінде</string>
-  <string name="share_dialog_title">Арқылы бөлісу</string>
-  <string name="notification_erase_text">Шолу тарихын өшіру</string>
-  <string name="notification_action_open">Ашу</string>
-  <string name="notification_action_erase_and_open">Өшіру және ашу</string>
-  <string name="shortcut_erase_short_label">Өшіру</string>
-  <string name="shortcut_erase_long_label">Шолу тарихын өшіру</string>
-  <string name="shortcut_erase_and_open_short_label">Өшіру және ашу</string>
-  <string name="shortcut_erase_and_open_long_label">Өшіру және %1$s ашу</string>
-  <string name="text_selection_search_action">Жеке шолыңыз</string>
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Жекелік және қауіпсіздік</string>
-  <string name="preference_privacy_and_security_summary">Бақылау, cookies файлдары, деректер таңдауы</string>
-  <string name="preference_search_summary">Бастапқы мәні, автотолықтыру</string>
-  <string name="preference_mozilla_summary">%1$s туралы, көмек</string>
-  <string name="preference_category_tracking_protection">Бақылаудан қорғаныс</string>
-  <string name="preference_category_web_content">Веб құрамасы</string>
-  <string name="preference_category_switching_apps">Қолданбаларды ауыстыру</string>
-  <string name="preference_category_general">Жалпы</string>
-  <string name="preference_general_summary">Негізгі браузер, беттер, тіл</string>
-  <string name="preference_category_data_collection_use">Деректерді жинау және қолдану</string>
-  <string name="preference_category_search">Іздеу</string>
-  <string name="preference_show_search_suggestions">Іздеу ұсыныстарын алу</string>
-  <string name="preference_show_search_suggestions_summary">%1$s сіз адрестік жолақта терген нәрсені сіздің іздеу жүйеңізге жіберетін болады</string>
-  <string name="preference_search_engine_default">Негізгі</string>
-  <string name="preference_search_engine_label">Іздеу жүйесі</string>
-  <string name="preference_state_on">Іске қосулған</string>
-  <string name="preference_state_off">Сөндірілген</string>
-  <string name="preference_subitem_autocomplete">URL автотолықтыру</string>
-  <string name="preference_switch_autocomplete_topsites">Үздік сайттар үшін</string>
-  <string name="preference_autocomplete_topsite_summary">Адрестік жолақта 450-ден астам әйгілі URL-ды автотолықтыру үшін іске қосыңыз.</string>
-  <string name="preference_switch_autocomplete_user_list">Қосылатын сайттар үшін</string>
-  <string name="preference_autocomplete_user_list_summary">Адрестік жолақта 450-ден астам әйгілі URL-ды автотолықтыру үшін іске қосыңыз.</string>
-  <string name="preference_category_autocomplete_manage_sites">Сайттарды басқару</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Сайттарды басқару</string>
-  <string name="preference_autocomplete_action_add">+ Таңдауыңызша URL қосу</string>
-  <string name="preference_autocomplete_title_add">Таңдауыңызша URL қосу</string>
-  <string name="custom_autocomplete_quick_add">Таңдауыңызша URL қосу</string>
-  <string name="add_custom_autocomplete_label">Автотолықтыру үшін сілтемені қосу</string>
-  <string name="preference_category_cookies">Cookies файлдары және сайт деректері</string>
-  <string name="preference_category_data_choices">Деректер таңдауы</string>
-  <string name="preference_autocomplete_title_remove">Таңдауыңызша URL-дер өшіру</string>
-  <string name="preference_autocomplete_learn_more">Көбірек білу</string>
-  <string name="preference_autocomplete_custom_summary">Таңдауыңызша автотолықтыру URL-ді қосыңыз немесе басқарыңыз.</string>
-  <string name="preference_autocomplete_add_title">Қосылатын URL</string>
-  <string name="preference_autocomplete_add_hint">URL кірістіріңіз немесе енгізіңіз</string>
-  <string name="preference_autocomplete_add_example2">Мысалы: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Мысалы: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Жаңа таңдауыңызша URL қосылды.</string>
-  <string name="preference_autocomplete_menu_remove">Өшіру</string>
-  <string name="preference_autocomplete_action_remove_content_description">Өшіру</string>
-  <string name="preference_autocomplete_add_error">Енгізілген URL тексеріңіз.</string>
-  <string name="preference_language">Тіл</string>
-  <string name="preference_language_systemdefault">Жүйелік</string>
-  <string name="preference_category_privacy">Жекелік</string>
-  <string name="preference_privacy_block_ads">Жарнама трекерлерін блоктау</string>
-  <string name="preference_privacy_block_ads_summary">Кейбір жарналамалар сайт шолуды бақылайды, жарнамаларға шертпесеңіз де</string>
-  <string name="preference_privacy_block_analytics">Аналитикалық трекерлерді блоктау</string>
-  <string name="preference_privacy_block_analytics_summary">Шерту және айналдыру әрекеттерін жинау, зерттеу және өлшеуге пайдаланылады</string>
-  <string name="preference_privacy_block_social">Әлеуметтік желілер трекерлерін блоктау</string>
-  <string name="preference_privacy_block_social_summary">Шолуыңызды бақылау және бөлісу батырмалары сияқты мүмкіндіктерді көрсету мақсатымен сайттарға ендірілген</string>
-  <string name="preference_privacy_block_content">Басқа құрама трекерлерін блоктау</string>
-  <string name="preference_privacy_block_content_summary2">Бұны іске қосу кейбір сайттардың мінез-құлығын күтпегендей өзгертеді</string>
-  <string name="preference_privacy_category_cookies">Cookies файлдарын бұғаттау</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Жоқ</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Тек үшінші жақты cookies файлдарын бұғаттау</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Тек үшінші жақты cookies файлдарын бұғаттау</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Иә</string>
-  <string name="preference_security_biometric">Қолданбаны босату үшін саусақ баспасын қолдану</string>
-  <string name="preference_security_biometric_summary">Сіздің саусақ баспаңыз URL сілтемеде ашық болған кезде %1$s босата алады. Тыңшы іске қосылатын болады.</string>
-  <string name="preference_privacy_secure_mode">Жасырын</string>
-  <string name="preference_privacy_stealth_summary">Қолданбаларды ауыстыру кезінде веб парақтарды жасыру және скриншот түсіруді бұғаттау.</string>
-  <string name="preference_category_security">Қауіпсіздік</string>
-  <string name="preference_category_performance">Өнімділік</string>
-  <string name="preference_performance_block_webfonts">Веб қаріптерін блоктау</string>
-  <string name="preference_performance_block_webfonts_summary">Жоқ болып тұрған таңбашалар немесе суреттерге әкеп соғуы мүмкін</string>
-  <string name="preference_performance_block_javascript">JavaScript бұғаттау</string>
-  <string name="preference_performance_block_javascript_summary">Беттер жылдамдау жүктелуі мүмкін, бірақ, мінез-құлығы күтпегендей өзгеруі мүмкін</string>
-  <string name="preference_default_browser2">%1$s-ты негізгі браузер қылу</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Қолдану деректерін жіберу</string>
-  <string name="preference_mozilla_telemetry_summary">Көбірек білу</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla тек %1$s әркім үшін ұсыну және жақсарту мақсатында керек деректерді жинауға тырысады.</string>
-  <string name="preference_privacy_notice">Жекелік ескертуі</string>
-  <string name="preference_about">%1$s туралы</string>
-  <string name="preference_search_installed_search_engines">Орнатылған іздеу жүйелері</string>
-  <string name="preference_search_restore">Үнсіз келісім іздеу жүйелерін қалпына келтіру</string>
-  <string name="preference_search_add2">+ Басқа іздеу жүйесін қосу</string>
-  <string name="preference_search_remove_title">Іздеу жүйелерін өшіру</string>
-  <string name="preference_search_remove">Өшіру</string>
-  <string name="preference_homescreen_tips">Үй парағында кеңестерді көрсету</string>
-  <string name="action_option_add_search_engine">Іздеу жүйесін қосу</string>
-  <string name="search_add_manually_name_hint">Іздеу жүйесінің аты</string>
-  <string name="search_add_manually_string">Қолданылатын іздеу жолы</string>
-  <string name="search_add_manually_save">Сақтау</string>
-  <string name="search_add_manually_example">Мысалы: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Жаңа іздеу жүйесі қосылды.</string>
-  <string name="search_add_error_empty_name">Іздеу жүйесі атын енгізіңіз</string>
-  <string name="search_add_error_duplicate_name">Орнатылған іздеу жүйесі бұл атын қолданып тұр.</string>
-  <string name="search_add_error_empty_search">Іздеу жолын енгізіңіз</string>
-  <string name="search_add_error_format">Іздеу жолы мысал пішіміне сай келетінін тексеріңіз</string>
-  <string name="content_description_clear_input">Енгізуді тазарту</string>
-  <string name="content_description_dismiss_input">Тайдыру</string>
-  <string name="content_description_erase">Шолу тарихын өшіру</string>
-  <string name="content_description_tab_counter">Ашық беттер: %1$s</string>
-  <string name="content_description_lock">Қауіпсіз байланыс</string>
-  <string name="accessibility_announcement_loading">Жүктелуде</string>
-  <string name="accessibility_announcement_loading_finished">Вебсайт жүктелген</string>
-  <string name="content_description_menu">Көбірек опциялар</string>
-  <string name="indicator_content_description_menu">Қосымша опциялар батырмасы</string>
-  <string name="content_description_forward">Алға өту</string>
-  <string name="content_description_reload">Вебсайтты қайта жүктеу</string>
-  <string name="content_description_back">Артқа өту</string>
-  <string name="content_description_stop">Вебсайтты жүктеуді тоқтату</string>
-  <string name="content_description_customtab_exit">Алдыңғы қолданбаға оралу</string>
-  <string name="content_description_trackers_blocked">Блокталған трекерлер саны</string>
-  <string name="content_description_blocking_switch">Трекерлерді блоктау</string>
-  <string name="your_rights">Құқықтарыңыз</string>
-  <string name="external_app_prompt_title">Сілтемені басқа қолданбада ашу</string>
-  <string name="external_app_prompt">Бұл сілтемені %2$s көмегімен ашу үшін, сіз %1$s ішінен шыға аласыз.</string>
-  <string name="external_app_prompt_no_app_title">Сілтемені аша алатын қолданбаны табу</string>
-  <string name="external_app_prompt_no_app">Құрылғыңыздағы бірде-бір қолданба бұл сілтемені аша алмайды. Оны аша алатын қолданбасын %2$s ішінен іздеу үшін, сіз %1$s ішінен шыға аласыз.</string>
-  <string name="external_multiple_apps_matched_exit">Жекелік шолу режимінен шығу керек пе?</string>
-  <string name="download_snackbar_finished">%1$s аяқталған</string>
-  <string name="download_snackbar_open">Ашу</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Бас тарту</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">ОК</string>
+
+    <string name="action_save">Сақтау</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Іздеу немесе адрес</string>
+
+    <string name="teaser">Автоматты түрдегі жекелік шолу.\nШолу. Өшіру. Қайталау.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Сіздің шолу тарихыңыз өшірілді.</string>
+    <string name="feedback_erase2">Шолу тарихы тазартылды</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Беттің шолу тарихы өшірілді.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">%1$s іздеу</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Бөлісу…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Сайт мәселесі жөнінде хабарлау</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">%1$s көмегімен ашу</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Көмегімен ашу…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Үй экранына қосу</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Жарлықтарға қосу</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Жарлықтардан өшіру</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Не жаңалық</string>
+    <string name="menu_settings">Баптаулар</string>
+    <string name="menu_about">Осы туралы</string>
+    <string name="menu_help">Көмек</string>
+    <string name="menu_rights">Құқықтарыңыз</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Блокталған трекерлер</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Бұл мүмкіндікті өшіру кейбір сайт мәселелерін шешуі мүмкін</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Құраманы бұғаттау</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Кейбір сайттарды жөндеу үшін өшіру</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">%1$s негізінде</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Арқылы бөлісу</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Шолу тарихын өшіру</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Ашу</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Өшіру және ашу</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Өшіру</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Шолу тарихын өшіру</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Өшіру және ашу</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Өшіру және %1$s ашу</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Жеке шолыңыз</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Жекелік және қауіпсіздік</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Бақылау, cookies файлдары, деректер таңдауы</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Бастапқы мәні, автотолықтыру</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">%1$s туралы, көмек</string>
+
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Бақылаудан кеңейтілген қорғаныс</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Веб құрамасы</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Қолданбаларды ауыстыру</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Жалпы</string>
+
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Негізгі браузер, беттер, тіл</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Деректерді жинау және қолдану</string>
+
+    <string name="preference_category_search">Іздеу</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Іздеу ұсыныстарын алу</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s сіз адрестік жолақта терген нәрсені сіздің іздеу жүйеңізге жіберетін болады</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Негізгі</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Іздеу жүйесі</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Іске қосулған</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Сөндірілген</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL автотолықтыру</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Үздік сайттар үшін</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Адрестік жолақта 450-ден астам әйгілі URL-ды автотолықтыру үшін іске қосыңыз.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Қосылатын сайттар үшін</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Адрестік жолақта 450-ден астам әйгілі URL-ды автотолықтыру үшін іске қосыңыз.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Сайттарды басқару</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Сайттарды басқару</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Таңдауыңызша URL қосу</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Сіздің автотолтыру тізіміңіз:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">URL қосу</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Таңдауыңызша URL қосу</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Таңдауыңызша URL қосу</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Автотолықтыру үшін сілтемені қосу</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookies файлдары және сайт деректері</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Деректер таңдауы</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Таңдауыңызша URL-дер өшіру</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Көбірек білу</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Таңдауыңызша автотолықтыру URL-ді қосыңыз немесе басқарыңыз.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">Қосылатын URL</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">URL кірістіріңіз немесе енгізіңіз</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Мысалы: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Мысалы: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Жаңа таңдауыңызша URL қосылды.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Өшіру</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Өшіру</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Енгізілген URL тексеріңіз.</string>
+
+    <string name="preference_language">Тіл</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Жүйелік</string>
+
+    <string name="preference_category_privacy">Жекелік</string>
+    <string name="preference_privacy_block_ads">Жарнама трекерлерін блоктау</string>
+    <string name="preference_privacy_block_ads_summary">Кейбір жарналамалар сайт шолуды бақылайды, жарнамаларға шертпесеңіз де</string>
+    <string name="preference_privacy_block_analytics">Аналитикалық трекерлерді блоктау</string>
+    <string name="preference_privacy_block_analytics_summary">Шерту және айналдыру әрекеттерін жинау, зерттеу және өлшеуге пайдаланылады</string>
+    <string name="preference_privacy_block_social">Әлеуметтік желілер трекерлерін блоктау</string>
+    <string name="preference_privacy_block_social_summary">Шолуыңызды бақылау және бөлісу батырмалары сияқты мүмкіндіктерді көрсету мақсатымен сайттарға ендірілген</string>
+    <string name="preference_privacy_block_content">Басқа құрама трекерлерін блоктау</string>
+    <string name="preference_privacy_block_content_summary2">Бұны іске қосу кейбір сайттардың мінез-құлығын күтпегендей өзгертеді</string>
+    <string name="preference_privacy_category_cookies">Cookies файлдарын бұғаттау</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Жоқ, рахмет</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Тек үшінші жақты cookies файлдарын бұғаттау</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Тек үшінші жақты cookies файлдарын бұғаттау</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Иә</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Қолданбаны босату үшін саусақ баспасын қолдану</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Сіздің саусақ баспаңыз URL сілтемеде ашық болған кезде %1$s босата алады. Тыңшы іске қосылатын болады.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Жасырын</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Қолданбаларды ауыстыру кезінде веб парақтарды жасыру және скриншот түсіруді бұғаттау.</string>
+
+    <string name="preference_category_security">Қауіпсіздік</string>
+
+    <string name="preference_category_performance">Өнімділік</string>
+    <string name="preference_performance_block_webfonts">Веб қаріптерін блоктау</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Жоқ болып тұрған таңбашалар немесе суреттерге әкеп соғуы мүмкін</string>
+
+    <string name="preference_performance_block_javascript">JavaScript бұғаттау</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Беттер жылдамдау жүктелуі мүмкін, бірақ, мінез-құлығы күтпегендей өзгеруі мүмкін</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s-ты негізгі браузер қылу</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Қолдану деректерін жіберу</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Көбірек білу</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla тек %1$s әркім үшін ұсыну және жақсарту мақсатында керек деректерді жинауға тырысады.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Жекелік ескертуі</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">%1$s туралы</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Орнатылған іздеу жүйелері</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Іздеу жүйесін таңдау</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Үнсіз келісім іздеу жүйелерін қалпына келтіру</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Басқа іздеу жүйесін қосу</string>
+    <string name="preference_search_remove_title">Іздеу жүйелерін өшіру</string>
+    <string name="preference_search_remove">Өшіру</string>
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Басқа іздеу жүйесін қосу</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Өзіңіз қалайтын іздеу жүйесін таңдаңыз:</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Үй парағында кеңестерді көрсету</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Іздеу жүйесін қосу</string>
+
+    <string name="search_add_manually_name_hint">Іздеу жүйесінің аты</string>
+    <string name="search_add_manually_string">Қолданылатын іздеу жолы</string>
+    <string name="search_add_manually_save">Сақтау</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Мысалы: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Жаңа іздеу жүйесі қосылды.</string>
+
+    <string name="search_add_error_empty_name">Іздеу жүйесі атын енгізіңіз</string>
+    <string name="search_add_error_duplicate_name">Орнатылған іздеу жүйесі бұл атын қолданып тұр.</string>
+
+    <string name="search_add_error_empty_search">Іздеу жолын енгізіңіз</string>
+
+    <string name="search_add_error_format">Іздеу жолы мысал пішіміне сай келетінін тексеріңіз</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Енгізуді тазарту</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Тайдыру</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Шолу тарихын өшіру</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Ашық беттер: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Қауіпсіз байланыс</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Жүктелуде</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Вебсайт жүктелген</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Көбірек опциялар</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Қосымша опциялар батырмасы</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Алға өту</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Вебсайтты қайта жүктеу</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Артқа өту</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Вебсайтты жүктеуді тоқтату</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Алдыңғы қолданбаға оралу</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Блокталған трекерлер саны</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Трекерлерді блоктау</string>
+
+    <string name="your_rights">Құқықтарыңыз</string>
+
+    <string name="external_app_prompt_title">Сілтемені басқа қолданбада ашу</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Бұл сілтемені %2$s көмегімен ашу үшін, сіз %1$s ішінен шыға аласыз.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Сілтемені аша алатын қолданбаны табу</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Құрылғыңыздағы бірде-бір қолданба бұл сілтемені аша алмайды. Оны аша алатын қолданбасын %2$s ішінен іздеу үшін, сіз %1$s ішінен шыға аласыз.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Жекелік шолу режимінен шығу керек пе?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s аяқталған</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Ашу</string>
 
 
 
@@ -176,91 +473,279 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Жекелігіңізді күшейтіңіз</string>
-  <string name="firstrun_defaultbrowser_text2">Жекелік шолудың келесі деңгейіне өтіңіз. Сайттар арасында сізді бақылайтын және парақтардың жүктелу уақытын арттыратын жарнама және басқа құраманы блоктаңыз.</string>
-  <string name="firstrun_search_title">Сіздің іздеулеріңіз, сіздің жолыңызбен</string>
-  <string name="firstrun_search_text">Басқа бірнәрсе іздедіңіз бе? Баптаулардан басқа негізгі іздеу жүйесін таңдаңыз.</string>
-  <string name="firstrun_shortcut_title">Үй экранына жарлықтарды қосыңыз</string>
-  <string name="firstrun_shortcut_text">%1$s ішінде таңдамалы сайттарға жылдам оралыңыз. Тек %1$s мәзірінен \"Үй экранына қосу\" таңдаңыз.</string>
-  <string name="firstrun_privacy_title">Жекелікті әдет қылыңыз</string>
-  <string name="firstrun_privacy_text">%1$s негізгі браузер ретінде орнатып, басқа қолданбалардан вебпарақтарын ашу кезінде жекелік шолудың артықшылықтарын алыңыз.</string>
-  <string name="firstrun_close_button">Жақсы, түсіндім!</string>
-  <string name="firstrun_skip_button">Аттап кету</string>
-  <string name="firstrun_next_button">Келесі</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Қосу</string>
-  <string name="dialog_addtohomescreen_action_cancel">Бас тарту</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Жарлық Баықылаудан қорғанысы сөндірілген түрде ашылады</string>
-  <string name="notification_browsing_session_channel_name">Жекелік шолу сессиясы</string>
-  <string name="notification_browsing_session_channel_description">Хабарламалар сізге %1$s сессиясын бір шертумен өшіруді мүмкін етеді. Сізге браузерді ашуды немесе браузерде не орындалғанын көру керек емес.</string>
-  <string name="tabs_tray_action_erase">Шолу тарихын өшіру</string>
-  <string name="download_firefox">Firefox-ты жүктеп алу</string>
-  <string name="your_rights_content1">%1$s - Mozilla және басқа үлес қосушылары жасаған еркін және бастапқы кодтары ашық бағдарламалық қамтама.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Жекелігіңізді күшейтіңіз</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Жекелік шолудың келесі деңгейіне өтіңіз. Сайттар арасында сізді бақылайтын және парақтардың жүктелу уақытын арттыратын жарнама және басқа құраманы блоктаңыз.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Сіздің іздеулеріңіз, сіздің жолыңызбен</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Басқа бірнәрсе іздедіңіз бе? Баптаулардан басқа негізгі іздеу жүйесін таңдаңыз.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Үй экранына жарлықтарды қосыңыз</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">%1$s ішінде таңдамалы сайттарға жылдам оралыңыз. Тек %1$s мәзірінен \&quot;Үй экранына қосу\&quot; таңдаңыз.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Жекелікті әдет қылыңыз</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">%1$s негізгі браузер ретінде орнатып, басқа қолданбалардан вебпарақтарын ашу кезінде жекелік шолудың артықшылықтарын алыңыз.</string>
+
+    <string name="firstrun_close_button">Жақсы, түсіндім!</string>
+    <string name="firstrun_skip_button">Аттап кету</string>
+    <string name="firstrun_next_button">Келесі</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Қосу</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ИӘ</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Бас тарту</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">ЖОҚ</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Жарлық Бақылаудан жақсартылған қорғанысы сөндірілген түрімен ашылады</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Жекелік шолу сессиясы</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Хабарламалар сізге %1$s сессиясын бір шертумен өшіруді мүмкін етеді. Сізге браузерді ашуды немесе браузерде не орындалғанын көру керек емес.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Шолу тарихын өшіру</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Firefox-ты жүктеп алу</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s - Mozilla және басқа үлес қосушылары жасаған еркін және бастапқы кодтары ашық бағдарламалық қамтама.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Пайдаланушы аты</string>
-  <string name="gv_prompt_password_hint">Пароль</string>
-  <string name="gv_prompt_clear">Тазарту</string>
-  <string name="security_popup_secure_connection">Қауіпсіз байланыс</string>
-  <string name="security_popup_insecure_connection">Қауіпсіз емес байланыс</string>
-  <string name="security_popup_security_verified">Растаған: %1$s</string>
-  <string name="site_security_icon_content_description">Сайт қауіпсіздігі</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL бар болып тұр</string>
-  <string name="find_in_page">Беттен табу</string>
-  <string name="find_in_page_input">Беттен табу</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%2$d ішінен %1$d</string>
-  <string name="accessibility_next_result">Келесі нәтижені табу</string>
-  <string name="accessibility_previous_result">Алдыңғы нәтижені табу</string>
-  <string name="accessibility_dismiss_find_in_page">Беттен іздеуді алып тастау</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Пайдаланушы аты</string>
+    <string name="gv_prompt_password_hint">Пароль</string>
+    <string name="gv_prompt_clear">Тазарту</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Қауіпсіз байланыс</string>
+    <string name="security_popup_insecure_connection">Қауіпсіз емес байланыс</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Растаған: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Сайт қауіпсіздігі</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL бар болып тұр</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Беттен табу</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Беттен табу</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%2$d ішінен %1$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Келесі нәтижені табу</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Алдыңғы нәтижені табу</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Беттен іздеуді алып тастау</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Сайттың толық нұсқасы</string>
-  <string name="custom_tab_copy_url_action">URL сілтемесі көшірілді</string>
-  <string name="preference_advanced_summary">Әзірлеуші құралдары</string>
-  <string name="preference_category_advanced">Кеңейтілген</string>
-  <string name="preference_remote_debugging">USB/Wi-Fi арқылы қашықтан жөндеу</string>
-  <string name="biometric_auth_title">%1$s босату</string>
-  <string name="biometric_auth_description">Жалғастыру үшін саусақ баспасын оқу құрылғысын тиіңіз.</string>
-  <string name="biometric_auth_new_session">Жаңа сессия</string>
-  <string name="biometric_auth_image_description">Саусақ баспасы таңбашасы</string>
-  <string name="biometric_auth_not_recognized_error">Саусақ баспасы танылмады. Қайталап көріңіз.</string>
-  <string name="biometric_auth_moved_too_quickly">Саусақ тым жылдам өткізілді. Қайталап көріңіз.</string>
-  <string name="enable_search_suggestion_title">Іздеу ұсыныстарын іске қосу керек пе?</string>
-  <string name="enable_search_suggestion_subtitle">Іздеу ұсыныстарын алу үшін, %1$s сіз адрестік жолақта терген нәрсені өзіңіз таңдаған іздеу жүйесіне жіберуі тиіс. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Көбірек білу</string>
-  <string name="enable_search_suggestions_no">Жоқ</string>
-  <string name="enable_search_suggestions_yes">Иә</string>
-  <string name="no_suggestions_message">Кейбір іздеу жүйелері ұсыныстарды көрсете алмайды.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Тайдыру</string>
-  <string name="tip_disable_tracking_protection">Әлі де күтпегендей әрекет жасайды ма?\n Бақылаудан қорғанысты сөндіріп көріңіз</string>
-  <string name="tip_add_to_homescreen">Жиірек қолданылатын сайттарға бір шертумен қатынаңыз%1$s Мәзір &gt; Үй бетіне қосу</string>
-  <string name="tip_set_default_browser">Әр сілтемені %1$s ішінде ашыңыз\n %1$s негізгі браузер ретінде орнатыңыз</string>
-  <string name="tip_autocomplete_url">Жиірек қолданылатын сайттар үшін сілтемелерді автотолықтырыңыз\n Адрестік жолақта кез келген сілтемеге ұзақ шертіңіз</string>
-  <string name="tip_open_in_new_tab">Сілтемені жаңа бетте ашу\n Беттегі кез келген сілтемеге ұзақ шертіңіз</string>
-  <string name="tip_request_desktop">Жұмыс үстелге арналған толық өлшемді көргіңіз келе ме?%1$s Мәзір &gt; Сайттың толық нұсқасы</string>
-  <string name="tip_disable_tips2">Іске қосу экранында кеңестерді сөндіру</string>
-  <string name="tip_explain_allowlist">Сенімді сайт па?\n Рұқсат тізімі өзіңіз білетін және сенетін сайттар үшін бақылаудан қорғанысты сөндіреді.</string>
-  <string name="new_tab_opened_snackbar">Жаңа бет ашылды</string>
-  <string name="open_new_tab_snackbar">Ауысу</string>
-  <string name="preference_open_new_tab">Жаңа бетке тура ауысу</string>
-  <string name="preference_category_safe_browsing">Қауіпсіз шолу</string>
-  <string name="preference_safe_browsing_title">Қауіпті және алдамшы болуы мүмкін сайттарды блоктау</string>
-  <string name="preference_safe_browsing_summary">Хабарланған алмамшы, шабуылшы, зиянкес және қаламайтын БҚ орнататын сайттарды бұғаттау.</string>
-  <string name="preference_exceptions">Ережеден бөлек</string>
-  <string name="preference_exceptions_description">Бұл веб-сайттар үшін құраманы бұғаттауды сөндіргенсіз.</string>
-  <string name="preference_exceptions_menu_remove">Өшіру</string>
-  <string name="preference_exceptions_remove_all_button_label">Барлық веб-сайттарды өшіру</string>
-  <string name="tab_crash_report_title">Бет құлады</string>
-  <string name="tab_crash_report_headline">Кешіріңіз. Бұл бетпен мәселе бар.</string>
-  <string name="tab_crash_report_description">Жеке браузер ретінде ешқашан сақтамаймыз және осы бетті қалпына келтіре алмаймыз.</string>
-  <string name="tab_crash_report_close_tab_button_label">Бетті жабу</string>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Сайттың толық нұсқасы</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Жұмыс үстелі сайты</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL сілтемесі көшірілді</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Әзірлеуші құралдары</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Кеңейтілген</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">USB/Wi-Fi арқылы қашықтан жөндеу</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">%1$s босату</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Жалғастыру үшін саусақ баспасын оқу құрылғысын тиіңіз.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Жаңа сессия</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Сілтемені жаңа сессияда ашу</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Саусақ баспасы таңбашасы</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Саусақ баспасы танылмады. Қайталап көріңіз.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Саусақ тым жылдам өткізілді. Қайталап көріңіз.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Іздеу ұсыныстарын көрсету керек пе?</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Жоқ</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Иә</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Кейбір іздеу жүйелері ұсыныстарды көрсете алмайды.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Тайдыру</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Әлі де күтпегендей әрекет жасайды ма?\n Бақылаудан қорғанысты сөндіріп көріңіз</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Жиірек қолданылатын сайттарға бір шертумен қатынаңыз%1$s Мәзір > Үй бетіне қосу]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Әр сілтемені %1$s ішінде ашыңыз\n %1$s негізгі браузер ретінде орнатыңыз</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Жиірек қолданылатын сайттар үшін сілтемелерді автотолықтырыңыз\n Адрестік жолақта кез келген сілтемеге ұзақ шертіңіз</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Сілтемені жаңа бетте ашу\n Беттегі кез келген сілтемеге ұзақ шертіңіз</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Іске қосу экранында кеңестерді сөндіру</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Жаңа бет ашылды</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Ауысу</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Жаңа бетке тура ауысу</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Қауіпсіз шолу</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Қауіпті және алдамшы болуы мүмкін сайттарды блоктау</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Хабарланған алмамшы, шабуылшы, зиянкес және қаламайтын БҚ орнататын сайттарды бұғаттау.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Ережеден бөлек</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Бұл веб-сайттар үшін құраманы бұғаттауды сөндіргенсіз.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Өшіру</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Барлық веб-сайттарды өшіру</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Cookies файлдарын бұғаттау</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Cookie файлдарын бұғаттауды қалайсыз ба?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Бет құлады</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Кешіріңіз. Бұл бетпен мәселе бар.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Жеке браузер ретінде ешқашан сақтамаймыз және осы бетті қалпына келтіре алмаймыз.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Бетті жабу</string>
 
 
 
 
-  <string name="crash_report_send_crash_label">Mozilla-ға құлау хабарламасын жіберу</string>
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Mozilla-ға құлау хабарламасын жіберу</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">%s бастап, бұғатталған трекер саны</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Мазмұн</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Жарнама</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Әлеуметтік</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Аналитика</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Бақылаудан кеңейтілген қорғаныс</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Бұл сайт үшін қорғаныс СӨНДІРІЛГЕН</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Бұл сайт үшін қорғаныс ІСКЕ ҚОСЫЛҒАН</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Байланыс қауіпсіз</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Байланыс қауіпсіз емес</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Бұғаттау үшін трекерлер және скрипттер</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Артқа</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Өшіру</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">%1$s тарихы өшірілген кезде сақталған және бөліскен суреттер &lt;b&gt;өшірілмейді&lt;/b&gt;</string>
 </resources>

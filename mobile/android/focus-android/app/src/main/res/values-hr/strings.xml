@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">O %1$su, pomoć</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Zaštita od praćenja</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Poboljšana zaštita od praćenja</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Web-sadržaj</string>
@@ -523,9 +523,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NE</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Prečac će se otvoriti uz onemogućenu zaštitu od praćenja</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Prečac će biti otvoren s onemogućenom poboljšanom zaštitom od praćenja</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -683,10 +683,10 @@
     <string name="tip_disable_tracking_protection">Stranica se ponaša neočekivano?\n
     Pokušaj isključiti zaštitu od praćenja</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">Stranici nedostaje sadržaj ili se čudno ponaša?\n
-    Pokušaj isključiti zaštitu od praćenja</string>
+    <string name="tip_disable_tracking_protection3">Stranici nedostaje sadržaj ili se čudno ponaša?\n
+    Pokušaj isključiti poboljšanu zaštitu od praćenja</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -721,13 +721,18 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">Želiš isključiti zaštitu od praćenja na stranici kojoj vjeruješ?\n
+    <string name="tip_explain_allowlist3">Želiš isključiti poboljšanu zaštitu od praćenja na stranici kojoj vjeruješ?\n
         Dodaj ju na popis dopuštenih stranica u postavkama
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">Da, imamo novi izgled! Pročitaj više o ovome i drugim ažuriranjima %1$sa.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Stvori prečace na web-stranice koje najčešće posjećuješ:\n
+    Odaberi Dodaj u prečace u %1$sovom izborniku</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Otvorena nova kartica</string>
@@ -806,5 +811,5 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">Spremljene i podijeljene slike &lt;b&gt;neće biti&lt;/b&gt; izbrisane kada izbrišeš povijest u %1su</string>
+    <string name="contextmenu_erased_images_note2">Spremljene i podijeljene slike &lt;b&gt;neće biti&lt;/b&gt; izbrisane kada izbrišeš %1$su povijest</string>
 </resources>

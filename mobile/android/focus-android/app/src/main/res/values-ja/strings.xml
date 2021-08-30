@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">%1$s について、ヘルプ</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">トラッキング防止</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">強化型トラッキング防止</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">ウェブコンテンツ</string>
@@ -527,9 +527,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">いいえ</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">ショートカットはトラッキング防止が無効の状態で開かれます</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">ショートカットは強化型トラッキング防止が無効の状態で開かれます</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -689,10 +689,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">サイトが予期せぬ挙動をしますか？\n トラッキング防止機能を無効化してみてください</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">サイトのコンテンツが欠けたりおかしな動作をしていますか？\n
-トラッキング防止機能をオフにしてみてください</string>
+    <string name="tip_disable_tracking_protection3">サイトのコンテンツが欠けたりおかしな動作をしていますか？\n
+強化型トラッキング防止機能をオフにしてみてください</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -721,8 +721,13 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">信頼できるサイトでトラッキング防止機能を無効にしておきたいときは？\n
+    <string name="tip_explain_allowlist3">信頼できるサイトで強化型トラッキング防止機能をオフにしておきたいときは？\n
 設定でサイトを許可リストに追加してください</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">よく見るサイトへのショートカットを作成しましょう:\n
+    %1$s のメニューからショートカットを追加を選択します</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">新しいタブを開きました</string>
@@ -749,6 +754,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">すべてのウェブサイトを削除</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Cookie をブロック</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Cookie をブロックしたいですか？</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">タブがクラッシュしました</string>
     <!-- Headline for the tab crash report screen -->
@@ -766,6 +777,16 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">%s 以降にブロックされたトラッカー</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">コンテンツ</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">広告</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">ソーシャル</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">解析</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="enhanced_tracking_protection">強化型トラッキング防止機能</string>
     <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
@@ -788,5 +809,5 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">保存、共有された画像は %1s の履歴を消去しても &lt;b&gt;削除されません&lt;/b&gt;。</string>
+    <string name="contextmenu_erased_images_note2">保存、共有された画像は %1$s の履歴を消去しても &lt;b&gt;削除されません&lt;/b&gt;。</string>
 </resources>

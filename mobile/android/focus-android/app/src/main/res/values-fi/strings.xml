@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Tietoja: %1$s, ohje</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Seurannan suojaus</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Tehostettu seurannan suojaus</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Verkkosisältö</string>
@@ -527,10 +527,6 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">EI</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Pikakuvake aukeaa ilman seurannan suojausta</string>
-
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
@@ -689,11 +685,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Käyttäytyykö sivusto odottamattomasti?\n Kokeile kytkeä seurannan suojaus pois päältä</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">Käyttäytyykö sivusto oudosti?\n
-    Kokeile kytkeä seurannan suojaus pois päältä</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Pääsy yhdellä napautuksella sivustoille, joilla useimmiten vierailet%1$s Valikko > Lisää linkki aloitusnäyttöön]]></string>
@@ -718,12 +709,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Älä näytä vinkkejä aloitusnäytössä</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">Haluatko seurannan suojauksen pois luottamiltasi sivustoilta?\n
-        Lisää sivusto sallittujen listalle asetuksista
-    </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
@@ -808,5 +793,5 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
-    <string name="contextmenu_erased_images_note">Tallennettuja ja jaettuja kuvia &lt;b&gt;ei poisteta&lt;/b&gt; kun tyhjennät %1s -historian</string>
+    <string name="contextmenu_erased_images_note2">Tallennettuja ja jaettuja kuvia &lt;b&gt;ei poisteta&lt;/b&gt; kun tyhjennät %1$sin historian</string>
 </resources>
