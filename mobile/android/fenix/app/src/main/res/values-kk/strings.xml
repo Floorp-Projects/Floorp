@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Жекелік %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -116,6 +116,11 @@
     <string name="recent_tabs_header">Кері оралу</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Барлығын көрсету</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Бұрыңғы зерттеулер</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -625,6 +630,15 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Көбірек білу</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Қолданба өзгерістерді іске асыру үшін жабылады</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">ОК</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Бас тарту</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Өзгерістерді іске асыру үшін қолданбадан шығу…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Ашық беттер</string>
@@ -1113,7 +1127,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Өшіру</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Бас тарту</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Бас тарту</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Толық экран режиміне өту</string>
@@ -1282,7 +1296,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Біздің жекелік ескертуімізді оқыңыз</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Жабу</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Жабу</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Шолуды бастау</string>
@@ -1416,7 +1430,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Бақылау коды бар сыртқы жарнама, видео және басқа жа мазмұннын жүктеуіне жол бермейді. Кейбір веб-сайттардың жұмысына әсер етуі мүмкін.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Әр рет қалқан күлгін болған сайын, %s сайттағы трекерлерді бұғаттаған. Қосымша ақпарат алу үшін шертіңіз.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Әр рет қалқан күлгін болған сайын, %s сайттағы трекерлерді бұғаттаған. Қосымша ақпарат алу үшін шертіңіз.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Бұл сайт үшін қорғаныс ІСКЕ ҚОСЫЛҒАН</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1496,10 +1510,17 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ешқашан сақтамау</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Автотолтыру</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Автотолтыру</string>
 
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s ішінде автотолтыру</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s қолдану кезінде веб-сайттарда пайдаланушы аттары мен парольдерін толтыру және сақтау.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Басқа қолданбаларда автотолтыру</string>
+
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Құрылғыңыздағы басқа қолданбаларда пайдаланушы аттары мен парольдерін толтыру.</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Логиндерді синхрондау</string>
@@ -1823,6 +1844,8 @@
     <!-- In-activate tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
     <string name="inactive_tabs_title">Белсенді емес беттер</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Беттер осында %s ішінде қолжетімді. Осы уақыттан кейін беттер автоматты түрде жабылады.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string name="inactive_tabs_30_days">30 күн</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->

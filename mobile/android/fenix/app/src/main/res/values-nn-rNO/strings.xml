@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Privat %s</string>
@@ -629,6 +629,18 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Lat att etter ein månad</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Fjern</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktiv</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Les meir</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Avbryt</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Opne faner</string>
@@ -955,6 +967,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Av</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">På</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Av</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Samlingar</string>
@@ -1118,7 +1135,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Slett</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Avbryt</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Avbryt</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Startar fullskjermmodus</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1287,7 +1304,7 @@
     <string name="onboarding_privacy_notice_read_button">Les personvernmerknaden vår</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Lat att</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Lat att</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Start nettlesinga</string>
@@ -1390,6 +1407,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptoutvinnarar</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Detaljar</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blokkert</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Tillatne</string>
@@ -1414,7 +1434,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Stoppar innlasting av eksterne annonsar, videoar og anna innhald, då dei kan innehalde sporingskode. Kan påverke visse nettstadfunksjonar.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Kvar gong skjoldet er lilla, har %s blokkert sporarar på ein nettstad. Trykk for meir info.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Kvar gong skjoldet er lilla, har %s blokkert sporarar på ein nettstad. Trykk for meir info.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Vern er slått PÅ for denne nettstaden</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1497,7 +1517,8 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Lagre aldri</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Autofyll</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Autofyll</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Synkroniser innloggingar</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1680,7 +1701,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Søkjestreng å bruke</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Byt ut spørjinga med «%s». Eksempel:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Byt ut spørjinga med «%s». Eksempel:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Les meir</string>
 
@@ -1821,6 +1842,14 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Avbryt</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Inaktive faner</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 dagar</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 veke</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Vel at lenker frå nettstadar, e-postmeldingar og meldingar skal opnast automatisk i Firefox.</string>
