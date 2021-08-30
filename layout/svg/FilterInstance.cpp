@@ -28,6 +28,7 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/SVGFilterInstance.h"
 #include "mozilla/SVGUtils.h"
+#include "mozilla/dom/Document.h"
 #include "CSSFilterInstance.h"
 #include "SVGIntegrationUtils.h"
 
@@ -120,6 +121,20 @@ bool FilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
                                            Span<const StyleFilter> aFilters,
                                            WrFiltersHolder& aWrFilters,
                                            Maybe<nsRect>& aPostFilterClip) {
+  bool status = BuildWebRenderFiltersImpl(aFilteredFrame, aFilters, aWrFilters,
+                                          aPostFilterClip);
+  if (!status) {
+    aFilteredFrame->PresContext()->Document()->SetUseCounter(
+        eUseCounter_custom_WrFilterFallback);
+  }
+
+  return status;
+}
+
+bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
+                                               Span<const StyleFilter> aFilters,
+                                               WrFiltersHolder& aWrFilters,
+                                               Maybe<nsRect>& aPostFilterClip) {
   aWrFilters.filters.Clear();
   aWrFilters.filter_datas.Clear();
   aWrFilters.values.Clear();
