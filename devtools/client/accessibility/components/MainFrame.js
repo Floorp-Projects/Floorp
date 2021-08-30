@@ -195,7 +195,7 @@ class MainFrame extends Component {
           SplitBox({
             ref: "splitBox",
             initialSize: SIDEBAR_WIDTH,
-            minSize: "10px",
+            minSize: "10%",
             maxSize: "80%",
             splitterSize: 1,
             endPanelControl: true,
