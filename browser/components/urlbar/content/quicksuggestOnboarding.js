@@ -4,11 +4,17 @@
 
 "use strict";
 
+document.addEventListener("dialogaccept", () => {
+  window.arguments[0].accept = true;
+});
 document.addEventListener("dialogextra1", () => {
-  window.arguments[0].disable = true;
+  window.arguments[0].openSettings = true;
   window.close();
 });
-document.addEventListener("dialogextra2", () => {
+document.getElementById("onboardingNotNow").addEventListener("click", () => {
+  window.close();
+});
+document.getElementById("onboardingLearnMore").addEventListener("click", () => {
   window.arguments[0].learnMore = true;
   window.close();
 });
