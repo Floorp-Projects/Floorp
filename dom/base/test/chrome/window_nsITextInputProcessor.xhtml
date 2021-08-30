@@ -9,7 +9,7 @@
 <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">
-<input id="input" type="text"/><br/>
+<input id="input" type="text"/><input id="anotherInput" type="text"/><br/>
 <iframe id="iframe" width="300" height="150"
         src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
 </p>
@@ -4327,6 +4327,65 @@ async function runCallbackTests(aForTests)
   dumpUnexpectedNotifications(1);
 }
 
+async function runFocusNotificationTestAfterDrop() {
+  const inputs = document.querySelectorAll("input[type=text]");
+  inputs[0].value = "abc";
+  inputs[1].value = "";
+
+  const TIP = createTIP();
+  let notifications = [];
+  let waitingNextNotification;
+  function callback(aTIP, aNotification)
+  {
+    if (aTIP != TIP) {
+      return true;
+    }
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+      case "notify-focus":
+      case "notify-blur":
+        notifications.push(aNotification.type);
+        break;
+    }
+    return true;
+  }
+
+  inputs[0].focus();
+  TIP.beginInputTransactionForTests(window, callback);
+  inputs[0].select();
+  try {
+    notifications = [];
+    await synthesizePlainDragAndDrop({
+      srcSelection: SpecialPowers.wrap(inputs[0]).editor.selection,
+      destElement: inputs[1],
+    });
+  } catch (ex) {
+    ok(false, `runFocusNotificationTestAfterDrop: unexpected error during DnD (${ex.message})`);
+    return;
+  }
+  is(
+    document.activeElement,
+    inputs[1],
+    "runFocusNotificationTestAfterDrop: Dropping to the second <input> should make it focused"
+  );
+  ok(
+    notifications.length > 1,
+    "runFocusNotificationTestAfterDrop: At least two notifications should be fired"
+  );
+  if (notifications.length > 0) {
+    is(
+      notifications[notifications.length - 1],
+      "notify-focus",
+      "runFocusNotificationTestAfterDrop: focus notification should've been fired at last"
+    );
+  }
+}
+
 async function runTests()
 {
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
@@ -4340,6 +4399,7 @@ async function runTests()
   runCommitCompositionTests();
   await runCallbackTests(false);
   await runCallbackTests(true);
+  await runFocusNotificationTestAfterDrop();
   await runUnloadTests1();
   await runUnloadTests2();
 

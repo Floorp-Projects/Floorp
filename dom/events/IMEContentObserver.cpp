@@ -203,6 +203,10 @@ void IMEContentObserver::OnIMEReceivedFocus() {
   // call of Init() with the latest content may occur.  In such case, we
   // shouldn't keep first initialization which notified IME of focus.
   if (GetState() != eState_Initializing) {
+    MOZ_LOG(sIMECOLog, LogLevel::Debug,
+            ("0x%p IMEContentObserver::OnIMEReceivedFocus(), "
+             "but the state is not \"initializing\", so does nothing",
+             this));
     return;
   }
 
@@ -210,6 +214,10 @@ void IMEContentObserver::OnIMEReceivedFocus() {
   // instance via IMEStateManager::UpdateIMEState().  So, this
   // instance might already have been destroyed, check it.
   if (!mRootContent) {
+    MOZ_LOG(sIMECOLog, LogLevel::Debug,
+            ("0x%p IMEContentObserver::OnIMEReceivedFocus(), "
+             "but mRootContent has already been cleared, so does nothing",
+             this));
     return;
   }
 
@@ -456,6 +464,12 @@ bool IMEContentObserver::MaybeReinitialize(nsIWidget& aWidget,
 bool IMEContentObserver::IsManaging(nsPresContext* aPresContext,
                                     nsIContent* aContent) const {
   return GetState() == eState_Observing &&
+         IsObservingContent(aPresContext, aContent);
+}
+
+bool IMEContentObserver::IsBeingInitializedFor(nsPresContext* aPresContext,
+                                               nsIContent* aContent) const {
+  return GetState() == eState_Initializing &&
          IsObservingContent(aPresContext, aContent);
 }
 
@@ -1410,9 +1424,30 @@ void IMEContentObserver::FlushMergeableNotifications() {
 }
 
 void IMEContentObserver::TryToFlushPendingNotifications(bool aAllowAsync) {
-  if (!mQueuedSender || mSendingNotification != NOTIFY_IME_OF_NOTHING ||
-      (XRE_IsContentProcess() && aAllowAsync)) {
+  // If a sender instance is sending notifications, we shouldn't try to create
+  // a new sender again because the sender will recreate by itself if there are
+  // new pending notifications.
+  if (mSendingNotification != NOTIFY_IME_OF_NOTHING) {
     return;
+  }
+
+  // When the caller allows to put off notifying IME, we can wait the next
+  // call of this method or to run the queued sender.
+  if (mQueuedSender && XRE_IsContentProcess() && aAllowAsync) {
+    return;
+  }
+
+  if (!mQueuedSender) {
+    // If it was not safe to dispatch notifications when the pending
+    // notifications are posted, this may not have IMENotificationSender
+    // instance because it couldn't dispatch it, e.g., when an edit sub-action
+    // is being handled in the editor, we shouldn't do it even if it's safe to
+    // run script.  Therefore, we need to create the sender instance here in the
+    // case.
+    if (!NeedsToNotifyIMEOfSomething()) {
+      return;
+    }
+    mQueuedSender = new IMENotificationSender(this);
   }
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
