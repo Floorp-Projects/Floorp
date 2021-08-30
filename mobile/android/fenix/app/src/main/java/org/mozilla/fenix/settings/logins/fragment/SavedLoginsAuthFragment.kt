@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.autofill.preference.AutofillPreference
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -102,10 +101,6 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
 
         requirePreference<AutofillPreference>(R.string.pref_key_android_autofill).apply {
             update()
-
-            if (!FeatureFlags.androidAutofill) {
-                isVisible = false
-            }
         }
 
         requirePreference<Preference>(R.string.pref_key_login_exceptions).apply {
