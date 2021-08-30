@@ -146,7 +146,7 @@
                      oncommand="PanelUI.showMoreToolsPanel(this);"/>
       <toolbarbutton id="appMenu-help-button2"
                      class="subviewbutton subviewbutton-nav"
-                     label="&appMenuHelp.label;"
+                     data-l10n-id="appmenuitem-help"
                      closemenu="none"
                      oncommand="PanelUI.showSubView('PanelUI-helpView', this)"/>
 #ifndef XP_MACOSX
@@ -443,11 +443,7 @@
           <!-- Sync is ready to Sync and the "tabs" engine is enabled -->
           <vbox id="PanelUI-remotetabs-tabspane">
             <vbox id="PanelUI-remotetabs-tabslist"
-                  showAllLabel="&appMenuRemoteTabs.showAll.label;"
-                  showAllTooltipText="&appMenuRemoteTabs.showAll.tooltip;"
-                  showMoreLabel="appmenu-fxa-show-more-tabs"
-                  showMoreTooltipText="&appMenuRemoteTabs.showMore.tooltip;"
-                  notabsforclientlabel="&appMenuRemoteTabs.notabs.label;"
+            notabsforclientlabel="appmenu-remote-tabs-notabs"
                   />
           </vbox>
           <!-- Sync is ready to Sync but we are still fetching the tabs to show -->
@@ -460,11 +456,11 @@
               <hbox pack="center">
                 <image class="fxaSyncIllustrationIssue"/>
               </hbox>
-              <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.tabsnotsyncing.label;</label>
+              <label class="PanelUI-remotetabs-instruction-label" data-l10n-id="appmenu-remote-tabs-tabsnotsyncing"></label>
               <hbox pack="center">
                 <toolbarbutton class="PanelUI-remotetabs-button"
                                id="PanelUI-remotetabs-tabsdisabledpane-button"
-                               label="&appMenuRemoteTabs.opensyncprefs.label;"
+                               data-l10n-id="appmenu-remote-tabs-opensettings"
                                oncommand="gSync.openPrefs('synced-tabs');"/>
               </hbox>
             </vbox>
@@ -475,10 +471,10 @@
               <hbox pack="center">
                 <image class="fxaSyncIllustrationIssue"/>
               </hbox>
-              <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.noclients.subtitle;</label>
+              <label class="PanelUI-remotetabs-instruction-label" data-l10n-id="appmenu-remote-tabs-noclients"></label>
               <toolbarbutton id="PanelUI-remotetabs-connect-device-button"
                              class="PanelUI-remotetabs-button"
-                             label="&appMenuRemoteTabs.connectdevice.label;"
+                             data-l10n-id="appmenu-remote-tabs-connectdevice"
                              oncommand="gSync.openConnectAnotherDevice('synced-tabs');"/>
             </vbox>
           </hbox>
@@ -493,7 +489,7 @@
               class="PanelUI-remotetabs-instruction-box"
               hidden="true">
           <image class="fxaSyncIllustration"/>
-          <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
+          <label class="PanelUI-remotetabs-instruction-label" data-l10n-id="appmenu-remote-tabs-welcome"></label>
           <toolbarbutton class="PanelUI-remotetabs-button"
                          id="PanelUI-remotetabs-setupsync-button"
                          data-l10n-id="appmenu-remote-tabs-sign-into-sync"
@@ -506,7 +502,7 @@
               class="PanelUI-remotetabs-instruction-box"
               hidden="true">
           <image class="fxaSyncIllustration"/>
-          <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
+          <label class="PanelUI-remotetabs-instruction-label" data-l10n-id="appmenu-remote-tabs-welcome"></label>
           <toolbarbutton class="PanelUI-remotetabs-button"
                          id="PanelUI-remotetabs-syncdisabled-button"
                          data-l10n-id="appmenu-remote-tabs-turn-on-sync"
@@ -519,7 +515,7 @@
               class="PanelUI-remotetabs-instruction-box"
               hidden="true">
           <image class="fxaSyncIllustrationIssue"/>
-          <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
+          <label class="PanelUI-remotetabs-instruction-label" data-l10n-id="appmenu-remote-tabs-welcome"></label>
           <toolbarbutton class="PanelUI-remotetabs-button"
                          id="PanelUI-remotetabs-reauthsync-button"
                          data-l10n-id="appmenu-remote-tabs-sign-into-sync"
@@ -532,10 +528,10 @@
               class="PanelUI-remotetabs-instruction-box"
               hidden="true">
           <image class="fxaSyncIllustrationIssue"/>
-          <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.unverified.label;</label>
+          <label class="PanelUI-remotetabs-instruction-label" data-l10n-id="appmenu-remote-tabs-unverified"></label>
           <toolbarbutton class="PanelUI-remotetabs-button"
                          id="PanelUI-remotetabs-unverified-button"
-                         label="&appMenuRemoteTabs.opensyncprefs.label;"
+                         data-l10n-id="appmenu-remote-tabs-opensettings"
                          oncommand="gSync.openPrefs('synced-tabs');"/>
         </vbox>
       </hbox>
@@ -603,12 +599,8 @@
         <!-- Sync is ready to Sync and the "tabs" engine is enabled -->
         <vbox id="PanelUI-fxa-remotetabs-tabspane">
           <vbox id="PanelUI-fxa-remotetabs-tabslist"
-                showAllLabel="&appMenuRemoteTabs.showAll.label;"
-                showAllTooltipText="&appMenuRemoteTabs.showAll.tooltip;"
-                showMoreLabel="appmenu-fxa-show-more-tabs"
-                showMoreTooltipText="&appMenuRemoteTabs.showMore.tooltip;"
-                notabsforclientlabel="&appMenuRemoteTabs.notabs.label;"
-                />
+          notabsforclientlabel="appmenu-remote-tabs-notabs"
+          />
         </vbox>
         <!-- Sync is ready to Sync but we are still fetching the tabs to show -->
         <vbox id="PanelUI-fxa-remotetabs-fetching">
@@ -644,7 +636,7 @@
       <label class="PanelUI-fxa-service-description-label">&fxa.service.sendTab.description;</label>
       <toolbarbutton id="PanelUI-fxa-menu-sendtab-connect-device-button"
                      class="PanelUI-fxa-signin-button"
-                     label="&appMenuRemoteTabs.connectdevice.label;"
+                     data-l10n-id="appmenu-remote-tabs-connectdevice"
                      oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
     </vbox>
   </panelview>
