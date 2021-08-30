@@ -102,6 +102,7 @@ impl Example for App {
             let mut builder = DisplayListBuilder::new(
                 doc.pipeline_id,
             );
+            builder.begin();
             let local_rect = LayoutRect::from_size(doc.content_rect.size());
 
             builder.push_simple_stacking_context(
@@ -121,7 +122,7 @@ impl Example for App {
                 Epoch(0),
                 None,
                 doc.content_rect.size(),
-                builder.finalize(),
+                builder.end(),
                 true,
             );
             txn.generate_frame(0);

@@ -2147,13 +2147,14 @@ pub unsafe extern "C" fn wr_transaction_clear_display_list(
     pipeline_id: WrPipelineId,
 ) {
     let preserve_frame_state = true;
-    let frame_builder = WebRenderFrameBuilder::new(pipeline_id);
+    let mut frame_builder = WebRenderFrameBuilder::new(pipeline_id);
+    frame_builder.dl_builder.begin();
 
     txn.set_display_list(
         epoch,
         None,
         LayoutSize::new(0.0, 0.0),
-        frame_builder.dl_builder.finalize(),
+        frame_builder.dl_builder.end(),
         preserve_frame_state,
     );
 }
@@ -2372,12 +2373,6 @@ impl WebRenderFrameBuilder {
             dl_builder: DisplayListBuilder::new(root_pipeline_id),
         }
     }
-    pub fn with_capacity(root_pipeline_id: WrPipelineId, capacity: DisplayListCapacity) -> WebRenderFrameBuilder {
-        WebRenderFrameBuilder {
-            root_pipeline_id,
-            dl_builder: DisplayListBuilder::with_capacity(root_pipeline_id, capacity),
-        }
-    }
 }
 
 pub struct WrState {
@@ -2386,12 +2381,12 @@ pub struct WrState {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId, capacity: DisplayListCapacity) -> *mut WrState {
+pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId) -> *mut WrState {
     assert!(unsafe { !is_in_render_thread() });
 
     let state = Box::new(WrState {
         pipeline_id,
-        frame_builder: WebRenderFrameBuilder::with_capacity(pipeline_id, capacity),
+        frame_builder: WebRenderFrameBuilder::new(pipeline_id),
     });
 
     Box::into_raw(state)
@@ -3792,15 +3787,21 @@ pub extern "C" fn wr_dump_serialized_display_list(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_api_finalize_builder(
+pub unsafe extern "C" fn wr_api_begin_builder(
+    state: &mut WrState,
+) {
+    state.frame_builder.dl_builder.begin();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_end_builder(
     state: &mut WrState,
     dl_descriptor: &mut BuiltDisplayListDescriptor,
     dl_items_data: &mut WrVecU8,
     dl_cache_data: &mut WrVecU8,
     dl_spatial_tree: &mut WrVecU8,
 ) {
-    let frame_builder = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(state.pipeline_id));
-    let (_, dl) = frame_builder.dl_builder.finalize();
+    let (_, dl) = state.frame_builder.dl_builder.end();
     let (payload, descriptor) = dl.into_data();
     *dl_items_data = WrVecU8::from_vec(payload.items_data);
     *dl_cache_data = WrVecU8::from_vec(payload.cache_data);

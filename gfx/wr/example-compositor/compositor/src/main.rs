@@ -468,6 +468,7 @@ fn main() {
 
     if let Invalidations::Scrolling = inv_mode {
         let mut root_builder = DisplayListBuilder::new(root_pipeline_id);
+        root_builder.begin();
 
         build_display_list(
             &mut root_builder,
@@ -482,7 +483,7 @@ fn main() {
             current_epoch,
             None,
             layout_size,
-            root_builder.finalize(),
+            root_builder.end(),
             true,
         );
     }
@@ -506,6 +507,7 @@ fn main() {
             match inv_mode {
                 Invalidations::Small | Invalidations::Large => {
                     let mut root_builder = DisplayListBuilder::new(root_pipeline_id);
+                    root_builder.begin();
 
                     build_display_list(
                         &mut root_builder,
@@ -520,7 +522,7 @@ fn main() {
                         current_epoch,
                         None,
                         layout_size,
-                        root_builder.finalize(),
+                        root_builder.end(),
                         true,
                     );
                 }

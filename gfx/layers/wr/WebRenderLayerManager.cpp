@@ -41,8 +41,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
       mIsFirstPaint(false),
       mTarget(nullptr),
       mPaintSequenceNumber(0),
-      mWebRenderCommandBuilder(this),
-      mLastDisplayListSize{0} {
+      mWebRenderCommandBuilder(this) {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
   mStateManager.mLayerManager = this;
 
@@ -120,6 +119,11 @@ bool WebRenderLayerManager::Initialize(
   WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
   WrBridge()->SetNamespace(idNamespace.ref());
   *aTextureFactoryIdentifier = textureFactoryIdentifier;
+
+  mDLBuilder = MakeUnique<wr::DisplayListBuilder>(
+      WrBridge()->GetPipeline(), WrBridge()->GetWebRenderBackend(),
+      &mDisplayItemCache);
+
   hasInitialized = true;
   return true;
 }
@@ -132,6 +136,8 @@ void WebRenderLayerManager::DoDestroy(bool aIsSync) {
   if (IsDestroyed()) {
     return;
   }
+
+  mDLBuilder = nullptr;
 
   LayerManager::Destroy();
 
@@ -339,20 +345,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
 
-  // While the first display list after tab-switch can be large, the
-  // following ones are always smaller thanks to interning (rarely above 0.3MB).
-  // So don't let the spike of the first allocation make us allocate a large
-  // contiguous buffer (with some likelihood of OOM, see bug 1531819).
-  static const size_t kMaxPrealloc = 300000;
-
-  mLastDisplayListSize.items_size =
-      std::min(mLastDisplayListSize.items_size, kMaxPrealloc);
-  mLastDisplayListSize.cache_size =
-      std::min(mLastDisplayListSize.cache_size, kMaxPrealloc);
-
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(),
-                                 WrBridge()->GetWebRenderBackend(),
-                                 mLastDisplayListSize, &mDisplayItemCache);
+  mDLBuilder->Begin();
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
@@ -367,7 +360,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   if (XRE_IsContentProcess() &&
       StaticPrefs::gfx_webrender_dl_dump_content_serialized()) {
-    builder.DumpSerializedDisplayList();
+    mDLBuilder->DumpSerializedDisplayList();
   }
 
   if (aDisplayList) {
@@ -375,7 +368,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     mDisplayItemCache.SetDisplayList(aDisplayListBuilder, aDisplayList);
 
     mWebRenderCommandBuilder.BuildWebRenderCommands(
-        builder, resourceUpdates, aDisplayList, aDisplayListBuilder,
+        *mDLBuilder, resourceUpdates, aDisplayList, aDisplayListBuilder,
         mScrollData, std::move(aFilters));
 
     aDisplayListBuilder->NotifyAndClearScrollFrames();
@@ -385,19 +378,19 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   } else {
     // ViewToPaint does not have frame yet, then render only background clolor.
     MOZ_ASSERT(!aDisplayListBuilder && aBackground);
-    aBackground->AddWebRenderCommands(builder);
+    aBackground->AddWebRenderCommands(*mDLBuilder);
     if (dumpEnabled) {
       printf_stderr("(no display list; background only)\n");
       builderDumpIndex =
-          builder.Dump(/*indent*/ 1, Some(builderDumpIndex), Nothing());
+          mDLBuilder->Dump(/*indent*/ 1, Some(builderDumpIndex), Nothing());
     }
   }
 
-  mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder,
+  mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), *mDLBuilder,
                                              resourceUpdates);
   if (dumpEnabled) {
     printf_stderr("(window overlay)\n");
-    Unused << builder.Dump(/*indent*/ 1, Some(builderDumpIndex), Nothing());
+    Unused << mDLBuilder->Dump(/*indent*/ 1, Some(builderDumpIndex), Nothing());
   }
 
   if (AsyncPanZoomEnabled()) {
@@ -458,10 +451,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   {
     AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardDPTransaction", GRAPHICS);
     DisplayListData dlData;
-    builder.Finalize(dlData);
-    mLastDisplayListSize.items_size = dlData.mDLItems->mCapacity;
-    mLastDisplayListSize.cache_size = dlData.mDLCache->mCapacity;
-    mLastDisplayListSize.spatial_tree_size = dlData.mDLSpatialTree->mCapacity;
+    mDLBuilder->End(dlData);
     resourceUpdates.Flush(dlData.mResourceUpdates, dlData.mSmallShmems,
                           dlData.mLargeShmems);
     dlData.mRect =
