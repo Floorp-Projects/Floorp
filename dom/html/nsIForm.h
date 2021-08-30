@@ -36,15 +36,6 @@ class nsIForm : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORM_IID)
 
   /**
-   * Get the element at a specified index position in form.elements
-   *
-   * @param aIndex the index
-   * @param aElement the element at that index
-   * @return NS_OK if there was an element at that position, -1 otherwise
-   */
-  NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const = 0;
-
-  /**
    * Get the index of the given control within form.elements.
    * @param aControl the control to find the index of
    * @param aIndex the index [OUT]

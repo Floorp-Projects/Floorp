@@ -603,7 +603,8 @@ nsresult HTMLFormElement::DoReset() {
   uint32_t numElements = mControls->Length();
   for (uint32_t elementX = 0; elementX < numElements; ++elementX) {
     // Hold strong ref in case the reset does something weird
-    nsCOMPtr<nsIFormControl> controlNode = GetElementAt(elementX);
+    nsCOMPtr<nsIFormControl> controlNode =
+        mControls->mElements.SafeElementAt(elementX, nullptr);
     if (controlNode) {
       controlNode->Reset();
     }
@@ -1073,11 +1074,6 @@ Element* HTMLFormElement::IndexedGetter(uint32_t aIndex, bool& aFound) {
   Element* element = mControls->mElements.SafeElementAt(aIndex, nullptr);
   aFound = element != nullptr;
   return element;
-}
-
-NS_IMETHODIMP_(nsIFormControl*)
-HTMLFormElement::GetElementAt(int32_t aIndex) const {
-  return mControls->mElements.SafeElementAt(aIndex, nullptr);
 }
 
 /**
