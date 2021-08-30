@@ -53,19 +53,6 @@ this container is a toolbar. This avoids double-speaking. -->
 
 <!ENTITY historyMenu.label "History">
 
-<!ENTITY customizeMenu.addToToolbar.label "Add to Toolbar">
-<!ENTITY customizeMenu.addToToolbar.accesskey "A">
-<!-- LOCALIZATION NOTE (customizeMenu.addToOverflowMenu.label,
-     customizeMenu.unpinFromOverflowMenu.label)
-     The overflow menu is the menu that appears if you click the chevron (>> button)
-     in the location bar. -->
-<!ENTITY customizeMenu.addToOverflowMenu.label "Add to Overflow Menu">
-<!ENTITY customizeMenu.addToOverflowMenu.accesskey "M">
-<!ENTITY customizeMenu.unpinFromOverflowMenu.label "Unpin from Overflow Menu">
-<!ENTITY customizeMenu.unpinFromOverflowMenu.accesskey "U">
-<!ENTITY customizeMenu.addMoreItems.label "Add More Items…">
-<!ENTITY customizeMenu.addMoreItems.accesskey "A">
-
 <!ENTITY contentSearchSubmit.tooltip  "Submit search">
 
 <!-- LOCALIZATION NOTE (searchInput.placeholder):
@@ -87,11 +74,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
-
-
-<!ENTITY panicButton.thankyou.msg1                "Your recent history is cleared.">
-<!ENTITY panicButton.thankyou.msg2                "Safe browsing!">
-<!ENTITY panicButton.thankyou.buttonlabel         "Thanks!">
 
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
 
