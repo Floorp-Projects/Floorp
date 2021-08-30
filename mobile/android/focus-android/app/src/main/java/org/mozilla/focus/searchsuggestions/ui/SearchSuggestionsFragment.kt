@@ -58,7 +58,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        searchSuggestionsViewModel = ViewModelProvider(requireActivity())
+        searchSuggestionsViewModel = ViewModelProvider(requireParentFragment())
             .get(SearchSuggestionsViewModel::class.java)
 
         searchSuggestionsViewModel.state.observe(

@@ -162,7 +162,7 @@ class UrlInputFragment :
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        searchSuggestionsViewModel = ViewModelProvider(requireActivity()).get(SearchSuggestionsViewModel::class.java)
+        searchSuggestionsViewModel = ViewModelProvider(this).get(SearchSuggestionsViewModel::class.java)
 
         childFragmentManager.beginTransaction()
             .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
