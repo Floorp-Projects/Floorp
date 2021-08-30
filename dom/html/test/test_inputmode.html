@@ -41,11 +41,16 @@
 </div>
 <pre id="test">
 <script class=testbody" type="application/javascript">
-SimpleTest.waitForExplicitFinish();
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.clearUserPref("dom.forms.inputmode");
+});
 
-SimpleTest.waitForFocus(async () => {
+add_task(async function setup() {
+  await new Promise(r => SimpleTest.waitForFocus(r));
   await SpecialPowers.setBoolPref("dom.forms.inputmode", true);
+});
 
+add_task(async function basic() {
   const tests = [
     { id: "a1", inputmode: "none", desc: "inputmode of input element is none" },
     { id: "a2", inputmode: "text", desc: "inputmode of input element is text" },
@@ -92,9 +97,29 @@ SimpleTest.waitForFocus(async () => {
     }
     is(SpecialPowers.DOMWindowUtils.focusedInputMode, test.inputmode, test.desc);
   }
+});
 
-  SpecialPowers.clearUserPref("dom.forms.inputmode");
-  SimpleTest.finish();
+add_task(async function dynamicChange() {
+  const tests = ["a3", "b3", "c3"];
+  for (let test of tests) {
+    let element = document.getElementById(test);
+    element.focus();
+    is(SpecialPowers.DOMWindowUtils.focusedInputMode, "tel", "Initial inputmode");
+    element.inputMode = "url";
+    is(SpecialPowers.DOMWindowUtils.focusedInputMode, "url",
+       "inputmode in InputContext has to sync with current inputmode");
+    // Storing the original value may be safer.
+    element.inputMode = "tel";
+  }
+
+  let element = document.getElementById("a3");
+  element.focus();
+  is(SpecialPowers.DOMWindowUtils.focusedInputMode, "tel", "Initial inputmode");
+  document.getElementById("a4").inputMode = "email";
+  is(SpecialPowers.DOMWindowUtils.focusedInputMode, "tel",
+     "inputmode in InputContext keeps focused inputmode value");
+  // Storing the original value may be safer.
+  document.getElementById("a4").inputMode = "url";
 });
 </script>
 </pre>

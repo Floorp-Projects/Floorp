@@ -920,14 +920,16 @@ void IMEStateManager::OnReFocus(nsPresContext* aPresContext,
 // static
 void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
                                      nsIContent* aContent,
-                                     EditorBase& aEditorBase) {
+                                     EditorBase& aEditorBase,
+                                     const UpdateIMEStateOptions& aOptions) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
-      ("UpdateIMEState(aNewIMEState=%s, aContent=0x%p, aEditorBase=0x%p), "
+      ("UpdateIMEState(aNewIMEState=%s, aContent=0x%p, aEditorBase=0x%p, "
+       "aOptions=0x%0x), "
        "sPresContext=0x%p, sContent=0x%p, sWidget=0x%p (available: %s), "
        "sActiveIMEContentObserver=0x%p, sIsGettingNewIMEState=%s",
        ToString(aNewIMEState).c_str(), aContent, &aEditorBase,
-       sPresContext.get(), sContent.get(), sWidget,
+       aOptions.serialize(), sPresContext.get(), sContent.get(), sWidget,
        GetBoolName(sWidget && !sWidget->Destroyed()),
        sActiveIMEContentObserver.get(), GetBoolName(sIsGettingNewIMEState)));
 
@@ -1024,6 +1026,7 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
        !sActiveIMEContentObserver->IsManaging(sPresContext, aContent));
 
   bool updateIMEState =
+      aOptions.contains(UpdateIMEStateOption::ForceUpdate) ||
       (widget->GetInputContext().mIMEState.mEnabled != aNewIMEState.mEnabled);
   if (NS_WARN_IF(widget->Destroyed())) {
     MOZ_LOG(
@@ -1032,7 +1035,8 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     return;
   }
 
-  if (updateIMEState) {
+  if (updateIMEState &&
+      !aOptions.contains(UpdateIMEStateOption::DontCommitComposition)) {
     // commit current composition before modifying IME state.
     NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, widget, sFocusedIMEBrowserParent);
     if (NS_WARN_IF(widget->Destroyed())) {
