@@ -353,6 +353,9 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   void NotifyListenersOnUnregister(
       nsIServiceWorkerRegistrationInfo* aRegistration);
 
+  void NotifyListenersOnQuotaUsageCheckFinish(
+      nsIServiceWorkerRegistrationInfo* aRegistration);
+
   void ScheduleUpdateTimer(nsIPrincipal* aPrincipal, const nsACString& aScope);
 
   void UpdateTimerFired(nsIPrincipal* aPrincipal, const nsACString& aScope);
