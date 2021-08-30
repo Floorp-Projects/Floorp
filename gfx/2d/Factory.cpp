@@ -53,7 +53,6 @@
 #endif
 
 #include "DrawTargetDual.h"
-#include "DrawTargetTiled.h"
 #include "DrawTargetOffset.h"
 #include "DrawTargetWrapAndRecord.h"
 #include "DrawTargetRecording.h"
@@ -469,17 +468,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetForData(
   }
 
   return retVal.forget();
-}
-
-already_AddRefed<DrawTarget> Factory::CreateTiledDrawTarget(
-    const TileSet& aTileSet) {
-  RefPtr<DrawTargetTiled> dt = new DrawTargetTiled();
-
-  if (!dt->Init(aTileSet)) {
-    return nullptr;
-  }
-
-  return dt.forget();
 }
 
 already_AddRefed<DrawTarget> Factory::CreateOffsetDrawTarget(
