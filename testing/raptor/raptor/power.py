@@ -16,21 +16,22 @@ LOG = RaptorLogger(component="raptor-power")
 
 P2_PATH = "/sys/class/power_supply/battery/input_suspend"
 G5_PATH = "/sys/class/power_supply/battery/charging_enabled"
+S7_PATH = "/sys/class/power_supply/battery/batt_slate_mode"
 
 
 def get_device_type(device, timeout=10):
     """Returns the type of device being tested. Currently
-    it can either be Pixel 2, or Moto G5"""
+    it can either be Pixel 2, Moto G5, or Samsung S7."""
     device_type = device.shell_output("getprop ro.product.model", timeout=timeout)
     if device_type == "Pixel 2":
         pass
     elif device_type == "Moto G (5)":
         pass
+    elif device_type == "SM-G930F":
+        # samsung s7 galaxy (exynos)
+        pass
     else:
-        raise Exception(
-            "TEST-UNEXPECTED-FAIL | Unknown device ('%s')! Contact Android Relops immediately."
-            % device_type
-        )
+        raise Exception("TEST-UNEXPECTED-FAIL | Unknown device ('%s')!" % device_type)
     return device_type
 
 
@@ -44,10 +45,12 @@ def change_charging_state(device, device_type, enable=True, timeout=10):
         elif device_type == "Moto G (5)":
             status = 1 if enable else 0
             device.shell_bool("echo %s > %s" % (status, G5_PATH), timeout=timeout)
+        elif device_type == "SM-G930F":
+            status = 0 if enable else 1
+            device.shell_bool("echo %s > %s" % (status, S7_PATH), timeout=timeout)
     except (ADBTimeoutError, ADBError) as e:
         raise Exception(
-            "TEST-UNEXPECTED-FAIL | Failed to %s charging. Contact Android Relops "
-            "immediately. Error: %s"
+            "TEST-UNEXPECTED-FAIL | Failed to %s charging. Error: %s"
             % (
                 "enable" if enable else "disable",
                 "{}: {}".format(e.__class__.__name__, e),
@@ -68,6 +71,11 @@ def is_charging_disabled(device, device_type, timeout=10):
             device.shell_output("cat %s 2>/dev/null" % G5_PATH, timeout=timeout).strip()
             == "0"
         )
+    elif device_type == "SM-G930F":
+        disabled = (
+            device.shell_output("cat %s 2>/dev/null" % S7_PATH, timeout=timeout).strip()
+            == "1"
+        )
     return disabled
 
 
@@ -77,7 +85,7 @@ def is_charging_enabled(device, device_type):
 
 
 def enable_charging(device):
-    """Enables charging on P2 or G5 devices."""
+    """Enables charging on a supported device."""
     device_type = get_device_type(device)
     if is_charging_enabled(device, device_type):
         return
@@ -96,7 +104,7 @@ def enable_charging(device):
 
 
 def disable_charging(device):
-    """Disables charging on P2 or G5 devices."""
+    """Disables charging on a supported device."""
     device_type = get_device_type(device)
     if is_charging_disabled(device, device_type):
         return
