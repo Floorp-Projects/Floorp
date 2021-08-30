@@ -52,7 +52,6 @@
 #  include "nsWindowsHelpers.h"
 #endif
 
-#include "DrawTargetCapture.h"
 #include "DrawTargetDual.h"
 #include "DrawTargetTiled.h"
 #include "DrawTargetOffset.h"
@@ -422,32 +421,6 @@ already_AddRefed<DrawTarget> Factory::CreateRecordingDrawTarget(
   return MakeAndAddRef<DrawTargetRecording>(aRecorder, aDT, aRect);
 }
 
-already_AddRefed<DrawTargetCapture> Factory::CreateCaptureDrawTargetForTarget(
-    gfx::DrawTarget* aTarget, size_t aFlushBytes) {
-  return MakeAndAddRef<DrawTargetCaptureImpl>(aTarget, aFlushBytes);
-}
-
-already_AddRefed<DrawTargetCapture> Factory::CreateCaptureDrawTarget(
-    BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat) {
-  return MakeAndAddRef<DrawTargetCaptureImpl>(aBackend, aSize, aFormat);
-}
-
-already_AddRefed<DrawTargetCapture> Factory::CreateCaptureDrawTargetForData(
-    BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat,
-    int32_t aStride, size_t aSurfaceAllocationSize) {
-  MOZ_ASSERT(aSurfaceAllocationSize && aStride);
-
-  BackendType type = aBackend;
-  if (!Factory::DoesBackendSupportDataDrawtarget(aBackend)) {
-    type = BackendType::SKIA;
-  }
-
-  RefPtr<DrawTargetCaptureImpl> dt =
-      new DrawTargetCaptureImpl(type, aSize, aFormat);
-  dt->InitForData(aStride, aSurfaceAllocationSize);
-  return dt.forget();
-}
-
 already_AddRefed<DrawTarget> Factory::CreateDrawTargetForData(
     BackendType aBackend, unsigned char* aData, const IntSize& aSize,
     int32_t aStride, SurfaceFormat aFormat, bool aUninitialized) {
@@ -525,7 +498,6 @@ bool Factory::DoesBackendSupportDataDrawtarget(BackendType aType) {
     case BackendType::DIRECT2D:
     case BackendType::DIRECT2D1_1:
     case BackendType::RECORDING:
-    case BackendType::CAPTURE:
     case BackendType::NONE:
     case BackendType::BACKEND_LAST:
     case BackendType::WEBRENDER_TEXT:

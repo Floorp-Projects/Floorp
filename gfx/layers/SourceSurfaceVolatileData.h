@@ -42,8 +42,6 @@ class SourceSurfaceVolatileData : public DataSourceSurface {
   IntSize GetSize() const override { return mSize; }
   SurfaceFormat GetFormat() const override { return mFormat; }
 
-  void GuaranteePersistance() override;
-
   void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                            SizeOfInfo& aInfo) const override;
 

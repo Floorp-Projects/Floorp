@@ -27,7 +27,6 @@
 #include "Tools.h"
 #include "DataSurfaceHelpers.h"
 #include "PathHelpers.h"
-#include "SourceSurfaceCapture.h"
 #include "Swizzle.h"
 #include <algorithm>
 
@@ -230,17 +229,6 @@ static sk_sp<SkImage> GetSkImageForSurface(SourceSurface* aSurface,
   if (!aSurface) {
     gfxDebug() << "Creating null Skia image from null SourceSurface";
     return nullptr;
-  }
-
-  if (aSurface->GetType() == SurfaceType::CAPTURE) {
-    SourceSurfaceCapture* capture =
-        static_cast<SourceSurfaceCapture*>(aSurface);
-    RefPtr<SourceSurface> resolved = capture->Resolve(BackendType::SKIA);
-    if (!resolved) {
-      return nullptr;
-    }
-    MOZ_ASSERT(resolved->GetType() != SurfaceType::CAPTURE);
-    return GetSkImageForSurface(resolved, aLock, aBounds, aMatrix);
   }
 
   if (aSurface->GetType() == SurfaceType::SKIA) {

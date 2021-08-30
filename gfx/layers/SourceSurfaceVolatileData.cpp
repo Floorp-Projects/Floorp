@@ -29,10 +29,6 @@ bool SourceSurfaceVolatileData::Init(const IntSize& aSize, int32_t aStride,
   return true;
 }
 
-void SourceSurfaceVolatileData::GuaranteePersistance() {
-  MOZ_ASSERT_UNREACHABLE("Should use SourceSurfaceRawData wrapper!");
-}
-
 void SourceSurfaceVolatileData::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                     SizeOfInfo& aInfo) const {
   aInfo.AddType(SurfaceType::DATA);

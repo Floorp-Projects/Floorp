@@ -21,25 +21,8 @@ void SourceSurfaceRawData::InitWrappingData(
   mSize = aSize;
   mStride = aStride;
   mFormat = aFormat;
-
-  if (aDeallocator) {
-    mOwnData = true;
-  }
   mDeallocator = aDeallocator;
   mClosure = aClosure;
-}
-
-void SourceSurfaceRawData::GuaranteePersistance() {
-  if (mOwnData) {
-    return;
-  }
-
-  MOZ_ASSERT(!mDeallocator);
-  uint8_t* oldData = mRawData;
-  mRawData = new uint8_t[mStride * mSize.height];
-
-  memcpy(mRawData, oldData, mStride * mSize.height);
-  mOwnData = true;
 }
 
 void SourceSurfaceRawData::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
@@ -47,8 +30,6 @@ void SourceSurfaceRawData::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   aInfo.AddType(SurfaceType::DATA);
   if (mDeallocator) {
     aInfo.mUnknownBytes = mStride * mSize.height;
-  } else if (mOwnData) {
-    aInfo.mHeapBytes = mStride * mSize.height;
   }
 }
 

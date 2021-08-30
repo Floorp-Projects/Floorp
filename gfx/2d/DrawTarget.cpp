@@ -5,11 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "2D.h"
+#include "Blur.h"
 #include "Logging.h"
 #include "PathHelpers.h"
 #include "Tools.h"
-
-#include "DrawTargetCapture.h"
 
 #include "BufferEdgePad.h"
 #include "BufferUnrotate.h"
@@ -155,17 +154,6 @@ static void ComputeLinearRGBLuminanceMask(
     sourcePixel += sourceOffset;
     destPixel += destOffset;
   }
-}
-
-void DrawTarget::DrawCapturedDT(DrawTargetCapture* aCaptureDT,
-                                const Matrix& aTransform) {
-  if (aTransform.HasNonIntegerTranslation()) {
-    gfxWarning() << "Non integer translations are not supported for "
-                    "DrawCaptureDT at this time!";
-    return;
-  }
-  static_cast<DrawTargetCaptureImpl*>(aCaptureDT)
-      ->ReplayToDrawTarget(this, aTransform);
 }
 
 void DrawTarget::PushDeviceSpaceClipRects(const IntRect* aRects,
