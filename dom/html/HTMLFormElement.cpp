@@ -155,7 +155,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLFormElement,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLFormElement,
-                                             nsGenericHTMLElement, nsIForm,
+                                             nsGenericHTMLElement,
                                              nsIRadioGroupContainer)
 
 // EventTarget
@@ -1068,8 +1068,6 @@ NotNull<const Encoding*> HTMLFormElement::GetSubmitEncoding() {
   return UTF_8_ENCODING;
 }
 
-// nsIForm
-
 Element* HTMLFormElement::IndexedGetter(uint32_t aIndex, bool& aFound) {
   Element* element = mControls->mElements.SafeElementAt(aIndex, nullptr);
   aFound = element != nullptr;
@@ -1749,8 +1747,7 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
   return rv;
 }
 
-NS_IMETHODIMP_(nsIFormControl*)
-HTMLFormElement::GetDefaultSubmitElement() const {
+nsIFormControl* HTMLFormElement::GetDefaultSubmitElement() const {
   MOZ_ASSERT(mDefaultSubmitElement == mFirstSubmitInElements ||
                  mDefaultSubmitElement == mFirstSubmitNotInElements,
              "What happened here?");
@@ -2035,8 +2032,7 @@ void HTMLFormElement::UpdateValidity(bool aElementValidity) {
   UpdateState(true);
 }
 
-NS_IMETHODIMP_(int32_t)
-HTMLFormElement::IndexOfControl(nsIFormControl* aControl) {
+int32_t HTMLFormElement::IndexOfControl(nsIFormControl* aControl) {
   int32_t index = 0;
   return mControls->IndexOfControl(aControl, &index) == NS_OK ? index : 0;
 }

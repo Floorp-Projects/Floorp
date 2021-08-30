@@ -37,7 +37,6 @@
 #include "nsFocusManager.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
-#include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsINode.h"
 #include "nsISupports.h"

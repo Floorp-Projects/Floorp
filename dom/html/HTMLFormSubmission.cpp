@@ -7,8 +7,8 @@
 #include "HTMLFormSubmission.h"
 
 #include "HTMLFormElement.h"
+#include "HTMLFormSubmissionConstants.h"
 #include "nsCOMPtr.h"
-#include "nsIForm.h"
 #include "mozilla/dom/Document.h"
 #include "nsComponentManagerUtils.h"
 #include "nsGkAtoms.h"

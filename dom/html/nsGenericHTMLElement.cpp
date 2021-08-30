@@ -63,7 +63,6 @@
 #include "nsGkAtoms.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsITextControlFrame.h"
-#include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsFocusManager.h"

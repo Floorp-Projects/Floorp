@@ -14,7 +14,6 @@
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/RadioGroupManager.h"
 #include "nsCOMPtr.h"
-#include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIRadioGroupContainer.h"
@@ -39,7 +38,6 @@ class HTMLImageElement;
 class FormData;
 
 class HTMLFormElement final : public nsGenericHTMLElement,
-                              public nsIForm,
                               public nsIRadioGroupContainer,
                               RadioGroupManager {
   friend class HTMLFormControlsCollection;
@@ -55,9 +53,8 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIForm
-  NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl) override;
-  NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const override;
+  int32_t IndexOfControl(nsIFormControl* aControl);
+  nsIFormControl* GetDefaultSubmitElement() const;
 
   // nsIRadioGroupContainer
   void SetCurrentRadioButton(const nsAString& aName,
