@@ -125,6 +125,8 @@ class IMEContentObserver final : public nsStubMutationObserver,
                                             EditorBase& aEditorBase);
 
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent) const;
+  bool IsBeingInitializedFor(nsPresContext* aPresContext,
+                             nsIContent* aContent) const;
   bool IsManaging(const TextComposition* aTextComposition) const;
   bool WasInitializedWith(const EditorBase& aEditorBase) const {
     return mEditorBase == &aEditorBase;
