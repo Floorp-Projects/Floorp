@@ -11,6 +11,7 @@ EXPORTS.mozilla.intl = [
     "src/ICU4CGlue.h",
     "src/ICUError.h",
     "src/NumberFormat.h",
+    "src/NumberFormatFields.h",
     "src/NumberRangeFormat.h",
     "src/PluralRules.h",
 ]
@@ -23,6 +24,7 @@ UNIFIED_SOURCES += [
     "src/ICU4CGlue.cpp",
     "src/NumberFormat.cpp",
     "src/NumberFormatFields.cpp",
+    "src/NumberFormatFieldsUtil.cpp",
     "src/NumberFormatterSkeleton.cpp",
     "src/NumberRangeFormat.cpp",
     "src/PluralRules.cpp",
