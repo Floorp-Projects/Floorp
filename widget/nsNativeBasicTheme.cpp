@@ -342,6 +342,9 @@ static std::pair<sRGBColor, sRGBColor> SystemColorPair(
 /* static */
 auto nsNativeBasicTheme::GetDPIRatioForScrollbarPart(nsPresContext* aPc)
     -> DPIRatio {
+  if (auto* widget = aPc->GetRootPresContext()->GetRootWidget()) {
+    return widget->GetDefaultScale();
+  }
   return DPIRatio(float(AppUnitsPerCSSPixel()) /
                   aPc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 }
