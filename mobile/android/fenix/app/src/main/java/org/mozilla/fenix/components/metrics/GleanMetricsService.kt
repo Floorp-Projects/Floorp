@@ -55,7 +55,6 @@ import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
-import org.mozilla.fenix.GleanMetrics.UserSpecifiedSearchEngines
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.ext.components
 
@@ -450,12 +449,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ToolbarPositionChanged -> EventWrapper(
             { ToolbarSettings.changedPosition.record(it) },
             { ToolbarSettings.changedPositionKeys.valueOf(it) }
-        )
-        is Event.CustomEngineAdded -> EventWrapper<NoExtraKeys>(
-            { UserSpecifiedSearchEngines.customEngineAdded.record(it) }
-        )
-        is Event.CustomEngineDeleted -> EventWrapper<NoExtraKeys>(
-            { UserSpecifiedSearchEngines.customEngineDeleted.record(it) }
         )
         is Event.SaveLoginsSettingChanged -> EventWrapper(
             { Logins.saveLoginsSettingChanged.record(it) },

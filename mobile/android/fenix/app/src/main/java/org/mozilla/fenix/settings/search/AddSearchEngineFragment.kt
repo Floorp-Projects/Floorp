@@ -32,7 +32,6 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.CustomSearchEngineBinding
 import org.mozilla.fenix.databinding.CustomSearchEngineRadioButtonBinding
 import org.mozilla.fenix.databinding.FragmentAddSearchEngineBinding
@@ -193,8 +192,6 @@ class AddSearchEngineFragment :
                             .setText(successMessage)
                             .show()
                     }
-
-                    context?.components?.analytics?.metrics?.track(Event.CustomEngineAdded)
                     findNavController().popBackStack()
                 }
             }

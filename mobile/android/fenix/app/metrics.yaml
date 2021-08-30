@@ -3366,41 +3366,6 @@ logins:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
-user_specified_search_engines:
-  custom_engine_added:
-    type: event
-    description: |
-      A user added a new custom search engine
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/5884
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/6918
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-    no_lint:
-      - COMMON_PREFIX
-  custom_engine_deleted:
-    type: event
-    description: |
-      A user deleted a custom search engine
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/5884
-      - https://github.com/mozilla-mobile/fenix/issues/7881
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/6918
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-
 search_suggestions:
   enable_in_private:
     type: event
