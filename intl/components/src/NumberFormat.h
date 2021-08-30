@@ -16,6 +16,7 @@
 #include "mozilla/Utf8.h"
 #include "mozilla/Vector.h"
 #include "mozilla/intl/ICUError.h"
+#include "mozilla/intl/NumberFormatFields.h"
 
 #include "unicode/ustring.h"
 #include "unicode/unum.h"
@@ -186,44 +187,6 @@ struct MOZ_STACK_CLASS NumberFormatOptions {
   } mRoundingPriority = RoundingPriority::Auto;
 };
 
-enum class NumberPartType : int16_t {
-  ApproximatelySign,
-  Compact,
-  Currency,
-  Decimal,
-  ExponentInteger,
-  ExponentMinusSign,
-  ExponentSeparator,
-  Fraction,
-  Group,
-  Infinity,
-  Integer,
-  Literal,
-  MinusSign,
-  Nan,
-  Percent,
-  PlusSign,
-  Unit,
-};
-
-enum class NumberPartSource : int16_t { Shared, Start, End };
-
-// Because parts fully partition the formatted string, we only track the
-// index of the end of each part -- the beginning is implicitly the last
-// part's end.
-struct NumberPart {
-  NumberPartType type;
-  NumberPartSource source;
-  size_t endIndex;
-
-  bool operator==(const NumberPart& rhs) const {
-    return type == rhs.type && source == rhs.source && endIndex == rhs.endIndex;
-  }
-  bool operator!=(const NumberPart& rhs) const { return !(*this == rhs); }
-};
-
-using NumberPartVector = mozilla::Vector<NumberPart, 8>;
-
 /**
  * According to http://userguide.icu-project.org/design, as long as we constrain
  * ourselves to const APIs ICU is const-correct.
@@ -281,7 +244,8 @@ class NumberFormat final {
 
     bool isNegative = !IsNaN(number) && IsNegative(number);
 
-    return formatResultToParts(Some(number), isNegative, parts);
+    return FormatResultToParts(mFormattedNumber, Some(number), isNegative,
+                               mFormatForUnit, parts);
   }
 
   /**
@@ -326,7 +290,8 @@ class NumberFormat final {
       return Err(ICUError::InternalError);
     }
 
-    return formatResultToParts(Nothing(), number < 0, parts);
+    return FormatResultToParts(mFormattedNumber, Nothing(), number < 0,
+                               mFormatForUnit, parts);
   }
 
   /**
@@ -381,7 +346,8 @@ class NumberFormat final {
 
     bool isNegative = !number.empty() && number[0] == '-';
 
-    return formatResultToParts(Nothing(), isNegative, parts);
+    return FormatResultToParts(mFormattedNumber, Nothing(), isNegative,
+                               mFormatForUnit, parts);
   }
 
   /**
@@ -429,9 +395,6 @@ class NumberFormat final {
   [[nodiscard]] bool formatInternal(std::string_view number) const;
 
   Result<std::u16string_view, ICUError> formatResult() const;
-  Result<std::u16string_view, ICUError> formatResultToParts(
-      const Maybe<double> number, bool isNegative,
-      NumberPartVector& parts) const;
 
   template <typename C, typename B>
   Result<Ok, ICUError> formatResult(B& buffer) const {
