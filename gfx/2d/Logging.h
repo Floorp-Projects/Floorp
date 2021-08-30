@@ -673,9 +673,6 @@ class Log final {
         case SurfaceType::SKIA:
           mMessage << "SurfaceType::SKIA";
           break;
-        case SurfaceType::DUAL_DT:
-          mMessage << "SurfaceType::DUAL_DT";
-          break;
         case SurfaceType::D2D1_1_IMAGE:
           mMessage << "SurfaceType::D2D1_1_IMAGE";
           break;
@@ -684,9 +681,6 @@ class Log final {
           break;
         case SurfaceType::WRAP_AND_RECORD:
           mMessage << "SurfaceType::WRAP_AND_RECORD";
-          break;
-        case SurfaceType::TILED:
-          mMessage << "SurfaceType::TILED";
           break;
         case SurfaceType::DATA_SHARED:
           mMessage << "SurfaceType::DATA_SHARED";

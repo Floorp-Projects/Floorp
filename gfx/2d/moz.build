@@ -165,7 +165,6 @@ UNIFIED_SOURCES += [
     "DrawEventRecorder.cpp",
     "DrawTarget.cpp",
     "DrawTargetCairo.cpp",
-    "DrawTargetDual.cpp",
     "DrawTargetOffset.cpp",
     "DrawTargetRecording.cpp",
     "DrawTargetWrapAndRecord.cpp",

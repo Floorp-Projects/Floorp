@@ -1600,7 +1600,6 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
    */
   virtual void* GetNativeSurface(NativeSurfaceType aType) { return nullptr; }
 
-  virtual bool IsDualDrawTarget() const { return false; }
   virtual bool IsTiledDrawTarget() const { return false; }
   virtual bool SupportsRegionClipping() const { return true; }
 
@@ -1857,20 +1856,6 @@ class GFX2D_API Factory {
  public:
   static void PurgeAllCaches();
 
-  static already_AddRefed<DrawTarget> CreateDualDrawTarget(DrawTarget* targetA,
-                                                           DrawTarget* targetB);
-
-  static already_AddRefed<SourceSurface> CreateDualSourceSurface(
-      SourceSurface* sourceA, SourceSurface* sourceB);
-
-  /*
-   * This creates a new tiled DrawTarget. When a tiled drawtarget is used the
-   * drawing is distributed over number of tiles which may each hold an
-   * individual offset. The tiles in the set must each have the same backend
-   * and format.
-   */
-  static already_AddRefed<DrawTarget> CreateTiledDrawTarget(
-      const TileSet& aTileSet);
   static already_AddRefed<DrawTarget> CreateOffsetDrawTarget(
       DrawTarget* aDrawTarget, IntPoint aTileOrigin);
 
