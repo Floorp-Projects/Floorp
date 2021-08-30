@@ -46,7 +46,7 @@ class PreferenceSwitch(
 
     private fun setInitialValue() {
         this.isChecked = PreferenceManager.getDefaultSharedPreferences(context)
-            .getBoolean(context.getString(key), false)
+            .getBoolean(context.getString(key), true)
     }
 
     fun onClickListener(listener: () -> Unit) {
