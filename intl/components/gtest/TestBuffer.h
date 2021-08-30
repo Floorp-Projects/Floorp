@@ -64,6 +64,11 @@ class TestBuffer {
     return std::basic_string_view<CharType>(data(), length());
   }
 
+  /**
+   * Clear the buffer, allowing it to be re-used.
+   */
+  void clear() { mBuffer.clear(); }
+
   Vector<C, inlineCapacity> mBuffer{};
 };
 
