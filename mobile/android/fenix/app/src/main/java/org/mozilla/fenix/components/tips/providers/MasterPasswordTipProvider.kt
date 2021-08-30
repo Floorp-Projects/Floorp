@@ -27,12 +27,10 @@ import mozilla.components.service.sync.logins.toLogin
 import mozilla.components.support.migration.FennecLoginsMPImporter
 import mozilla.components.support.migration.FennecProfile
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.TipProvider
 import org.mozilla.fenix.components.tips.TipType
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -214,8 +212,6 @@ class MasterPasswordTipProvider(
 
     private fun dismissMPTip() {
         tip?.let {
-            context.metrics.track(Event.TipClosed(it.identifier))
-
             context.components.settings.preferences
                 .edit()
                 .putBoolean(it.identifier, false)

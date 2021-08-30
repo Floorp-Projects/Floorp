@@ -24,8 +24,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.TipType
 import org.mozilla.fenix.databinding.ButtonTipItemBinding
@@ -38,7 +36,6 @@ class ButtonTipViewHolderTest {
 
     @MockK private lateinit var activity: HomeActivity
     @MockK private lateinit var interactor: SessionControlInteractor
-    @MockK(relaxed = true) private lateinit var metrics: MetricController
     @MockK private lateinit var settings: Settings
     @MockK private lateinit var sharedPrefs: SharedPreferences
     @MockK private lateinit var sharedPrefsEditor: SharedPreferences.Editor
@@ -53,7 +50,7 @@ class ButtonTipViewHolderTest {
                 .inflate(ButtonTipViewHolder.LAYOUT_ID, null)
         )
 
-        viewHolder = ButtonTipViewHolder(view, interactor, metrics, settings)
+        viewHolder = ButtonTipViewHolder(view, interactor, settings)
         binding = ButtonTipItemBinding.bind(view)
         every { view.context } returns activity
         every { activity.openToBrowserAndLoad(any(), any(), any()) } just Runs
@@ -71,8 +68,6 @@ class ButtonTipViewHolderTest {
         assertEquals("Tip Title", binding.tipHeaderText.text)
         assertEquals("Tip description", binding.tipDescriptionText.text)
         assertEquals("button", binding.tipButton.text)
-
-        verify { metrics.track(Event.TipDisplayed("tipIdentifier")) }
     }
 
     @Test
@@ -105,7 +100,6 @@ class ButtonTipViewHolderTest {
 
         binding.tipButton.performClick()
         verify { action() }
-        verify { metrics.track(Event.TipPressed("tipIdentifier")) }
     }
 
     @Test
@@ -115,7 +109,6 @@ class ButtonTipViewHolderTest {
 
         binding.tipClose.performClick()
         verify { interactor.onCloseTip(tip) }
-        verify { metrics.track(Event.TipClosed("tipIdentifier")) }
         verify { sharedPrefsEditor.putBoolean("tipIdentifier", false) }
     }
 

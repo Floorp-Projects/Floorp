@@ -9,8 +9,6 @@ import androidx.core.view.isVisible
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.TipType
 import org.mozilla.fenix.databinding.ButtonTipItemBinding
@@ -23,7 +21,6 @@ import org.mozilla.fenix.utils.view.ViewHolder
 class ButtonTipViewHolder(
     private val view: View,
     private val interactor: SessionControlInteractor,
-    private val metrics: MetricController = view.context.components.analytics.metrics,
     private val settings: Settings = view.context.components.settings
 ) : ViewHolder(view) {
 
@@ -34,8 +31,6 @@ class ButtonTipViewHolder(
         require(tip.type is TipType.Button)
 
         this.tip = tip
-
-        metrics.track(Event.TipDisplayed(tip.identifier))
 
         with(binding) {
             tipHeaderText.text = tip.title
@@ -60,12 +55,9 @@ class ButtonTipViewHolder(
 
             tipButton.setOnClickListener {
                 tip.type.action.invoke()
-                metrics.track(Event.TipPressed(tip.identifier))
             }
 
             tipClose.setOnClickListener {
-                metrics.track(Event.TipClosed(tip.identifier))
-
                 settings.preferences
                     .edit()
                     .putBoolean(tip.identifier, false)

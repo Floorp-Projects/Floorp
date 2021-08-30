@@ -22,7 +22,6 @@ import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
@@ -349,21 +348,6 @@ sealed class Event {
     data class AddonOpenSetting(val addonId: String) : Event() {
         override val extras: Map<Addons.openAddonSettingKeys, String>?
             get() = hashMapOf(Addons.openAddonSettingKeys.addonId to addonId)
-    }
-
-    data class TipDisplayed(val identifier: String) : Event() {
-        override val extras: Map<Tip.displayedKeys, String>?
-            get() = hashMapOf(Tip.displayedKeys.identifier to identifier)
-    }
-
-    data class TipPressed(val identifier: String) : Event() {
-        override val extras: Map<Tip.pressedKeys, String>?
-            get() = hashMapOf(Tip.pressedKeys.identifier to identifier)
-    }
-
-    data class TipClosed(val identifier: String) : Event() {
-        override val extras: Map<Tip.closedKeys, String>?
-            get() = hashMapOf(Tip.closedKeys.identifier to identifier)
     }
 
     data class ToolbarPositionChanged(val position: Position) : Event() {

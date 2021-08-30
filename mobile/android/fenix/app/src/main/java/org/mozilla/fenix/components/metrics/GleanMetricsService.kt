@@ -54,7 +54,6 @@ import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
@@ -540,18 +539,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.AddonOpenSetting -> EventWrapper(
             { Addons.openAddonSetting.record(it) },
             { Addons.openAddonSettingKeys.valueOf(it) }
-        )
-        is Event.TipDisplayed -> EventWrapper(
-            { Tip.displayed.record(it) },
-            { Tip.displayedKeys.valueOf(it) }
-        )
-        is Event.TipPressed -> EventWrapper(
-            { Tip.pressed.record(it) },
-            { Tip.pressedKeys.valueOf(it) }
-        )
-        is Event.TipClosed -> EventWrapper(
-            { Tip.closed.record(it) },
-            { Tip.closedKeys.valueOf(it) }
         )
         is Event.VoiceSearchTapped -> EventWrapper<NoExtraKeys>(
             { VoiceSearch.tapped.record(it) }
