@@ -41,7 +41,7 @@ i686-pc-windows-msvc)
     # Some magic that papers over differences in case-sensitivity/insensitivity on Linux
     # and Windows file systems.
     export LD_PRELOAD="/builds/worker/fetches/liblowercase/liblowercase.so"
-    export LOWERCASE_DIRS="/builds/worker/fetches/vs2017_15.8.4"
+    export LOWERCASE_DIRS="/builds/worker/fetches/vs2017_15.9.6"
     # {CC,CXX} and TARGET_{CC,CXX} must be set because a build.rs file builds
     # some C and C++ code.
     export CC=$MOZ_FETCHES_DIR/clang/bin/clang-cl

@@ -7,7 +7,7 @@ job-defaults:
     worker:
         max-run-time: 36000
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         tooltool-downloads: internal
 
@@ -46,7 +46,7 @@ sm-plain-win32/debug:
             - win64-mozmake
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
 
 sm-plain-win64/opt:
     description: "Spidermonkey Plain win64 opt"
@@ -83,7 +83,7 @@ sm-plain-win32/opt:
             - win64-mozmake
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
 
 sm-compacting-win64/debug:
     description: "Spidermonkey Compacting win64 debug"
@@ -120,4 +120,4 @@ sm-compacting-win32/debug:
             - win64-mozmake
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"

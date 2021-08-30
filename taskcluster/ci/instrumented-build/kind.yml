@@ -234,7 +234,7 @@ jobs:
         worker:
             docker-image: {in-tree: debian11-amd64-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
         run:
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
@@ -247,7 +247,7 @@ jobs:
                 mozconfig_platform: win32
                 env:
                     LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         fetches:
             toolchain:
                 - linux64-binutils
@@ -278,7 +278,7 @@ jobs:
         worker:
             docker-image: {in-tree: debian11-amd64-build}
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
         run:
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
@@ -291,7 +291,7 @@ jobs:
                 mozconfig_platform: win64
                 env:
                     LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         fetches:
             toolchain:
                 - linux64-binutils
