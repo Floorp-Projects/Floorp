@@ -95,8 +95,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       !queryContext.searchMode &&
       !queryContext.isPrivate &&
       UrlbarPrefs.get("quickSuggestEnabled") &&
-      (UrlbarPrefs.get("quicksuggest.showedOnboardingDialog") ||
-        !UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog")) &&
       UrlbarPrefs.get(SUGGEST_PREF) &&
       UrlbarPrefs.get("suggest.searches") &&
       UrlbarPrefs.get("browser.search.suggest.enabled")

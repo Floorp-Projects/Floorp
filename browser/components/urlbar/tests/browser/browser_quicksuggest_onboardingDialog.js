@@ -18,11 +18,10 @@ const LEARN_MORE_URL =
   Services.urlFormatter.formatURLPref("app.support.baseURL") +
   "firefox-suggest";
 
-const MR1_VERSION = 89;
-
-// When the accept button is clicked, no new pages should load.
+// When the accept button is clicked, no new pages should load, and the feature
+// should be enabled.
 add_task(async function accept() {
-  await doDialogTest(async () => {
+  await doDialogTest(true, async () => {
     let tabCount = gBrowser.tabs.length;
     let dialogPromise = openDialog("accept");
 
@@ -41,9 +40,31 @@ add_task(async function accept() {
   });
 });
 
-// When the Disable button is clicked, about:preferences#search should load.
-add_task(async function disable() {
-  await doDialogTest(async () => {
+// When the Not Now link is clicked, no new pages should load, and the feature
+// should be enabled.
+add_task(async function notNow() {
+  await doDialogTest(false, async () => {
+    let tabCount = gBrowser.tabs.length;
+    let dialogPromise = openDialog("onboardingNotNow");
+
+    info("Calling maybeShowOnboardingDialog");
+    await UrlbarQuickSuggest.maybeShowOnboardingDialog();
+
+    info("Waiting for dialog");
+    await dialogPromise;
+
+    Assert.equal(
+      gBrowser.currentURI.spec,
+      "about:blank",
+      "Nothing loaded in the current tab"
+    );
+    Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
+  });
+});
+
+// When the Customize button is clicked, about:preferences#search should load.
+add_task(async function customize() {
+  await doDialogTest(false, async () => {
     let dialogPromise = openDialog("extra1");
 
     // about:preferences#search will load in the current tab since it's
@@ -72,8 +93,8 @@ add_task(async function disable() {
 // When the Learn More button is clicked, the support URL should open in a new
 // tab.
 add_task(async function learnMore() {
-  await doDialogTest(async () => {
-    let dialogPromise = openDialog("extra2");
+  await doDialogTest(false, async () => {
+    let dialogPromise = openDialog("onboardingLearnMore");
     let loadPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
       LEARN_MORE_URL
@@ -101,19 +122,26 @@ add_task(async function learnMore() {
   });
 });
 
-async function doDialogTest(callback) {
+async function doDialogTest(expectOptIn, callback) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     // Set all the required prefs for showing the onboarding dialog.
     await SpecialPowers.pushPrefEnv({
       set: [
+        ["browser.urlbar.suggest.quicksuggest", false],
         ["browser.urlbar.quicksuggest.enabled", true],
         ["browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true],
         ["browser.urlbar.quicksuggest.showedOnboardingDialog", false],
         ["browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts", 0],
-        ["browser.startup.upgradeDialog.version", MR1_VERSION],
       ],
     });
     await callback();
+
+    Assert.equal(
+      UrlbarPrefs.get("suggest.quicksuggest"),
+      expectOptIn,
+      "The feature has been enabled"
+    );
+
     await SpecialPowers.popPrefEnv();
   });
 }

@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const SHOWED_ONBOARDING_DIALOG_PREF =
   "browser.urlbar.quicksuggest.showedOnboardingDialog";
+const OPT_IN_PREF = "browser.urlbar.suggest.quicksuggest";
 const SEEN_RESTART_PREF = "browser.urlbar.quicksuggest.seenRestarts";
 
 add_task(async function init() {
@@ -21,8 +22,8 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.suggest.searches", true],
-      ["browser.startup.upgradeDialog.version", 89],
       // Reset those prefs in case they were set by other tests
+      [OPT_IN_PREF, false],
       [SHOWED_ONBOARDING_DIALOG_PREF, false],
       [SEEN_RESTART_PREF, 0],
     ],
@@ -45,15 +46,15 @@ add_task(async function init() {
   });
 });
 
-// The default is to wait for 2 browser restarts to show the onboarding dialog
-// on the 3rd restart. This tests that we can override it by configuring the
+// The default is to wait for no browser restarts to show the onboarding dialog
+// on the first restart. This tests that we can override it by configuring the
 // `showOnboardingDialogOnNthRestart`
 add_task(async function test_override_wait_after_n_restarts() {
   let doExperimentCleanup = await UrlbarTestUtils.enrollExperiment({
     valueOverrides: {
       quickSuggestEnabled: true,
       quickSuggestShouldShowOnboardingDialog: true,
-      // Just wait for 1 browser restart instead of the default 2
+      // Wait for 1 browser restart
       quickSuggestShowOnboardingDialogAfterNRestarts: 1,
     },
   });
@@ -85,6 +86,7 @@ add_task(async function test_override_wait_after_n_restarts() {
 add_task(async function test_skip_onboarding_dialog() {
   await SpecialPowers.pushPrefEnv({
     set: [
+      [OPT_IN_PREF, false],
       [SHOWED_ONBOARDING_DIALOG_PREF, false],
       [SEEN_RESTART_PREF, 0],
     ],

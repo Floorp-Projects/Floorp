@@ -363,7 +363,7 @@ pref("browser.urlbar.suggest.openpage",             true);
 pref("browser.urlbar.suggest.searches",             true);
 pref("browser.urlbar.suggest.topsites",             true);
 pref("browser.urlbar.suggest.engines",              true);
-pref("browser.urlbar.suggest.quicksuggest",         true);
+pref("browser.urlbar.suggest.quicksuggest",         false);
 pref("browser.urlbar.suggest.calculator",           false);
 
 // Whether the QuickSuggest experiment is enabled.
@@ -373,7 +373,7 @@ pref("browser.urlbar.quicksuggest.enabled", false);
 pref("browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true);
 
 // Show QuickSuggest onboarding dialog on the nth browser restarts.
-pref("browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts", 2);
+pref("browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts", 0);
 
 // The indexes of the sponsored and non-sponsored quick suggest results within
 // the general results group.

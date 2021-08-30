@@ -62,8 +62,8 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [EXPERIMENT_PREF, true],
+      ["browser.urlbar." + SUGGEST_PREF, true],
       ["browser.urlbar.suggest.searches", true],
-      ["browser.urlbar.quicksuggest.showedOnboardingDialog", true],
     ],
   });
 
@@ -321,7 +321,7 @@ add_task(async function enableToggled() {
   TelemetryTestUtils.assertEvents([], { category: TELEMETRY_EVENT_CATEGORY });
   await SpecialPowers.popPrefEnv();
 
-  UrlbarPrefs.clear(SUGGEST_PREF);
+  UrlbarPrefs.set(SUGGEST_PREF, true);
 });
 
 // Tests the Nimbus "exposure" event gets recorded when the user is enrolled in
