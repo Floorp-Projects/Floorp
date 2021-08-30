@@ -127,7 +127,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
           currentCase++;
         } else if (command == "finishing") {
           bc3.close();
-          SimpleTest.finish();
+          test4();
         }
       }
 
@@ -140,6 +140,65 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
         }
       }
       window.open("file_scrollRestoration_part3_nobfcache.html", "", "width=360,height=480,noopener");
+    }
+
+    // test4 opens a new page which can enter bfcache. That page then loads
+    // another page which can't enter bfcache. That second page then scrolls
+    // down. History API is then used to navigate back and forward. When the
+    // second page loads again, it should scroll down automatically.
+    var bc4a, bc4b;
+    var scrollYCounter = 0;
+    function test4() {
+      currentCase = 0;
+      bc4a = new BroadcastChannel("bfcached");
+      bc4a.onmessage = (msgEvent) => {
+        var msg = msgEvent.data;
+        var command = msg.command;
+        if (command == "pageshow") {
+          ++currentCase;
+          if (currentCase == 1) {
+            ok(!msg.persisted, "The first page should not be persisted initially.");
+            bc4a.postMessage("loadNext");
+          } else if (currentCase == 3) {
+            ok(msg.persisted, "The first page should be persisted.");
+            bc4a.postMessage("forward");
+            bc4a.close();
+          }
+        }
+      }
+
+      bc4b = new BroadcastChannel("notbfcached");
+      bc4b.onmessage = (event) => {
+        var msg = event.data;
+        var command = msg.command;
+        if (command == "pageshow") {
+          ++currentCase;
+          if (currentCase == 2) {
+            ok(!msg.persisted, "The second page should not be persisted.");
+            bc4b.postMessage("getScrollY");
+            bc4b.postMessage("scroll");
+            bc4b.postMessage("getScrollY");
+            bc4b.postMessage("back");
+          } else if (currentCase == 4) {
+            ok(!msg.persisted, "The second page should not be persisted.");
+            bc4b.postMessage("getScrollY");
+          }
+        } else if (msg == "closed") {
+          bc4b.close();
+          SimpleTest.finish();
+        } else if ("scrollY" in msg) {
+          ++scrollYCounter;
+          if (scrollYCounter == 1) {
+            is(msg.scrollY, 0, "The page should be initially scrolled to top.");
+          } else if (scrollYCounter == 2) {
+            isnot(msg.scrollY, 0, "The page should be then scrolled down.");
+          } else if (scrollYCounter == 3) {
+            isnot(msg.scrollY, 0, "The page should be scrolled down after being restored from the session history.");
+            bc4b.postMessage("close");
+          }
+        }
+      }
+      window.open("file_scrollRestoration_bfcache_and_nobfcache.html", "", "width=360,height=480,noopener");
     }
 
     function runTest() {

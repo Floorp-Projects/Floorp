@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <script>
+      // Ensure layout is flushed before doing anything with scrolling.
+      function flushAndExecute(callback) {
+        window.requestAnimationFrame(function() {
+          setTimeout(callback);
+        });
+      }
+
+      var bc = new BroadcastChannel("bfcached");
+      bc.onmessage = (msgEvent) => {
+        if (msgEvent.data == "loadNext") {
+          flushAndExecute(() => {
+            location.href = "file_scrollRestoration_bfcache_and_nobfcache_part2.html";
+          });
+        } else if (msgEvent.data == "forward") {
+          flushAndExecute(() => {
+            history.forward();
+          });
+        }
+      };
+      window.onpageshow = (event) => {
+        bc.postMessage({command: "pageshow", persisted: event.persisted});
+      };
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
