@@ -638,7 +638,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             bookmarksSuggestion.set(settings.shouldShowBookmarkSuggestions)
             clipboardSuggestionsEnabled.set(settings.shouldShowClipboardSuggestions)
             searchShortcutsEnabled.set(settings.shouldShowSearchShortcuts)
-            openLinksInPrivate.set(settings.openLinksInAPrivateTab)
             privateSearchSuggestions.set(settings.shouldShowSearchSuggestionsInPrivate)
             voiceSearchEnabled.set(settings.shouldShowVoiceSearch)
             openLinksInAppEnabled.set(settings.openLinksInExternalApp)
