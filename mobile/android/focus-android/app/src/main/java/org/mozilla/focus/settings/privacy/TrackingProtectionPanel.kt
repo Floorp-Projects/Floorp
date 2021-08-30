@@ -18,6 +18,7 @@ import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
 import org.mozilla.focus.engine.EngineSharedPreferencesListener.TrackerChanged
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.installedDate
+import org.mozilla.focus.utils.Settings
 
 @SuppressWarnings("LongParameterList")
 class TrackingProtectionPanel(
@@ -110,12 +111,19 @@ class TrackingProtectionPanel(
     }
 
     private fun updateTrackersState() {
+        val settings = Settings.getInstance(context)
+
         with(binding) {
             advertising.isVisible = isTrackingProtectionOn
             analytics.isVisible = isTrackingProtectionOn
             social.isVisible = isTrackingProtectionOn
             content.isVisible = isTrackingProtectionOn
             trackersAndScriptsHeading.isVisible = isTrackingProtectionOn
+
+            advertising.isChecked = settings.shouldBlockAdTrackers()
+            analytics.isChecked = settings.shouldBlockAnalyticTrackers()
+            social.isChecked = settings.shouldBlockSocialTrackers()
+            content.isChecked = settings.shouldBlockOtherTrackers()
         }
     }
 
