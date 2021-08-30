@@ -36,6 +36,7 @@ function fakeUIResponse() {
     if (topic === "captive-portal-login-success") {
       Assert.equal(++step, 4);
       gServer.stop(do_test_finished);
+      Assert.ok(fakeTelemetryService.recordEvent.calledOnce);
     }
   }, "captive-portal-login-success");
 }

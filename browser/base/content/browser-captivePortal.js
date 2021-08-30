@@ -210,11 +210,6 @@ var CaptivePortalWatcher = {
     }
 
     this._showNotification();
-    Services.telemetry.recordEvent(
-      "networking.captive_portal",
-      "login_infobar_shown",
-      "infobar"
-    );
   },
 
   /**
@@ -279,14 +274,6 @@ var CaptivePortalWatcher = {
       gBrowser.removeTab(tab);
     }
     this._captivePortalTab = null;
-
-    if (aSuccess) {
-      Services.telemetry.recordEvent(
-        "networking.captive_portal",
-        "login_successful",
-        "detector"
-      );
-    }
   },
 
   _cancelDelayedCaptivePortal() {
@@ -374,6 +361,12 @@ var CaptivePortalWatcher = {
       gNotificationBox.PRIORITY_INFO_MEDIUM,
       buttons,
       closeHandler
+    );
+
+    Services.telemetry.recordEvent(
+      "networking.captive_portal",
+      "login_infobar_shown",
+      "infobar"
     );
 
     gBrowser.tabContainer.addEventListener("TabSelect", this);
