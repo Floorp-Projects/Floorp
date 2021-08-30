@@ -45,14 +45,6 @@ class nsIForm : public nsISupports {
   NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const = 0;
 
   /**
-   * Get the number of elements in form.elements
-   *
-   * @param aCount the number of elements
-   * @return NS_OK if there was an element at that position, -1 otherwise
-   */
-  NS_IMETHOD_(uint32_t) GetElementCount() const = 0;
-
-  /**
    * Get the index of the given control within form.elements.
    * @param aControl the control to find the index of
    * @param aIndex the index [OUT]
