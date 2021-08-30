@@ -79,7 +79,6 @@ class DynamicDownloadDialog(
                 )
                 setOnClickListener {
                     tryAgain(downloadState.id)
-                    context.metrics.track(Event.InAppNotificationDownloadTryAgain)
                     dismiss()
                 }
             }
@@ -110,7 +109,6 @@ class DynamicDownloadDialog(
                         onCannotOpenFile(downloadState)
                     }
 
-                    context.metrics.track(Event.InAppNotificationDownloadOpen)
                     dismiss()
                 }
             }

@@ -189,17 +189,6 @@ internal class ReleaseMetricController(
         Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> Event.CustomTabsClosed
         Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> Event.CustomTabsActionTapped
 
-        Component.FEATURE_DOWNLOADS to DownloadsFacts.Items.NOTIFICATION -> {
-            when (action) {
-                Action.CANCEL -> Event.NotificationDownloadCancel
-                Action.OPEN -> Event.NotificationDownloadOpen
-                Action.PAUSE -> Event.NotificationDownloadPause
-                Action.RESUME -> Event.NotificationDownloadResume
-                Action.TRY_AGAIN -> Event.NotificationDownloadTryAgain
-                else -> null
-            }
-        }
-
         Component.FEATURE_MEDIA to MediaFacts.Items.NOTIFICATION -> {
             when (action) {
                 Action.PLAY -> Event.NotificationMediaPlay
