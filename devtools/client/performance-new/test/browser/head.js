@@ -694,23 +694,41 @@ function withWebChannelTestDocument(callback) {
   );
 }
 
+// This has been stolen from the great library dom-testing-library.
+// See https://github.com/testing-library/dom-testing-library/blob/91b9dc3b6f5deea88028e97aab15b3b9f3289a2a/src/events.js#L104-L123
+// function written after some investigation here:
+// https://github.com/facebook/react/issues/10135#issuecomment-401496776
+function setNativeValue(element, value) {
+  const { set: valueSetter } =
+    Object.getOwnPropertyDescriptor(element, "value") || {};
+  const prototype = Object.getPrototypeOf(element);
+  const { set: prototypeValueSetter } =
+    Object.getOwnPropertyDescriptor(prototype, "value") || {};
+  if (prototypeValueSetter && valueSetter !== prototypeValueSetter) {
+    prototypeValueSetter.call(element, value);
+  } else {
+    /* istanbul ignore if */
+    // eslint-disable-next-line no-lonely-if -- Can't be ignored by istanbul otherwise
+    if (valueSetter) {
+      valueSetter.call(element, value);
+    } else {
+      throw new Error("The given element does not have a value setter");
+    }
+  }
+}
+
 /**
  * Set a React-friendly input value. Doing this the normal way doesn't work.
+ * This reuses the previous function setNativeValue stolen from
+ * dom-testing-library.
  *
- * See https://github.com/facebook/react/issues/10135#issuecomment-500929024
+ * See https://github.com/facebook/react/issues/10135
  *
  * @param {HTMLInputElement} input
  * @param {string} value
  */
 function setReactFriendlyInputValue(input, value) {
-  const previousValue = input.value;
-
-  input.value = value;
-
-  const tracker = input._valueTracker;
-  if (tracker) {
-    tracker.setValue(previousValue);
-  }
+  setNativeValue(input, value);
 
   // 'change' instead of 'input', see https://github.com/facebook/react/issues/11488#issuecomment-381590324
   input.dispatchEvent(new Event("change", { bubbles: true }));
