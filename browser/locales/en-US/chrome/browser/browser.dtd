@@ -53,30 +53,6 @@ this container is a toolbar. This avoids double-speaking. -->
 
 <!ENTITY historyMenu.label "History">
 
-<!ENTITY appMenuHelp.label "Help">
-
-<!-- LOCALIZATION NOTE (appMenuRemoteTabs.notabs.label): This is shown beneath
-     the name of a device when that device has no open tabs -->
-<!ENTITY appMenuRemoteTabs.notabs.label "No open tabs">
-<!-- LOCALIZATION NOTE (appMenuRemoteTabs.showMore.tooltip):
-     This is shown after the tabs list if we can display more tabs by clicking on the button -->
-<!ENTITY appMenuRemoteTabs.showMore.tooltip "Show more tabs from this device">
-<!-- LOCALIZATION NOTE (appMenuRemoteTabs.showAll.label, appMenuRemoteTabs.showAll.tooltip):
-     This is shown after the tabs list if we can all the remaining tabs by clicking on the button -->
-<!ENTITY appMenuRemoteTabs.showAll.label "Show All">
-<!ENTITY appMenuRemoteTabs.showAll.tooltip "Show all tabs from this device">
-<!-- LOCALIZATION NOTE (appMenuRemoteTabs.tabsnotsyncing.label): This is shown
-     when Sync is configured but syncing tabs is disabled. -->
-<!ENTITY appMenuRemoteTabs.tabsnotsyncing.label "Turn on tab syncing to view a list of tabs from your other devices.">
-<!-- LOCALIZATION NOTE (appMenuRemoteTabs.noclients.subtitle): This is shown
-     when Sync is configured but this appears to be the only device attached to
-     the account. We also show links to download Firefox for android/ios. -->
-<!ENTITY appMenuRemoteTabs.noclients.subtitle "Want to see your tabs from other devices here?">
-<!ENTITY appMenuRemoteTabs.opensyncprefs.label "Open Sync Preferences">
-<!ENTITY appMenuRemoteTabs.welcome.label "View a list of tabs from your other devices.">
-<!ENTITY appMenuRemoteTabs.unverified.label "Your account needs to be verified.">
-<!ENTITY appMenuRemoteTabs.connectdevice.label "Connect Another Device">
-
 <!ENTITY customizeMenu.addToToolbar.label "Add to Toolbar">
 <!ENTITY customizeMenu.addToToolbar.accesskey "A">
 <!-- LOCALIZATION NOTE (customizeMenu.addToOverflowMenu.label,
