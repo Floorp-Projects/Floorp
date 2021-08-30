@@ -263,10 +263,12 @@ void TransactionBuilder::SetDisplayList(
     const gfx::DeviceColor& aBgColor, Epoch aEpoch,
     const wr::LayoutSize& aViewportSize, wr::WrPipelineId pipeline_id,
     wr::BuiltDisplayListDescriptor dl_descriptor,
-    wr::Vec<uint8_t>& dl_items_data, wr::Vec<uint8_t>& dl_cache_data) {
+    wr::Vec<uint8_t>& dl_items_data, wr::Vec<uint8_t>& dl_cache_data,
+    wr::Vec<uint8_t>& dl_spatial_tree) {
   wr_transaction_set_display_list(mTxn, aEpoch, ToColorF(aBgColor),
                                   aViewportSize, pipeline_id, dl_descriptor,
-                                  &dl_items_data.inner, &dl_cache_data.inner);
+                                  &dl_items_data.inner, &dl_cache_data.inner,
+                                  &dl_spatial_tree.inner);
 }
 
 void TransactionBuilder::ClearDisplayList(Epoch aEpoch,
@@ -996,9 +998,9 @@ void DisplayListBuilder::DumpSerializedDisplayList() {
 }
 
 void DisplayListBuilder::Finalize(BuiltDisplayList& aOutDisplayList) {
-  wr_api_finalize_builder(mWrState, &aOutDisplayList.dl_desc,
-                          &aOutDisplayList.dl_items.inner,
-                          &aOutDisplayList.dl_cache.inner);
+  wr_api_finalize_builder(
+      mWrState, &aOutDisplayList.dl_desc, &aOutDisplayList.dl_items.inner,
+      &aOutDisplayList.dl_cache.inner, &aOutDisplayList.dl_spatial_tree.inner);
 }
 
 void DisplayListBuilder::Finalize(layers::DisplayListData& aOutTransaction) {
@@ -1006,18 +1008,23 @@ void DisplayListBuilder::Finalize(layers::DisplayListData& aOutTransaction) {
     wr_dp_set_cache_size(mWrState, mDisplayItemCache->CurrentSize());
   }
 
-  wr::VecU8 dlItems, dlCache;
+  wr::VecU8 dlItems, dlCache, dlSpatialTree;
   wr_api_finalize_builder(mWrState, &aOutTransaction.mDLDesc, &dlItems.inner,
-                          &dlCache.inner);
+                          &dlCache.inner, &dlSpatialTree.inner);
   aOutTransaction.mDLItems.emplace(dlItems.inner.data, dlItems.inner.length,
                                    dlItems.inner.capacity);
   aOutTransaction.mDLCache.emplace(dlCache.inner.data, dlCache.inner.length,
                                    dlCache.inner.capacity);
+  aOutTransaction.mDLSpatialTree.emplace(dlSpatialTree.inner.data,
+                                         dlSpatialTree.inner.length,
+                                         dlSpatialTree.inner.capacity);
   aOutTransaction.mRemotePipelineIds = std::move(mRemotePipelineIds);
   dlItems.inner.capacity = 0;
   dlItems.inner.data = nullptr;
   dlCache.inner.capacity = 0;
   dlCache.inner.data = nullptr;
+  dlSpatialTree.inner.capacity = 0;
+  dlSpatialTree.inner.data = nullptr;
 }
 
 Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
