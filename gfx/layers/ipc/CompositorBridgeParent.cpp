@@ -95,8 +95,6 @@
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
-#include "LayerScope.h"
-
 namespace mozilla {
 
 namespace layers {
@@ -394,8 +392,6 @@ void CompositorBridgeParent::Initialize() {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
   }
-
-  LayerScope::SetPixelScale(mScale.scale);
 }
 
 LayersId CompositorBridgeParent::RootLayerTreeId() {

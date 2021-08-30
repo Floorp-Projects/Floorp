@@ -77,10 +77,6 @@ class Compositor;
 class TransformData;
 struct PropertyAnimationGroup;
 
-namespace layerscope {
-class LayersPacket;
-}  // namespace layerscope
-
 #define MOZ_LAYER_DECL_NAME(n, e)                  \
   const char* Name() const override { return n; }  \
   LayerType GetType() const override { return e; } \

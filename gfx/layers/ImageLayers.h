@@ -18,10 +18,6 @@ namespace layers {
 
 class ImageContainer;
 
-namespace layerscope {
-class LayersPacket;
-}  // namespace layerscope
-
 /**
  * A Layer which renders an Image.
  */

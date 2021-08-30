@@ -78,10 +78,6 @@ class GlyphArray;
 class WebRenderLayerManager;
 struct AnimData;
 
-namespace layerscope {
-class LayersPacket;
-}  // namespace layerscope
-
 // Defined in LayerUserData.h; please include that file instead.
 class LayerUserData;
 
@@ -468,12 +464,6 @@ class LayerManager : public WindowRenderer {
   void DumpSelf(std::stringstream& aStream, const char* aPrefix = "",
                 bool aSorted = false);
   void Dump(bool aSorted = false);
-
-  /**
-   * Dump information about this layer manager and its managed tree to
-   * layerscope packet.
-   */
-  void Dump(layerscope::LayersPacket* aPacket);
 
   /**
    * Log information about this layer manager and its managed tree to

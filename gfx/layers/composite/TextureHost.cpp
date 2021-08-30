@@ -7,7 +7,6 @@
 #include "TextureHost.h"
 
 #include "CompositableHost.h"  // for CompositableHost
-#include "LayerScope.h"
 #include "mozilla/gfx/2D.h"  // for DataSourceSurface, Factory
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Shmem.h"  // for Shmem
@@ -525,7 +524,6 @@ void TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
 }
 
 void TextureHost::Updated(const nsIntRegion* aRegion) {
-  LayerScope::ContentChanged(this);
   UpdatedInternal(aRegion);
 }
 
