@@ -477,6 +477,13 @@ void PossiblyCrash(const char* aPrefSuffix, const char* aUnsafeCrashString,
     // pref-writing works.
     return;
   }
+  if (!NS_IsMainThread()) {
+    // Setting a pref off the main thread causes ContentParent to observe the
+    // pref set, resulting in a Release Assertion when it tries to update the
+    // child off main thread. So don't do any of this off main thread. (Which
+    // is a bit of a blind spot for this purpose...)
+    return;
+  }
 
   nsCString previous_crashes("security.crash_tracking.");
   previous_crashes.Append(aPrefSuffix);
