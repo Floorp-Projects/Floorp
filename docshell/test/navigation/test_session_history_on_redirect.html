@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Session history on redirect</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    /*
+     * The test opens a new window and loads a page there. Then another document
+     * is loaded to the window. The initial load of that second page doesn't do
+     * a redirect. Now another non-redirecting page is loaded. Then
+     * history.go(-2) and history.forward() are called. The second time
+     * the second page is loaded, it does a redirect. history.back() and
+     * history.forward() are called again. The page which did the redirect
+     * shouldn't be accessed, but the page which it redirected to.
+     * Finally history.forward() is called again and the third page should be
+     * loaded and history.length should have the same value as it had when the
+     * third page was loaded the first time.
+     */
+
+    SimpleTest.waitForExplicitFinish();
+    var win;
+    var finalHistoryLength = 0;
+
+    function run() {
+      win = window.open("file_session_history_on_redirect.html");
+    }
+
+    var pageshowCounter = 0;
+    async function pageshow() {
+      // Need to trigger new loads asynchronously after page load, otherwise
+      // new loads are treated as replace loads.
+      await new Promise((r) => setTimeout(r));
+      ++pageshowCounter;
+      info("Page load: " + win.location.href);
+      switch (pageshowCounter) {
+        case 1:
+          ok(win.location.href.includes("file_session_history_on_redirect.html"));
+          win.location.href = "redirect_handlers.sjs";
+          break;
+        case 2:
+          ok(win.location.href.includes("redirect_handlers.sjs"));
+          // Put the initial page also as the last entry in the session history.
+          win.location.href = "file_session_history_on_redirect.html";
+          break;
+        case 3:
+          ok(win.location.href.includes("file_session_history_on_redirect.html"));
+          finalHistoryLength = win.history.length;
+          win.history.go(-2);
+          break;
+        case 4:
+          ok(win.location.href.includes("file_session_history_on_redirect.html"));
+          win.history.forward();
+          break;
+        case 5:
+          ok(win.location.href.includes("file_session_history_on_redirect_2.html"));
+          win.history.back();
+          break;
+        case 6:
+          ok(win.location.href.includes("file_session_history_on_redirect.html"));
+          win.history.forward();
+          break;
+        case 7:
+          ok(win.location.href.includes("file_session_history_on_redirect_2.html"));
+          is(win.history.length, finalHistoryLength, "Shouldn't have changed the history length.");
+          win.history.forward();
+          break;
+        case 8:
+          ok(win.location.href.includes("file_session_history_on_redirect.html"));
+          is(win.history.length, finalHistoryLength, "Shouldn't have changed the history length.");
+          win.onpagehide = null;
+          finishTest();
+          break;
+        default:
+            ok(false, "unexpected pageshow");
+      }
+    }
+
+    function finishTest() {
+      win.close()
+      SimpleTest.finish();
+    }
+
+  </script>
+</head>
+<body onload="run()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
