@@ -3185,7 +3185,6 @@
   result_type: WordSized
   operands:
     input: WordSized
-  call_instruction: true
 
 # Constant Simd128
 - name: Simd128
