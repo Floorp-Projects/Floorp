@@ -52,8 +52,7 @@
               id="customizationPanelItemContextMenuUnpin"
               closemenu="single"
               class="customize-context-moveToToolbar"
-              accesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
-              label="&customizeMenu.unpinFromOverflowMenu.label;"/>
+              data-l10n-id="customize-menu-unpin-from-overflowmenu"/>
     <menuitem oncommand="gCustomizeMode.removeFromArea(this.parentNode.triggerNode, 'panelitem-context')"
               closemenu="single"
               class="customize-context-removeFromPanel"
@@ -75,12 +74,12 @@
     <hbox id="panic-button-success-header">
       <image id="panic-button-success-icon" alt=""/>
       <vbox>
-        <description>&panicButton.thankyou.msg1;</description>
-        <description>&panicButton.thankyou.msg2;</description>
+        <description data-l10n-id="panic-button-thankyou-msg1"></description>
+        <description data-l10n-id="panic-button-thankyou-msg2"></description>
       </vbox>
     </hbox>
-    <button label="&panicButton.thankyou.buttonlabel;"
-            id="panic-button-success-closebutton"
+    <button id="panic-button-success-closebutton"
+            data-l10n-id="panic-button-thankyou-button"
             oncommand="PanicButtonNotifier.close()"/>
   </panel>
 </html:template>
@@ -195,19 +194,12 @@
              onpopupshowing="gCustomizeMode.onPaletteContextMenuShowing(event)">
     <menuitem oncommand="gCustomizeMode.addToToolbar(this.parentNode.triggerNode, 'palette-context')"
               class="customize-context-addToToolbar"
-              accesskey="&customizeMenu.addToToolbar.accesskey;"
-              label="&customizeMenu.addToToolbar.label;"/>
+              data-l10n-id="customize-menu-add-to-toolbar"/>
     <menuitem oncommand="gCustomizeMode.addToPanel(this.parentNode.triggerNode, 'palette-context')"
               class="customize-context-addToPanel"
-              accesskey="&customizeMenu.addToOverflowMenu.accesskey;"
-              label="&customizeMenu.addToOverflowMenu.label;"/>
+              data-l10n-id="customize-menu-add-to-overflowmenu"/>
   </menupopup>
 
-  <menupopup id="customizationPanelContextMenu">
-    <menuitem command="cmd_CustomizeToolbars"
-              accesskey="&customizeMenu.addMoreItems.accesskey;"
-              label="&customizeMenu.addMoreItems.label;"/>
-  </menupopup>
   <panel id="downloads-button-autohide-panel"
          role="group"
          type="arrow"
