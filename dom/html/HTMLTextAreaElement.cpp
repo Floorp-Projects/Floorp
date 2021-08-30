@@ -29,7 +29,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFormControl.h"
-#include "nsIForm.h"
 #include "nsIFrame.h"
 #include "nsITextControlFrame.h"
 #include "nsLayoutUtils.h"

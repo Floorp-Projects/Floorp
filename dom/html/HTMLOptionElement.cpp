@@ -12,7 +12,6 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIFormControl.h"
-#include "nsIForm.h"
 #include "nsISelectControlFrame.h"
 
 // Notify/query select frame for selected state

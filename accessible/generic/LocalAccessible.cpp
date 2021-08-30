@@ -43,7 +43,6 @@
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "nsIContent.h"
-#include "nsIForm.h"
 #include "nsIFormControl.h"
 
 #include "nsDeckFrame.h"

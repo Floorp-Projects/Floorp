@@ -25,7 +25,6 @@
 #include "nsComboboxControlFrame.h"
 #include "mozilla/dom/Document.h"
 #include "nsIFormControlFrame.h"
-#include "nsIForm.h"
 #include "nsIFrame.h"
 #include "nsListControlFrame.h"
 #include "nsISelectControlFrame.h"
