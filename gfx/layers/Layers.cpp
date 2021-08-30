@@ -50,7 +50,6 @@
 #include "nsPrintfCString.h"               // for nsPrintfCString
 #include "nsRegionFwd.h"                   // for IntRegion
 #include "nsString.h"                      // for nsTSubstring
-#include "protobuf/LayerScopePacket.pb.h"  // for LayersPacket::Layer, LayersPacket, LayersPacket_Layer::Matrix, LayersPacke...
 
 // Undo the damage done by mozzconf.h
 #undef compress

@@ -22,12 +22,10 @@ EXPORTS += [
     "ImageTypes.h",
     "IMFYCbCrImage.h",
     "Layers.h",
-    "LayerScope.h",
     "LayersTypes.h",
     "LayerUserData.h",
     "opengl/OGLShaderConfig.h",
     "opengl/OGLShaderProgram.h",
-    "protobuf/LayerScopePacket.pb.h",
     "ReadbackLayer.h",
     "TiledLayerBuffer.h",
 ]
@@ -420,7 +418,6 @@ UNIFIED_SOURCES += [
     "ipc/VideoBridgeParent.cpp",
     "LayerManager.cpp",
     "Layers.cpp",
-    "LayerScope.cpp",
     "LayersHelpers.cpp",
     "LayersTypes.cpp",
     "MemoryPressureObserver.cpp",
@@ -470,7 +467,6 @@ SOURCES += [
     "client/TextureClient.cpp",
     "ImageContainer.cpp",
     "PersistentBufferProvider.cpp",
-    "protobuf/LayerScopePacket.pb.cc",
     "wr/WebRenderTextureHost.cpp",
 ]
 
