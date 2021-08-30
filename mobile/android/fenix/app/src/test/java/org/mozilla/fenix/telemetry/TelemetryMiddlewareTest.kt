@@ -178,28 +178,24 @@ class TelemetryMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN a page is loading WHEN loading is complete THEN we record a UriOpened event`() {
+    fun `GIVEN a normal page is loading WHEN loading is complete THEN we record a UriOpened event`() {
         val tab = createTab(id = "1", url = "https://mozilla.org")
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
-        verify(exactly = 0) { metrics.track(Event.UriOpened) }
         verify(exactly = 0) { metrics.track(Event.NormalAndPrivateUriOpened) }
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
-        verify(exactly = 1) { metrics.track(Event.UriOpened) }
         verify(exactly = 1) { metrics.track(Event.NormalAndPrivateUriOpened) }
     }
 
     @Test
-    fun `GIVEN a private page is loading WHEN loading is complete THEN we never record a UriOpened event`() {
+    fun `GIVEN a private page is loading WHEN loading is complete THEN we record a UriOpened event`() {
         val tab = createTab(id = "1", url = "https://mozilla.org", private = true)
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
-        verify(exactly = 0) { metrics.track(Event.UriOpened) }
         verify(exactly = 0) { metrics.track(Event.NormalAndPrivateUriOpened) }
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
-        verify(exactly = 0) { metrics.track(Event.UriOpened) }
         verify(exactly = 1) { metrics.track(Event.NormalAndPrivateUriOpened) }
     }
 

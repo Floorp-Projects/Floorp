@@ -240,9 +240,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.CustomTabsClosed -> EventWrapper<NoExtraKeys>(
             { CustomTab.closed.record(it) }
         )
-        is Event.UriOpened -> EventWrapper<NoExtraKeys>(
-            { Events.totalUriCount.add(1) }
-        )
         is Event.NormalAndPrivateUriOpened -> EventWrapper<NoExtraKeys>(
             { Events.normalAndPrivateUriCount.add(1) }
         )

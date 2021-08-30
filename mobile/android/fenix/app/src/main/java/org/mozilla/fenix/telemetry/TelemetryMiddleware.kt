@@ -51,10 +51,6 @@ class TelemetryMiddleware(
                 context.state.findTab(action.sessionId)?.let { tab ->
                     // Record UriOpened event when a non-private page finishes loading
                     if (tab.content.loading && !action.loading) {
-                        if (!tab.content.private) {
-                            metrics.track(Event.UriOpened)
-                        }
-
                         metrics.track(Event.NormalAndPrivateUriOpened)
                     }
                 }
