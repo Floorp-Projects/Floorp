@@ -1612,15 +1612,7 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
     return;
   }
 
-  // GetLastUserEventTime returns microseconds.
-  uint32_t lastEventTime = 0;
-  vm->GetLastUserEventTime(lastEventTime);
-  uint32_t currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-  // Only try to trigger collectors more often if user hasn't interacted with
-  // the page for awhile.
-  if ((currentTime - lastEventTime) >
-      (StaticPrefs::dom_events_user_interaction_interval() *
-       PR_USEC_PER_MSEC)) {
+  if (!sScheduler.IsUserActive()) {
     Maybe<TimeStamp> next = nsRefreshDriver::GetNextTickHint();
     // Try to not delay the next RefreshDriver tick, so give a reasonable
     // deadline for collectors.
