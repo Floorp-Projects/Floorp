@@ -41,7 +41,6 @@ import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
-import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SetDefaultNewtabExperiment
 import org.mozilla.fenix.GleanMetrics.SetDefaultSettingExperiment
@@ -442,9 +441,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.EditLoginSave -> EventWrapper<NoExtraKeys>(
             { Logins.saveEditedLogin.record(it) }
-        )
-        is Event.PrivateBrowsingShowSearchSuggestions -> EventWrapper<NoExtraKeys>(
-            { SearchSuggestions.enableInPrivate.record(it) }
         )
         is Event.ToolbarPositionChanged -> EventWrapper(
             { ToolbarSettings.changedPosition.record(it) },

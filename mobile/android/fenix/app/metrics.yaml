@@ -3366,24 +3366,6 @@ logins:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
-search_suggestions:
-  enable_in_private:
-    type: event
-    description: |
-      A user enabled receiving search suggestions in private sessions
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/6070
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/6746
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - technical
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-
 voice_search:
   tapped:
     type: event

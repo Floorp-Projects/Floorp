@@ -318,7 +318,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 }
                 store.dispatch(SearchFragmentAction.SetShowSearchSuggestions(true))
                 store.dispatch(SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(false))
-                requireComponents.analytics.metrics.track(Event.PrivateBrowsingShowSearchSuggestions)
             }
 
             searchSuggestionHintBinding.dismiss.setOnClickListener {

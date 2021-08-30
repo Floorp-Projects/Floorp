@@ -124,7 +124,6 @@ sealed class Event {
     object EditLogin : Event()
     object EditLoginSave : Event()
     object ViewLoginPassword : Event()
-    object PrivateBrowsingShowSearchSuggestions : Event()
     object WhatsNewTapped : Event()
     object PocketTopSiteClicked : Event()
     object PocketTopSiteRemoved : Event()
