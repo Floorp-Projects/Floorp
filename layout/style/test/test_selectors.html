@@ -1248,11 +1248,8 @@ function runTests() {
     should_serialize_to(":not([disabled],[selected])", ":not([disabled], [selected])");
 
     // :-moz-any()
-    let parseable_if_any_is_is_and_has_better_error_recovery =
-      SpecialPowers.getBoolPref("layout.css.is-and-where-better-error-recovery.enabled")
-      ? test_parseable : test_balanced_unparseable;
-    parseable_if_any_is_is_and_has_better_error_recovery(":-moz-any()");
-    parseable_if_any_is_is_and_has_better_error_recovery(":-moz-any('foo')");
+    test_parseable(":-moz-any()");
+    test_parseable(":-moz-any('foo')");
     test_parseable(":-moz-any(div p)");
     test_parseable(":-moz-any(div ~ p)");
     test_parseable(":-moz-any(div~p)");
@@ -1324,21 +1321,14 @@ function runTests() {
     test_balanced_unparseable("::-moz-color-swatch:hover#foo");
     test_balanced_unparseable(".foo::after:not(.bar) ~ h3");
 
-    {
-      let better_error_recovery = SpecialPowers.getBoolPref("layout.css.is-and-where-better-error-recovery.enabled");
-      let expected_fn = better_error_recovery ? test_parseable : test_balanced_unparseable;
-
-      for (let [selector, expected_serialization_when_parseable] of [
-        ["::-moz-color-swatch:where(.foo)", "::-moz-color-swatch:where()"],
-        ["::-moz-color-swatch:is(.foo)", "::-moz-color-swatch:is()"],
-        ["::-moz-color-swatch:where(p, :hover)", "::-moz-color-swatch:where(:hover)"],
-        ["::-moz-color-swatch:is(p, :hover)", "::-moz-color-swatch:is(:hover)"],
-      ]) {
-        expected_fn(selector);
-        if (better_error_recovery) {
-          should_serialize_to(selector, expected_serialization_when_parseable);
-        }
-      }
+    for (let [selector, expected_serialization_when_parseable] of [
+      ["::-moz-color-swatch:where(.foo)", "::-moz-color-swatch:where()"],
+      ["::-moz-color-swatch:is(.foo)", "::-moz-color-swatch:is()"],
+      ["::-moz-color-swatch:where(p, :hover)", "::-moz-color-swatch:where(:hover)"],
+      ["::-moz-color-swatch:is(p, :hover)", "::-moz-color-swatch:is(:hover)"],
+    ]) {
+      test_parseable(selector);
+      should_serialize_to(selector, expected_serialization_when_parseable);
     }
 
     test_parseable(":-moz-broken");
