@@ -1923,7 +1923,7 @@ RecordedDrawTargetCreation::RecordedDrawTargetCreation(S& aStream)
     : RecordedEventDerived(DRAWTARGETCREATION), mExistingData(nullptr) {
   ReadElement(aStream, mRefPtr);
   ReadElementConstrained(aStream, mBackendType, BackendType::NONE,
-                         BackendType::CAPTURE);
+                         BackendType::WEBRENDER_TEXT);
   ReadElement(aStream, mRect);
   ReadElementConstrained(aStream, mFormat, SurfaceFormat::A8R8G8B8_UINT32,
                          SurfaceFormat::UNKNOWN);

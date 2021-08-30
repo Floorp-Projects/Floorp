@@ -10,12 +10,10 @@
 #include "DrawTargetD2D1.h"
 #include "FilterNodeSoftware.h"
 #include "GradientStopsD2D.h"
-#include "SourceSurfaceCapture.h"
 #include "SourceSurfaceD2D1.h"
 #include "SourceSurfaceDual.h"
 #include "ConicGradientEffectD2D1.h"
 #include "RadialGradientEffectD2D1.h"
-#include "PathCapture.h"
 
 #include "HelpersD2D.h"
 #include "FilterNodeD2D1.h"
@@ -664,10 +662,6 @@ void DrawTargetD2D1::Stroke(const Path* aPath, const Pattern& aPattern,
                             const StrokeOptions& aStrokeOptions,
                             const DrawOptions& aOptions) {
   const Path* path = aPath;
-  if (aPath->GetBackendType() == BackendType::CAPTURE) {
-    path = static_cast<const PathCapture*>(aPath)->GetRealizedPath();
-  }
-
   if (path->GetBackendType() != BackendType::DIRECT2D1_1) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible path.";
     return;
@@ -693,10 +687,6 @@ void DrawTargetD2D1::Stroke(const Path* aPath, const Pattern& aPattern,
 void DrawTargetD2D1::Fill(const Path* aPath, const Pattern& aPattern,
                           const DrawOptions& aOptions) {
   const Path* path = aPath;
-  if (aPath && aPath->GetBackendType() == BackendType::CAPTURE) {
-    path = static_cast<const PathCapture*>(aPath)->GetRealizedPath();
-  }
-
   if (!path || path->GetBackendType() != BackendType::DIRECT2D1_1) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible path.";
     return;
@@ -904,10 +894,6 @@ void DrawTargetD2D1::PushClipGeometry(ID2D1Geometry* aGeometry,
 
 void DrawTargetD2D1::PushClip(const Path* aPath) {
   const Path* path = aPath;
-  if (aPath->GetBackendType() == BackendType::CAPTURE) {
-    path = static_cast<const PathCapture*>(aPath)->GetRealizedPath();
-  }
-
   if (path->GetBackendType() != BackendType::DIRECT2D1_1) {
     gfxDebug() << *this << ": Ignoring clipping call for incompatible path.";
     return;
@@ -2117,15 +2103,6 @@ already_AddRefed<ID2D1Brush> DrawTargetD2D1::CreateBrushForPattern(
 
     RefPtr<SourceSurface> surf = pat->mSurface;
 
-    if (pat->mSurface->GetType() == SurfaceType::CAPTURE) {
-      SourceSurfaceCapture* capture =
-          static_cast<SourceSurfaceCapture*>(pat->mSurface.get());
-      RefPtr<SourceSurface> resolved = capture->Resolve(GetBackendType());
-      if (resolved) {
-        surf = resolved;
-      }
-    }
-
     RefPtr<ID2D1Image> image = GetImageForSurface(
         surf, mat, pat->mExtendMode,
         !pat->mSamplingRect.IsEmpty() ? &pat->mSamplingRect : nullptr);
@@ -2240,17 +2217,6 @@ already_AddRefed<ID2D1Image> DrawTargetD2D1::GetImageForSurface(
   }
 
   switch (surface->GetType()) {
-    case SurfaceType::CAPTURE: {
-      SourceSurfaceCapture* capture =
-          static_cast<SourceSurfaceCapture*>(surface.get());
-      RefPtr<SourceSurface> resolved = capture->Resolve(GetBackendType());
-      if (!resolved) {
-        return nullptr;
-      }
-      MOZ_ASSERT(resolved->GetType() != SurfaceType::CAPTURE);
-      return GetImageForSurface(resolved, aSourceTransform, aExtendMode,
-                                aSourceRect, aUserSpace);
-    } break;
     case SurfaceType::D2D1_1_IMAGE: {
       SourceSurfaceD2D1* surf = static_cast<SourceSurfaceD2D1*>(surface.get());
       image = surf->GetImage();
@@ -2297,18 +2263,6 @@ already_AddRefed<SourceSurface> DrawTargetD2D1::OptimizeSourceSurface(
   RefPtr<ID2D1DeviceContext> dc = Factory::GetD2DDeviceContext();
   if (!dc) {
     return nullptr;
-  }
-
-  // Special case captures so we don't resolve them to a data surface.
-  if (aSurface->GetType() == SurfaceType::CAPTURE) {
-    SourceSurfaceCapture* capture =
-        static_cast<SourceSurfaceCapture*>(aSurface);
-    RefPtr<SourceSurface> resolved = capture->Resolve(GetBackendType());
-    if (!resolved) {
-      return nullptr;
-    }
-    MOZ_ASSERT(resolved->GetType() != SurfaceType::CAPTURE);
-    return OptimizeSourceSurface(resolved);
   }
 
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();

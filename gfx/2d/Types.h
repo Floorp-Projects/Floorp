@@ -38,7 +38,6 @@ enum class SurfaceType : int8_t {
   WRAP_AND_RECORD,        /* Surface used for wrap and record */
   TILED,                  /* Surface from a tiled DrawTarget */
   DATA_SHARED,            /* Data surface using shared memory */
-  CAPTURE,                /* Data from a DrawTargetCapture */
   DATA_RECYCLING_SHARED,  /* Data surface using shared memory */
   OFFSET,                 /* Offset */
   DATA_ALIGNED,           /* Data surface using aligned heap memory */
@@ -554,7 +553,6 @@ enum class BackendType : int8_t {
   RECORDING,
   DIRECT2D1_1,
   WEBRENDER_TEXT,
-  CAPTURE,  // Used for paths
 
   // Add new entries above this line.
   BACKEND_LAST

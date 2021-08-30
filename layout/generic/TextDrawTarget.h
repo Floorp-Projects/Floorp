@@ -406,7 +406,6 @@ class TextDrawTarget : public DrawTarget {
   }
 
   bool IsRecording() const override { return true; }
-  bool IsCaptureDT() const override { return false; }
 
   already_AddRefed<SourceSurface> Snapshot() override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
@@ -420,11 +419,6 @@ class TextDrawTarget : public DrawTarget {
   }
 
   void Flush() override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-  }
-
-  void DrawCapturedDT(DrawTargetCapture* aCaptureDT,
-                      const Matrix& aTransform) override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
   }
 

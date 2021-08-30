@@ -55,9 +55,6 @@ class DrawTargetOffset : public DrawTarget {
   // We'll pestimistically return true here
   virtual bool IsTiledDrawTarget() const override { return true; }
 
-  virtual bool IsCaptureDT() const override {
-    return mDrawTarget->IsCaptureDT();
-  }
   virtual DrawTargetType GetType() const override {
     return mDrawTarget->GetType();
   }

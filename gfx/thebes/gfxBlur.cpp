@@ -70,18 +70,8 @@ already_AddRefed<DrawTarget> gfxAlphaBoxBlur::InitDrawTarget(
     mAccelerated = true;
   }
 
-  if (aReferenceDT->IsCaptureDT()) {
-    if (mAccelerated) {
-      mDrawTarget = Factory::CreateCaptureDrawTarget(backend, mBlur.GetSize(),
-                                                     SurfaceFormat::A8);
-    } else {
-      mDrawTarget = Factory::CreateCaptureDrawTargetForData(
-          backend, mBlur.GetSize(), SurfaceFormat::A8, mBlur.GetStride(),
-          blurDataSize);
-    }
-  } else if (mAccelerated) {
-    // Note: CreateShadowDrawTarget is only implemented for Cairo, so we don't
-    // care about mimicking this in the DrawTargetCapture case.
+  if (mAccelerated) {
+    // Note: CreateShadowDrawTarget is only implemented for Cairo.
     mDrawTarget = aReferenceDT->CreateShadowDrawTarget(
         mBlur.GetSize(), SurfaceFormat::A8,
         AlphaBoxBlur::CalculateBlurSigma(aBlurRadius.width));
@@ -145,9 +135,6 @@ already_AddRefed<SourceSurface> gfxAlphaBoxBlur::DoBlur(
         AlphaBoxBlur::CalculateBlurSigma(mBlur.GetBlurRadius().width),
         CompositionOp::OP_OVER);
     blurMask = blurDT->Snapshot();
-  } else if (mDrawTarget->IsCaptureDT()) {
-    mDrawTarget->Blur(mBlur);
-    blurMask = mDrawTarget->Snapshot();
   }
 
   if (!aShadowColor) {
@@ -166,7 +153,7 @@ already_AddRefed<SourceSurface> gfxAlphaBoxBlur::DoBlur(
 }
 
 void gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx) {
-  if ((mDrawTarget && !mDrawTarget->IsCaptureDT()) && !mAccelerated && !mData) {
+  if (mDrawTarget && !mAccelerated && !mData) {
     return;
   }
 
