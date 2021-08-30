@@ -407,7 +407,9 @@ class BrowserRobot {
                 .className(EditText::class.java)
         )
         passwordField.waitForExists(waitingTime)
-        passwordField.setText(password)
+        passwordField.click()
+        passwordField.clearTextField()
+        passwordField.text = password
         // wait until the password is hidden
         assertTrue(mDevice.findObject(UiSelector().text(password)).waitUntilGone(waitingTime))
     }

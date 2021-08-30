@@ -6,6 +6,7 @@ import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.swipeLeft
 import androidx.test.espresso.action.ViewActions.swipeRight
+import androidx.test.espresso.action.ViewActions.swipeUp
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
@@ -190,6 +191,8 @@ class CollectionRobot {
     }
 
     fun goBackInCollectionFlow() = backButton().click()
+
+    fun swipeToBottom() = onView(withId(R.id.sessionControlRecyclerView)).perform(swipeUp())
 
     class Transition {
         fun collapseCollection(
