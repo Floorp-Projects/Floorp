@@ -48,10 +48,15 @@ def computeVersionCode() {
     return code;
 }
 
-def computeVersionNumber() {
-  def appVersion = getAppVersionWithoutMilestone()
-  def parts = appVersion.split('\\.')
-  return parts[0] + "." + parts[1] + "." + getBuildId()
+def getVersionNumber() {
+    def appVersion = getAppVersionWithoutMilestone()
+    def parts = appVersion.split('\\.')
+    def version = parts[0] + "." + parts[1] + "." + getBuildId()
+    if (!mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+        // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
+        version += "-SNAPSHOT"
+    }
+    return version
 }
 
 // Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
@@ -423,43 +428,45 @@ android.libraryVariants.all { variant ->
 
 apply plugin: 'maven-publish'
 
-version = computeVersionNumber()
-if (!mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
-    // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
-    version = "${version}-SNAPSHOT"
+version = getVersionNumber()
+group = 'org.mozilla.geckoview'
+
+def getArtifactId() {
+    def id = "geckoview"
+    // Release artifacts don't specify the channel, for the sake of simplicity.
+    if (mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
+        id += "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+    }
+
+    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+        id += "-omni"
+    }
+
+    if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+        // In automation, per-architecture artifacts identify
+        // the architecture; multi-architecture artifacts don't.
+        // When building locally, we produce a "skinny AAR" with
+        // one target architecture masquerading as a "fat AAR"
+        // to enable Gradle composite builds to substitute this
+        // project into consumers easily.
+        id += "-${mozconfig.substs.ANDROID_CPU_ARCH}"
+    }
+
+    return id
 }
 
 publishing {
     publications {
         android.libraryVariants.all { variant ->
             "${variant.name}"(MavenPublication) {
+                from components.findByName(variant.name)
+
                 pom {
-                    groupId = 'org.mozilla.geckoview'
-
-                    def omniSuffix = ""
-                    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
-                        omniSuffix = "-omni"
+                    afterEvaluate {
+                        artifactId = getArtifactId()
                     }
 
-                    def channelSuffix = ""
-                    // Release artifacts don't specify the channel, for the sake of simplicity.
-                    if (mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
-                        channelSuffix = "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
-                    }
-
-                    artifactId = "geckoview$channelSuffix$omniSuffix"
-
-                    if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
-                        // In automation, per-architecture artifacts identify
-                        // the architecture; multi-architecture artifacts don't.
-                        // When building locally, we produce a "skinny AAR" with
-                        // one target architecture masquerading as a "fat AAR"
-                        // to enable Gradle composite builds to substitute this
-                        // project into consumers easily.
-                        artifactId = "${artifactId}-${mozconfig.substs.ANDROID_CPU_ARCH}"
-                    }
-
-                    url = 'https://wiki.mozilla.org/Mobile/GeckoView'
+                    url = 'https://geckoview.dev'
 
                     licenses {
                         license {
@@ -481,29 +488,7 @@ publishing {
                             url = 'https://hg.mozilla.org/mozilla-central/'
                         }
                     }
-
-                    // Unfortunately Gradle does not provide a way to expose dependencies for custom
-                    // project types like Android plugins. So we need to add them manually to the POM
-                    // XML here, or use a plugin that achieves the same (like
-                    // https://github.com/wupdigital/android-maven-publish). We elect to do this
-                    // manually since our dependencies are simple and plugins increase our complexity
-                    // surface. This workaround can be removed after this issue is fixed:
-                    // https://github.com/gradle/gradle/issues/1842
-                    withXml {
-                        def dependenciesNode = asNode().appendNode('dependencies')
-
-                        for (configurationName in ["implementation", "api"]) {
-                            configurations.getByName(configurationName).dependencies.each {
-                                def dependencyNode = dependenciesNode.appendNode('dependency')
-                                dependencyNode.appendNode('groupId', it.group)
-                                dependencyNode.appendNode('artifactId', it.name)
-                                dependencyNode.appendNode('version', it.version)
-                            }
-                        }
-                    }
                 }
-
-                artifact tasks["bundle${variant.name.capitalize()}Aar"]
 
                 // Javadoc and sources for developer ergononomics.
                 artifact tasks["javadocJar${variant.name.capitalize()}"]
