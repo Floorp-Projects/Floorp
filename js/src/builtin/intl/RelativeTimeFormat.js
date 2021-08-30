@@ -196,12 +196,8 @@ function Intl_RelativeTimeFormat_format(value, unit) {
     // Step 4.
     let u = ToString(unit);
 
-    // Ensure the RelativeTimeFormat internals are resolved.
-    var internals = getRelativeTimeFormatInternals(relativeTimeFormat);
-
     // Step 5.
-    return intl_FormatRelativeTime(relativeTimeFormat, t, u, internals.numeric,
-                                   false);
+    return intl_FormatRelativeTime(relativeTimeFormat, t, u, false);
 }
 
 /**
@@ -229,12 +225,8 @@ function Intl_RelativeTimeFormat_formatToParts(value, unit) {
     // Step 4.
     let u = ToString(unit);
 
-    // Ensure the RelativeTimeFormat internals are resolved.
-    var internals = getRelativeTimeFormatInternals(relativeTimeFormat);
-
     // Step 5.
-    return intl_FormatRelativeTime(relativeTimeFormat, t, u, internals.numeric,
-                                   true);
+    return intl_FormatRelativeTime(relativeTimeFormat, t, u, true);
 }
 
 /**
