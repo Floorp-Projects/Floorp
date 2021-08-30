@@ -827,514 +827,6 @@ static Formatter* NewNumberFormat(JSContext* cx,
   return nullptr;
 }
 
-static JSString* FormattedNumberToString(
-    JSContext* cx, const UFormattedValue* formattedValue) {
-  UErrorCode status = U_ZERO_ERROR;
-  int32_t strLength;
-  const char16_t* str = ufmtval_getString(formattedValue, &strLength, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-
-  return NewStringCopyN<CanGC>(cx, str, AssertedCast<uint32_t>(strLength));
-}
-
-enum class FormattingType { ForUnit, NotForUnit };
-
-static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
-                                            HandleValue x,
-                                            FormattingType formattingType) {
-  // See intl/icu/source/i18n/unicode/unum.h for a detailed field list.  This
-  // list is deliberately exhaustive: cases might have to be added/removed if
-  // this code is compiled with a different ICU with more UNumberFormatFields
-  // enum initializers.  Please guard such cases with appropriate ICU
-  // version-testing #ifdefs, should cross-version divergence occur.
-  switch (fieldName) {
-    case UNUM_INTEGER_FIELD:
-      if (x.isNumber()) {
-        double d = x.toNumber();
-        if (IsNaN(d)) {
-          return &JSAtomState::nan;
-        }
-        if (!IsFinite(d)) {
-          return &JSAtomState::infinity;
-        }
-      }
-      return &JSAtomState::integer;
-
-    case UNUM_GROUPING_SEPARATOR_FIELD:
-      return &JSAtomState::group;
-
-    case UNUM_DECIMAL_SEPARATOR_FIELD:
-      return &JSAtomState::decimal;
-
-    case UNUM_FRACTION_FIELD:
-      return &JSAtomState::fraction;
-
-    case UNUM_SIGN_FIELD: {
-      // We coerce all NaNs to one with the sign bit unset, so all NaNs are
-      // positive in our implementation.
-      bool isNegative = x.isNumber()
-                            ? !IsNaN(x.toNumber()) && IsNegative(x.toNumber())
-                            : x.toBigInt()->isNegative();
-      return isNegative ? &JSAtomState::minusSign : &JSAtomState::plusSign;
-    }
-
-    case UNUM_PERCENT_FIELD:
-      // Percent fields are returned as "unit" elements when the number
-      // formatter's style is "unit".
-      if (formattingType == FormattingType::ForUnit) {
-        return &JSAtomState::unit;
-      }
-      return &JSAtomState::percentSign;
-
-    case UNUM_CURRENCY_FIELD:
-      return &JSAtomState::currency;
-
-    case UNUM_PERMILL_FIELD:
-      MOZ_ASSERT_UNREACHABLE(
-          "unexpected permill field found, even though "
-          "we don't use any user-defined patterns that "
-          "would require a permill field");
-      break;
-
-    case UNUM_EXPONENT_SYMBOL_FIELD:
-      return &JSAtomState::exponentSeparator;
-
-    case UNUM_EXPONENT_SIGN_FIELD:
-      return &JSAtomState::exponentMinusSign;
-
-    case UNUM_EXPONENT_FIELD:
-      return &JSAtomState::exponentInteger;
-
-    case UNUM_MEASURE_UNIT_FIELD:
-      return &JSAtomState::unit;
-
-    case UNUM_COMPACT_FIELD:
-      return &JSAtomState::compact;
-
-#ifndef U_HIDE_DEPRECATED_API
-    case UNUM_FIELD_COUNT:
-      MOZ_ASSERT_UNREACHABLE(
-          "format field sentinel value returned by iterator!");
-      break;
-#endif
-  }
-
-  MOZ_ASSERT_UNREACHABLE(
-      "unenumerated, undocumented format field returned by iterator");
-  return nullptr;
-}
-
-struct Field {
-  uint32_t begin;
-  uint32_t end;
-  FieldType type;
-
-  // Needed for vector-resizing scratch space.
-  Field() = default;
-
-  Field(uint32_t begin, uint32_t end, FieldType type)
-      : begin(begin), end(end), type(type) {}
-};
-
-class NumberFormatFields {
-  using FieldsVector = Vector<Field, 16>;
-
-  FieldsVector fields_;
-
- public:
-  explicit NumberFormatFields(JSContext* cx) : fields_(cx) {}
-
-  [[nodiscard]] bool append(FieldType type, int32_t begin, int32_t end);
-
-  [[nodiscard]] ArrayObject* toArray(JSContext* cx,
-                                     JS::HandleString overallResult,
-                                     FieldType unitType);
-};
-
-bool NumberFormatFields::append(FieldType type, int32_t begin, int32_t end) {
-  MOZ_ASSERT(begin >= 0);
-  MOZ_ASSERT(end >= 0);
-  MOZ_ASSERT(begin < end, "erm, aren't fields always non-empty?");
-
-  return fields_.emplaceBack(uint32_t(begin), uint32_t(end), type);
-}
-
-ArrayObject* NumberFormatFields::toArray(JSContext* cx,
-                                         HandleString overallResult,
-                                         FieldType unitType) {
-  // Merge sort the fields vector.  Expand the vector to have scratch space for
-  // performing the sort.
-  size_t fieldsLen = fields_.length();
-  if (!fields_.growByUninitialized(fieldsLen)) {
-    return nullptr;
-  }
-
-  MOZ_ALWAYS_TRUE(MergeSort(
-      fields_.begin(), fieldsLen, fields_.begin() + fieldsLen,
-      [](const Field& left, const Field& right, bool* lessOrEqual) {
-        // Sort first by begin index, then to place
-        // enclosing fields before nested fields.
-        *lessOrEqual = left.begin < right.begin ||
-                       (left.begin == right.begin && left.end > right.end);
-        return true;
-      }));
-
-  // Delete the elements in the scratch space.
-  fields_.shrinkBy(fieldsLen);
-
-  // Then iterate over the sorted field list to generate a sequence of parts
-  // (what ECMA-402 actually exposes).  A part is a maximal character sequence
-  // entirely within no field or a single most-nested field.
-  //
-  // Diagrams may be helpful to illustrate how fields map to parts.  Consider
-  // formatting -19,766,580,028,249.41, the US national surplus (negative
-  // because it's actually a debt) on October 18, 2016.
-  //
-  //    var options =
-  //      { style: "currency", currency: "USD", currencyDisplay: "name" };
-  //    var usdFormatter = new Intl.NumberFormat("en-US", options);
-  //    usdFormatter.format(-19766580028249.41);
-  //
-  // The formatted result is "-19,766,580,028,249.41 US dollars".  ICU
-  // identifies these fields in the string:
-  //
-  //     UNUM_GROUPING_SEPARATOR_FIELD
-  //                   |
-  //   UNUM_SIGN_FIELD |  UNUM_DECIMAL_SEPARATOR_FIELD
-  //    |   __________/|   |
-  //    |  /   |   |   |   |
-  //   "-19,766,580,028,249.41 US dollars"
-  //     \________________/ |/ \_______/
-  //             |          |      |
-  //    UNUM_INTEGER_FIELD  |  UNUM_CURRENCY_FIELD
-  //                        |
-  //               UNUM_FRACTION_FIELD
-  //
-  // These fields map to parts as follows:
-  //
-  //         integer     decimal
-  //       _____|________  |
-  //      /  /| |\  |\  |\ |  literal
-  //     /| / | | \ | \ | \|  |
-  //   "-19,766,580,028,249.41 US dollars"
-  //    |  \___|___|___/    |/ \________/
-  //    |        |          |       |
-  //    |      group        |   currency
-  //    |                   |
-  //   minusSign        fraction
-  //
-  // The sign is a part.  Each comma is a part, splitting the integer field
-  // into parts for trillions/billions/&c. digits.  The decimal point is a
-  // part.  Cents are a part.  The space between cents and currency is a part
-  // (outside any field).  Last, the currency field is a part.
-  //
-  // Because parts fully partition the formatted string, we only track the
-  // end of each part -- the beginning is implicitly the last part's end.
-  struct Part {
-    uint32_t end;
-    FieldType type;
-  };
-
-  class PartGenerator {
-    // The fields in order from start to end, then least to most nested.
-    const FieldsVector& fields;
-
-    // Index of the current field, in |fields|, being considered to
-    // determine part boundaries.  |lastEnd <= fields[index].begin| is an
-    // invariant.
-    size_t index;
-
-    // The end index of the last part produced, always less than or equal
-    // to |limit|, strictly increasing.
-    uint32_t lastEnd;
-
-    // The length of the overall formatted string.
-    const uint32_t limit;
-
-    Vector<size_t, 4> enclosingFields;
-
-    void popEnclosingFieldsEndingAt(uint32_t end) {
-      MOZ_ASSERT_IF(enclosingFields.length() > 0,
-                    fields[enclosingFields.back()].end >= end);
-
-      while (enclosingFields.length() > 0 &&
-             fields[enclosingFields.back()].end == end) {
-        enclosingFields.popBack();
-      }
-    }
-
-    bool nextPartInternal(Part* part) {
-      size_t len = fields.length();
-      MOZ_ASSERT(index <= len);
-
-      // If we're out of fields, all that remains are part(s) consisting
-      // of trailing portions of enclosing fields, and maybe a final
-      // literal part.
-      if (index == len) {
-        if (enclosingFields.length() > 0) {
-          const auto& enclosing = fields[enclosingFields.popCopy()];
-          part->end = enclosing.end;
-          part->type = enclosing.type;
-
-          // If additional enclosing fields end where this part ends,
-          // pop them as well.
-          popEnclosingFieldsEndingAt(part->end);
-        } else {
-          part->end = limit;
-          part->type = &JSAtomState::literal;
-        }
-
-        return true;
-      }
-
-      // Otherwise we still have a field to process.
-      const Field* current = &fields[index];
-      MOZ_ASSERT(lastEnd <= current->begin);
-      MOZ_ASSERT(current->begin < current->end);
-
-      // But first, deal with inter-field space.
-      if (lastEnd < current->begin) {
-        if (enclosingFields.length() > 0) {
-          // Space between fields, within an enclosing field, is part
-          // of that enclosing field, until the start of the current
-          // field or the end of the enclosing field, whichever is
-          // earlier.
-          const auto& enclosing = fields[enclosingFields.back()];
-          part->end = std::min(enclosing.end, current->begin);
-          part->type = enclosing.type;
-          popEnclosingFieldsEndingAt(part->end);
-        } else {
-          // If there's no enclosing field, the space is a literal.
-          part->end = current->begin;
-          part->type = &JSAtomState::literal;
-        }
-
-        return true;
-      }
-
-      // Otherwise, the part spans a prefix of the current field.  Find
-      // the most-nested field containing that prefix.
-      const Field* next;
-      do {
-        current = &fields[index];
-
-        // If the current field is last, the part extends to its end.
-        if (++index == len) {
-          part->end = current->end;
-          part->type = current->type;
-          return true;
-        }
-
-        next = &fields[index];
-        MOZ_ASSERT(current->begin <= next->begin);
-        MOZ_ASSERT(current->begin < next->end);
-
-        // If the next field nests within the current field, push an
-        // enclosing field.  (If there are no nested fields, don't
-        // bother pushing a field that'd be immediately popped.)
-        if (current->end > next->begin) {
-          if (!enclosingFields.append(index - 1)) {
-            return false;
-          }
-        }
-
-        // Do so until the next field begins after this one.
-      } while (current->begin == next->begin);
-
-      part->type = current->type;
-
-      if (current->end <= next->begin) {
-        // The next field begins after the current field ends.  Therefore
-        // the current part ends at the end of the current field.
-        part->end = current->end;
-        popEnclosingFieldsEndingAt(part->end);
-      } else {
-        // The current field encloses the next one.  The current part
-        // ends where the next field/part will start.
-        part->end = next->begin;
-      }
-
-      return true;
-    }
-
-   public:
-    PartGenerator(JSContext* cx, const FieldsVector& vec, uint32_t limit)
-        : fields(vec),
-          index(0),
-          lastEnd(0),
-          limit(limit),
-          enclosingFields(cx) {}
-
-    bool nextPart(bool* hasPart, Part* part) {
-      // There are no parts left if we've partitioned the entire string.
-      if (lastEnd == limit) {
-        MOZ_ASSERT(enclosingFields.length() == 0);
-        *hasPart = false;
-        return true;
-      }
-
-      if (!nextPartInternal(part)) {
-        return false;
-      }
-
-      *hasPart = true;
-      lastEnd = part->end;
-      return true;
-    }
-  };
-
-  // Finally, generate the result array.
-  size_t lastEndIndex = 0;
-  RootedObject singlePart(cx);
-  RootedValue propVal(cx);
-
-  RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
-  if (!partsArray) {
-    return nullptr;
-  }
-
-  PartGenerator gen(cx, fields_, overallResult->length());
-  do {
-    bool hasPart = false;
-    Part part = {};
-    if (!gen.nextPart(&hasPart, &part)) {
-      return nullptr;
-    }
-
-    if (!hasPart) {
-      break;
-    }
-
-    FieldType type = part.type;
-    size_t endIndex = part.end;
-
-    MOZ_ASSERT(lastEndIndex < endIndex);
-
-    singlePart = NewPlainObject(cx);
-    if (!singlePart) {
-      return nullptr;
-    }
-
-    propVal.setString(cx->names().*type);
-    if (!DefineDataProperty(cx, singlePart, cx->names().type, propVal)) {
-      return nullptr;
-    }
-
-    JSLinearString* partSubstr = NewDependentString(
-        cx, overallResult, lastEndIndex, endIndex - lastEndIndex);
-    if (!partSubstr) {
-      return nullptr;
-    }
-
-    propVal.setString(partSubstr);
-    if (!DefineDataProperty(cx, singlePart, cx->names().value, propVal)) {
-      return nullptr;
-    }
-
-    if (unitType != nullptr && type != &JSAtomState::literal) {
-      propVal.setString(cx->names().*unitType);
-      if (!DefineDataProperty(cx, singlePart, cx->names().unit, propVal)) {
-        return nullptr;
-      }
-    }
-
-    if (!NewbornArrayPush(cx, partsArray, ObjectValue(*singlePart))) {
-      return nullptr;
-    }
-
-    lastEndIndex = endIndex;
-  } while (true);
-
-  MOZ_ASSERT(lastEndIndex == overallResult->length(),
-             "result array must partition the entire string");
-
-  return partsArray;
-}
-
-static bool FormattedNumberToParts(JSContext* cx,
-                                   const UFormattedValue* formattedValue,
-                                   HandleValue number,
-                                   FieldType relativeTimeUnit,
-                                   FormattingType formattingType,
-                                   MutableHandleValue result) {
-  MOZ_ASSERT(number.isNumeric());
-
-  RootedString overallResult(cx, FormattedNumberToString(cx, formattedValue));
-  if (!overallResult) {
-    return false;
-  }
-
-  UErrorCode status = U_ZERO_ERROR;
-  UConstrainedFieldPosition* fpos = ucfpos_open(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
-
-  // We're only interested in UFIELD_CATEGORY_NUMBER fields.
-  ucfpos_constrainCategory(fpos, UFIELD_CATEGORY_NUMBER, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-
-  // Vacuum up fields in the overall formatted string.
-
-  NumberFormatFields fields(cx);
-
-  while (true) {
-    bool hasMore = ufmtval_nextPosition(formattedValue, fpos, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-    if (!hasMore) {
-      break;
-    }
-
-    int32_t field = ucfpos_getField(fpos, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    int32_t beginIndex, endIndex;
-    ucfpos_getIndexes(fpos, &beginIndex, &endIndex, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    FieldType type = GetFieldTypeForNumberField(UNumberFormatFields(field),
-                                                number, formattingType);
-
-    if (!fields.append(type, beginIndex, endIndex)) {
-      return false;
-    }
-  }
-
-  ArrayObject* array = fields.toArray(cx, overallResult, relativeTimeUnit);
-  if (!array) {
-    return false;
-  }
-
-  result.setObject(*array);
-  return true;
-}
-
-bool js::intl::FormattedRelativeTimeToParts(
-    JSContext* cx, const UFormattedValue* formattedValue, double timeValue,
-    FieldType relativeTimeUnit, MutableHandleValue result) {
-  Value tval = DoubleValue(timeValue);
-  return FormattedNumberToParts(
-      cx, formattedValue, HandleValue::fromMarkedLocation(&tval),
-      relativeTimeUnit, FormattingType::NotForUnit, result);
-}
-
 static FieldType GetFieldTypeForNumberPartType(
     mozilla::intl::NumberPartType type) {
   switch (type) {
@@ -1398,6 +890,7 @@ enum class DisplayNumberPartSource : bool { No, Yes };
 static bool FormattedNumberToParts(JSContext* cx, HandleString str,
                                    const mozilla::intl::NumberPartVector& parts,
                                    DisplayNumberPartSource displaySource,
+                                   FieldType unitType,
                                    MutableHandleValue result) {
   size_t lastEndIndex = 0;
 
@@ -1448,6 +941,13 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
       }
     }
 
+    if (unitType != nullptr && type != &JSAtomState::literal) {
+      propVal.setString(cx->names().*unitType);
+      if (!DefineDataProperty(cx, singlePart, cx->names().unit, propVal)) {
+        return false;
+      }
+    }
+
     partsArray->initDenseElement(index++, ObjectValue(*singlePart));
 
     lastEndIndex = endIndex;
@@ -1459,6 +959,14 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
 
   result.setObject(*partsArray);
   return true;
+}
+
+bool js::intl::FormattedRelativeTimeToParts(
+    JSContext* cx, HandleString str,
+    const mozilla::intl::NumberPartVector& parts, FieldType relativeTimeUnit,
+    MutableHandleValue result) {
+  return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
+                                relativeTimeUnit, result);
 }
 
 // Return true if the string starts with "0[bBoOxX]", possibly skipping over
@@ -1759,7 +1267,7 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
 
   if (formatToParts) {
     return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
-                                  args.rval());
+                                  nullptr, args.rval());
   }
 
   args.rval().setString(str);
@@ -2105,7 +1613,7 @@ bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
 
   if (formatToParts) {
     return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::Yes,
-                                  args.rval());
+                                  nullptr, args.rval());
   }
 
   args.rval().setString(str);
