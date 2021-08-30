@@ -37,28 +37,33 @@ add_task(async function test_toolbar_field_focus() {
 
   let urlBar = document.querySelector("#urlbar-background");
   gURLBar.textbox.setAttribute("focused", "true");
+  let style = window.getComputedStyle(urlBar);
 
   Assert.equal(
-    window.getComputedStyle(urlBar).backgroundColor,
+    style.backgroundColor,
     `rgb(${hexToRGB(TOOLBAR_FOCUS_BACKGROUND).join(", ")})`,
     "Background Color is changed"
   );
   Assert.equal(
-    window.getComputedStyle(urlBar).color,
+    style.color,
     `rgb(${hexToRGB(TOOLBAR_FOCUS_TEXT).join(", ")})`,
     "Text Color is changed"
   );
-  testBorderColor(urlBar, TOOLBAR_FOCUS_BORDER);
+  Assert.equal(
+    style.outlineColor,
+    `rgb(${hexToRGB(TOOLBAR_FOCUS_BORDER).join(", ")})`,
+    "Focus ring color"
+  );
 
   gURLBar.textbox.removeAttribute("focused");
 
   Assert.equal(
-    window.getComputedStyle(urlBar).backgroundColor,
+    style.backgroundColor,
     `rgb(${hexToRGB(TOOLBAR_FIELD_BACKGROUND).join(", ")})`,
     "Background Color is set back to initial"
   );
   Assert.equal(
-    window.getComputedStyle(urlBar).color,
+    style.color,
     `rgb(${hexToRGB(TOOLBAR_FIELD_COLOR).join(", ")})`,
     "Text Color is set back to initial"
   );
