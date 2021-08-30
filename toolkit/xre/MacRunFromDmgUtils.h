@@ -19,6 +19,16 @@ namespace MacRunFromDmgUtils {
  */
 bool IsAppRunningFromDmg();
 
+/**
+ * Checks whether the app is running from a read-only .dmg image and, if so,
+ * asks the user for permission before attempting to install the app and launch
+ * it.
+ *
+ * Returns true if the app has been installed and relaunched, in which case
+ * this instance of the app should exit.
+ */
+bool MaybeInstallFromDmgAndRelaunch();
+
 }  // namespace MacRunFromDmgUtils
 }  // namespace mozilla
 
