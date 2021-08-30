@@ -3,6 +3,19 @@
     {
       "stash": {
         "blocked": [
+          "{7aa2b9c4-c823-45ea-8b77-51a90c625311}:1.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1629808696276,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1629981310291,
+      "id": "3918630b-731d-47b4-b9ab-126be669e9cd",
+      "last_modified": 1629981493939
+    },
+    {
+      "stash": {
+        "blocked": [
           "jtds@jietudashi:1.0.0.3",
           "jtds@jietudashi:1.0.0.1",
           "jtds@jietudashi:1.5.1.8",

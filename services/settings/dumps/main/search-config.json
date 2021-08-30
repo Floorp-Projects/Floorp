@@ -13,7 +13,7 @@
           }
         ]
       },
-      "schema": 1627654944012,
+      "schema": 1629736603297,
       "appliesTo": [
         {
           "included": {
@@ -221,13 +221,102 @@
               "MozillaOnline"
             ]
           }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000010"
+              },
+              {
+                "name": "pc",
+                "value": "MOZD"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "everywhere": true
+          },
+          "experiment": "search-defaults-2021-1"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000011"
+              },
+              {
+                "name": "pc",
+                "value": "MOZD"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "experiment": "search-defaults-2021-2"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000012"
+              },
+              {
+                "name": "pc",
+                "value": "MOZD"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "everywhere": true
+          },
+          "experiment": "search-defaults-2021-3"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000013"
+              },
+              {
+                "name": "pc",
+                "value": "MOZD"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "everywhere": true
+          },
+          "experiment": "search-defaults-2021-4"
         }
       ],
       "webExtension": {
         "id": "bing@search.mozilla.org"
       },
       "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
-      "last_modified": 1627663746803
+      "last_modified": 1630005303731
     },
     {
       "schema": 1627058212123,
