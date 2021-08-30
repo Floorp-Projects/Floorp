@@ -242,6 +242,7 @@ function CaptivePortalDetector() {
   // Load preference
   this._canonicalSiteURL = null;
   this._canonicalSiteExpectedContent = null;
+  this._telemetryService = Services.telemetry;
 
   try {
     this._canonicalSiteURL = Services.prefs.getCharPref(
@@ -281,7 +282,7 @@ function CaptivePortalDetector() {
   this._requestQueue = []; // Maintain a progress table, store callbacks and the ongoing XHR
   this._interfaceNames = {}; // Maintain names of the requested network interfaces
 
-  Services.telemetry.setEventRecordingEnabled(
+  this._telemetryService.setEventRecordingEnabled(
     "networking.captive_portal",
     true
   );
@@ -442,6 +443,12 @@ CaptivePortalDetector.prototype = {
       // Only when the request has a event id and |success| is true
       // do we need to notify the login-success event.
       if (this._runningRequest.hasOwnProperty("eventId") && success) {
+        this._telemetryService.recordEvent(
+          "networking.captive_portal",
+          "login_successful",
+          "detector"
+        );
+
         let details = {
           type: kCaptivePortalLoginSuccessEvent,
           id: this._runningRequest.eventId,
