@@ -7642,16 +7642,6 @@
   value: true
   mirror: always
 
-# Whether :is() and :where() ignore errors inside their selector lists
-# internally, rather than failing to parse altogether.
-#
-# See https://github.com/w3c/csswg-drafts/issues/3264
-- name: layout.css.is-and-where-better-error-recovery.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Is 'content:none' supported on (non-pseudo) elements?
 - name: layout.css.element-content-none.enabled
   type: RelaxedAtomicBool
