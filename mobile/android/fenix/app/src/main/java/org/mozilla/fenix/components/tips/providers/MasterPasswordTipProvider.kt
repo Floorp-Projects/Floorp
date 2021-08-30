@@ -87,8 +87,6 @@ class MasterPasswordTipProvider(
 
         val dialog = dialogBuilder.show()
 
-        context.metrics.track(Event.MasterPasswordMigrationDisplayed)
-
         val passwordErrorText = context.getString(R.string.mp_dialog_error_transfer_saved_logins)
         val migrationContinueButton =
             dialogView.findViewById<MaterialButton>(R.id.migration_continue).apply {
@@ -229,8 +227,6 @@ class MasterPasswordTipProvider(
 
     private fun showSuccessDialog() {
         dismissMPTip()
-
-        context.metrics.track(Event.MasterPasswordMigrationSuccess)
 
         val dialogView =
             LayoutInflater.from(context).inflate(R.layout.mp_migration_done_dialog, null)
