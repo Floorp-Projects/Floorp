@@ -350,11 +350,6 @@ class nsHtml5StreamParser final : public nsISupports {
   nsresult WriteStreamBytes(mozilla::Span<const uint8_t> aFromSegment);
 
   /**
-   * Check whether every other byte in the sniffing buffer is zero.
-   */
-  void SniffBOMlessUTF16BasicLatin(const uint8_t* aBuf, size_t aBufLen);
-
-  /**
    * Write the start of the stream to detector.
    */
   void FinalizeSniffingWithDetector(mozilla::Span<const uint8_t> aFromSegment,
