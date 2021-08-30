@@ -56,7 +56,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIForm
-  NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const override;
   NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl) override;
   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const override;
 
