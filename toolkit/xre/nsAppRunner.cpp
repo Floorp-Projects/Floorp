@@ -5166,6 +5166,14 @@ nsresult XREMain::XRE_mainRun() {
                          nsICommandLine::STATE_INITIAL_LAUNCH);
       free(tempArgv);
       NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+      // Check if we're running from a DMG and allow the user to install to the
+      // Applications directory.
+      if (mProfileSvc->GetIsFirstRun() &&
+          MacRunFromDmgUtils::MaybeInstallFromDmgAndRelaunch()) {
+        bool userAllowedQuit = true;
+        appStartup->Quit(nsIAppStartup::eForceQuit, 0, &userAllowedQuit);
+      }
 #endif
 
       nsCOMPtr<nsIObserverService> obsService =
@@ -5463,13 +5471,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
   rv = mScopedXPCOM->Initialize(/* aInitJSContext = */ false);
   NS_ENSURE_SUCCESS(rv, 1);
-
-#ifdef XP_MACOSX
-  if (mProfileSvc->GetIsFirstRun()) {
-    Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_FIRST_RUN_IS_FROM_DMG,
-                         MacRunFromDmgUtils::IsAppRunningFromDmg());
-  }
-#endif
 
   // run!
   rv = XRE_mainRun();
