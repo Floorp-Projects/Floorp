@@ -1471,7 +1471,10 @@ void GeckoEditableSupport::NotifyIMEContext(const InputContext& aContext,
       (aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput);
   const int32_t flags =
       (inPrivateBrowsing ? EditableListener::IME_FLAG_PRIVATE_BROWSING : 0) |
-      (isUserAction ? EditableListener::IME_FLAG_USER_ACTION : 0);
+      (isUserAction ? EditableListener::IME_FLAG_USER_ACTION : 0) |
+      (aAction.mFocusChange == InputContextAction::FOCUS_NOT_CHANGED
+           ? EditableListener::IME_FOCUS_NOT_CHANGED
+           : 0);
 
   mEditable->NotifyIMEContext(
       static_cast<int32_t>(aContext.mIMEState.mEnabled),
