@@ -33,8 +33,8 @@
             android:title="@string/preference_privacy_block_social" />
 
         <androidx.preference.SwitchPreferenceCompat
-            android:defaultValue="true"
-            android:key="@string/pref_key_privacy_block_other2"
+            android:defaultValue="false"
+            android:key="@string/pref_key_privacy_block_other3"
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_privacy_block_content_summary2"
             android:title="@string/preference_privacy_block_content" />

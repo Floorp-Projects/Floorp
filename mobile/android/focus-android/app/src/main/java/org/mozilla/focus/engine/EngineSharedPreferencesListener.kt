@@ -43,7 +43,7 @@ class EngineSharedPreferencesListener(
                     settings.shouldBlockAnalyticTrackers()
                 )
 
-            context.getString(R.string.pref_key_privacy_block_other2) ->
+            context.getString(R.string.pref_key_privacy_block_other3) ->
                 updateTrackingProtectionPolicy(
                     ChangeSource.SETTINGS.source,
                     TrackerChanged.CONTENT.tracker,
