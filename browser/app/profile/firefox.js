@@ -380,6 +380,9 @@ pref("browser.urlbar.quicksuggest.showOnboardingDialogAfterNRestarts", 0);
 pref("browser.urlbar.quicksuggest.sponsoredIndex", -1);
 pref("browser.urlbar.quicksuggest.nonSponsoredIndex", -1);
 
+// Whether Remote Settings is enabled as a quick suggest source.
+pref("browser.urlbar.quicksuggest.remoteSettings.enabled", true);
+
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
 pref("browser.urlbar.unitConversion.enabled", true);
@@ -448,6 +451,12 @@ pref("browser.urlbar.keepPanelOpenDuringImeComposition", false);
 
 // Whether Firefox Suggest group labels are shown in the urlbar view.
 pref("browser.urlbar.groupLabels.enabled", true);
+
+// Whether Merino is enabled as a quick suggest source in the urlbar.
+pref("browser.urlbar.merino.enabled", false);
+
+// The Merino endpoint URL, not including parameters.
+pref("browser.urlbar.merino.endpointURL", "https://merino.services.mozilla.com/api/v1/suggest");
 
 pref("browser.altClickSave", false);
 

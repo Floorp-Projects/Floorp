@@ -90,7 +90,7 @@ class Suggestions {
       `${pad(d.getDate())}${pad(d.getHours())}`;
     let icon = await this.fetchIcon(result.icon);
     return {
-      fullKeyword: this.getFullKeyword(phrase, result.keywords),
+      full_keyword: this.getFullKeyword(phrase, result.keywords),
       title: result.title,
       url: result.url.replace("%YYYYMMDDHH%", date),
       click_url: result.click_url.replace("%YYYYMMDDHH%", date),
@@ -98,7 +98,7 @@ class Suggestions {
       impression_url: result.impression_url,
       block_id: result.id,
       advertiser: result.advertiser.toLocaleLowerCase(),
-      isSponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
+      is_sponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
       icon,
     };
   }

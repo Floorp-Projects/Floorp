@@ -23,8 +23,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-// These prefs are relative to the `browser.urlbar` branch.
-const SUGGEST_PREF = "suggest.quicksuggest";
+XPCOMUtils.defineLazyGlobalGetters(this, ["AbortController", "fetch"]);
+
+const MERINO_ENDPOINT_PARAM_QUERY = "q";
 
 const TELEMETRY_SCALAR_IMPRESSION =
   "contextual.services.quicksuggest.impression";
@@ -95,7 +96,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       !queryContext.searchMode &&
       !queryContext.isPrivate &&
       UrlbarPrefs.get("quickSuggestEnabled") &&
-      UrlbarPrefs.get(SUGGEST_PREF) &&
+      UrlbarPrefs.get("suggest.quicksuggest") &&
       UrlbarPrefs.get("suggest.searches") &&
       UrlbarPrefs.get("browser.search.suggest.enabled")
     );
@@ -111,15 +112,33 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
-    let suggestion = await UrlbarQuickSuggest.query(
-      queryContext.searchString.trimStart()
-    );
-    if (!suggestion || instance != this.queryInstance) {
+
+    // Trim only the start of the search string because a trailing space can
+    // affect the suggestions.
+    let searchString = queryContext.searchString.trimStart();
+
+    // We currently have two sources for quick suggest: remote settings
+    // (from `UrlbarQuickSuggest`) and Merino.
+    let promises = [];
+    if (UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")) {
+      promises.push(UrlbarQuickSuggest.query(searchString));
+    }
+    if (UrlbarPrefs.get("merinoEnabled") && queryContext.allowRemoteResults()) {
+      promises.push(this._fetchMerinoSuggestion(searchString));
+    }
+    let [rsSuggestion, merinoSuggestion] = await Promise.all(promises);
+    if (instance != this.queryInstance) {
+      return;
+    }
+
+    // We prefer the Merino suggestion.
+    let suggestion = merinoSuggestion || rsSuggestion;
+    if (!suggestion) {
       return;
     }
 
     let payload = {
-      qsSuggestion: [suggestion.fullKeyword, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+      qsSuggestion: [suggestion.full_keyword, UrlbarUtils.HIGHLIGHT.SUGGESTED],
       title: suggestion.title,
       url: suggestion.url,
       icon: suggestion.icon,
@@ -132,7 +151,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       helpL10nId: "firefox-suggest-urlbar-learn-more",
     };
 
-    if (!suggestion.isSponsored) {
+    if (!suggestion.is_sponsored) {
       payload.sponsoredL10nId = "firefox-suggest-urlbar-nonsponsored-action";
     }
 
@@ -143,7 +162,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     );
     result.isSuggestedIndexRelativeToGroup = true;
     result.suggestedIndex = UrlbarPrefs.get(
-      suggestion.isSponsored
+      suggestion.is_sponsored
         ? "quickSuggestSponsoredIndex"
         : "quickSuggestNonSponsoredIndex"
     );
@@ -282,14 +301,91 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   onPrefChanged(pref) {
     switch (pref) {
-      case SUGGEST_PREF:
+      case "suggest.quicksuggest":
         Services.telemetry.recordEvent(
           TELEMETRY_EVENT_CATEGORY,
           "enable_toggled",
-          UrlbarPrefs.get(SUGGEST_PREF) ? "enabled" : "disabled"
+          UrlbarPrefs.get("suggest.quicksuggest") ? "enabled" : "disabled"
         );
         break;
     }
+  }
+
+  /**
+   * Cancels the current query.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   */
+  cancelQuery(queryContext) {
+    try {
+      this._merinoFetchController?.abort();
+    } catch (error) {
+      Cu.reportError(error);
+    }
+    this._merinoFetchController = null;
+  }
+
+  /**
+   * Fetches a Merino suggestion.
+   *
+   * @param {string} searchString
+   * @returns {object}
+   *   The Merino suggestion object, or null if there isn't one.
+   */
+  async _fetchMerinoSuggestion(searchString) {
+    let instance = this.queryInstance;
+
+    // Fetch a response from the endpoint.
+    let response;
+    let controller;
+    try {
+      let url = new URL(UrlbarPrefs.get("merino.endpointURL"));
+      url.searchParams.set(MERINO_ENDPOINT_PARAM_QUERY, searchString);
+
+      controller = this._merinoFetchController = new AbortController();
+      response = await fetch(url, {
+        signal: controller.signal,
+      });
+      if (instance != this.queryInstance) {
+        return null;
+      }
+    } catch (error) {
+      if (error.name != "AbortError") {
+        Cu.reportError(error);
+      }
+    } finally {
+      if (controller == this._merinoFetchController) {
+        this._merinoFetchController = null;
+      }
+    }
+
+    if (!response) {
+      return null;
+    }
+
+    // Get the response body as an object.
+    let body;
+    try {
+      body = await response.json();
+      if (instance != this.queryInstance) {
+        return null;
+      }
+    } catch (error) {
+      Cu.reportError(error);
+    }
+
+    if (!body?.suggestions?.length) {
+      return null;
+    }
+
+    let { suggestions } = body;
+    if (!Array.isArray(suggestions)) {
+      Cu.reportError("Unexpected Merino response: " + JSON.stringify(body));
+      return null;
+    }
+
+    // Return the first suggestion.
+    return suggestions[0];
   }
 
   /**

@@ -40,6 +40,7 @@ XPCOMUtils.defineLazyServiceGetter(
 // throw an "unknown pref" error if a test enrolls in a mock experiment and hits
 // a code path that accesses a Nimbus feature variable not defined here.
 const DEFAULT_EXPERIMENT_FEATURE_VARIABLES = {
+  merinoEnabled: false,
   quickSuggestEnabled: false,
   quickSuggestNonSponsoredIndex: -1,
   quickSuggestShouldShowOnboardingDialog: true,
