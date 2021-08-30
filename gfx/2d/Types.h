@@ -32,11 +32,9 @@ enum class SurfaceType : int8_t {
   COREGRAPHICS_IMAGE,     /* Surface wrapping a CoreGraphics Image */
   COREGRAPHICS_CGCONTEXT, /* Surface wrapping a CG context */
   SKIA,                   /* Surface wrapping a Skia bitmap */
-  DUAL_DT,                /* Snapshot of a dual drawtarget */
   D2D1_1_IMAGE,           /* A D2D 1.1 ID2D1Image SourceSurface */
   RECORDING,              /* Surface used for recording */
   WRAP_AND_RECORD,        /* Surface used for wrap and record */
-  TILED,                  /* Surface from a tiled DrawTarget */
   DATA_SHARED,            /* Data surface using shared memory */
   DATA_RECYCLING_SHARED,  /* Data surface using shared memory */
   OFFSET,                 /* Offset */

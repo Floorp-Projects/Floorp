@@ -52,7 +52,6 @@
 #  include "nsWindowsHelpers.h"
 #endif
 
-#include "DrawTargetDual.h"
 #include "DrawTargetOffset.h"
 #include "DrawTargetWrapAndRecord.h"
 #include "DrawTargetRecording.h"
@@ -598,30 +597,6 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForFreeTypeFont(
                                            aSize, aApplySyntheticBold);
 }
 #endif
-
-already_AddRefed<DrawTarget> Factory::CreateDualDrawTarget(
-    DrawTarget* targetA, DrawTarget* targetB) {
-  MOZ_ASSERT(targetA && targetB);
-
-  RefPtr<DrawTarget> newTarget = new DrawTargetDual(targetA, targetB);
-
-  RefPtr<DrawTarget> retVal = newTarget;
-
-  if (mRecorder) {
-    retVal = new DrawTargetWrapAndRecord(mRecorder, retVal);
-  }
-
-  return retVal.forget();
-}
-
-already_AddRefed<SourceSurface> Factory::CreateDualSourceSurface(
-    SourceSurface* sourceA, SourceSurface* sourceB) {
-  MOZ_ASSERT(sourceA && sourceB);
-
-  RefPtr<SourceSurface> newSource = new SourceSurfaceDual(sourceA, sourceB);
-
-  return newSource.forget();
-}
 
 void Factory::SetBGRSubpixelOrder(bool aBGR) { mBGRSubpixelOrder = aBGR; }
 
