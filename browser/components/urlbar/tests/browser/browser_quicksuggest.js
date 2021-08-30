@@ -148,10 +148,7 @@ add_task(async function init() {
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.suggest.searches", true],
-      ["browser.startup.upgradeDialog.version", 89],
-    ],
+    set: [["browser.urlbar.suggest.searches", true]],
   });
 
   Services.prefs.clearUserPref(SEEN_DIALOG_PREF);

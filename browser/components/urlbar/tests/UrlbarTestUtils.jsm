@@ -43,7 +43,7 @@ const DEFAULT_EXPERIMENT_FEATURE_VARIABLES = {
   quickSuggestEnabled: false,
   quickSuggestNonSponsoredIndex: -1,
   quickSuggestShouldShowOnboardingDialog: true,
-  quickSuggestShowOnboardingDialogAfterNRestarts: 2,
+  quickSuggestShowOnboardingDialogAfterNRestarts: 0,
   quickSuggestSponsoredIndex: -1,
 };
 

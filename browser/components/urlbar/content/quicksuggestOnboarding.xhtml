@@ -15,7 +15,7 @@
         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         aria-describedby="infoBody">
 <dialog id="quicksuggestOnboardingDialog"
-        buttons="accept, extra1, extra2"
+        buttons="accept, extra1"
         defaultButton="accept">
 
   <linkset>
@@ -25,22 +25,16 @@
   <!-- The <div> was added in bug 1606617 to workaround bug 1614447 -->
   <div xmlns="http://www.w3.org/1999/xhtml">
     <div id="infoContainer">
+      <div id="notNowLinkContainer"><a id="onboardingNotNow">Not now</a></div>
       <xul:image id="infoIcon"/>
-      <h2 id="infoTitle">Firefox is getting <span class="zap short">smarter.</span></h2>
-      <xul:description id="infoBody">
-        We're rolling out experiences to help you find the right things faster.
-        You'll start to see richer recommendations in the address bar.
-      </xul:description>
+      <h2 id="infoTitle">Say hello to smarter suggestions</h2>
+      <xul:description id="infoBody">Firefox Suggest uses your city location and search keywords to make contextual suggestions from Firefox and partners, while keeping your privacy in mind. <a id="onboardingLearnMore">Learn more</a></xul:description>
+      <div id="illustration"/>
       <div id="infoButtons">
-        <xul:button id="onboardingAccept"
-                dlgtype="accept"
-                label="Okay, got it!"></xul:button>
-        <xul:button id="onboardingDisable"
-                    dlgtype="extra1"
-                    label="Disable"></xul:button>
-        <xul:button id="onboardingLearnMore"
-                    dlgtype="extra2"
-                    label="Learn more"></xul:button>
+        <xul:button dlgtype="accept"
+                    label="Allow suggestions"/>
+        <xul:button dlgtype="extra1"
+                    label="Customize in settings"/>
       </div>
     </div>
   </div>
