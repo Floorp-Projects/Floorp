@@ -32,7 +32,7 @@ load 385423-2.html
 load 385719-1.html
 load 389326-1.html
 load 390476.html
-load 393746-1.xhtml
+skip-if(xulRuntime.OS=="WINNT"&&!xulRuntime.is64Bit) load 393746-1.xhtml  # Bug 1727925
 load 393749-1.html
 load 393822-1.html
 load 394384-1.html

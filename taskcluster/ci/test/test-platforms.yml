@@ -139,7 +139,6 @@ windows10-32-shippable-qr/opt:
         - raptor-firefox
         - web-platform-tests
         - web-platform-tests-wdspec-headless
-        - windows32-tests
         - windows-talos
 
 windows10-32-qr/opt:
@@ -151,14 +150,12 @@ windows10-32-qr/opt:
         - raptor-firefox
         - web-platform-tests
         - web-platform-tests-wdspec-headless
-        - windows32-tests
         - windows-talos
 
 windows10-32-qr/debug:
     build-platform: win32/debug
     test-sets:
         - web-platform-tests
-        - windows32-tests
         - windows-7-tests
 
 windows10-32-2004-shippable-qr/opt:

@@ -204,23 +204,20 @@ windows-7-tests:
     - reftest
     - xpcshell
 
-windows32-tests:
+windows32-2004-tests:
     - cppunit
     - crashtest
-    # - jittest  # See comment in windows-ccov-tests set.
-    - jsreftest
-    - mochitest-plain
-    - mochitest-plain-gpu
-
-windows32-2004-tests:
     - gtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
+    - jsreftest
     - marionette
     - mochitest-a11y
     - mochitest-chrome
     - mochitest-chrome-gpu
     - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
     - mochitest-remote
     - telemetry-tests-client
     - test-verify
