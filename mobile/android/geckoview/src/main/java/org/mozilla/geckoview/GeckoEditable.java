@@ -1608,8 +1608,36 @@ import android.view.inputmethod.EditorInfo;
             mListener.notifyIMEContext(state, typeHint, modeHint, actionHint, flags);
         }
 
-        if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED ||
-                mFocusedChild == null) {
+        if (mFocusedChild == null) {
+            // We have no focus.
+            return;
+        }
+
+        if ((flags & SessionTextInput.EditableListener.IME_FOCUS_NOT_CHANGED) != 0) {
+            if (DEBUG) {
+                final StringBuilder sb = new StringBuilder("icNotifyIMEContext: ");
+                sb.append("focus isn't changed. oldState=").append(oldState)
+                    .append(", newState=").append(state);
+                Log.d(LOGTAG, sb.toString());
+            }
+            if (((oldState == SessionTextInput.EditableListener.IME_STATE_ENABLED ||
+                  oldState == SessionTextInput.EditableListener.IME_STATE_PASSWORD) &&
+                 state == SessionTextInput.EditableListener.IME_STATE_DISABLED) ||
+                (oldState == SessionTextInput.EditableListener.IME_STATE_DISABLED &&
+                 (state == SessionTextInput.EditableListener.IME_STATE_ENABLED ||
+                  state == SessionTextInput.EditableListener.IME_STATE_PASSWORD))) {
+                // Even if focus isn't changed, software keyboard state is changed.
+                // We have to show or dismiss it.
+                icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE,
+                               /* toggleSoftInput */ true);
+                return;
+            }
+        }
+
+        if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            // When focus is being lost, icNotifyIME with NOTIFY_IME_OF_BLUR
+            // will dismiss it.
+            // So ignore to control software keyboard at this time.
             return;
         }
 

@@ -93,6 +93,7 @@ public final class SessionTextInput {
         // Flags for notifyIMEContext().
         @WrapForJNI final int IME_FLAG_PRIVATE_BROWSING = 1;
         @WrapForJNI final int IME_FLAG_USER_ACTION = 2;
+        @WrapForJNI final int IME_FOCUS_NOT_CHANGED = 4;
 
         void notifyIME(int type);
         void notifyIMEContext(int state, String typeHint, String modeHint,
