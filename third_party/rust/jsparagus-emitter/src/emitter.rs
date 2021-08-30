@@ -519,9 +519,9 @@ impl InstructionWriter {
         self.emit_op(Opcode::NewInit);
     }
 
-    pub fn new_object(&mut self, baseobj_index: GCThingIndex) {
+    pub fn new_object(&mut self, shape_index: GCThingIndex) {
         self.emit_op(Opcode::NewObject);
-        self.write_g_c_thing_index(baseobj_index);
+        self.write_g_c_thing_index(shape_index);
     }
 
     pub fn object(&mut self, object_index: GCThingIndex) {
