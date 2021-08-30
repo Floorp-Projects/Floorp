@@ -289,7 +289,7 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
         aOptions->minimum_fraction_digits, aOptions->maximum_fraction_digits));
   }
 
-  Result<UniquePtr<NumberFormat>, NumberFormat::FormatError> result =
+  Result<UniquePtr<NumberFormat>, ICUError> result =
       NumberFormat::TryCreate(aLocale->get(), options);
 
   MOZ_ASSERT(result.isOk());

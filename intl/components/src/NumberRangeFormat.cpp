@@ -17,7 +17,7 @@ namespace mozilla::intl {
 
 #ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
 
-/*static*/ Result<UniquePtr<NumberRangeFormat>, NumberRangeFormat::FormatError>
+/*static*/ Result<UniquePtr<NumberRangeFormat>, ICUError>
 NumberRangeFormat::TryCreate(std::string_view aLocale,
                              const NumberRangeFormatOptions& aOptions) {
   UniquePtr<NumberRangeFormat> nrf = MakeUnique<NumberRangeFormat>();
@@ -34,7 +34,7 @@ NumberRangeFormat::~NumberRangeFormat() {
   }
 }
 
-Result<Ok, NumberRangeFormat::FormatError> NumberRangeFormat::initialize(
+Result<Ok, ICUError> NumberRangeFormat::initialize(
     std::string_view aLocale, const NumberRangeFormatOptions& aOptions) {
   mFormatForUnit = aOptions.mUnit.isSome();
   switch (aOptions.mRangeIdentityFallback) {
@@ -58,13 +58,12 @@ Result<Ok, NumberRangeFormat::FormatError> NumberRangeFormat::initialize(
       return Ok();
     }
   }
-  return Err(FormatError::InternalError);
+  return Err(ICUError::InternalError);
 }
 
-Result<int32_t, NumberRangeFormat::FormatError>
-NumberRangeFormat::selectForRange(double start, double end, char16_t* keyword,
-                                  int32_t keywordSize,
-                                  const UPluralRules* pluralRules) const {
+Result<int32_t, ICUError> NumberRangeFormat::selectForRange(
+    double start, double end, char16_t* keyword, int32_t keywordSize,
+    const UPluralRules* pluralRules) const {
   MOZ_ASSERT(keyword);
   MOZ_ASSERT(pluralRules);
 
@@ -74,7 +73,7 @@ NumberRangeFormat::selectForRange(double start, double end, char16_t* keyword,
   int32_t utf16KeywordLength = uplrules_selectForRange(
       pluralRules, mFormattedNumberRange, keyword, keywordSize, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   return utf16KeywordLength;
@@ -106,37 +105,34 @@ bool NumberRangeFormat::formatInternal(std::string_view start,
   return U_SUCCESS(status);
 }
 
-Result<std::u16string_view, NumberRangeFormat::FormatError>
-NumberRangeFormat::formatResult() const {
+Result<std::u16string_view, ICUError> NumberRangeFormat::formatResult() const {
   UErrorCode status = U_ZERO_ERROR;
 
   const UFormattedValue* formattedValue =
       unumrf_resultAsValue(mFormattedNumberRange, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   int32_t utf16Length;
   const char16_t* utf16Str =
       ufmtval_getString(formattedValue, &utf16Length, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   return std::u16string_view(utf16Str, static_cast<size_t>(utf16Length));
 }
 
-Result<std::u16string_view, NumberRangeFormat::FormatError>
-NumberRangeFormat::formatResultToParts(Maybe<double> start,
-                                       bool startIsNegative, Maybe<double> end,
-                                       bool endIsNegative,
-                                       NumberPartVector& parts) const {
+Result<std::u16string_view, ICUError> NumberRangeFormat::formatResultToParts(
+    Maybe<double> start, bool startIsNegative, Maybe<double> end,
+    bool endIsNegative, NumberPartVector& parts) const {
   UErrorCode status = U_ZERO_ERROR;
 
   UNumberRangeIdentityResult identity =
       unumrf_resultGetIdentityResult(mFormattedNumberRange, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   bool isIdenticalNumber = identity != UNUM_IDENTITY_RESULT_NOT_EQUAL;
@@ -144,19 +140,19 @@ NumberRangeFormat::formatResultToParts(Maybe<double> start,
   const UFormattedValue* formattedValue =
       unumrf_resultAsValue(mFormattedNumberRange, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   int32_t utf16Length;
   const char16_t* utf16Str =
       ufmtval_getString(formattedValue, &utf16Length, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   UConstrainedFieldPosition* fpos = ucfpos_open(&status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
   ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
 
@@ -168,7 +164,7 @@ NumberRangeFormat::formatResultToParts(Maybe<double> start,
   if (isIdenticalNumber) {
     ucfpos_constrainCategory(fpos, UFIELD_CATEGORY_NUMBER, &status);
     if (U_FAILURE(status)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
   }
 
@@ -183,7 +179,7 @@ NumberRangeFormat::formatResultToParts(Maybe<double> start,
   while (true) {
     bool hasMore = ufmtval_nextPosition(formattedValue, fpos, &status);
     if (U_FAILURE(status)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
     if (!hasMore) {
       break;
@@ -191,18 +187,18 @@ NumberRangeFormat::formatResultToParts(Maybe<double> start,
 
     int32_t category = ucfpos_getCategory(fpos, &status);
     if (U_FAILURE(status)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
 
     int32_t fieldName = ucfpos_getField(fpos, &status);
     if (U_FAILURE(status)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
 
     int32_t beginIndex, endIndex;
     ucfpos_getIndexes(fpos, &beginIndex, &endIndex, &status);
     if (U_FAILURE(status)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
 
     if (category == UFIELD_CATEGORY_NUMBER_RANGE_SPAN) {
@@ -235,12 +231,12 @@ NumberRangeFormat::formatResultToParts(Maybe<double> start,
     Maybe<NumberPartType> partType = GetPartTypeForNumberField(
         UNumberFormatFields(fieldName), number, isNegative, mFormatForUnit);
     if (!partType || !fields.append(*partType, beginIndex, endIndex)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
   }
 
   if (!fields.toPartsVector(utf16Length, sourceMap, parts)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   // Find the approximately sign for ECMA-402.
@@ -295,7 +291,7 @@ NumberRangeFormat::formatResultToParts(Maybe<double> start,
 
 #else
 
-/*static*/ Result<UniquePtr<NumberRangeFormat>, NumberRangeFormat::FormatError>
+/*static*/ Result<UniquePtr<NumberRangeFormat>, ICUError>
 NumberRangeFormat::TryCreate(std::string_view aLocale,
                              const NumberFormatOptions& aOptions) {
   return MakeUnique<NumberRangeFormat>();

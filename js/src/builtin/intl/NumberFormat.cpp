@@ -816,8 +816,7 @@ static Formatter* NewNumberFormat(JSContext* cx,
   options.mRangeIdentityFallback =
       NumberFormatOptions::RangeIdentityFallback::Approximately;
 
-  mozilla::Result<mozilla::UniquePtr<Formatter>,
-                  typename Formatter::FormatError>
+  mozilla::Result<mozilla::UniquePtr<Formatter>, mozilla::intl::ICUError>
       result = Formatter::TryCreate(locale.get(), options);
 
   if (result.isOk()) {
@@ -1682,11 +1681,11 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Actually format the number
-  using FormatError = mozilla::intl::NumberFormat::FormatError;
+  using ICUError = mozilla::intl::ICUError;
 
   bool formatToParts = args[2].toBoolean();
-  mozilla::Result<std::u16string_view, FormatError> result =
-      mozilla::Err(FormatError::InternalError);
+  mozilla::Result<std::u16string_view, ICUError> result =
+      mozilla::Err(ICUError::InternalError);
   mozilla::intl::NumberPartVector parts;
   if (value.isNumber()) {
     double num = value.toNumber();
@@ -2044,10 +2043,10 @@ bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
   };
 
   // Actually format the number range.
-  using FormatError = NumberRangeFormat::FormatError;
+  using ICUError = mozilla::intl::ICUError;
 
-  mozilla::Result<std::u16string_view, FormatError> result =
-      mozilla::Err(FormatError::InternalError);
+  mozilla::Result<std::u16string_view, ICUError> result =
+      mozilla::Err(ICUError::InternalError);
   mozilla::intl::NumberPartVector parts;
 
   double numStart, numEnd;
