@@ -82,7 +82,7 @@ class MachCommands(MachCommandBase):
     def script_dir(self, command_context):
         return os.path.join(command_context.topsrcdir, "js/src/devtools/rootAnalysis")
 
-    def work_dir(self, command_context, application, given):
+    def get_work_dir(self, command_context, application, given):
         if given is not None:
             return given
         return os.path.join(command_context.topsrcdir, "haz-" + application)
@@ -225,7 +225,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
                 command_context.topsrcdir, "obj-analyzed-" + application
             )
 
-        work_dir = self.work_dir(command_context, application, kwargs["work_dir"])
+        work_dir = self.get_work_dir(command_context, application, kwargs["work_dir"])
         self.ensure_dir_exists(work_dir)
         with open(os.path.join(work_dir, "defaults.py"), "wt") as fh:
             data = textwrap.dedent(
@@ -363,7 +363,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         self.setup_env_for_tools(os.environ)
         os.environ["LD_LIBRARY_PATH"] += ":" + os.path.dirname(shell)
 
-        work_dir = self.work_dir(command_context, application, work_dir)
+        work_dir = self.get_work_dir(command_context, application, work_dir)
         return command_context.run_process(args=args, cwd=work_dir, pass_thru=True)
 
     @SubCommand(
