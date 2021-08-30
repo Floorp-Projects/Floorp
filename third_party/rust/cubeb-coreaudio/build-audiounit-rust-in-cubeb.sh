@@ -1,8 +1,8 @@
 #!/bin/sh
 
-git clone --recursive https://github.com/kinetiknz/cubeb.git
+git clone --recursive https://github.com/mozilla/cubeb.git
 cd cubeb/src
-git clone https://github.com/ChunMinChang/cubeb-coreaudio-rs.git
+git clone https://github.com/mozilla/cubeb-coreaudio-rs.git
 cd ../..
 mkdir cubeb-build
 cd cubeb-build
