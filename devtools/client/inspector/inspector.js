@@ -772,7 +772,7 @@ Inspector.prototype = {
       }),
       endPanel: this.InspectorSplitBox({
         initialWidth: splitSidebarWidth,
-        minSize: 10,
+        minSize: "225px",
         maxSize: "80%",
         splitterSize: this.is3PaneModeEnabled ? 1 : 0,
         endPanelControl: this.is3PaneModeEnabled,
