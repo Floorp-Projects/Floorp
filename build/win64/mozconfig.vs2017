@@ -1,6 +1,6 @@
 if [ -z "${VSPATH}" ]; then
     TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
-    VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2017_15.8.4"
+    VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2017_15.9.6"
 fi
 
 if [ -d "${VSPATH}" ]; then

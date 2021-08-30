@@ -26,7 +26,7 @@ case "$TARGET" in
   # Bug 1584530: don't require the Microsoft MSVC runtime to be installed.
   export RUSTFLAGS="-Ctarget-feature=+crt-static"
   export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
-  export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs2017_15.8.4
+  export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs2017_15.9.6
   ;;
 # OSX cross builds are a bit harder
 *-apple-darwin)

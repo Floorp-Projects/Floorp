@@ -16,7 +16,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['ANGLE_IS_WIN'] = True
 
     # ANGLE wants NTDDI_WIN10_VB, but:
-    # > /builds/worker/checkouts/gecko/vs2017_15.8.4/SDK/include/10.0.17134.0/winrt/wrl/def.h(48,2):
+    # > /builds/worker/checkouts/gecko/vs2017_15.9.6/SDK/include/10.0.17134.0/winrt/wrl/def.h(48,2):
     # > #error WRL requires NTDDI_VERSION to be #defined at least to NTDDI_VISTA or greater
     DEFINES['NTDDI_VERSION'] = 'NTDDI_WIN10_RS2'
 

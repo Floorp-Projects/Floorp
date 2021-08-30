@@ -78,7 +78,7 @@ jobs:
         worker-type: b-win2012
         worker:
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
         run:
             config:
                 - builds/releng_base_firefox.py

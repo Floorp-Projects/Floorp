@@ -72,7 +72,7 @@ win64-sccache:
     worker:
         max-run-time: 3600
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         toolchain-artifact: public/build/sccache.tar.bz2
         resources:
