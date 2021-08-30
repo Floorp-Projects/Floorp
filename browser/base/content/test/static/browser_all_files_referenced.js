@@ -265,6 +265,9 @@ var whitelist = [
   { file: "chrome://browser/content/screenshots/menu-visible.svg" },
 
   { file: "resource://app/modules/SnapshotSelector.jsm" },
+
+  // toolkit/xre/MacRunFromDmgUtils.mm
+  { file: "resource://gre/localization/en-US/toolkit/global/run-from-dmg.ftl" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
