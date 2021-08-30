@@ -52,12 +52,12 @@ It is augmented as it progresses through the system, with various information:
                 // with the search service.
     currentPage: // {string} url of the page that was loaded when the search
                  // began.
-    allowSearchSuggestions: // {boolean} Whether to allow search suggestions.
-                            // This is a veto, meaning that when false,
-                            // suggestions will not be fetched, but when true,
-                            // some other condition may still prohibit
-                            // suggestions, like private browsing mode. Defaults
-                            // to true.
+    prohibitRemoteResults:
+      // {boolean} This provides a short-circuit override for
+      // context.allowRemoteResults(). If it's false, then allowRemoteResults()
+      // will do its usual checks to determine whether remote results are
+      // allowed. If it's true, then allowRemoteResults() will immediately
+      // return false. Defaults to false.
 
     // Properties added by the Model.
     results; // {array} list of UrlbarResult objects.

@@ -139,7 +139,6 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    */
   _allowSuggestions(queryContext) {
     if (
-      !queryContext.allowSearchSuggestions ||
       // If the user typed a restriction token or token alias, we ignore the
       // pref to disable suggestions in the Urlbar.
       (!UrlbarPrefs.get("suggest.searches") &&
@@ -165,6 +164,13 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     queryContext,
     searchString = queryContext.searchString
   ) {
+    // This is checked by `queryContext.allowRemoteResults` below, but we can
+    // short-circuit that call with the `_isTokenOrRestrictionPresent` block
+    // before that. Make sure we don't allow remote suggestions if this is set.
+    if (queryContext.prohibitRemoteResults) {
+      return false;
+    }
+
     // TODO (Bug 1626964): Support zero prefix suggestions.
     if (!searchString.trim()) {
       return false;
@@ -188,30 +194,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       return false;
     }
 
-    // We're unlikely to get useful remote suggestions for a single character.
-    if (searchString.length < 2) {
-      return false;
-    }
-
-    // Disallow remote suggestions if only an origin is typed to avoid
-    // disclosing information about sites the user visits. This also catches
-    // partially-typed origins, like mozilla.o, because the URIFixup check
-    // below can't validate those.
-    if (
-      queryContext.tokens.length == 1 &&
-      queryContext.tokens[0].type == UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN
-    ) {
-      return false;
-    }
-
-    // Disallow remote suggestions for strings containing tokens that look like
-    // URIs, to avoid disclosing information about networks or passwords.
-    if (queryContext.fixupInfo?.href && !queryContext.fixupInfo?.isSearch) {
-      return false;
-    }
-
-    // Allow remote suggestions.
-    return true;
+    return queryContext.allowRemoteResults(searchString);
   }
 
   /**

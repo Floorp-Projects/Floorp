@@ -980,7 +980,7 @@ var UrlbarUtils = {
       userContextId: window.gBrowser.selectedBrowser.getAttribute(
         "usercontextid"
       ),
-      allowSearchSuggestions: false,
+      prohibitRemoteResults: true,
       providers: ["AliasEngines", "BookmarkKeywords", "HeuristicFallback"],
     };
     if (window.gURLBar.searchMode) {
@@ -1532,11 +1532,11 @@ class UrlbarQueryContext {
    * @param {object} [options.searchMode]
    *   The input's current search mode.  See UrlbarInput.setSearchMode for a
    *   description.
-   * @param {boolean} [options.allowSearchSuggestions]
-   *   Whether to allow search suggestions.  This is a veto, meaning that when
-   *   false, suggestions will not be fetched, but when true, some other
-   *   condition may still prohibit suggestions, like private browsing mode.
-   *   Defaults to true.
+   * @param {boolean} [options.prohibitRemoteResults]
+   *   This provides a short-circuit override for `context.allowRemoteResults`.
+   *   If it's false, then `allowRemoteResults` will do its usual checks to
+   *   determine whether remote results are allowed. If it's true, then
+   *   `allowRemoteResults` will immediately return false. Defaults to false.
    * @param {string} [options.formHistoryName]
    *   The name under which the local form history is registered.
    */
@@ -1556,9 +1556,9 @@ class UrlbarQueryContext {
 
     // Manage optional properties of options.
     for (let [prop, checkFn, defaultValue] of [
-      ["allowSearchSuggestions", v => true, true],
       ["currentPage", v => typeof v == "string" && !!v.length],
       ["formHistoryName", v => typeof v == "string" && !!v.length],
+      ["prohibitRemoteResults", v => true, false],
       ["providers", v => Array.isArray(v) && v.length],
       ["searchMode", v => v && typeof v == "object"],
       ["sources", v => Array.isArray(v) && v.length],
@@ -1645,6 +1645,47 @@ class UrlbarQueryContext {
     }
 
     return null;
+  }
+
+  /**
+   * Returns whether results from remote services are generally allowed for the
+   * context. Callers can impose further restrictions as appropriate, but
+   * typically they should not fetch remote results if this returns false.
+   *
+   * @param {string} [searchString]
+   *   Usually this is just the context's search string, but if you need to
+   *   fetch remote results based on a modified version, you can pass it here.
+   * @returns {boolean}
+   *   Whether remote results are allowed.
+   */
+  allowRemoteResults(searchString = this.searchString) {
+    if (this.prohibitRemoteResults) {
+      return false;
+    }
+
+    // We're unlikely to get useful remote results for a single character.
+    if (searchString.length < 2) {
+      return false;
+    }
+
+    // Disallow remote results if only an origin is typed to avoid disclosing
+    // sites the user visits. This also catches partially typed origins, like
+    // mozilla.o, because the fixup check below can't validate them.
+    if (
+      this.tokens.length == 1 &&
+      this.tokens[0].type == UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN
+    ) {
+      return false;
+    }
+
+    // Disallow remote results for strings containing tokens that look like URIs
+    // to avoid disclosing information about networks and passwords.
+    if (this.fixupInfo?.href && !this.fixupInfo?.isSearch) {
+      return false;
+    }
+
+    // Allow remote results.
+    return true;
   }
 }
 
