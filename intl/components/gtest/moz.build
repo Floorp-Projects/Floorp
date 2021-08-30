@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     "TestDateTimeFormat.cpp",
     "TestNumberFormat.cpp",
     "TestPluralRules.cpp",
+    "TestRelativeTimeFormat.cpp",
 ]
 
 FINAL_LIBRARY = "xul-gtest"
