@@ -340,9 +340,13 @@ android.libraryVariants.all { variant ->
         exclude '**/R.java', '**/BuildConfig.java'
         include 'org/mozilla/geckoview/**.java'
         options.addPathOption('sourcepath', ':').setValue(
-            variant.sourceSets.collect({ it.java.srcDirs }).flatten() +
-            variant.generateBuildConfigProvider.get().sourceOutputDir +
-            variant.aidlCompileProvider.get().sourceOutputDir)
+             variant.sourceSets.collect({ it.java.srcDirs }).flatten() +
+             variant.generateBuildConfigProvider.get().sourceOutputDir.asFile.get() +
+             variant.aidlCompileProvider.get().sourceOutputDir.asFile.get()
+        )
+
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        classpath += variant.javaCompileProvider.get().classpath
 
         // javadoc 8 has a bug that requires the rt.jar file from the JRE to be
         // in the bootclasspath (https://stackoverflow.com/a/30458820).
@@ -392,7 +396,7 @@ android.libraryVariants.all { variant ->
 }
 
 checkstyle {
-    configDir = file(".")
+    configDirectory = file(".")
     configFile = file("checkstyle.xml")
     toolVersion = "8.36.2"
 }
