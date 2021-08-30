@@ -5,42 +5,37 @@
 #infoContainer {
   text-align: center;
   min-width: 500px;
-  padding: 1em 0;
+  padding: 1em;
 }
 
-#infoTitle {
-  font-size: 24px;
+a {
+  cursor: pointer;
+}
+
+#notNowLinkContainer {
+  text-align: end;
 }
 
 #infoIcon {
   width: 112px;
   height: 112px;
-  margin: 1em auto;
+  margin: 0 auto 1em;
   background-image: url("chrome://branding/content/about-logo.svg");
   background-size: 100%;
 }
 
-/* Copied from https://searchfox.org/mozilla-central/source/browser/components/newtab/aboutwelcome/content/aboutwelcome.css#88 */
-/* We will want to check in to figure out if we want to share this code somehow */
-span.zap {
-  position: relative;
-  z-index: 1;
-  white-space: nowrap;
+#infoTitle {
+  font-size: 1.5em;
+  margin: 0;
 }
 
-.zap::after {
-  display: block;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  content: '';
-  position: absolute;
-  top: calc(100% - 0.15em);
-  width: 100%;
-  height: 0.3em;
-  left: 0;
-  z-index: -1;
+#infoBody {
+  margin: 1em 0;
 }
 
-.zap.short::after {
-  background-image:  url('chrome://activity-stream/content/data/content/assets/short-zap.svg');
+#illustration {
+  background: url("quicksuggestOnboarding_illustration.svg") no-repeat center;
+  min-width: 455px;
+  height: 219px;
+  margin: 1em 0 2em;
 }
