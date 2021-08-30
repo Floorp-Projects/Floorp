@@ -53,14 +53,6 @@ class CompositableForwarder : public KnowsCompositor {
                        ImageContainer* aImageContainer = nullptr) = 0;
 
   /**
-   * Tell the CompositableHost on the compositor side what TiledLayerBuffer to
-   * use for the next composition.
-   */
-  virtual void UseTiledLayerBuffer(
-      CompositableClient* aCompositable,
-      const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
-
-  /**
    * Communicate to the compositor that aRegion in the texture identified by
    * aCompositable and aIdentifier has been updated to aThebesBuffer.
    */

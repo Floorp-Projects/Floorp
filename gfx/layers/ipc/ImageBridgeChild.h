@@ -269,12 +269,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
   void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                      TextureClient* aTexture) override;
 
-  void UseTiledLayerBuffer(
-      CompositableClient* aCompositable,
-      const SurfaceDescriptorTiles& aTileLayerDescriptor) override {
-    MOZ_CRASH("should not be called");
-  }
-
   void UpdateTextureRegion(CompositableClient* aCompositable,
                            const ThebesBufferData& aThebesBufferData,
                            const nsIntRegion& aUpdatedRegion) override {
