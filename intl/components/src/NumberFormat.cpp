@@ -12,11 +12,10 @@
 namespace mozilla {
 namespace intl {
 
-/*static*/ Result<UniquePtr<NumberFormat>, NumberFormat::FormatError>
-NumberFormat::TryCreate(std::string_view aLocale,
-                        const NumberFormatOptions& aOptions) {
+/*static*/ Result<UniquePtr<NumberFormat>, ICUError> NumberFormat::TryCreate(
+    std::string_view aLocale, const NumberFormatOptions& aOptions) {
   UniquePtr<NumberFormat> nf = MakeUnique<NumberFormat>();
-  Result<Ok, FormatError> result = nf->initialize(aLocale, aOptions);
+  Result<Ok, ICUError> result = nf->initialize(aLocale, aOptions);
   if (result.isOk()) {
     return nf;
   }
@@ -33,7 +32,7 @@ NumberFormat::~NumberFormat() {
   }
 }
 
-Result<Ok, NumberFormat::FormatError> NumberFormat::initialize(
+Result<Ok, ICUError> NumberFormat::initialize(
     std::string_view aLocale, const NumberFormatOptions& aOptions) {
   mFormatForUnit = aOptions.mUnit.isSome();
   NumberFormatterSkeleton skeleton(aOptions);
@@ -45,24 +44,24 @@ Result<Ok, NumberFormat::FormatError> NumberFormat::initialize(
       return Ok();
     }
   }
-  return Err(FormatError::InternalError);
+  return Err(ICUError::InternalError);
 }
 
-Result<int32_t, NumberFormat::FormatError> NumberFormat::selectFormatted(
+Result<int32_t, ICUError> NumberFormat::selectFormatted(
     double number, char16_t* keyword, int32_t keywordSize,
     UPluralRules* pluralRules) const {
   MOZ_ASSERT(keyword && pluralRules);
   UErrorCode status = U_ZERO_ERROR;
 
   if (format(number).isErr()) {
-    return Err(NumberFormat::FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   int32_t utf16KeywordLength = uplrules_selectFormatted(
       pluralRules, mFormattedNumber, keyword, keywordSize, &status);
 
   if (U_FAILURE(status)) {
-    return Err(NumberFormat::FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   return utf16KeywordLength;
@@ -94,21 +93,20 @@ bool NumberFormat::formatInternal(std::string_view number) const {
   return U_SUCCESS(status);
 }
 
-Result<std::u16string_view, NumberFormat::FormatError>
-NumberFormat::formatResult() const {
+Result<std::u16string_view, ICUError> NumberFormat::formatResult() const {
   UErrorCode status = U_ZERO_ERROR;
 
   const UFormattedValue* formattedValue =
       unumf_resultAsValue(mFormattedNumber, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   int32_t utf16Length;
   const char16_t* utf16Str =
       ufmtval_getString(formattedValue, &utf16Length, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   return std::u16string_view(utf16Str, static_cast<size_t>(utf16Length));
@@ -176,34 +174,33 @@ Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
   return Nothing();
 }
 
-Result<std::u16string_view, NumberFormat::FormatError>
-NumberFormat::formatResultToParts(Maybe<double> number, bool isNegative,
-                                  NumberPartVector& parts) const {
+Result<std::u16string_view, ICUError> NumberFormat::formatResultToParts(
+    Maybe<double> number, bool isNegative, NumberPartVector& parts) const {
   UErrorCode status = U_ZERO_ERROR;
 
   const UFormattedValue* formattedValue =
       unumf_resultAsValue(mFormattedNumber, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   int32_t utf16Length;
   const char16_t* utf16Str =
       ufmtval_getString(formattedValue, &utf16Length, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   UConstrainedFieldPosition* fpos = ucfpos_open(&status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
   ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
 
   // We're only interested in UFIELD_CATEGORY_NUMBER fields.
   ucfpos_constrainCategory(fpos, UFIELD_CATEGORY_NUMBER, &status);
   if (U_FAILURE(status)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   // Vacuum up fields in the overall formatted string.
@@ -212,7 +209,7 @@ NumberFormat::formatResultToParts(Maybe<double> number, bool isNegative,
   while (true) {
     bool hasMore = ufmtval_nextPosition(formattedValue, fpos, &status);
     if (U_FAILURE(status)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
     if (!hasMore) {
       break;
@@ -220,24 +217,24 @@ NumberFormat::formatResultToParts(Maybe<double> number, bool isNegative,
 
     int32_t fieldName = ucfpos_getField(fpos, &status);
     if (U_FAILURE(status)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
 
     int32_t beginIndex, endIndex;
     ucfpos_getIndexes(fpos, &beginIndex, &endIndex, &status);
     if (U_FAILURE(status)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
 
     Maybe<NumberPartType> partType = GetPartTypeForNumberField(
         UNumberFormatFields(fieldName), number, isNegative, mFormatForUnit);
     if (!partType || !fields.append(*partType, beginIndex, endIndex)) {
-      return Err(FormatError::InternalError);
+      return Err(ICUError::InternalError);
     }
   }
 
   if (!fields.toPartsVector(utf16Length, parts)) {
-    return Err(FormatError::InternalError);
+    return Err(ICUError::InternalError);
   }
 
   return std::u16string_view(utf16Str, static_cast<size_t>(utf16Length));

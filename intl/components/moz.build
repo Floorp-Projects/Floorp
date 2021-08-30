@@ -9,6 +9,7 @@ EXPORTS.mozilla.intl = [
     "src/DateTimeFormat.h",
     "src/DateTimePatternGenerator.h",
     "src/ICU4CGlue.h",
+    "src/ICUError.h",
     "src/NumberFormat.h",
     "src/NumberRangeFormat.h",
     "src/PluralRules.h",
