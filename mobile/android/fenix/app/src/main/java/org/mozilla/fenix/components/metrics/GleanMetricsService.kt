@@ -36,7 +36,6 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
-import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.ReaderMode
@@ -371,12 +370,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.SearchWidgetVoiceSearchPressed -> EventWrapper<NoExtraKeys>(
             { SearchWidget.voiceButton.record(it) }
-        )
-        is Event.PrivateBrowsingSnackbarUndoTapped -> EventWrapper<NoExtraKeys>(
-            { PrivateBrowsingMode.snackbarUndo.record(it) }
-        )
-        is Event.PrivateBrowsingNotificationTapped -> EventWrapper<NoExtraKeys>(
-            { PrivateBrowsingMode.notificationTapped.record(it) }
         )
         is Event.PrivateBrowsingCreateShortcut -> EventWrapper<NoExtraKeys>(
             { PrivateBrowsingShortcut.createShortcut.record(it) }

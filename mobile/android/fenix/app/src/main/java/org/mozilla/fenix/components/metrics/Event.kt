@@ -95,8 +95,6 @@ sealed class Event {
     object CollectionRenamePressed : Event()
     object SearchWidgetNewTabPressed : Event()
     object SearchWidgetVoiceSearchPressed : Event()
-    object PrivateBrowsingSnackbarUndoTapped : Event()
-    object PrivateBrowsingNotificationTapped : Event()
     object PrivateBrowsingCreateShortcut : Event()
     object PrivateBrowsingAddShortcutCFR : Event()
     object PrivateBrowsingCancelCFR : Event()

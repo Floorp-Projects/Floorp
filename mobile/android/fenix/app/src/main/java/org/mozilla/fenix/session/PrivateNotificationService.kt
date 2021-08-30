@@ -13,9 +13,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import java.util.Locale
 
 /**
@@ -65,8 +63,6 @@ class PrivateNotificationService : AbstractPrivateNotificationService() {
         // Trigger use case directly for now (instead of calling super.erasePrivateTabs)
         // as otherwise SessionManager and the store will be out of sync.
         components.useCases.tabsUseCases.removePrivateTabs()
-
-        metrics.track(Event.PrivateBrowsingNotificationTapped)
 
         // If the app is in private mode we launch to the private mode home screen as a
         // confirmation that all private tabs have been deleted. If we don't do this the user

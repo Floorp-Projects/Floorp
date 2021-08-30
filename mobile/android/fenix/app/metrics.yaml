@@ -2975,39 +2975,6 @@ search_widget:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
-private_browsing_mode:
-  snackbar_undo:
-    type: event
-    description: |
-      A user pressed the "undo" button in the snackbar that is shown when the
-      garbage icon is tapped.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/4658
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/4968
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-  notification_tapped:
-    type: event
-    description: |
-      A user pressed the private browsing mode notification itself.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/4658
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/4968
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-
 tracking_protection:
   exception_added:
     type: event
