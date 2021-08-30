@@ -14,7 +14,6 @@ import org.mozilla.fenix.GleanMetrics.AndroidKeystoreExperiment
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
-import org.mozilla.fenix.GleanMetrics.BannerOpenInApp
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Collections
@@ -641,15 +640,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         Event.HaveNoOpenTabs -> EventWrapper<NoExtraKeys>(
             { Metrics.hasOpenTabs.set(false) }
-        )
-        is Event.BannerOpenInAppDisplayed -> EventWrapper<NoExtraKeys>(
-            { BannerOpenInApp.displayed.record(it) }
-        )
-        is Event.BannerOpenInAppDismissed -> EventWrapper<NoExtraKeys>(
-            { BannerOpenInApp.dismissed.record(it) }
-        )
-        is Event.BannerOpenInAppGoToSettings -> EventWrapper<NoExtraKeys>(
-            { BannerOpenInApp.goToSettings.record(it) }
         )
         is Event.SyncedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
             { SyncedTabs.syncedTabsSuggestionClicked.record(it) }

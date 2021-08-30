@@ -4459,50 +4459,6 @@ tabs:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
-banner_open_in_app:
-  displayed:
-    type: event
-    description: |
-      Open in App banner was shown.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/16828
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/17049
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-  dismissed:
-    type: event
-    description: |
-      User tapped 'dismiss' on Open in App banner.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/16828
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/17049
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-  go_to_settings:
-    type: event
-    description: |
-      User tapped 'go to settings' on Open in App banner.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/16828
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/17049
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-
 contextual_menu:
   copy_tapped:
     type: event
