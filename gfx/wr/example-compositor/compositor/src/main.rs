@@ -241,6 +241,7 @@ fn push_rotated_rect(
             is_2d_scale_translation: false,
             should_snap: false,
         },
+        SpatialTreeItemKey::new(0, 0),
     );
     builder.push_rect(
         &CommonItemProperties::new(
@@ -280,6 +281,7 @@ fn build_display_list(
         LayoutRect::from_size(layout_size),
         ScrollSensitivity::Script,
         LayoutVector2D::zero(),
+        SpatialTreeItemKey::new(0, 1),
     );
 
     builder.push_rect(

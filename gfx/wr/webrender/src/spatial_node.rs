@@ -4,13 +4,73 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind, ScrollClamping, ScrollLocation};
-use api::{TransformStyle, ScrollSensitivity, StickyOffsetBounds};
+use api::{TransformStyle, ScrollSensitivity, StickyOffsetBounds, SpatialTreeItemKey};
 use api::units::*;
 use crate::spatial_tree::{CoordinateSystem, SpatialNodeIndex, TransformUpdateState};
 use crate::spatial_tree::{CoordinateSystemId, StaticCoordinateSystemId};
 use euclid::{Vector2D, SideOffsets2D};
 use crate::scene::SceneProperties;
 use crate::util::{LayoutFastTransform, MatrixHelpers, ScaleOffset, TransformedRectKind, PointHelpers};
+
+/// The kind of a spatial node uid. These are required because we currently create external
+/// nodes during DL building, but the internal nodes aren't created until scene building.
+/// TODO(gw): The internal scroll and reference frames are not used in any important way
+//            by Gecko - they were primarily useful for Servo. So we should plan to remove
+//            them completely.
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+pub enum SpatialNodeUidKind {
+    /// Internal scroll frame created during scene building for each iframe
+    InternalScrollFrame {
+        pipeline_id: PipelineId,
+    },
+    /// Internal reference frame created during scene building for each iframe
+    InternalReferenceFrame {
+        pipeline_id: PipelineId,
+    },
+    /// A normal spatial node uid, defined by a caller provided unique key
+    External {
+        key: SpatialTreeItemKey,
+    },
+}
+
+/// A unique identifier for a spatial node, that is stable across display lists
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+pub struct SpatialNodeUid {
+    /// The unique key for a given pipeline for this uid
+    pub kind: SpatialNodeUidKind,
+}
+
+impl SpatialNodeUid {
+    pub fn root_scroll_frame(
+        pipeline_id: PipelineId,
+    ) -> Self {
+        SpatialNodeUid {
+            kind: SpatialNodeUidKind::InternalScrollFrame {
+                pipeline_id,
+            },
+        }
+    }
+
+    pub fn root_reference_frame(
+        pipeline_id: PipelineId,
+    ) -> Self {
+        SpatialNodeUid {
+            kind: SpatialNodeUidKind::InternalReferenceFrame {
+                pipeline_id,
+            },
+        }
+    }
+
+    pub fn external(
+        key: SpatialTreeItemKey,
+    ) -> Self {
+        SpatialNodeUid {
+            kind: SpatialNodeUidKind::External {
+                key,
+            },
+        }
+    }
+}
 
 pub enum SpatialNodeType {
     /// A special kind of node that adjusts its position based on the position
@@ -941,6 +1001,7 @@ fn test_cst_perspective_relative_scroll() {
         },
         LayoutVector2D::zero(),
         pipeline_id,
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0)),
     );
 
     let scroll_frame_1 = cst.add_scroll_frame(
@@ -952,6 +1013,7 @@ fn test_cst_perspective_relative_scroll() {
         ScrollSensitivity::Script,
         ScrollFrameKind::Explicit,
         LayoutVector2D::zero(),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
     );
 
     let scroll_frame_2 = cst.add_scroll_frame(
@@ -963,6 +1025,7 @@ fn test_cst_perspective_relative_scroll() {
         ScrollSensitivity::Script,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 50.0),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3)),
     );
 
     let ref_frame = cst.add_reference_frame(
@@ -974,6 +1037,7 @@ fn test_cst_perspective_relative_scroll() {
         },
         LayoutVector2D::zero(),
         pipeline_id,
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 4)),
     );
 
     cst.update_tree(&SceneProperties::new());
