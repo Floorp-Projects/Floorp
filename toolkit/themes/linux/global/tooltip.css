@@ -19,6 +19,7 @@ tooltip {
   color: InfoText;
   background-color: InfoBackground;
   font: message-box;
+  line-height: 1.2;
 }
 
 tooltip:not([position]) {
