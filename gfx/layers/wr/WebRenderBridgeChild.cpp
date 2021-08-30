@@ -390,10 +390,6 @@ void WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
   SendNewCompositable(handle, aCompositable->GetTextureInfo());
 }
 
-void WebRenderBridgeChild::UseTiledLayerBuffer(
-    CompositableClient* aCompositable,
-    const SurfaceDescriptorTiles& aTiledDescriptor) {}
-
 void WebRenderBridgeChild::UpdateTextureRegion(
     CompositableClient* aCompositable,
     const ThebesBufferData& aThebesBufferData,

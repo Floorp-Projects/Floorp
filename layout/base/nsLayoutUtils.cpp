@@ -153,7 +153,6 @@
 #include "RegionBuilder.h"
 #include "RetainedDisplayListBuilder.h"
 #include "TextDrawTarget.h"
-#include "TiledLayerBuffer.h"  // For TILEDLAYERBUFFER_TILE_SIZE
 #include "UnitTransforms.h"
 #include "ViewportFrame.h"
 

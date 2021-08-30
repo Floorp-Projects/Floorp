@@ -29,7 +29,6 @@
 namespace mozilla {
 namespace layers {
 
-class ClientTiledLayerBuffer;
 class Compositor;
 
 // This function can in some cases fail and return false without it being a bug.
