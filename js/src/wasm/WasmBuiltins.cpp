@@ -253,12 +253,13 @@ const SymbolicAddressSignature SASigRefTest = {
     SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _RoN, _END}};
 const SymbolicAddressSignature SASigRttSub = {
     SymbolicAddress::RttSub, _RoN, _FailOnNullPtr, 3, {_PTR, _RoN, _RoN, _END}};
-const SymbolicAddressSignature SASigIntrI8VecMul = {
-    SymbolicAddress::IntrI8VecMul,
-    _VOID,
-    _FailOnNegI32,
-    6,
-    {_PTR, _I32, _I32, _I32, _I32, _PTR, _END}};
+#define DECL_SAS_FOR_INTRINSIC(op, export, sa_name, abitype, entry, idx) \
+  const SymbolicAddressSignature SASig##sa_name = {                      \
+      SymbolicAddress::sa_name, _VOID, _FailOnNegI32,                    \
+      DECLARE_INTRINSIC_PARAM_TYPES_##op};
+
+FOR_EACH_INTRINSIC(DECL_SAS_FOR_INTRINSIC)
+#undef DECL_SAS_FOR_INTRINSIC
 
 }  // namespace wasm
 }  // namespace js
@@ -1277,12 +1278,12 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General1;
       return FuncCast(PrintText, *abiType);
 #endif
-    case SymbolicAddress::IntrI8VecMul:
-      *abiType = MakeABIFunctionType(
-          ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
-                          ArgType_Int32, ArgType_Int32, ArgType_General});
-      MOZ_ASSERT(*abiType == ToABIType(SASigIntrI8VecMul));
-      return FuncCast(Instance::intrI8VecMul, *abiType);
+#define DECL_SAS_TYPE_AND_FN(op, export, sa_name, abitype, entry, idx) \
+  case SymbolicAddress::sa_name:                                       \
+    *abiType = abitype;                                                \
+    return FuncCast(entry, *abiType);
+      FOR_EACH_INTRINSIC(DECL_SAS_TYPE_AND_FN)
+#undef DECL_SAS_TYPE_AND_FN
     case SymbolicAddress::Limit:
       break;
   }
@@ -1409,7 +1410,10 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ArrayNew:
     case SymbolicAddress::RefTest:
     case SymbolicAddress::RttSub:
-    case SymbolicAddress::IntrI8VecMul:
+#define OP(op, export, sa_name, abitype, entry, idx) \
+  case SymbolicAddress::sa_name:
+      FOR_EACH_INTRINSIC(OP)
+#undef OP
       return true;
     case SymbolicAddress::Limit:
       break;

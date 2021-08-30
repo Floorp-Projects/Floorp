@@ -22,6 +22,7 @@
 #include "vm/GlobalObject.h"
 
 #include "wasm/WasmGenerator.h"
+#include "wasm/WasmIntrinsicGenerated.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmOpIter.h"
@@ -30,13 +31,18 @@
 using namespace js;
 using namespace js::wasm;
 
-static const ValType IntrinsicI8VecMul_Params[] = {ValType::I32, ValType::I32,
-                                                   ValType::I32, ValType::I32};
-const Intrinsic IntrinsicI8VecMul = {
-    "i8vecmul",
-    mozilla::Span<const ValType>(IntrinsicI8VecMul_Params),
-    SASigIntrI8VecMul,
-};
+#define INTR_DECL(op, export, sa_name, abitype, entry, idx) \
+  static const ValType Intrinsic##op##_Params[] =           \
+      DECLARE_INTRINSIC_SAS_PARAM_VALTYPES_##op;            \
+                                                            \
+  const Intrinsic Intrinsic##op = {                         \
+      export,                                               \
+      mozilla::Span<const ValType>(Intrinsic##op##_Params), \
+      SASig##sa_name,                                       \
+  };
+
+FOR_EACH_INTRINSIC(INTR_DECL)
+#undef INTR_DECL
 
 bool Intrinsic::funcType(FuncType* type) const {
   ValTypeVector paramVec;
@@ -50,8 +56,11 @@ bool Intrinsic::funcType(FuncType* type) const {
 /* static */
 const Intrinsic& Intrinsic::getFromOp(IntrinsicOp op) {
   switch (op) {
-    case IntrinsicOp::I8VecMul:
-      return IntrinsicI8VecMul;
+#define OP(op, export, sa_name, abitype, entry, idx) \
+  case IntrinsicOp::op:                              \
+    return Intrinsic##op;
+    FOR_EACH_INTRINSIC(OP)
+#undef OP
     default:
       MOZ_CRASH("unexpected intrinsic");
   }
@@ -113,8 +122,8 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
 
   // Add (type (func (params ...))) for each intrinsic. The function types will
   // be deduplicated by the runtime
-  for (uint32_t funcIndex = 0; funcIndex < ops.size(); funcIndex++) {
-    const Intrinsic& intrinsic = Intrinsic::getFromOp(ops[funcIndex]);
+  for (const IntrinsicOp& op : ops) {
+    const Intrinsic& intrinsic = Intrinsic::getFromOp(op);
 
     FuncType type;
     if (!intrinsic.funcType(&type) ||

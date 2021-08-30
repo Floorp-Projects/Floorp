@@ -23,6 +23,7 @@
 #include "vm/JSContext.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmIntrinsicGenerated.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmTlsData.h"
 
@@ -1527,8 +1528,11 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::js_jit_gAtomic64Lock:
       MOZ_CRASH();
 #endif
-    case SymbolicAddress::IntrI8VecMul:
-      return "call to native i8 vector multiplication intrinsic (in wasm)";
+#define OP(op, export, sa_name, abitype, entry, idx) \
+  case SymbolicAddress::sa_name:                     \
+    return "call to native " #op " intrinsic (in wasm)";
+      FOR_EACH_INTRINSIC(OP)
+#undef OP
 #ifdef WASM_CODEGEN_DEBUG
     case SymbolicAddress::PrintI32:
     case SymbolicAddress::PrintPtr:
