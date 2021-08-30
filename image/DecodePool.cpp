@@ -147,13 +147,6 @@ class DecodingTask final : public Task {
     return true;
   }
 
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-  bool GetName(nsACString& aName) override {
-    aName.AssignLiteral("ImageDecodingTask");
-    return true;
-  }
-#endif
-
  private:
   RefPtr<IDecodingTask> mTask;
 };
