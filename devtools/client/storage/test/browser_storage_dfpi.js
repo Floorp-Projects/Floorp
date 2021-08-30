@@ -76,12 +76,12 @@ async function setPartitionedStorage(browser, type, key) {
   );
 }
 
-function checkData(storageType, key, value) {
+async function checkData(storageType, key, value) {
   if (storageType == "cookie") {
     checkCookieData(key, value);
     return;
   }
-  checkStorageData(key, value);
+  await waitForStorageData(key, value);
 }
 
 async function testPartitionedStorage(
@@ -113,10 +113,10 @@ async function testPartitionedStorage(
   );
 
   await selectTreeItem([treeItemLabel, ORIGIN]);
-  checkData(storageType, "contextA", "first");
+  await checkData(storageType, "contextA", "first");
 
   await selectTreeItem([treeItemLabel, ORIGIN_THIRD_PARTY]);
-  checkData(storageType, "contextA", "third");
+  await checkData(storageType, "contextA", "third");
 
   info("Add more entries while the storage panel is open");
   const onUpdated = gUI.once("store-objects-edit");
@@ -136,12 +136,12 @@ async function testPartitionedStorage(
   );
 
   await selectTreeItem([treeItemLabel, ORIGIN]);
-  checkData(storageType, "contextA", "first");
-  checkData(storageType, "contextB", "first");
+  await checkData(storageType, "contextA", "first");
+  await checkData(storageType, "contextB", "first");
 
   await selectTreeItem([treeItemLabel, ORIGIN_THIRD_PARTY]);
-  checkData(storageType, "contextA", "third");
-  checkData(storageType, "contextB", "third");
+  await checkData(storageType, "contextA", "third");
+  await checkData(storageType, "contextB", "third");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
