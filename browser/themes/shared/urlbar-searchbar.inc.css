@@ -64,16 +64,13 @@
   outline: none;
 }
 
-#urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background,
-#searchbar:focus-within {
-  outline: var(--focus-outline);
-  outline-offset: calc(var(--focus-outline-width) * -1);
+#urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background {
+  border: var(--focus-outline);
   /* We used --focus-outline above to inherit its width and style properties,
      but we still want to use the theme's border-color.
      --toolbar-field-focus-border-color is set equal to --focus-outline-color
      on :root, but LWT themes can override this value. */
-  outline-color: var(--toolbar-field-focus-border-color);
-  border-color: transparent;
+  border-color: var(--toolbar-field-focus-border-color);
 }
 
 #urlbar[focused="true"] > #urlbar-background,
@@ -84,6 +81,19 @@
 #urlbar[open] > #urlbar-background {
   border-color: var(--arrowpanel-border-color);
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.13);
+}
+
+/* We draw the searchbar's border as an outline. If we did it as a border, the searchbar's
+   contents would shift when its border-width expanded by 1px when focused.
+   Removing the border when focused would also shift contents. #urlbar gets
+   around this problem by applying its border to #urlbar-background, which is
+   positioned absolutely. We don't plan on changing the searchbar's UX
+   significantly, so it's better to avoid that extra complexity. */
+#searchbar:focus-within {
+  outline: var(--focus-outline);
+  outline-offset: -2px;
+  outline-color: var(--toolbar-field-focus-border-color);
+  border-color: transparent;
 }
 
 #urlbar:is([focused="true"], [open]),
