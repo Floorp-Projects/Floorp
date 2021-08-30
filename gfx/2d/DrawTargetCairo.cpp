@@ -2140,38 +2140,6 @@ Rect DrawTargetCairo::GetUserSpaceClip() const {
               clipY2 - clipY1);  // Narrowing of doubles to floats
 }
 
-cairo_t* BorrowedCairoContext::BorrowCairoContextFromDrawTarget(
-    DrawTarget* aDT) {
-  if (aDT->GetBackendType() != BackendType::CAIRO || aDT->IsDualDrawTarget() ||
-      aDT->IsTiledDrawTarget() || aDT->IsCaptureDT()) {
-    return nullptr;
-  }
-  DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);
-
-  cairoDT->WillChange();
-
-  // save the state to make it easier for callers to avoid mucking with things
-  cairo_save(cairoDT->mContext);
-
-  // Neuter the DrawTarget while the context is being borrowed
-  cairo_t* cairo = cairoDT->mContext;
-  cairoDT->mContext = nullptr;
-
-  return cairo;
-}
-
-void BorrowedCairoContext::ReturnCairoContextToDrawTarget(DrawTarget* aDT,
-                                                          cairo_t* aCairo) {
-  if (aDT->GetBackendType() != BackendType::CAIRO || aDT->IsDualDrawTarget() ||
-      aDT->IsTiledDrawTarget()) {
-    return;
-  }
-  DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);
-
-  cairo_restore(aCairo);
-  cairoDT->mContext = aCairo;
-}
-
 #ifdef MOZ_X11
 bool BorrowedXlibDrawable::Init(DrawTarget* aDT) {
   MOZ_ASSERT(aDT, "Caller should check for nullptr");
