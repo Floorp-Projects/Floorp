@@ -404,6 +404,8 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
     return IPC_OK();
   }
 
+  // Synchronously delete de actor here rather than using SendBeginDestroy(), as
+  // we haven't initialized it yet.
   auto deleteBridge =
       MakeScopeExit([&] { BrowserBridgeChild::Send__delete__(bridge); });
 
