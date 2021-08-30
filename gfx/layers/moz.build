@@ -27,7 +27,6 @@ EXPORTS += [
     "opengl/OGLShaderConfig.h",
     "opengl/OGLShaderProgram.h",
     "ReadbackLayer.h",
-    "TiledLayerBuffer.h",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":

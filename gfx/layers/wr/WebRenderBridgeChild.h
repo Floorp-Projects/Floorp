@@ -195,9 +195,6 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
   // CompositableForwarder
   void Connect(CompositableClient* aCompositable,
                ImageContainer* aImageContainer = nullptr) override;
-  void UseTiledLayerBuffer(
-      CompositableClient* aCompositable,
-      const SurfaceDescriptorTiles& aTiledDescriptor) override;
   void UpdateTextureRegion(CompositableClient* aCompositable,
                            const ThebesBufferData& aThebesBufferData,
                            const nsIntRegion& aUpdatedRegion) override;
