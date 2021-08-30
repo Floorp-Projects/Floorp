@@ -40,6 +40,12 @@ const FIRST_SPATIAL_NODE_INDEX: usize = 2;
 // See ROOT_SCROLL_NODE_SPATIAL_ID
 const FIRST_CLIP_NODE_INDEX: usize = 1;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+enum BuildState {
+    Idle,
+    Build,
+}
+
 #[repr(C)]
 #[derive(Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ItemRange<'a, T> {
@@ -120,6 +126,20 @@ pub struct DisplayListPayload {
 }
 
 impl DisplayListPayload {
+    fn new(capacity: DisplayListCapacity) -> Self {
+        DisplayListPayload {
+            items_data: Vec::with_capacity(capacity.items_size),
+            cache_data: Vec::with_capacity(capacity.cache_size),
+            spatial_tree: Vec::with_capacity(capacity.spatial_tree_size),
+        }
+    }
+
+    fn clear(&mut self) {
+        self.items_data.clear();
+        self.cache_data.clear();
+        self.spatial_tree.clear();
+    }
+
     fn size_in_bytes(&self) -> usize {
         self.items_data.len() +
         self.cache_data.len() +
@@ -1034,6 +1054,7 @@ pub struct DisplayListBuilder {
 
     cache_size: usize,
     serialized_content_buffer: Option<String>,
+    state: BuildState,
 
     /// Helper struct to map stacking context coords <-> reference frame coords.
     rf_mapper: ReferenceFrameMapper,
@@ -1043,7 +1064,7 @@ pub struct DisplayListBuilder {
 }
 
 #[repr(C)]
-pub struct DisplayListCapacity {
+struct DisplayListCapacity {
     items_size: usize,
     cache_size: usize,
     spatial_tree_size: usize,
@@ -1061,21 +1082,8 @@ impl DisplayListCapacity {
 
 impl DisplayListBuilder {
     pub fn new(pipeline_id: PipelineId) -> Self {
-        Self::with_capacity(pipeline_id, DisplayListCapacity::empty())
-    }
-
-    pub fn with_capacity(
-        pipeline_id: PipelineId,
-        capacity: DisplayListCapacity,
-    ) -> Self {
-        let start_time = precise_time_ns();
-
         DisplayListBuilder {
-            payload: DisplayListPayload {
-                items_data: Vec::with_capacity(capacity.items_size),
-                cache_data: Vec::with_capacity(capacity.cache_size),
-                spatial_tree: Vec::with_capacity(capacity.spatial_tree_size),
-            },
+            payload: DisplayListPayload::new(DisplayListCapacity::empty()),
             pipeline_id,
 
             pending_chunk: Vec::new(),
@@ -1084,14 +1092,32 @@ impl DisplayListBuilder {
             next_clip_index: FIRST_CLIP_NODE_INDEX,
             next_spatial_index: FIRST_SPATIAL_NODE_INDEX,
             next_clip_chain_id: 0,
-            builder_start_time: start_time,
+            builder_start_time: 0,
             save_state: None,
             cache_size: 0,
             serialized_content_buffer: None,
+            state: BuildState::Idle,
 
             rf_mapper: ReferenceFrameMapper::new(),
             spatial_nodes: vec![SpatialNodeInfo::identity(); FIRST_SPATIAL_NODE_INDEX + 1],
         }
+    }
+
+    fn reset(&mut self) {
+        self.payload.clear();
+        self.pending_chunk.clear();
+        self.writing_to_chunk = false;
+
+        self.next_clip_index = FIRST_CLIP_NODE_INDEX;
+        self.next_spatial_index = FIRST_SPATIAL_NODE_INDEX;
+        self.next_clip_chain_id = 0;
+
+        self.save_state = None;
+        self.cache_size = 0;
+        self.serialized_content_buffer = None;
+
+        self.rf_mapper = ReferenceFrameMapper::new();
+        self.spatial_nodes = vec![SpatialNodeInfo::identity(); FIRST_SPATIAL_NODE_INDEX + 1];
     }
 
     /// Saves the current display list state, so it may be `restore()`'d.
@@ -1212,6 +1238,7 @@ impl DisplayListBuilder {
         item: &di::DisplayItem,
         section: DisplayListSection,
     ) {
+        debug_assert_eq!(self.state, BuildState::Build);
         poke_into_vec(item, self.buffer_from_section(section));
         self.add_to_display_list_dump(item);
     }
@@ -1228,6 +1255,7 @@ impl DisplayListBuilder {
 
     #[inline]
     pub fn push_spatial_tree_item(&mut self, item: &di::SpatialTreeItem) {
+        debug_assert_eq!(self.state, BuildState::Build);
         poke_into_vec(item, &mut self.payload.spatial_tree);
     }
 
@@ -1274,6 +1302,8 @@ impl DisplayListBuilder {
         I::IntoIter: ExactSizeIterator,
         I::Item: Poke,
     {
+        assert_eq!(self.state, BuildState::Build);
+
         let mut buffer = self.buffer_from_section(self.default_section());
         Self::push_iter_impl(&mut buffer, iter);
     }
@@ -2085,7 +2115,15 @@ impl DisplayListBuilder {
         self.cache_size = cache_size;
     }
 
-    pub fn finalize(mut self) -> (PipelineId, BuiltDisplayList) {
+    pub fn begin(&mut self) {
+        assert_eq!(self.state, BuildState::Idle);
+        self.state = BuildState::Build;
+        self.builder_start_time = precise_time_ns();
+        self.reset();
+    }
+
+    pub fn end(&mut self) -> (PipelineId, BuiltDisplayList) {
+        assert_eq!(self.state, BuildState::Build);
         assert!(self.save_state.is_none(), "Finalized DisplayListBuilder with a pending save");
 
         if let Some(content) = self.serialized_content_buffer.take() {
@@ -2100,7 +2138,23 @@ impl DisplayListBuilder {
         ensure_red_zone::<di::DisplayItem>(&mut self.payload.cache_data);
         ensure_red_zone::<di::SpatialTreeItem>(&mut self.payload.spatial_tree);
 
+        // While the first display list after tab-switch can be large, the
+        // following ones are always smaller thanks to interning.
+        // So don't let the spike of the first allocation make us allocate a large
+        // contiguous buffer (with some likelihood of OOM, see bug 1531819).
+        let next_capacity = DisplayListCapacity {
+            cache_size: self.payload.cache_data.len().min(1024),
+            items_size: self.payload.items_data.len().min(1024),
+            spatial_tree_size: self.payload.spatial_tree.len().min(1024),
+        };
+        let payload = mem::replace(
+            &mut self.payload,
+            DisplayListPayload::new(next_capacity),
+        );
         let end_time = precise_time_ns();
+
+        self.state = BuildState::Idle;
+
         (
             self.pipeline_id,
             BuiltDisplayList {
@@ -2113,7 +2167,7 @@ impl DisplayListBuilder {
                     total_spatial_nodes: self.next_spatial_index,
                     cache_size: self.cache_size,
                 },
-                payload: self.payload,
+                payload,
             },
         )
     }

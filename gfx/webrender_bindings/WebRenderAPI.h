@@ -435,7 +435,6 @@ class DisplayListBuilder final {
  public:
   explicit DisplayListBuilder(wr::PipelineId aId,
                               layers::WebRenderBackend aBackend,
-                              wr::DisplayListCapacity aCapacity,
                               layers::DisplayItemCache* aCache = nullptr);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
@@ -449,8 +448,9 @@ class DisplayListBuilder final {
              const Maybe<usize>& aEnd);
   void DumpSerializedDisplayList();
 
-  void Finalize(wr::BuiltDisplayList& aOutDisplayList);
-  void Finalize(layers::DisplayListData& aOutTransaction);
+  void Begin();
+  void End(wr::BuiltDisplayList& aOutDisplayList);
+  void End(layers::DisplayListData& aOutTransaction);
 
   Maybe<wr::WrSpatialId> PushStackingContext(
       const StackingContextParams& aParams, const wr::LayoutRect& aBounds,
@@ -750,7 +750,6 @@ class DisplayListBuilder final {
 
   wr::PipelineId mPipelineId;
   layers::WebRenderBackend mBackend;
-  wr::LayoutSize mContentSize;
 
   nsTArray<wr::PipelineId> mRemotePipelineIds;
 

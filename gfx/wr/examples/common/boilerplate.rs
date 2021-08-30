@@ -197,6 +197,7 @@ pub fn main_wrapper<E: Example>(
     let layout_size = device_size.to_f32() / euclid::Scale::new(device_pixel_ratio);
     let mut builder = DisplayListBuilder::new(pipeline_id);
     let mut txn = Transaction::new();
+    builder.begin();
 
     example.render(
         &mut api,
@@ -210,7 +211,7 @@ pub fn main_wrapper<E: Example>(
         epoch,
         Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
         layout_size,
-        builder.finalize(),
+        builder.end(),
         true,
     );
     txn.set_root_pipeline(pipeline_id);
@@ -287,6 +288,7 @@ pub fn main_wrapper<E: Example>(
 
         if custom_event {
             let mut builder = DisplayListBuilder::new(pipeline_id);
+            builder.begin();
 
             example.render(
                 &mut api,
@@ -300,7 +302,7 @@ pub fn main_wrapper<E: Example>(
                 epoch,
                 Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
                 layout_size,
-                builder.finalize(),
+                builder.end(),
                 true,
             );
             txn.generate_frame(0);

@@ -489,6 +489,7 @@ impl YamlFrameReader {
         self.spatial_id_stack.push(SpatialId::root_scroll_node(pipeline_id));
 
         let mut builder = DisplayListBuilder::new(pipeline_id);
+        builder.begin();
         let mut info = CommonItemProperties {
             clip_rect: LayoutRect::zero(),
             clip_id: ClipId::invalid(),
@@ -496,7 +497,7 @@ impl YamlFrameReader {
             flags: PrimitiveFlags::default(),
         };
         self.add_stacking_context_from_yaml(&mut builder, wrench, yaml, true, &mut info);
-        self.display_lists.push(builder.finalize());
+        self.display_lists.push(builder.end());
 
         assert_eq!(self.clip_id_stack.len(), 1);
         assert_eq!(self.spatial_id_stack.len(), 1);

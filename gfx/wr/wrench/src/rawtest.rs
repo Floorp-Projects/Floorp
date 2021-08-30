@@ -92,7 +92,7 @@ impl<'a> RawtestHarness<'a> {
         &mut self,
         epoch: &mut Epoch,
         layout_size: LayoutSize,
-        builder: DisplayListBuilder,
+        mut builder: DisplayListBuilder,
         mut txn: Transaction,
     ) {
         let root_background_color = Some(ColorF::new(1.0, 1.0, 1.0, 1.0));
@@ -102,7 +102,7 @@ impl<'a> RawtestHarness<'a> {
             *epoch,
             root_background_color,
             layout_size,
-            builder.finalize(),
+            builder.end(),
             false,
         );
         epoch.0 += 1;
@@ -155,6 +155,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(0.0, 0.0, 64.0, 64.0).to_box2d());
 
         builder.push_image(
@@ -182,6 +183,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(0.0, 0.0, 1024.0, 1024.0).to_box2d());
 
         builder.push_image(
@@ -207,6 +209,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(0.0, 0.0, 1024.0, 1024.0).to_box2d());
 
         builder.push_image(
@@ -243,6 +246,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let info = self.make_common_properties(rect(448.899994, 74.0, 151.000031, 56.).to_box2d());
 
@@ -305,6 +309,7 @@ impl<'a> RawtestHarness<'a> {
         });
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
@@ -386,6 +391,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let image_size = size2(400.0, 400.0);
 
@@ -480,6 +486,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
@@ -524,6 +531,7 @@ impl<'a> RawtestHarness<'a> {
         });
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
@@ -570,6 +578,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
@@ -633,6 +642,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let info = self.make_common_properties(rect(0., 0.0, 1510., 1510.).to_box2d());
 
@@ -659,6 +669,7 @@ impl<'a> RawtestHarness<'a> {
         let mut epoch = Epoch(1);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let info = self.make_common_properties(rect(-10000., 0.0, 1510., 1510.).to_box2d());
 
@@ -691,6 +702,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let info = self.make_common_properties(rect(0., 0.0, 1510., 1510.).to_box2d());
 
@@ -758,6 +770,7 @@ impl<'a> RawtestHarness<'a> {
 
         // draw the blob the first time
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
 
         builder.push_image(
@@ -781,6 +794,7 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(1.0, 60.0, 200.0, 200.0).to_box2d());
         builder.push_image(
             &info,
@@ -865,6 +879,7 @@ impl<'a> RawtestHarness<'a> {
 
         // create two blob images and draw them
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
         let info2 = self.make_common_properties(rect(200.0, 60.0, 200.0, 200.0).to_box2d());
         let push_images = |builder: &mut DisplayListBuilder| {
@@ -911,6 +926,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         push_images(&mut builder);
         self.submit_dl(&mut epoch, layout_size, builder, txn);
         let _pixels_second = self.render_and_get_pixels(window_rect);
@@ -926,6 +942,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         push_images(&mut builder);
         self.submit_dl(&mut epoch, layout_size, builder, txn);
         let _pixels_third = self.render_and_get_pixels(window_rect);
@@ -965,6 +982,7 @@ impl<'a> RawtestHarness<'a> {
 
         // draw the blobs the first time
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
 
         builder.push_image(
@@ -993,6 +1011,7 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
         builder.push_image(
             &info,
@@ -1018,6 +1037,7 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0).to_box2d());
         builder.push_image(
             &info,
@@ -1049,6 +1069,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut do_test = |should_try_and_fail| {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+            builder.begin();
 
             let spatial_id = SpatialId::root_scroll_node(self.wrench.root_pipeline_id);
             let clip_id = builder.define_clip_rect(
@@ -1152,6 +1173,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut do_test = |shadow_is_red| {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+            builder.begin();
             let shadow_color = if shadow_is_red {
                 ColorF::new(1.0, 0.0, 0.0, 1.0)
             } else {
@@ -1211,6 +1233,7 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let info = self.make_common_properties(rect(300.0, 70.0, 150.0, 50.0).to_box2d());
         builder.push_image(
@@ -1228,7 +1251,7 @@ impl<'a> RawtestHarness<'a> {
             Epoch(0),
             Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
             layout_size,
-            builder.finalize(),
+            builder.end(),
             false,
         );
         txn.generate_frame(0);
@@ -1243,13 +1266,14 @@ impl<'a> RawtestHarness<'a> {
         // 3. set a different scene
 
         builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let mut txn = Transaction::new();
         txn.set_display_list(
             Epoch(1),
             Some(ColorF::new(1.0, 0.0, 0.0, 1.0)),
             layout_size,
-            builder.finalize(),
+            builder.end(),
             false,
         );
         self.wrench.api.send_transaction(self.wrench.document_id, txn);
@@ -1280,6 +1304,7 @@ impl<'a> RawtestHarness<'a> {
         let doc_id = self.wrench.api.add_document(window_size);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
         let info = self.make_common_properties(
             LayoutRect::from_size(LayoutSize::new(100.0, 100.0))
         );
@@ -1295,7 +1320,7 @@ impl<'a> RawtestHarness<'a> {
             Epoch(1),
             Some(ColorF::new(1.0, 0.0, 0.0, 1.0)),
             layout_size,
-            builder.finalize(),
+            builder.end(),
             false,
         );
         txn.generate_frame(0);
@@ -1312,6 +1337,7 @@ impl<'a> RawtestHarness<'a> {
 
         let layout_size = LayoutSize::new(400., 400.);
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         // Add a rectangle that covers the entire scene.
         let info = self.make_common_properties(LayoutRect::from_size(layout_size));
@@ -1436,7 +1462,8 @@ impl<'a> RawtestHarness<'a> {
         self.wrench.api.send_message(ApiMsg::DebugCommand(DebugCommand::ClearCaches(ClearCache::all())));
 
         let layout_size = LayoutSize::new(400., 400.);
-        let builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
+        builder.begin();
 
         let txn = Transaction::new();
         let mut epoch = Epoch(0);

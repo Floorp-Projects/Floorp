@@ -963,7 +963,6 @@ void WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent) {
 
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
                                        WebRenderBackend aBackend,
-                                       wr::DisplayListCapacity aCapacity,
                                        layers::DisplayItemCache* aCache)
     : mCurrentSpaceAndClipChain(wr::RootScrollNodeWithChain()),
       mActiveFixedPosTracker(nullptr),
@@ -971,7 +970,7 @@ DisplayListBuilder::DisplayListBuilder(PipelineId aId,
       mBackend(aBackend),
       mDisplayItemCache(aCache) {
   MOZ_COUNT_CTOR(DisplayListBuilder);
-  mWrState = wr_state_new(aId, aCapacity);
+  mWrState = wr_state_new(aId);
 
   if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
     mDisplayItemCache->SetPipelineId(aId);
@@ -997,20 +996,36 @@ void DisplayListBuilder::DumpSerializedDisplayList() {
   wr_dump_serialized_display_list(mWrState);
 }
 
-void DisplayListBuilder::Finalize(BuiltDisplayList& aOutDisplayList) {
-  wr_api_finalize_builder(
+void DisplayListBuilder::Begin() {
+  wr_api_begin_builder(mWrState);
+
+  mScrollIds.clear();
+  mCurrentSpaceAndClipChain = wr::RootScrollNodeWithChain();
+  mClipChainLeaf = Nothing();
+  mSuspendedSpaceAndClipChain = Nothing();
+  mSuspendedClipChainLeaf = Nothing();
+  mCachedTextDT = nullptr;
+  mCachedContext = nullptr;
+  mActiveFixedPosTracker = nullptr;
+  mDisplayItemCache = nullptr;
+  mCurrentCacheSlot = Nothing();
+  mRemotePipelineIds.Clear();
+}
+
+void DisplayListBuilder::End(BuiltDisplayList& aOutDisplayList) {
+  wr_api_end_builder(
       mWrState, &aOutDisplayList.dl_desc, &aOutDisplayList.dl_items.inner,
       &aOutDisplayList.dl_cache.inner, &aOutDisplayList.dl_spatial_tree.inner);
 }
 
-void DisplayListBuilder::Finalize(layers::DisplayListData& aOutTransaction) {
+void DisplayListBuilder::End(layers::DisplayListData& aOutTransaction) {
   if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
     wr_dp_set_cache_size(mWrState, mDisplayItemCache->CurrentSize());
   }
 
   wr::VecU8 dlItems, dlCache, dlSpatialTree;
-  wr_api_finalize_builder(mWrState, &aOutTransaction.mDLDesc, &dlItems.inner,
-                          &dlCache.inner, &dlSpatialTree.inner);
+  wr_api_end_builder(mWrState, &aOutTransaction.mDLDesc, &dlItems.inner,
+                     &dlCache.inner, &dlSpatialTree.inner);
   aOutTransaction.mDLItems.emplace(dlItems.inner.data, dlItems.inner.length,
                                    dlItems.inner.capacity);
   aOutTransaction.mDLCache.emplace(dlCache.inner.data, dlCache.inner.length,
@@ -1018,7 +1033,7 @@ void DisplayListBuilder::Finalize(layers::DisplayListData& aOutTransaction) {
   aOutTransaction.mDLSpatialTree.emplace(dlSpatialTree.inner.data,
                                          dlSpatialTree.inner.length,
                                          dlSpatialTree.inner.capacity);
-  aOutTransaction.mRemotePipelineIds = std::move(mRemotePipelineIds);
+  aOutTransaction.mRemotePipelineIds = mRemotePipelineIds.Clone();
   dlItems.inner.capacity = 0;
   dlItems.inner.data = nullptr;
   dlCache.inner.capacity = 0;

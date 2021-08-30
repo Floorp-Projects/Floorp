@@ -185,6 +185,7 @@ impl Window {
         let mut txn = Transaction::new();
         let mut builder = DisplayListBuilder::new(self.pipeline_id);
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.pipeline_id);
+        builder.begin();
 
         let bounds = LayoutRect::from_size(layout_size);
         builder.push_simple_stacking_context(
@@ -280,7 +281,7 @@ impl Window {
             self.epoch,
             None,
             layout_size,
-            builder.finalize(),
+            builder.end(),
             true,
         );
         txn.set_root_pipeline(self.pipeline_id);
