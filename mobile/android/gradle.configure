@@ -98,11 +98,11 @@ def gradle_android_intermediates_folder(build_config):
     )
     buildType = uncapitalize(build_config.geckoview.variant.buildType)
 
-    return "gradle/build/mobile/android/geckoview/intermediates/javac/{}{}/compile{}{}JavaWithJavac/classes".format(
-        productFlavor,
-        capitalize(buildType),
-        capitalize(productFlavor),
-        capitalize(buildType),
+    return (
+        "gradle/build/mobile/android/geckoview/intermediates/javac/{}{}/classes".format(
+            productFlavor,
+            capitalize(buildType),
+        )
     )
 
 
