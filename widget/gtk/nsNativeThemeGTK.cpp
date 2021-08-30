@@ -33,7 +33,6 @@
 #include <gtk/gtk.h>
 
 #include "gfxContext.h"
-#include "gfxGdkNativeRenderer.h"
 #include "mozilla/gfx/BorrowedContext.h"
 #include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/gfx/PathHelpers.h"
