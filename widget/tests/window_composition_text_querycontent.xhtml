@@ -9672,6 +9672,45 @@ async function runPasswordMaskDelayTest() {
                  "runPasswordMaskDelayTest(): committed string should be masked after a while");
 }
 
+async function runInputModeTest()
+{
+  await SpecialPowers.setBoolPref("dom.forms.inputmode", true);
+
+  let result = [];
+
+  function handler(aEvent)
+  {
+    result.push(aEvent);
+  }
+
+  textarea.inputMode = "text";
+  textarea.value = "";
+  textarea.focus();
+
+  textarea.addEventListener("compositionupdate", handler, true);
+  textarea.addEventListener("compositionend", handler, true);
+
+  synthesizeCompositionChange({
+    composition: {string: "a ", clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+  });
+
+  is(result[0].type, "compositionupdate", "Set initial composition for inputmode test");
+  result = [];
+
+  textarea.inputMode = "tel";
+  is(result.length, 0, "No compositonend event even if inputmode is updated");
+
+  // Clean up
+  synthesizeComposition({ type: "compositioncommitasis" });
+  textarea.inputMode = "";
+  textarea.value = "";
+  textarea.removeEventListener("compositionupdate", handler, true);
+  textarea.removeEventListener("compositionend", handler, true);
+
+  await SpecialPowers.clearUserPref("dom.forms.inputmode");
+}
+
+
 async function runTest()
 {
   window.addEventListener("unload", window.arguments[0].SimpleTest.finish, {once: true, capture: true});
@@ -9690,6 +9729,7 @@ async function runTest()
   await runPanelTest();
   await runPasswordMaskDelayTest();
   await runBug1584901Test();
+  await runInputModeTest();
 
   runUndoRedoTest();
   runCompositionTest();
