@@ -25,6 +25,11 @@ const SWM = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
   Ci.nsIServiceWorkerManager
 );
 
+// The expected minimum usage for an origin that has any Cache API storage in
+// use. Currently, the DB uses a page size of 4k and a minimum growth size of
+// 32k and has enough tables/indices for this to round up to 64k.
+const kMinimumOriginUsageBytes = 65536;
+
 function getPrincipal(url, attrs) {
   const uri = Services.io.newURI(url);
   if (!attrs) {
@@ -45,6 +50,13 @@ async function _qm_requestFinished(request) {
   }
 
   return request.result;
+}
+
+async function qm_reset_storage() {
+  return new Promise(resolve => {
+    let request = Services.qms.reset();
+    request.callback = resolve;
+  });
 }
 
 async function get_qm_origin_usage(origin) {
@@ -70,7 +82,7 @@ async function clear_qm_origin_group_via_clearData(origin) {
 
   // Initiate group clearing and wait for it.
   await new Promise((resolve, reject) => {
-    Services.clearData.deleteDataFromHost(
+    Services.clearData.deleteDataFromBaseDomain(
       baseDomain,
       false,
       Services.clearData.CLEAR_DOM_QUOTA,
@@ -165,6 +177,12 @@ async function consume_storage(origin, storageDesc) {
   );
 }
 
+// Check if the origin is effectively empty, but allowing for the minimum size
+// Cache API database to be present.
+function is_minimum_origin_usage(originUsageBytes) {
+  return originUsageBytes <= kMinimumOriginUsageBytes;
+}
+
 /**
  * Perform a navigation, waiting until the navigation stops, then returning
  * the `textContent` of the body node.  The expectation is this will be used
@@ -242,6 +260,23 @@ function waitForUnregister(scope) {
   return new Promise(function(resolve) {
     let listener = {
       onUnregister(registration) {
+        if (registration.scope !== scope) {
+          return;
+        }
+        SWM.removeListener(listener);
+        resolve(registration);
+      },
+    };
+    SWM.addListener(listener);
+  });
+}
+
+// Be careful using this helper function, please make sure QuotaUsageCheck must
+// happen, otherwise test would be stucked in this function.
+function waitForQuotaUsageCheckFinish(scope) {
+  return new Promise(function(resolve) {
+    let listener = {
+      onQuotaUsageCheckFinish(registration) {
         if (registration.scope !== scope) {
           return;
         }
