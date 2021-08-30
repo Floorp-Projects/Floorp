@@ -188,9 +188,14 @@ class IMEStateManager {
   // XXX Changing this to MOZ_CAN_RUN_SCRIPT requires too many callers to be
   //     marked too.  Probably, we should initialize IMEContentObserver
   //     asynchronously.
+  enum class UpdateIMEStateOption {
+    ForceUpdate,
+    DontCommitComposition,
+  };
+  using UpdateIMEStateOptions = EnumSet<UpdateIMEStateOption, uint32_t>;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static void UpdateIMEState(
       const IMEState& aNewIMEState, nsIContent* aContent,
-      EditorBase& aEditorBase);
+      EditorBase& aEditorBase, const UpdateIMEStateOptions& aOptions = {});
 
   // This method is called when user operates mouse button in focused editor
   // and before the editor handles it.

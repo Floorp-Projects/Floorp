@@ -12,6 +12,8 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/IMEContentObserver.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
@@ -729,6 +731,27 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
         SetHasName();
         if (CanHaveName(NodeInfo()->NameAtom())) {
           AddToNameTable(aValue->GetAtomValue());
+        }
+      }
+    } else if ((aName == nsGkAtoms::inputmode &&
+                StaticPrefs::dom_forms_inputmode()) ||
+               (aName == nsGkAtoms::enterkeyhint &&
+                StaticPrefs::dom_forms_enterkeyhint())) {
+      nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
+      if (window && window->GetFocusedElement() == this) {
+        IMEContentObserver* observer =
+            IMEStateManager::GetActiveContentObserver();
+        nsPresContext* presContext = GetPresContext(eForComposedDoc);
+        if (observer && observer->IsManaging(presContext, this)) {
+          if (RefPtr<EditorBase> editor =
+                  nsContentUtils::GetActiveEditor(window)) {
+            IMEState newState;
+            editor->GetPreferredIMEState(&newState);
+            IMEStateManager::UpdateIMEState(
+                newState, this, *editor,
+                {IMEStateManager::UpdateIMEStateOption::ForceUpdate,
+                 IMEStateManager::UpdateIMEStateOption::DontCommitComposition});
+          }
         }
       }
     }
