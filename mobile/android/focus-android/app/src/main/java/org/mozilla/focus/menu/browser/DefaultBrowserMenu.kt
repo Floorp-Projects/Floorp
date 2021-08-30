@@ -5,6 +5,7 @@
 package org.mozilla.focus.menu.browser
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
@@ -29,6 +30,7 @@ class DefaultBrowserMenu(
     private val context: Context,
     private val appStore: AppStore,
     private val store: BrowserStore,
+    private val isPinningSupported: Boolean,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
 
@@ -143,6 +145,10 @@ class DefaultBrowserMenu(
             iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText)
         )
 
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        fun canAddToHomescreen(): Boolean =
+            selectedSession != null && isPinningSupported
+
         val addToHomescreen = BrowserMenuImageText(
             label = context.getString(R.string.menu_add_to_home_screen),
             imageResource = R.drawable.mozac_ic_add_to_home_screen
@@ -175,7 +181,7 @@ class DefaultBrowserMenu(
             desktopMode,
             reportSiteIssuePlaceholder,
             BrowserMenuDivider(),
-            addToHomescreen,
+            addToHomescreen.apply { visible = ::canAddToHomescreen },
             openInApp,
             BrowserMenuDivider(),
             settings
