@@ -24,10 +24,6 @@ namespace layers {
 
 class ReadbackProcessor;
 
-namespace layerscope {
-class LayersPacket;
-}  // namespace layerscope
-
 /**
  * A ReadbackSink receives a stream of updates to a rectangle of pixels.
  * These update callbacks are always called on the main thread, either during
