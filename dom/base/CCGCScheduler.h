@@ -142,6 +142,7 @@ class CCGCScheduler {
 
   void UserIsInactive();
   void UserIsActive();
+  bool IsUserActive() const { return mUserIsActive; }
 
   void KillShrinkingGCTimer();
   void KillFullGCTimer();
