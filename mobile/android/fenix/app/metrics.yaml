@@ -142,7 +142,7 @@ events:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/18857
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/18895
+      - https://github.com/mozilla-mobile/fenix/pull/18982#pullrequestreview-635098629
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
@@ -170,7 +170,7 @@ events:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/18855
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/18895
+      - https://github.com/mozilla-mobile/fenix/pull/18982#pullrequestreview-635098629
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
@@ -570,7 +570,7 @@ experiments_default_browser:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/18851
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/18895
+      - https://github.com/mozilla-mobile/fenix/pull/18982#pullrequestreview-635098629
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/TBD
     data_sensitivity:
