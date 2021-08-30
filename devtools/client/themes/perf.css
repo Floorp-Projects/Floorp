@@ -18,9 +18,11 @@
 }
 
 .perf-devtools {
+  box-sizing: border-box;
   width: 100%;
-  height: 100%;
   position: absolute;
+  margin-top: 10vh;
+  padding-inline: 5vh;
 }
 
 .perf-button-image {
@@ -35,10 +37,6 @@
   display: flex;
   flex-flow: column;
   align-items: center;
-}
-
-.perf-devtools .perf-button-container {
-  margin-top: 65px;
 }
 
 .perf-additional-message {
@@ -163,6 +161,8 @@ a.perf-photon-button:focus {
 
 .perf-presets {
   display: flex;
+  flex-direction: column;
+  row-gap: 10px;
   width: 100%;
   margin-block: 12px;
 }
@@ -241,11 +241,13 @@ a.perf-photon-button:focus {
   display: grid;
   font-size: 13px;
   grid-template-columns: auto 36px;
-  /* Compensate some of the 65px margin-top set on .perf-button-container */
-  margin-bottom: -50px;
   /* Override the max-width set on ".perf > *" */
   max-width: unset;
   width: 100%;
+}
+
+.perf-onboarding + .perf-devtools {
+  margin-top: 15px;
 }
 
 .perf-onboarding-message {

@@ -70,14 +70,16 @@ class DevToolsPanel extends PureComponent {
       return null;
     }
 
-    return div(
-      { className: `perf perf-devtools` },
+    return [
       OnboardingMessage(),
-      RecordingButton({ perfFront, onProfileReceived }),
-      Description(),
-      hr({ className: "perf-presets-hr" }),
-      DevToolsPresetSelection({ onEditSettingsLinkClicked })
-    );
+      div(
+        { className: `perf perf-devtools` },
+        RecordingButton({ perfFront, onProfileReceived }),
+        Description(),
+        hr({ className: "perf-presets-hr" }),
+        DevToolsPresetSelection({ onEditSettingsLinkClicked })
+      ),
+    ];
   }
 }
 
