@@ -6,14 +6,18 @@
 
 namespace mozilla::intl {
 
+ICUError ToICUError(UErrorCode status) {
+  if (status == U_MEMORY_ALLOCATION_ERROR) {
+    return ICUError::OutOfMemory;
+  }
+  return ICUError::InternalError;
+}
+
 ICUResult ToICUResult(UErrorCode status) {
   if (U_SUCCESS(status)) {
     return Ok();
   }
-  if (status == U_MEMORY_ALLOCATION_ERROR) {
-    return Err(ICUError::OutOfMemory);
-  }
-  return Err(ICUError::InternalError);
+  return Err(ToICUError(status));
 }
 
 }  // namespace mozilla::intl
