@@ -155,8 +155,6 @@ class SourceSurfaceSharedData : public DataSourceSurface {
   IntSize GetSize() const final { return mSize; }
   SurfaceFormat GetFormat() const final { return mFormat; }
 
-  void GuaranteePersistance() final;
-
   void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                            SizeOfInfo& aInfo) const final;
 

@@ -96,9 +96,8 @@ already_AddRefed<Path> SVGGeometryElement::GetOrBuildPath(
   // and it's not a capturing drawtarget. A capturing DT might start using the
   // the Path object on a different thread (OMTP), and we might have a data race
   // if we keep a handle to it.
-  bool cacheable = (aDrawTarget->GetBackendType() ==
-                    gfxPlatform::GetPlatform()->GetDefaultContentBackend()) &&
-                   !aDrawTarget->IsCaptureDT();
+  bool cacheable = aDrawTarget->GetBackendType() ==
+                   gfxPlatform::GetPlatform()->GetDefaultContentBackend();
 
   if (cacheable && mCachedPath && mCachedPath->GetFillRule() == aFillRule &&
       aDrawTarget->GetBackendType() == mCachedPath->GetBackendType()) {

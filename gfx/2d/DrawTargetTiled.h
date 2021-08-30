@@ -36,9 +36,6 @@ class DrawTargetTiled : public DrawTarget {
 
   bool IsTiledDrawTarget() const override { return true; }
 
-  bool IsCaptureDT() const override {
-    return mTiles[0].mDrawTarget->IsCaptureDT();
-  }
   DrawTargetType GetType() const override {
     return mTiles[0].mDrawTarget->GetType();
   }

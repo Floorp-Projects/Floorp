@@ -196,12 +196,6 @@ void ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
                                            PathBuilder* aBuilder,
                                            const Matrix* aTransformHint) {
   BackendType backendType = aBuilder->GetBackendType();
-  if (backendType == BackendType::CAPTURE) {
-    StreamingGeometrySink sink(aBuilder);
-    CopyGlyphsToSink(aBuffer, &sink);
-    return;
-  }
-
   if (backendType != BackendType::DIRECT2D &&
       backendType != BackendType::DIRECT2D1_1) {
     ScaledFontBase::CopyGlyphsToBuilder(aBuffer, aBuilder, aTransformHint);
