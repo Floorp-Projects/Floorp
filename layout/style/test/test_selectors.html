@@ -1264,7 +1264,7 @@ function runTests() {
     test_parseable(":-moz-any(div,p,:link,span:focus)");
     test_parseable(":-moz-any(:active,:focus)");
     test_parseable(":-moz-any(:active,:link:focus)");
-    parseable_if_any_is_is_and_has_better_error_recovery(":-moz-any(div,:nonexistentpseudo)");
+    test_parseable(":-moz-any(div,:nonexistentpseudo)");
     var any_elts = "<input type='text'><a href='http://www.example.com/'></a><div></div><a name='foo'>";
     test_selector_in_html(":-moz-any(a,input)", any_elts,
                           bodychildset([0, 1, 3]), bodychildset([2]));
