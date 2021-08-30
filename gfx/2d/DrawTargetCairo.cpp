@@ -2148,8 +2148,7 @@ bool BorrowedXlibDrawable::Init(DrawTarget* aDT) {
   mDrawable = X11None;
 
 #  ifdef CAIRO_HAS_XLIB_SURFACE
-  if (aDT->GetBackendType() != BackendType::CAIRO || aDT->IsDualDrawTarget() ||
-      aDT->IsTiledDrawTarget()) {
+  if (aDT->GetBackendType() != BackendType::CAIRO || aDT->IsTiledDrawTarget()) {
     return false;
   }
 
