@@ -9,7 +9,7 @@ if test -n "$TOOLTOOL_MANIFEST"; then
     export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
 
     export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
-    export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs2017_15.8.4
+    export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs2017_15.9.6
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
     . $GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh

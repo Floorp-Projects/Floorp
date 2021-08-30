@@ -112,7 +112,7 @@ jobs:
             docker-image: {in-tree: debian11-amd64-build}
             max-run-time: 36000
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.8.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
                 PERFHERDER_EXTRA_OPTIONS: searchfox
                 RUSTC_BOOTSTRAP: "1"
                 MOZSEARCH_PLATFORM: "windows"
@@ -131,7 +131,7 @@ jobs:
                 mozconfig_platform: win64
                 env:
                     LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.8.4"
+                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         use-sccache: true
         fetches:
             toolchain:
