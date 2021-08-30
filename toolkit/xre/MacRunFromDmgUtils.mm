@@ -17,6 +17,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/intl/Localization.h"
 #include "nsCocoaFeatures.h"
+#include "nsCocoaUtils.h"
 #include "nsCommandLine.h"
 #include "nsCommandLineServiceMac.h"
 #include "nsILocalFileMac.h"
@@ -27,6 +28,14 @@
 // For IOKit docs, see:
 // https://developer.apple.com/documentation/iokit
 // https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/
+
+#if !defined(MAC_OS_X_VERSION_10_13) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
+@interface NSTask (NSTask10_13)
+@property(copy) NSURL* executableURL NS_AVAILABLE_MAC(10_13);
+@property(copy) NSArray<NSString*>* arguments;
+- (BOOL)launchAndReturnError:(NSError**)error NS_AVAILABLE_MAC(10_13);
+@end
+#endif
 
 namespace mozilla {
 namespace MacRunFromDmgUtils {
@@ -131,6 +140,80 @@ static void ShowInstallFailedDialog() {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
+/**
+ * Helper to launch macOS tasks via NSTask.
+ */
+static void LaunchTask(NSString* aPath, NSArray* aArguments) {
+  if (@available(macOS 10.13, *)) {
+    NSTask* task = [[NSTask alloc] init];
+    [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+    if (aArguments) {
+      [task setArguments:aArguments];
+    }
+    [task launchAndReturnError:nil];
+    [task release];
+  } else {
+    NSArray* arguments = aArguments;
+    if (!arguments) {
+      arguments = @[];
+    }
+    [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
+  }
+}
+
+static void LaunchInstalledApp(NSString* aBundlePath) {
+  LaunchTask([[NSBundle bundleWithPath:aBundlePath] executablePath], nil);
+}
+
+static void RegisterAppWithLaunchServices(NSString* aBundlePath) {
+  NSArray* arguments = @[ @"-f", aBundlePath ];
+  LaunchTask(@"/System/Library/Frameworks/CoreServices.framework/Frameworks/"
+             @"LaunchServices.framework/Support/lsregister",
+             arguments);
+}
+
+static void StripQuarantineBit(NSString* aBundlePath) {
+  NSArray* arguments = @[ @"-d", @"com.apple.quarantine", aBundlePath ];
+  LaunchTask(@"/usr/bin/xattr", arguments);
+}
+
+// Note: both arguments are expected to contain the app name (to end with
+// '.app').
+static bool InstallFromDmg(NSString* aBundlePath, NSString* aDestPath) {
+  bool installSuccessful = false;
+  if ([[NSFileManager defaultManager] copyItemAtPath:aBundlePath toPath:aDestPath error:nil]) {
+    RegisterAppWithLaunchServices(aDestPath);
+    StripQuarantineBit(aDestPath);
+    installSuccessful = true;
+  }
+
+  // The installation may have been unsuccessful if the user did not have the
+  // rights to write to the Applications directory. Check for this situation and
+  // launch an elevated installation if necessary.
+  NSString* destDir = [aDestPath stringByDeletingLastPathComponent];
+  if (!installSuccessful && ![[NSFileManager defaultManager] isWritableFileAtPath:destDir]) {
+    // TODO: launch elevated installation.
+  }
+
+  if (!installSuccessful) {
+    return false;
+  }
+
+  // Pin to dock:
+  nsresult rv;
+  nsCOMPtr<nsIMacDockSupport> dockSupport =
+      do_GetService("@mozilla.org/widget/macdocksupport;1", &rv);
+  if (NS_SUCCEEDED(rv) && dockSupport) {
+    bool isInDock;
+    nsAutoString appPath, appToReplacePath;
+    nsCocoaUtils::GetStringForNSString(aDestPath, appPath);
+    nsCocoaUtils::GetStringForNSString(aBundlePath, appToReplacePath);
+    dockSupport->EnsureAppIsPinnedToDock(appPath, appToReplacePath, &isInDock);
+  }
+
+  return true;
+}
+
 bool IsAppRunningFromDmg() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
@@ -192,6 +275,62 @@ bool IsAppRunningFromDmg() {
     return true;
   }
   return false;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
+}
+
+bool MaybeInstallFromDmgAndRelaunch() {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  @autoreleasepool {
+    if (!IsAppRunningFromDmg()) {
+      return false;
+    }
+
+    // The Applications directory may not be at /Applications, although in
+    // practice we're unlikely to encounter since run-from-.dmg is really an
+    // issue with novice mac users. Still, look it up correctly:
+    NSArray* applicationsDirs =
+        NSSearchPathForDirectoriesInDomains(NSApplicationDirectory, NSLocalDomainMask, YES);
+    NSString* applicationsDir = applicationsDirs[0];
+
+    // Sanity check dir exists
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+    BOOL isDir;
+    if (![fileManager fileExistsAtPath:applicationsDir isDirectory:&isDir] || !isDir) {
+      return false;
+    }
+
+    NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+    NSString* appName = [bundlePath lastPathComponent];
+    NSString* destPath = [applicationsDir stringByAppendingPathComponent:appName];
+
+    // If the app (an app of the same name) is already installed we can't really
+    // tell if we're dealing with the edge case of an inexperienced user running
+    // from .dmg by mistake, or if we're dealing with a more sophisticated user
+    // intentionally running from .dmg.
+    // We could throw a series of prompts at the user to figure out if they want
+    // to overwrite the installed app, or maybe just launch it, or continue with
+    // running from .dmg, but that seems like overkill for an edge case when
+    // we're just trying to provide mitigate inexperienced mac users trying to
+    // get and run our app for the first time.
+    if ([fileManager fileExistsAtPath:destPath]) {
+      return false;
+    }
+
+    if (!AskUserIfWeShouldInstall()) {
+      return false;
+    }
+
+    if (!InstallFromDmg(bundlePath, destPath)) {
+      ShowInstallFailedDialog();
+      return false;
+    }
+
+    LaunchInstalledApp(destPath);
+
+    return true;
+  }
 
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
