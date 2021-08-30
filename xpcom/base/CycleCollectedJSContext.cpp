@@ -499,6 +499,8 @@ void CycleCollectedJSContext::IsIdleGCTaskNeeded() const {
     using mozilla::IdleRunnable::IdleRunnable;
 
    public:
+    IdleTimeGCTaskRunnable() : IdleRunnable("IdleTimeGCTask") {}
+
     NS_IMETHOD Run() override {
       CycleCollectedJSRuntime* ccrt = CycleCollectedJSRuntime::Get();
       if (ccrt) {
