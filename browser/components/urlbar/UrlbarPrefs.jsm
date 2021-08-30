@@ -182,7 +182,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["suggest.calculator", false],
 
   // Whether results will include QuickSuggest suggestions.
-  ["suggest.quicksuggest", true],
+  ["suggest.quicksuggest", false],
 
   // Whether the user has seen the onboarding dialog.
   ["quicksuggest.showedOnboardingDialog", false],
