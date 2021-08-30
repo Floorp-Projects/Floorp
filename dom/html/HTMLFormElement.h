@@ -54,7 +54,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   NS_DECL_ISUPPORTS_INHERITED
 
   int32_t IndexOfControl(nsIFormControl* aControl);
-  nsIFormControl* GetDefaultSubmitElement() const;
+  nsGenericHTMLFormElement* GetDefaultSubmitElement() const;
 
   // nsIRadioGroupContainer
   void SetCurrentRadioButton(const nsAString& aName,
