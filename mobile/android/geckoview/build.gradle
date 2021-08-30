@@ -233,10 +233,30 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
 }
 
 configurations {
-  // No need to include libglean_ffi.so here or for GeckoView consumers.
-  // If those consumers use Glean, they'll get the FFI through GeckoView anyway.
-  all*.exclude group: 'org.mozilla.telemetry', module: 'glean-native'
-  all*.exclude group: 'net.java.dev.jna', module: 'jna'
+    withGeckoBinariesApi {
+        outgoing {
+            if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+                // The omni build provides glean-native
+                capability("org.mozilla.telemetry:glean-native:${project.ext.gleanVersion}")
+            }
+            afterEvaluate {
+                // Implicit capability
+                capability("org.mozilla.geckoview:${getArtifactId()}:${getVersionNumber()}")
+            }
+        }
+    }
+    // TODO: This is a workaround for a bug that was fixed in Gradle 7.
+    // The variant resolver _should_ pick the RuntimeOnly configuration when building
+    // the tests as those define the implicit :geckoview capability but it doesn't,
+    // so we manually define it here.
+    withGeckoBinariesRuntimeOnly {
+        outgoing {
+            afterEvaluate {
+                // Implicit capability
+                capability("org.mozilla.geckoview:geckoview:${getVersionNumber()}")
+            }
+        }
+    }
 }
 
 dependencies {
@@ -245,11 +265,6 @@ dependencies {
     compileOnly "org.checkerframework:checker-compat-qual:2.5.0"
     compileOnly "org.checkerframework:checker-qual:2.5.0"
     compileOnly "org.jetbrains.kotlin:kotlin-annotations-jvm:1.3.70"
-
-    // The Glean Kotlin, which will be re-exported.
-    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
-        api "org.mozilla.telemetry:glean:${project.ext.gleanVersion}"
-    }
 
     implementation "androidx.annotation:annotation:1.1.0"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
