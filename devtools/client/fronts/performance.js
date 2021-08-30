@@ -20,6 +20,12 @@ loader.lazyRequireGetter(
   "devtools/client/performance/modules/io"
 );
 loader.lazyRequireGetter(this, "getSystemInfo", "devtools/shared/system", true);
+loader.lazyRequireGetter(
+  this,
+  "safeAsyncMethod",
+  "devtools/shared/async-utils",
+  true
+);
 
 class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
   constructor(client, targetFront, parentFront) {
@@ -31,6 +37,14 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
     this.before("profiler-status", this._onProfilerStatus.bind(this));
     this.before("timeline-data", this._onTimelineEvent.bind(this));
     this.on("recording-started", this._onRecordingStartedEvent);
+
+    // Todo: This is a temp fix for the perma fail in Bug 1726461, lets fix
+    // the underlying issue once Bug 1727506 lands. See Bug 1728092 for details.
+    this.connect = safeAsyncMethod(
+      this.connect.bind(this),
+      () => this.isDestroyed(),
+      {}
+    );
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "performanceActor";
