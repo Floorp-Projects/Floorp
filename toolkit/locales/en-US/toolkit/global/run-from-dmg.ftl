@@ -11,3 +11,8 @@ prompt-to-install-title = Finish installing { -brand-short-name }?
 prompt-to-install-message = Complete this one-step installation to help keep { -brand-short-name } up to date and prevent data loss. { -brand-short-name } will be added to your Applications folder and Dock.
 prompt-to-install-yes-button = Install
 prompt-to-install-no-button = Don’t Install
+
+## Strings for a dialog that opens if the installation failed.
+
+install-failed-title = { -brand-short-name } installation failed.
+install-failed-message = { -brand-short-name } failed to install but will continue to run.
