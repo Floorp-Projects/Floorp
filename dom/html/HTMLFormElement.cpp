@@ -1747,7 +1747,7 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
   return rv;
 }
 
-nsIFormControl* HTMLFormElement::GetDefaultSubmitElement() const {
+nsGenericHTMLFormElement* HTMLFormElement::GetDefaultSubmitElement() const {
   MOZ_ASSERT(mDefaultSubmitElement == mFirstSubmitInElements ||
                  mDefaultSubmitElement == mFirstSubmitNotInElements,
              "What happened here?");
