@@ -12,8 +12,6 @@ import androidx.preference.SwitchPreference
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
@@ -34,7 +32,6 @@ class PrivateBrowsingFragment : PreferenceFragmentCompat() {
     private fun updatePreferences() {
         requirePreference<Preference>(R.string.pref_key_add_private_browsing_shortcut).apply {
             setOnPreferenceClickListener {
-                requireContext().metrics.track(Event.PrivateBrowsingCreateShortcut)
                 PrivateShortcutCreateManager.createPrivateShortcut(requireContext())
                 true
             }

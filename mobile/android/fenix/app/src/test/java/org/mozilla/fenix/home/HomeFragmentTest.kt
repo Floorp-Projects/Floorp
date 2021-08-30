@@ -17,7 +17,6 @@ import org.junit.Test
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 
 @ExperimentalCoroutinesApi

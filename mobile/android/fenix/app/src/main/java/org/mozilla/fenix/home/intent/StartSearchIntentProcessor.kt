@@ -30,16 +30,9 @@ class StartSearchIntentProcessor(
                     metrics.track(Event.SearchWidgetNewTabPressed)
                     Event.PerformedSearch.SearchAccessPoint.WIDGET
                 }
-                STATIC_SHORTCUT_NEW_TAB -> {
-                    metrics.track(Event.PrivateBrowsingStaticShortcutTab)
-                    Event.PerformedSearch.SearchAccessPoint.SHORTCUT
-                }
-                STATIC_SHORTCUT_NEW_PRIVATE_TAB -> {
-                    metrics.track(Event.PrivateBrowsingStaticShortcutPrivateTab)
-                    Event.PerformedSearch.SearchAccessPoint.SHORTCUT
-                }
+                STATIC_SHORTCUT_NEW_TAB,
+                STATIC_SHORTCUT_NEW_PRIVATE_TAB,
                 PRIVATE_BROWSING_PINNED_SHORTCUT -> {
-                    metrics.track(Event.PrivateBrowsingPinnedShortcutPrivateTab)
                     Event.PerformedSearch.SearchAccessPoint.SHORTCUT
                 }
                 else -> null

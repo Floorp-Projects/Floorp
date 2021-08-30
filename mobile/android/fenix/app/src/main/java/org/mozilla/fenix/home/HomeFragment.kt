@@ -776,14 +776,12 @@ class HomeFragment : Fragment() {
                 )
             layout.findViewById<Button>(R.id.cfr_pos_button).apply {
                 setOnClickListener {
-                    context.metrics.track(Event.PrivateBrowsingAddShortcutCFR)
                     PrivateShortcutCreateManager.createPrivateShortcut(context)
                     privateBrowsingRecommend.dismiss()
                 }
             }
             layout.findViewById<Button>(R.id.cfr_neg_button).apply {
                 setOnClickListener {
-                    context.metrics.track(Event.PrivateBrowsingCancelCFR)
                     privateBrowsingRecommend.dismiss()
                 }
             }

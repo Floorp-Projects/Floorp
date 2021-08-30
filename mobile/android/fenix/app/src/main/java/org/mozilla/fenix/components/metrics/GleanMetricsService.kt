@@ -36,7 +36,6 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
-import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
@@ -370,24 +369,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.SearchWidgetVoiceSearchPressed -> EventWrapper<NoExtraKeys>(
             { SearchWidget.voiceButton.record(it) }
-        )
-        is Event.PrivateBrowsingCreateShortcut -> EventWrapper<NoExtraKeys>(
-            { PrivateBrowsingShortcut.createShortcut.record(it) }
-        )
-        is Event.PrivateBrowsingAddShortcutCFR -> EventWrapper<NoExtraKeys>(
-            { PrivateBrowsingShortcut.cfrAddShortcut.record(it) }
-        )
-        is Event.PrivateBrowsingCancelCFR -> EventWrapper<NoExtraKeys>(
-            { PrivateBrowsingShortcut.cfrCancel.record(it) }
-        )
-        is Event.PrivateBrowsingPinnedShortcutPrivateTab -> EventWrapper<NoExtraKeys>(
-            { PrivateBrowsingShortcut.pinnedShortcutPriv.record(it) }
-        )
-        is Event.PrivateBrowsingStaticShortcutTab -> EventWrapper<NoExtraKeys>(
-            { PrivateBrowsingShortcut.staticShortcutTab.record(it) }
-        )
-        is Event.PrivateBrowsingStaticShortcutPrivateTab -> EventWrapper<NoExtraKeys>(
-            { PrivateBrowsingShortcut.staticShortcutPriv.record(it) }
         )
         is Event.WhatsNewTapped -> EventWrapper<NoExtraKeys>(
             { Events.whatsNewTapped.record(it) }
