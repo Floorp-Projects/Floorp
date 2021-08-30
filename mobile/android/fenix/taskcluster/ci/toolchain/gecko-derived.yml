@@ -47,7 +47,7 @@ linux64-node:
     description: "Node.js toolchain"
     run:
         index-search:
-            - gecko.cache.level-3.toolchains.v3.linux64-node-10.latest
+            - gecko.cache.level-3.toolchains.v3.linux64-node-12.latest
 
 visual-metrics:
     attributes:
