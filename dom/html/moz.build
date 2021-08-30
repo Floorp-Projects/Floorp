@@ -35,7 +35,6 @@ EXPORTS += [
     "nsGenericHTMLFrameElement.h",
     "nsHTMLDocument.h",
     "nsIConstraintValidation.h",
-    "nsIForm.h",
     "nsIFormControl.h",
     "nsIHTMLCollection.h",
     "nsIRadioGroupContainer.h",
