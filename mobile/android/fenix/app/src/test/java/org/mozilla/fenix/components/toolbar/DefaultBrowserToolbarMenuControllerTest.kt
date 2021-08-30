@@ -509,7 +509,6 @@ class DefaultBrowserToolbarMenuControllerTest {
         controller.handleToolbarItemInteraction(item)
 
         assertTrue(launcherInvoked)
-        verify { metrics.track(Event.FindInPageOpened) }
     }
 
     @Test

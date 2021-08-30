@@ -733,53 +733,6 @@ login_dialog:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
-find_in_page:
-  opened:
-    type: event
-    description: |
-      A user opened the find in page UI
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/1036
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-  closed:
-    type: event
-    description: |
-      A user closed the find in page UI
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/1036
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-  searched_page:
-    type: event
-    description: |
-      A user searched the page
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/1036
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2021-08-01"
-
 metrics:
   default_browser:
     type: boolean

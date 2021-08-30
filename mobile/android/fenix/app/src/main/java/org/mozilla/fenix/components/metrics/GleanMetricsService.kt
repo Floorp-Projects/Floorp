@@ -25,7 +25,6 @@ import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
-import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
@@ -155,15 +154,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.LoginDialogPromptNeverSave -> EventWrapper<NoExtraKeys>(
             { LoginDialog.neverSave.record(it) }
-        )
-        is Event.FindInPageOpened -> EventWrapper<NoExtraKeys>(
-            { FindInPage.opened.record(it) }
-        )
-        is Event.FindInPageClosed -> EventWrapper<NoExtraKeys>(
-            { FindInPage.closed.record(it) }
-        )
-        is Event.FindInPageSearchCommitted -> EventWrapper<NoExtraKeys>(
-            { FindInPage.searchedPage.record(it) }
         )
         is Event.ContextMenuItemTapped -> EventWrapper(
             { ContextMenu.itemTapped.record(it) },

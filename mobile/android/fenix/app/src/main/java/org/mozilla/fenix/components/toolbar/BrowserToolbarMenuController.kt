@@ -297,7 +297,6 @@ class DefaultBrowserToolbarMenuController(
             }
             is ToolbarMenu.Item.FindInPage -> {
                 findInPageLauncher()
-                metrics.track(Event.FindInPageOpened)
             }
             is ToolbarMenu.Item.AddonsManager -> browserAnimator.captureEngineViewAndDrawStatically {
                 navController.nav(
