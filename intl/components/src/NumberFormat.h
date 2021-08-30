@@ -234,6 +234,12 @@ class NumberFormat final {
    * The string view is valid until another number is formatted. Accessing the
    * string view after this event is undefined behavior.
    *
+   * This is utf-16 only because the only current use case is in
+   * SpiderMonkey. Supporting utf-8 would require recalculating the offsets
+   * in NumberPartVector from fixed width to variable width, which might be
+   * tricky to get right and is work that won't be necessary if we switch to
+   * ICU4X (see Bug 1707035).
+   *
    * https://tc39.es/ecma402/#sec-partitionnumberpattern
    */
   Result<std::u16string_view, ICUError> formatToParts(
@@ -282,6 +288,12 @@ class NumberFormat final {
    * The string view is valid until another number is formatted. Accessing the
    * string view after this event is undefined behavior.
    *
+   * This is utf-16 only because the only current use case is in
+   * SpiderMonkey. Supporting utf-8 would require recalculating the offsets
+   * in NumberPartVector from fixed width to variable width, which might be
+   * tricky to get right and is work that won't be necessary if we switch to
+   * ICU4X (see Bug 1707035).
+   *
    * https://tc39.es/ecma402/#sec-partitionnumberpattern
    */
   Result<std::u16string_view, ICUError> formatToParts(
@@ -328,6 +340,12 @@ class NumberFormat final {
    * provided parts vector. The string view is valid until another number is
    * formatted. Accessing the string view after this event is undefined
    * behavior.
+   *
+   * This is utf-16 only because the only current use case is in
+   * SpiderMonkey. Supporting utf-8 would require recalculating the offsets
+   * in NumberPartVector from fixed width to variable width, which might be
+   * tricky to get right and is work that won't be necessary if we switch to
+   * ICU4X (see Bug 1707035).
    *
    * https://tc39.es/ecma402/#sec-partitionnumberpattern
    */
