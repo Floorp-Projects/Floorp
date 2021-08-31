@@ -5063,7 +5063,10 @@ void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent) {
           transferables, dataTransfers, false, nullptr, this);
       uint32_t action;
       session->GetDragAction(&action);
-      mozilla::Unused << SendInvokeDragSession(dataTransfers, action);
+
+      RefPtr<WindowContext> sourceWC;
+      session->GetSourceWindowContext(getter_AddRefs(sourceWC));
+      mozilla::Unused << SendInvokeDragSession(sourceWC, dataTransfers, action);
     }
   }
 }

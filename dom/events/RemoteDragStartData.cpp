@@ -22,13 +22,15 @@ RemoteDragStartData::~RemoteDragStartData() = default;
 RemoteDragStartData::RemoteDragStartData(
     BrowserParent* aBrowserParent, nsTArray<IPCDataTransfer>&& aDataTransfer,
     const LayoutDeviceIntRect& aRect, nsIPrincipal* aPrincipal,
-    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings)
+    nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
+    WindowContext* aSourceWindowContext)
     : mBrowserParent(aBrowserParent),
       mDataTransfer(std::move(aDataTransfer)),
       mRect(aRect),
       mPrincipal(aPrincipal),
       mCsp(aCsp),
-      mCookieJarSettings(aCookieJarSettings) {}
+      mCookieJarSettings(aCookieJarSettings),
+      mSourceWindowContext(aSourceWindowContext) {}
 
 void RemoteDragStartData::AddInitialDnDDataTo(
     DataTransfer* aDataTransfer, nsIPrincipal** aPrincipal,

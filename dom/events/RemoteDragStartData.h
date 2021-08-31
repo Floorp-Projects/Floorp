@@ -31,7 +31,8 @@ class RemoteDragStartData {
                       nsTArray<IPCDataTransfer>&& aDataTransfer,
                       const LayoutDeviceIntRect& aRect,
                       nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
-                      nsICookieJarSettings* aCookieJarSettings);
+                      nsICookieJarSettings* aCookieJarSettings,
+                      WindowContext* aSourceWindowContext);
 
   void SetVisualization(
       already_AddRefed<gfx::DataSourceSurface> aVisualization) {
@@ -51,6 +52,8 @@ class RemoteDragStartData {
                            nsIContentSecurityPolicy** aCsp,
                            nsICookieJarSettings** aCookieJarSettings);
 
+  WindowContext* GetSourceWindowContext() { return mSourceWindowContext; }
+
  private:
   virtual ~RemoteDragStartData();
 
@@ -60,6 +63,7 @@ class RemoteDragStartData {
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
+  RefPtr<WindowContext> mSourceWindowContext;
   RefPtr<mozilla::gfx::SourceSurface> mVisualization;
 };
 

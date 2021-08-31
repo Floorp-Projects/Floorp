@@ -672,7 +672,8 @@ class BrowserParent final : public PBrowserParent,
       Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
       const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
       nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
-      const CookieJarSettingsArgs& aCookieJarSettingsArgs);
+      const CookieJarSettingsArgs& aCookieJarSettingsArgs,
+      const MaybeDiscarded<WindowContext>& aSourceWindowContext);
 
   void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
                            nsIPrincipal** aPrincipal);

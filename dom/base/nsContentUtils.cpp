@@ -5907,16 +5907,21 @@ bool nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession,
     return false;
   }
 
-  // If there is no source node, then this is a drag from another
+  WindowContext* targetWC = target->OwnerDoc()->GetWindowContext();
+
+  // If there is no source browsing context, then this is a drag from another
   // application, which should be allowed.
-  RefPtr<Document> doc(aDragSession->GetSourceDocument());
-  if (doc && doc->GetBrowsingContext()) {
+  RefPtr<WindowContext> sourceWC;
+  aDragSession->GetSourceWindowContext(getter_AddRefs(sourceWC));
+  if (sourceWC) {
     // Get each successive parent of the source document and compare it to
     // the drop document. If they match, then this is a drag from a child frame.
-    for (BrowsingContext* bc = doc->GetBrowsingContext()->GetParent(); bc;
-         bc = bc->GetParent()) {
-      if (bc == targetBC) {
-        // The drag is from a descendant frame.
+    for (sourceWC = sourceWC->GetParentWindowContext(); sourceWC;
+         sourceWC = sourceWC->GetParentWindowContext()) {
+      // If the source and the target match, then the drag started in a
+      // descendant frame. If the source is discarded, err on the side of
+      // caution and treat it as a subframe drag.
+      if (sourceWC == targetWC || sourceWC->IsDiscarded()) {
         return true;
       }
     }

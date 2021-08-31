@@ -759,7 +759,8 @@ child:
      */
     async NotifyIdleObserver(uint64_t observerId, nsCString topic, nsString str);
 
-    async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action);
+    async InvokeDragSession(MaybeDiscardedWindowContext aContext,
+                            IPCDataTransfer[] transfers, uint32_t action);
 
     async EndDragSession(bool aDoneDrag, bool aUserCancelled,
                          LayoutDeviceIntPoint aDragEndPoint,
