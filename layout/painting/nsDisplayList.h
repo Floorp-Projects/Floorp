@@ -3246,7 +3246,7 @@ class nsDisplayList {
    * Create an empty list.
    */
   nsDisplayList()
-      : mLength(0), mIsOpaque(false), mForceTransparentSurface(false) {
+      : mLength(0), mForceTransparentSurface(false) {
     mTop = &mSentinel;
     mSentinel.mAbove = nullptr;
   }
@@ -3256,7 +3256,6 @@ class nsDisplayList {
   }
 
   nsDisplayList(nsDisplayList&& aOther) {
-    mIsOpaque = aOther.mIsOpaque;
     mForceTransparentSurface = aOther.mForceTransparentSurface;
 
     if (aOther.mSentinel.mAbove) {
@@ -3278,7 +3277,6 @@ class nsDisplayList {
         mTop = &mSentinel;
         mLength = 0;
       }
-      mIsOpaque = aOther.mIsOpaque;
       mForceTransparentSurface = aOther.mForceTransparentSurface;
     }
     return *this;
@@ -3465,8 +3463,6 @@ class nsDisplayList {
    * This is also a good place to put ComputeVisibility-related logic
    * that must be applied to every display item. In particular, this
    * sets mVisibleRect on each display item.
-   * This sets mIsOpaque if the entire visible area of this list has
-   * been removed from aVisibleRegion when we return.
    * This does not remove any items from the list, so we can recompute
    * visiblity with different regions later (see
    * FrameLayerBuilder::DrawPaintedLayer).
@@ -3492,12 +3488,6 @@ class nsDisplayList {
    */
   bool ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
                                 nsRegion* aVisibleRegion);
-
-  /**
-   * Returns true if the visible region output from ComputeVisiblity was
-   * empty, i.e. everything visible in this list is opaque.
-   */
-  bool IsOpaque() const { return mIsOpaque; }
 
   /**
    * Returns true if any display item requires the surface to be transparent.
@@ -3604,12 +3594,9 @@ class nsDisplayList {
    */
   nsRect GetBuildingRect() const;
 
-  void SetIsOpaque() { mIsOpaque = true; }
-
   void SetNeedsTransparentSurface() { mForceTransparentSurface = true; }
 
   void RestoreState() {
-    mIsOpaque = false;
     mForceTransparentSurface = false;
   }
 
@@ -3619,10 +3606,6 @@ class nsDisplayList {
 
   uint32_t mLength;
 
-  // This is set to true by FrameLayerBuilder if the final visible region
-  // is empty (i.e. everything that was visible is covered by some
-  // opaque content in this list).
-  bool mIsOpaque;
   // This is set to true by FrameLayerBuilder if any display item in this
   // list needs to force the surface containing this list to be transparent.
   bool mForceTransparentSurface;
