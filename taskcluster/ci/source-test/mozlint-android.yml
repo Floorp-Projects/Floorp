@@ -64,7 +64,7 @@ lints:
             ln -s $MOZ_FETCHES_DIR/android-sdk-linux $GECKO_PATH &&
             ln -s $MOZ_FETCHES_DIR/node $GECKO_PATH &&
             cd $GECKO_PATH &&
-            ./mach --log-no-times build &&
+            ./mach --log-no-times build pre-export export &&
             ./mach --log-no-times lint -f treeherder -f json:/builds/worker/mozlint.json
             --linter android-api-lint
             --linter android-javadoc
