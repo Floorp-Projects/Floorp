@@ -49,8 +49,8 @@ class TimerThreadWrapper {
   nsresult Init();
   void Shutdown();
 
-  nsresult AddTimer(nsTimerImpl* aTimer);
-  nsresult RemoveTimer(nsTimerImpl* aTimer);
+  nsresult AddTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock);
+  nsresult RemoveTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock);
   TimeStamp FindNextFireTimeForCurrentThread(TimeStamp aDefault,
                                              uint32_t aSearchBound);
   uint32_t AllowedEarlyFiringMicroseconds();
@@ -97,18 +97,20 @@ void TimerThreadWrapper::Shutdown() {
   }
 }
 
-nsresult TimerThreadWrapper::AddTimer(nsTimerImpl* aTimer) {
+nsresult TimerThreadWrapper::AddTimer(nsTimerImpl* aTimer,
+                                      const MutexAutoLock& aProofOfLock) {
   mozilla::StaticMutexAutoLock lock(sMutex);
   if (mThread) {
-    return mThread->AddTimer(aTimer);
+    return mThread->AddTimer(aTimer, aProofOfLock);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult TimerThreadWrapper::RemoveTimer(nsTimerImpl* aTimer) {
+nsresult TimerThreadWrapper::RemoveTimer(nsTimerImpl* aTimer,
+                                         const MutexAutoLock& aProofOfLock) {
   mozilla::StaticMutexAutoLock lock(sMutex);
   if (mThread) {
-    return mThread->RemoveTimer(aTimer);
+    return mThread->RemoveTimer(aTimer, aProofOfLock);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
@@ -359,21 +361,21 @@ void nsTimerImpl::Shutdown() {
 }
 
 nsresult nsTimerImpl::InitCommon(uint32_t aDelayMS, uint32_t aType,
-                                 Callback&& aNewCallback) {
+                                 Callback&& aNewCallback,
+                                 const MutexAutoLock& aProofOfLock) {
   return InitCommon(TimeDuration::FromMilliseconds(aDelayMS), aType,
-                    std::move(aNewCallback));
+                    std::move(aNewCallback), aProofOfLock);
 }
 
 nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
-                                 Callback&& newCallback) {
-  mMutex.AssertCurrentThreadOwns();
-
+                                 Callback&& newCallback,
+                                 const MutexAutoLock& aProofOfLock) {
   if (!mEventTarget) {
     NS_ERROR("mEventTarget is NULL");
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  gThreadWrapper.RemoveTimer(this);
+  gThreadWrapper.RemoveTimer(this, aProofOfLock);
 
   // If we have an existing callback, using `swap` ensures it's destroyed after
   // the mutex is unlocked in our caller.
@@ -384,7 +386,7 @@ nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
   mDelay = aDelay;
   mTimeout = TimeStamp::Now() + mDelay;
 
-  return gThreadWrapper.AddTimer(this);
+  return gThreadWrapper.AddTimer(this, aProofOfLock);
 }
 
 nsresult nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
@@ -398,7 +400,7 @@ nsresult nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
   Callback cb{FuncCallback{aFunc, aClosure, aName}};
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, std::move(cb));
+  return InitCommon(aDelay, aType, std::move(cb), lock);
 }
 
 nsresult nsTimerImpl::InitWithCallback(nsITimerCallback* aCallback,
@@ -417,7 +419,7 @@ nsresult nsTimerImpl::InitHighResolutionWithCallback(
   Callback cb{nsCOMPtr{aCallback}};
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, std::move(cb));
+  return InitCommon(aDelay, aType, std::move(cb), lock);
 }
 
 nsresult nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelayInMs,
@@ -429,7 +431,7 @@ nsresult nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelayInMs,
   Callback cb{nsCOMPtr{aObserver}};
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelayInMs, aType, std::move(cb));
+  return InitCommon(aDelayInMs, aType, std::move(cb), lock);
 }
 
 nsresult nsTimerImpl::InitWithClosureCallback(
@@ -442,7 +444,7 @@ nsresult nsTimerImpl::InitWithClosureCallback(
   Callback cb{ClosureCallback{std::move(aCallback), aNameString}};
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, std::move(cb));
+  return InitCommon(aDelay, aType, std::move(cb), lock);
 }
 
 nsresult nsTimerImpl::Cancel() {
@@ -456,7 +458,7 @@ void nsTimerImpl::CancelImpl(bool aClearITimer) {
 
   {
     MutexAutoLock lock(mMutex);
-    gThreadWrapper.RemoveTimer(this);
+    gThreadWrapper.RemoveTimer(this, lock);
 
     // The swap ensures our callback isn't dropped until after the mutex is
     // unlocked.
@@ -487,13 +489,13 @@ nsresult nsTimerImpl::SetDelay(uint32_t aDelay) {
   }
 
   bool reAdd = false;
-  reAdd = NS_SUCCEEDED(gThreadWrapper.RemoveTimer(this));
+  reAdd = NS_SUCCEEDED(gThreadWrapper.RemoveTimer(this, lock));
 
   mDelay = TimeDuration::FromMilliseconds(aDelay);
   mTimeout = TimeStamp::Now() + mDelay;
 
   if (reAdd) {
-    gThreadWrapper.AddTimer(this);
+    gThreadWrapper.AddTimer(this, lock);
   }
 
   return NS_OK;
@@ -633,7 +635,7 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
       } else {
         mTimeout = mTimeout + mDelay;
       }
-      gThreadWrapper.AddTimer(this);
+      gThreadWrapper.AddTimer(this, lock);
     } else {
       // Non-repeating timer that has not been re-scheduled. Clear.
       // XXX(nika): Other callsites seem to go to some effort to avoid
@@ -702,8 +704,8 @@ void nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType,
       });
 }
 
-void nsTimerImpl::GetName(nsACString& aName) {
-  MutexAutoLock lock(mMutex);
+void nsTimerImpl::GetName(nsACString& aName,
+                          const MutexAutoLock& aProofOfLock) {
   GetCallback().match(
       [&](const UnknownCallback&) { aName.AssignLiteral("Canceled_timer"); },
       [&](const InterfaceCallback& i) {
@@ -722,6 +724,11 @@ void nsTimerImpl::GetName(nsACString& aName) {
       },
       [&](const FuncCallback& f) { aName.Assign(f.mName); },
       [&](const ClosureCallback& c) { aName.Assign(c.mName); });
+}
+
+void nsTimerImpl::GetName(nsACString& aName) {
+  MutexAutoLock lock(mMutex);
+  GetName(aName, lock);
 }
 
 void nsTimerImpl::SetHolder(nsTimerImplHolder* aHolder) { mHolder = aHolder; }
