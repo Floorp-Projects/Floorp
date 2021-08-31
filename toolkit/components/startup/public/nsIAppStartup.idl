@@ -126,6 +126,10 @@ interface nsIAppStartup : nsISupports
      * Firefox into this state. But we do occasionally want it to restart this
      * way. Passing this flag prevents Firefox from opening any windows when it
      * restarts.
+     *
+     * Note that, if there is an application update pending, this also silences
+     * the update. This means that no UI will be shown including elevation
+     * dialogs (potentially preventing the update from being installed).
      */
     const uint32_t eSilently = 0x100;
 
