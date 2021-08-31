@@ -558,6 +558,48 @@ bool EditorUtils::IsWhiteSpacePreformatted(const nsIContent& aContent) {
   return elementStyle->StyleText()->WhiteSpaceIsSignificant();
 }
 
+// static
+bool EditorUtils::IsNewLinePreformatted(const nsIContent& aContent) {
+  // Look at the node (and its parent if it's not an element), and grab its
+  // ComputedStyle.
+  Element* element = aContent.GetAsElementOrParentElement();
+  if (!element) {
+    return false;
+  }
+
+  RefPtr<ComputedStyle> elementStyle =
+      nsComputedDOMStyle::GetComputedStyleNoFlush(element);
+  if (!elementStyle) {
+    // Consider nodes without a ComputedStyle to be NOT preformatted:
+    // For instance, this is true of JS tags inside the body (which show
+    // up as #text nodes but have no ComputedStyle).
+    return false;
+  }
+
+  return elementStyle->StyleText()->NewlineIsSignificantStyle();
+}
+
+// static
+bool EditorUtils::IsOnlyNewLinePreformatted(const nsIContent& aContent) {
+  // Look at the node (and its parent if it's not an element), and grab its
+  // ComputedStyle.
+  Element* element = aContent.GetAsElementOrParentElement();
+  if (!element) {
+    return false;
+  }
+
+  RefPtr<ComputedStyle> elementStyle =
+      nsComputedDOMStyle::GetComputedStyleNoFlush(element);
+  if (!elementStyle) {
+    // Consider nodes without a ComputedStyle to be NOT preformatted:
+    // For instance, this is true of JS tags inside the body (which show
+    // up as #text nodes but have no ComputedStyle).
+    return false;
+  }
+
+  return elementStyle->StyleText()->mWhiteSpace == StyleWhiteSpace::PreLine;
+}
+
 bool EditorUtils::IsPointInSelection(const Selection& aSelection,
                                      const nsINode& aParentNode,
                                      uint32_t aOffset) {
@@ -620,6 +662,112 @@ EditorUtils::CreateTransferableForPlainText(const Document& aDocument) {
       NS_SUCCEEDED(rvIgnored),
       "nsITransferable::AddDataFlavor(kMozTextInternal) failed, but ignored");
   return transferable;
+}
+
+/******************************************************************************
+ * mozilla::EditorDOMPointBase
+ *****************************************************************************/
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
+                                       IsCharCollapsibleASCIISpace() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleASCIISpace() const {
+  if (IsCharNewLine()) {
+    return !EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+  }
+  return IsCharASCIISpace() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsCharCollapsibleNBSP() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleNBSP() const {
+  // TODO: Perhaps, we should return false if neither previous char nor
+  //       next char is collapsible white-space or NBSP.
+  return IsCharNBSP() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsCharCollapsibleASCIISpaceOrNBSP()
+                                                 const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleASCIISpaceOrNBSP() const {
+  if (IsCharNewLine()) {
+    return !EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+  }
+  return IsCharASCIISpaceOrNBSP() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
+                                       IsPreviousCharCollapsibleASCIISpace()
+                                           const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleASCIISpace() const {
+  if (IsPreviousCharNewLine()) {
+    return !EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+  }
+  return IsPreviousCharASCIISpace() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
+                                       IsPreviousCharCollapsibleNBSP() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleNBSP() const {
+  return IsPreviousCharNBSP() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(
+    bool, IsPreviousCharCollapsibleASCIISpaceOrNBSP() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleASCIISpaceOrNBSP()
+    const {
+  if (IsPreviousCharNewLine()) {
+    return !EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+  }
+  return IsPreviousCharASCIISpaceOrNBSP() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
+                                       IsNextCharCollapsibleASCIISpace() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleASCIISpace() const {
+  if (IsNextCharNewLine()) {
+    return !EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+  }
+  return IsNextCharASCIISpace() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsNextCharCollapsibleNBSP() const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleNBSP() const {
+  return IsNextCharNBSP() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
+}
+
+NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
+                                       IsNextCharCollapsibleASCIISpaceOrNBSP()
+                                           const)
+
+template <typename PT, typename CT>
+bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleASCIISpaceOrNBSP() const {
+  if (IsNextCharNewLine()) {
+    return !EditorUtils::IsNewLinePreformatted(*ContainerAsText());
+  }
+  return IsNextCharASCIISpaceOrNBSP() &&
+         !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
 }  // namespace mozilla

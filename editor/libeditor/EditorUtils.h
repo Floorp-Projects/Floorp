@@ -1167,6 +1167,19 @@ class EditorUtils final {
   static bool IsWhiteSpacePreformatted(const nsIContent& aContent);
 
   /**
+   * IsNewLinePreformatted() checks whether the linefeed characters are
+   * preformatted or collapsible white-spaces.  This does NOT flush layout.
+   */
+  static bool IsNewLinePreformatted(const nsIContent& aContent);
+
+  /**
+   * IsOnlyNewLinePreformatted() checks whether the linefeed characters are
+   * preformated but white-spaces are collapsed, or otherwise.  I.e., this
+   * returns true only when `white-space:pre-line`.
+   */
+  static bool IsOnlyNewLinePreformatted(const nsIContent& aContent);
+
+  /**
    * Helper method for `AppendString()` and `AppendSubString()`.  This should
    * be called only when `aText` is in a password field.  This method masks
    * A part of or all of `aText` (`aStartOffsetInText` and later) should've
