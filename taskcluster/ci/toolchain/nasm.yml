@@ -16,8 +16,6 @@ win64-nasm:
         local-toolchain: true
     treeherder:
         symbol: TW64(nasm)
-    worker:
-        docker-image: {in-tree: mingw32-build}
     run:
         script: build-nasm.sh
         arguments: ['win64']

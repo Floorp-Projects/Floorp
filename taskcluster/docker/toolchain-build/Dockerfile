@@ -39,6 +39,7 @@ RUN apt-get update && \
       python3-distutils-extra \
       python3-requests \
       python3-pytoml \
+      scons \
       subversion \
       tar \
       unzip \
