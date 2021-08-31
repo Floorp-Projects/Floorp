@@ -1915,7 +1915,7 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
       return EditActionResult(NS_ERROR_FAILURE);
     }
     if (backwardScanFromPointToCreateNewBRElementResult
-            .InNormalWhiteSpacesOrText() ||
+            .InVisibleOrCollapsibleCharacters() ||
         backwardScanFromPointToCreateNewBRElementResult
             .ReachedSpecialContent()) {
       EditorRawDOMPoint pointAfterNewBRElement(
@@ -1930,7 +1930,7 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
         return EditActionResult(NS_ERROR_FAILURE);
       }
       if (forwardScanFromPointAfterNewBRElementResult
-              .InNormalWhiteSpacesOrText() ||
+              .InVisibleOrCollapsibleCharacters() ||
           forwardScanFromPointAfterNewBRElementResult.ReachedSpecialContent() ||
           // In case we're at the very end.
           forwardScanFromPointAfterNewBRElementResult
@@ -5541,7 +5541,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
         "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom() failed");
     return NS_ERROR_FAILURE;
   }
-  if (scanResultAtEnd.ReachedSomething()) {
+  if (scanResultAtEnd.ReachedSomethingNonTextContent()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
     if (wsScannerAtEnd.StartsFromOtherBlockElement()) {
@@ -5578,7 +5578,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
     NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
     return NS_ERROR_FAILURE;
   }
-  if (scanResultAtStart.ReachedSomething()) {
+  if (scanResultAtStart.ReachedSomethingNonTextContent()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
     if (wsScannerAtStart.EndsByOtherBlockElement()) {
