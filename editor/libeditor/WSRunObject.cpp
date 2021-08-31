@@ -1474,12 +1474,13 @@ WSRunScanner::TextFragmentData::TextFragmentData(
   // preformatted.
   // Additionally, if the scan start point is preformatted, and there is
   // no text node around it, the range is also preformatted.
-  mIsWhiteSpaceCollapsible = !mStart.AcrossPreformattedCharacter() &&
-                             !mEnd.AcrossPreformattedCharacter() &&
-                             !(EditorUtils::IsWhiteSpacePreformatted(
-                                   *mScanStartPoint.ContainerAsContent()) &&
-                               !mStart.IsNonCollapsibleCharacters() &&
-                               !mEnd.IsNonCollapsibleCharacters());
+  mIsWhiteSpaceCollapsible =
+      !mStart.AcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter() &&
+      !mEnd.AcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter() &&
+      !(EditorUtils::IsWhiteSpacePreformatted(
+            *mScanStartPoint.ContainerAsContent()) &&
+        !mStart.IsNonCollapsibleCharacters() &&
+        !mEnd.IsNonCollapsibleCharacters());
 }
 
 // static
@@ -1511,7 +1512,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
 
     return Some(BoundaryData(
         EditorDOMPoint(aPoint.ContainerAsText(), i), *aPoint.ContainerAsText(),
-        WSType::NonCollapsibleCharacters, Preformatted::No));
+        WSType::NonCollapsibleCharacters, WhiteSpacePreformatted::No));
   }
 
   return Nothing();
@@ -1531,7 +1532,8 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     // the point as a visible character point.
     if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
       return BoundaryData(aPoint, *aPoint.ContainerAsText(),
-                          WSType::NonCollapsibleCharacters, Preformatted::Yes);
+                          WSType::NonCollapsibleCharacters,
+                          WhiteSpacePreformatted::Yes);
     }
     // If the text node is not preformatted, we should look for its preceding
     // characters.
@@ -1562,12 +1564,13 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     return BoundaryData(aPoint,
                         const_cast<Element&>(
                             aEditableBlockParentOrTopmostEditableInlineContent),
-                        WSType::CurrentBlockBoundary, Preformatted::No);
+                        WSType::CurrentBlockBoundary,
+                        WhiteSpacePreformatted::No);
   }
 
   if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock)) {
     return BoundaryData(aPoint, *previousLeafContentOrBlock,
-                        WSType::OtherBlockBoundary, Preformatted::No);
+                        WSType::OtherBlockBoundary, WhiteSpacePreformatted::No);
   }
 
   if (!previousLeafContentOrBlock->IsText() ||
@@ -1578,7 +1581,7 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
                         previousLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
                             ? WSType::BRElement
                             : WSType::SpecialContent,
-                        Preformatted::No);
+                        WhiteSpacePreformatted::No);
   }
 
   if (!previousLeafContentOrBlock->AsText()->TextLength()) {
@@ -1598,7 +1601,8 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     // node.  I.e., the following text node might be not preformatted.
     return BoundaryData(EditorDOMPoint::AtEndOf(*previousLeafContentOrBlock),
                         *previousLeafContentOrBlock,
-                        WSType::NonCollapsibleCharacters, Preformatted::No);
+                        WSType::NonCollapsibleCharacters,
+                        WhiteSpacePreformatted::No);
   }
 
   Maybe<BoundaryData> startInTextNode =
@@ -1644,7 +1648,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
 
     return Some(BoundaryData(
         EditorDOMPoint(aPoint.ContainerAsText(), i), *aPoint.ContainerAsText(),
-        WSType::NonCollapsibleCharacters, Preformatted::No));
+        WSType::NonCollapsibleCharacters, WhiteSpacePreformatted::No));
   }
 
   return Nothing();
@@ -1664,7 +1668,8 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     // the point as a visible character point.
     if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
       return BoundaryData(aPoint, *aPoint.ContainerAsText(),
-                          WSType::NonCollapsibleCharacters, Preformatted::Yes);
+                          WSType::NonCollapsibleCharacters,
+                          WhiteSpacePreformatted::Yes);
     }
     // If the text node is not preformatted, we should look for inclusive
     // next characters.
@@ -1694,13 +1699,14 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     return BoundaryData(aPoint,
                         const_cast<Element&>(
                             aEditableBlockParentOrTopmostEditableInlineElement),
-                        WSType::CurrentBlockBoundary, Preformatted::No);
+                        WSType::CurrentBlockBoundary,
+                        WhiteSpacePreformatted::No);
   }
 
   if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock)) {
     // we encountered a new block.  therefore no more ws.
     return BoundaryData(aPoint, *nextLeafContentOrBlock,
-                        WSType::OtherBlockBoundary, Preformatted::No);
+                        WSType::OtherBlockBoundary, WhiteSpacePreformatted::No);
   }
 
   if (!nextLeafContentOrBlock->IsText() ||
@@ -1712,7 +1718,7 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
                         nextLeafContentOrBlock->IsHTMLElement(nsGkAtoms::br)
                             ? WSType::BRElement
                             : WSType::SpecialContent,
-                        Preformatted::No);
+                        WhiteSpacePreformatted::No);
   }
 
   if (!nextLeafContentOrBlock->AsText()->TextFragment().GetLength()) {
@@ -1730,9 +1736,9 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     // its start as found a visible character.  Note that we stop scanning
     // collapsible white-spaces due to reaching preformatted non-empty text
     // node.  I.e., the following text node might be not preformatted.
-    return BoundaryData(EditorDOMPoint(nextLeafContentOrBlock, 0),
-                        *nextLeafContentOrBlock,
-                        WSType::NonCollapsibleCharacters, Preformatted::No);
+    return BoundaryData(
+        EditorDOMPoint(nextLeafContentOrBlock, 0), *nextLeafContentOrBlock,
+        WSType::NonCollapsibleCharacters, WhiteSpacePreformatted::No);
   }
 
   Maybe<BoundaryData> endInTextNode =
