@@ -582,6 +582,13 @@ class InitializeVirtualDesktopManagerTask : public Task {
  public:
   InitializeVirtualDesktopManagerTask() : Task(false, kDefaultPriorityValue) {}
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  bool GetName(nsACString& aName) override {
+    aName.AssignLiteral("InitializeVirtualDesktopManagerTask");
+    return true;
+  }
+#endif
+
   virtual bool Run() override {
 #ifndef __MINGW32__
     if (!IsWin10OrLater()) {
