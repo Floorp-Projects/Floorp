@@ -76,6 +76,12 @@ typedef EditorDOMPointBase<nsINode*, nsIContent*> EditorRawDOMPoint;
 typedef EditorDOMPointBase<RefPtr<dom::Text>, nsIContent*> EditorDOMPointInText;
 typedef EditorDOMPointBase<dom::Text*, nsIContent*> EditorRawDOMPointInText;
 
+#define NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(aResultType, aMethodName) \
+  template aResultType EditorDOMPoint::aMethodName;                      \
+  template aResultType EditorRawDOMPoint::aMethodName;                   \
+  template aResultType EditorDOMPointInText::aMethodName;                \
+  template aResultType EditorRawDOMPointInText::aMethodName;
+
 template <typename ParentType, typename ChildType>
 class EditorDOMPointBase final {
   typedef EditorDOMPointBase<ParentType, ChildType> SelfType;
@@ -365,6 +371,16 @@ class EditorDOMPointBase final {
     char16_t ch = Char();
     return nsCRT::IsAsciiSpace(ch) || ch == 0x00A0;
   }
+  MOZ_NEVER_INLINE_DEBUG bool IsCharNewLine() const { return Char() == '\n'; }
+  /**
+   * IsCharCollapsibleASCIISpace(), IsCharCollapsibleNBSP() and
+   * IsCharCollapsibleASCIISpaceOrNBSP() checks whether the white-space is
+   * preformatted or collapsible with the style of the container text node
+   * without flushing pending notifications.
+   */
+  bool IsCharCollapsibleASCIISpace() const;
+  bool IsCharCollapsibleNBSP() const;
+  bool IsCharCollapsibleASCIISpaceOrNBSP() const;
 
   MOZ_NEVER_INLINE_DEBUG bool IsCharHighSurrogateFollowedByLowSurrogate()
       const {
@@ -397,6 +413,18 @@ class EditorDOMPointBase final {
     char16_t ch = PreviousChar();
     return nsCRT::IsAsciiSpace(ch) || ch == 0x00A0;
   }
+  MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharNewLine() const {
+    return PreviousChar() == '\n';
+  }
+  /**
+   * IsPreviousCharCollapsibleASCIISpace(), IsPreviousCharCollapsibleNBSP() and
+   * IsPreviousCharCollapsibleASCIISpaceOrNBSP() checks whether the white-space
+   * is preformatted or collapsible with the style of the container text node
+   * without flushing pending notifications.
+   */
+  bool IsPreviousCharCollapsibleASCIISpace() const;
+  bool IsPreviousCharCollapsibleNBSP() const;
+  bool IsPreviousCharCollapsibleASCIISpaceOrNBSP() const;
 
   MOZ_NEVER_INLINE_DEBUG char16_t NextChar() const {
     MOZ_ASSERT(IsSetAndValid());
@@ -413,6 +441,18 @@ class EditorDOMPointBase final {
     char16_t ch = NextChar();
     return nsCRT::IsAsciiSpace(ch) || ch == 0x00A0;
   }
+  MOZ_NEVER_INLINE_DEBUG bool IsNextCharNewLine() const {
+    return NextChar() == '\n';
+  }
+  /**
+   * IsNextCharCollapsibleASCIISpace(), IsNextCharCollapsibleNBSP() and
+   * IsNextCharCollapsibleASCIISpaceOrNBSP() checks whether the white-space is
+   * preformatted or collapsible with the style of the container text node
+   * without flushing pending notifications.
+   */
+  bool IsNextCharCollapsibleASCIISpace() const;
+  bool IsNextCharCollapsibleNBSP() const;
+  bool IsNextCharCollapsibleASCIISpaceOrNBSP() const;
 
   uint32_t Offset() const {
     if (mOffset.isSome()) {
