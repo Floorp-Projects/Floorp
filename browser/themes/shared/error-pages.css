@@ -87,12 +87,10 @@ body {
   }
 }
 
-/* For small window height, shift the stripes up by 10px.
- * We could just change the background size, but that changes
- * the angle of the stripes so just shifting up is easier. */
 @media only screen and (max-height: 480px) {
   body {
-    background-position: 10px -10px;
+    /* Note: if you change the top padding, also update the image positioning
+     * media query in aboutNetError.css for the certificate error case. */
     padding-top: 38px;
     /* We get rid of bottom padding for width < 640px, but
      * for height < 480px a bit of space between the content
