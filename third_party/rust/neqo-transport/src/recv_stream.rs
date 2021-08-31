@@ -19,7 +19,7 @@ use crate::events::ConnectionEvents;
 use crate::fc::ReceiverFlowControl;
 use crate::frame::FRAME_TYPE_STOP_SENDING;
 use crate::packet::PacketBuilder;
-use crate::recovery::RecoveryToken;
+use crate::recovery::{RecoveryToken, StreamRecoveryToken};
 use crate::send_stream::SendStreams;
 use crate::stats::FrameStats;
 use crate::stream_id::StreamId;
@@ -737,9 +737,9 @@ impl RecvStream {
                         *err,
                     ])
                 {
-                    tokens.push(RecoveryToken::StopSending {
+                    tokens.push(RecoveryToken::Stream(StreamRecoveryToken::StopSending {
                         stream_id: self.stream_id,
-                    });
+                    }));
                     stats.stop_sending += 1;
                     *frame_needed = false;
                 }

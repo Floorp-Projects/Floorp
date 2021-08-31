@@ -13,7 +13,7 @@ use crate::frame::{
     FRAME_TYPE_STREAMS_BLOCKED_UNIDI, FRAME_TYPE_STREAM_DATA_BLOCKED,
 };
 use crate::packet::PacketBuilder;
-use crate::recovery::RecoveryToken;
+use crate::recovery::{RecoveryToken, StreamRecoveryToken};
 use crate::stats::FrameStats;
 use crate::stream_id::{StreamId, StreamType};
 use crate::{Error, Res};
@@ -136,7 +136,9 @@ impl SenderFlowControl<()> {
         if let Some(limit) = self.blocked_needed() {
             if builder.write_varint_frame(&[FRAME_TYPE_DATA_BLOCKED, limit]) {
                 stats.data_blocked += 1;
-                tokens.push(RecoveryToken::DataBlocked(limit));
+                tokens.push(RecoveryToken::Stream(StreamRecoveryToken::DataBlocked(
+                    limit,
+                )));
                 self.blocked_sent();
             }
         }
@@ -157,10 +159,12 @@ impl SenderFlowControl<StreamId> {
                 limit,
             ]) {
                 stats.stream_data_blocked += 1;
-                tokens.push(RecoveryToken::StreamDataBlocked {
-                    stream_id: self.subject,
-                    limit,
-                });
+                tokens.push(RecoveryToken::Stream(
+                    StreamRecoveryToken::StreamDataBlocked {
+                        stream_id: self.subject,
+                        limit,
+                    },
+                ));
                 self.blocked_sent();
             }
         }
@@ -181,10 +185,10 @@ impl SenderFlowControl<StreamType> {
             };
             if builder.write_varint_frame(&[frame, limit]) {
                 stats.streams_blocked += 1;
-                tokens.push(RecoveryToken::StreamsBlocked {
+                tokens.push(RecoveryToken::Stream(StreamRecoveryToken::StreamsBlocked {
                     stream_type: self.subject,
                     limit,
-                });
+                }));
                 self.blocked_sent();
             }
         }
@@ -300,7 +304,9 @@ impl ReceiverFlowControl<()> {
         let max_allowed = self.next_limit();
         if builder.write_varint_frame(&[FRAME_TYPE_MAX_DATA, max_allowed]) {
             stats.max_data += 1;
-            tokens.push(RecoveryToken::MaxData(max_allowed));
+            tokens.push(RecoveryToken::Stream(StreamRecoveryToken::MaxData(
+                max_allowed,
+            )));
             self.frame_sent(max_allowed);
         }
     }
@@ -351,10 +357,10 @@ impl ReceiverFlowControl<StreamId> {
             max_allowed,
         ]) {
             stats.max_stream_data += 1;
-            tokens.push(RecoveryToken::MaxStreamData {
+            tokens.push(RecoveryToken::Stream(StreamRecoveryToken::MaxStreamData {
                 stream_id: self.subject,
                 max_data: max_allowed,
-            });
+            }));
             self.frame_sent(max_allowed);
         }
     }
@@ -405,10 +411,10 @@ impl ReceiverFlowControl<StreamType> {
         };
         if builder.write_varint_frame(&[frame, max_streams]) {
             stats.max_streams += 1;
-            tokens.push(RecoveryToken::MaxStreams {
+            tokens.push(RecoveryToken::Stream(StreamRecoveryToken::MaxStreams {
                 stream_type: self.subject,
                 max_streams,
-            });
+            }));
             self.frame_sent(max_streams);
         }
     }
