@@ -10,7 +10,8 @@
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+#include "mozilla/ScopeExit.h"  // mozilla::MakeScopeExit
+#include "mozilla/Utf8.h"       // mozilla::Utf8Unit
 
 #include <algorithm>
 #include <iterator>
@@ -2865,30 +2866,53 @@ JSRuntime::getSelfHostedScriptIndexRange(js::PropertyName* name) {
 static bool GetComputedIntrinsic(JSContext* cx, HandlePropertyName name,
                                  MutableHandleValue vp) {
   // If the intrinsic was not in hardcoded set, run the top-level of the
-  // selfhosted script and then look for intrinsic again.
+  // selfhosted script. This will generate values and call `SetIntrinsic` to
+  // save them on a special "computed intrinsics holder". We then can check for
+  // our required values and cache on the normal intrinsics holder.
 
-  RootedScript script(
-      cx,
-      cx->runtime()->selfHostStencil().instantiateSelfHostedTopLevelForRealm(
-          cx, cx->runtime()->selfHostStencilInput()));
-  if (!script) {
-    return false;
+  RootedNativeObject computedIntrinsicsHolder(
+      cx, cx->global()->getComputedIntrinsicsHolder());
+  if (!computedIntrinsicsHolder) {
+    auto computedIntrinsicHolderGuard = mozilla::MakeScopeExit(
+        [cx]() { cx->global()->setComputedIntrinsicsHolder(nullptr); });
+
+    // Instantiate a script in current realm from the shared Stencil.
+    JSRuntime* runtime = cx->runtime();
+    RootedScript script(
+        cx, runtime->selfHostStencil().instantiateSelfHostedTopLevelForRealm(
+                cx, runtime->selfHostStencilInput()));
+    if (!script) {
+      return false;
+    }
+
+    // Attach the computed intrinsics holder to the global now to capture
+    // generated values.
+    computedIntrinsicsHolder =
+        NewPlainObjectWithProto(cx, nullptr, TenuredObject);
+    if (!computedIntrinsicsHolder) {
+      return false;
+    }
+    cx->global()->setComputedIntrinsicsHolder(computedIntrinsicsHolder);
+
+    // Attempt to execute the top-level script. If they fails to run to
+    // successful completion, throw away the holder to avoid a partial
+    // initialization state.
+    if (!JS_ExecuteScript(cx, script)) {
+      return false;
+    }
+
+    // Successfully ran the self-host top-level in current realm, so these
+    // computed intrinsic values are now source of truth for the realm.
+    computedIntrinsicHolderGuard.release();
   }
 
-  if (!JS_ExecuteScript(cx, script)) {
-    return false;
-  }
-
-  bool exists = false;
-  if (!GlobalObject::maybeGetIntrinsicValue(cx, cx->global(), name, vp,
-                                            &exists)) {
-    return false;
-  }
-  if (!exists) {
-    MOZ_CRASH("SelfHosted Intrinsic not found");
-  }
-
-  return true;
+  // Cache the individual intrinsic on the standard holder object so that we
+  // only have to look for it in one place when performing `GetIntrinsic`.
+  mozilla::Maybe<PropertyInfo> prop =
+      computedIntrinsicsHolder->lookup(cx, name);
+  MOZ_RELEASE_ASSERT(prop, "SelfHosted intrinsic not found");
+  RootedValue value(cx, computedIntrinsicsHolder->getSlot(prop->slot()));
+  return GlobalObject::addIntrinsicValue(cx, cx->global(), name, value);
 }
 
 bool JSRuntime::getSelfHostedValue(JSContext* cx, HandlePropertyName name,
