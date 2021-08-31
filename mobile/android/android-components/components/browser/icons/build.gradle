@@ -31,6 +31,14 @@ android {
             resources.srcDirs += ['src/test/resources']
         }
     }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_version
+    }
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -54,6 +62,8 @@ dependencies {
     implementation Dependencies.androidx_annotation
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_palette
+    implementation Dependencies.androidx_compose_ui
+    implementation Dependencies.androidx_compose_material
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.thirdparty_disklrucache
