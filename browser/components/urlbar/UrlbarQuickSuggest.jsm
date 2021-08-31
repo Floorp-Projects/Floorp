@@ -38,6 +38,12 @@ const OPTED_IN = "suggest.quicksuggest";
 const SEEN_DIALOG_PREF = "quicksuggest.showedOnboardingDialog";
 const RESTARTS_PREF = "quicksuggest.seenRestarts";
 
+// This is a score in the range [0, 1] used by the provider to compare
+// suggestions from remote settings to suggestions from Merino. Remote settings
+// suggestions don't have a natural score so we hardcode a value, and we choose
+// a low value to allow Merino to experiment with a broad range of scores.
+const SUGGESTION_SCORE = 0.2;
+
 /**
  * Fetches the suggestions data from RemoteSettings and builds the tree
  * to provide suggestions for UrlbarProviderQuickSuggest.
@@ -99,6 +105,7 @@ class Suggestions {
       block_id: result.id,
       advertiser: result.advertiser.toLocaleLowerCase(),
       is_sponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
+      score: SUGGESTION_SCORE,
       icon,
     };
   }
@@ -366,6 +373,10 @@ const RESULT_KEY = "^";
 class KeywordTree {
   constructor() {
     this.tree = new Map();
+  }
+
+  static get SUGGESTION_SCORE() {
+    return SUGGESTION_SCORE;
   }
 
   /*

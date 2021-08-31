@@ -51,7 +51,7 @@ add_task(async function init() {
 });
 
 // Tests with Merino enabled and remote settings disabled.
-add_task(async function merinoOnly() {
+add_task(async function oneEnabled_merino() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
 
@@ -68,6 +68,9 @@ add_task(async function merinoOnly() {
           block_id: 111,
           advertiser: "merinoOnly advertiser",
           is_sponsored: true,
+          // Use a score lower than the remote settings score to make sure this
+          // suggestion is included regardless.
+          score: UrlbarQuickSuggest.SUGGESTION_SCORE / 2,
         },
       ],
     },
@@ -104,7 +107,7 @@ add_task(async function merinoOnly() {
 });
 
 // Tests with Merino disabled and remote settings enabled.
-add_task(async function remoteSettingsOnly() {
+add_task(async function oneEnabled_remoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, false);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
 
@@ -123,6 +126,7 @@ add_task(async function remoteSettingsOnly() {
           block_id: 111,
           advertiser: "remoteSettingsOnly advertiser",
           is_sponsored: true,
+          score: 1,
         },
       ],
     },
@@ -158,9 +162,9 @@ add_task(async function remoteSettingsOnly() {
   });
 });
 
-// Tests with both Merino and remote settings enabled. The Merino suggestion
-// should be preferred over the remote settings one.
-add_task(async function bothEnabled() {
+// When the Merino suggestion has a higher score than the remote settings
+// suggestion, the Merino suggestion should be used.
+add_task(async function higherScore_merino() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
 
@@ -168,15 +172,16 @@ add_task(async function bothEnabled() {
     body: {
       suggestions: [
         {
-          full_keyword: "bothEnabled full_keyword",
-          title: "bothEnabled title",
-          url: "bothEnabled url",
-          icon: "bothEnabled icon",
-          impression_url: "bothEnabled impression_url",
-          click_url: "bothEnabled click_url",
+          full_keyword: "higherScore full_keyword",
+          title: "higherScore title",
+          url: "higherScore url",
+          icon: "higherScore icon",
+          impression_url: "higherScore impression_url",
+          click_url: "higherScore click_url",
           block_id: 111,
-          advertiser: "bothEnabled advertiser",
+          advertiser: "higherScore advertiser",
           is_sponsored: true,
+          score: 1,
         },
       ],
     },
@@ -194,18 +199,280 @@ add_task(async function bothEnabled() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         heuristic: false,
         payload: {
-          qsSuggestion: "bothEnabled full_keyword",
-          title: "bothEnabled title",
-          url: "bothEnabled url",
-          icon: "bothEnabled icon",
-          sponsoredImpressionUrl: "bothEnabled impression_url",
-          sponsoredClickUrl: "bothEnabled click_url",
+          qsSuggestion: "higherScore full_keyword",
+          title: "higherScore title",
+          url: "higherScore url",
+          icon: "higherScore icon",
+          sponsoredImpressionUrl: "higherScore impression_url",
+          sponsoredClickUrl: "higherScore click_url",
           sponsoredBlockId: 111,
-          sponsoredAdvertiser: "bothEnabled advertiser",
+          sponsoredAdvertiser: "higherScore advertiser",
           isSponsored: true,
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
-          displayUrl: "bothEnabled url",
+          displayUrl: "higherScore url",
+        },
+      },
+    ],
+  });
+});
+
+// When the remote settings suggestion has a higher score than the Merino
+// suggestion, the remote settings suggestion should be used.
+add_task(async function higherScore_remoteSettings() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  setMerinoResponse({
+    body: {
+      suggestions: [
+        {
+          full_keyword: "higherScore full_keyword",
+          title: "higherScore title",
+          url: "higherScore url",
+          icon: "higherScore icon",
+          impression_url: "higherScore impression_url",
+          click_url: "higherScore click_url",
+          block_id: 111,
+          advertiser: "higherScore advertiser",
+          is_sponsored: true,
+          score: UrlbarQuickSuggest.SUGGESTION_SCORE / 2,
+        },
+      ],
+    },
+  });
+
+  let context = createContext("frab", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        payload: {
+          qsSuggestion: "frab",
+          title: "frabbits",
+          url: "http://test.com/q=frabbits",
+          icon: null,
+          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
+          sponsoredClickUrl: "http://click.reporting.test.com/",
+          sponsoredBlockId: 1,
+          sponsoredAdvertiser: "testadvertiser",
+          isSponsored: true,
+          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+          helpL10nId: "firefox-suggest-urlbar-learn-more",
+          displayUrl: "http://test.com/q=frabbits",
+        },
+      },
+    ],
+  });
+});
+
+// When the Merino and remote settings suggestions have the same score, the
+// remote settings suggestion should be used.
+add_task(async function sameScore() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  setMerinoResponse({
+    body: {
+      suggestions: [
+        {
+          full_keyword: "sameScore full_keyword",
+          title: "sameScore title",
+          url: "sameScore url",
+          icon: "sameScore icon",
+          impression_url: "sameScore impression_url",
+          click_url: "sameScore click_url",
+          block_id: 111,
+          advertiser: "sameScore advertiser",
+          is_sponsored: true,
+          score: UrlbarQuickSuggest.SUGGESTION_SCORE,
+        },
+      ],
+    },
+  });
+
+  let context = createContext("frab", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        payload: {
+          qsSuggestion: "frab",
+          title: "frabbits",
+          url: "http://test.com/q=frabbits",
+          icon: null,
+          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
+          sponsoredClickUrl: "http://click.reporting.test.com/",
+          sponsoredBlockId: 1,
+          sponsoredAdvertiser: "testadvertiser",
+          isSponsored: true,
+          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+          helpL10nId: "firefox-suggest-urlbar-learn-more",
+          displayUrl: "http://test.com/q=frabbits",
+        },
+      },
+    ],
+  });
+});
+
+// When the Merino suggestion does not include a score, the remote settings
+// suggestion should be used.
+add_task(async function noMerinoScore() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  setMerinoResponse({
+    body: {
+      suggestions: [
+        {
+          full_keyword: "noMerinoScore full_keyword",
+          title: "noMerinoScore title",
+          url: "noMerinoScore url",
+          icon: "noMerinoScore icon",
+          impression_url: "noMerinoScore impression_url",
+          click_url: "noMerinoScore click_url",
+          block_id: 111,
+          advertiser: "noMerinoScore advertiser",
+          is_sponsored: true,
+          // no score
+        },
+      ],
+    },
+  });
+
+  let context = createContext("frab", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        payload: {
+          qsSuggestion: "frab",
+          title: "frabbits",
+          url: "http://test.com/q=frabbits",
+          icon: null,
+          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
+          sponsoredClickUrl: "http://click.reporting.test.com/",
+          sponsoredBlockId: 1,
+          sponsoredAdvertiser: "testadvertiser",
+          isSponsored: true,
+          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+          helpL10nId: "firefox-suggest-urlbar-learn-more",
+          displayUrl: "http://test.com/q=frabbits",
+        },
+      },
+    ],
+  });
+});
+
+// When remote settings doesn't return a suggestion but Merino does, the Merino
+// suggestion should be used.
+add_task(async function noSuggestion_remoteSettings() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  setMerinoResponse({
+    body: {
+      suggestions: [
+        {
+          full_keyword: "noSuggestion full_keyword",
+          title: "noSuggestion title",
+          url: "noSuggestion url",
+          icon: "noSuggestion icon",
+          impression_url: "noSuggestion impression_url",
+          click_url: "noSuggestion click_url",
+          block_id: 111,
+          advertiser: "noSuggestion advertiser",
+          is_sponsored: true,
+          score: UrlbarQuickSuggest.SUGGESTION_SCORE / 2,
+        },
+      ],
+    },
+  });
+
+  let context = createContext("this doesn't match remote settings", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        payload: {
+          qsSuggestion: "noSuggestion full_keyword",
+          title: "noSuggestion title",
+          url: "noSuggestion url",
+          icon: "noSuggestion icon",
+          sponsoredImpressionUrl: "noSuggestion impression_url",
+          sponsoredClickUrl: "noSuggestion click_url",
+          sponsoredBlockId: 111,
+          sponsoredAdvertiser: "noSuggestion advertiser",
+          isSponsored: true,
+          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+          helpL10nId: "firefox-suggest-urlbar-learn-more",
+          displayUrl: "noSuggestion url",
+        },
+      },
+    ],
+  });
+});
+
+// When Merino doesn't return a suggestion but remote settings does, the remote
+// settings suggestion should be used.
+add_task(async function noSuggestion_merino() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  setMerinoResponse({
+    body: {
+      suggestions: [],
+    },
+  });
+
+  let context = createContext("frab", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        payload: {
+          qsSuggestion: "frab",
+          title: "frabbits",
+          url: "http://test.com/q=frabbits",
+          icon: null,
+          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
+          sponsoredClickUrl: "http://click.reporting.test.com/",
+          sponsoredBlockId: 1,
+          sponsoredAdvertiser: "testadvertiser",
+          isSponsored: true,
+          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+          helpL10nId: "firefox-suggest-urlbar-learn-more",
+          displayUrl: "http://test.com/q=frabbits",
         },
       },
     ],
@@ -232,6 +499,7 @@ add_task(async function bothDisabled() {
           block_id: 111,
           advertiser: "bothDisabled advertiser",
           is_sponsored: true,
+          score: 1,
         },
       ],
     },
@@ -244,8 +512,8 @@ add_task(async function bothDisabled() {
   await check_results({ context, matches: [] });
 });
 
-// Checks that we use the first Merino suggestion if the response includes
-// multiple suggestions.
+// When Merino returns multiple suggestions, the one with the largest score
+// should be used.
 add_task(async function multipleMerinoSuggestions() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
@@ -263,6 +531,7 @@ add_task(async function multipleMerinoSuggestions() {
           block_id: 0,
           advertiser: "multipleMerinoSuggestions 0 advertiser",
           is_sponsored: true,
+          score: 0.1,
         },
         {
           full_keyword: "multipleMerinoSuggestions 1 full_keyword",
@@ -273,7 +542,20 @@ add_task(async function multipleMerinoSuggestions() {
           click_url: "multipleMerinoSuggestions 1 click_url",
           block_id: 1,
           advertiser: "multipleMerinoSuggestions 1 advertiser",
-          is_sponsored: false,
+          is_sponsored: true,
+          score: 1,
+        },
+        {
+          full_keyword: "multipleMerinoSuggestions 2 full_keyword",
+          title: "multipleMerinoSuggestions 2 title",
+          url: "multipleMerinoSuggestions 2 url",
+          icon: "multipleMerinoSuggestions 2 icon",
+          impression_url: "multipleMerinoSuggestions 2 impression_url",
+          click_url: "multipleMerinoSuggestions 2 click_url",
+          block_id: 2,
+          advertiser: "multipleMerinoSuggestions 2 advertiser",
+          is_sponsored: true,
+          score: 0.2,
         },
       ],
     },
@@ -291,18 +573,18 @@ add_task(async function multipleMerinoSuggestions() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         heuristic: false,
         payload: {
-          qsSuggestion: "multipleMerinoSuggestions 0 full_keyword",
-          title: "multipleMerinoSuggestions 0 title",
-          url: "multipleMerinoSuggestions 0 url",
-          icon: "multipleMerinoSuggestions 0 icon",
-          sponsoredImpressionUrl: "multipleMerinoSuggestions 0 impression_url",
-          sponsoredClickUrl: "multipleMerinoSuggestions 0 click_url",
-          sponsoredBlockId: 0,
-          sponsoredAdvertiser: "multipleMerinoSuggestions 0 advertiser",
+          qsSuggestion: "multipleMerinoSuggestions 1 full_keyword",
+          title: "multipleMerinoSuggestions 1 title",
+          url: "multipleMerinoSuggestions 1 url",
+          icon: "multipleMerinoSuggestions 1 icon",
+          sponsoredImpressionUrl: "multipleMerinoSuggestions 1 impression_url",
+          sponsoredClickUrl: "multipleMerinoSuggestions 1 click_url",
+          sponsoredBlockId: 1,
+          sponsoredAdvertiser: "multipleMerinoSuggestions 1 advertiser",
           isSponsored: true,
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
-          displayUrl: "multipleMerinoSuggestions 0 url",
+          displayUrl: "multipleMerinoSuggestions 1 url",
         },
       },
     ],
@@ -330,6 +612,7 @@ add_task(async function unexpectedResponseProperties() {
           block_id: 1234,
           advertiser: "unexpected advertiser",
           is_sponsored: true,
+          score: 1,
         },
       ],
     },
