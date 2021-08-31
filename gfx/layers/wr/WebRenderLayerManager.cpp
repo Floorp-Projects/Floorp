@@ -159,6 +159,7 @@ void WebRenderLayerManager::DoDestroy(bool aIsSync) {
     RefPtr<Runnable> task = NS_NewRunnableFunction(
         "TransactionIdAllocator::NotifyTransactionCompleted",
         [allocator, id]() -> void {
+          allocator->ClearPendingTransactions();
           allocator->NotifyTransactionCompleted(id);
         });
     NS_DispatchToMainThread(task.forget());
