@@ -1228,8 +1228,8 @@ public class WebExtensionController {
         callback.resolveTo(response);
     }
 
-    private GeckoResult<WebExtension> extensionFromBundle(final GeckoBundle message) {
-        final String extensionId = message.getString("extensionId");
+    private GeckoResult<WebExtension> extensionFromBundle(final GeckoBundle sender) {
+        final String extensionId = sender.getString("id");
         return mExtensions.get(extensionId);
     }
 
