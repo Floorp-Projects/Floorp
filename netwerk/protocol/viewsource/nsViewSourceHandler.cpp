@@ -6,7 +6,6 @@
 
 #include "nsViewSourceHandler.h"
 #include "nsViewSourceChannel.h"
-#include "nsIExternalProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsSimpleNestedURI.h"
 
@@ -81,26 +80,6 @@ nsresult nsViewSourceHandler::CreateNewURI(const nsACString& aSpec,
   nsresult rv = NS_NewURI(getter_AddRefs(innerURI), Substring(aSpec, colon + 1),
                           aCharset, aBaseURI);
   if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsAutoCString scheme;
-  innerURI->GetScheme(scheme);
-  nsCOMPtr<nsIProtocolHandler> handler;
-  rv = ios->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIExternalProtocolHandler> externalHandler =
-      do_QueryInterface(handler);
-  // We should not allow view-source to open any external app.
-  if (externalHandler) {
-    return NS_ERROR_MALFORMED_URI;
-  }
 
   nsAutoCString asciiSpec;
   rv = innerURI->GetAsciiSpec(asciiSpec);
