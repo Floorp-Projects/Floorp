@@ -86,7 +86,7 @@ function assertAsmLinkFail(f, ...args)
 
     assertWarning(() => {
         f.apply(null, args);
-    }, /Disabled by linker/);
+    }, /disabled by linker/);
 }
 
 // Linking should throw an exception even without warnings-as-errors
