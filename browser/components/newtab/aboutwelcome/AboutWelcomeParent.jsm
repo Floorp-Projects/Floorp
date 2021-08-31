@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   AboutWelcomeTelemetry:
@@ -68,9 +67,9 @@ async function getImportableSites() {
     // Check each profile for top sites
     const dataPath = await migrator.wrappedJSObject._getChromeUserDataPathIfExists();
     for (const profile of await migrator.getSourceProfiles()) {
-      let path = OS.Path.join(dataPath, profile.id, "Top Sites");
+      let path = PathUtils.join(dataPath, profile.id, "Top Sites");
       // Skip if top sites data is missing
-      if (!(await OS.File.exists(path))) {
+      if (!(await IOUtils.exists(path))) {
         Cu.reportError(`Missing file at ${path}`);
         continue;
       }
