@@ -10,7 +10,7 @@ from ..push import push_to_try
 
 
 TRY_AUTO_PARAMETERS = {
-    "optimize_strategies": "taskgraph.optimize:tryselect.bugbug_reduced_manifests_config_selection_low",  # noqa
+    "optimize_strategies": "taskgraph.optimize:tryselect.bugbug_reduced_manifests_config_selection_medium",  # noqa
     "optimize_target_tasks": True,
     "target_tasks_method": "try_auto",
     "test_manifest_loader": "bugbug",
