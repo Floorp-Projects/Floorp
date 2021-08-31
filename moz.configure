@@ -272,9 +272,10 @@ def bootstrap_toolchain_tasks(host):
     }.get((host.cpu, host.os, host.kernel))
     try:
         return namespace(prefix=prefix, tasks=toolchain_task_definitions())
-    except Exception:
+    except Exception as e:
         message = traceback.format_exc()
-        log.warning(message)
+        log.warning(str(e))
+        log.debug(message)
         return None
 
 
