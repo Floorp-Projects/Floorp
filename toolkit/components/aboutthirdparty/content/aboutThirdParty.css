@@ -19,7 +19,23 @@ h1 {
 }
 
 .svg-button {
-  min-width: auto;
+  height: 32px;
+  width: 32px;
+  min-width: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.button-open-dir {
+  background-image: url(chrome://global/skin/icons/folder.svg);
+}
+
+.button-expand {
+  background-image: url(chrome://global/skin/icons/arrow-down.svg);
+}
+
+.button-collapse {
+  background-image: url(chrome://global/skin/icons/arrow-up.svg);
 }
 
 .card-head > img {
