@@ -723,11 +723,13 @@ partial interface Window {
   attribute EventHandler onvrdisplaypresentchange;
 };
 
+#ifndef RELEASE_OR_BETA
 // https://drafts.css-houdini.org/css-paint-api-1/#dom-window-paintworklet
 partial interface Window {
     [Pref="dom.paintWorklet.enabled", Throws]
     readonly attribute Worklet paintWorklet;
 };
+#endif
 
 Window includes WindowOrWorkerGlobalScope;
 
