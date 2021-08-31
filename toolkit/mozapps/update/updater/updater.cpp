@@ -285,14 +285,21 @@ static bool sStagedUpdate = false;
 static bool sReplaceRequest = false;
 static bool sUsingService = false;
 
-// Whether the callback app is a background task. If true then the updater is
-// likely being run as part of a background task and therefore shouldn't:
+// Normally, we run updates as a result of user action (the user started Firefox
+// or clicked a "Restart to Update" button). But there are some cases when
+// we are not:
+// a) The callback app is a background task. If true then the updater is
+//    likely being run as part of a background task.
+//    The updater could be run with no callback, but this only happens
+//    when performing a staged update (see calls to ProcessUpdates), and there
+//    are already checks for sStagedUpdate when showing UI or elevating.
+// b) On macOS, the environment variable MOZ_APP_SILENT_RESTART is set and not
+//    empty. This is set when Firefox had no windows open for a while and
+//    restarted to apply updates.
+//
+// In these cases, the update should be installed silently, so we shouldn't:
 // a) show progress UI
 // b) prompt for elevation
-//
-// The updater could be run with no callback, but this only happens
-// when performing a staged update (see calls to ProcessUpdates), and there
-// are already checks for sStagedUpdate when showing UI or elevating.
 static bool sUpdateSilently = false;
 
 #ifdef XP_WIN
@@ -352,13 +359,8 @@ static NS_tchar* mstrtok(const NS_tchar* delims, NS_tchar** str) {
   return ret;
 }
 
-#if defined(TEST_UPDATER)
-#  define HAS_ENV_CHECK 1
-#elif defined(MOZ_MAINTENANCE_SERVICE)
-#  define HAS_ENV_CHECK 1
-#endif
-
-#if defined(HAS_ENV_CHECK)
+#if defined(TEST_UPDATER) || defined(MOZ_MAINTENANCE_SERVICE) || \
+    defined(XP_MACOSX)
 static bool EnvHasValue(const char* name) {
   const char* val = getenv(name);
   return (val && *val);
@@ -2704,6 +2706,13 @@ bool ShouldRunSilently(int argc, NS_tchar** argv) {
     }
   }
 #endif  // MOZ_BACKGROUNDTASKS
+
+#ifdef XP_MACOSX
+  if (EnvHasValue("MOZ_APP_SILENT_RESTART")) {
+    return true;
+  }
+#endif  // XP_MACOSX
+
   return false;
 }
 
@@ -2976,19 +2985,33 @@ int NS_main(int argc, NS_tchar** argv) {
   if (!isElevated && !IsRecursivelyWritable(argv[2])) {
     // If the app directory isn't recursively writeable, an elevated update is
     // required.
-    UpdateServerThreadArgs threadArgs;
-    threadArgs.argc = argc;
-    threadArgs.argv = const_cast<const NS_tchar**>(argv);
+    if (sUpdateSilently) {
+      // An elevated update always requires an elevation dialog, so if we are
+      // updating silently, don't do an elevated update.
+      // This means that we cannot successfully perform silent updates from
+      // non-admin accounts on a Mac.
+      // It also means that we cannot silently perform the first update by an
+      // admin who was not the installing user. Once the first update has been
+      // installed, the permissions of the installation directory should be
+      // changed such that we don't need to elevate in the future.
+      // Firefox shouldn't actually launch the updater at all in this case. This
+      // is defense in depth.
+      WriteStatusFile(SILENT_UPDATE_NEEDED_ELEVATION_ERROR);
+      fprintf(stderr,
+              "Skipping update to avoid elevation prompt from silent update.");
+    } else {
+      UpdateServerThreadArgs threadArgs;
+      threadArgs.argc = argc;
+      threadArgs.argv = const_cast<const NS_tchar**>(argv);
 
-    Thread t1;
-    if (t1.Run(ServeElevatedUpdateThreadFunc, &threadArgs) == 0) {
-      // Show an indeterminate progress bar while an elevated update is in
-      // progress.
-      if (!sUpdateSilently) {
+      Thread t1;
+      if (t1.Run(ServeElevatedUpdateThreadFunc, &threadArgs) == 0) {
+        // Show an indeterminate progress bar while an elevated update is in
+        // progress.
         ShowProgressUI(true);
       }
+      t1.Join();
     }
-    t1.Join();
 
     LaunchCallbackAndPostProcessApps(argc, argv, callbackIndex, false);
     return gSucceeded ? 0 : 1;
