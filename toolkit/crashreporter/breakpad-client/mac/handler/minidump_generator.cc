@@ -1147,6 +1147,16 @@ MinidumpGenerator::WriteExceptionStream(MDRawDirectory *exception_stream) {
   MDRawExceptionStream *exception_ptr = exception.get();
   exception_ptr->thread_id = exception_thread_;
 
+  uint64_t u_exception_code = exception_code_;
+  if (exception_type_ == EXC_CRASH) {
+    if (!IsValidExcCrash(exception_code_)) {
+      return false;
+    }
+
+    [[maybe_unused]] int signal_number;
+    RecoverExceptionDataFromExcCrash(u_exception_code, signal_number);
+  }
+
   // This naming is confusing, but it is the proper translation from
   // mach naming to minidump naming.
   exception_ptr->exception_record.exception_code = exception_type_;
@@ -1156,8 +1166,7 @@ MinidumpGenerator::WriteExceptionStream(MDRawDirectory *exception_stream) {
     // For EXC_RESOURCE and EXC_GUARD crashes Crashpad records the uppermost
     // 32 bits of the exception code in the exception flags, let's do the same
     // here.
-    uint64_t unsigned_exception_code = exception_code_;
-    exception_flags = unsigned_exception_code >> 32;
+    exception_flags = u_exception_code >> 32;
   } else {
     exception_flags = exception_code_;
   }
@@ -1446,6 +1455,26 @@ int MinidumpGenerator::FindExecutableModule() {
 
   // failed - just use the first image
   return 0;
+}
+
+bool MinidumpGenerator::IsValidExcCrash(uint64_t exception_code) {
+  switch ((exception_code >> 20) & 0xf) {
+    case EXC_CRASH:         // EXC_CRASH cannot wrap EXC_CRASH
+    case EXC_RESOURCE:      // EXC_RESOURCE would lose data if wrapped
+    case EXC_GUARD:         // EXC_GUARD would lose data if wrapped
+    case EXC_CORPSE_NOTIFY: // EXC_CRASH cannot wrap EXC_CORPSE_NOTIFY
+      return false;
+    default:
+      return true;
+  }
+}
+
+void MinidumpGenerator::RecoverExceptionDataFromExcCrash(
+  uint64_t exception_code, int& signal_number)
+{
+  exception_type_ = (exception_code >> 20) & 0xf;
+  exception_code_ = exception_code & 0xfffff;
+  signal_number = (exception_code >> 24) & 0xff;
 }
 
 bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type, int cpu_subtype,
