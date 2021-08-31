@@ -68,7 +68,7 @@ class BackgroundHangManager : public nsIObserver {
  private:
   // Background hang monitor thread function
   static void MonitorThread(void* aData) {
-    AUTO_PROFILER_REGISTER_THREAD("BgHangMonitor");
+    AUTO_PROFILER_REGISTER_THREAD("BHMgr Monitor");
     NS_SetCurrentThreadName("BHMgr Monitor");
 
     /* We do not hold a reference to BackgroundHangManager here
@@ -103,6 +103,8 @@ class BackgroundHangManager : public nsIObserver {
 
   // Unwinding and reporting of hangs is despatched to this thread.
   nsCOMPtr<nsIThread> mHangProcessingThread;
+
+  ProfilerThreadId mHangMonitorProfilerThreadId;
 
   // Used for recording a permahang in case we don't ever make it back to
   // the main thread to record/send it.
@@ -250,11 +252,17 @@ class BackgroundHangThread : public LinkedListElement<BackgroundHangThread> {
   // Called by BackgroundHangMonitor::NotifyActivity
   void NotifyActivity() {
     MonitorAutoLock autoLock(mManager->mLock);
+    PROFILER_MARKER_UNTYPED(
+        "NotifyActivity", OTHER,
+        MarkerThreadId(mManager->mHangMonitorProfilerThreadId));
     Update();
   }
   // Called by BackgroundHangMonitor::NotifyWait
   void NotifyWait() {
     MonitorAutoLock autoLock(mManager->mLock);
+    PROFILER_MARKER_UNTYPED(
+        "NotifyWait", OTHER,
+        MarkerThreadId(mManager->mHangMonitorProfilerThreadId));
 
     if (mWaiting) {
       return;
@@ -323,6 +331,8 @@ void BackgroundHangManager::RunMonitorThread() {
   // Keep us locked except when waiting
   MonitorAutoLock autoLock(mLock);
 
+  mHangMonitorProfilerThreadId = profiler_current_thread_id();
+
   /* mNow is updated at various intervals determined by waitTime.
      However, if an update latency is too long (due to CPU scheduling, system
      sleep, etc.), we don't update mNow at all. This is done so that
@@ -340,6 +350,7 @@ void BackgroundHangManager::RunMonitorThread() {
   while (!mShutdown) {
     autoLock.Wait(waitTime);
 
+    PROFILER_MARKER_UNTYPED("Wakeup", OTHER);
     TimeStamp newTime = TimeStamp::Now();
     TimeDuration systemInterval = newTime - systemTime;
     systemTime = newTime;
