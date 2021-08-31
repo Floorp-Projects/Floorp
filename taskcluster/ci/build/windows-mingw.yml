@@ -5,7 +5,7 @@
 job-defaults:
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: mingw32-build}
+        docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
     run:
         using: mozharness

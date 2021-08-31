@@ -7,7 +7,6 @@ job-defaults:
         tier: 2
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: mingw32-build}
         max-run-time: 3600
 
 linux64-mingw32-gcc:
