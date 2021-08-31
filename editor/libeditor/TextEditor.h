@@ -423,7 +423,7 @@ class TextEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertDroppedDataTransferAsAction(
       AutoEditActionDataSetter& aEditActionData,
       dom::DataTransfer& aDataTransfer, const EditorDOMPoint& aDroppedAt,
-      dom::Document* aSrcDocument) final;
+      nsIPrincipal* aSourcePrincipal) final;
 
   /**
    * HandleDeleteSelectionInternal() is a helper method of
