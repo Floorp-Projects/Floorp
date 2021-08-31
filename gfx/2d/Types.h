@@ -34,7 +34,6 @@ enum class SurfaceType : int8_t {
   SKIA,                   /* Surface wrapping a Skia bitmap */
   D2D1_1_IMAGE,           /* A D2D 1.1 ID2D1Image SourceSurface */
   RECORDING,              /* Surface used for recording */
-  WRAP_AND_RECORD,        /* Surface used for wrap and record */
   DATA_SHARED,            /* Data surface using shared memory */
   DATA_RECYCLING_SHARED,  /* Data surface using shared memory */
   OFFSET,                 /* Offset */

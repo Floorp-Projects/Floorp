@@ -493,48 +493,6 @@ void gfxPlatform::InitChild(const ContentDeviceData& aData) {
   gContentDeviceInitData = nullptr;
 }
 
-void RecordingPrefChanged(const char* aPrefName, void* aClosure) {
-  if (Preferences::GetBool("gfx.2d.recording", false)) {
-    nsAutoCString fileName;
-    nsAutoString prefFileName;
-    nsresult rv = Preferences::GetString("gfx.2d.recordingfile", prefFileName);
-    if (NS_SUCCEEDED(rv)) {
-      CopyUTF16toUTF8(prefFileName, fileName);
-    } else {
-      nsCOMPtr<nsIFile> tmpFile;
-      if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                           getter_AddRefs(tmpFile)))) {
-        return;
-      }
-      fileName.AppendPrintf("moz2drec_%i_%i.aer", XRE_GetProcessType(),
-                            getpid());
-
-      nsresult rv = tmpFile->AppendNative(fileName);
-      if (NS_FAILED(rv)) return;
-
-#ifdef XP_WIN
-      rv = tmpFile->GetPath(prefFileName);
-      CopyUTF16toUTF8(prefFileName, fileName);
-#else
-      rv = tmpFile->GetNativePath(fileName);
-#endif
-      if (NS_FAILED(rv)) return;
-    }
-
-#ifdef XP_WIN
-    gPlatform->mRecorder =
-        Factory::CreateEventRecorderForFile(prefFileName.BeginReading());
-#else
-    gPlatform->mRecorder =
-        Factory::CreateEventRecorderForFile(fileName.BeginReading());
-#endif
-    printf_stderr("Recording to %s\n", fileName.get());
-    Factory::SetGlobalEventRecorder(gPlatform->mRecorder);
-  } else {
-    Factory::SetGlobalEventRecorder(nullptr);
-  }
-}
-
 #define WR_DEBUG_PREF "gfx.webrender.debug"
 
 static void WebRendeProfilerUIPrefChangeCallback(const char* aPrefName, void*) {
@@ -998,9 +956,6 @@ void gfxPlatform::Init() {
   Preferences::RegisterPrefixCallbacks(FontPrefChanged, kObservedPrefs);
 
   GLContext::PlatformStartup();
-
-  Preferences::RegisterCallbackAndCall(RecordingPrefChanged,
-                                       "gfx.2d.recording");
 
   // Listen to memory pressure event so we can purge DrawTarget caches
   gPlatform->mMemoryPressureObserver =

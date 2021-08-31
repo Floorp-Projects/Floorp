@@ -18,7 +18,6 @@ DIRS += [
     "ipc",
     "mathml",
     "inspector",
-    "tools/recording",
     "reftests",
     "painting",
 ]

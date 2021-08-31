@@ -239,8 +239,6 @@
 @RESPATH@/chrome/pdfjs/*
 @RESPATH@/chrome/toolkit@JAREXT@
 @RESPATH@/chrome/toolkit.manifest
-@RESPATH@/chrome/recording.manifest
-@RESPATH@/chrome/recording/*
 #ifdef MOZ_GTK
 @RESPATH@/browser/chrome/icons/default/default16.png
 @RESPATH@/browser/chrome/icons/default/default32.png

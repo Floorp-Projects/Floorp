@@ -679,9 +679,6 @@ class Log final {
         case SurfaceType::RECORDING:
           mMessage << "SurfaceType::RECORDING";
           break;
-        case SurfaceType::WRAP_AND_RECORD:
-          mMessage << "SurfaceType::WRAP_AND_RECORD";
-          break;
         case SurfaceType::DATA_SHARED:
           mMessage << "SurfaceType::DATA_SHARED";
           break;

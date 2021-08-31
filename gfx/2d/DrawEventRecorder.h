@@ -10,7 +10,6 @@
 #include "2D.h"
 #include "RecordedEvent.h"
 #include "RecordingTypes.h"
-#include "mozilla/FStream.h"
 
 #include <unordered_set>
 #include <unordered_map>
@@ -165,41 +164,6 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   std::unordered_set<SourceSurface*> mStoredSurfaces;
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
   bool mExternalFonts;
-};
-
-class DrawEventRecorderFile : public DrawEventRecorderPrivate {
-  using char_type = filesystem::Path::value_type;
-
- public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderFile, override)
-  explicit DrawEventRecorderFile(const char_type* aFilename);
-  virtual ~DrawEventRecorderFile();
-
-  void RecordEvent(const RecordedEvent& aEvent) override;
-
-  /**
-   * Returns whether a recording file is currently open.
-   */
-  bool IsOpen();
-
-  /**
-   * Opens new file with the provided name. The recorder does NOT forget which
-   * objects it has recorded. This can be used with Close, so that a recording
-   * can be processed in chunks. The file must not already be open.
-   */
-  void OpenNew(const char_type* aFilename);
-
-  /**
-   * Closes the file so that it can be processed. The recorder does NOT forget
-   * which objects it has recorded. This can be used with OpenNew, so that a
-   * recording can be processed in chunks. The file must be open.
-   */
-  void Close();
-
- private:
-  void Flush() override;
-
-  mozilla::OFStream mOutputStream;
 };
 
 typedef std::function<void(MemStream& aStream,
