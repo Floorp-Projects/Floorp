@@ -817,7 +817,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       WSScanResult scanResultInTextNode =
           WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
               editingHost, EditorRawDOMPoint(text, 0));
-      if (scanResultInTextNode.InNormalWhiteSpacesOrText() &&
+      if (scanResultInTextNode.InVisibleOrCollapsibleCharacters() &&
           scanResultInTextNode.TextPtr() == text) {
         nsresult rv = CollapseSelectionTo(scanResultInTextNode.Point());
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

@@ -1652,8 +1652,8 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
     const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
     AutoRangeArray& aRangesToDelete, const WSRunScanner& aWSRunScannerAtCaret,
     const WSScanResult& aScanFromCaretPointResult) const {
-  if (aScanFromCaretPointResult.InNormalWhiteSpaces() ||
-      aScanFromCaretPointResult.InNormalText()) {
+  if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces() ||
+      aScanFromCaretPointResult.InNonCollapsibleCharacters()) {
     nsresult rv = aRangesToDelete.Collapse(aScanFromCaretPointResult.Point());
     if (NS_FAILED(rv)) {
       NS_WARNING("AutoRangeArray::Collapse() failed");
@@ -1766,8 +1766,8 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
       EditorType::HTML));
 
   if (StaticPrefs::editor_white_space_normalization_blink_compatible()) {
-    if (aScanFromCaretPointResult.InNormalWhiteSpaces() ||
-        aScanFromCaretPointResult.InNormalText()) {
+    if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces() ||
+        aScanFromCaretPointResult.InNonCollapsibleCharacters()) {
       nsresult rv = aRangesToDelete.Collapse(aScanFromCaretPointResult.Point());
       if (NS_FAILED(rv)) {
         NS_WARNING("AutoRangeArray::Collapse() failed");
@@ -1782,7 +1782,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
     }
   }
 
-  if (aScanFromCaretPointResult.InNormalWhiteSpaces()) {
+  if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces()) {
     EditActionResult result = HandleDeleteCollapsedSelectionAtWhiteSpaces(
         aHTMLEditor, aDirectionAndAmount, aWSRunScannerAtCaret.ScanStartRef());
     NS_WARNING_ASSERTION(result.Succeeded(),
@@ -1792,7 +1792,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
     return result;
   }
 
-  if (aScanFromCaretPointResult.InNormalText()) {
+  if (aScanFromCaretPointResult.InNonCollapsibleCharacters()) {
     if (NS_WARN_IF(!aScanFromCaretPointResult.GetContent()->IsText())) {
       return EditActionResult(NS_ERROR_FAILURE);
     }

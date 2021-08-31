@@ -396,7 +396,7 @@ bool HTMLEditUtils::IsVisibleTextNode(
   WSScanResult nextWSScanResult =
       WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
           aEditingHost, EditorRawDOMPoint(&aText, 0));
-  return nextWSScanResult.InNormalWhiteSpacesOrText() &&
+  return nextWSScanResult.InVisibleOrCollapsibleCharacters() &&
          nextWSScanResult.TextPtr() == &aText;
 }
 
