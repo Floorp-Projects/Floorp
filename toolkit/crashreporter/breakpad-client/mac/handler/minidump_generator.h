@@ -175,6 +175,9 @@ class MinidumpGenerator {
                        MDRawThreadName *thread_name);
   size_t CalculateStackSize(mach_vm_address_t start_addr);
   int  FindExecutableModule();
+  bool IsValidExcCrash(uint64_t exception_code);
+  void RecoverExceptionDataFromExcCrash(uint64_t exception_code,
+                                        int& signal_number);
 
   // Per-CPU implementations of these methods
 #ifdef HAS_ARM_SUPPORT
