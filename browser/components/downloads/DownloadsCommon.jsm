@@ -147,6 +147,7 @@ var DownloadsCommon = {
   // The following are the possible values of the "attention" property.
   ATTENTION_NONE: "",
   ATTENTION_SUCCESS: "success",
+  ATTENTION_INFO: "info",
   ATTENTION_WARNING: "warning",
   ATTENTION_SEVERE: "severe",
 
@@ -1251,8 +1252,16 @@ DownloadsIndicatorDataCtor.prototype = {
       download.error.reputationCheckVerdict
     ) {
       switch (download.error.reputationCheckVerdict) {
-        case Downloads.Error.BLOCK_VERDICT_UNCOMMON: // fall-through
-        case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
+        case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
+          // Existing higher level attention indication trumps ATTENTION_INFO.
+          if (
+            this._attention != DownloadsCommon.ATTENTION_SEVERE &&
+            this._attention != DownloadsCommon.ATTENTION_WARNING
+          ) {
+            this.attention = DownloadsCommon.ATTENTION_INFO;
+          }
+          break;
+        case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED: // fall-through
         case Downloads.Error.BLOCK_VERDICT_INSECURE:
           // Existing higher level attention indication trumps ATTENTION_WARNING.
           if (this._attention != DownloadsCommon.ATTENTION_SEVERE) {
