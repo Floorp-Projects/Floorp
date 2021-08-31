@@ -955,7 +955,7 @@ class ContentScriptContextChild extends BaseContext {
 }
 
 defineLazyGetter(ContentScriptContextChild.prototype, "messenger", function() {
-  return new Messenger(this, { frameId: this.frameId, url: this.url });
+  return new Messenger(this);
 });
 
 defineLazyGetter(
