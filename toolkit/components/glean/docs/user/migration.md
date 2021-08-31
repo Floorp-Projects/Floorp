@@ -16,7 +16,7 @@ or for mentally translating Telemetry concepts to Glean ones.
 ## General Things To Bear In Mind
 
 You should familiarize yourself with
-[the guide on adding new metrics to Firefox Desktop](new_definitions.file.md).
+[the guide on adding new metrics to Firefox Desktop](new_definitions_file.md).
 Its advice stacks with the advice included in this guide as
 (once you've figured out what kind) you will indeed be adding new metrics.
 
