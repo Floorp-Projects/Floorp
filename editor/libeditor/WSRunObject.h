@@ -51,6 +51,8 @@ class MOZ_STACK_CLASS WSScanResult final {
     SpecialContent,
     // <br> element.
     BRElement,
+    // A linefeed which is preformatted.
+    PreformattedLineBreak,
     // Other block's boundary (child block of current block, maybe).
     OtherBlockBoundary,
     // Current block's boundary.
@@ -79,6 +81,7 @@ class MOZ_STACK_CLASS WSScanResult final {
                mReason == WSType::NonCollapsibleCharacters ||
                mReason == WSType::CollapsibleWhiteSpaces ||
                mReason == WSType::BRElement ||
+               mReason == WSType::PreformattedLineBreak ||
                mReason == WSType::SpecialContent ||
                mReason == WSType::CurrentBlockBoundary ||
                mReason == WSType::OtherBlockBoundary);
@@ -88,6 +91,9 @@ class MOZ_STACK_CLASS WSScanResult final {
                   mContent && mContent->IsText());
     MOZ_ASSERT_IF(mReason == WSType::BRElement,
                   mContent && mContent->IsHTMLElement(nsGkAtoms::br));
+    MOZ_ASSERT_IF(mReason == WSType::PreformattedLineBreak,
+                  mContent && mContent->IsText() &&
+                      EditorUtils::IsNewLinePreformatted(*mContent));
     MOZ_ASSERT_IF(
         mReason == WSType::SpecialContent,
         mContent && ((mContent->IsText() && !mContent->IsEditable()) ||
@@ -235,6 +241,10 @@ class MOZ_STACK_CLASS WSScanResult final {
   bool ReachedInvisibleBRElement() const {
     return ReachedBRElement() &&
            HTMLEditUtils::IsInvisibleBRElement(*BRElementPtr());
+  }
+
+  bool ReachedPreformattedLineBreak() const {
+    return mReason == WSType::PreformattedLineBreak;
   }
 
   /**
@@ -502,6 +512,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
   bool StartsFromInvisibleBRElement() const {
     return TextFragmentDataAtStartRef().StartsFromInvisibleBRElement();
   }
+  bool StartsFromPreformattedLineBreak() const {
+    return TextFragmentDataAtStartRef().StartsFromPreformattedLineBreak();
+  }
   bool StartsFromCurrentBlockBoundary() const {
     return TextFragmentDataAtStartRef().StartsFromCurrentBlockBoundary();
   }
@@ -528,6 +541,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
   }
   bool EndsByInvisibleBRElement() const {
     return TextFragmentDataAtStartRef().EndsByInvisibleBRElement();
+  }
+  bool EndsByPreformattedLineBreak() const {
+    return TextFragmentDataAtStartRef().EndsByPreformattedLineBreak();
   }
   bool EndsByCurrentBlockBoundary() const {
     return TextFragmentDataAtStartRef().EndsByCurrentBlockBoundary();
@@ -598,6 +614,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
       return mRightWSType == WSType::SpecialContent;
     }
     bool EndsByBRElement() const { return mRightWSType == WSType::BRElement; }
+    bool EndsByPreformattedLineBreak() const {
+      return mRightWSType == WSType::PreformattedLineBreak;
+    }
     bool EndsByBlockBoundary() const {
       return mRightWSType == WSType::CurrentBlockBoundary ||
              mRightWSType == WSType::OtherBlockBoundary;
@@ -807,6 +826,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
         return mReason == WSType::SpecialContent;
       }
       bool IsBRElement() const { return mReason == WSType::BRElement; }
+      bool IsPreformattedLineBreak() const {
+        return mReason == WSType::PreformattedLineBreak;
+      }
       bool IsCurrentBlockBoundary() const {
         return mReason == WSType::CurrentBlockBoundary;
       }
@@ -820,7 +842,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       bool IsHardLineBreak() const {
         return mReason == WSType::CurrentBlockBoundary ||
                mReason == WSType::OtherBlockBoundary ||
-               mReason == WSType::BRElement;
+               mReason == WSType::BRElement ||
+               mReason == WSType::PreformattedLineBreak;
       }
       MOZ_NEVER_INLINE_DEBUG Element* OtherBlockElementPtr() const {
         MOZ_DIAGNOSTIC_ASSERT(mReasonContent->IsElement());
@@ -915,6 +938,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
              HTMLEditUtils::IsInvisibleBRElement(*GetStartReasonContent(),
                                                  mEditingHost);
     }
+    bool StartsFromPreformattedLineBreak() const {
+      return mStart.IsPreformattedLineBreak();
+    }
     bool StartsFromCurrentBlockBoundary() const {
       return mStart.IsCurrentBlockBoundary();
     }
@@ -935,6 +961,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
     bool EndsByInvisibleBRElement() const {
       return EndsByBRElement() && HTMLEditUtils::IsInvisibleBRElement(
                                       *GetEndReasonContent(), mEditingHost);
+    }
+    bool EndsByPreformattedLineBreak() const {
+      return mEnd.IsPreformattedLineBreak();
     }
     bool EndsByCurrentBlockBoundary() const {
       return mEnd.IsCurrentBlockBoundary();
@@ -1233,7 +1262,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
              ((StartsFromNonCollapsibleCharacters() ||
                StartsFromSpecialContent()) &&
               (EndsByNonCollapsibleCharacters() || EndsBySpecialContent() ||
-               EndsByBRElement()));
+               EndsByBRElement() || EndsByPreformattedLineBreak()));
     }
 
     EditorDOMPoint mScanStartPoint;
