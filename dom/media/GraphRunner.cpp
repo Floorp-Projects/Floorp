@@ -14,9 +14,9 @@
 #include "prthread.h"
 #include "Tracing.h"
 #include "audio_thread_priority.h"
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidProcess.h"
-#endif
+#endif // MOZ_WIDGET_ANDROID
 
 namespace mozilla {
 
@@ -98,7 +98,7 @@ auto GraphRunner::OneIteration(GraphTime aStateTime, GraphTime aIterationEnd,
   return result;
 }
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 namespace {
 void PromoteRenderingThreadAndroid() {
   MOZ_LOG(gMediaTrackGraphLog, LogLevel::Debug,
@@ -111,7 +111,7 @@ void PromoteRenderingThreadAndroid() {
            java::sdk::Process::GetThreadPriority(java::sdk::Process::MyTid())));
 }
 };  // namespace
-#endif
+#endif // MOZ_WIDGET_ANDROID
 
 NS_IMETHODIMP GraphRunner::Run() {
 #ifndef XP_LINUX
@@ -119,9 +119,9 @@ NS_IMETHODIMP GraphRunner::Run() {
       atp_promote_current_thread_to_real_time(0, mGraph->GraphRate());
 #endif
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   PromoteRenderingThreadAndroid();
-#endif
+#endif // MOZ_WIDGET_ANDROID
 
   nsCOMPtr<nsIThreadInternal> threadInternal = do_QueryInterface(mThread);
   threadInternal->SetObserver(mGraph);
