@@ -17,6 +17,7 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.whatsnew.WhatsNew
 
@@ -83,8 +84,17 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
         SettingsScreen.whatsNewTapped.add()
         WhatsNew.userViewedWhatsNew(context)
 
-        val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.WHATS_NEW)
-        requireComponents.tabsUseCases.addTab(url, source = SessionState.Source.Internal.Menu, private = true)
+        val sumoTopic = if (AppConstants.isKlarBuild)
+            SupportUtils.SumoTopic.WHATS_NEW_KLAR
+        else
+            SupportUtils.SumoTopic.WHATS_NEW_FOCUS
+
+        val url = SupportUtils.getSumoURLForTopic(context, sumoTopic)
+        requireComponents.tabsUseCases.addTab(
+            url,
+            source = SessionState.Source.Internal.Menu,
+            private = true
+        )
     }
 
     companion object {
