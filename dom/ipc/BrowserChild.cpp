@@ -3197,6 +3197,12 @@ void BrowserChild::SchedulePaint() {
 void BrowserChild::ReinitRendering() {
   MOZ_ASSERT(mLayersId.IsValid());
 
+  // In some cases, like when we create a windowless browser,
+  // RemoteLayerTreeOwner/BrowserChild is not connected to a compositor.
+  if (mLayersConnected.isNothing() || !*mLayersConnected) {
+    return;
+  }
+
   // Before we establish a new PLayerTransaction, we must connect our layer tree
   // id, CompositorBridge, and the widget compositor all together again.
   // Normally this happens in BrowserParent before BrowserChild is given
@@ -3245,10 +3251,6 @@ void BrowserChild::ReinitRenderingForDeviceReset() {
       mPuppetWidget->GetWindowRenderer()->AsLayerManager();
   if (lm && lm->AsWebRenderLayerManager()) {
     lm->AsWebRenderLayerManager()->DoDestroy(/* aIsSync */ true);
-  } else {
-    if (mLayersConnected.isNothing()) {
-      return;
-    }
   }
 
   // Proceed with destroying and recreating the layer manager.
