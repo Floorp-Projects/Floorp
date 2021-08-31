@@ -161,8 +161,11 @@ class GlobalObjectData {
   // The WindowProxy associated with this global.
   HeapPtr<JSObject*> windowProxy;
 
-  // Functions and other top-level values for self-hosted code.
+  // Functions and other top-level values for self-hosted code. The "computed"
+  // holder is used as the target of `SetIntrinsic` calls, but the same property
+  // may also be cached on the normal intrinsics holder for `GetIntrinsic`.
   HeapPtr<NativeObject*> intrinsicsHolder;
+  HeapPtr<NativeObject*> computedIntrinsicsHolder;
 
   // Cache used to optimize certain for-of operations.
   HeapPtr<NativeObject*> forOfPICChain;
@@ -858,6 +861,13 @@ class GlobalObject : public NativeObject {
 
   static NativeObject* getIntrinsicsHolder(JSContext* cx,
                                            Handle<GlobalObject*> global);
+
+  NativeObject* getComputedIntrinsicsHolder() {
+    return data().computedIntrinsicsHolder;
+  }
+  void setComputedIntrinsicsHolder(NativeObject* holder) {
+    data().computedIntrinsicsHolder = holder;
+  }
 
   bool maybeExistingIntrinsicValue(PropertyName* name, Value* vp) {
     NativeObject* holder = data().intrinsicsHolder;
