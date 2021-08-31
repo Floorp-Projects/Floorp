@@ -2423,7 +2423,6 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
     params.language = mFontLanguage;
     params.explicitLanguage = mExplicitLanguage;
     params.textPerf = mPresContext->GetTextPerfMetrics();
-    params.fontStats = mPresContext->GetFontMatchingStats();
     params.featureValueLookup = mPresContext->GetFontFeatureValuesLookup();
     RefPtr<nsFontMetrics> fontMetrics =
         mPresContext->GetMetricsFor(mFont, params);
@@ -3263,7 +3262,6 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   params.explicitLanguage = fontStyle->mExplicitLanguage;
   params.userFontSet = c->GetUserFontSet();
   params.textPerf = c->GetTextPerfMetrics();
-  params.fontStats = c->GetFontMatchingStats();
   RefPtr<nsFontMetrics> metrics = c->GetMetricsFor(resizedFont, params);
 
   gfxFontGroup* newFontGroup = metrics->GetThebesFontGroup();
@@ -4035,19 +4033,16 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
 
   RefPtr<PresShell> presShell = GetPresShell();
   gfxTextPerfMetrics* tp = nullptr;
-  FontMatchingStats* fontStats = nullptr;
   if (presShell && !presShell->IsDestroying()) {
     nsPresContext* pc = presShell->GetPresContext();
     tp = pc->GetTextPerfMetrics();
-    fontStats = pc->GetFontMatchingStats();
   }
 
   // If we have a cached fontGroup, check that it is valid for the current
   // prescontext; if not, we need to discard and re-create it.
   RefPtr<gfxFontGroup>& fontGroup = CurrentState().fontGroup;
   if (fontGroup) {
-    if (fontGroup->GetFontMatchingStats() != fontStats ||
-        fontGroup->GetTextPerfMetrics() != tp) {
+    if (fontGroup->GetTextPerfMetrics() != tp) {
       fontGroup = nullptr;
     }
   }
@@ -4075,8 +4070,8 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
       const auto* sans =
           Servo_FontFamily_Generic(StyleGenericFontFamily::SansSerif);
       fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
-          sans->families, &style, language, explicitLanguage, tp, fontStats,
-          nullptr, devToCssSize);
+          sans->families, &style, language, explicitLanguage, tp, nullptr,
+          devToCssSize);
       if (fontGroup) {
         CurrentState().font = kDefaultFontStyle;
       } else {
