@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">మీ విహారణ చరిత్ర తుడిచివెయ్యబడింది.</string>
 
+    <string name="feedback_erase2">విహారిణి చరిత్ర తుడిచివేయబడింది</string>
+
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">%1$s కొరకు వెతకండి</string>
 
@@ -106,9 +108,6 @@
     <!-- About the app and help are links that are inside this menu -->
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">%1$s గురించి, సహాయం</string>
-
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">ట్రాకింగ్ సంరక్షణ</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">వెబ్ కంటెంట్</string>
@@ -414,12 +413,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">చేర్చు</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">అవును</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">రద్దుచేయి</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">సత్వరమార్గం ట్రాకింగ్ రక్షణ అచేతనపరిచి తెరవబడుతుంది</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">వద్దు</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -476,6 +477,9 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">డెస్క్‌టాప్ సైటును అభ్యర్థించు</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">డెస్క్‌టాప్ సైటు</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">URL కాపీ అయ్యింది</string>
 
@@ -510,6 +514,9 @@
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">వేలు చాలా వేగంగా కదిలింది. మళ్ళీ ప్రయత్నించండి.</string>
 
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">వెతుకుడు సలహాలను చూపించాలా?</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">వద్దు</string>
 
@@ -540,11 +547,40 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">అన్ని వెబ్‌సైట్లను తీసివేయి</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">కుకీలను నిరోధించు</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">మీరు కుకీలను నిరోధించాలనుకుంటున్నారా?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">ట్యాబు క్రాష్ అయ్యింది</string>
     <!-- Headline for the tab crash report screen -->
     <string name="tab_crash_report_headline">క్షమించండి. ఈ ట్యాబులో ఏదో సమస్య ఉంది.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">ఒక అంతరంగిక విహారిణిగా, మేము ఈ ట్యాబును భద్రపరచలేదు, దాన్ని పునరుద్ధరించలేము.</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">ట్యాబును మూసివేయి</string>
 
+    <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">క్రాష్ నివేదికను మొజిల్లాకు పంపు</string>
+
     <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">%s నుండి నిరోధించిన ట్రాకర్లు</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">సామాజికం</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">అనుసంధానం సురక్షితం</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">నిరోధించాల్సిన ట్రాకర్లు, స్క్రిప్టులు</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">వెనుకకు వెళ్ళు</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">తీసివేయి</string>
 
     </resources>

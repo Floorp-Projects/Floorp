@@ -47,6 +47,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Legg til på startskjermen</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Legg til i snarveier</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Fjern fra snarveier</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Hva er nytt</string>
     <string name="menu_settings">Innstillinger</string>
@@ -145,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Om %1$s, hjelp</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Sporingsbeskyttelse</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Utvidet sporingsbeskyttelse</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Nettinnhold</string>
@@ -271,12 +276,8 @@
     <string name="preference_privacy_block_content_summary2">Aktivering kan føre til at noen sider oppfører seg uventet</string>
     <string name="preference_privacy_category_cookies">Blokker infokapsler</string>
 
-    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
-    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
-    <string name="preference_privacy_should_block_cookies_no_option">Nei</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokker bare tredjepartssporingsinfokapsler</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokker bare tredjepartsinfokapsler</string>
-    <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Bruk fingeravtrykk til å låse opp appen</string>
@@ -501,10 +502,6 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Snarveien vil bli åpnet med sporingsbeskyttelsen avslått</string>
-
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
@@ -638,19 +635,6 @@
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Fingeren rørte seg for fort. Prøv igjen.</string>
 
-    <!-- Title for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestion_title">Vil du skru på søkeforslag?</string>
-
-    <!-- Description for the prompt to enable search suggestions
-        %1$s will be replaced by the app name (e.g. Firefox Focus)
-        %2$s will be replaced with "Learn more" which will be a tappable link
-        using the string: "enable_search_suggestion_subtitle_learnmore" -->
-    <string name="enable_search_suggestion_subtitle">For å få søkeforslag trenger %1$s å sende det du skriver i adressefeltet til søkemotoren du har valgt. %2$s.</string>
-
-    <!-- String to be placed inside the string: enable_search_suggestion_subtitle,
-        which will be a "Learn More" link. -->
-    <string name="enable_search_suggestion_subtitle_learnmore">Les mer</string>
-
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Nei</string>
 
@@ -686,16 +670,8 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Åpne en lenke i en ny fane\n Trykk og hold på en lenke på en side</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-     Argument 1 will be replaced with a line break in the application. -->
-    <string name="tip_request_desktop"><![CDATA[Vil du heller se den fulle skrivebordsversjonen?%1$s Meny > Vis skrivebordsversjon]]></string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Slå av tips på startskjermen</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist">Troverdig nettsted?\n Tillatelseslisten deaktiverer sporingsbeskyttelse for nettsteder du kjenner og stoler på.</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Ny fane åpnet</string>
@@ -736,4 +712,7 @@
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
     <string name="crash_report_send_crash_label">Send krasjrapport til Mozilla</string>
-</resources>
+
+    <!-- Tracking protection bottom sheet -->
+
+    </resources>
