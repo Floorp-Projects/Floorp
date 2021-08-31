@@ -441,6 +441,13 @@ ImageTestCase GreenAVIFTestCase() {
   return ImageTestCase("green.avif", "image/avif", IntSize(100, 100));
 }
 
+ImageTestCase NonzeroReservedAVIFTestCase() {
+  auto testCase = ImageTestCase("hdlr-nonzero-reserved-bug-1727033.avif",
+                                "image/avif", IntSize(1, 1));
+  testCase.mColor = BGRAColor(0x00, 0x00, 0x00, 0xFF);
+  return testCase;
+}
+
 ImageTestCase Transparent10bit420AVIFTestCase() {
   auto testCase =
       ImageTestCase("transparent-green-50pct-10bit-yuv420.avif", "image/avif",
