@@ -274,15 +274,12 @@ const ProxyMessenger = {
 
   openNative(nativeApp, sender) {
     let context = ParentAPIManager.getContextById(sender.childId);
-    let { extension } = context;
-    if (extension.hasPermission("geckoViewAddons")) {
-      let allowMessagingFromContent = extension.hasPermission(
-        "nativeMessagingFromContent"
-      );
+    if (context.extension.hasPermission("geckoViewAddons")) {
       return new GeckoViewConnection(
-        sender,
+        this.getSender(context, sender),
+        sender.actor.browsingContext.top.embedderElement,
         nativeApp,
-        allowMessagingFromContent
+        context.extension.hasPermission("nativeMessagingFromContent")
       );
     } else if (sender.verified) {
       return new NativeApp(context, nativeApp);
@@ -294,11 +291,21 @@ const ProxyMessenger = {
     return this.openNative(nativeApp, sender).sendMessage(holder);
   },
 
-  getSender(extension, source) {
-    let { extensionId, envType, frameId, url, actor, id } = source;
-    let sender = { id: extensionId, envType, frameId, url, contextId: id };
-    let target = actor.browsingContext.top.embedderElement;
-    apiManager.global.tabGetSender(extension, target, sender);
+  getSender(context, source) {
+    let sender = {
+      contextId: source.id,
+      id: source.extensionId,
+      envType: source.envType,
+      frameId: source.frameId,
+      url: context.uri.spec,
+    };
+
+    let { tabId } = apiManager.global.tabTracker.getBrowserData(
+      source.actor.browsingContext.top.embedderElement
+    );
+    if (tabId > 0) {
+      sender.tab = context.extension.tabManager.get(tabId, null)?.convert();
+    }
     return sender;
   },
 
@@ -322,7 +329,8 @@ const ProxyMessenger = {
     }
     await extension.wakeupBackground?.();
 
-    arg.sender = this.getSender(extension, sender);
+    let context = ParentAPIManager.getContextById(sender.childId);
+    arg.sender = this.getSender(context, sender);
     arg.topBC = arg.tabId && this.getTopBrowsingContextId(arg.tabId);
     return arg.tabId ? "tab" : "messenger";
   },
