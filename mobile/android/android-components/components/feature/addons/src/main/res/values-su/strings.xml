@@ -81,7 +81,7 @@
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Setélan</string>
     <!-- Indicates the add-on is enabled. -->
-    <string name="mozac_feature_addons_settings_on">Hurung</string>
+    <string name="mozac_feature_addons_settings_on">Aktip</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Pareum</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -89,7 +89,7 @@
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">Jalankeun dina langlangan pribadi</string>
     <!-- Indicates the add-on is enabled. -->
-    <string name="mozac_feature_addons_enabled">Dihurungkeun</string>
+    <string name="mozac_feature_addons_enabled">Diaktipkeun</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_disabled">Dipareuman</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
@@ -167,9 +167,9 @@
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Gagal masang %1$s</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_enabled">Laksana ngahurungkeun %1$s</string>
+    <string name="mozac_feature_addons_successfully_enabled">Laksana ngaktipkeun %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_enable">Gagal ngahurungkeun %1$s</string>
+    <string name="mozac_feature_addons_failed_to_enable">Gagal ngaktipkeun %1$s</string>
     <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_disabled">Laksana numpurkeun %1$s</string>
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->

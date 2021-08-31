@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Default shortcut label used if website has no title -->
-    <string name="mozac_feature_pwa_default_shortcut_label">Ιστοσελίδα</string>
+    <string name="mozac_feature_pwa_default_shortcut_label">Ιστότοπος</string>
 
     <!-- Name of the "notification channel" used for displaying site controls notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_pwa_site_controls_notification_channel">Κουμπιά ελέγχου πλήρους οθόνης</string>

@@ -3,7 +3,7 @@
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Ανάγνωση και τροποποίηση ρυθμίσεων απορρήτου</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">Πρόσβαση στα δεδομένα σας για όλες τις ιστοσελίδες</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">Πρόσβαση στα δεδομένα σας για κάθε ιστότοπο</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
     <string name="mozac_feature_addons_permissions_one_site_description">Πρόσβαση στα δεδομένα σας για το %1$s</string>
     <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->

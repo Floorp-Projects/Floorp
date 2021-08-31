@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Πρόβλημα φόρτωσης σελίδας</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Δοκιμή ξανά</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Επιστροφή</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Αδυναμία ολοκλήρωσης αιτήματος</string>
@@ -90,7 +85,7 @@
 
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
-      <p>Η ιστοσελίδα απάντησε στο αίτημα δικτύου με απρόσμενο τρόπο και το πρόγραμμα περιήγησης δεν μπορεί να συνεχίσει.</p>
+      <p>Ο ιστότοπος απάντησε με απρόσμενο τρόπο στο αίτημα δικτύου και το πρόγραμμα περιήγησης δεν μπορεί να συνεχίσει.</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
@@ -171,9 +166,9 @@
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Σφάλμα κωδικοποίησης περιεχομένου</string>
 
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
-      <p>Δεν ήταν δυνατή η εμφάνιση της σελίδας που προσπαθείτε να προβάλετε, επειδή χρησιμοποιεί μια μη έγκυρη ή μη υποστηριζόμενη μορφή συμπίεσης.</p>
+      <p>Η σελίδα που προσπαθείτε να δείτε δεν μπορεί να εμφανιστεί επειδή δεν χρησιμοποιεί έγκυρη ή υποστηριζόμενη μορφή συμπίεσης.</p>
       <ul>
-        <li>Παρακαλούμε ενημερώστε τους ιδιοκτήτες της ιστοσελίδας για αυτό το πρόβλημα.</li>
+        <li>Παρακαλώ επικοινωνήστε με τους ιδιοκτήτες του ιστοτόπου για να τους ενημερώσετε σχετικά με αυτό το πρόβλημα.</li>
       </ul>
     ]]></string>
 
@@ -214,10 +209,10 @@
     <string name="mozac_browser_errorpages_unknown_protocol_title">Άγνωστο πρωτόκολλο</string>
 
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
-      <p>Η διεύθυνση καθορίζει πρωτόκολλο (π.χ., <q>wxyz://</q>) που δεν αναγνωρίζεται από το πρόγραμμα περιήγησης, επομένως δεν μπορεί να συνδεθεί σωστά στην ιστοσελίδα.</p>
+      <p>Η διεύθυνση καθορίζει ένα πρωτόκολλο (π.χ. «wxyz://») που δεν αναγνωρίζει το πρόγραμμα περιήγησης, επομένως δεν είναι δυνατή η σωστή σύνδεση στον ιστότοπο.</p>
       <ul>
-        <li>Προσπαθείτε να προσπελάσετε πολυμέσα ή άλλες υπηρεσίες χωρίς κείμενο; Ελέγξτε τη σελίδα για επιπλέον απαιτήσεις.</li>
-        <li>Μερικά πρωτόκολλα ίσως απαιτούν λογισμικό τρίτων ή αρθρώματα, πριν αναγνωριστούν από το πρόγραμμα περιήγησης.</li>
+        <li>Προσπαθείτε να προσπελάσετε πολυμέσα ή άλλες υπηρεσίες χωρίς κείμενο; Ελέγξτε τον ιστότοπο για επιπλέον απαιτήσεις.</li>
+        <li>Ορισμένα πρωτόκολλα ενδέχεται να απαιτούν λογισμικό ή αρθρώματα τρίτων πριν μπορέσουν να αναγνωριστούν από το πρόγραμμα περιήγησης.</li>
       </ul>
     ]]></string>
 
@@ -264,24 +259,32 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ζήτημα κακόβουλης ιστοσελίδας</string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ζήτημα κακόβουλου ιστοτόπου</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Η ιστοσελίδα στο %1$s έχει αναφερθεί ως ιστοσελίδα επιθέσεων και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Ο ιστότοπος στο %1$s έχει αναφερθεί ως ιστότοπος επιθέσεων και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Ζήτημα ανεπιθύμητης ιστοσελίδας</string>
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Ζήτημα ανεπιθύμητου ιστοτόπου</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Η ιστοσελίδα στο %1$s έχει αναφερθεί για διανομή ανεπιθύμητου λογισμικού και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Ο ιστότοπος στο %1$s έχει αναφερθεί για διανομή ανεπιθύμητου λογισμικού και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Ζήτημα επιβλαβούς ιστοσελίδας</string>
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Ζήτημα επιβλαβούς ιστοτόπου</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Η ιστοσελίδα στο %1$s έχει αναφερθεί ως πιθανώς επιβλαβής και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Ο ιστότοπος στο %1$s έχει αναφερθεί ως δυνητικά επιβλαβής και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Ζήτημα παραπλανητικής ιστοσελίδας</string>
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Ζήτημα παραπλανητικού ιστοτόπου</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Αυτή η ιστοσελίδα στο %1$s έχει αναφερθεί ως παραπλανητική ιστοσελίδα και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Η ιστοσελίδα στο %1$s έχει αναφερθεί ως παραπλανητικός ιστότοπος και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>
+    ]]></string>
 </resources>
