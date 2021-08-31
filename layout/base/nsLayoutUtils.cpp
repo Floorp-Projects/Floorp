@@ -3105,12 +3105,12 @@ struct TemporaryDisplayListBuilder {
   RetainedDisplayListMetrics mMetrics;
 };
 
-nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
-                                   nsIFrame* aFrame,
-                                   const nsRegion& aDirtyRegion,
-                                   nscolor aBackstop,
-                                   nsDisplayListBuilderMode aBuilderMode,
-                                   PaintFrameFlags aFlags) {
+void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
+                               nsIFrame* aFrame,
+                               const nsRegion& aDirtyRegion,
+                               nscolor aBackstop,
+                               nsDisplayListBuilderMode aBuilderMode,
+                               PaintFrameFlags aFlags) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::PaintFrame", GRAPHICS);
 
 #ifdef MOZ_DUMP_PAINTING
@@ -3558,8 +3558,6 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     }
   }
 #endif
-
-  return NS_OK;
 }
 
 /**
