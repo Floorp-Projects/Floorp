@@ -41,7 +41,6 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
-import java.lang.Deprecated;
 import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
@@ -224,9 +223,6 @@ package org.mozilla.geckoview {
 
   public static class Autocomplete.LoginSelectOption extends Autocomplete.SelectOption {
     ctor public LoginSelectOption(@NonNull Autocomplete.LoginEntry);
-  }
-
-  @Deprecated @DeprecationSchedule(version=93,id="login-storage") public static interface Autocomplete.LoginStorageDelegate implements Autocomplete.StorageDelegate {
   }
 
   public abstract static class Autocomplete.Option<T> {
@@ -670,8 +666,6 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public ContentBlockingController getContentBlockingController();
     method @NonNull @UiThread public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @Nullable @UiThread public GeckoRuntime.Delegate getDelegate();
-    method @Deprecated @DeprecationSchedule(version=93,id="login-storage") @Nullable @UiThread public Autocomplete.LoginStorageDelegate getLoginStorageDelegate();
-    method @Deprecated @DeprecationSchedule(id="get-profile-dir",version=93) @Nullable @UiThread public File getProfileDir();
     method @NonNull @UiThread public ProfilerController getProfilerController();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
     method @NonNull @UiThread public StorageController getStorageController();
@@ -684,7 +678,6 @@ package org.mozilla.geckoview {
     method @UiThread public void setActivityDelegate(@Nullable GeckoRuntime.ActivityDelegate);
     method @UiThread public void setAutocompleteStorageDelegate(@Nullable Autocomplete.StorageDelegate);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
-    method @Deprecated @DeprecationSchedule(version=93,id="login-storage") @UiThread public void setLoginStorageDelegate(@Nullable Autocomplete.LoginStorageDelegate);
     method @UiThread public void setServiceWorkerDelegate(@Nullable GeckoRuntime.ServiceWorkerDelegate);
     method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
