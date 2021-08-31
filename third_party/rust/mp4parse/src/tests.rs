@@ -515,7 +515,7 @@ fn read_hdlr_invalid_pre_defined_field() {
     let mut stream = iter.next_box().unwrap().unwrap();
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 32);
-    match super::read_hdlr(&mut stream, ParseStrictness::Normal) {
+    match super::read_hdlr(&mut stream, ParseStrictness::Strict) {
         Err(Error::InvalidData(msg)) => assert_eq!(
             "The HandlerBox 'pre_defined' field shall be 0 \
              per ISOBMFF (ISO 14496-12:2020) § 8.4.3.2",
@@ -537,7 +537,7 @@ fn read_hdlr_invalid_reserved_field() {
     let mut stream = iter.next_box().unwrap().unwrap();
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 32);
-    match super::read_hdlr(&mut stream, ParseStrictness::Normal) {
+    match super::read_hdlr(&mut stream, ParseStrictness::Strict) {
         Err(Error::InvalidData(msg)) => assert_eq!(
             "The HandlerBox 'reserved' fields shall be 0 \
              per ISOBMFF (ISO 14496-12:2020) § 8.4.3.2",
