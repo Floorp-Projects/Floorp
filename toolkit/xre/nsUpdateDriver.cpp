@@ -441,6 +441,35 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
     return;
   }
 
+#if defined(XP_MACOSX)
+  // We need to detect whether elevation is required for this update. This can
+  // occur when an admin user installs the application, but another admin
+  // user attempts to update (see bug 394984).
+  // We only check if we need elevation if we are restarting. We don't attempt
+  // to stage if elevation is required. Staging happens without the user knowing
+  // about it, and we don't want to ask for elevation for seemingly no reason.
+  bool needElevation = false;
+  if (restart) {
+    needElevation = !IsRecursivelyWritable(installDirPath.get());
+    if (needElevation) {
+      // Normally we would check this via nsIAppStartup::wasSilentlyRestarted,
+      // but nsIAppStartup isn't available yet.
+      char* mozAppSilentRestart = PR_GetEnv("MOZ_APP_SILENT_RESTART");
+      bool wasSilentlyRestarted =
+          mozAppSilentRestart && (strcmp(mozAppSilentRestart, "") != 0);
+      if (wasSilentlyRestarted) {
+        // Elevation always requires prompting for credentials on macOS. If we
+        // are trying to restart silently, we must not display UI such as this
+        // prompt.
+        // We make this check here rather than in the updater, because it is
+        // actually Firefox that shows the elevation prompt (via
+        // InstallPrivilegedHelper), not the updater.
+        return;
+      }
+    }
+  }
+#endif
+
   nsAutoCString applyToDirPath;
   nsCOMPtr<nsIFile> updatedDir;
   if (restart && !isStaged) {
@@ -582,10 +611,7 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   }
 #elif defined(XP_MACOSX)
 UpdateDriverSetupMacCommandLine(argc, argv, restart);
-// We need to detect whether elevation is required for this update. This can
-// occur when an admin user installs the application, but another admin
-// user attempts to update (see bug 394984).
-if (restart && !IsRecursivelyWritable(installDirPath.get())) {
+if (restart && needElevation) {
   bool hasLaunched = LaunchElevatedUpdate(argc, argv, outpid);
   free(argv);
   if (!hasLaunched) {
