@@ -17,11 +17,9 @@
 /* static */ inline bool js::GlobalObject::setIntrinsicValue(
     JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName name,
     HandleValue value) {
-  RootedObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
-  if (!holder) {
-    return false;
-  }
-
+  RootedNativeObject holder(cx, global->getComputedIntrinsicsHolder());
+  MOZ_ASSERT(holder->lookupPure(name).isNothing(),
+             "SetIntrinsic tried to redefine existing intrinsic");
   return SetProperty(cx, holder, name, value);
 }
 
