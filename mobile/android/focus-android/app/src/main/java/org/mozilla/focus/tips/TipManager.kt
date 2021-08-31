@@ -10,8 +10,10 @@ import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
+import org.mozilla.focus.utils.SupportUtils.getSumoURLForTopic
 
 class Tip(
     @StringRes
@@ -29,7 +31,7 @@ class Tip(
             val deepLink = {
                 context.components.tabsUseCases.addTab(
                     url,
-                    source = SessionState.Source.Internal.Menu,
+                    source = SessionState.Source.Internal.HomeScreen,
                     selectTab = true,
                     private = true
                 )
@@ -55,11 +57,27 @@ class Tip(
             val id = R.string.tip_fresh_look
             val name = context.getString(R.string.app_name)
 
+            val sumoTopic = if (AppConstants.isKlarBuild) {
+                SupportUtils.SumoTopic.WHATS_NEW_KLAR
+            } else {
+                SupportUtils.SumoTopic.WHATS_NEW_FOCUS
+            }
+
+            val whatsNewUrl = getSumoURLForTopic(context, sumoTopic)
+            val deepLink = {
+                context.components.tabsUseCases.addTab(
+                    url = whatsNewUrl,
+                    source = SessionState.Source.Internal.HomeScreen,
+                    selectTab = true,
+                    private = true
+                )
+                TelemetryWrapper.pressTipEvent(id)
+            }
             val shouldDisplayFreshLookTip = {
                 Settings.getInstance(context).getAppLaunchCount() == 0
             }
 
-            return Tip(id, name, shouldDisplayFreshLookTip)
+            return Tip(id, name, shouldDisplayFreshLookTip, deepLink)
         }
 
         fun createShortcutsTip(context: Context): Tip {
@@ -96,7 +114,7 @@ class Tip(
             val deepLinkRequestDesktop = {
                 context.components.tabsUseCases.addTab(
                     requestDesktopURL,
-                    source = SessionState.Source.Internal.Menu,
+                    source = SessionState.Source.Internal.HomeScreen,
                     selectTab = true,
                     private = true
                 )
