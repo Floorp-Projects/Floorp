@@ -257,6 +257,12 @@ class CsvImportHelper {
 
 const random = Math.round(Math.random() * 100000001);
 
+add_task(async function setup() {
+  registerCleanupFunction(() => {
+    Services.logins.removeAllUserFacingLogins();
+  });
+});
+
 add_task(async function test_open_import_one_item_from_csv() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:logins" },
