@@ -48,8 +48,18 @@ bool IsAppRunningFromDmg() {
   const char devDirPath[] = "/dev/";
   const int devDirPathLength = strlen(devDirPath);
   if (strncmp(statfsBuf.f_mntfromname, devDirPath, devDirPathLength) != 0) {
-    // Does this ever happen?
-    return false;
+    // This has been observed to happen under App Translocation. In this case,
+    // path is the translocated path, and f_mntfromname is the path under
+    // /Volumes. Do another stat on that path.
+    nsCString volumesPath(statfsBuf.f_mntfromname);
+    if (statfs(volumesPath.get(), &statfsBuf) != 0) {
+      return false;
+    }
+
+    if (strncmp(statfsBuf.f_mntfromname, devDirPath, devDirPathLength) != 0) {
+      // It still doesn't begin with /dev/, bail out.
+      return false;
+    }
   }
   const char* bsdDeviceName = statfsBuf.f_mntfromname + devDirPathLength;
 
