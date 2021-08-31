@@ -100,6 +100,10 @@ const PREF_APP_UPDATE_LANGPACK_TIMEOUT = "app.update.langpack.timeout";
 const PREF_APP_UPDATE_LOG = "app.update.log";
 const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
 const PREF_APP_UPDATE_NOTIFYDURINGDOWNLOAD = "app.update.notifyDuringDownload";
+const PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_ENABLED =
+  "app.update.noWindowAutoRestart.enabled";
+const PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_DELAY_MS =
+  "app.update.noWindowAutoRestart.delayMs";
 const PREF_APP_UPDATE_PROMPTWAITTIME = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SERVICE_ENABLED = "app.update.service.enabled";
 const PREF_APP_UPDATE_SERVICE_ERRORS = "app.update.service.errors";
@@ -2992,6 +2996,17 @@ UpdateService.prototype = {
             "but there isn't a ready update, removing update"
         );
         cleanupReadyUpdate();
+      } else if (Services.startup.wasSilentlyRestarted) {
+        // This check _should_ be unnecessary since we should not silently
+        // restart if state == pending-elevate. But the update elevation dialog
+        // is a way that we could potentially show UI on startup, even with no
+        // windows open. Which we really do not want to do on a silent restart.
+        // So this is defense in depth.
+        LOG(
+          "UpdateService:_postUpdateProcessing - status is pending-elevate, " +
+            "but this is a silent startup, so the elevation window has been " +
+            "suppressed."
+        );
       } else {
         let uri = "chrome://mozapps/content/update/updateElevation.xhtml";
         let features =
@@ -6296,5 +6311,312 @@ Downloader.prototype = {
     "nsIInterfaceRequestor",
   ]),
 };
+
+// On macOS, all browser windows can be closed without Firefox exiting. If it
+// is left in this state for a while and an update is pending, we should restart
+// Firefox on our own to apply the update. This class will do that
+// automatically.
+class RestartOnLastWindowClosed {
+  #enabled = false;
+  #hasShutdown = false;
+
+  #restartTimer = null;
+  #restartTimerExpired = false;
+
+  // Tracks whether an update is ready to be installed (i.e. could we restart
+  // now and apply an update). We can safely start this value at false. If
+  // Firefox starts up with an update ready, it should apply it. If it still
+  // appears to be in a ready state after that, we assume that something is
+  // going wrong applying that update at which point we clean it up and report
+  // to the user that they should update manually. So there is no situation
+  // where we start up wanting to shutdown to apply an update.
+  // Note: We keep this value up to date even if the class is disabled. The
+  //       reason is that it's surprisingly difficult to determine if an update
+  //       is ready to be installed by examining the update state. There are a
+  //       lot of little race conditions where we could, for example, run while
+  //       an asynchronous update function is still part way through its work.
+  //       The best way to be sure of the current update state is to listen to
+  //       every update observer notification.
+  //       Since this class could always be enabled later, we watch every
+  //       update notification in order to keep this value up to date, even if
+  //       the class isn't currently enabled.
+  #updateReady = false;
+
+  constructor() {
+    this.#maybeEnableOrDisable();
+
+    // We connect these observers even if the class is disabled. See the
+    // #updateReady definition for details.
+    Services.obs.addObserver(this, "update-downloaded");
+    Services.obs.addObserver(this, "update-staged");
+    Services.obs.addObserver(this, "update-swap");
+
+    Services.prefs.addObserver(
+      PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_ENABLED,
+      this
+    );
+    Services.obs.addObserver(this, "quit-application");
+  }
+
+  shutdown() {
+    LOG("RestartOnLastWindowClosed.shutdown - Shutting down");
+    this.#hasShutdown = true;
+
+    Services.prefs.removeObserver(
+      PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_ENABLED,
+      this
+    );
+    Services.obs.removeObserver(this, "quit-application");
+
+    Services.obs.removeObserver(this, "update-downloaded");
+    Services.obs.removeObserver(this, "update-staged");
+    Services.obs.removeObserver(this, "update-swap");
+
+    this.#maybeEnableOrDisable();
+  }
+
+  get shouldEnable() {
+    if (AppConstants.platform != "macosx") {
+      return false;
+    }
+    if (this.#hasShutdown) {
+      return false;
+    }
+    return Services.prefs.getBoolPref(
+      PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_ENABLED,
+      false
+    );
+  }
+
+  get enabled() {
+    return this.#enabled;
+  }
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "nsPref:changed":
+        if (data == PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_ENABLED) {
+          this.#maybeEnableOrDisable();
+        }
+        break;
+      case "quit-application":
+        this.shutdown();
+        break;
+      case "browser-lastwindow-close-granted":
+        this.#onLastWindowClose();
+        break;
+      case "domwindowopened":
+        this.#onWindowOpen();
+        break;
+      case "update-downloaded":
+      case "update-staged":
+        this.#onUpdateReady(data);
+        break;
+      case "update-swap":
+        this.#onUpdateUnready();
+        break;
+    }
+  }
+
+  // Returns true if any windows are open. Otherwise, false.
+  #windowsAreOpen() {
+    // eslint-disable-next-line no-unused-vars
+    for (const win of Services.wm.getEnumerator(null)) {
+      return true;
+    }
+    return false;
+  }
+
+  // Enables or disables this class's functionality based on the value of
+  // this.shouldEnable. Does nothing if the class is already in the right state
+  // (i.e. if the class should be enabled and already is, or should be disabled
+  // and already is).
+  #maybeEnableOrDisable() {
+    if (this.shouldEnable) {
+      if (this.#enabled) {
+        return;
+      }
+      LOG("RestartOnLastWindowClosed.#maybeEnableOrDisable - Enabling");
+
+      Services.obs.addObserver(this, "browser-lastwindow-close-granted");
+      Services.obs.addObserver(this, "domwindowopened");
+
+      // Reset internal state, except for #updateReady (see its definition for
+      // details).
+      this.#restartTimer = null;
+      this.#restartTimerExpired = false;
+
+      this.#enabled = true;
+
+      // Synchronize with external state.
+      if (!this.#windowsAreOpen()) {
+        this.#onLastWindowClose();
+      }
+    } else {
+      if (!this.#enabled) {
+        return;
+      }
+      LOG("RestartOnLastWindowClosed.#maybeEnableOrDisable - Disabling");
+
+      Services.obs.removeObserver(this, "browser-lastwindow-close-granted");
+      Services.obs.removeObserver(this, "domwindowopened");
+
+      this.#enabled = false;
+
+      if (this.#restartTimer) {
+        this.#restartTimer.cancel();
+      }
+      this.#restartTimer = null;
+    }
+  }
+
+  // Note: Since we keep track of the update state even when this class is
+  //       disabled, this function will run even in that case.
+  #onUpdateReady(updateState) {
+    // Note that we do not count pending-elevate as a ready state, because we
+    // cannot silently restart in that state.
+    if (
+      [
+        STATE_APPLIED,
+        STATE_PENDING,
+        STATE_APPLIED_SERVICE,
+        STATE_PENDING_SERVICE,
+      ].includes(updateState)
+    ) {
+      this.#updateReady = true;
+
+      if (this.#enabled) {
+        LOG("RestartOnLastWindowClosed.#onUpdateReady - update ready");
+        this.#maybeRestartBrowser();
+      }
+    } else if (this.#enabled) {
+      LOG(
+        `RestartOnLastWindowClosed.#onUpdateReady - Not counting update as ` +
+          `ready because the state is ${updateState}`
+      );
+    }
+  }
+
+  // Note: Since we keep track of the update state even when this class is
+  //       disabled, this function will run even in that case.
+  #onUpdateUnready() {
+    // Seeing logging from this class could be confusing if it is meant to be
+    // disabled.
+    if (this.#enabled) {
+      LOG(
+        "RestartOnLastWindowClosed.#onUpdateUnready - update no longer ready"
+      );
+    }
+
+    this.#updateReady = false;
+  }
+
+  #onLastWindowClose() {
+    if (this.#restartTimer || this.#restartTimerExpired) {
+      LOG(
+        "RestartOnLastWindowClosed.#onLastWindowClose - Restart timer is " +
+          "either already running or has already expired"
+      );
+      return;
+    }
+
+    let timeout = Services.prefs.getIntPref(
+      PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_DELAY_MS,
+      5 * 60 * 1000
+    );
+
+    LOG(
+      "RestartOnLastWindowClosed.#onLastWindowClose - Last window closed. " +
+        "Starting restart timer"
+    );
+    this.#restartTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this.#restartTimer.initWithCallback(
+      () => this.#onRestartTimerExpire(),
+      timeout,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
+  }
+
+  #onWindowOpen() {
+    if (this.#restartTimer) {
+      LOG(
+        "RestartOnLastWindowClosed.#onWindowOpen - Window opened. Cancelling " +
+          "restart timer."
+      );
+      this.#restartTimer.cancel();
+    }
+    this.#restartTimer = null;
+    this.#restartTimerExpired = false;
+  }
+
+  #onRestartTimerExpire() {
+    LOG("RestartOnLastWindowClosed.#onRestartTimerExpire - Timer Expired");
+
+    this.#restartTimer = null;
+    this.#restartTimerExpired = true;
+    this.#maybeRestartBrowser();
+  }
+
+  #maybeRestartBrowser() {
+    if (!this.#restartTimerExpired) {
+      LOG(
+        "RestartOnLastWindowClosed.#maybeRestartBrowser - Still waiting for " +
+          "all windows to be closed and restartTimer to expire. " +
+          "(not restarting)"
+      );
+      return;
+    }
+
+    if (!this.#updateReady) {
+      LOG(
+        "RestartOnLastWindowClosed.#maybeRestartBrowser - No update ready. " +
+          "(not restarting)"
+      );
+      return;
+    }
+
+    if (getElevationRequired()) {
+      // We check for STATE_PENDING_ELEVATE elsewhere, but this is actually
+      // different from that because it is technically possible that the user
+      // gave permission to elevate, but we haven't actually elevated yet.
+      // This is a bit of a corner case. We only call elevationOptedIn() right
+      // before we restart to apply the update immediately. But it is possible
+      // that something could stop the browser from shutting down.
+      LOG(
+        "RestartOnLastWindowClosed.#maybeRestartBrowser - This update will " +
+          "require user elevation (not restarting)"
+      );
+      return;
+    }
+
+    if (this.#windowsAreOpen()) {
+      LOG(
+        "RestartOnLastWindowClosed.#maybeRestartBrowser - Window " +
+          "unexpectedly still open! (not restarting)"
+      );
+      return;
+    }
+
+    if (!this.shouldEnable) {
+      LOG(
+        "RestartOnLastWindowClosed.#maybeRestartBrowser - Unexpectedly " +
+          "attempted to restart when RestartOnLastWindowClosed ought to be " +
+          "disabled! (not restarting)"
+      );
+      return;
+    }
+
+    LOG("RestartOnLastWindowClosed.#maybeRestartBrowser - Restarting now");
+    Services.startup.quit(
+      Ci.nsIAppStartup.eAttemptQuit |
+        Ci.nsIAppStartup.eRestart |
+        Ci.nsIAppStartup.eSilently
+    );
+  }
+}
+// Nothing actually uses this variable at the moment, but let's make sure that
+// we hold the reference to the RestartOnLastWindowClosed instance somewhere.
+// eslint-disable-next-line no-unused-vars
+let restartOnLastWindowClosed = new RestartOnLastWindowClosed();
 
 var EXPORTED_SYMBOLS = ["UpdateService", "Checker", "UpdateManager"];

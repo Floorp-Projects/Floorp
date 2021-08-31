@@ -192,6 +192,15 @@ pref("app.update.langpack.enabled", true);
   pref("app.update.background.interval", 25200);
 #endif
 
+#ifdef XP_MACOSX
+  // If set to true, Firefox will automatically restart if it is left running
+  // with no browser windows open.
+  pref("app.update.noWindowAutoRestart.enabled", true);
+  // How long to wait after all browser windows are closed before restarting,
+  // in milliseconds. 5 min = 300000 ms
+  pref("app.update.noWindowAutoRestart.delayMs", 300000);
+#endif
+
 #if defined(MOZ_BACKGROUNDTASKS)
   // The amount of time, in seconds, before background tasks time out and exit.
   // Tasks can override this default (10 minutes).
