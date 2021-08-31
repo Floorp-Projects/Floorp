@@ -2114,16 +2114,12 @@ void HTMLEditor::ExtendRangeToDeleteWithNormalizingWhiteSpaces(
       !precedingCharPoint.IsEndOfContainer() &&
       precedingCharPoint.ContainerAsText() ==
           aStartToDelete.ContainerAsText() &&
-      precedingCharPoint.IsCharASCIISpaceOrNBSP() &&
-      !EditorUtils::IsWhiteSpacePreformatted(
-          *precedingCharPoint.ContainerAsText());
+      precedingCharPoint.IsCharCollapsibleASCIISpaceOrNBSP();
   const bool maybeNormalizeFollowingWhiteSpaces =
       followingCharPoint.IsSet() && !followingCharPoint.IsEndOfContainer() &&
       (followingCharPoint.ContainerAsText() == aEndToDelete.ContainerAsText() ||
        removingLastCharOfStartNode) &&
-      followingCharPoint.IsCharASCIISpaceOrNBSP() &&
-      !EditorUtils::IsWhiteSpacePreformatted(
-          *followingCharPoint.ContainerAsText());
+      followingCharPoint.IsCharCollapsibleASCIISpaceOrNBSP();
 
   if (!maybeNormalizePrecedingWhiteSpaces &&
       !maybeNormalizeFollowingWhiteSpaces) {
