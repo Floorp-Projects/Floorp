@@ -76,6 +76,9 @@ Review groups
    * - #mozbase-rust
      - Changes to Mozbase in Rust
      - `Member list <https://phabricator.services.mozilla.com/project/members/114/>`__
+   * - #nss-reviewers
+     - Changes to Network Security Services (NSS)
+     - `Member list <https://phabricator.services.mozilla.com/project/members/156/>`__
    * - #perftest-reviewers
      - Perf Tests
      - `Member list <https://phabricator.services.mozilla.com/project/members/102/>`__
