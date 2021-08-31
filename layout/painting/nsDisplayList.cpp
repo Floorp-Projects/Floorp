@@ -2376,10 +2376,10 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
 
     nsRegion visible(item->GetClippedBounds(aBuilder));
     visible.And(visible, item->GetBuildingRect());
-    item->SetPaintRect(visible.GetBounds());
-    if (!item->ComputeVisibility(aBuilder, &visible)) {
+    if (visible.IsEmpty()) {
       continue;
     }
+    item->SetPaintRect(visible.GetBounds());
 
     DisplayItemClip currentClip = item->GetClip();
     if (currentClip.HasClip()) {
