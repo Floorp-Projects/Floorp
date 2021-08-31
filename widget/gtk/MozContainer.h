@@ -87,4 +87,7 @@ void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
                        gint y);
 void moz_container_force_default_visual(MozContainer* container);
 
+class nsWindow;
+nsWindow* moz_container_get_nsWindow(MozContainer* container);
+
 #endif /* __MOZ_CONTAINER_H__ */
