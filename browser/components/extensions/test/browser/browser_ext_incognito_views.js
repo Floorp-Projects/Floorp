@@ -82,8 +82,6 @@ add_task(async function testIncognitoViews() {
           await windowReady;
 
           await testWindow(window);
-
-          await browser.windows.remove(window.id);
         }
 
         browser.test.notifyPass("incognito-views");
@@ -163,20 +161,24 @@ add_task(async function testIncognitoViews() {
           windowId: win.id,
           incognito: browser.extension.inIncognitoContext,
         });
-
-        window.close();
       },
     },
   });
 
+  let win;
+  let promiseBrowserActionOpened;
   extension.onMessage("click-browserAction", () => {
-    clickBrowserAction(
-      extension,
-      Services.wm.getMostRecentWindow("navigator:browser")
-    );
+    win = Services.wm.getMostRecentWindow("navigator:browser");
+    promiseBrowserActionOpened = openBrowserActionPanel(extension, win, true);
   });
 
   await extension.startup();
   await extension.awaitFinish("incognito-views");
+  // Prevent intermittent failures of this test in optimized builds due to a race between
+  // opening/closing the browserAction and closing the related window at the end
+  // of the test (e.g. Bug 1707305).
+  await promiseBrowserActionOpened;
+  await closeBrowserAction(extension, win);
   await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
 });
