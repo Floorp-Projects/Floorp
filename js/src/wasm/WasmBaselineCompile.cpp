@@ -12979,8 +12979,7 @@ bool BaseCompiler::emitMemCopy() {
   }
 
   int32_t signedLength;
-  if (MacroAssembler::SupportsFastUnalignedAccesses() &&
-      peekConst(&signedLength) && signedLength != 0 &&
+  if (peekConst(&signedLength) && signedLength != 0 &&
       uint32_t(signedLength) <= MaxInlineMemoryCopyLength) {
     return emitMemCopyInline();
   }
@@ -13009,8 +13008,11 @@ bool BaseCompiler::emitMemCopyInline() {
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
 #ifdef ENABLE_WASM_SIMD
-  size_t numCopies16 = remainder / sizeof(V128);
-  remainder %= sizeof(V128);
+  size_t numCopies16 = 0;
+  if (MacroAssembler::SupportsFastUnalignedFPAccesses()) {
+    numCopies16 = remainder / sizeof(V128);
+    remainder %= sizeof(V128);
+  }
 #endif
 #ifdef JS_64BIT
   size_t numCopies8 = remainder / sizeof(uint64_t);
@@ -13259,8 +13261,7 @@ bool BaseCompiler::emitMemFill() {
 
   int32_t signedLength;
   int32_t signedValue;
-  if (MacroAssembler::SupportsFastUnalignedAccesses() &&
-      peek2xConst(&signedLength, &signedValue) && signedLength != 0 &&
+  if (peek2xConst(&signedLength, &signedValue) && signedLength != 0 &&
       uint32_t(signedLength) <= MaxInlineMemoryFillLength) {
     return emitMemFillInline();
   }
@@ -13290,8 +13291,11 @@ bool BaseCompiler::emitMemFillInline() {
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
 #ifdef ENABLE_WASM_SIMD
-  size_t numCopies16 = remainder / sizeof(V128);
-  remainder %= sizeof(V128);
+  size_t numCopies16 = 0;
+  if (MacroAssembler::SupportsFastUnalignedFPAccesses()) {
+    numCopies16 = remainder / sizeof(V128);
+    remainder %= sizeof(V128);
+  }
 #endif
 #ifdef JS_64BIT
   size_t numCopies8 = remainder / sizeof(uint64_t);

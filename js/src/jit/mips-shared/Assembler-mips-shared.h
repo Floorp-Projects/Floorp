@@ -1229,7 +1229,7 @@ class AssemblerMIPSShared : public AssemblerShared {
 #endif
   }
   static bool SupportsUnalignedAccesses() { return true; }
-  static bool SupportsFastUnalignedAccesses() { return false; }
+  static bool SupportsFastUnalignedFPAccesses() { return false; }
 
   static bool HasRoundInstruction(RoundingMode mode) { return false; }
 
