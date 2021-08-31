@@ -181,14 +181,6 @@ class Components(
     }
 }
 
-private fun determineInitialScreen(context: Context): Screen {
-    return if (Settings.getInstance(context).shouldShowFirstrun()) {
-        Screen.FirstRun
-    } else {
-        Screen.Home
-    }
-}
-
 private fun createCrashReporter(context: Context): CrashReporter {
     val services = mutableListOf<CrashReporterService>()
 

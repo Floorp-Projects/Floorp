@@ -23,7 +23,6 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.ShowTabs -> showTabs(state)
             is AppAction.HideTabs -> hideTabs(state)
             is AppAction.ShowFirstRun -> showFirstRun(state)
-            is AppAction.SkipOnboardingPerfTest -> performanceTest(state)
             is AppAction.FinishFirstRun -> finishFirstRun(state, action)
             is AppAction.Lock -> lock(state)
             is AppAction.Unlock -> unlock(state, action)
@@ -151,9 +150,6 @@ private fun openTab(state: AppState, action: AppAction.OpenTab): AppState {
     )
 }
 
-private fun performanceTest(state: AppState): AppState {
-    return state.copy(screen = Screen.Home)
-}
 /**
  * The list of [TopSite] has changed.
  */

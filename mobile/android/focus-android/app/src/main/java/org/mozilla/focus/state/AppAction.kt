@@ -67,15 +67,9 @@ sealed class AppAction : Action {
     data class NavigateUp(val tabId: String?) : AppAction()
 
     /**
-     * Forces showing the first run screen (for tests).
+     * Forces showing the first run screen.
      */
     internal object ShowFirstRun : AppAction()
-
-    /**
-     * Skips the onboarding screen for performance tests. We need to be able to skip the onboarding
-     * screen to get time values for startup.
-     */
-    object SkipOnboardingPerfTest: AppAction()
 
     /**
      * Opens the tab with the given [tabId] and actively switches to the browser screen if needed.
