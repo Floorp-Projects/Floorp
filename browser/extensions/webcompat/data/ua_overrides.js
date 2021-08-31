@@ -251,25 +251,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1566253 - posts.google.com - Add UA override for posts.google.com
-     * WebCompat issue #17870 - https://webcompat.com/issues/17870
-     *
-     * posts.google.com displaying "Your browser doesn't support this page".
-     * Spoofing as Chrome works fine.
-     */
-    id: "bug1566253",
-    platform: "android",
-    domain: "posts.google.com",
-    bug: "1566253",
-    config: {
-      matches: ["*://posts.google.com/*"],
-      uaTransformer: _ => {
-        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G900M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.101 Mobile Safari/537.36";
-      },
-    },
-  },
-  {
-    /*
      * Bug 1574522 - UA override for enuri.com on Firefox for Android
      * WebCompat issue #37139 - https://webcompat.com/issues/37139
      *
@@ -649,25 +630,6 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1719841",
     config: {
       matches: ["*://appmedia.jp/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1719842 - Add UA override for www.gouletpens.com
-     * Webcompat issue #77723 - https://webcompat.com/issues/77723
-     *
-     * The slider is not working in Firefox for Android due to some UA sniffing
-     * code path. It works if we spoof as Chrome for Android.
-     */
-    id: "bug1719842",
-    platform: "android",
-    domain: "gouletpens.com",
-    bug: "1719842",
-    config: {
-      matches: ["*://*.gouletpens.com/*"],
       uaTransformer: () => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },

@@ -1,9 +1,0 @@
-/**
- * snaptik.app - Ensure that the main text input's text is vertically centered.
- * Bug #1712843 - https://bugzilla.mozilla.org/show_bug.cgi?id=1712843
- * WebCompat issue #55986 - https://webcompat.com/issues/55986
- */
-
-form#get_video input#url::placeholder {
-  line-height: revert;
-}
