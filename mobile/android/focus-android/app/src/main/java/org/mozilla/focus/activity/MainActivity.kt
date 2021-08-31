@@ -60,9 +60,11 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        Performance.processIntentIfPerformanceTest(intent, this, components.appStore)
-
         val intent = SafeIntent(intent)
+
+        if (Settings.getInstance(this).shouldShowFirstrun()){
+            components.appStore.dispatch(AppAction.ShowFirstRun)
+        }
 
         if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
             intentProcessor.handleNewIntent(this, intent)

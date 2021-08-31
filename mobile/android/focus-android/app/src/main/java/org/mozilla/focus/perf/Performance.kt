@@ -8,20 +8,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
-import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.state.AppStore
+import mozilla.components.support.utils.SafeIntent
 import android.provider.Settings as AndroidSettings
 
 object Performance {
 
     private const val EXTRA_IS_PERFORMANCE_TEST = "performancetest"
 
-    fun processIntentIfPerformanceTest(intent: Intent, context: Context, appStore: AppStore) {
-        if (!isPerformanceTest(intent, context)) {
-            return
-        }
-        skipOnboarding(appStore)
-    }
+    fun processIntentIfPerformanceTest(intent: SafeIntent, context: Context) = isPerformanceTest(intent, context)
+
 
     /**
      * The checks for the USB connections and ADB debugging are checks in case another application
@@ -29,7 +24,7 @@ object Performance {
      * it is for testing visual metrics. These checks aren't full proof but most of our users won't have
      * ADB on and USB connected at the same time when running Firefox.
      */
-    private fun isPerformanceTest(intent: Intent, context: Context): Boolean {
+    private fun isPerformanceTest(intent: SafeIntent, context: Context): Boolean {
         if (!intent.getBooleanExtra(EXTRA_IS_PERFORMANCE_TEST, false)) {
             return false
         }
@@ -46,9 +41,5 @@ object Performance {
             return isPhonePlugged && isAdbEnabled
         }
         return false
-    }
-
-    private fun skipOnboarding(appStore: AppStore){
-        appStore.dispatch(AppAction.SkipOnboardingPerfTest)
     }
 }
