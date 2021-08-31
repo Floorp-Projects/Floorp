@@ -25,7 +25,7 @@ use crate::packet::PacketNumber;
 use crate::path::{Path, PathRef};
 use crate::qlog::{self, QlogMetric};
 use crate::rtt::RttEstimate;
-use crate::send_stream::StreamRecoveryToken;
+use crate::send_stream::SendStreamRecoveryToken;
 use crate::stats::{Stats, StatsCell};
 use crate::stream_id::{StreamId, StreamType};
 use crate::tracking::{AckToken, PacketNumberSpace, PacketNumberSpaceSet, SentPacket};
@@ -46,57 +46,49 @@ pub(crate) const MIN_OUTSTANDING_UNACK: usize = 16;
 
 #[derive(Debug, Clone)]
 #[allow(clippy::module_name_repetitions)]
+pub enum StreamRecoveryToken {
+    Stream(SendStreamRecoveryToken),
+    ResetStream {
+        stream_id: StreamId,
+    },
+    StopSending {
+        stream_id: StreamId,
+    },
+
+    MaxData(u64),
+    DataBlocked(u64),
+
+    MaxStreamData {
+        stream_id: StreamId,
+        max_data: u64,
+    },
+    StreamDataBlocked {
+        stream_id: StreamId,
+        limit: u64,
+    },
+
+    MaxStreams {
+        stream_type: StreamType,
+        max_streams: u64,
+    },
+    StreamsBlocked {
+        stream_type: StreamType,
+        limit: u64,
+    },
+}
+
+#[derive(Debug, Clone)]
+#[allow(clippy::module_name_repetitions)]
 pub enum RecoveryToken {
-    Ack(AckToken),
     Stream(StreamRecoveryToken),
+    Ack(AckToken),
     Crypto(CryptoRecoveryToken),
     HandshakeDone,
     KeepAlive, // Special PING.
     NewToken(usize),
     NewConnectionId(ConnectionIdEntry<[u8; 16]>),
     RetireConnectionId(u64),
-    DataBlocked(u64),
-    StreamDataBlocked {
-        stream_id: StreamId,
-        limit: u64,
-    },
-    ResetStream {
-        stream_id: StreamId,
-    },
-    MaxData(u64),
-    MaxStreamData {
-        stream_id: StreamId,
-        max_data: u64,
-    },
-    StopSending {
-        stream_id: StreamId,
-    },
-    StreamsBlocked {
-        stream_type: StreamType,
-        limit: u64,
-    },
-    MaxStreams {
-        stream_type: StreamType,
-        max_streams: u64,
-    },
     AckFrequency(AckRate),
-}
-
-impl RecoveryToken {
-    pub fn is_stream(&self) -> bool {
-        matches!(
-            self,
-            Self::Stream(_)
-                | Self::ResetStream { .. }
-                | Self::StreamDataBlocked { .. }
-                | Self::MaxStreamData { .. }
-                | Self::StopSending { .. }
-                | Self::StreamsBlocked { .. }
-                | Self::MaxStreams { .. }
-                | Self::DataBlocked(_)
-                | Self::MaxData(_)
-        )
-    }
 }
 
 /// `SendProfile` tells a sender how to send packets.
