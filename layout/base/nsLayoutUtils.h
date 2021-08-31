@@ -1196,10 +1196,10 @@ class nsLayoutUtils {
    * necessarily correspond to what's visible in the window; we don't
    * want to mess up the widget's layer tree.
    */
-  static nsresult PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
-                             const nsRegion& aDirtyRegion, nscolor aBackstop,
-                             nsDisplayListBuilderMode aBuilderMode,
-                             PaintFrameFlags aFlags = PaintFrameFlags(0));
+  static void PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
+                         const nsRegion& aDirtyRegion, nscolor aBackstop,
+                         nsDisplayListBuilderMode aBuilderMode,
+                         PaintFrameFlags aFlags = PaintFrameFlags(0));
 
   /**
    * Uses a binary search for find where the cursor falls in the line of text
