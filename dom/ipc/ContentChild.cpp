@@ -3100,6 +3100,7 @@ bool ContentChild::DeallocPWebBrowserPersistDocumentChild(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
+    const MaybeDiscarded<WindowContext>& aSourceWindowContext,
     nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction) {
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
@@ -3108,6 +3109,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
     nsCOMPtr<nsIDragSession> session;
     dragService->GetCurrentSession(getter_AddRefs(session));
     if (session) {
+      session->SetSourceWindowContext(aSourceWindowContext.GetMaybeDiscarded());
       session->SetDragAction(aAction);
       // Check if we are receiving any file objects. If we are we will want
       // to hide any of the other objects coming in from content.

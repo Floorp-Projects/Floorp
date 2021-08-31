@@ -17,7 +17,7 @@ interface nsIContentSecurityPolicy;
 native nsSize(nsSize);
 
 webidl DataTransfer;
-webidl Document;
+webidl WindowContext;
 webidl Node;
 webidl Selection;
 
@@ -46,12 +46,12 @@ interface nsIDragSession : nsISupports
   readonly attribute unsigned long numDropItems;
 
   /**
-    * The document where the drag was started, which will be null if the
+    * The window context where the drag was started, which will be null if the
     * drag originated outside the application. Useful for determining if a drop
-    * originated in the same document.
+    * originated in the same window context.
     */
   [infallible]
-  readonly attribute Document sourceDocument;
+  attribute WindowContext sourceWindowContext;
 
   /**
     * The dom node that was originally dragged to start the session, which will be null if the

@@ -432,6 +432,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvShutdown();
 
   mozilla::ipc::IPCResult RecvInvokeDragSession(
+      const MaybeDiscarded<WindowContext>& aSourceWindowContext,
       nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY

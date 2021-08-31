@@ -131,16 +131,24 @@ nsBaseDragService::GetNumDropItems(uint32_t* aNumItems) {
 }
 
 //
-// GetSourceDocument
+// GetSourceWindowContext
 //
-// Returns the DOM document where the drag was initiated. This will be
+// Returns the window context where the drag was initiated. This will be
 // nullptr if the drag began outside of our application.
 //
 NS_IMETHODIMP
-nsBaseDragService::GetSourceDocument(Document** aSourceDocument) {
-  *aSourceDocument = mSourceDocument.get();
-  NS_IF_ADDREF(*aSourceDocument);
+nsBaseDragService::GetSourceWindowContext(
+    WindowContext** aSourceWindowContext) {
+  *aSourceWindowContext = mSourceWindowContext.get();
+  NS_IF_ADDREF(*aSourceWindowContext);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsBaseDragService::SetSourceWindowContext(WindowContext* aSourceWindowContext) {
+  // This should only be called in a child process.
+  MOZ_ASSERT(!XRE_IsParentProcess());
+  mSourceWindowContext = aSourceWindowContext;
   return NS_OK;
 }
 
@@ -379,6 +387,8 @@ nsBaseDragService::InvokeDragSessionWithImage(
   mImage = aImage;
   mImageOffset = CSSIntPoint(aImageX, aImageY);
   mDragStartData = nullptr;
+  mSourceWindowContext =
+      aDOMNode ? aDOMNode->OwnerDoc()->GetWindowContext() : nullptr;
 
   mScreenPosition.x = aDragEvent->ScreenX(CallerType::System);
   mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
@@ -429,6 +439,7 @@ nsBaseDragService::InvokeDragSessionWithRemoteImage(
   mImage = nullptr;
   mDragStartData = aDragStartData;
   mImageOffset = CSSIntPoint(0, 0);
+  mSourceWindowContext = mDragStartData->GetSourceWindowContext();
 
   mScreenPosition.x = aDragEvent->ScreenX(CallerType::System);
   mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
@@ -470,6 +481,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(
   // XXXndeakin this should actually be the deepest node that contains both
   // endpoints of the selection
   nsCOMPtr<nsINode> node = aSelection->GetFocusNode();
+  mSourceWindowContext = node ? node->OwnerDoc()->GetWindowContext() : nullptr;
 
   return InvokeDragSession(node, aPrincipal, aCsp, aCookieJarSettings,
                            aTransferableArray, aActionType,
@@ -585,6 +597,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   // release the source we've been holding on to.
   mSourceDocument = nullptr;
   mSourceNode = nullptr;
+  mSourceWindowContext = nullptr;
   mTriggeringPrincipal = nullptr;
   mCsp = nullptr;
   mSelection = nullptr;
