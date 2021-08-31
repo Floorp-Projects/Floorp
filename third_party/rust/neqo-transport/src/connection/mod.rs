@@ -2504,10 +2504,6 @@ impl Connection {
         for lost in lost_packets {
             for token in &lost.tokens {
                 qdebug!([self], "Lost: {:?}", token);
-                if token.is_stream() {
-                    self.streams.lost(token);
-                    continue;
-                }
                 match token {
                     RecoveryToken::Ack(_) => {}
                     RecoveryToken::Crypto(ct) => self.crypto.lost(&ct),
@@ -2517,7 +2513,7 @@ impl Connection {
                     RecoveryToken::RetireConnectionId(seqno) => self.paths.lost_retire_cid(*seqno),
                     RecoveryToken::AckFrequency(rate) => self.paths.lost_ack_frequency(rate),
                     RecoveryToken::KeepAlive => self.idle_timeout.lost_keep_alive(),
-                    _ => unreachable!("All other tokens are for streams"),
+                    RecoveryToken::Stream(stream_token) => self.streams.lost(stream_token),
                 }
             }
         }
@@ -2557,11 +2553,8 @@ impl Connection {
         );
         for acked in acked_packets {
             for token in &acked.tokens {
-                if token.is_stream() {
-                    self.streams.acked(token);
-                    continue;
-                }
                 match token {
+                    RecoveryToken::Stream(stream_token) => self.streams.acked(stream_token),
                     RecoveryToken::Ack(at) => self.acks.acked(at),
                     RecoveryToken::Crypto(ct) => self.crypto.acked(ct),
                     RecoveryToken::NewToken(seqno) => self.new_token.acked(*seqno),
@@ -2571,7 +2564,6 @@ impl Connection {
                     RecoveryToken::KeepAlive => self.idle_timeout.ack_keep_alive(),
                     // We only worry when these are lost
                     RecoveryToken::HandshakeDone => (),
-                    _ => unreachable!("All other tokens are for streams"),
                 }
             }
         }

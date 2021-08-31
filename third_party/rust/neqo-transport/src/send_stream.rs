@@ -23,7 +23,7 @@ use crate::events::ConnectionEvents;
 use crate::fc::SenderFlowControl;
 use crate::frame::{Frame, FRAME_TYPE_RESET_STREAM};
 use crate::packet::PacketBuilder;
-use crate::recovery::RecoveryToken;
+use crate::recovery::{RecoveryToken, StreamRecoveryToken};
 use crate::stats::FrameStats;
 use crate::stream_id::StreamId;
 use crate::tparams::{self, TransportParameters};
@@ -724,12 +724,14 @@ impl SendStream {
             debug_assert!(builder.len() <= builder.limit());
 
             self.mark_as_sent(offset, length, fin);
-            tokens.push(RecoveryToken::Stream(StreamRecoveryToken {
-                id,
-                offset,
-                length,
-                fin,
-            }));
+            tokens.push(RecoveryToken::Stream(StreamRecoveryToken::Stream(
+                SendStreamRecoveryToken {
+                    id,
+                    offset,
+                    length,
+                    fin,
+                },
+            )));
             stats.stream += 1;
         }
     }
@@ -782,9 +784,9 @@ impl SendStream {
                 err,
                 final_size,
             ]) {
-                tokens.push(RecoveryToken::ResetStream {
+                tokens.push(RecoveryToken::Stream(StreamRecoveryToken::ResetStream {
                     stream_id: self.stream_id,
-                });
+                }));
                 stats.reset_stream += 1;
                 *priority = None;
                 true
@@ -1080,7 +1082,7 @@ impl SendStreams {
         self.0.insert(id, stream);
     }
 
-    pub fn acked(&mut self, token: &StreamRecoveryToken) {
+    pub fn acked(&mut self, token: &SendStreamRecoveryToken) {
         if let Some(ss) = self.0.get_mut(&token.id) {
             ss.mark_as_acked(token.offset, token.length, token.fin);
         }
@@ -1092,7 +1094,7 @@ impl SendStreams {
         }
     }
 
-    pub fn lost(&mut self, token: &StreamRecoveryToken) {
+    pub fn lost(&mut self, token: &SendStreamRecoveryToken) {
         if let Some(ss) = self.0.get_mut(&token.id) {
             ss.mark_as_lost(token.offset, token.length, token.fin);
         }
@@ -1157,7 +1159,7 @@ impl<'a> IntoIterator for &'a mut SendStreams {
 }
 
 #[derive(Debug, Clone)]
-pub struct StreamRecoveryToken {
+pub struct SendStreamRecoveryToken {
     pub(crate) id: StreamId,
     offset: u64,
     length: usize,
@@ -1571,6 +1573,14 @@ mod tests {
         ));
     }
 
+    fn as_stream_token(t: &RecoveryToken) -> &SendStreamRecoveryToken {
+        if let RecoveryToken::Stream(StreamRecoveryToken::Stream(rt)) = &t {
+            rt
+        } else {
+            panic!();
+        }
+    }
+
     #[test]
     // Verify lost frames handle fin properly
     fn send_stream_get_frame_data() {
@@ -1599,7 +1609,7 @@ mod tests {
         assert_eq!(builder.len(), written + 6);
         assert_eq!(tokens.len(), 1);
         let f1_token = tokens.remove(0);
-        assert!(matches!(&f1_token, RecoveryToken::Stream(x) if !x.fin));
+        assert!(!as_stream_token(&f1_token).fin);
 
         // Write the rest: fin.
         let written = builder.len();
@@ -1613,7 +1623,7 @@ mod tests {
         assert_eq!(builder.len(), written + 10);
         assert_eq!(tokens.len(), 1);
         let f2_token = tokens.remove(0);
-        assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.fin));
+        assert!(as_stream_token(&f2_token).fin);
 
         // Should be no more data to frame.
         let written = builder.len();
@@ -1627,11 +1637,7 @@ mod tests {
         assert!(tokens.is_empty());
 
         // Mark frame 1 as lost
-        if let RecoveryToken::Stream(rt) = f1_token {
-            ss.lost(&rt);
-        } else {
-            panic!();
-        }
+        ss.lost(as_stream_token(&f1_token));
 
         // Next frame should not set fin even though stream has fin but frame
         // does not include end of stream
@@ -1645,14 +1651,10 @@ mod tests {
         assert_eq!(builder.len(), written + 7); // Needs a length this time.
         assert_eq!(tokens.len(), 1);
         let f4_token = tokens.remove(0);
-        assert!(matches!(&f4_token, RecoveryToken::Stream(x) if !x.fin));
+        assert!(!as_stream_token(&f4_token).fin);
 
         // Mark frame 2 as lost
-        if let RecoveryToken::Stream(rt) = f2_token {
-            ss.lost(&rt);
-        } else {
-            panic!();
-        }
+        ss.lost(as_stream_token(&f2_token));
 
         // Next frame should set fin because it includes end of stream
         let written = builder.len();
@@ -1665,7 +1667,7 @@ mod tests {
         assert_eq!(builder.len(), written + 10);
         assert_eq!(tokens.len(), 1);
         let f5_token = tokens.remove(0);
-        assert!(matches!(&f5_token, RecoveryToken::Stream(x) if x.fin));
+        assert!(as_stream_token(&f5_token).fin);
     }
 
     #[test]
@@ -1690,9 +1692,9 @@ mod tests {
             &mut FrameStats::default(),
         );
         let f1_token = tokens.remove(0);
-        assert!(matches!(&f1_token, RecoveryToken::Stream(x) if x.offset == 0));
-        assert!(matches!(&f1_token, RecoveryToken::Stream(x) if x.length == 10));
-        assert!(matches!(&f1_token, RecoveryToken::Stream(x) if !x.fin));
+        assert_eq!(as_stream_token(&f1_token).offset, 0);
+        assert_eq!(as_stream_token(&f1_token).length, 10);
+        assert!(!as_stream_token(&f1_token).fin);
 
         // Should be no more data to frame
         ss.write_frames(
@@ -1712,16 +1714,12 @@ mod tests {
             &mut FrameStats::default(),
         );
         let f2_token = tokens.remove(0);
-        assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.offset == 10));
-        assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.length == 0));
-        assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.fin));
+        assert_eq!(as_stream_token(&f2_token).offset, 10);
+        assert_eq!(as_stream_token(&f2_token).length, 0);
+        assert!(as_stream_token(&f2_token).fin);
 
         // Mark frame 2 as lost
-        if let RecoveryToken::Stream(rt) = f2_token {
-            ss.lost(&rt);
-        } else {
-            panic!();
-        }
+        ss.lost(as_stream_token(&f2_token));
 
         // Next frame should set fin
         ss.write_frames(
@@ -1731,16 +1729,12 @@ mod tests {
             &mut FrameStats::default(),
         );
         let f3_token = tokens.remove(0);
-        assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.offset == 10));
-        assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.length == 0));
-        assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.fin));
+        assert_eq!(as_stream_token(&f3_token).offset, 10);
+        assert_eq!(as_stream_token(&f3_token).length, 0);
+        assert!(as_stream_token(&f3_token).fin);
 
         // Mark frame 1 as lost
-        if let RecoveryToken::Stream(rt) = f1_token {
-            ss.lost(&rt);
-        } else {
-            panic!();
-        }
+        ss.lost(as_stream_token(&f1_token));
 
         // Next frame should set fin and include all data
         ss.write_frames(
@@ -1750,9 +1744,9 @@ mod tests {
             &mut FrameStats::default(),
         );
         let f4_token = tokens.remove(0);
-        assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.offset == 0));
-        assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.length == 10));
-        assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.fin));
+        assert_eq!(as_stream_token(&f4_token).offset, 0);
+        assert_eq!(as_stream_token(&f4_token).length, 10);
+        assert!(as_stream_token(&f4_token).fin);
     }
 
     #[test]
