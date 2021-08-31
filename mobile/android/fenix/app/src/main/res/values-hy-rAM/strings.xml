@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Մասնավոր %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -636,6 +636,15 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Իմանալ ավելին</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Փոփոխությունները գործադրելու համար հավելվածը կվերամեկնարկի</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Լավ</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Չեղարկել</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Փոփոխությունները գործադրելու համար դուրս է գալիս հավելվածից…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Բաց ներդիրներ</string>
@@ -1128,7 +1137,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Ջնջել</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Չեղարկել</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Չեղարկել</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Մուտք լիաէկրան</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1294,7 +1303,7 @@
     <string name="onboarding_privacy_notice_read_button">Կարդացեք մեր գաղտնիության ծանուցումը</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Փակել</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Փակել</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Սկսել դիտարկումը</string>
@@ -1425,7 +1434,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Դադարեցվում է արտաքին գովազդի, տեսանյութերի և այլ բովանդակության բեռնումը, որը պարունակում է հետագծման կոդ: Կարող է ազդել կայքի որոշ գործառությունների վրա:</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Ամեն անգամ, երբ վահանը մանուշակագույն է, ուրեմն %s-ն արգելափակել է հետագծիչները այս կայքում: Հպեք՝ տեղեկությունների համար:</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Ամեն անգամ, երբ վահանը մանուշակագույն է, ուրեմն %s-ն արգելափակել է հետագծիչները այս կայքում: Հպեք՝ տեղեկությունների համար:</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Պաշտպանությունը միացված է այս կայքի համար</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1506,7 +1515,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Երբեք չպահպանել</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Ինքնալցնում</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Ինքնալցնում</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Ինքնալցնել %1$s-ում</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->

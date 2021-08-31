@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s privat</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -118,6 +118,11 @@
     <string name="recent_tabs_header">Tornar a aqueste onglet</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">O afichar tot</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Exploracions passadas</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -633,13 +638,20 @@
     <string name="studies_remove">Suprimir</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Actiu</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox pòt installar e lançar d’estudis de temps en temps.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Ne saber mai</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">L’aplicacion es a se tampar per aplicar las modifcacions</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">D’acòrdi</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Anullar</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Tampadura de l’aplicacion per aplicar las modificacions…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1137,7 +1149,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Suprimir</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Anullar</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Anullar</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Mòde plen ecran actiu</string>
@@ -1309,7 +1321,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Legissètz nòstra politica de confidencialitat</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Tampar</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Tampar</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Començar de navegar</string>
@@ -1441,7 +1453,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Empacha lo cargament de publicitats, vidèos e autre contengut que contenon de còdi de seguiment. Pòt afectar d’unas foncionalitats de sites web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Quand l’escut es violet, %s a blocat de traçadors sus aqueste site. Tocatz aquí per ne saber mai.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Quand l’escut es violet, %s a blocat de traçadors sus aqueste site. Tocatz aquí per ne saber mai.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Las proteccions son activadas per aqueste site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1528,7 +1540,17 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Salvar pas jamai</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Emplenament automatic</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Emplenament automatic</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Emplenatge automatic dins %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Emplenar e enregistrar los noms d’utilizaire e los senhals als sites web en utilizant %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Emplenatge automatic dins d’autras aplicacions</string>
+
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Emplena los noms d’utilizaires e los senhals d’autres aplicacions sus vòstre periferic.</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronizar los identificants</string>
@@ -1856,6 +1878,8 @@
     <!-- In-activate tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
     <string name="inactive_tabs_title">Onglets inactius</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Los onglets son disponible aicí pendent %s jorns. Aprèp, seràn automaticament tampats.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string name="inactive_tabs_30_days">30 jorns</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->

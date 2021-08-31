@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s nyamuni</string>
@@ -114,6 +114,11 @@
     <string name="recent_tabs_header">Asup deui</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Témbongkeun sadayana</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Éksplorasi tiheula</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -628,6 +633,24 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Tutup sanggeus sabulan</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Piceun</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktip</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox bisa masang jeung ngajalankeun studi ti mangsa ka mangsa.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Lenyepan</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Aplikasi bakal kaluar pikeun nerapkeun parobahan</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">HEUG</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Bolay</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Ninggalkeun aplikasi pikeun nerapkeun parobahan…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Buka tab</string>
@@ -655,6 +678,8 @@
     <string name="tab_tray_menu_item_share">Bagikeun sadaya tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Tab nu anyar ditutup</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Anyar ditutup</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Setélan akun</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -951,6 +976,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Pareum</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Hurung</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Pareum</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Koléksi</string>
@@ -1111,7 +1141,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Pupus</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Bolay</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Bolay</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Asup ka mode layar pinuh</string>
@@ -1282,7 +1312,7 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Maca wawaran salindungan kami</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Tutup</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Tutup</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Mitembeyan nyungsi</string>
@@ -1385,6 +1415,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Gurandil kripto</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Sidik ramo</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Wincikan</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Dipeungpeuk</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Idinan</string>
@@ -1412,7 +1445,7 @@
     <string name="etp_tracking_content_description">Eureunan iklan, pidéo, jeung kontén lianna anu ngandung sandi palacak. Bisa mangaruhan fungsionalitas sababaraha raramatloka.</string>
 
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Nalika taméngna bungur, %s geus meungpeuk palacak dina loka. Toél pikeun iber leuwih lengkep.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Nalika taméngna bungur, %s geus meungpeuk palacak dina loka. Toél pikeun iber leuwih lengkep.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Perlindungan ON pikeun ieu loka</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1496,7 +1529,17 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ulah diteundeun</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Eusi otomatis</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Eusi otomatis</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Otoeusi dina %1$s</string>
+
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Eusian jeung simpen sandiasma jeung kecap sandi dina raramatloka nalika maké %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Otoeusi di séjén aplikasi</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Eusian sandiasma jeung kecap sandi dina séjén aplikasi dina parabot anjeun.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Singkronkeun login</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1676,7 +1719,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Paluruh string pakéeun</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Ganti kueri ku “%s”. Conto:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Ganti kueri ku “%s”. Conto:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Lenyepan</string>
 
@@ -1816,6 +1859,16 @@
 	<string name="top_sites_rename_dialog_ok">Heug</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Bolay</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Tab teu aktip</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Tab sayaga di dieu salila %s. Sanggeusna, tab bakal otomatis ditutup.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 poé</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 minggu</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Setél tutumbu ti raramatloka, surélék, jeung surat pikeun muka otomatis dina Firefox.</string>
