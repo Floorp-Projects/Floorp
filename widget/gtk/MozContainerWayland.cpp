@@ -90,18 +90,14 @@ static bool moz_container_wayland_surface_create_locked(
 static void moz_container_wayland_set_opaque_region_locked(
     MozContainer* container);
 
-static nsWindow* moz_container_get_nsWindow(MozContainer* container) {
-  gpointer user_data = g_object_get_data(G_OBJECT(container), "nsWindow");
-  return static_cast<nsWindow*>(user_data);
-}
-
 // Imlemented in MozContainer.cpp
 void moz_container_realize(GtkWidget* widget);
 
 // Invalidate gtk wl_surface to commit changes to wl_subsurface.
 // wl_subsurface changes are effective when parent surface is commited.
 static void moz_container_wayland_invalidate(MozContainer* container) {
-  LOGWAYLAND(("moz_container_wayland_invalidate [%p]\n", (void*)container));
+  LOGWAYLAND(("moz_container_wayland_invalidate [%p]\n",
+              (void*)moz_container_get_nsWindow(container)));
 
   GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
   if (!window) {
@@ -126,8 +122,8 @@ static void moz_container_clear_input_region(MozContainer* container) {
 
 static void moz_container_wayland_move_locked(MozContainer* container, int dx,
                                               int dy) {
-  LOGWAYLAND(
-      ("moz_container_wayland_move [%p] %d,%d\n", (void*)container, dx, dy));
+  LOGWAYLAND(("moz_container_wayland_move [%p] %d,%d\n",
+              (void*)moz_container_get_nsWindow(container), dx, dy));
 
   MozContainerWayland* wl_container = &container->wl_container;
 
@@ -207,7 +203,7 @@ static void moz_container_wayland_frame_callback_handler(
   LOGWAYLAND(
       ("%s [%p] frame_callback_handler %p ready_to_draw %d (set to true)"
        " initial_draw callback %zd\n",
-       __FUNCTION__, (void*)MOZ_CONTAINER(data),
+       __FUNCTION__, (void*)moz_container_get_nsWindow(MOZ_CONTAINER(data)),
        (void*)wl_container->frame_callback_handler, wl_container->ready_to_draw,
        wl_container->initial_draw_cbs.size()));
 
@@ -282,7 +278,8 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
 
-  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
+  LOGWAYLAND(("%s [%p]\n", __FUNCTION__,
+              (void*)moz_container_get_nsWindow(container)));
 
   if (wl_container->opaque_region_used) {
     moz_gdk_wayland_window_remove_frame_callback_surface_locked(container);
@@ -303,7 +300,8 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
 static gboolean moz_container_wayland_map_event(GtkWidget* widget,
                                                 GdkEventAny* event) {
   MozContainerWayland* wl_container = &MOZ_CONTAINER(widget)->wl_container;
-  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)MOZ_CONTAINER(widget)));
+  LOGWAYLAND(("%s [%p]\n", __FUNCTION__,
+              (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget))));
 
   // Don't create wl_subsurface in map_event when it's already created or
   // if we create it for the first time.
@@ -326,7 +324,8 @@ static gboolean moz_container_wayland_map_event(GtkWidget* widget,
 }
 
 void moz_container_wayland_map(GtkWidget* widget) {
-  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)widget));
+  LOGWAYLAND(("%s [%p]\n", __FUNCTION__,
+              (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget))));
 
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
   gtk_widget_set_mapped(widget, TRUE);
@@ -337,7 +336,8 @@ void moz_container_wayland_map(GtkWidget* widget) {
 }
 
 void moz_container_wayland_unmap(GtkWidget* widget) {
-  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)widget));
+  LOGWAYLAND(("%s [%p]\n", __FUNCTION__,
+              (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget))));
 
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
   gtk_widget_set_mapped(widget, FALSE);
@@ -356,7 +356,8 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
 
   LOGWAYLAND(("moz_container_wayland_size_allocate [%p] %d,%d -> %d x %d\n",
-              (void*)widget, allocation->x, allocation->y, allocation->width,
+              (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)),
+              allocation->x, allocation->y, allocation->width,
               allocation->height));
 
   /* short circuit if you can */
@@ -464,7 +465,8 @@ void moz_container_wayland_set_scale_factor_locked(MozContainer* container) {
       return;
     }
 
-    LOGWAYLAND(("%s [%p] scale %d\n", __FUNCTION__, (void*)container, scale));
+    LOGWAYLAND(("%s [%p] scale %d\n", __FUNCTION__,
+                (void*)moz_container_get_nsWindow(container), scale));
     wl_surface_set_buffer_scale(wl_container->surface, scale);
     wl_container->buffer_scale = scale;
   }
@@ -481,7 +483,8 @@ static bool moz_container_wayland_surface_create_locked(
     MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
 
-  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
+  LOGWAYLAND(("%s [%p]\n", __FUNCTION__,
+              (void*)moz_container_get_nsWindow(container)));
 
   GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
   wl_surface* parent_surface = gdk_wayland_window_get_wl_surface(window);
@@ -568,7 +571,8 @@ void moz_container_wayland_surface_unlock(MozContainer* container,
 struct wl_surface* moz_container_wayland_get_surface_locked(
     MozContainer* container) {
   LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
-              (void*)container, (void*)container->wl_container.surface,
+              (void*)moz_container_get_nsWindow(container),
+              (void*)container->wl_container.surface,
               container->wl_container.ready_to_draw));
   if (!container->wl_container.surface ||
       !container->wl_container.ready_to_draw) {
@@ -590,7 +594,8 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
     MozContainer* container, double scale) {
   MozContainerWayland* wl_container = &container->wl_container;
 
-  LOGWAYLAND(("%s [%p] eglwindow %p\n", __FUNCTION__, (void*)container,
+  LOGWAYLAND(("%s [%p] eglwindow %p\n", __FUNCTION__,
+              (void*)moz_container_get_nsWindow(container),
               (void*)wl_container->eglwindow));
 
   MutexAutoLock lock(*wl_container->container_lock);
@@ -604,7 +609,8 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
         (int)round(gdk_window_get_height(window) * scale));
 
     LOGWAYLAND(("%s [%p] created eglwindow %p\n", __FUNCTION__,
-                (void*)container, (void*)wl_container->eglwindow));
+                (void*)moz_container_get_nsWindow(container),
+                (void*)wl_container->eglwindow));
   }
   return wl_container->eglwindow;
 }
