@@ -81,6 +81,7 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
 
 /*** Status badges ***/
 
+#downloads-button[attention="info"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   display: block;
@@ -94,6 +95,11 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
   background-size: 12px;
 }
 
+#downloads-button[attention="info"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background: url(chrome://browser/skin/notification-fill-12.svg)  no-repeat center;
+  fill: var(--panel-banner-item-info-icon-bgcolor);
+}
+
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   background: url(chrome://global/skin/icons/warning-fill-12.svg) no-repeat center;
   fill: var(--panel-banner-item-warning-icon-bgcolor);
@@ -102,6 +108,11 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
 #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   background: url(chrome://browser/skin/notification-fill-12.svg) no-repeat center;
   fill: var(--input-error-border-color, #E22850);
+}
+
+#downloads-button[animate] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  /* Don't display the badge until after the animation has cleared. */
+  display: none;
 }
 
 /*** Download notifications (transitions between downloading states) ***/
