@@ -31,7 +31,7 @@ addRDMTask(
     );
 
     // Load URL that requires the main process, forcing a remoteness flip
-    await navigateToNewDomain("about:robots", ui);
+    await navigateTo("about:robots");
 
     // Bug 1625501: RDM will remain open when the embedded browser UI is enabled.
     is(ui.destroyed, false, "RDM is still open.");

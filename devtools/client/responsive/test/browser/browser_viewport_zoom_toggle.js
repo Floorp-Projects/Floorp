@@ -25,7 +25,7 @@ addRDMTask(
     const tab = await addTab(TEST_URL);
     const browser = tab.linkedBrowser;
 
-    await load(browser, TEST_URL);
+    await navigateTo(TEST_URL);
 
     // Get the initial zoom level.
     const initialOuterZoom = getZoomForBrowser(browser);
