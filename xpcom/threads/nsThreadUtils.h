@@ -458,7 +458,6 @@ class IdleRunnable : public DiscardableRunnable, public nsIIdleRunnable {
  public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  IdleRunnable() : DiscardableRunnable("IdleRunnable") {}
   explicit IdleRunnable(const char* aName) : DiscardableRunnable(aName) {}
 
  protected:
