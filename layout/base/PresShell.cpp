@@ -1244,49 +1244,6 @@ void PresShell::Destroy() {
       Telemetry::Accumulate(Telemetry::WEBFONT_PER_PAGE, 0);
       Telemetry::Accumulate(Telemetry::WEBFONT_SIZE_PER_PAGE, 0);
     }
-    const auto* stats = mPresContext->GetFontMatchingStats();
-    if (stats) {
-      Document* doc = GetDocument();
-      if (doc && doc->IsContentDocument()) {
-        nsIURI* uri = doc->GetDocumentURI();
-        nsAutoCString path;
-        if (uri && !uri->SchemeIs("about") && !uri->SchemeIs("chrome") &&
-            !uri->SchemeIs("resource") &&
-            !(uri->SchemeIs("moz-extension") &&
-              (NS_SUCCEEDED(uri->GetFilePath(path)) &&
-               StringEndsWith(path, "/_generated_background_page.html"_ns)))) {
-          Telemetry::Accumulate(Telemetry::BASE_FONT_FAMILIES_PER_PAGE,
-                                stats->mBaseFonts);
-          Telemetry::Accumulate(Telemetry::LANGPACK_FONT_FAMILIES_PER_PAGE,
-                                stats->mLangPackFonts);
-          Telemetry::Accumulate(Telemetry::USER_FONT_FAMILIES_PER_PAGE,
-                                stats->mUserFonts);
-          Telemetry::Accumulate(Telemetry::WEB_FONT_FAMILIES_PER_PAGE,
-                                stats->mWebFonts);
-          Telemetry::Accumulate(
-              Telemetry::FALLBACK_TO_PREFS_FONT,
-              bool(stats->mFallbacks & FallbackTypes::FallbackToPrefsFont));
-          Telemetry::Accumulate(
-              Telemetry::FALLBACK_TO_BASE_FONT,
-              bool(stats->mFallbacks & FallbackTypes::FallbackToBaseFont));
-          Telemetry::Accumulate(
-              Telemetry::FALLBACK_TO_LANGPACK_FONT,
-              bool(stats->mFallbacks & FallbackTypes::FallbackToLangPackFont));
-          Telemetry::Accumulate(
-              Telemetry::FALLBACK_TO_USER_FONT,
-              bool(stats->mFallbacks & FallbackTypes::FallbackToUserFont));
-          Telemetry::Accumulate(
-              Telemetry::MISSING_FONT,
-              bool(stats->mFallbacks & FallbackTypes::MissingFont));
-          Telemetry::Accumulate(
-              Telemetry::MISSING_FONT_LANGPACK,
-              bool(stats->mFallbacks & FallbackTypes::MissingFontLangPack));
-          Telemetry::Accumulate(
-              Telemetry::MISSING_FONT_USER,
-              bool(stats->mFallbacks & FallbackTypes::MissingFontUser));
-        }
-      }
-    }
     mPresContext->CancelManagedPostRefreshObservers();
   }
 
@@ -10553,7 +10510,6 @@ void ReflowCountMgr::PaintCount(const char* aName,
       nsFontMetrics::Params params;
       params.language = nsGkAtoms::x_western;
       params.textPerf = aPresContext->GetTextPerfMetrics();
-      params.fontStats = nullptr;  // not interested here
       params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
       RefPtr<nsFontMetrics> fm = aPresContext->GetMetricsFor(font, params);
 

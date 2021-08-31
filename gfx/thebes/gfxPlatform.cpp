@@ -1805,11 +1805,9 @@ bool gfxPlatform::IsFontFormatSupported(uint32_t aFormatFlags) {
 gfxFontGroup* gfxPlatform::CreateFontGroup(
     const StyleFontFamilyList& aFontFamilyList, const gfxFontStyle* aStyle,
     nsAtom* aLanguage, bool aExplicitLanguage, gfxTextPerfMetrics* aTextPerf,
-    FontMatchingStats* aFontMatchingStats, gfxUserFontSet* aUserFontSet,
-    gfxFloat aDevToCssSize) const {
+    gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize) const {
   return new gfxFontGroup(aFontFamilyList, aStyle, aLanguage, aExplicitLanguage,
-                          aTextPerf, aFontMatchingStats, aUserFontSet,
-                          aDevToCssSize);
+                          aTextPerf, aUserFontSet, aDevToCssSize);
 }
 
 gfxFontEntry* gfxPlatform::LookupLocalFont(const nsACString& aFontName,

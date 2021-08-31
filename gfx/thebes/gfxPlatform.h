@@ -39,7 +39,6 @@ class nsAtom;
 class nsIObserver;
 class SRGBOverrideObserver;
 class gfxTextPerfMetrics;
-struct FontMatchingStats;
 typedef struct FT_LibraryRec_* FT_Library;
 
 namespace mozilla {
@@ -398,8 +397,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   gfxFontGroup* CreateFontGroup(
       const mozilla::StyleFontFamilyList& aFontFamilyList,
       const gfxFontStyle* aStyle, nsAtom* aLanguage, bool aExplicitLanguage,
-      gfxTextPerfMetrics* aTextPerf, FontMatchingStats* aFontMatchingStats,
-      gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize) const;
+      gfxTextPerfMetrics* aTextPerf, gfxUserFontSet* aUserFontSet,
+      gfxFloat aDevToCssSize) const;
 
   /**
    * Look up a local platform font using the full font face name.

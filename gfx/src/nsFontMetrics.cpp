@@ -136,7 +136,7 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
   gfxFloat devToCssSize = gfxFloat(mP2A) / gfxFloat(AppUnitsPerCSSPixel());
   mFontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
       aFont.family.families, &style, mLanguage, mExplicitLanguage,
-      aParams.textPerf, aParams.fontStats, aParams.userFontSet, devToCssSize);
+      aParams.textPerf, aParams.userFontSet, devToCssSize);
 }
 
 nsFontMetrics::~nsFontMetrics() {

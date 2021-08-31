@@ -1835,7 +1835,6 @@ gfxFontGroup::gfxFontGroup(const StyleFontFamilyList& aFontFamilyList,
                            const gfxFontStyle* aStyle, nsAtom* aLanguage,
                            bool aExplicitLanguage,
                            gfxTextPerfMetrics* aTextPerf,
-                           FontMatchingStats* aFontMatchingStats,
                            gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize)
     : mFamilyList(aFontFamilyList),
       mStyle(*aStyle),
@@ -1845,7 +1844,6 @@ gfxFontGroup::gfxFontGroup(const StyleFontFamilyList& aFontFamilyList,
       mDevToCssSize(aDevToCssSize),
       mUserFontSet(aUserFontSet),
       mTextPerf(aTextPerf),
-      mFontMatchingStats(aFontMatchingStats),
       mLastPrefLang(eFontPrefLang_Western),
       mPageLang(gfxPlatformFontList::GetFontPrefLangFor(aLanguage)),
       mLastPrefFirstFont(false),
@@ -1886,40 +1884,6 @@ void gfxFontGroup::BuildFontList() {
       pfl->AddGenericFonts(generic, mLanguage, fonts);
       if (mTextPerf) {
         mTextPerf->current.genericLookups++;
-      }
-    }
-  }
-
-  if (mFontMatchingStats) {
-    for (const auto& f : fonts) {
-      nsCString key;  // not nsAutoCString, as the assignment to it won't copy
-                      // characters, it'll just share the string buffer
-      FontVisibility visibility;
-      if (f.mFamily.mIsShared) {
-        key = f.mFamily.mShared->Key().AsString(pfl->SharedFontList());
-        visibility = f.mFamily.mShared->Visibility();
-      } else {
-        key = f.mFamily.mUnshared->Name();
-        ToLowerCase(key);
-        visibility = f.mFamily.mUnshared->Visibility();
-      }
-      if (mFontMatchingStats->mFamilyNames.EnsureInserted(key)) {
-        switch (visibility) {
-          case FontVisibility::Base:
-            mFontMatchingStats->mBaseFonts++;
-            break;
-          case FontVisibility::LangPack:
-            mFontMatchingStats->mLangPackFonts++;
-            break;
-          case FontVisibility::User:
-            mFontMatchingStats->mUserFonts++;
-            break;
-          case FontVisibility::Webfont:
-            mFontMatchingStats->mWebFonts++;
-            break;
-          default:
-            break;
-        }
       }
     }
   }
@@ -2838,9 +2802,6 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
             index++;
             if (!mSkipDrawing && !IsPUA(usv)) {
               missingChars = true;
-              if (mFontMatchingStats) {
-                mFontMatchingStats->mFallbacks |= FallbackTypes::MissingFont;
-              }
             }
             continue;
           }
@@ -2873,9 +2834,6 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
         aTextRun->SetMissingGlyph(aOffset + index, ch, mainFont);
         if (!mSkipDrawing && !IsPUA(ch)) {
           missingChars = true;
-          if (mFontMatchingStats) {
-            mFontMatchingStats->mFallbacks |= FallbackTypes::MissingFont;
-          }
         }
       }
     }
@@ -3760,9 +3718,6 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(
         mLastPrefFont = prefFont;
         mLastPrefLang = charLang;
         mLastPrefFirstFont = (i == 0 && j == 0);
-        if (mFontMatchingStats) {
-          mFontMatchingStats->mFallbacks |= FallbackTypes::FallbackToPrefsFont;
-        }
         return prefFont;
       }
     }
@@ -3777,36 +3732,8 @@ gfxFont* gfxFontGroup::WhichSystemFontSupportsChar(
   FontVisibility visibility;
   gfxFont* font =
       gfxPlatformFontList::PlatformFontList()->SystemFindFontForChar(
-          aCh, aNextCh, aRunScript, aPresentation, &mStyle, &visibility,
-          mFontMatchingStats);
+          aCh, aNextCh, aRunScript, aPresentation, &mStyle, &visibility);
   if (font) {
-    if (mFontMatchingStats) {
-      switch (visibility) {
-        case FontVisibility::Unknown:
-          // We don't currently track stats for systems lacking font visibility
-          // categories, so just ignore this.
-          break;
-        case FontVisibility::Base:
-          mFontMatchingStats->mFallbacks |= FallbackTypes::FallbackToBaseFont;
-          break;
-        case FontVisibility::LangPack:
-          mFontMatchingStats->mFallbacks |=
-              FallbackTypes::FallbackToLangPackFont;
-          break;
-        case FontVisibility::User:
-          mFontMatchingStats->mFallbacks |= FallbackTypes::FallbackToUserFont;
-          break;
-        case FontVisibility::Hidden:
-          // If macOS font fallback uses the system font, we consider this a
-          // base OS font even though it wouldn't be exposed via font-family.
-          mFontMatchingStats->mFallbacks |= FallbackTypes::FallbackToBaseFont;
-          break;
-        case FontVisibility::Webfont:
-        default:
-          MOZ_ASSERT_UNREACHABLE("this can't happen!");
-          break;
-      }
-    }
     return font;
   }
 

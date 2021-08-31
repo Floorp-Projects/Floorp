@@ -265,11 +265,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
     mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
   }
 
-  // TODO: check whether this is too expensive to do for all pages;
-  // maybe we could throttle and only collect stats on 1% of page-loads,
-  // or something like that.
-  mFontStats = MakeUnique<FontMatchingStats>();
-
   if (StaticPrefs::layout_dynamic_toolbar_max_height() > 0) {
     // The pref for dynamic toolbar max height is only used in reftests so it's
     // fine to set here.
