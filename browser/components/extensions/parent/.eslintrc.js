@@ -26,7 +26,6 @@ module.exports = {
     replaceUrlInTab: true,
     searchInitialized: true,
     sidebarActionFor: true,
-    tabGetSender: true,
     tabTracker: true,
     waitForTabLoaded: true,
     windowTracker: true,
