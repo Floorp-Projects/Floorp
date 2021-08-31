@@ -1686,7 +1686,10 @@ class Assembler : public AssemblerShared {
 
   static bool SupportsFloatingPoint() { return HasVFP(); }
   static bool SupportsUnalignedAccesses() { return HasARMv7(); }
-  static bool SupportsFastUnalignedAccesses() { return false; }
+  // Note, returning false here is technically wrong, but one has to go via the
+  // as_vldr_unaligned and as_vstr_unaligned instructions to get proper behavior
+  // and those are NEON-specific and have to be asked for specifically.
+  static bool SupportsFastUnalignedFPAccesses() { return false; }
 
   static bool HasRoundInstruction(RoundingMode mode) { return false; }
 
