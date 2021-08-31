@@ -224,7 +224,7 @@ class GeckoViewConnection {
     this.nativeApp = nativeApp;
     this.allowContentMessaging = allowContentMessaging;
 
-    if (!allowContentMessaging && sender.envType !== "addon_child") {
+    if (!this.allowContentMessaging && !sender.verified) {
       throw new Error(`Unexpected messaging sender: ${JSON.stringify(sender)}`);
     }
   }
