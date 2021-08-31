@@ -2584,8 +2584,9 @@ nsresult HTMLEditor::InsertWithQuotationsAsSubAction(
 
   // It's best to put a blank line after the quoted text so that mails
   // written without thinking won't be so ugly.
-  if (!aQuotedText.IsEmpty() && (aQuotedText.Last() != char16_t('\n'))) {
-    quotedStuff.Append(char16_t('\n'));
+  if (!aQuotedText.IsEmpty() &&
+      (aQuotedText.Last() != HTMLEditUtils::kNewLine)) {
+    quotedStuff.Append(HTMLEditUtils::kNewLine);
   }
 
   IgnoredErrorResult ignoredError;
@@ -2679,7 +2680,7 @@ nsresult HTMLEditor::InsertTextWithQuotationsInternal(
   // there aren't any there:
 #ifdef DEBUG
   nsAString::const_iterator dbgStart(hunkStart);
-  if (FindCharInReadable('\r', dbgStart, strEnd)) {
+  if (FindCharInReadable(HTMLEditUtils::kCarridgeReturn, dbgStart, strEnd)) {
     NS_ASSERTION(
         false,
         "Return characters in DOM! InsertTextWithQuotations may be wrong");
@@ -2692,13 +2693,13 @@ nsresult HTMLEditor::InsertTextWithQuotationsInternal(
   // We will break from inside when we run out of newlines.
   for (;;) {
     // Search for the end of this line (dom newlines, see above):
-    bool found = FindCharInReadable('\n', lineStart, strEnd);
+    bool found = FindCharInReadable(HTMLEditUtils::kNewLine, lineStart, strEnd);
     bool quoted = false;
     if (found) {
       // if there's another newline, lineStart now points there.
       // Loop over any consecutive newline chars:
       nsAString::const_iterator firstNewline(lineStart);
-      while (*lineStart == '\n') {
+      while (*lineStart == HTMLEditUtils::kNewLine) {
         ++lineStart;
       }
       quoted = (*lineStart == cite);
@@ -3426,8 +3427,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
-        "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
-        " "
+        "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces() "
         "failed");
     return rv;
   }
@@ -3447,8 +3447,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::"
-        "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces()"
-        " failed");
+        "RemoveNonPreWhiteSpaceOnlyTextNodesForIgnoringInvisibleWhiteSpaces() "
+        "failed");
     return rv;
   }
 

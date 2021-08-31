@@ -1291,8 +1291,7 @@ nsresult HTMLEditor::SetFinalSizeWithTransaction(int32_t aX, int32_t aY) {
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::left)"
-          " "
+          "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::left) "
           "failed, but ignored");
     }
   }

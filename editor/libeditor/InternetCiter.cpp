@@ -5,6 +5,7 @@
 
 #include "InternetCiter.h"
 
+#include "HTMLEditUtils.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -18,11 +19,6 @@
 
 namespace mozilla {
 
-const char16_t gt('>');
-const char16_t space(' ');
-const char16_t nl('\n');
-const char16_t cr('\r');
-
 /**
  * Mail citations using the Internet style: > This is a citation.
  */
@@ -30,25 +26,26 @@ const char16_t cr('\r');
 nsresult InternetCiter::GetCiteString(const nsAString& aInString,
                                       nsAString& aOutString) {
   aOutString.Truncate();
-  char16_t uch = nl;
+  char16_t uch = HTMLEditUtils::kNewLine;
 
   // Strip trailing new lines which will otherwise turn up
   // as ugly quoted empty lines.
   nsReadingIterator<char16_t> beginIter, endIter;
   aInString.BeginReading(beginIter);
   aInString.EndReading(endIter);
-  while (beginIter != endIter && (*endIter == cr || *endIter == nl)) {
+  while (beginIter != endIter && (*endIter == HTMLEditUtils::kCarridgeReturn ||
+                                  *endIter == HTMLEditUtils::kNewLine)) {
     --endIter;
   }
 
   // Loop over the string:
   while (beginIter != endIter) {
-    if (uch == nl) {
-      aOutString.Append(gt);
+    if (uch == HTMLEditUtils::kNewLine) {
+      aOutString.Append(HTMLEditUtils::kGreaterThan);
       // No space between >: this is ">>> " style quoting, for
       // compatibility with RFC 2646 and format=flowed.
-      if (*beginIter != gt) {
-        aOutString.Append(space);
+      if (*beginIter != HTMLEditUtils::kGreaterThan) {
+        aOutString.Append(HTMLEditUtils::kSpace);
       }
     }
 
@@ -58,24 +55,24 @@ nsresult InternetCiter::GetCiteString(const nsAString& aInString,
     aOutString += uch;
   }
 
-  if (uch != nl) {
-    aOutString += nl;
+  if (uch != HTMLEditUtils::kNewLine) {
+    aOutString += HTMLEditUtils::kNewLine;
   }
   return NS_OK;
 }
 
 static void AddCite(nsAString& aOutString, int32_t citeLevel) {
   for (int32_t i = 0; i < citeLevel; ++i) {
-    aOutString.Append(gt);
+    aOutString.Append(HTMLEditUtils::kGreaterThan);
   }
   if (citeLevel > 0) {
-    aOutString.Append(space);
+    aOutString.Append(HTMLEditUtils::kSpace);
   }
 }
 
 static inline void BreakLine(nsAString& aOutString, uint32_t& outStringCol,
                              uint32_t citeLevel) {
-  aOutString.Append(nl);
+  aOutString.Append(HTMLEditUtils::kNewLine);
   if (citeLevel > 0) {
     AddCite(aOutString, citeLevel);
     outStringCol = citeLevel + 1;
@@ -85,8 +82,8 @@ static inline void BreakLine(nsAString& aOutString, uint32_t& outStringCol,
 }
 
 static inline bool IsSpace(char16_t c) {
-  const char16_t nbsp(0xa0);
-  return (nsCRT::IsAsciiSpace(c) || (c == nl) || (c == cr) || (c == nbsp));
+  return (nsCRT::IsAsciiSpace(c) || (c == HTMLEditUtils::kNewLine) ||
+          (c == HTMLEditUtils::kCarridgeReturn) || (c == HTMLEditUtils::kNBSP));
 }
 
 nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
@@ -95,8 +92,8 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
   // There shouldn't be returns in this string, only dom newlines.
   // Check to make sure:
 #ifdef DEBUG
-  int32_t cr = aInString.FindChar(char16_t('\r'));
-  NS_ASSERTION((cr < 0), "Rewrap: CR in string gotten from DOM!\n");
+  int32_t crPosition = aInString.FindChar(HTMLEditUtils::kCarridgeReturn);
+  NS_ASSERTION(crPosition < 0, "Rewrap: CR in string gotten from DOM!\n");
 #endif /* DEBUG */
 
   aOutString.Truncate();
@@ -117,10 +114,12 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
   while (posInString < length) {
     // Get the new cite level here since we're at the beginning of a line
     uint32_t newCiteLevel = 0;
-    while (posInString < length && tString[posInString] == gt) {
+    while (posInString < length &&
+           tString[posInString] == HTMLEditUtils::kGreaterThan) {
       ++newCiteLevel;
       ++posInString;
-      while (posInString < length && tString[posInString] == space) {
+      while (posInString < length &&
+             tString[posInString] == HTMLEditUtils::kSpace) {
         ++posInString;
       }
     }
@@ -130,12 +129,13 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
 
     // Special case: if this is a blank line, maintain a blank line
     // (retain the original paragraph breaks)
-    if (tString[posInString] == nl && !aOutString.IsEmpty()) {
-      if (aOutString.Last() != nl) {
-        aOutString.Append(nl);
+    if (tString[posInString] == HTMLEditUtils::kNewLine &&
+        !aOutString.IsEmpty()) {
+      if (aOutString.Last() != HTMLEditUtils::kNewLine) {
+        aOutString.Append(HTMLEditUtils::kNewLine);
       }
       AddCite(aOutString, newCiteLevel);
-      aOutString.Append(nl);
+      aOutString.Append(HTMLEditUtils::kNewLine);
 
       ++posInString;
       outStringCol = 0;
@@ -160,12 +160,13 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
     // the output string, add a space to separate new text from the
     // previous text.
     else if (outStringCol > citeLevel) {
-      aOutString.Append(space);
+      aOutString.Append(HTMLEditUtils::kSpace);
       ++outStringCol;
     }
 
     // find the next newline -- don't want to go farther than that
-    int32_t nextNewline = tString.FindChar(nl, posInString);
+    int32_t nextNewline =
+        tString.FindChar(HTMLEditUtils::kNewLine, posInString);
     if (nextNewline < 0) {
       nextNewline = length;
     }
@@ -182,7 +183,7 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
           Substring(tString, posInString, nextNewline - posInString));
       outStringCol += nextNewline - posInString;
       if (nextNewline != (int32_t)length) {
-        aOutString.Append(nl);
+        aOutString.Append(HTMLEditUtils::kNewLine);
         outStringCol = 0;
       }
       posInString = nextNewline + 1;
@@ -204,7 +205,7 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
         // If this short line is the final one in the in string,
         // then we need to include the final newline, if any:
         if (nextNewline + 1 == (int32_t)length &&
-            tString[nextNewline - 1] == nl) {
+            tString[nextNewline - 1] == HTMLEditUtils::kNewLine) {
           ++nextNewline;
         }
         // Trim trailing spaces:

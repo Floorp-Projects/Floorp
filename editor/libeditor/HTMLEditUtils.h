@@ -35,8 +35,11 @@ class HTMLEditUtils final {
   using Selection = dom::Selection;
 
  public:
-  static const char16_t kSpace = 0x0020;
-  static const char16_t kNBSP = 0x00A0;
+  static constexpr char16_t kNewLine = '\n';
+  static constexpr char16_t kCarridgeReturn = '\r';
+  static constexpr char16_t kSpace = ' ';
+  static constexpr char16_t kNBSP = 0x00A0;
+  static constexpr char16_t kGreaterThan = '>';
 
   /**
    * IsSimplyEditableNode() returns true when aNode is simply editable.
@@ -1460,7 +1463,7 @@ class HTMLEditUtils final {
     MOZ_ASSERT(aOffset <= textFragment.GetLength());
     for (uint32_t i = aOffset; i; i--) {
       char16_t ch = textFragment.CharAt(i - 1);
-      if (!nsCRT::IsAsciiSpace(ch) && ch != kNBSP) {
+      if (!nsCRT::IsAsciiSpace(ch) && ch != HTMLEditUtils::kNBSP) {
         return Some(i - 1);
       }
     }
@@ -1484,7 +1487,7 @@ class HTMLEditUtils final {
     MOZ_ASSERT(aOffset <= textFragment.GetLength());
     for (uint32_t i = aOffset; i < textFragment.GetLength(); i++) {
       char16_t ch = textFragment.CharAt(i);
-      if (!nsCRT::IsAsciiSpace(ch) && ch != kNBSP) {
+      if (!nsCRT::IsAsciiSpace(ch) && ch != HTMLEditUtils::kNBSP) {
         return Some(i);
       }
     }
