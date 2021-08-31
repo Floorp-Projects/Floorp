@@ -920,7 +920,7 @@ void gfxPlatformFontList::GetFontFamilyList(
 gfxFont* gfxPlatformFontList::SystemFindFontForChar(
     uint32_t aCh, uint32_t aNextCh, Script aRunScript,
     eFontPresentation aPresentation, const gfxFontStyle* aStyle,
-    FontVisibility* aVisibility, FontMatchingStats* aFontMatchingStats) {
+    FontVisibility* aVisibility) {
   MOZ_ASSERT(!mCodepointsWithNoFonts.test(aCh),
              "don't call for codepoints already known to be unsupported");
 
@@ -979,7 +979,7 @@ gfxFont* gfxPlatformFontList::SystemFindFontForChar(
   if (!font) {
     common = false;
     font = GlobalFontFallback(aCh, aNextCh, aRunScript, aPresentation, aStyle,
-                              cmapCount, fallbackFamily, aFontMatchingStats);
+                              cmapCount, fallbackFamily);
     // If the font we found doesn't match the requested type, and we also found
     // a candidate above, prefer that one.
     if (font && aPresentation != eFontPresentation::Any && candidate) {
@@ -1080,8 +1080,7 @@ gfxFont* gfxPlatformFontList::CommonFontFallback(
 gfxFont* gfxPlatformFontList::GlobalFontFallback(
     uint32_t aCh, uint32_t aNextCh, Script aRunScript,
     eFontPresentation aPresentation, const gfxFontStyle* aMatchStyle,
-    uint32_t& aCmapCount, FontFamily& aMatchedFamily,
-    FontMatchingStats* aFontMatchingStats) {
+    uint32_t& aCmapCount, FontFamily& aMatchedFamily) {
   bool useCmaps = IsFontFamilyWhitelistActive() ||
                   gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
   FontVisibility rejectedFallbackVisibility = FontVisibility::Unknown;
@@ -1174,14 +1173,6 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
     if (data.mBestMatch) {
       aMatchedFamily = FontFamily(data.mMatchedFamily);
       return data.mBestMatch->FindOrMakeFont(aMatchStyle);
-    }
-  }
-
-  if (aFontMatchingStats) {
-    if (rejectedFallbackVisibility == FontVisibility::LangPack) {
-      aFontMatchingStats->mFallbacks |= FallbackTypes::MissingFontLangPack;
-    } else if (rejectedFallbackVisibility == FontVisibility::User) {
-      aFontMatchingStats->mFallbacks |= FallbackTypes::MissingFontUser;
     }
   }
 

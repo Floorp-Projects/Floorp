@@ -234,8 +234,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
                                  Script aRunScript,
                                  eFontPresentation aPresentation,
                                  const gfxFontStyle* aStyle,
-                                 FontVisibility* aVisibility,
-                                 FontMatchingStats* aFontMatchingStats);
+                                 FontVisibility* aVisibility);
 
   // Flags to control optional behaviors in FindAndAddFamilies. The sense
   // of the bit flags have been chosen such that the default parameter of
@@ -699,8 +698,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   gfxFont* GlobalFontFallback(uint32_t aCh, uint32_t aNextCh, Script aRunScript,
                               eFontPresentation aPresentation,
                               const gfxFontStyle* aMatchStyle,
-                              uint32_t& aCmapCount, FontFamily& aMatchedFamily,
-                              FontMatchingStats* aFontMatchingStats);
+                              uint32_t& aCmapCount, FontFamily& aMatchedFamily);
 
   // Platform-specific implementation of global font fallback, if any;
   // this may return nullptr in which case the default cmap-based fallback

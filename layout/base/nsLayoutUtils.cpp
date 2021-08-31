@@ -4123,7 +4123,6 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetFontMetricsForComputedStyle(
   // pass along to CreateFontGroup
   params.userFontSet = aPresContext->GetUserFontSet();
   params.textPerf = aPresContext->GetTextPerfMetrics();
-  params.fontStats = aPresContext->GetFontMatchingStats();
   params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
 
   // When aInflation is 1.0 and we don't require width variant, avoid
@@ -9670,7 +9669,6 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
   params.userFontSet =
       aUseUserFontSet ? aPresContext->GetUserFontSet() : nullptr;
   params.textPerf = aPresContext->GetTextPerfMetrics();
-  params.fontStats = aPresContext->GetFontMatchingStats();
   params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
   return aPresContext->GetMetricsFor(font, params);
 }
