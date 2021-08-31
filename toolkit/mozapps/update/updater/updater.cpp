@@ -293,7 +293,7 @@ static bool sUsingService = false;
 // The updater could be run with no callback, but this only happens
 // when performing a staged update (see calls to ProcessUpdates), and there
 // are already checks for sStagedUpdate when showing UI or elevating.
-static bool sCallbackIsBackgroundTask = false;
+static bool sUpdateSilently = false;
 
 #ifdef XP_WIN
 static NS_tchar gCallbackRelPath[MAXPATHLEN];
@@ -2678,7 +2678,7 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv,
 return 0;
 }
 
-bool IsCallbackBackgroundTask(int argc, NS_tchar** argv) {
+bool ShouldRunSilently(int argc, NS_tchar** argv) {
 #ifdef MOZ_BACKGROUNDTASKS
   // If the callback has a --backgroundtask switch, consider it a background
   // task. The CheckArg semantics aren't reproduced in full here,
@@ -2968,8 +2968,8 @@ int NS_main(int argc, NS_tchar** argv) {
       return 1;
     }
 
-    sCallbackIsBackgroundTask =
-        IsCallbackBackgroundTask(argc - callbackIndex, argv + callbackIndex);
+    sUpdateSilently =
+        ShouldRunSilently(argc - callbackIndex, argv + callbackIndex);
   }
 
 #ifdef XP_MACOSX
@@ -2984,7 +2984,7 @@ int NS_main(int argc, NS_tchar** argv) {
     if (t1.Run(ServeElevatedUpdateThreadFunc, &threadArgs) == 0) {
       // Show an indeterminate progress bar while an elevated update is in
       // progress.
-      if (!sCallbackIsBackgroundTask) {
+      if (!sUpdateSilently) {
         ShowProgressUI(true);
       }
     }
@@ -3290,7 +3290,7 @@ int NS_main(int argc, NS_tchar** argv) {
           bool showProgressUI = false;
           // Never show the progress UI when staging updates or in a background
           // task.
-          if (!sStagedUpdate && !sCallbackIsBackgroundTask) {
+          if (!sStagedUpdate && !sUpdateSilently) {
             // We need to call this separately instead of allowing
             // ShowProgressUI to initialize the strings because the service will
             // move the ini file out of the way when running updater.
@@ -3354,14 +3354,14 @@ int NS_main(int argc, NS_tchar** argv) {
 
       // If the service can't be used when in a background task, make sure
       // that the UAC prompt is not shown!
-      if (!useService && sCallbackIsBackgroundTask) {
+      if (!useService && sUpdateSilently) {
         if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
           CloseHandle(updateLockFileHandle);
         }
         // Set an error so we don't get into an update loop when the callback
         // runs. This will be reset to pending by handleUpdateFailure in
         // UpdateService.jsm.
-        WriteStatusFile(BACKGROUND_TASK_NEEDED_ELEVATION_ERROR);
+        WriteStatusFile(SILENT_UPDATE_NEEDED_ELEVATION_ERROR);
         LOG(("Skipping update to avoid UAC prompt from background task."));
         output_finish();
 
@@ -3705,8 +3705,7 @@ int NS_main(int argc, NS_tchar** argv) {
         // background task has a higher risk of interfering with a running app.
         // Note that this does not apply when staging (when an exclusive lock
         // isn't necessary), as there is no callback.
-        if (lastWriteError == ERROR_SHARING_VIOLATION &&
-            sCallbackIsBackgroundTask) {
+        if (lastWriteError == ERROR_SHARING_VIOLATION && sUpdateSilently) {
           LOG(
               ("NS_main: callback app file in use, failed to exclusively open "
                "executable file from background task: " LOG_S,
@@ -3765,7 +3764,7 @@ int NS_main(int argc, NS_tchar** argv) {
   // is an elevated process on OSX.
   Thread t;
   if (t.Run(UpdateThreadFunc, nullptr) == 0) {
-    if (!sStagedUpdate && !sReplaceRequest && !sCallbackIsBackgroundTask
+    if (!sStagedUpdate && !sReplaceRequest && !sUpdateSilently
 #ifdef XP_MACOSX
         && !isElevated
 #endif
