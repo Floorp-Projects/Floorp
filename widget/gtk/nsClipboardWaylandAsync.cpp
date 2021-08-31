@@ -78,6 +78,7 @@ void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
 
   if (mClipboardRequestNumber != aClipboardRequestNumber) {
     LOGCLIP(("    request number does not match!\n"));
+    return;
   }
   LOGCLIP(("    request number matches\n"));
 
@@ -238,17 +239,23 @@ const char* nsRetrievalContextWaylandAsync::GetClipboardText(
 }
 
 bool nsRetrievalContextWaylandAsync::WaitForClipboardContent() {
+  int iteration = 1;
+
   PRTime entryTime = PR_Now();
   while (!mClipboardDataReceived) {
-    // check the number of iterations
-    LOGCLIP(("doing iteration...\n"));
-    PR_Sleep(20 * PR_TicksPerSecond() / 1000); /* sleep for 20 ms/iteration */
-    if (PR_Now() - entryTime > kClipboardTimeout) {
-      LOGCLIP(("  failed to get async clipboard data in time limit\n"));
-      break;
+    if (iteration++ > kClipboardFastIterationNum) {
+      /* sleep for 10 ms/iteration */
+      PR_Sleep(PR_MillisecondsToInterval(10));
+      if (PR_Now() - entryTime > kClipboardTimeout) {
+        LOGCLIP(("  failed to get async clipboard data in time limit\n"));
+        break;
+      }
     }
+    LOGCLIP(("doing iteration %d msec %ld ...\n", (iteration - 1),
+             (long)((PR_Now() - entryTime) / 1000)));
     gtk_main_iteration();
   }
+
   return mClipboardDataReceived && mClipboardData != nullptr;
 }
 
