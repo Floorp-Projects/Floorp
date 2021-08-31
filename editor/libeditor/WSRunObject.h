@@ -799,24 +799,29 @@ class MOZ_STACK_CLASS WSRunScanner final {
           const Element& aEditableBlockParentOrTopmostEditableInlineElement,
           const Element* aEditingHost, NoBreakingSpaceData* aNBSPData);
 
-      enum class Preformatted : bool { Yes, No };
+      enum class WhiteSpacePreformatted : bool { Yes, No };
       BoundaryData()
           : mReason(WSType::NotInitialized),
-            mAcrossPreformattedCharacter(Preformatted::No) {}
+            mAcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter(
+                WhiteSpacePreformatted::No) {}
       template <typename EditorDOMPointType>
       BoundaryData(const EditorDOMPointType& aPoint, nsIContent& aReasonContent,
-                   WSType aReason, Preformatted aDidCrossPreformattedCharacter)
+                   WSType aReason,
+                   WhiteSpacePreformatted
+                       aDidCrossPreformattedWhiteSpaceOrNonCollapsibleCharacter)
           : mReasonContent(&aReasonContent),
             mPoint(aPoint),
             mReason(aReason),
-            mAcrossPreformattedCharacter(aDidCrossPreformattedCharacter) {}
+            mAcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter(
+                aDidCrossPreformattedWhiteSpaceOrNonCollapsibleCharacter) {}
       bool Initialized() const { return mReasonContent && mPoint.IsSet(); }
 
       nsIContent* GetReasonContent() const { return mReasonContent; }
       const EditorDOMPoint& PointRef() const { return mPoint; }
       WSType RawReason() const { return mReason; }
-      bool AcrossPreformattedCharacter() const {
-        return mAcrossPreformattedCharacter == Preformatted::Yes;
+      bool AcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter() const {
+        return mAcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter ==
+               WhiteSpacePreformatted::Yes;
       }
 
       bool IsNonCollapsibleCharacters() const {
@@ -870,14 +875,15 @@ class MOZ_STACK_CLASS WSRunScanner final {
       nsCOMPtr<nsIContent> mReasonContent;
       EditorDOMPoint mPoint;
       // Must be one of WSType::NotInitialized,
-      // WSType::NonCollapsibleCharacters,
-      // WSType::SpecialContent, WSType::BRElement, WSType::CurrentBlockBoundary
-      // or WSType::OtherBlockBoundary.
+      // WSType::NonCollapsibleCharacters, WSType::SpecialContent,
+      // WSType::BRElement, WSType::CurrentBlockBoundary or
+      // WSType::OtherBlockBoundary.
       WSType mReason;
-      // If the point crosses a preformatted character from scanning start
-      // point, set to "Yes".  So, this may NOT equal to the style at mPoint
-      // nor mReasonContent.
-      Preformatted mAcrossPreformattedCharacter;
+      // If the point crosses a preformatted white-space or a visible character
+      // from scanning start point, set to "Yes".  So, this may NOT equal to the
+      // style at mPoint nor mReasonContent.
+      WhiteSpacePreformatted
+          mAcrossPreformattedWhiteSpaceOrNonCollapsibleCharacter;
     };
 
     class MOZ_STACK_CLASS NoBreakingSpaceData final {
