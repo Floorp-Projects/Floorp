@@ -278,29 +278,30 @@ function getBounds(aID, aDPR = window.devicePixelRatio) {
   accessible.getBounds(x, y, width, height);
   accessible.getBoundsInCSSPixels(xInCSS, yInCSS, widthInCSS, heightInCSS);
 
+  info(`DPR is: ${aDPR}`);
   isWithin(
     x.value / aDPR,
     xInCSS.value,
     1,
-    "Heights in CSS pixels is calculated correctly"
+    "X in CSS pixels is calculated correctly"
   );
   isWithin(
     y.value / aDPR,
     yInCSS.value,
     1,
-    "Heights in CSS pixels is calculated correctly"
+    "Y in CSS pixels is calculated correctly"
   );
   isWithin(
     width.value / aDPR,
     widthInCSS.value,
     1,
-    "Heights in CSS pixels is calculated correctly"
+    "Width in CSS pixels is calculated correctly"
   );
   isWithin(
     height.value / aDPR,
     heightInCSS.value,
     1,
-    "Heights in CSS pixels is calculated correctly"
+    "Height in CSS pixels is calculated correctly"
   );
 
   return [x.value, y.value, width.value, height.value];
