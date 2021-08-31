@@ -3639,8 +3639,11 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
 #ifdef ENABLE_WASM_SIMD
-  size_t numCopies16 = remainder / sizeof(V128);
-  remainder %= sizeof(V128);
+  size_t numCopies16 = 0;
+  if (MacroAssembler::SupportsFastUnalignedFPAccesses()) {
+    numCopies16 = remainder / sizeof(V128);
+    remainder %= sizeof(V128);
+  }
 #endif
 #ifdef JS_64BIT
   size_t numCopies8 = remainder / sizeof(uint64_t);
@@ -3775,8 +3778,8 @@ static bool EmitMemCopy(FunctionCompiler& f) {
     return true;
   }
 
-  if (MacroAssembler::SupportsFastUnalignedAccesses() && len->isConstant() &&
-      len->type() == MIRType::Int32 && len->toConstant()->toInt32() != 0 &&
+  if (len->isConstant() && len->type() == MIRType::Int32 &&
+      len->toConstant()->toInt32() != 0 &&
       uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryCopyLength) {
     return EmitMemCopyInline(f, dst, src, len);
   }
@@ -3912,8 +3915,11 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
 #ifdef ENABLE_WASM_SIMD
-  size_t numCopies16 = remainder / sizeof(V128);
-  remainder %= sizeof(V128);
+  size_t numCopies16 = 0;
+  if (MacroAssembler::SupportsFastUnalignedFPAccesses()) {
+    numCopies16 = remainder / sizeof(V128);
+    remainder %= sizeof(V128);
+  }
 #endif
 #ifdef JS_64BIT
   size_t numCopies8 = remainder / sizeof(uint64_t);
@@ -4000,8 +4006,8 @@ static bool EmitMemFill(FunctionCompiler& f) {
     return true;
   }
 
-  if (MacroAssembler::SupportsFastUnalignedAccesses() && len->isConstant() &&
-      len->type() == MIRType::Int32 && len->toConstant()->toInt32() != 0 &&
+  if (len->isConstant() && len->type() == MIRType::Int32 &&
+      len->toConstant()->toInt32() != 0 &&
       uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryFillLength &&
       val->isConstant() && val->type() == MIRType::Int32) {
     return EmitMemFillInline(f, start, val, len);

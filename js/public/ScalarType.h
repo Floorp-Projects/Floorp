@@ -125,6 +125,29 @@ static inline bool isBigIntType(Type atype) {
   MOZ_CRASH("invalid scalar type");
 }
 
+static inline bool isFloatingType(Type atype) {
+  switch (atype) {
+    case Int8:
+    case Uint8:
+    case Uint8Clamped:
+    case Int16:
+    case Uint16:
+    case Int32:
+    case Uint32:
+    case Int64:
+    case BigInt64:
+    case BigUint64:
+      return false;
+    case Float32:
+    case Float64:
+    case Simd128:
+      return true;
+    case MaxTypedArrayViewType:
+      break;
+  }
+  MOZ_CRASH("invalid scalar type");
+}
+
 static inline const char* name(Type atype) {
   switch (atype) {
     case Int8:
