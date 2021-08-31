@@ -7073,54 +7073,40 @@ static bool IsAsmJSCompilerAvailable(JSContext* cx) {
 static bool EstablishPreconditions(JSContext* cx,
                                    frontend::ParserBase& parser) {
   if (!IsAsmJSCompilerAvailable(cx)) {
-    if (cx->realm()->debuggerObservesAsmJS()) {
-      return TypeFailureWarning(
-          parser, "Asm.js optimizer disabled because debugger is active");
-    }
-    return TypeFailureWarning(parser,
-                              "Asm.js optimizer disabled because the compiler "
-                              "is disabled or unavailable");
+    return TypeFailureWarning(parser, "Disabled by lack of compiler support");
   }
 
   switch (parser.options().asmJSOption) {
     case AsmJSOption::DisabledByAsmJSPref:
-      return TypeFailureWarning(
-          parser, "Asm.js optimizer disabled by 'asmjs' runtime option");
+      return TypeFailureWarning(parser, "Disabled by 'asmjs' runtime option");
     case AsmJSOption::DisabledByLinker:
-      return TypeFailureWarning(
-          parser,
-          "Asm.js optimizer disabled by linker (instantiation failure)");
-    case AsmJSOption::DisabledByNoWasmCompiler:
       return TypeFailureWarning(parser,
-                                "Asm.js optimizer disabled because no suitable "
-                                "wasm compiler is available");
-    case AsmJSOption::DisabledByDebugger:
+                                "Disabled by linker (instantiation failure)");
+    case AsmJSOption::DisabledByNoWasmCompiler:
       return TypeFailureWarning(
-          parser, "Asm.js optimizer disabled because debugger is active");
+          parser, "Disabled because no suitable wasm compiler is available");
+    case AsmJSOption::DisabledByDebugger:
+      return TypeFailureWarning(parser, "Disabled by debugger");
     case AsmJSOption::Enabled:
       break;
   }
 
   if (parser.pc_->isGenerator()) {
-    return TypeFailureWarning(parser,
-                              "Asm.js optimizer disabled in generator context");
+    return TypeFailureWarning(parser, "Disabled by generator context");
   }
 
   if (parser.pc_->isAsync()) {
-    return TypeFailureWarning(parser,
-                              "Asm.js optimizer disabled in async context");
+    return TypeFailureWarning(parser, "Disabled by async context");
   }
 
   if (parser.pc_->isArrowFunction()) {
-    return TypeFailureWarning(
-        parser, "Asm.js optimizer disabled in arrow function context");
+    return TypeFailureWarning(parser, "Disabled by arrow function context");
   }
 
   // Class constructors are also methods
   if (parser.pc_->isMethod() || parser.pc_->isGetterOrSetter()) {
     return TypeFailureWarning(
-        parser,
-        "Asm.js optimizer disabled in class constructor or method context");
+        parser, "Disabled by class constructor or method context");
   }
 
   return true;
