@@ -131,7 +131,6 @@ EXPORTS.mozilla.layers += [
     "composite/FrameUniformityData.h",
     "composite/GPUVideoTextureHost.h",
     "composite/ImageComposite.h",
-    "composite/TextRenderer.h",
     "composite/TextureHost.h",
     "CompositionRecorder.h",
     "Compositor.h",
@@ -372,8 +371,6 @@ UNIFIED_SOURCES += [
     "composite/FrameUniformityData.cpp",
     "composite/GPUVideoTextureHost.cpp",
     "composite/ImageComposite.cpp",
-    "composite/TextRenderer.cpp",
-    "composite/TextureHost.cpp",
     "CompositionRecorder.cpp",
     "Compositor.cpp",
     "CompositorAnimationStorage.cpp",
@@ -466,6 +463,7 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     "client/TextureClient.cpp",
+    "composite/TextureHost.cpp",
     "ImageContainer.cpp",
     "PersistentBufferProvider.cpp",
     "wr/WebRenderTextureHost.cpp",
