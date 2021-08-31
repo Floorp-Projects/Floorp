@@ -88,6 +88,15 @@ async function checkAngleCyclingPersist(inspector, view) {
 }
 
 async function checkSwatchShiftClick(container, win, expectedValue, comment) {
+  // Wait for 500ms before attempting a click to workaround frequent
+  // intermittents.
+  //
+  // See intermittent bug at https://bugzilla.mozilla.org/show_bug.cgi?id=1721938
+  // See potentially related bugs:
+  // - browserLoaded + synthesizeMouse timeouts https://bugzilla.mozilla.org/show_bug.cgi?id=1727749
+  // - mochitest general synthesize events issue https://bugzilla.mozilla.org/show_bug.cgi?id=1720248
+  await wait(500);
+
   const swatch = container.querySelector(".ruleview-angleswatch");
   const valueNode = container.querySelector(".ruleview-angle");
 
