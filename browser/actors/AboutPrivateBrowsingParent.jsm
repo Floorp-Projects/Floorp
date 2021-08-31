@@ -165,7 +165,8 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         const currentRegion = Region.current || "";
         return (
           homeRegion.toLowerCase() !== "cn" &&
-          currentRegion.toLowerCase() !== "cn"
+          currentRegion.toLowerCase() !== "cn" &&
+          Services.policies.status !== Services.policies.ACTIVE
         );
       }
     }
