@@ -219,23 +219,24 @@ class EmbedderPort {
 }
 
 class GeckoViewConnection {
-  constructor(sender, target, nativeApp, allowContentMessaging) {
+  constructor(sender, nativeApp, allowContentMessaging) {
     this.sender = sender;
-    this.target = target;
     this.nativeApp = nativeApp;
     this.allowContentMessaging = allowContentMessaging;
 
-    if (!allowContentMessaging && sender.envType !== "addon_child") {
+    if (!this.allowContentMessaging && !sender.verified) {
       throw new Error(`Unexpected messaging sender: ${JSON.stringify(sender)}`);
     }
   }
 
   get dispatcher() {
+    const target = this.sender.actor.browsingContext.top.embedderElement;
+
     if (this.sender.envType === "addon_child") {
       // If this is a WebExtension Page we will have a GeckoSession associated
       // to it and thus a dispatcher.
       const dispatcher = GeckoViewUtils.getDispatcherForWindow(
-        this.target.ownerGlobal
+        target.ownerGlobal
       );
       if (dispatcher) {
         return dispatcher;
@@ -251,7 +252,7 @@ class GeckoViewConnection {
       // If this message came from a content script, send the message to
       // the corresponding tab messenger so that GeckoSession can pick it
       // up.
-      return GeckoViewUtils.getDispatcherForWindow(this.target.ownerGlobal);
+      return GeckoViewUtils.getDispatcherForWindow(target.ownerGlobal);
     }
 
     throw new Error(`Uknown sender envType: ${this.sender.envType}`);
