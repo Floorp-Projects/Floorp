@@ -29,8 +29,8 @@
     <color name="find_in_page_results_color">#FFFFFF</color>
 
     <!-- Add to Home screen dialog color palette -->
-    <color name="home_screen_dialog_bg">#271948</color>
-    <color name="images_removal_warning_background_color">#1D1133</color>
+    <color name="home_screen_dialog_bg">@color/colorSecondary</color>
+    <color name="images_removal_warning_background_color">#271948</color>
     <color name="home_screen_dialog_bg_tint">#FF4AA2</color>
     <color name="home_screen_dialog_highlight">#FF4AA2</color>
     <color name="home_screen_dialog_button_text">#FF4AA2</color>
