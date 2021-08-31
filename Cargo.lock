@@ -3264,7 +3264,7 @@ dependencies = [
 [[package]]
 name = "mp4parse"
 version = "0.11.5"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=c6ba5afd856c158d9cfc1a447165fcfaaf2b797c#c6ba5afd856c158d9cfc1a447165fcfaaf2b797c"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=2dcd3d84424a02c167ac40e535a9e3231252d6c1#2dcd3d84424a02c167ac40e535a9e3231252d6c1"
 dependencies = [
  "bitreader",
  "byteorder",
@@ -3282,7 +3282,7 @@ version = "0.1.0"
 [[package]]
 name = "mp4parse_capi"
 version = "0.11.5"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=c6ba5afd856c158d9cfc1a447165fcfaaf2b797c#c6ba5afd856c158d9cfc1a447165fcfaaf2b797c"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=2dcd3d84424a02c167ac40e535a9e3231252d6c1#2dcd3d84424a02c167ac40e535a9e3231252d6c1"
 dependencies = [
  "byteorder",
  "fallible_collections",
