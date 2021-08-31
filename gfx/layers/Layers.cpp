@@ -738,11 +738,6 @@ bool ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter) {
   return true;
 }
 
-void ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs) {
-  aAttrs = ContainerLayerAttributes(mPreXScale, mPreYScale, mInheritedXScale,
-                                    mInheritedYScale, mPresShellResolution);
-}
-
 bool ContainerLayer::Creates3DContextWithExtendingChildren() {
   if (Extend3DContext()) {
     return false;
@@ -1096,11 +1091,6 @@ void ContainerLayer::DidInsertChild(Layer* aLayer) {
   if (aLayer->GetType() == TYPE_READBACK) {
     mMayHaveReadbackChild = true;
   }
-}
-
-void RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs) {
-  aAttrs = RefLayerAttributes(GetReferentId(), mEventRegionsOverride,
-                              mRemoteDocumentSize);
 }
 
 #ifdef MOZ_DUMP_PAINTING

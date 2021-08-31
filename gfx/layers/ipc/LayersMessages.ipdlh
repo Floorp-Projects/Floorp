@@ -50,19 +50,15 @@ using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
-using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
-using struct mozilla::layers::ScrollMetadata from "FrameMetrics.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositionPayload from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttributes.h";
 using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
-using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 using mozilla::LengthPercentage from "mozilla/ServoStyleConsts.h";
 using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
 using mozilla::StyleOffsetPath from "mozilla/ServoStyleConsts.h";
@@ -259,76 +255,6 @@ struct CompositorAnimations {
   uint64_t id;
 };
 
-// Change a layer's attributes
-struct CommonLayerAttributes {
-  LayerIntRegion visibleRegion;
-  EventRegions eventRegions;
-  bool useClipRect;
-  ParentLayerIntRect clipRect;
-  LayerHandle maskLayer;
-  LayerHandle[] ancestorMaskLayers;
-  // Animated colors will only honored for ColorLayers.
-  CompositorAnimations compositorAnimations;
-  nsIntRegion invalidRegion;
-  ScrollMetadata[] scrollMetadata;
-  nsCString displayListLog;
-};
-
-struct PaintedLayerAttributes {
-  nsIntRegion validRegion;
-};
-struct ContainerLayerAttributes {
-  float preXScale;
-  float preYScale;
-  float inheritedXScale;
-  float inheritedYScale;
-  float presShellResolution;
-};
-
-struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
-struct CanvasLayerAttributes    { SamplingFilter samplingFilter; IntRect bounds; };
-struct RefLayerAttributes {
-  LayersId id;
-  EventRegionsOverride eventRegionsOverride;
-  LayerIntSize remoteDocumentSize;
-};
-struct ImageLayerAttributes     { SamplingFilter samplingFilter; IntSize scaleToSize; ScaleMode scaleMode; };
-
-union SpecificLayerAttributes {
-  null_t;
-  PaintedLayerAttributes;
-  ContainerLayerAttributes;
-  ColorLayerAttributes;
-  CanvasLayerAttributes;
-  RefLayerAttributes;
-  ImageLayerAttributes;
-};
-
-struct LayerAttributes {
-  CommonLayerAttributes common;
-  SpecificLayerAttributes specific;
-};
-
-struct OpSetSimpleLayerAttributes {
-  LayerHandle layer;
-  SimpleLayerAttributes attrs;
-};
-
-struct OpSetLayerAttributes {
-  LayerHandle layer;
-  LayerAttributes attrs;
-};
-
-// Monkey with the tree structure
-struct OpSetRoot          { LayerHandle root; };
-struct OpInsertAfter      { LayerHandle container; LayerHandle childLayer; LayerHandle after; };
-struct OpPrependChild     { LayerHandle container; LayerHandle childLayer; };
-struct OpRemoveChild      { LayerHandle container; LayerHandle childLayer; };
-struct OpRepositionChild  { LayerHandle container; LayerHandle childLayer; LayerHandle after; };
-struct OpRaiseToTopChild  { LayerHandle container; LayerHandle childLayer; };
-
-struct OpSetDiagnosticTypes { DiagnosticTypes diagnostics; };
-
 struct ShmemSection {
   Shmem shmem;
   uint32_t offset;
@@ -406,32 +332,6 @@ struct CompositableOperation {
   CompositableOperationDetail detail;
 };
 
-// A unit of a changeset; a set of these comprise a changeset
-// If adding a new edit type that requires the hit testing tree to be updated,
-// set the updateHitTestingTree flag to true in RecvUpdate()
-union Edit {
-  OpCreatePaintedLayer;
-  OpCreateContainerLayer;
-  OpCreateImageLayer;
-  OpCreateColorLayer;
-  OpCreateCanvasLayer;
-  OpCreateRefLayer;
-
-  OpSetDiagnosticTypes;
-  
-  OpSetRoot;
-  OpInsertAfter;
-  OpPrependChild;
-  OpRemoveChild;
-  OpRepositionChild;
-  OpRaiseToTopChild;
-
-  OpAttachCompositable;
-  OpAttachAsyncCompositable;
-
-  CompositableOperation;
-};
-
 // Operations related to destroying resources, always handled after the other
 // operations for safety.
 union OpDestroy {
@@ -470,34 +370,6 @@ struct PaintTiming {
   float dl2Ms;
   float flbMs;
   float rasterMs;
-};
-
-struct TransactionInfo
-{
-  Edit[] cset;
-  OpSetSimpleLayerAttributes[] setSimpleAttrs;
-  OpSetLayerAttributes[] setAttrs;
-  CompositableOperation[] paints;
-  OpDestroy[] toDestroy;
-  uint64_t fwdTransactionId;
-  TransactionId id;
-  TargetConfig targetConfig;
-  bool isFirstPaint;
-  FocusTarget focusTarget;
-  bool scheduleComposite;
-  uint32_t paintSequenceNumber;
-  bool isRepeatTransaction;
-  VsyncId vsyncId;
-  TimeStamp vsyncStart;
-  TimeStamp refreshStart;
-  TimeStamp transactionStart;
-  bool containsSVG;
-  nsCString url;
-  TimeStamp fwdTime;
-  /* This provides some timing information on any content that is meant to be
-   * presented during this transaction.
-   */
-  CompositionPayload[] payload;
 };
 
 union OMTAValue {
