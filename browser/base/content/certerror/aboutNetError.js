@@ -328,7 +328,6 @@ function initPage() {
       initPageCaptivePortal();
     } else {
       initPageCertError();
-      updateContainerPosition();
     }
 
     initCertErrorPageActions();
@@ -594,28 +593,6 @@ async function setNetErrorMessageFromCode() {
   });
 }
 
-// This function centers the error container after its content updates.
-// It is currently duplicated in NetErrorChild.jsm to avoid having to do
-// async communication to the page that would result in flicker.
-// TODO(johannh): Get rid of this duplication.
-function updateContainerPosition() {
-  let textContainer = document.getElementById("text-container");
-  // Using the vh CSS property our margin adapts nicely to window size changes.
-  // Unfortunately, this doesn't work correctly in iframes, which is why we need
-  // to manually compute the height there.
-  if (window.parent == window) {
-    textContainer.style.marginTop = `calc(50vh - ${textContainer.clientHeight /
-      2}px)`;
-  } else {
-    let offset =
-      document.documentElement.clientHeight / 2 -
-      textContainer.clientHeight / 2;
-    if (offset > 0) {
-      textContainer.style.marginTop = `${offset}px`;
-    }
-  }
-}
-
 function initPageCaptivePortal() {
   document.body.className = "captiveportal";
   document
@@ -836,7 +813,6 @@ function setCertErrorDetails(event) {
         // eslint-disable-next-line no-unsanitized/property
         est.innerHTML = errWhatToDoTitle.innerHTML;
       }
-      updateContainerPosition();
       break;
 
     // This error code currently only exists for the Symantec distrust
@@ -861,7 +837,6 @@ function setCertErrorDetails(event) {
       );
 
       learnMoreLink.href = baseURL + "symantec-warning";
-      updateContainerPosition();
       break;
 
     case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
@@ -894,8 +869,6 @@ function setCertErrorDetails(event) {
       es.innerHTML = errWhatToDo.innerHTML;
       // eslint-disable-next-line no-unsanitized/property
       est.innerHTML = errWhatToDoTitle.innerHTML;
-
-      updateContainerPosition();
       break;
 
     case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
@@ -1021,7 +994,6 @@ function setCertErrorDetails(event) {
           est.textContent = errWhatToDoTitle.textContent;
           est.style.fontWeight = "bold";
         }
-        updateContainerPosition();
       }
       break;
   }
