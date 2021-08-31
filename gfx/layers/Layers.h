@@ -797,14 +797,6 @@ class Layer {
   std::unordered_set<ScrollableLayerGuid::ViewID>
   ApplyPendingUpdatesToSubtree();
 
-  /**
-   * DRAWING PHASE ONLY
-   *
-   * Write layer-subtype-specific attributes into aAttrs.  Used to
-   * synchronize layer attributes to their shadows'.
-   */
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) {}
-
   // Returns true if it's OK to save the contents of aLayer in an
   // opaque surface (a surface without an alpha channel).
   // If we can use a surface without an alpha channel, we should, because
@@ -1521,8 +1513,6 @@ class ContainerLayer : public Layer {
     Mutated();
   }
 
-  void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override;
-
   enum class SortMode {
     WITH_GEOMETRY,
     WITHOUT_GEOMETRY,
@@ -1953,11 +1943,6 @@ class RefLayer : public ContainerLayer {
   RefLayer* AsRefLayer() override { return this; }
 
   virtual LayersId GetReferentId() { return mId; }
-
-  /**
-   * DRAWING PHASE ONLY
-   */
-  void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override;
 
   MOZ_LAYER_DECL_NAME("RefLayer", TYPE_REF)
 
