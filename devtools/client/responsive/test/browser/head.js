@@ -606,21 +606,6 @@ function waitForViewportScroll(ui) {
   );
 }
 
-async function load(browser, url) {
-  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
-    browser,
-    false,
-    null,
-    false
-  );
-  const waitForDevToolsReload = await watchForDevToolsReload(browser);
-
-  BrowserTestUtils.loadURI(browser, url);
-
-  await onBrowserLoaded;
-  await waitForDevToolsReload();
-}
-
 /**
  * Reload and wait for the viewport to be loaded and for the page to be fully parsed.
  */
@@ -1031,22 +1016,4 @@ async function waitForDevicePixelRatio(
   }
 
   return dpx;
-}
-
-/**
- * Navigate the selected tab to a new URL and wait for the RDM UI to switch to a new
- * target. Until Bug 1627847 is fixed, this helper should only be called when we are
- * guaranteed the navigation will trigger a process change with or without fission.
- *
- * @param  {String} uri
- *         The URL to navigate to.
- * @param  {ResponsiveUI} ui
- *         The selected tab's ResponsiveUI.
- */
-async function navigateToNewDomain(uri, ui) {
-  // Store the current target tab before navigating.
-  const target = ui.currentTarget;
-
-  await load(ui.getViewportBrowser(), uri);
-  await waitUntil(() => ui.currentTarget !== target);
 }

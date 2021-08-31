@@ -19,11 +19,11 @@ add_task(async function() {
   await assertDocshell(tab, false, 0);
 
   info("Open RDM");
-  const { ui } = await openRDM(tab);
+  await openRDM(tab);
   await assertDocshell(tab, true, TEST_DPPX);
 
   info("Load a page which runs on the main process");
-  await navigateToNewDomain(PAGE_ON_MAIN, ui);
+  await navigateTo(PAGE_ON_MAIN);
   await assertDocshell(tab, true, TEST_DPPX);
 
   info("Close RDM");
