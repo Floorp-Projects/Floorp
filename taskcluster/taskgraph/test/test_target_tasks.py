@@ -294,6 +294,73 @@ class TestTargetTasks(unittest.TestCase):
             False,
             id="filter_regex_re_exclude_multiple",
         ),
+        pytest.param(
+            "filter_unsupported_artifact_builds",
+            {
+                "task": Task(
+                    kind="test",
+                    label="a",
+                    attributes={"supports-artifact-builds": False},
+                    task={},
+                ),
+                "parameters": {
+                    "try_task_config": {
+                        "use-artifact-builds": False,
+                    },
+                },
+            },
+            False,
+            id="filter_unsupported_artifact_builds_no_artifact_builds",
+        ),
+        pytest.param(
+            "filter_unsupported_artifact_builds",
+            {
+                "task": Task(
+                    kind="test",
+                    label="a",
+                    attributes={"supports-artifact-builds": False},
+                    task={},
+                ),
+                "parameters": {
+                    "try_task_config": {
+                        "use-artifact-builds": True,
+                    },
+                },
+            },
+            True,
+            id="filter_unsupported_artifact_builds_removed",
+        ),
+        pytest.param(
+            "filter_unsupported_artifact_builds",
+            {
+                "task": Task(
+                    kind="test",
+                    label="a",
+                    attributes={"supports-artifact-builds": True},
+                    task={},
+                ),
+                "parameters": {
+                    "try_task_config": {
+                        "use-artifact-builds": True,
+                    },
+                },
+            },
+            False,
+            id="filter_unsupported_artifact_builds_not_removed",
+        ),
+        pytest.param(
+            "filter_unsupported_artifact_builds",
+            {
+                "task": Task(kind="test", label="a", attributes={}, task={}),
+                "parameters": {
+                    "try_task_config": {
+                        "use-artifact-builds": True,
+                    },
+                },
+            },
+            False,
+            id="filter_unsupported_artifact_builds_not_removed",
+        ),
     ),
 )
 def test_filters(name, params, expected):
