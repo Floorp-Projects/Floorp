@@ -31,6 +31,11 @@ ChromeUtils.defineModuleGetter(
   "Schemas",
   "resource://gre/modules/Schemas.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
 
 const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 const CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS = "webextension-scripts-devtools";
@@ -177,13 +182,21 @@ class ExtensionBaseContextChild extends BaseContext {
     this.setContentWindow(contentWindow);
     this.browsingContextId = contentWindow.docShell.browsingContext.id;
 
+    // This is the MessageSender property passed to extension.
+    let sender = { id: extension.id };
     if (viewType == "tab") {
+      sender.frameId = WebNavigationFrames.getFrameId(contentWindow);
+      sender.tabId = tabId;
       Object.defineProperty(this, "tabId", {
         value: tabId,
         enumerable: true,
         configurable: true,
       });
     }
+    if (uri) {
+      sender.url = uri.spec;
+    }
+    this.sender = sender;
 
     Schemas.exportLazyGetter(contentWindow, "browser", () => {
       let browserObj = Cu.createObjectIn(contentWindow);
@@ -242,7 +255,7 @@ class ExtensionBaseContextChild extends BaseContext {
 }
 
 defineLazyGetter(ExtensionBaseContextChild.prototype, "messenger", function() {
-  return new Messenger(this);
+  return new Messenger(this, this.sender);
 });
 
 class ExtensionPageContextChild extends ExtensionBaseContextChild {
