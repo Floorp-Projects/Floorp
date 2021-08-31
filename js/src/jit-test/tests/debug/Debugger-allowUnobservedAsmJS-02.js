@@ -18,8 +18,8 @@ offThreadCompileScript("(function() {" + asmFunStr + "})");
 runOffThreadScript();
 
 var msg = getLastWarning().message;
-assertEq(msg === "asm.js type error: Disabled by debugger" ||
-         msg === "asm.js type error: Disabled because no suitable wasm compiler is available" ||
-         msg === "asm.js type error: Disabled by 'asmjs' runtime option" ||
-         msg === "asm.js type error: Disabled by lack of compiler support",
+assertEq(msg === "asm.js type error: Asm.js optimizer disabled by debugger" ||
+         msg === "asm.js type error: Asm.js optimizer disabled because no suitable wasm compiler is available" ||
+         msg === "asm.js type error: Asm.js optimizer disabled by 'asmjs' runtime option" ||
+         msg === "asm.js type error: Asm.js optimizer disabled because the compiler is disabled or unavailable",
          true);
