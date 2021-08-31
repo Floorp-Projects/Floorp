@@ -567,25 +567,6 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     /**
-     * Set the {@link Autocomplete.LoginStorageDelegate} instance on this runtime.
-     * This delegate is required for handling autocomplete storage requests.
-     *
-     * @param delegate The {@link Autocomplete.LoginStorageDelegate} handling
-     *                 autocomplete storage requests.
-     *
-     * @deprecated This API has been replaced by
-     *             {@link #setAutocompleteStorageDelegate} and
-     *             will be removed in GeckoView 93.
-     */
-    @Deprecated @DeprecationSchedule(version = 93, id = "login-storage")
-    @UiThread
-    public void setLoginStorageDelegate(
-            final @Nullable Autocomplete.LoginStorageDelegate delegate) {
-        ThreadUtils.assertOnUiThread();
-        mAutocompleteStorageProxy.setDelegate(delegate);
-    }
-
-    /**
      * Get the {@link Autocomplete.StorageDelegate} instance set on this runtime.
      *
      * @return The {@link Autocomplete.StorageDelegate} set on this runtime.
@@ -594,22 +575,6 @@ public final class GeckoRuntime implements Parcelable {
     public @Nullable Autocomplete.StorageDelegate getAutocompleteStorageDelegate() {
         ThreadUtils.assertOnUiThread();
         return mAutocompleteStorageProxy.getDelegate();
-    }
-
-    /**
-     * Get the {@link Autocomplete.LoginStorageDelegate} instance set on this runtime.
-     *
-     * @return The {@link Autocomplete.LoginStorageDelegate} set on this runtime.
-     *
-     * @deprecated This API has been replaced by
-     *             {@link #getAutocompleteStorageDelegate} and
-     *             will be removed in GeckoView 93.
-     */
-    @Deprecated @DeprecationSchedule(version = 93, id = "login-storage")
-    @UiThread
-    public @Nullable Autocomplete.LoginStorageDelegate getLoginStorageDelegate() {
-        ThreadUtils.assertOnUiThread();
-        return (Autocomplete.LoginStorageDelegate)mAutocompleteStorageProxy.getDelegate();
     }
 
     @UiThread
@@ -782,21 +747,6 @@ public final class GeckoRuntime implements Parcelable {
     @SuppressWarnings("checkstyle:javadocmethod")
     public @NonNull GeckoRuntimeSettings getSettings() {
         return mSettings;
-    }
-
-    /**
-     * Get the profile directory for this runtime. This is where Gecko stores
-     * internal data.
-     *
-     * @deprecated This API is deprecated and is kept here just for compatibility, as of
-     *             GeckoView 89 it always returns null.
-     * @return Profile directory
-     */
-    @UiThread
-    @Deprecated
-    @DeprecationSchedule(id = "get-profile-dir", version = 93)
-    public @Nullable File getProfileDir() {
-        return null;
     }
 
     /**

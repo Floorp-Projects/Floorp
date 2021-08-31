@@ -977,13 +977,6 @@ public class Autocomplete {
     }
 
     /**
-     * @deprecated This API has been replaced by {@link StorageDelegate} and
-     *             will be removed in GeckoView 93.
-     */
-    @Deprecated @DeprecationSchedule(version = 93, id = "login-storage")
-    public interface LoginStorageDelegate extends StorageDelegate {}
-
-    /**
      * Abstract base class for Autocomplete options.
      * Extended by {@link Autocomplete.SaveOption} and
      * {@link Autocomplete.SelectOption}.
