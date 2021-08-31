@@ -4291,7 +4291,11 @@ pref("dom.clients.openwindow_favors_same_process", true);
 // If `true`, about:processes shows in-process subframes.
 pref("toolkit.aboutProcesses.showAllSubframes", false);
 // If `true`, about:processes shows thread information.
-pref("toolkit.aboutProcesses.showThreads", false);
+#ifdef NIGHTLY_BUILD
+  pref("toolkit.aboutProcesses.showThreads", true);
+#else
+  pref("toolkit.aboutProcesses.showThreads", false);
+#endif
 
 // When a crash happens, whether to include heap regions of the crash context
 // in the minidump. Enabled by default on nightly and aurora.
