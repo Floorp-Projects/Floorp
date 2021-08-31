@@ -47,6 +47,7 @@ static IMAGE_AVIF_IPMA_INVALID_PROPERTY_INDEX: &str =
 static IMAGE_AVIF_NO_HDLR: &str = "tests/corrupt/hdlr-not-first.avif";
 static IMAGE_AVIF_HDLR_NOT_FIRST: &str = "tests/corrupt/no-hdlr.avif";
 static IMAGE_AVIF_HDLR_NOT_PICT: &str = "tests/corrupt/hdlr-not-pict.avif";
+static IMAGE_AVIF_HDLR_NONZERO_RESERVED: &str = "tests/hdlr-nonzero-reserved.avif";
 static IMAGE_AVIF_NO_MIF1: &str = "tests/no-mif1.avif";
 static IMAGE_AVIF_NO_PIXI: &str = "tests/corrupt/no-pixi.avif";
 static IMAGE_AVIF_NO_AV1C: &str = "tests/corrupt/no-av1C.avif";
@@ -932,6 +933,15 @@ fn public_avif_hdlr_is_pict() {
     let expected_msg = "The HandlerBox handler_type must be 'pict' \
                         per MIAF (ISO 23000-22:2019) § 7.2.1.5";
     assert_avif_shall(IMAGE_AVIF_HDLR_NOT_PICT, expected_msg);
+}
+
+#[test]
+fn public_avif_hdlr_nonzero_reserved() {
+    let expected_msg = "The HandlerBox 'reserved' fields shall be 0 \
+                        per ISOBMFF (ISO 14496-12:2020) § 8.4.3.2";
+    // This is a "should" despite the spec indicating a (somewhat ambiguous)
+    // requirement that this field is set to zero.
+    assert_avif_should(IMAGE_AVIF_HDLR_NONZERO_RESERVED, expected_msg);
 }
 
 #[test]
