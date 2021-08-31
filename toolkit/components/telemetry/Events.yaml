@@ -2894,12 +2894,12 @@ installation:
       silent: '(optional, present if object is "full") Whether this was a silent install'
       from_msi: '(optional, present if object is "full") Whether this was an MSI install'
       default_path: '(optional, present if object is "full") Whether the default path was used'
-    bug_numbers: [1660198]
+    bug_numbers: [1660198, 1725295]
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
       - agashlin@mozilla.com
       - rtestard@mozilla.com
-    expiry_version: "94"
+    expiry_version: "100"
 
 contextservices.quicksuggest:
   enable_toggled:
