@@ -127,12 +127,8 @@ function onClickOpenDir(event) {
 }
 
 function onClickExpand(event) {
-  const iconUp = "chrome://global/skin/icons/arrow-up-12.svg";
-  const iconDown = "chrome://global/skin/icons/arrow-down-12.svg";
-
   const card = event.target.closest(".card");
   const button = event.target.closest("button");
-  const image = button.querySelector("img");
 
   const table = card.querySelector(".event-table");
   if (!table) {
@@ -141,11 +137,13 @@ function onClickExpand(event) {
 
   if (table.hidden) {
     table.hidden = false;
-    image.src = iconUp;
+    button.classList.add("button-collapse");
+    button.classList.remove("button-expand");
     setContent(button, null, "third-party-button-collapse");
   } else {
     table.hidden = true;
-    image.src = iconDown;
+    button.classList.add("button-expand");
+    button.classList.remove("button-collapse");
     setContent(button, null, "third-party-button-expand");
   }
 }
