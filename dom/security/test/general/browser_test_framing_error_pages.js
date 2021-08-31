@@ -27,12 +27,7 @@ add_task(async function open_test_xfo_error_page() {
       const iframeDoc = content.document.getElementById("testframe")
         .contentDocument;
       let errorPage = iframeDoc.body.innerHTML;
-      ok(
-        errorPage.includes(
-          "This page has an X-Frame-Options policy that prevents it from being loaded in this context"
-        ),
-        "xfo error page correct"
-      );
+      ok(errorPage.includes("csp-xfo-error-title"), "xfo error page correct");
     });
   });
 });
@@ -52,12 +47,7 @@ add_task(async function open_test_csp_frame_ancestor_error_page() {
       const iframeDoc = content.document.getElementById("testframe")
         .contentDocument;
       let errorPage = iframeDoc.body.innerHTML;
-      ok(
-        errorPage.includes(
-          "This page has a content security policy that prevents it from being loaded in this way"
-        ),
-        "csp error page correct"
-      );
+      ok(errorPage.includes("csp-xfo-error-title"), "csp error page correct");
     });
   });
 });
