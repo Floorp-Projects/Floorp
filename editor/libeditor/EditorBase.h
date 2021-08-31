@@ -2103,7 +2103,7 @@ class EditorBase : public nsIEditor,
    * principals match, or we are in a editor context where this doesn't matter.
    * Otherwise, the data must be sanitized first.
    */
-  bool IsSafeToInsertData(const Document* aSourceDoc) const;
+  bool IsSafeToInsertData(nsIPrincipal* aSourcePrincipal) const;
 
  protected:  // Called by helper classes.
   /**
@@ -2449,14 +2449,15 @@ class EditorBase : public nsIEditor,
    * @param aDataTransfer       The data transfer object which is dropped.
    * @param aDroppedAt          The DOM tree position whether aDataTransfer
    *                            is dropped.
-   * @param aSrcDocument        Source document which has the dragging item.
-   *                            May be nullptr if it comes from another app.
+   * @param aSourcePrincipal    Principal of the source of the drag.
+   *                            May be nullptr if it comes from another app
+   *                            or process.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult
   InsertDroppedDataTransferAsAction(AutoEditActionDataSetter& aEditActionData,
                                     dom::DataTransfer& aDataTransfer,
                                     const EditorDOMPoint& aDroppedAt,
-                                    dom::Document* aSrcDocument) = 0;
+                                    nsIPrincipal* aSourcePrincipal) = 0;
 
   /**
    * DeleteSelectionByDragAsAction() removes selection and dispatch "input"

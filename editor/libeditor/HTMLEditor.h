@@ -1070,7 +1070,7 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertDroppedDataTransferAsAction(
       AutoEditActionDataSetter& aEditActionData,
       dom::DataTransfer& aDataTransfer, const EditorDOMPoint& aDroppedAt,
-      dom::Document* aSrcDocument) final;
+      nsIPrincipal* aSourcePrincipal) final;
 
   /**
    * GetInlineStyles() retrieves the style of aNode and modifies each item of
@@ -3856,7 +3856,7 @@ class HTMLEditor final : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertFromDataTransfer(
       const dom::DataTransfer* aDataTransfer, uint32_t aIndex,
-      Document* aSourceDoc, const EditorDOMPoint& aDroppedAt,
+      nsIPrincipal* aSourcePrincipal, const EditorDOMPoint& aDroppedAt,
       bool aDoDeleteSelection);
 
   static bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);

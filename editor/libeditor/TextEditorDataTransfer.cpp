@@ -96,7 +96,7 @@ nsresult TextEditor::InsertTextFromTransferable(
 
 nsresult TextEditor::InsertDroppedDataTransferAsAction(
     AutoEditActionDataSetter& aEditActionData, DataTransfer& aDataTransfer,
-    const EditorDOMPoint& aDroppedAt, Document* aSrcDocument) {
+    const EditorDOMPoint& aDroppedAt, nsIPrincipal* aSourcePrincipal) {
   MOZ_ASSERT(aEditActionData.GetEditAction() == EditAction::eDrop);
   MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
   MOZ_ASSERT(aDroppedAt.IsSet());

@@ -1791,7 +1791,7 @@ nsresult EditorBase::InsertTextAt(const nsAString& aStringToInsert,
   return rv;
 }
 
-bool EditorBase::IsSafeToInsertData(const Document* aSourceDoc) const {
+bool EditorBase::IsSafeToInsertData(nsIPrincipal* aSourcePrincipal) const {
   // Try to determine whether we should use a sanitizing fragment sink
   bool isSafe = false;
 
@@ -1808,13 +1808,11 @@ bool EditorBase::IsSafeToInsertData(const Document* aSourceDoc) const {
 
   isSafe = docShell && docShell->GetAppType() == nsIDocShell::APP_TYPE_EDITOR;
 
-  if (!isSafe && aSourceDoc) {
-    nsIPrincipal* srcPrincipal = aSourceDoc->NodePrincipal();
+  if (!isSafe && aSourcePrincipal) {
     nsIPrincipal* destPrincipal = destdoc->NodePrincipal();
-    NS_ASSERTION(srcPrincipal && destPrincipal,
-                 "How come we don't have a principal?");
+    NS_ASSERTION(destPrincipal, "How come we don't have a principal?");
     DebugOnly<nsresult> rvIgnored =
-        srcPrincipal->Subsumes(destPrincipal, &isSafe);
+        aSourcePrincipal->Subsumes(destPrincipal, &isSafe);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "nsIPrincipal::Subsumes() failed, but ignored");
   }
@@ -4350,16 +4348,23 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
 
   nsCOMPtr<nsINode> sourceNode = dataTransfer->GetMozSourceNode();
 
+  // If there is no source document, then the drag was from another application
+  // or another process (such as an out of process subframe). The latter case is
+  // not currently handled below when checking for a move/copy and deleting the
+  // existing text.
   RefPtr<Document> srcdoc;
   if (sourceNode) {
     srcdoc = sourceNode->OwnerDoc();
   }
 
+  nsCOMPtr<nsIPrincipal> sourcePrincipal;
+  dragSession->GetTriggeringPrincipal(getter_AddRefs(sourcePrincipal));
+
   if (nsContentUtils::CheckForSubFrameDrop(
           dragSession, aDropEvent->WidgetEventPtr()->AsDragEvent())) {
     // Don't allow drags from subframe documents with different origins than
     // the drop destination.
-    if (srcdoc && !IsSafeToInsertData(srcdoc)) {
+    if (!IsSafeToInsertData(sourcePrincipal)) {
       return NS_OK;
     }
   }
@@ -4580,7 +4585,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   }
 
   nsresult rv = InsertDroppedDataTransferAsAction(editActionData, *dataTransfer,
-                                                  droppedAt, srcdoc);
+                                                  droppedAt, sourcePrincipal);
   if (rv == NS_ERROR_EDITOR_DESTROYED ||
       rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
     return EditorBase::ToGenericNSResult(rv);

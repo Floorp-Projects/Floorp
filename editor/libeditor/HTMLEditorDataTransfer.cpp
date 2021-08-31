@@ -94,7 +94,7 @@ static void RemoveFragComments(nsCString& aStr);
 
 nsresult HTMLEditor::InsertDroppedDataTransferAsAction(
     AutoEditActionDataSetter& aEditActionData, DataTransfer& aDataTransfer,
-    const EditorDOMPoint& aDroppedAt, Document* aSrcDocument) {
+    const EditorDOMPoint& aDroppedAt, nsIPrincipal* aSourcePrincipal) {
   MOZ_ASSERT(aEditActionData.GetEditAction() == EditAction::eDrop);
   MOZ_ASSERT(GetEditAction() == EditAction::eDrop);
   MOZ_ASSERT(aDroppedAt.IsSet());
@@ -119,7 +119,7 @@ nsresult HTMLEditor::InsertDroppedDataTransferAsAction(
   uint32_t numItems = aDataTransfer.MozItemCount();
   for (uint32_t i = 0; i < numItems; ++i) {
     DebugOnly<nsresult> rvIgnored = InsertFromDataTransfer(
-        &aDataTransfer, i, aSrcDocument, aDroppedAt, false);
+        &aDataTransfer, i, aSourcePrincipal, aDroppedAt, false);
     if (NS_WARN_IF(Destroyed())) {
       return NS_OK;
     }
@@ -1879,7 +1879,7 @@ static void GetStringFromDataTransfer(const DataTransfer* aDataTransfer,
 
 nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
                                             uint32_t aIndex,
-                                            Document* aSourceDoc,
+                                            nsIPrincipal* aSourcePrincipal,
                                             const EditorDOMPoint& aDroppedAt,
                                             bool aDoDeleteSelection) {
   MOZ_ASSERT(GetEditAction() == EditAction::eDrop ||
@@ -1902,7 +1902,7 @@ nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
       types->Contains(NS_LITERAL_STRING_FROM_CSTRING(kHTMLContext));
 
   bool isPlaintextEditor = IsInPlaintextMode();
-  bool isSafe = IsSafeToInsertData(aSourceDoc);
+  bool isSafe = IsSafeToInsertData(aSourcePrincipal);
 
   uint32_t length = types->Length();
   for (uint32_t i = 0; i < length; i++) {
