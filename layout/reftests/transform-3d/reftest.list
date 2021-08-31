@@ -60,7 +60,7 @@ fuzzy-if(webrender,0-1,0-4) == rotatex-transformorigin-1a.html rotatex-transform
 fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),0-1,0-86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
 == transform-style-flat-1a.html transform-style-flat-1-ref.html
 == willchange-containing-block.html?willchange willchange-containing-block.html?ref
-fails-if(useDrawSnapshot) != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
+!= willchange-containing-block.html?willchange willchange-containing-block.html?noblock
 fuzzy-if(winWidget&&!layersGPUAccelerated,0-1,0-606) fuzzy-if(webrender,0-3,0-304) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
 fails-if(!layersGPUAccelerated) fails-if(useDrawSnapshot&&webrender) fuzzy-if(!useDrawSnapshot&&webrender,0-29,0-826) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
