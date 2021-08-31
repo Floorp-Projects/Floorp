@@ -89,7 +89,7 @@ class SyncLibsAndUpdateGenerationID extends DefaultTask {
     @OutputDirectory
     File destinationDir
 
-    @Input
+    @InputDirectory
     File llvmBin = project.ext.getLlvmBinFolder()
 
     // Sibling to `.note.gnu.build-id`.
@@ -222,7 +222,7 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     }()
 
     def syncLibsFromDistDir = { if (shouldUpdateGenerationID) {
-        def jarTask = tasks["bundleLibRuntime${variant.name.capitalize()}"]
+        def jarTask = tasks["bundleLibRuntimeToJar${variant.name.capitalize()}"]
         def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
 
         task("syncLibsAndUpdateGenerationIDFromDistDirFor${variant.name.capitalize()}", type: SyncLibsAndUpdateGenerationID) {
@@ -292,7 +292,7 @@ ext.configureVariantWithGeckoBinaries = { variant ->
 ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
     // BundleLibRuntime prepares the library for further processing to be
     // incorporated in an app. We use this version to create the JNI wrappers.
-    def jarTask = tasks["bundleLibRuntime${variant.name.capitalize()}"]
+    def jarTask = tasks["bundleLibRuntimeToJar${variant.name.capitalize()}"]
     def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
 
     def annotationProcessorsJarTask = project(':annotations').jar
