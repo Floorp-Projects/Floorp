@@ -324,6 +324,10 @@ bool nsWaylandDisplay::Matches(wl_display* aDisplay) {
   return mThreadId == PR_GetCurrentThread() && aDisplay == mDisplay;
 }
 
+static void WlCrashHandler(const char* format, va_list args) {
+  MOZ_CRASH_UNSAFE(g_strdup_vprintf(format, args));
+}
+
 nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
     : mThreadId(PR_GetCurrentThread()),
       mDisplay(aDisplay),
@@ -341,6 +345,10 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       mViewporter(nullptr),
       mDmabuf(nullptr),
       mExplicitSync(false) {
+  // GTK sets the log handler on display creation, thus we overwrite it here
+  // in a similar fashion
+  wl_log_set_handler_client(WlCrashHandler);
+
   wl_registry* registry = wl_display_get_registry(mDisplay);
   wl_registry_add_listener(registry, &registry_listener, this);
   if (!NS_IsMainThread()) {
