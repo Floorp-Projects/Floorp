@@ -469,15 +469,20 @@ var refreshTab = async function(tab = gBrowser.selectedTab) {
  *
  * @param {String} url The url to be loaded in the current tab.
  * @param {JSON} options Optional dictionary object with the following keys:
- *        - {Boolean} isErrorPage You may pass `true` is the URL is an error
- *                    page. Otherwise BrowserTestUtils.browserLoaded will wait
- *                    for 'load' event, which never fires for error pages.
+ *        - {XULBrowser} browser
+ *          The browser element which should navigate. Defaults to the selected
+ *          browser.
+ *        - {Boolean} isErrorPage
+ *          You may pass `true` is the URL is an error page. Otherwise
+ *          BrowserTestUtils.browserLoaded will wait for 'load' event, which
+ *          never fires for error pages.
  *
  * @return a promise that resolves when the page has fully loaded.
  */
-async function navigateTo(uri, { isErrorPage = false } = {}) {
-  const browser = gBrowser.selectedBrowser;
-
+async function navigateTo(
+  uri,
+  { browser = gBrowser.selectedBrowser, isErrorPage = false } = {}
+) {
   const waitForDevToolsReload = await watchForDevToolsReload(browser, {
     isErrorPage,
   });
@@ -500,7 +505,7 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   // if we're navigating to the same page we're already on, use reloadTab instead as the
   // behavior slightly differs from loadURI (e.g. scroll position isn't keps with the latter).
   if (uri === browser.currentURI.spec) {
-    gBrowser.reloadTab(gBrowser.selectedTab);
+    gBrowser.reloadTab(gBrowser.getTabForBrowser(browser));
   } else {
     BrowserTestUtils.loadURI(browser, uri);
   }
