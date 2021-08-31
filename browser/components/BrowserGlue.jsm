@@ -307,9 +307,7 @@ let JSWINDOWACTORS = {
       events: {
         DOMContentLoaded: {},
         pageshow: { mozSystemGroup: true },
-        // Don't try to create the actor if only the pagehide event fires.
-        // This can happen with the initial about:blank documents.
-        pagehide: { mozSystemGroup: true, createActor: false },
+        pagehide: { mozSystemGroup: true },
       },
     },
     messageManagerGroups: ["browsers"],

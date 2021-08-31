@@ -272,12 +272,10 @@ add_task(async function test_filter_isArticle() {
   await extension.startup();
   let ok = extension.awaitFinish("isArticle");
 
-  const baseUrl = getRootDirectory(gTestPath).replace(
-    "chrome://mochitests/content",
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
     "http://mochi.test:8888/"
   );
-  const url = `${baseUrl}/readerModeArticle.html`;
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await ok;
 
   await extension.unload();
