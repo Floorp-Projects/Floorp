@@ -51,6 +51,9 @@ button.downloadButton:hover:active,
 @item@[verdict="Insecure"] .downloadDetails,
 @item@[verdict="Malware"] .downloadDetails {
   color: #C50042;
+  /* The details text usually gets an opacity reduction, but for the error
+     states we disable that, because it would reduce the contrast too much. */
+  opacity: inherit;
 }
 
 :root[lwt-popup-brighttext] @item@[verdict="Insecure"] .downloadDetails,
