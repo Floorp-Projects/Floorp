@@ -53,7 +53,6 @@ class DrawTarget;
 class SourceSurface;
 class DataSourceSurface;
 class ScaledFont;
-class DrawEventRecorder;
 class VsyncSource;
 class ContentDeviceData;
 class GPUDeviceData;
@@ -985,8 +984,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static void InitializeCMS();
   static void ShutdownCMS();
 
-  friend void RecordingPrefChanged(const char* aPrefName, void* aClosure);
-
   /**
    * Calling this function will compute and set the ideal tile size for the
    * platform. This will only have an effect in the parent process; child
@@ -1035,8 +1032,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   mozilla::widget::GfxInfoCollector<gfxPlatform> mDisplayInfoCollector;
 
   nsTArray<mozilla::layers::FrameStats> mFrameStats;
-
-  RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
 
   // Backend that we are compositing with. NONE, if no compositor has been
   // created yet.

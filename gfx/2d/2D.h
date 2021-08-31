@@ -1839,11 +1839,6 @@ class GFX2D_API Factory {
   static void CopyDataSourceSurface(DataSourceSurface* aSource,
                                     DataSourceSurface* aDest);
 
-  static already_AddRefed<DrawEventRecorder> CreateEventRecorderForFile(
-      const char_type* aFilename);
-
-  static void SetGlobalEventRecorder(DrawEventRecorder* aRecorder);
-
   static uint32_t GetMaxSurfaceSize(BackendType aType);
 
   static LogForwarder* GetLogForwarder() {
@@ -1972,9 +1967,6 @@ class GFX2D_API Factory {
 
   friend class DrawTargetD2D1;
 #endif  // WIN32
-
- private:
-  static DrawEventRecorder* mRecorder;
 };
 
 class MOZ_RAII AutoSerializeWithMoz2D final {
