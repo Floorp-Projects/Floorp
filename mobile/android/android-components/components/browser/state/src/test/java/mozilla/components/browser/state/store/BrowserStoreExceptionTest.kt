@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.recover.toRecoverableTab
 import mozilla.components.lib.state.StoreException
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.fail
@@ -50,7 +51,7 @@ class BrowserStoreExceptionTest {
             val tab1 = createTab("https://www.mozilla.org")
             store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
 
-            store.dispatch(TabListAction.RestoreAction(listOf(tab1))).joinBlocking()
+            store.dispatch(TabListAction.RestoreAction(listOf(tab1.toRecoverableTab()), restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING)).joinBlocking()
         }
     }
 

@@ -18,8 +18,8 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.recover.toRecoverableTab
-import mozilla.components.browser.state.state.recover.toTabSessionStates
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
@@ -71,6 +71,9 @@ class UndoMiddleware(
 
             // Restore
             is UndoAction.RestoreRecoverableTabs -> restore(context.store, context.state)
+
+            // Do nothing when an action different from above is passed in.
+            else -> { }
         }
 
         next(action)
@@ -83,10 +86,12 @@ class UndoMiddleware(
     ) {
         clearJob?.cancel()
 
-        val recoverableTabs = tabs.mapNotNull {
-            it as? TabSessionState
-        }.map {
-            it.toRecoverableTab()
+        val recoverableTabs = mutableListOf<RecoverableTab>()
+        tabs.forEach { tab ->
+            if (tab is TabSessionState) {
+                val index = context.state.tabs.indexOfFirst { it.id == tab.id }
+                recoverableTabs.add(tab.toRecoverableTab(index))
+            }
         }
 
         if (recoverableTabs.isEmpty()) {
@@ -127,7 +132,12 @@ class UndoMiddleware(
             return@launch
         }
 
-        store.dispatch(TabListAction.RestoreAction(tabs.toTabSessionStates()))
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
+            )
+        )
 
         // Restore the previous selection if needed.
         undoHistory.selectedTabId?.let { tabId ->

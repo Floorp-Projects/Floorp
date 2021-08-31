@@ -9,6 +9,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
@@ -466,12 +467,13 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    createTab(id = "a", url = "https://www.mozilla.org", private = false),
-                    createTab(id = "b", url = "https://www.firefox.com", private = true),
-                    createTab(id = "c", url = "https://www.example.org", private = true),
-                    createTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(id = "a", url = "https://www.mozilla.org", private = false),
+                    RecoverableTab(id = "b", url = "https://www.firefox.com", private = true),
+                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
+                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
                 ),
-                selectedTabId = "d"
+                selectedTabId = "d",
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
             )
         ).joinBlocking()
 
@@ -484,7 +486,7 @@ class TabListActionTest {
     }
 
     @Test
-    fun `RestoreAction - Adds restored tabs to existing tabs without updating selection`() {
+    fun `RestoreAction - Adds restored tabs to the beginning of existing tabs without updating selection`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -500,10 +502,11 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    createTab(id = "c", url = "https://www.example.org", private = true),
-                    createTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
+                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
                 ),
-                selectedTabId = "d"
+                selectedTabId = "d",
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
             )
         ).joinBlocking()
 
@@ -516,7 +519,40 @@ class TabListActionTest {
     }
 
     @Test
-    fun `RestoreAction - Adds restored tabs to existing tabs with updating selection`() {
+    fun `RestoreAction - Adds restored tabs to the end of existing tabs without updating selection`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                    createTab(id = "b", url = "https://www.firefox.com", private = true)
+                ),
+                selectedTabId = "a"
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
+                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
+                ),
+                selectedTabId = "d",
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.END
+            )
+        ).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("b", store.state.tabs[1].id)
+        assertEquals("c", store.state.tabs[2].id)
+        assertEquals("d", store.state.tabs[3].id)
+        assertEquals("a", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `RestoreAction - Adds restored tabs to beginning of existing tabs with updating selection`() {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -531,10 +567,11 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    createTab(id = "c", url = "https://www.example.org", private = true),
-                    createTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
+                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
                 ),
-                selectedTabId = "d"
+                selectedTabId = "d",
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
             )
         ).joinBlocking()
 
@@ -543,6 +580,38 @@ class TabListActionTest {
         assertEquals("d", store.state.tabs[1].id)
         assertEquals("a", store.state.tabs[2].id)
         assertEquals("b", store.state.tabs[3].id)
+        assertEquals("d", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `RestoreAction - Adds restored tabs to end of existing tabs with updating selection`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                    createTab(id = "b", url = "https://www.firefox.com", private = true)
+                )
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
+                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
+                ),
+                selectedTabId = "d",
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.END
+            )
+        ).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("b", store.state.tabs[1].id)
+        assertEquals("c", store.state.tabs[2].id)
+        assertEquals("d", store.state.tabs[3].id)
         assertEquals("d", store.state.selectedTabId)
     }
 
@@ -562,10 +631,11 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    createTab(id = "c", url = "https://www.example.org", private = true),
-                    createTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
+                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
                 ),
-                selectedTabId = null
+                selectedTabId = null,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
             )
         ).joinBlocking()
 
@@ -575,6 +645,215 @@ class TabListActionTest {
         assertEquals("a", store.state.tabs[2].id)
         assertEquals("b", store.state.tabs[3].id)
         assertNull(store.state.selectedTabId)
+    }
+
+    @Test
+    fun `RestoreAction - Add tab back to correct location (beginning)`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org"),
+                    createTab(id = "b", url = "https://www.firefox.com")
+                )
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", index = 0),
+                ),
+                selectedTabId = null,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
+            )
+        ).joinBlocking()
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("c", store.state.tabs[0].id)
+        assertEquals("a", store.state.tabs[1].id)
+        assertEquals("b", store.state.tabs[2].id)
+    }
+
+    @Test
+    fun `RestoreAction - Add tab back to correct location (middle)`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org"),
+                    createTab(id = "b", url = "https://www.firefox.com")
+                )
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", index = 1),
+                ),
+                selectedTabId = null,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
+            )
+        ).joinBlocking()
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("c", store.state.tabs[1].id)
+        assertEquals("b", store.state.tabs[2].id)
+    }
+
+    @Test
+    fun `RestoreAction - Add tab back to correct location (end)`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org"),
+                    createTab(id = "b", url = "https://www.firefox.com")
+                )
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", index = 2),
+                ),
+                selectedTabId = null,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
+            )
+        ).joinBlocking()
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("b", store.state.tabs[1].id)
+        assertEquals("c", store.state.tabs[2].id)
+    }
+
+    @Test
+    fun `RestoreAction - Add tab back to correct location with index beyond size of total tabs`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org"),
+                    createTab(id = "b", url = "https://www.firefox.com")
+                )
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", index = 4),
+                ),
+                selectedTabId = null,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
+            )
+        ).joinBlocking()
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("b", store.state.tabs[1].id)
+        assertEquals("c", store.state.tabs[2].id)
+    }
+
+    @Test
+    fun `RestoreAction - Add tabs back to correct locations`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org"),
+                    createTab(id = "b", url = "https://www.firefox.com")
+                )
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", index = 3),
+                    RecoverableTab(id = "d", url = "https://www.example.org", index = 0),
+                ),
+                selectedTabId = null,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
+            )
+        ).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("d", store.state.tabs[0].id)
+        assertEquals("a", store.state.tabs[1].id)
+        assertEquals("b", store.state.tabs[2].id)
+        assertEquals("c", store.state.tabs[3].id)
+    }
+
+    @Test
+    fun `RestoreAction - Add tabs with matching indices back to correct locations`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org"),
+                    createTab(id = "b", url = "https://www.firefox.com")
+                )
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", index = 0),
+                    RecoverableTab(id = "d", url = "https://www.example.org", index = 0),
+                ),
+                selectedTabId = null,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
+            )
+        ).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("d", store.state.tabs[0].id)
+        assertEquals("c", store.state.tabs[1].id)
+        assertEquals("a", store.state.tabs[2].id)
+        assertEquals("b", store.state.tabs[3].id)
+    }
+
+    @Test
+    fun `RestoreAction - Add tabs with a -1 removal index`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org"),
+                    createTab(id = "b", url = "https://www.firefox.com")
+                )
+            )
+        )
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    RecoverableTab(id = "c", url = "https://www.example.org", index = -1),
+                    RecoverableTab(id = "d", url = "https://www.example.org"),
+                ),
+                selectedTabId = null,
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
+            )
+        ).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("b", store.state.tabs[1].id)
+        assertEquals("c", store.state.tabs[2].id)
+        assertEquals("d", store.state.tabs[3].id)
     }
 
     @Test

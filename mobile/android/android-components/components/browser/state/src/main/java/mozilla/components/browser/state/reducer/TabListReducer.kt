@@ -9,6 +9,7 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.recover.toTabSessionStates
 import kotlin.math.max
 
 internal object TabListReducer {
@@ -134,13 +135,34 @@ internal object TabListReducer {
 
             is TabListAction.RestoreAction -> {
                 // Verify that none of the tabs to restore already exist
-                action.tabs.forEach { requireUniqueTab(state, it) }
+                val restoredTabs = action.tabs.toTabSessionStates()
+                restoredTabs.forEach { requireUniqueTab(state, it) }
 
-                // We are adding the restored tabs first and then the already existing tabs. Since restore can or should
-                // happen asynchronously we may already have a tab at this point (e.g. from an `Intent`) and so we
-                // pretend we restored the list of tabs before any tab was added.
+                // Using the enum, action.restoreLocation, we are adding the restored tabs at
+                // either the beginning of the tab list, the end of the tab list, or at a
+                // specified index (RecoverableTab.index). If the index for some reason is -1,
+                // the tab will be restored to the end of the tab list. Upon restoration, the
+                // index will be reset to -1 when added to the combined list.
+                val combinedTabList: List<TabSessionState> = when (action.restoreLocation) {
+                    TabListAction.RestoreAction.RestoreLocation.BEGINNING -> restoredTabs + state.tabs
+                    TabListAction.RestoreAction.RestoreLocation.END -> state.tabs + restoredTabs
+                    TabListAction.RestoreAction.RestoreLocation.AT_INDEX -> mutableListOf<TabSessionState>().apply {
+                        addAll(state.tabs)
+                        restoredTabs.forEachIndexed { index, restoredTab ->
+                            val tabIndex = action.tabs[index].index
+                            val restoreIndex =
+                                if (tabIndex > size || tabIndex < 0) {
+                                    size
+                                } else {
+                                    tabIndex
+                                }
+                            add(restoreIndex, restoredTab)
+                        }
+                    }
+                }
+
                 state.copy(
-                    tabs = action.tabs + state.tabs,
+                    tabs = combinedTabList,
                     selectedTabId = if (action.selectedTabId != null && state.selectedTabId == null) {
                         // We only want to update the selected tab if none has been already selected. Otherwise we may
                         // switch to a restored tab even though the user is already looking at an existing tab (e.g.

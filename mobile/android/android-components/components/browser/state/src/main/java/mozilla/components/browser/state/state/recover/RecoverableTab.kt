@@ -33,6 +33,7 @@ import mozilla.components.concept.storage.HistoryMetadataKey
  * @property private If tab was private.
  * @property historyMetadata The last [HistoryMetadataKey] of the tab.
  * @property source The last [Source] of the tab.
+ * @property index The index the tab should be restored at.
  */
 data class RecoverableTab(
     val id: String,
@@ -47,13 +48,14 @@ data class RecoverableTab(
     val lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     val private: Boolean = false,
     val historyMetadata: HistoryMetadataKey? = null,
-    val source: Source = Source.Internal.None
+    val source: Source = Source.Internal.None,
+    val index: Int = -1
 )
 
 /**
  * Creates a [RecoverableTab] from this [TabSessionState].
  */
-fun TabSessionState.toRecoverableTab() = RecoverableTab(
+fun TabSessionState.toRecoverableTab(index: Int = -1) = RecoverableTab(
     id = id,
     parentId = parentId,
     url = content.url,
@@ -66,7 +68,8 @@ fun TabSessionState.toRecoverableTab() = RecoverableTab(
     lastMediaAccessState = lastMediaAccessState,
     private = content.private,
     historyMetadata = historyMetadata,
-    source = source
+    source = source,
+    index = index
 )
 
 /**
