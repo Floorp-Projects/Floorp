@@ -466,7 +466,6 @@ class RecordedEvent {
 
  protected:
   friend class DrawEventRecorderPrivate;
-  friend class DrawEventRecorderFile;
   friend class DrawEventRecorderMemory;
   static void RecordUnscaledFont(UnscaledFont* aUnscaledFont,
                                  std::ostream* aOutput);

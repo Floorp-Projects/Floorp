@@ -53,7 +53,6 @@
 #endif
 
 #include "DrawTargetOffset.h"
-#include "DrawTargetWrapAndRecord.h"
 #include "DrawTargetRecording.h"
 
 #include "SourceSurfaceRawData.h"
@@ -225,8 +224,6 @@ StaticMutex Factory::mDTDependencyLock;
 
 bool Factory::mBGRSubpixelOrder = false;
 
-DrawEventRecorder* Factory::mRecorder;
-
 mozilla::gfx::Config* Factory::sConfig = nullptr;
 
 void Factory::Init(const Config& aConfig) {
@@ -396,10 +393,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTarget(BackendType aBackend,
       return nullptr;
   }
 
-  if (mRecorder && retVal) {
-    return MakeAndAddRef<DrawTargetWrapAndRecord>(mRecorder, retVal);
-  }
-
   if (!retVal) {
     // Failed
     gfxCriticalError(LoggerOptionsBasedOnSize(aSize))
@@ -454,10 +447,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetForData(
       gfxCriticalNote << "Invalid draw target type specified: "
                       << (int)aBackend;
       return nullptr;
-  }
-
-  if (mRecorder && retVal) {
-    return MakeAndAddRef<DrawTargetWrapAndRecord>(mRecorder, retVal, true);
   }
 
   if (!retVal) {
@@ -742,11 +731,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetForD3D11Texture(
   newTarget = new DrawTargetD2D1();
   if (newTarget->Init(aTexture, aFormat)) {
     RefPtr<DrawTarget> retVal = newTarget;
-
-    if (mRecorder) {
-      retVal = new DrawTargetWrapAndRecord(mRecorder, retVal, true);
-    }
-
     return retVal.forget();
   }
 
@@ -981,10 +965,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetForCairoSurface(
   if (newTarget->Init(aSurface, aSize, aFormat)) {
     retVal = newTarget;
   }
-
-  if (mRecorder && retVal) {
-    return MakeAndAddRef<DrawTargetWrapAndRecord>(mRecorder, retVal, true);
-  }
 #endif
   return retVal.forget();
 }
@@ -1102,15 +1082,6 @@ void Factory::CopyDataSourceSurface(DataSourceSurface* aSource,
 
   aSource->Unmap();
   aDest->Unmap();
-}
-
-already_AddRefed<DrawEventRecorder> Factory::CreateEventRecorderForFile(
-    const char_type* aFilename) {
-  return MakeAndAddRef<DrawEventRecorderFile>(aFilename);
-}
-
-void Factory::SetGlobalEventRecorder(DrawEventRecorder* aRecorder) {
-  mRecorder = aRecorder;
 }
 
 #ifdef WIN32
