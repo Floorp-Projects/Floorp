@@ -2189,7 +2189,7 @@ class HTMLEditor final : public EditorBase,
     if (aPoint.IsStartOfContainer()) {
       return CharPointType::TextEnd;
     }
-    if (EditorUtils::IsContentPreformatted(*aPoint.ContainerAsText())) {
+    if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
       return CharPointType::PreformattedChar;
     }
     if (aPoint.IsPreviousCharASCIISpace()) {
@@ -2204,7 +2204,7 @@ class HTMLEditor final : public EditorBase,
     if (aPoint.IsEndOfContainer()) {
       return CharPointType::TextEnd;
     }
-    if (EditorUtils::IsContentPreformatted(*aPoint.ContainerAsText())) {
+    if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
       return CharPointType::PreformattedChar;
     }
     if (aPoint.IsCharASCIISpace()) {
