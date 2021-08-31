@@ -53,7 +53,13 @@ function runTest() {
     sendKey("right");
     sendChar(" ");
     is(e.parentNode.childNodes[2].nodeValue, before, msg + " with id=" + e.id);
-    is(e.innerHTML, "X&nbsp;", msg + " with id=" + e.id);
+    is(
+      e.innerHTML,
+      SpecialPowers.getBoolPref("editor.white_space_normalization.blink_compatible") || e.tagName == "SPAN"
+        ? "X&nbsp;"
+        : "X <br>",
+      msg + " with id=" + e.id
+    );
   }
 
   test_begin_bs(select("t1"));

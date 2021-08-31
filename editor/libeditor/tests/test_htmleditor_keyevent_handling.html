@@ -226,8 +226,17 @@ function runTests() {
     check(aDescription + "Tab",
           true, true, !aIsTabbable && !aIsReadonly);
     is(aElement.innerHTML,
-       aIsTabbable || aIsReadonly ? "a" :
-         aIsPlaintext ? "a\t" : "a&nbsp; &nbsp;&nbsp;",
+       (() => {
+         if (aIsTabbable || aIsReadonly) {
+           return "a";
+         }
+         if (aIsPlaintext) {
+           return "a\t";
+         }
+         return SpecialPowers.getBoolPref("editor.white_space_normalization.blink_compatible")
+           ? "a&nbsp; &nbsp;&nbsp;"
+           : "a&nbsp;&nbsp;&nbsp; <br>";
+       })(),
        aDescription + "Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Tab)");
@@ -597,7 +606,17 @@ function runTests() {
     sendString(" ");
     check(aDescription + "' '", true, true, !aIsReadonly);
     is(aElement.innerHTML,
-       aIsReadonly ? "" : aIsPlaintext ? "Mozilla " : "Mozilla&nbsp;",
+       (() => {
+         if (aIsReadonly) {
+           return "";
+         }
+         if (aIsPlaintext) {
+           return "Mozilla ";
+         }
+         return SpecialPowers.getBoolPref("editor.white_space_normalization.blink_compatible")
+           ? "Mozilla&nbsp;"
+           : "Mozilla <br>";
+       })(),
        aDescription + "typed \"Mozilla \"");
   }
 

@@ -93,8 +93,13 @@ function runTests() {
   editor7.focus();
   synthesizeKey("KEY_ArrowRight");
   synthesizeKey("KEY_Backspace");
-  is(editor7.innerHTML, "<br>",
-     "an editor which had \"f\" in a <span> element should have only <br> element after Backspace keypress");
+  is(
+    editor7.innerHTML,
+    SpecialPowers.getBoolPref("editor.white_space_normalization.blink_compatible")
+      ? "<br>"
+      : "<span><br></span>",
+    "an editor which had \"f\" in a <span> element should have only <br> element after Backspace keypress"
+  );
   ok(Math.abs(editor7.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
      "an editor whose content was removed by Backspace key should have a place to put a caret");
 
@@ -102,9 +107,14 @@ function runTests() {
   synthesizeKey("KEY_ArrowLeft");
   synthesizeKey("KEY_Delete");
   todo_is(editor8.innerHTML, "<br>",
-     "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress");
-  todo_isnot(editor8.innerHTML, "<br><span></span>",
-     "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress");
+    "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress");
+  todo_isnot(
+    editor8.innerHTML,
+    SpecialPowers.getBoolPref("editor.white_space_normalization.blink_compatible")
+      ? "<br><span></span>"
+      : "<span><br></span>",
+    "an editor which had \"g\" in a <span> element should have only <br> element after Delete keypress"
+  );
   ok(Math.abs(editor8.getBoundingClientRect().height - editor1.getBoundingClientRect().height) <= 1,
      "an editor whose content was removed by Backspace key should have a place to put a caret");
 
