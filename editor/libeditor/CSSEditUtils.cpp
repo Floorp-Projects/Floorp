@@ -5,6 +5,7 @@
 
 #include "mozilla/CSSEditUtils.h"
 
+#include "HTMLEditUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ChangeStyleTransaction.h"
 #include "mozilla/HTMLEditor.h"
@@ -971,7 +972,7 @@ nsresult CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSetInternal(
     }
     // append the value to aValue (possibly with a leading white-space)
     if (index) {
-      aValue.Append(char16_t(' '));
+      aValue.Append(HTMLEditUtils::kSpace);
     }
     aValue.Append(valueString);
   }
@@ -1102,7 +1103,7 @@ bool CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
     } else if (nsGkAtoms::font == aHTMLProperty && aAttribute &&
                aAttribute == nsGkAtoms::face) {
       if (!htmlValueString.IsEmpty()) {
-        const char16_t commaSpace[] = {char16_t(','), char16_t(' '), 0};
+        const char16_t commaSpace[] = {char16_t(','), HTMLEditUtils::kSpace, 0};
         const char16_t comma[] = {char16_t(','), 0};
         htmlValueString.ReplaceSubstring(commaSpace, comma);
         nsAutoString valueStringNorm(aValue);

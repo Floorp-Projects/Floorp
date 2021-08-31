@@ -75,8 +75,6 @@ using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
-const char16_t kNBSP = 160;
-
 // Some utilities to handle overloading of "A" tag for link and named anchor.
 static bool IsLinkTag(const nsAtom& aTagName) {
   return &aTagName == nsGkAtoms::href;
@@ -5138,7 +5136,7 @@ nsresult HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
     // style attribute's value
     nsAutoString existingValue;
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::style, existingValue);
-    existingValue.Append(' ');
+    existingValue.Append(HTMLEditUtils::kSpace);
     existingValue.Append(aValue);
     if (aSuppressTransaction) {
       nsresult rv = aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
