@@ -6,12 +6,15 @@
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsComplexBreaker.h"
+#include "nsTArray.h"
 #include "nsUnicodeProperties.h"
 
 using mozilla::intl::WordBreakClass;
 using mozilla::intl::WordBreaker;
 using mozilla::intl::WordRange;
+using mozilla::unicode::GetGenCategory;
 using mozilla::unicode::GetScriptCode;
+using mozilla::unicode::Script;
 
 /*static*/
 already_AddRefed<WordBreaker> WordBreaker::Create() {
