@@ -309,7 +309,7 @@ class TestTargetTasks(unittest.TestCase):
                     },
                 },
             },
-            False,
+            True,
             id="filter_unsupported_artifact_builds_no_artifact_builds",
         ),
         pytest.param(
@@ -327,7 +327,7 @@ class TestTargetTasks(unittest.TestCase):
                     },
                 },
             },
-            True,
+            False,
             id="filter_unsupported_artifact_builds_removed",
         ),
         pytest.param(
@@ -345,7 +345,7 @@ class TestTargetTasks(unittest.TestCase):
                     },
                 },
             },
-            False,
+            True,
             id="filter_unsupported_artifact_builds_not_removed",
         ),
         pytest.param(
@@ -358,7 +358,7 @@ class TestTargetTasks(unittest.TestCase):
                     },
                 },
             },
-            False,
+            True,
             id="filter_unsupported_artifact_builds_not_removed",
         ),
     ),

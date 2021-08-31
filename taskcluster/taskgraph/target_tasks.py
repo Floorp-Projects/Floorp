@@ -251,11 +251,12 @@ def accept_raptor_android_build(platform):
 
 
 def filter_unsupported_artifact_builds(task, parameters):
-    if not parameters["try_task_config"].get("use-artifact-builds", False):
-        return False
+    try_config = parameters.get("try_task_config", {})
+    if not try_config.get("use-artifact-builds", False):
+        return True
 
     supports_artifact_builds = task.attributes.get("supports-artifact-builds", True)
-    return not supports_artifact_builds
+    return supports_artifact_builds
 
 
 def filter_out_shippable(task):
