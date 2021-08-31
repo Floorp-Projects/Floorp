@@ -149,7 +149,7 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
   mozilla::Atomic<int> mClipboardRequestNumber;
   char* mClipboardData;
   uint32_t mClipboardDataLength;
-
+  bool mAsyncDataGetter;
 // Mime types used for text data at Gtk+, see request_text_received_func()
 // at gtkclipboard.c.
 #define TEXT_MIME_TYPES_NUM 3
