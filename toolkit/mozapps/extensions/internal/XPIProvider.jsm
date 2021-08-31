@@ -2472,6 +2472,24 @@ var XPIProvider = {
 
       AddonManagerPrivate.markProviderSafe(this);
 
+      const lastTheme = Services.prefs.getCharPref(
+        "extensions.activeThemeID",
+        null
+      );
+
+      if (
+        lastTheme === "recommended-1" ||
+        lastTheme === "recommended-2" ||
+        lastTheme === "recommended-3" ||
+        lastTheme === "recommended-4" ||
+        lastTheme === "recommended-5"
+      ) {
+        // The user is using a theme that was once bundled with Firefox, but no longer
+        // is. Clear their theme so that they will be forced to reset to the default.
+        this.startupPromises.push(
+          AddonManagerPrivate.notifyAddonChanged(null, "theme")
+        );
+      }
       this.maybeInstallBuiltinAddon(
         "default-theme@mozilla.org",
         "1.2",
