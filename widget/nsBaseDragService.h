@@ -175,6 +175,8 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
   // app.
   RefPtr<mozilla::dom::Document> mSourceDocument;
 
+  RefPtr<mozilla::dom::WindowContext> mSourceWindowContext;
+
   // the contentpolicy type passed to the channel when initiating the drag
   // session
   nsContentPolicyType mContentPolicyType;

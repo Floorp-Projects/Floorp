@@ -3700,7 +3700,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
     const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
     nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
-    const CookieJarSettingsArgs& aCookieJarSettingsArgs) {
+    const CookieJarSettingsArgs& aCookieJarSettingsArgs,
+    const MaybeDiscarded<WindowContext>& aSourceWindowContext) {
   PresShell* presShell = mFrameElement->OwnerDoc()->GetPresShell();
   if (!presShell) {
     Unused << Manager()->SendEndDragSession(true, true, LayoutDeviceIntPoint(),
@@ -3715,9 +3716,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
   net::CookieJarSettings::Deserialize(aCookieJarSettingsArgs,
                                       getter_AddRefs(cookieJarSettings));
 
-  RefPtr<RemoteDragStartData> dragStartData =
-      new RemoteDragStartData(this, std::move(aTransfers), aDragRect,
-                              aPrincipal, aCsp, cookieJarSettings);
+  RefPtr<RemoteDragStartData> dragStartData = new RemoteDragStartData(
+      this, std::move(aTransfers), aDragRect, aPrincipal, aCsp,
+      cookieJarSettings, aSourceWindowContext.GetMaybeDiscarded());
 
   if (!aVisualDnDData.isNothing() && aVisualDnDData.ref().IsReadable() &&
       aVisualDnDData.ref().Size<char>() >= aDragRect.height * aStride) {

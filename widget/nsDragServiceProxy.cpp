@@ -46,6 +46,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   if (mSourceDocument) {
     csp = mSourceDocument->GetCsp();
+    mSourceWindowContext = mSourceDocument->GetWindowContext();
   }
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
@@ -80,7 +81,8 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
         mozilla::Unused << child->SendInvokeDragSession(
             dataTransfers, aActionType, Some(std::move(surfaceData)), stride,
-            dataSurface->GetFormat(), dragRect, principal, csp, csArgs);
+            dataSurface->GetFormat(), dragRect, principal, csp, csArgs,
+            mSourceWindowContext);
         StartDragSession();
         return NS_OK;
       }
@@ -89,7 +91,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
   mozilla::Unused << child->SendInvokeDragSession(
       dataTransfers, aActionType, Nothing(), 0, static_cast<SurfaceFormat>(0),
-      dragRect, principal, csp, csArgs);
+      dragRect, principal, csp, csArgs, mSourceWindowContext);
   StartDragSession();
   return NS_OK;
 }
