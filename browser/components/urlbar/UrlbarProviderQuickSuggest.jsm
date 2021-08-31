@@ -124,15 +124,19 @@ class ProviderQuickSuggest extends UrlbarProvider {
       promises.push(UrlbarQuickSuggest.query(searchString));
     }
     if (UrlbarPrefs.get("merinoEnabled") && queryContext.allowRemoteResults()) {
-      promises.push(this._fetchMerinoSuggestion(searchString));
+      promises.push(this._fetchMerinoSuggestions(searchString));
     }
-    let [rsSuggestion, merinoSuggestion] = await Promise.all(promises);
+
+    let allSuggestions = await Promise.all(promises);
     if (instance != this.queryInstance) {
       return;
     }
 
-    // We prefer the Merino suggestion.
-    let suggestion = merinoSuggestion || rsSuggestion;
+    // Get the suggestion with the largest score.
+    let suggestion = allSuggestions
+      .flat()
+      .filter(s => s)
+      .sort((a, b) => b.score - a.score)[0];
     if (!suggestion) {
       return;
     }
@@ -326,13 +330,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
-   * Fetches a Merino suggestion.
+   * Fetches Merino suggestions.
    *
    * @param {string} searchString
-   * @returns {object}
-   *   The Merino suggestion object, or null if there isn't one.
+   * @returns {array}
+   *   The Merino suggestions or null if there's an error or unexpected
+   *   response.
    */
-  async _fetchMerinoSuggestion(searchString) {
+  async _fetchMerinoSuggestions(searchString) {
     let instance = this.queryInstance;
 
     // Fetch a response from the endpoint.
@@ -384,8 +389,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return null;
     }
 
-    // Return the first suggestion.
-    return suggestions[0];
+    return suggestions;
   }
 
   /**
