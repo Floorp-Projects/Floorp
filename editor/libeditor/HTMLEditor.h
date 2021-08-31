@@ -3497,8 +3497,7 @@ class HTMLEditor final : public EditorBase,
 
    public:
     BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor, bool aIsSafe,
-               Document* aSourceDoc, const EditorDOMPoint& aPointToInsert,
-               bool aDoDeleteSelection);
+               const EditorDOMPoint& aPointToInsert, bool aDoDeleteSelection);
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(BlobReader)
@@ -3512,7 +3511,6 @@ class HTMLEditor final : public EditorBase,
     RefPtr<dom::BlobImpl> mBlob;
     RefPtr<HTMLEditor> mHTMLEditor;
     RefPtr<dom::DataTransfer> mDataTransfer;
-    nsCOMPtr<Document> mSourceDoc;
     EditorDOMPoint mPointToInsert;
     EditAction mEditAction;
     bool mIsSafe;
@@ -3839,7 +3837,6 @@ class HTMLEditor final : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertObject(const nsACString& aType,
                                            nsISupports* aObject, bool aIsSafe,
-                                           Document* aSourceDoc,
                                            const EditorDOMPoint& aPointToInsert,
                                            bool aDoDeleteSelection);
 
@@ -3847,9 +3844,9 @@ class HTMLEditor final : public EditorBase,
   nsresult PrepareHTMLTransferable(nsITransferable** aTransferable) const;
 
   MOZ_CAN_RUN_SCRIPT nsresult InsertFromTransferable(
-      nsITransferable* aTransferable, Document* aSourceDoc,
-      const nsAString& aContextStr, const nsAString& aInfoStr,
-      bool aHavePrivateHTMLFlavor, bool aDoDeleteSelection);
+      nsITransferable* aTransferable, const nsAString& aContextStr,
+      const nsAString& aInfoStr, bool aHavePrivateHTMLFlavor,
+      bool aDoDeleteSelection);
 
   /**
    * InsertFromDataTransfer() is called only when user drops data into
@@ -4070,7 +4067,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult DoInsertHTMLWithContext(
       const nsAString& aInputString, const nsAString& aContextStr,
-      const nsAString& aInfoStr, const nsAString& aFlavor, Document* aSourceDoc,
+      const nsAString& aInfoStr, const nsAString& aFlavor,
       const EditorDOMPoint& aPointToInsert, bool aDeleteSelection,
       bool aTrustedInput, bool aClearStyle = true);
 
