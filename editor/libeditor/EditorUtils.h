@@ -1161,10 +1161,10 @@ class EditorUtils final {
   }
 
   /**
-   * IsContentPreformatted() checks the style info for the node for the
+   * IsWhiteSpacePreformatted() checks the style info for the node for the
    * preformatted text style.  This does NOT flush layout.
    */
-  static bool IsContentPreformatted(nsIContent& aContent);
+  static bool IsWhiteSpacePreformatted(const nsIContent& aContent);
 
   /**
    * Helper method for `AppendString()` and `AppendSubString()`.  This should

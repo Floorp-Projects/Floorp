@@ -963,7 +963,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
       return mNBSPData.LastPointRef();
     }
 
-    bool IsPreformatted() const { return mIsPreformatted; }
+    bool IsWhiteSpaceCollapsible() const { return mIsWhiteSpaceCollapsible; }
 
     template <typename PT, typename CT>
     EditorDOMPointInText GetInclusiveNextEditableCharPoint(
@@ -1216,12 +1216,12 @@ class MOZ_STACK_CLASS WSRunScanner final {
 
    private:
     /**
-     * IsPreformattedOrSurrondedByVisibleContent() returns true if the text is
-     * preformatted or the text fragment is surrounded by visible content.
-     * When this returns true, all of the text is visible.
+     * IsWhiteSpaceNotCollapsibleOrSurrondedByVisibleContent() returns true if
+     * the text is preformatted or the text fragment is surrounded by visible
+     * content. When this returns true, all of the text is visible.
      */
-    bool IsPreformattedOrSurrondedByVisibleContent() const {
-      return mIsPreformatted ||
+    bool IsWhiteSpaceNotCollapsibleOrSurrondedByVisibleContent() const {
+      return !mIsWhiteSpaceCollapsible ||
              ((StartsFromNormalText() || StartsFromSpecialContent()) &&
               (EndsByNormalText() || EndsBySpecialContent() ||
                EndsByBRElement()));
@@ -1235,11 +1235,11 @@ class MOZ_STACK_CLASS WSRunScanner final {
     mutable Maybe<EditorDOMRange> mLeadingWhiteSpaceRange;
     mutable Maybe<EditorDOMRange> mTrailingWhiteSpaceRange;
     mutable Maybe<VisibleWhiteSpacesData> mVisibleWhiteSpacesData;
-    // XXX Currently we set mIsPreformatted to `WSRunScanner::mPRE` value
+    // XXX Currently `WSRunScanner` refers `IsWhiteSpaceCollapsible()` result
     //     even if some text nodes between mStart and mEnd are different styled
     //     nodes.  This caused some bugs actually, but we now keep traditional
     //     behavior for now.
-    bool mIsPreformatted;
+    bool mIsWhiteSpaceCollapsible;
   };
 
   const TextFragmentData& TextFragmentDataAtStartRef() const {

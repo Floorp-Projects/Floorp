@@ -538,7 +538,7 @@ void EditorUtils::MaskString(nsString& aString, Text* aText,
 }
 
 // static
-bool EditorUtils::IsContentPreformatted(nsIContent& aContent) {
+bool EditorUtils::IsWhiteSpacePreformatted(const nsIContent& aContent) {
   // Look at the node (and its parent if it's not an element), and grab its
   // ComputedStyle.
   Element* element = aContent.GetAsElementOrParentElement();
