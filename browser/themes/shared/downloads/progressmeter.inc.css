@@ -4,6 +4,32 @@
 
 /*** Common-styled progressmeter ***/
 
+:root {
+  --download-progress-fill-color: -moz-accent-color;
+  --download-progress-paused-color: GrayText;
+  --download-progress-flare-color: rgba(255,255,255,0.75);
+}
+
+/* download progress bar is used in contexts which are not LightweightThemeConsumers and
+   do not get the lwt- theme variables. So we duplicate the fallbacks here. */
+:root:-moz-lwtheme {
+  --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
+}
+
+@media (-moz-toolbar-prefers-color-scheme: dark) {
+  :root {
+    --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
+  }
+  #contentAreaDownloadsView {
+    --download-progress-fill-color: var(--in-content-item-selected);
+  }
+}
+
+:root[lwt-popup-brighttext] panel,
+toolbar[brighttext]:-moz-lwtheme {
+  --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
+}
+
 /*
  * Styling "html:progress" is limited by the fact that a number of properties
  * are intentionally locked at the UA stylesheet level. We have to use a border
@@ -16,33 +42,41 @@
 .downloadProgress {
   appearance: none;
   display: -moz-box;
-  margin: 4px 0 0;
+  margin-block: 5px 1px;
   margin-inline-end: 12px;
-  border: 1px solid ButtonShadow;
-  height: 6px;
-  background-color: ButtonFace;
+  border: none;
+  height: 4px;
+  border-radius: 2px;
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
+}
+
+/* Ensure we have contrast in selected download items */
+#downloadsRichListBox richlistitem[selected] .downloadProgress::-moz-progress-bar {
+  --download-progress-fill-color: currentColor;
+  --download-progress-flare-color:  -moz-accent-color;
 }
 
 .downloadProgress::-moz-progress-bar {
   appearance: none;
-  background-color: Highlight;
+  background-color: var(--download-progress-fill-color);
+  border-radius: 2px;
 }
 
 .downloadProgress[paused]::-moz-progress-bar {
-  background-color: GrayText;
+  background-color: var(--download-progress-paused-color);
 }
 
 .downloadProgress:indeterminate::-moz-progress-bar {
   width: calc(100% + 2px);
   /* Make a white reflecting animation.
-     Create a gradient with 2 identical pattern, and enlarge the size to 200%.
+     Create a gradient with 2 identical patterns, and enlarge the size to 200%.
      This allows us to animate background-position with percentage. */
-  background-image: linear-gradient(90deg, transparent 0%,
-                                           rgba(255,255,255,0.5) 25%,
+  background: var(--download-progress-fill-color) linear-gradient(90deg, transparent 0%,
+                                           var(--download-progress-flare-color) 25%,
                                            transparent 50%,
-                                           rgba(255,255,255,0.5) 75%,
+                                           var(--download-progress-flare-color) 75%,
                                            transparent 100%);
-  background-blend-mode: lighten;
+  background-blend-mode: normal;
   background-size: 200% 100%;
   animation: downloadProgressSlideX 1.5s linear infinite;
 }
