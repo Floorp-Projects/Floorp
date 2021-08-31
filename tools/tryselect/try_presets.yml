@@ -39,9 +39,11 @@ devtools:
     query:
         - "'node-debugger | 'node-devtools"
         - "'mozlint-eslint"
-        # 'mochitest-devtools-chrome should match the "-e10s" and "-fis-e10s" flavors
-        # explicitly target "'windows10-64-qr/" to avoid duplicate jobs on asan & shippable builds
-        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'windows10-64-qr/ | 'macosx"
+        # 'mochitest-devtools-chrome matches "-e10s" and "-fis-e10s"
+        # Windows: skip jobs on asan and 32 bits platforms
+        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'windows10 !asan !-32"
+        # macos: no extra platform to filter out
+        - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'macosx"
         # Linux is being named "linux1804" and may change over time, so use a more flexible search
         - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'linux '64-qr/ !swr"
         - "'xpcshell-e10s 'linux '64-qr/"
