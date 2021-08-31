@@ -95,7 +95,7 @@ class DefaultBrowserMenu(
                 onItemTapped.invoke(ToolbarMenu.Item.Share)
             }
         )
-        BrowserMenuItemToolbar(listOf(back, forward, refresh, share))
+        BrowserMenuItemToolbar(listOf(back, forward, share, refresh))
     }
 
     private val mvpMenuItems by lazy {
