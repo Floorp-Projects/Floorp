@@ -899,7 +899,11 @@ void MacroAssembler::anyTrueSimd128(FloatRegister src, Register dest) {
 
 void MacroAssembler::extractLaneInt64x2(uint32_t lane, FloatRegister src,
                                         Register64 dest) {
-  vpextrq(lane, src, dest.reg);
+  if (lane == 0) {
+    vmovq(src, dest.reg);
+  } else {
+    vpextrq(lane, src, dest.reg);
+  }
 }
 
 // Replace lane value

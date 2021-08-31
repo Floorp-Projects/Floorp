@@ -1137,7 +1137,11 @@ void MacroAssembler::anyTrueSimd128(FloatRegister src, Register dest) {
 
 void MacroAssembler::extractLaneInt64x2(uint32_t lane, FloatRegister src,
                                         Register64 dest) {
-  vpextrd(2 * lane, src, dest.low);
+  if (lane == 0) {
+    vmovd(src, dest.low);
+  } else {
+    vpextrd(2 * lane, src, dest.low);
+  }
   vpextrd(2 * lane + 1, src, dest.high);
 }
 
