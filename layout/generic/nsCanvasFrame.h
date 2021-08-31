@@ -143,10 +143,6 @@ class nsDisplayCanvasBackgroundColor final : public nsDisplaySolidColorBase {
                                  nsIFrame* aFrame)
       : nsDisplaySolidColorBase(aBuilder, aFrame, NS_RGBA(0, 0, 0, 0)) {}
 
-  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                 nsRegion* aVisibleRegion) override {
-    return NS_GET_A(mColor) > 0;
-  }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
