@@ -1364,8 +1364,8 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
       MOZ_ASSERT(!atPreviousChar.IsEndOfContainer());
       return WSScanResult(atPreviousChar.NextPoint(),
                           atPreviousChar.IsCharASCIISpaceOrNBSP()
-                              ? WSType::NormalWhiteSpaces
-                              : WSType::NormalText);
+                              ? WSType::CollapsibleWhiteSpaces
+                              : WSType::NonCollapsibleCharacters);
     }
   }
 
@@ -1408,8 +1408,8 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
       return WSScanResult(
           atNextChar,
           !atNextChar.IsEndOfContainer() && atNextChar.IsCharASCIISpaceOrNBSP()
-              ? WSType::NormalWhiteSpaces
-              : WSType::NormalText);
+              ? WSType::CollapsibleWhiteSpaces
+              : WSType::NonCollapsibleCharacters);
     }
   }
 
@@ -1480,7 +1480,8 @@ WSRunScanner::TextFragmentData::TextFragmentData(
                              !mEnd.AcrossPreformattedCharacter() &&
                              !(EditorUtils::IsWhiteSpacePreformatted(
                                    *mScanStartPoint.ContainerAsContent()) &&
-                               !mStart.IsNormalText() && !mEnd.IsNormalText());
+                               !mStart.IsNonCollapsibleCharacters() &&
+                               !mEnd.IsNonCollapsibleCharacters());
 }
 
 // static
@@ -1510,9 +1511,9 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
       continue;
     }
 
-    return Some(BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
-                             *aPoint.ContainerAsText(), WSType::NormalText,
-                             Preformatted::No));
+    return Some(BoundaryData(
+        EditorDOMPoint(aPoint.ContainerAsText(), i), *aPoint.ContainerAsText(),
+        WSType::NonCollapsibleCharacters, Preformatted::No));
   }
 
   return Nothing();
@@ -1531,8 +1532,8 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     // If the point is in a text node which is preformatted, we should return
     // the point as a visible character point.
     if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
-      return BoundaryData(aPoint, *aPoint.ContainerAsText(), WSType::NormalText,
-                          Preformatted::Yes);
+      return BoundaryData(aPoint, *aPoint.ContainerAsText(),
+                          WSType::NonCollapsibleCharacters, Preformatted::Yes);
     }
     // If the text node is not preformatted, we should look for its preceding
     // characters.
@@ -1598,8 +1599,8 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     // collapsible white-spaces due to reaching preformatted non-empty text
     // node.  I.e., the following text node might be not preformatted.
     return BoundaryData(EditorDOMPoint::AtEndOf(*previousLeafContentOrBlock),
-                        *previousLeafContentOrBlock, WSType::NormalText,
-                        Preformatted::No);
+                        *previousLeafContentOrBlock,
+                        WSType::NonCollapsibleCharacters, Preformatted::No);
   }
 
   Maybe<BoundaryData> startInTextNode =
@@ -1643,9 +1644,9 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
       continue;
     }
 
-    return Some(BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
-                             *aPoint.ContainerAsText(), WSType::NormalText,
-                             Preformatted::No));
+    return Some(BoundaryData(
+        EditorDOMPoint(aPoint.ContainerAsText(), i), *aPoint.ContainerAsText(),
+        WSType::NonCollapsibleCharacters, Preformatted::No));
   }
 
   return Nothing();
@@ -1664,8 +1665,8 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     // If the point is in a text node which is preformatted, we should return
     // the point as a visible character point.
     if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
-      return BoundaryData(aPoint, *aPoint.ContainerAsText(), WSType::NormalText,
-                          Preformatted::Yes);
+      return BoundaryData(aPoint, *aPoint.ContainerAsText(),
+                          WSType::NonCollapsibleCharacters, Preformatted::Yes);
     }
     // If the text node is not preformatted, we should look for inclusive
     // next characters.
@@ -1732,8 +1733,8 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     // collapsible white-spaces due to reaching preformatted non-empty text
     // node.  I.e., the following text node might be not preformatted.
     return BoundaryData(EditorDOMPoint(nextLeafContentOrBlock, 0),
-                        *nextLeafContentOrBlock, WSType::NormalText,
-                        Preformatted::No);
+                        *nextLeafContentOrBlock,
+                        WSType::NonCollapsibleCharacters, Preformatted::No);
   }
 
   Maybe<BoundaryData> endInTextNode =
@@ -2819,7 +2820,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
         (atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
          !isPreviousCharASCIIWhiteSpace) ||
         (!atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() &&
-         (visibleWhiteSpaces.StartsFromNormalText() ||
+         (visibleWhiteSpaces.StartsFromNonCollapsibleCharacters() ||
           visibleWhiteSpaces.StartsFromSpecialContent()));
     bool followedByVisibleContentOrBRElement = false;
 
@@ -2828,7 +2829,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     // insert <br> element and restore the NBSP to an ASCII white-space.
     if (maybeNBSPFollowingVisibleContent || isPreviousCharASCIIWhiteSpace) {
       followedByVisibleContentOrBRElement =
-          visibleWhiteSpaces.EndsByNormalText() ||
+          visibleWhiteSpaces.EndsByNonCollapsibleCharacters() ||
           visibleWhiteSpaces.EndsBySpecialContent() ||
           visibleWhiteSpaces.EndsByBRElement();
       // First, try to insert <br> element if NBSP is at end of a block.
@@ -3085,7 +3086,7 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   // NBSP with an ASCII white-space to keep it rendered.
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
       VisibleWhiteSpacesDataRef();
-  if (!visibleWhiteSpaces.StartsFromNormalText() &&
+  if (!visibleWhiteSpaces.StartsFromNonCollapsibleCharacters() &&
       !visibleWhiteSpaces.StartsFromSpecialContent()) {
     return EditorDOMPointInText();
   }
@@ -3140,7 +3141,7 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   // replace it because it's required to render multiple white-spaces.
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
       VisibleWhiteSpacesDataRef();
-  if (!visibleWhiteSpaces.EndsByNormalText() &&
+  if (!visibleWhiteSpaces.EndsByNonCollapsibleCharacters() &&
       !visibleWhiteSpaces.EndsBySpecialContent() &&
       !visibleWhiteSpaces.EndsByBRElement()) {
     return EditorDOMPointInText();

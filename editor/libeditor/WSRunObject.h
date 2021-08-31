@@ -43,10 +43,10 @@ class MOZ_STACK_CLASS WSScanResult final {
     LeadingWhiteSpaces,
     // The run is maybe collapsible white-spaces at end of a hard line.
     TrailingWhiteSpaces,
-    // Normal (perhaps, meaning visible) white-spaces.
-    NormalWhiteSpaces,
-    // Normal text, not white-spaces.
-    NormalText,
+    // Collapsible, but visible white-spaces.
+    CollapsibleWhiteSpaces,
+    // Visible characters except collapsible white-spaces.
+    NonCollapsibleCharacters,
     // Special content such as `<img>`, etc.
     SpecialContent,
     // <br> element.
@@ -75,16 +75,17 @@ class MOZ_STACK_CLASS WSScanResult final {
 
   MOZ_NEVER_INLINE_DEBUG void AssertIfInvalidData() const {
 #ifdef DEBUG
-    MOZ_ASSERT(
-        mReason == WSType::UnexpectedError || mReason == WSType::NormalText ||
-        mReason == WSType::NormalWhiteSpaces || mReason == WSType::BRElement ||
-        mReason == WSType::SpecialContent ||
-        mReason == WSType::CurrentBlockBoundary ||
-        mReason == WSType::OtherBlockBoundary);
+    MOZ_ASSERT(mReason == WSType::UnexpectedError ||
+               mReason == WSType::NonCollapsibleCharacters ||
+               mReason == WSType::CollapsibleWhiteSpaces ||
+               mReason == WSType::BRElement ||
+               mReason == WSType::SpecialContent ||
+               mReason == WSType::CurrentBlockBoundary ||
+               mReason == WSType::OtherBlockBoundary);
     MOZ_ASSERT_IF(mReason == WSType::UnexpectedError, !mContent);
-    MOZ_ASSERT_IF(
-        mReason == WSType::NormalText || mReason == WSType::NormalWhiteSpaces,
-        mContent && mContent->IsText());
+    MOZ_ASSERT_IF(mReason == WSType::NonCollapsibleCharacters ||
+                      mReason == WSType::CollapsibleWhiteSpaces,
+                  mContent && mContent->IsText());
     MOZ_ASSERT_IF(mReason == WSType::BRElement,
                   mContent && mContent->IsHTMLElement(nsGkAtoms::br));
     MOZ_ASSERT_IF(
@@ -141,12 +142,12 @@ class MOZ_STACK_CLASS WSScanResult final {
   bool IsContentEditable() const { return mContent && mContent->IsEditable(); }
 
   /**
-   *  Offset() returns meaningful value only when InNormalWhiteSpacesOrText()
-   * returns true or the scanner reached to start or end of its scanning
-   * range and that is same as start or end container which are specified
-   * when the scanner is initialized.  If it's result of scanning backward,
-   * this offset means before the found point.  Otherwise, i.e., scanning
-   * forward, this offset means after the found point.
+   *  Offset() returns meaningful value only when
+   * InVisibleOrCollapsibleCharacters() returns true or the scanner
+   * reached to start or end of its scanning range and that is same as start or
+   * end container which are specified when the scanner is initialized.  If it's
+   * result of scanning backward, this offset means before the found point.
+   * Otherwise, i.e., scanning forward, this offset means after the found point.
    */
   MOZ_NEVER_INLINE_DEBUG uint32_t Offset() const {
     NS_ASSERTION(mOffset.isSome(), "Retrieved non-meaningful offset");
@@ -202,24 +203,26 @@ class MOZ_STACK_CLASS WSScanResult final {
   }
 
   /**
-   * The point is in normal white-spaces or text.
+   * The point is in visible characters or collapsible white-spaces.
    */
-  bool InNormalWhiteSpacesOrText() const {
-    return mReason == WSType::NormalWhiteSpaces ||
-           mReason == WSType::NormalText;
+  bool InVisibleOrCollapsibleCharacters() const {
+    return mReason == WSType::CollapsibleWhiteSpaces ||
+           mReason == WSType::NonCollapsibleCharacters;
   }
 
   /**
-   * The point is in normal white-spaces.
+   * The point is in collapsible white-spaces.
    */
-  bool InNormalWhiteSpaces() const {
-    return mReason == WSType::NormalWhiteSpaces;
+  bool InCollapsibleWhiteSpaces() const {
+    return mReason == WSType::CollapsibleWhiteSpaces;
   }
 
   /**
-   * The point is in normal text.
+   * The point is in visible non-collapsible characters.
    */
-  bool InNormalText() const { return mReason == WSType::NormalText; }
+  bool InNonCollapsibleCharacters() const {
+    return mReason == WSType::NonCollapsibleCharacters;
+  }
 
   /**
    * The scanner reached a <br> element.
@@ -273,7 +276,9 @@ class MOZ_STACK_CLASS WSScanResult final {
   /**
    * The scanner reached something non-text node.
    */
-  bool ReachedSomething() const { return !InNormalWhiteSpacesOrText(); }
+  bool ReachedSomethingNonTextContent() const {
+    return !InVisibleOrCollapsibleCharacters();
+  }
 
  private:
   nsCOMPtr<nsIContent> mContent;
@@ -482,8 +487,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
     return TextFragmentDataAtStartRef().GetEndReasonContent();
   }
 
-  bool StartsFromNormalText() const {
-    return TextFragmentDataAtStartRef().StartsFromNormalText();
+  bool StartsFromNonCollapsibleCharacters() const {
+    return TextFragmentDataAtStartRef().StartsFromNonCollapsibleCharacters();
   }
   bool StartsFromSpecialContent() const {
     return TextFragmentDataAtStartRef().StartsFromSpecialContent();
@@ -509,8 +514,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
   bool StartsFromHardLineBreak() const {
     return TextFragmentDataAtStartRef().StartsFromHardLineBreak();
   }
-  bool EndsByNormalText() const {
-    return TextFragmentDataAtStartRef().EndsByNormalText();
+  bool EndsByNonCollapsibleCharacters() const {
+    return TextFragmentDataAtStartRef().EndsByNonCollapsibleCharacters();
   }
   bool EndsBySpecialContent() const {
     return TextFragmentDataAtStartRef().EndsBySpecialContent();
@@ -572,8 +577,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
      * Information why the white-spaces start from (i.e., this indicates the
      * previous content type of the fragment).
      */
-    bool StartsFromNormalText() const {
-      return mLeftWSType == WSType::NormalText;
+    bool StartsFromNonCollapsibleCharacters() const {
+      return mLeftWSType == WSType::NonCollapsibleCharacters;
     }
     bool StartsFromSpecialContent() const {
       return mLeftWSType == WSType::SpecialContent;
@@ -583,7 +588,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
      * Information why the white-spaces end by (i.e., this indicates the
      * next content type of the fragment).
      */
-    bool EndsByNormalText() const { return mRightWSType == WSType::NormalText; }
+    bool EndsByNonCollapsibleCharacters() const {
+      return mRightWSType == WSType::NonCollapsibleCharacters;
+    }
     bool EndsByTrailingWhiteSpaces() const {
       return mRightWSType == WSType::TrailingWhiteSpaces;
     }
@@ -649,13 +656,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     void SetStartFromLeadingWhiteSpaces() {
       mLeftWSType = WSType::LeadingWhiteSpaces;
     }
-    void SetStartFromNormalWhiteSpaces() {
-      mLeftWSType = WSType::NormalWhiteSpaces;
-    }
     void SetEndBy(WSType aRightWSType) { mRightWSType = aRightWSType; }
-    void SetEndByNormalWiteSpaces() {
-      mRightWSType = WSType::NormalWhiteSpaces;
-    }
     void SetEndByTrailingWhiteSpaces() {
       mRightWSType = WSType::TrailingWhiteSpaces;
     }
@@ -799,7 +800,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
         return mAcrossPreformattedCharacter == Preformatted::Yes;
       }
 
-      bool IsNormalText() const { return mReason == WSType::NormalText; }
+      bool IsNonCollapsibleCharacters() const {
+        return mReason == WSType::NonCollapsibleCharacters;
+      }
       bool IsSpecialContent() const {
         return mReason == WSType::SpecialContent;
       }
@@ -843,7 +846,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
 
       nsCOMPtr<nsIContent> mReasonContent;
       EditorDOMPoint mPoint;
-      // Must be one of WSType::NotInitialized, WSType::NormalText,
+      // Must be one of WSType::NotInitialized,
+      // WSType::NonCollapsibleCharacters,
       // WSType::SpecialContent, WSType::BRElement, WSType::CurrentBlockBoundary
       // or WSType::OtherBlockBoundary.
       WSType mReason;
@@ -896,7 +900,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
     }
     nsIContent* GetEndReasonContent() const { return mEnd.GetReasonContent(); }
 
-    bool StartsFromNormalText() const { return mStart.IsNormalText(); }
+    bool StartsFromNonCollapsibleCharacters() const {
+      return mStart.IsNonCollapsibleCharacters();
+    }
     bool StartsFromSpecialContent() const { return mStart.IsSpecialContent(); }
     bool StartsFromBRElement() const { return mStart.IsBRElement(); }
     bool StartsFromVisibleBRElement() const {
@@ -917,7 +923,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
     }
     bool StartsFromBlockBoundary() const { return mStart.IsBlockBoundary(); }
     bool StartsFromHardLineBreak() const { return mStart.IsHardLineBreak(); }
-    bool EndsByNormalText() const { return mEnd.IsNormalText(); }
+    bool EndsByNonCollapsibleCharacters() const {
+      return mEnd.IsNonCollapsibleCharacters();
+    }
     bool EndsBySpecialContent() const { return mEnd.IsSpecialContent(); }
     bool EndsByBRElement() const { return mEnd.IsBRElement(); }
     bool EndsByVisibleBRElement() const {
@@ -1222,8 +1230,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
      */
     bool IsWhiteSpaceNotCollapsibleOrSurrondedByVisibleContent() const {
       return !mIsWhiteSpaceCollapsible ||
-             ((StartsFromNormalText() || StartsFromSpecialContent()) &&
-              (EndsByNormalText() || EndsBySpecialContent() ||
+             ((StartsFromNonCollapsibleCharacters() ||
+               StartsFromSpecialContent()) &&
+              (EndsByNonCollapsibleCharacters() || EndsBySpecialContent() ||
                EndsByBRElement()));
     }
 
