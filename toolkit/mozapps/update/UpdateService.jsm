@@ -199,7 +199,7 @@ const ERR_CHANNEL_CHANGE = 92;
 const INVALID_UPDATER_STATE_CODE = 98;
 const INVALID_UPDATER_STATUS_CODE = 99;
 
-const BACKGROUND_TASK_NEEDED_ELEVATION_ERROR = 105;
+const SILENT_UPDATE_NEEDED_ELEVATION_ERROR = 105;
 const WRITE_ERROR_BACKGROUND_TASK_SHARING_VIOLATION = 106;
 
 // Array of write errors to simplify checks for write errors
@@ -1517,7 +1517,7 @@ function handleUpdateFailure(update, errorCode) {
     return true;
   }
 
-  if (update.errorCode == BACKGROUND_TASK_NEEDED_ELEVATION_ERROR) {
+  if (update.errorCode == SILENT_UPDATE_NEEDED_ELEVATION_ERROR) {
     // There's no need to count attempts and escalate: it's expected that the
     // background update task will try to update and fail due to required
     // elevation repeatedly if, for example, the maintenance service is not
@@ -1526,7 +1526,7 @@ function handleUpdateFailure(update, errorCode) {
 
     let bestState = getBestPendingState();
     LOG(
-      "handleUpdateFailure - witnessed BACKGROUND_TASK_NEEDED_ELEVATION_ERROR, " +
+      "handleUpdateFailure - witnessed SILENT_UPDATE_NEEDED_ELEVATION_ERROR, " +
         "returning to " +
         bestState
     );
