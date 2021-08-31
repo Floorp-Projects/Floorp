@@ -645,6 +645,7 @@ class nsWindow final : public nsBaseWidget {
   bool WaylandPopupIsPermanent();
   bool IsWidgetOverflowWindow();
   void RemovePopupFromHierarchyList();
+  void ShowWaylandWindow();
   void HideWaylandWindow();
   void HideWaylandPopupWindow(bool aTemporaryHidden, bool aRemoveFromPopupList);
   void HideWaylandToplevelWindow();
@@ -653,7 +654,6 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupHierarchyHideTemporary();
   void WaylandPopupHierarchyShowTemporaryHidden();
   void WaylandPopupHierarchyCalculatePositions();
-  bool IsTooltipWithNegativeRelativePositionRemoved();
   bool IsInPopupHierarchy();
   void AddWindowToPopupHierarchy();
   void UpdateWaylandPopupHierarchy();
@@ -663,7 +663,8 @@ class nsWindow final : public nsBaseWidget {
       nsTArray<nsIWidget*>* aLayoutWidgetHierarchy);
   void CloseAllPopupsBeforeRemotePopup();
   void WaylandPopupHideClosedPopups();
-  void WaylandPopupMove(bool aUseMoveToRect);
+  void WaylandPopupMove();
+  bool WaylandPopupRemoveNegativePosition(int* aX = nullptr, int* aY = nullptr);
   nsWindow* WaylandPopupGetTopmostWindow();
   bool IsPopupInLayoutPopupChain(nsTArray<nsIWidget*>* aLayoutWidgetHierarchy,
                                  bool aMustMatchParent);
@@ -756,6 +757,10 @@ class nsWindow final : public nsBaseWidget {
   /*  Popup is going to be closed and removed.
    */
   bool mPopupClosed;
+
+  /* Popup is positioned by gdk_window_move_to_rect()
+   */
+  bool mPopupUseMoveToRect;
 
   /* Last used anchor for move-to-rect.
    */
