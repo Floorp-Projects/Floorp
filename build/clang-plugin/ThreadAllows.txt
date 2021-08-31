@@ -81,7 +81,7 @@ TestPipe
 TestShortWrites
 TestThreadsMain
 Testing Thread
-Timer Thread
+Timer
 ToastBgThread
 TRR Background
 URL Classifier

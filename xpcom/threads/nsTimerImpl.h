@@ -82,11 +82,12 @@ class nsTimerImpl {
       mozilla::Variant<UnknownCallback, InterfaceCallback, ObserverCallback,
                        FuncCallback, ClosureCallback>;
 
-  nsresult InitCommon(uint32_t aDelayMS, uint32_t aType,
-                      Callback&& newCallback);
+  nsresult InitCommon(uint32_t aDelayMS, uint32_t aType, Callback&& newCallback,
+                      const mozilla::MutexAutoLock& aProofOfLock);
 
   nsresult InitCommon(const mozilla::TimeDuration& aDelay, uint32_t aType,
-                      Callback&& newCallback);
+                      Callback&& newCallback,
+                      const mozilla::MutexAutoLock& aProofOfLock);
 
   Callback& GetCallback() {
     mMutex.AssertCurrentThreadOwns();
@@ -115,6 +116,8 @@ class nsTimerImpl {
     return mType == nsITimer::TYPE_REPEATING_SLACK ||
            mType == nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY;
   }
+
+  void GetName(nsACString& aName, const mozilla::MutexAutoLock& aProofOfLock);
 
   void GetName(nsACString& aName);
 

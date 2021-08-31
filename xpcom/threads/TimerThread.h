@@ -19,6 +19,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/ProfilerUtils.h"
 #include "mozilla/UniquePtr.h"
 
 #include <algorithm>
@@ -30,6 +31,7 @@ class TimeStamp;
 class TimerThread final : public mozilla::Runnable, public nsIObserver {
  public:
   typedef mozilla::Monitor Monitor;
+  typedef mozilla::MutexAutoLock MutexAutoLock;
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
@@ -42,8 +44,8 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
   nsresult Shutdown();
 
-  nsresult AddTimer(nsTimerImpl* aTimer);
-  nsresult RemoveTimer(nsTimerImpl* aTimer);
+  nsresult AddTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock);
+  nsresult RemoveTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock);
   TimeStamp FindNextFireTimeForCurrentThread(TimeStamp aDefault,
                                              uint32_t aSearchBound);
 
@@ -110,6 +112,7 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
   nsTArray<mozilla::UniquePtr<Entry>> mTimers;
   uint32_t mAllowedEarlyFiringMicroseconds;
+  ProfilerThreadId mProfilerThreadId;
 };
 
 #endif /* TimerThread_h___ */
