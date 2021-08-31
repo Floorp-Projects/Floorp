@@ -4734,6 +4734,26 @@ update:
     record_in_processes:
       - main
 
+  no_window_auto_restarts:
+    bug_numbers:
+      - 1720742
+    description: >
+      On macOS, all browser windows can be closed without exiting Firefox. If
+      there is an update pending in that case, and we can install it silently,
+      we restart automatically in order to do so. This probe counts the number
+      of times the browser restarts to silently install a pending update.
+    expires: never
+    kind: uint
+    keyed: false
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - bytesized@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # The following section contains search counters.
 browser.search:
   with_ads:
