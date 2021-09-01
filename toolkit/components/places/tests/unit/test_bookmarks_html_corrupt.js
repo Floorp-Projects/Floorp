@@ -34,9 +34,7 @@ add_task(async function test_corrupt_database() {
     OS.Constants.Path.profileDir,
     "bookmarks.exported.html"
   );
-  if (await OS.File.exists(bookmarksFile)) {
-    await OS.File.remove(bookmarksFile);
-  }
+  await IOUtils.remove(bookmarksFile, { ignoreAbsent: true });
   await BookmarkHTMLUtils.exportToFile(bookmarksFile);
 
   // Import again and check for correctness.

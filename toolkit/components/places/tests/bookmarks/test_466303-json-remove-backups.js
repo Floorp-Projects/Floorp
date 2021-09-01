@@ -7,43 +7,41 @@
 // Since PlacesBackups.getbackupFiles() is a lazy getter, these tests must
 // run in the given order, to avoid making it out-of-sync.
 
+async function countChildren(path) {
+  let children = await IOUtils.getChildren(path);
+  let count = 0;
+  let lastBackupPath = null;
+  for (let entry of children) {
+    count++;
+    if (PlacesBackups.filenamesRegex.test(OS.Path.basename(entry))) {
+      lastBackupPath = entry;
+    }
+  }
+  return { count, lastBackupPath };
+}
+
 add_task(async function check_max_backups_is_respected() {
   // Get bookmarkBackups directory
   let backupFolder = await PlacesBackups.getBackupFolder();
 
   // Create 2 json dummy backups in the past.
   let oldJsonPath = OS.Path.join(backupFolder, "bookmarks-2008-01-01.json");
-  let oldJsonFile = await OS.File.open(oldJsonPath, { truncate: true });
-  oldJsonFile.close();
-  Assert.ok(await OS.File.exists(oldJsonPath));
+  await IOUtils.writeUTF8(oldJsonPath, "");
+  Assert.ok(await IOUtils.exists(oldJsonPath));
 
   let jsonPath = OS.Path.join(backupFolder, "bookmarks-2008-01-31.json");
-  let jsonFile = await OS.File.open(jsonPath, { truncate: true });
-  jsonFile.close();
-  Assert.ok(await OS.File.exists(jsonPath));
+  await IOUtils.writeUTF8(jsonPath, "");
+  Assert.ok(await IOUtils.exists(jsonPath));
 
   // Export bookmarks to JSON.
   // Allow 2 backups, the older one should be removed.
   await PlacesBackups.create(2);
 
-  let count = 0;
-  let lastBackupPath = null;
-  let iterator = new OS.File.DirectoryIterator(backupFolder);
-  try {
-    await iterator.forEach(aEntry => {
-      count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name)) {
-        lastBackupPath = aEntry.path;
-      }
-    });
-  } finally {
-    iterator.close();
-  }
-
+  let { count, lastBackupPath } = await countChildren(backupFolder);
   Assert.equal(count, 2);
   Assert.notEqual(lastBackupPath, null);
-  Assert.equal(false, await OS.File.exists(oldJsonPath));
-  Assert.ok(await OS.File.exists(jsonPath));
+  Assert.equal(false, await IOUtils.exists(oldJsonPath));
+  Assert.ok(await IOUtils.exists(jsonPath));
 });
 
 add_task(async function check_max_backups_greater_than_backups() {
@@ -54,19 +52,7 @@ add_task(async function check_max_backups_greater_than_backups() {
   // Allow 3 backups, none should be removed.
   await PlacesBackups.create(3);
 
-  let count = 0;
-  let lastBackupPath = null;
-  let iterator = new OS.File.DirectoryIterator(backupFolder);
-  try {
-    await iterator.forEach(aEntry => {
-      count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name)) {
-        lastBackupPath = aEntry.path;
-      }
-    });
-  } finally {
-    iterator.close();
-  }
+  let { count, lastBackupPath } = await countChildren(backupFolder);
   Assert.equal(count, 2);
   Assert.notEqual(lastBackupPath, null);
 });
@@ -80,19 +66,7 @@ add_task(async function check_max_backups_null() {
   // since one for today already exists.
   await PlacesBackups.create(null);
 
-  let count = 0;
-  let lastBackupPath = null;
-  let iterator = new OS.File.DirectoryIterator(backupFolder);
-  try {
-    await iterator.forEach(aEntry => {
-      count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name)) {
-        lastBackupPath = aEntry.path;
-      }
-    });
-  } finally {
-    iterator.close();
-  }
+  let { count, lastBackupPath } = await countChildren(backupFolder);
   Assert.equal(count, 2);
   Assert.notEqual(lastBackupPath, null);
 });
@@ -106,19 +80,7 @@ add_task(async function check_max_backups_undefined() {
   // since one for today already exists.
   await PlacesBackups.create();
 
-  let count = 0;
-  let lastBackupPath = null;
-  let iterator = new OS.File.DirectoryIterator(backupFolder);
-  try {
-    await iterator.forEach(aEntry => {
-      count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name)) {
-        lastBackupPath = aEntry.path;
-      }
-    });
-  } finally {
-    iterator.close();
-  }
+  let { count, lastBackupPath } = await countChildren(backupFolder);
   Assert.equal(count, 2);
   Assert.notEqual(lastBackupPath, null);
 });
