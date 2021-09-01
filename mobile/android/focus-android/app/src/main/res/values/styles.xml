@@ -120,8 +120,14 @@
         <item name="cardBackgroundColor">@color/menuBackground</item>
     </style>
 
-    <!-- Add new style to be able to use the same color for both themes until light theme it will be implemented -->
-    <style name="MenuItem" parent="@android:style/TextAppearance.Material.Menu">
+    <!-- Add new style to be able to use the same menu item style for both themes until light theme it will be implemented -->
+    <style name="Mozac.Browser.Menu.Item.Text" parent="@android:style/TextAppearance.Material.Menu">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lines">1</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
         <item name="android:textColor">@color/primaryText</item>
     </style>
 

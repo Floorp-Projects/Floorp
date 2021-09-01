@@ -121,15 +121,13 @@ class CustomTabMenu(
 
         val appName = context.getString(R.string.app_name)
         val openInFocus = SimpleBrowserMenuItem(
-            label = context.getString(R.string.menu_open_with_default_browser2, appName),
-            textColorResource = context.theme.resolveAttribute(R.attr.primaryText)
+            label = context.getString(R.string.menu_open_with_default_browser2, appName)
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.OpenInBrowser)
         }
 
         val openInApp = SimpleBrowserMenuItem(
-            label = context.getString(R.string.menu_open_with_a_browser2),
-            textColorResource = context.theme.resolveAttribute(R.attr.primaryText)
+            label = context.getString(R.string.menu_open_with_a_browser2)
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
         }
@@ -137,7 +135,6 @@ class CustomTabMenu(
         val poweredBy = BrowserMenuCategory(
             label = context.getString(R.string.menu_custom_tab_branding, context.getString(R.string.app_name)),
             textSize = CAPTION_TEXT_SIZE,
-            textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
             textStyle = Typeface.NORMAL
         )
 
