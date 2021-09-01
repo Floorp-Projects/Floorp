@@ -174,7 +174,8 @@ impl Example for App {
                 let xf1 = LayoutTransform::rotation(0.0, 0.0, 1.0, Angle::radians(self.angle1));
                 let xf2 = LayoutTransform::rotation(0.0, 0.0, 1.0, Angle::radians(self.angle2));
                 let mut txn = Transaction::new();
-                txn.update_dynamic_properties(
+                txn.reset_dynamic_properties();
+                txn.append_dynamic_properties(
                     DynamicProperties {
                         transforms: vec![
                             PropertyValue {
