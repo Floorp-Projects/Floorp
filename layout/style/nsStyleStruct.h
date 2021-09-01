@@ -1749,7 +1749,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
   mozilla::StyleColorScheme mColorScheme;
 
   inline mozilla::StylePointerEvents GetEffectivePointerEvents(
-      nsIFrame* aFrame) const;
+      const nsIFrame*) const;
 
   bool HasCustomScrollbars() const { return !mScrollbarColor.IsAuto(); }
 };

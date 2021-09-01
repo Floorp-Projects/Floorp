@@ -121,7 +121,6 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
       mShouldAutoPosition(true),
       mInContentShell(true),
       mIsMenuLocked(false),
-      mMouseTransparent(false),
       mIsOffset(false),
       mHFlip(false),
       mVFlip(false),
@@ -196,6 +195,13 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 
   AddStateBits(NS_FRAME_IN_POPUP);
+}
+
+// If pointer-events: none; is set on the popup, then the widget should
+// ignore mouse events, passing them through to the content behind.
+bool nsMenuPopupFrame::IsMouseTransparent(const ComputedStyle& aStyle) const {
+  return aStyle.StyleUI()->GetEffectivePointerEvents(this) ==
+         StylePointerEvents::None;
 }
 
 bool nsMenuPopupFrame::HasRemoteContent() const {
@@ -285,11 +291,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
       widgetData.mIsDragPopup = true;
     }
 
-    // If pointer-events: none; is set on the popup, then the widget should
-    // ignore mouse events, passing them through to the content behind.
-    mMouseTransparent =
-        StyleUI()->GetEffectivePointerEvents(this) == StylePointerEvents::None;
-    widgetData.mMouseTransparent = mMouseTransparent;
+    widgetData.mMouseTransparent = IsMouseTransparent();
   }
 
   nsAutoString title;
@@ -385,7 +387,7 @@ void nsMenuPopupFrame::SetPopupState(nsPopupState aState) {
   // Work around https://gitlab.gnome.org/GNOME/gtk/-/issues/4166
   if (aState == ePopupShown && IS_WAYLAND_DISPLAY()) {
     if (nsIWidget* widget = GetWidget()) {
-      widget->SetWindowMouseTransparent(mMouseTransparent);
+      widget->SetWindowMouseTransparent(IsMouseTransparent());
     }
   }
 }
@@ -495,12 +497,10 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
     }
   }
 
-  bool newMouseTransparent =
-      StyleUI()->GetEffectivePointerEvents(this) == StylePointerEvents::None;
-  if (newMouseTransparent != mMouseTransparent) {
+  bool newMouseTransparent = IsMouseTransparent();
+  if (newMouseTransparent != IsMouseTransparent(*aOldStyle)) {
     if (nsIWidget* widget = GetWidget()) {
       widget->SetWindowMouseTransparent(newMouseTransparent);
-      mMouseTransparent = newMouseTransparent;
     }
   }
 }
