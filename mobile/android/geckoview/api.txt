@@ -667,6 +667,7 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @Nullable @UiThread public GeckoRuntime.Delegate getDelegate();
     method @NonNull @UiThread public ProfilerController getProfilerController();
+    method @Nullable @UiThread public GeckoRuntime.ServiceWorkerDelegate getServiceWorkerDelegate();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
     method @NonNull @UiThread public StorageController getStorageController();
     method @NonNull @UiThread public WebExtensionController getWebExtensionController();
@@ -2055,6 +2056,7 @@ package org.mozilla.geckoview {
   }
 
   public class WebPushController {
+    method @Nullable @UiThread public WebPushDelegate getDelegate();
     method @UiThread public void onPushEvent(@NonNull String);
     method @UiThread public void onPushEvent(@NonNull String, @Nullable byte[]);
     method @UiThread public void onSubscriptionChanged(@NonNull String);
