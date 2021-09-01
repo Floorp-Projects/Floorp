@@ -1776,6 +1776,9 @@ pref("browser.contentblocking.state-partitioning.mvp.ui.enabled", true);
 //   Level 2 Tracking list:
 //     "lvl2": Level 2 tracking list enabled
 //     "-lvl2": Level 2 tracking list disabled
+//   Restrict relaxing default referrer policy:
+//     "rp": Restrict relaxing default referrer policy enabled
+//     "-rp": Restrict relaxing default referrer policy disabled
 //   Cookie behavior:
 //     "cookieBehavior0": cookie behaviour BEHAVIOR_ACCEPT
 //     "cookieBehavior1": cookie behaviour BEHAVIOR_REJECT_FOREIGN
@@ -1791,7 +1794,7 @@ pref("browser.contentblocking.state-partitioning.mvp.ui.enabled", true);
 //     "cookieBehaviorPBM4": cookie behaviour BEHAVIOR_REJECT_TRACKER
 //     "cookieBehaviorPBM5": cookie behaviour BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
 // One value from each section must be included in the browser.contentblocking.features.strict pref.
-pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior5,cookieBehaviorPBM5,cm,fp,stp,lvl2");
+pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior5,cookieBehaviorPBM5,cm,fp,stp,lvl2,rp");
 
 // Hide the "Change Block List" link for trackers/tracking content in the custom
 // Content Blocking/ETP panel. By default, it will not be visible. There is also
