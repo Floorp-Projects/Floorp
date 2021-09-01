@@ -198,8 +198,6 @@ class UrlInputFragment :
 
         StatusBarUtils.getStatusBarHeight(keyboardLinearLayout) {
             adjustViewToStatusBarHeight(it)
-            // Show tips section as a carousel when the keyboard is hidden
-            home_tips.showAsCarousel(keyboardLinearLayout.paddingBottom != 0)
         }
 
         if (!isInitialized) {

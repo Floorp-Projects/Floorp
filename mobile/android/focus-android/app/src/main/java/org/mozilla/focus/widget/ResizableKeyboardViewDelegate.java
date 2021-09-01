@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import androidx.annotation.NonNull;
 import org.mozilla.focus.R;
+import org.mozilla.focus.tips.TipsHorizontalCarousel;
 
 import java.util.ArrayList;
 
@@ -39,6 +40,7 @@ import java.util.ArrayList;
     private final ArrayList<Integer> arrayOfViewsToHide = new ArrayList<>();
     private final boolean shouldAnimate;
     private boolean isAnimating;
+    private int lastValueOfDifference = 0;
 
     private final ViewTreeObserver.OnGlobalLayoutListener layoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
         @Override
@@ -64,6 +66,7 @@ import java.util.ArrayList;
                     updateDynamicViewsVisibility(View.VISIBLE);
                 }
             }
+            setHomeTipsVisibility(difference);
         }
     };
 
@@ -159,6 +162,19 @@ import java.util.ArrayList;
                     viewToHide.setVisibility(visibility);
                 }
             }
+        }
+    }
+
+    /**
+     * If the delegate view contains a specific section for tips, then we should show it as a carousel
+     * with all tips when the keyboard is closed, other else we should show only the current tip
+     */
+    private void setHomeTipsVisibility(int difference) {
+        TipsHorizontalCarousel homeTipsCarousel = delegateView.findViewById(R.id.home_tips);
+
+        if (homeTipsCarousel != null && difference != lastValueOfDifference) {
+            lastValueOfDifference = difference;
+            homeTipsCarousel.showAsCarousel(difference <= 0);
         }
     }
 }
