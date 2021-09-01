@@ -22,8 +22,12 @@ def getNDKDirectory() {
     if (project.mozconfig.substs.ANDROID_NDK) {
         return project.mozconfig.substs.ANDROID_NDK
     }
-    if (project.android.ndkDirectory) {
-        return project.android.ndkDirectory
+    try {
+        if (project.android.ndkDirectory) {
+            return project.android.ndkDirectory
+        }
+    } catch (InvalidUserDataException ex) {
+        // The NDK is not installed, that's ok.
     }
     def mozbuild = System.getenv('MOZBUILD_STATE_PATH') ?: "${System.getProperty('user.home')}/.mozbuild"
     def files = new FileNameFinder().getFileNames(mozbuild, "android-ndk-*/source.properties")
