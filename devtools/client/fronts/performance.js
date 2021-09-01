@@ -140,7 +140,7 @@ class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
    */
   importRecording(file) {
     return PerformanceIO.loadRecordingFromFile(file).then(recordingData => {
-      const model = new PerformanceRecordingFront();
+      const model = new PerformanceRecordingFront(this.conn);
       model._imported = true;
       model._label = recordingData.label || "";
       model._duration = recordingData.duration;

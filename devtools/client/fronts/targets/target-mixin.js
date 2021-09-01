@@ -313,6 +313,11 @@ function TargetMixin(parentClass) {
     // Get a Front for a target-scoped actor.
     // i.e. an actor served by RootActor.listTabs or RootActorActor.getTab requests
     async getFront(typeName) {
+      if (this.isDestroyed()) {
+        throw new Error(
+          "Target already destroyed, unable to fetch children fronts"
+        );
+      }
       let front = this.fronts.get(typeName);
       if (front) {
         // XXX: This is typically the kind of spot where switching to
