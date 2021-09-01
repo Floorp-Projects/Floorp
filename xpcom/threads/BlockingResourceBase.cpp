@@ -314,7 +314,6 @@ void OffTheBooksMutex::Lock() {
 }
 
 bool OffTheBooksMutex::TryLock() {
-  CheckAcquire();
   bool locked = this->tryLock();
   if (locked) {
     mOwningThread = PR_GetCurrentThread();
