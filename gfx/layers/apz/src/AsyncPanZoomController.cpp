@@ -5982,6 +5982,7 @@ void AsyncPanZoomController::SetTestAsyncScrollOffset(const CSSPoint& aPoint) {
 
 void AsyncPanZoomController::SetTestAsyncZoom(
     const LayerToParentLayerScale& aZoom) {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   mTestAsyncZoom = aZoom;
   ScheduleComposite();
 }
