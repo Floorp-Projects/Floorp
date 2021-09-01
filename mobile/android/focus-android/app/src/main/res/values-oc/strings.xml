@@ -137,8 +137,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">A prepaus de %1$s, ajuda</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">Proteccion contra lo seguiment</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Proteccion contra lo seguiment renfortida</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Contengut web</string>
@@ -198,6 +198,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Ajustar una adreça personalizada</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Vòstra lista d’auto emplenatge :</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">Apondre l’adreça</string>
@@ -507,9 +510,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NON</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">Aqueste acorchi se dobrirà sens proteccion contra lo seguiment</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Aqueste acorchi se dobrirà amb proteccion renfortida contra lo seguiment desactivada</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -541,7 +544,23 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s es distribuit jols tèrmes de la <a href="%2$s">Licéncia publica de Mozilla</a> e d’autras licéncias open source.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Còdis font complementaris per %1$s son disponibles jos diferentas <a href="%2$s">licéncias</a> liuras e open source.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s utiliza tanben las listas de blocatges provesidas per Disconnect, Inc coma de trabalh separat e independent jos licéncia <a href="%2$s">GNU General Public License v3</a>, e disponiblas <a href="%3$s">aquí</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Nom d\'utilizaire</string>
     <string name="gv_prompt_password_hint">Senhal</string>
     <string name="gv_prompt_clear">Escafar</string>
@@ -608,6 +627,10 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">Session novèla</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Dobrir lo ligam dins una session novèla</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Icòna d’emprentas digitalas</string>
 
@@ -621,6 +644,10 @@
 
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">Afichar las suggestions de recèrca ?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Per obténer de suggestions, %1$s a d’enviar al motor de recèrca çò que picatz dins la barra d’adreça.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Non</string>
@@ -640,6 +667,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Aqueste site a un compòrtament inesperat ?\n Ensajatz de desactivar la proteccion contra lo seguiment</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Manca lo contengut al site o agís estranhament ?\n
+    Ensajatz de desactivar la proteccion contra lo seguiment renfortida</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Accedissètz rapidament als sites que mai visitatz %1$s Menú > Apondre a l’ecran d’acuèlh]]></string>
@@ -657,8 +689,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Dobrir un ligam dins un onglet novèl\n Mantenètz quichat quin que siá ligam de la pagina</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Volètz veire la version complèta d’un site ?\n
+        Passatz a la version per ordenador del menú %1$s estant</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Quitar de mostrar las astúcias a l’ecran de començament</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Volètz desactivar la proteccion renfortida contra lo seguiment per un site de fisança ?\n
+        Apondètz-lo a la lista d’autorizacion al paramètres
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Mas òc, avèm una aparéncia novèla !\n Ne saber mai tocant aqueste subjècte e tocant d’autras mesas a jorn de %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Creatz d’acorchis cap als sites que mai visitatz :\n
+    Seleccionatz « Apondre als acorchis » al menú de %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Novèl onglet dobèrt</string>
@@ -738,4 +790,7 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Suprimir</string>
 
-    </resources>
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Los imatges salvagardats o partejats &lt;b&gt;seràn pas&lt;/b&gt; suprimits en netejar vòstre istoric %1$s.</string>
+</resources>

@@ -150,8 +150,8 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">%1$s 정보, 도움말</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">추적 방지</string>
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">향상된 추적 방지 기능</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">웹 콘텐츠</string>
@@ -523,9 +523,9 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">아니오</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">바로 가기가 추적 차단 기능이 해제된 상태에서 열립니다</string>
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">바로 가기가 향상된 추적 방지 기능이 해제된 상태에서 열림</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -685,10 +685,10 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">사이트가 잘 작동하지 않나요?\n 추적 방지를 꺼보세요</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">사이트에서 콘텐츠가 나오지 않거나 이상하게 작동하나요?\n
-    추적 방지를 꺼보세요</string>
+    <string name="tip_disable_tracking_protection3">사이트에서 콘텐츠가 나오지 않거나 이상하게 작동하나요?\n
+    향상된 추적 방지를 꺼보세요.</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -717,7 +717,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist2">신뢰할 수 있는 사이트는 처적 방지 기능을 해제하고 싶으신가요?\n
+    <string name="tip_explain_allowlist3">신뢰할 수 있는 사이트는 향상된 추적 방지 기능을 해제하고 싶으신가요?\n
         설정의 허용 목록에 추가해보세요.
     </string>
 

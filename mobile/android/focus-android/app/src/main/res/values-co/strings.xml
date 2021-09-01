@@ -171,7 +171,7 @@
     <string name="preference_category_search">Ricerca</string>
 
     <!-- Title of "switch" preference that enables/disables search suggestions -->
-    <string name="preference_show_search_suggestions">Ottene suggestioni di ricerca</string>
+    <string name="preference_show_search_suggestions">Ottene sugestioni di ricerca</string>
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_show_search_suggestions_summary">%1$s manderà à u vostru mutore di ricerca ciò chì voi scrivite in a barra d’indirizzu</string>
@@ -669,7 +669,7 @@
 
     <!-- Description for the prompt to enable search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="enable_search_suggestion_description">Per ottene suggestioni di ricerca, %1$s hà bisognu di mandà à u mutore di ricerca ciò chì vo scrivite in a barra d’indirizzu.</string>
+    <string name="enable_search_suggestion_description">Per ottene sugestioni di ricerca, %1$s hà bisognu di mandà à u mutore di ricerca ciò chì vo scrivite in a barra d’indirizzu.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Innò</string>
@@ -678,7 +678,7 @@
     <string name="enable_search_suggestions_yes">Iè</string>
 
     <!-- Message displayed when using a search engine that doesn't provide suggestions -->
-    <string name="no_suggestions_message">Certi mutori di ricerca ùn ponu affissà suggestioni.</string>
+    <string name="no_suggestions_message">Certi mutori di ricerca ùn ponu affissà sugestioni.</string>
 
     <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
     <string name="dismiss_no_suggestions_prompt_button">Ignurà</string>

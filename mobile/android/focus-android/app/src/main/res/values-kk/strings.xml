@@ -122,6 +122,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Жеке шолыңыз</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s басқаруды қолыңызға береді.</p>
+<p>Оны жекелік браузері ретінде қолданыңыз:
+  <ul>
+    <li>Қолданба ішінен тікелей іздеу және шолу</li>
+    <li>Трекерлерді блоктау (немесе, оларды рұқсат ету үшін, баптауларды жаңарту)</li>
+    <li>Cookie файлдарын және іздеу мен шолу тарихын кетіру үшін өшіру</li>
+  </ul>
+</p>
+<p>%1$s жасаған Mozilla. Мақсатымыз - интернет денсаулығын және ашықтығын сақтау.<br/>
+<a href="%2$s">Көбірек білу</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Жекелік және қауіпсіздік</string>
 
@@ -544,7 +557,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s сізге <a href="%2$s">Mozilla публикалық лицензиясы</a> және басқа кодтары ашық лицензиялар аясында қолжетімді етілген.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Сізге Mozilla Foundation-ның немесе басқа да жақтардың ешбір тіркелген сауда белгілеріне, соның ішінде Mozilla, Firefox немесе %1$s аттары немесе логотиптеріне ешбір құқықтар немесе лицензиялар берілмейді. Қосымша ақпаратты <a href="%2$s">осы жерден</a> табуға болады.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$s үшін қосымша бастапқы кодтары әр түрлі басқа тегін және бастапқы кодтары ашық <a href="%2$s">лицензиялар</a> аясында қолжетімді.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[Сонымен қатар, %1$s Disconnect, Inc. ұсынған блоктізімдерін қолданады, олар <a href="%2$s">GNU General Public License v3</a> аясында, <a href="%3$s">осында</a> бөлек және тәуелсіз жұмыстар ретінде қолжетімді.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Пайдаланушы аты</string>
     <string name="gv_prompt_password_hint">Пароль</string>
     <string name="gv_prompt_clear">Тазарту</string>
@@ -629,6 +663,10 @@
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">Іздеу ұсыныстарын көрсету керек пе?</string>
 
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Іздеу ұсыныстарын алу үшін, %1$s сіз адрестік жолақта терген нәрсені іздеу жүйесіне жіберуі тиіс.</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Жоқ</string>
 
@@ -647,6 +685,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Әлі де күтпегендей әрекет жасайды ма?\n Бақылаудан қорғанысты сөндіріп көріңіз</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Сайтта мазмұн жоқ па немесе оның әрекеттері біртүрлі ма?\n
+    Бақылаудан жақсартылған қорғанысты өшіріп көріңіз</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Жиірек қолданылатын сайттарға бір шертумен қатынаңыз%1$s Мәзір > Үй бетіне қосу]]></string>
@@ -664,8 +707,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Сілтемені жаңа бетте ашу\n Беттегі кез келген сілтемеге ұзақ шертіңіз</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Сайттың толық нұсқасын көргіңіз келе ме?\n
+        %1$s мәзірінен жұмыс үстелі нұсқасын іске қосыңыз</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Іске қосу экранында кеңестерді сөндіру</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Сенімді сайт үшін Бақылаудан жақсартылған қорғанысты өшіргіңіз келе ме?\n
+        Оны «Баптаулар» бөлімінде рұқсат тізіміне қосыңыз
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Неге жоқ, бізде жаңа көрініс бар! Ол және басқа да %1$s жаңартулары туралы көбірек біліңіз.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Сіз жиі шолатын сайттарға сілтемелер жасаңыз:\n
+    %1$s мәзірінен Жарлықтарға қосу командасын таңдаңыз</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Жаңа бет ашылды</string>
