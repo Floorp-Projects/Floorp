@@ -32,6 +32,8 @@ static LazyLogModule sScreenLog("WidgetScreen");
 #  define LOG_SCREEN(args)
 #endif /* MOZ_LOGGING */
 
+using GdkMonitor = struct _GdkMonitor;
+
 static UniquePtr<ScreenGetter> gScreenGetter;
 
 static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
@@ -300,11 +302,69 @@ ScreenGetterWayland::~ScreenGetterWayland() {
   g_clear_pointer(&mRegistry, wl_registry_destroy);
 }
 
-already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(
-    gint aMonitorNum) {
-  MonitorConfig monitor = mMonitors[aMonitorNum];
+static bool GdkMonitorGetWorkarea(GdkMonitor* monitor, GdkRectangle* workarea) {
+  static auto s_gdk_monitor_get_workarea =
+      (void (*)(GdkMonitor*, GdkRectangle*))dlsym(RTLD_DEFAULT,
+                                                  "gdk_monitor_get_workarea");
+  if (!s_gdk_monitor_get_workarea) {
+    return false;
+  }
+
+  s_gdk_monitor_get_workarea(monitor, workarea);
+  return true;
+}
+
+bool ScreenGetterWayland::MonitorUsesNonIntegerScale(int aMonitor) {
+  static auto s_gdk_display_get_n_monitors =
+      (int (*)(GdkDisplay*))dlsym(RTLD_DEFAULT, "gdk_display_get_n_monitors");
+  static auto s_gdk_display_get_monitor = (GdkMonitor * (*)(GdkDisplay*, int))
+      dlsym(RTLD_DEFAULT, "gdk_display_get_monitor");
+
+  if (!s_gdk_display_get_n_monitors || !s_gdk_display_get_monitor) {
+    return false;
+  }
+
+  int monitorNum = s_gdk_display_get_n_monitors(gdk_display_get_default());
+  for (int m = 0; m < monitorNum; m++) {
+    GdkMonitor* gdkMonitor =
+        s_gdk_display_get_monitor(gdk_display_get_default(), m);
+    if (!gdkMonitor) {
+      return false;
+    }
+    GdkRectangle workArea;
+    if (!GdkMonitorGetWorkarea(gdkMonitor, &workArea)) {
+      return false;
+    }
+
+    LOG_SCREEN(("Monitor %d Gtk workarea size %d x %d", m, workArea.width,
+                workArea.height));
+    LOG_SCREEN(("Monitor %d wl_output size %d x %d", aMonitor,
+                mMonitors[aMonitor].width, mMonitors[aMonitor].height));
+
+    if (mMonitors[aMonitor].x == workArea.x &&
+        mMonitors[aMonitor].y == workArea.y) {
+      // When non-integer scale is used, wl_output reports framebuffer size
+      // but Gtk reports downscaled logical size.
+      return workArea.width < mMonitors[aMonitor].width &&
+             workArea.height < mMonitors[aMonitor].height;
+    }
+  }
+  return false;
+}
+
+already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
+  MonitorConfig monitor = mMonitors[aMonitor];
 
   LayoutDeviceIntRect rect(monitor.x, monitor.y, monitor.width, monitor.height);
+
+  // Non integer scales are downscaled from upper scales so report screen sizes
+  // as bigger ones.
+  if (MonitorUsesNonIntegerScale(aMonitor)) {
+    LOG_SCREEN(("Monitor %d uses non-integer scale", aMonitor));
+    rect.width *= monitor.scale;
+    rect.height *= monitor.scale;
+  }
+
   uint32_t pixelDepth = GetGTKPixelDepth();
 
   // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
@@ -323,7 +383,7 @@ already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(
   LOG_SCREEN(
       ("Monitor %d [%d %d -> %d x %d depth %d content scale %f css scale %f "
        "DPI %f]",
-       aMonitorNum, rect.x, rect.y, rect.width, rect.height, pixelDepth,
+       aMonitor, rect.x, rect.y, rect.width, rect.height, pixelDepth,
        contentsScale.scale, defaultCssScale.scale, dpi));
   RefPtr<Screen> screen = new Screen(rect, rect, pixelDepth, pixelDepth,
                                      contentsScale, defaultCssScale, dpi);
@@ -349,16 +409,11 @@ void ScreenGetterWayland::RefreshScreens() {
 int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
   LOG_SCREEN(("GetMonitorForWindow() [%p]", aWindow));
 
-  using GdkMonitor = struct _GdkMonitor;
   static auto s_gdk_display_get_monitor_at_window =
       (GdkMonitor * (*)(GdkDisplay*, GdkWindow*))
           dlsym(RTLD_DEFAULT, "gdk_display_get_monitor_at_window");
 
-  static auto s_gdk_monitor_get_workarea =
-      (void (*)(GdkMonitor*, GdkRectangle*))dlsym(RTLD_DEFAULT,
-                                                  "gdk_monitor_get_workarea");
-
-  if (!s_gdk_display_get_monitor_at_window || !s_gdk_monitor_get_workarea) {
+  if (!s_gdk_display_get_monitor_at_window) {
     LOG_SCREEN(("  failed, missing Gtk helpers"));
     return -1;
   }
@@ -377,11 +432,13 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
   }
 
   GdkRectangle workArea;
-  s_gdk_monitor_get_workarea(monitor, &workArea);
+  if (!GdkMonitorGetWorkarea(monitor, &workArea)) {
+    return -1;
+  }
 
   for (unsigned int i = 0; i < mMonitors.Length(); i++) {
     // Although Gtk/Mutter are very creative in reporting various screens sizes
-    // we can relly work area start position matches wl_output.
+    // we can rely on Gtk work area start position to match wl_output.
     if (mMonitors[i].x == workArea.x && mMonitors[i].y == workArea.y) {
       LOG_SCREEN((" monitor %d values %d %d -> %d x %d", i, mMonitors[i].x,
                   mMonitors[i].y, mMonitors[i].width, mMonitors[i].height));
