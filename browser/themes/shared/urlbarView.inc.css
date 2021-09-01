@@ -14,8 +14,8 @@
 :root {
   --autocomplete-popup-background: var(--arrowpanel-background);
   --autocomplete-popup-color: var(--arrowpanel-color);
-  --autocomplete-popup-highlight-background: SelectedItem;
-  --autocomplete-popup-highlight-color: SelectedItemText;
+  --autocomplete-popup-highlight-background: Highlight;
+  --autocomplete-popup-highlight-color: HighlightText;
 
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 
