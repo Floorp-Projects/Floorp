@@ -1543,12 +1543,9 @@ var gSync = {
       let tabCount = aTargetTab.multiselected
         ? gBrowser.multiSelectedTabsCount
         : 1;
-      sendTabsToDevice.label = PluralForm.get(
-        tabCount,
-        gNavigatorBundle.getString("sendTabsToDevice.label")
-      ).replace("#1", tabCount.toLocaleString());
-      sendTabsToDevice.accessKey = gNavigatorBundle.getString(
-        "sendTabsToDevice.accesskey"
+      sendTabsToDevice.setAttribute(
+        "data-l10n-args",
+        JSON.stringify({ tabCount })
       );
       sendTabsToDevice.hidden = false;
     }
