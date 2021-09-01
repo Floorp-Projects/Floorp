@@ -1683,6 +1683,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
 
+  if (StaticPrefs::browser_download_improvements_to_download_panel() &&
+      IsDownloadSpam(aChannel)) {
+    return NS_OK;
+  }
+
   mDownloadClassification =
       nsContentSecurityUtils::ClassifyDownload(aChannel, MIMEType);
 
@@ -1956,6 +1961,62 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     }
   }
   return NS_OK;
+}
+
+bool nsExternalAppHandler::IsDownloadSpam(nsIChannel* aChannel) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  if (loadInfo->GetHasValidUserGestureActivation()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+      mozilla::services::GetPermissionManager();
+  nsCOMPtr<nsIPrincipal> principal = loadInfo->TriggeringPrincipal();
+  bool exactHostMatch = false;
+  constexpr auto type = "automatic-download"_ns;
+  nsCOMPtr<nsIPermission> permission;
+
+  permissionManager->GetPermissionObject(principal, type, exactHostMatch,
+                                         getter_AddRefs(permission));
+
+  if (permission) {
+    uint32_t capability;
+    permission->GetCapability(&capability);
+    if (capability == nsIPermissionManager::DENY_ACTION) {
+      mCanceled = true;
+      aChannel->Cancel(NS_ERROR_ABORT);
+      return true;
+    }
+    if (capability == nsIPermissionManager::ALLOW_ACTION) {
+      return false;
+    }
+    // If no action is set (i.e: null), we set PROMPT_ACTION by default,
+    // which will notify the Downloads UI to open the panel on the next request.
+    if (capability == nsIPermissionManager::PROMPT_ACTION) {
+      nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService();
+
+      nsAutoCString cStringURI;
+      loadInfo->TriggeringPrincipal()->GetPrePath(cStringURI);
+      observerService->NotifyObservers(
+          nullptr, "blocked-automatic-download",
+          NS_ConvertASCIItoUTF16(cStringURI.get()).get());
+      // FIXME: In order to escape memory leaks, currently we cancel blocked
+      // downloads. This is temporary solution, because download data should be
+      // kept in order to restart the blocked download.
+      mCanceled = true;
+      aChannel->Cancel(NS_ERROR_ABORT);
+      // End cancel
+      return true;
+    }
+  } else {
+    permissionManager->AddFromPrincipal(
+        principal, type, nsIPermissionManager::PROMPT_ACTION,
+        nsIPermissionManager::EXPIRE_NEVER, 0 /* expire time */);
+  }
+
+  return false;
 }
 
 // Convert error info into proper message text and send OnStatusChange

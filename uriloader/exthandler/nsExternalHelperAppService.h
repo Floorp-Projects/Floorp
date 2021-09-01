@@ -14,11 +14,13 @@
 #include "nsIWebProgressListener2.h"
 #include "nsIHelperAppLauncherDialog.h"
 
+#include "nsILoadInfo.h"
 #include "nsIMIMEInfo.h"
 #include "nsIMIMEService.h"
 #include "nsINamed.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
+#include "nsIPermission.h"
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -267,6 +269,8 @@ class nsExternalAppHandler final : public nsIStreamListener,
   void SetShouldCloseWindow() { mShouldCloseWindow = true; }
 
  protected:
+  bool IsDownloadSpam(nsIChannel* aChannel);
+
   ~nsExternalAppHandler();
 
   nsCOMPtr<nsIFile> mTempFile;
