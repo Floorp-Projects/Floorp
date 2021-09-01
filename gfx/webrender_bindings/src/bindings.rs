@@ -1039,10 +1039,8 @@ impl AsyncPropertySampler for SamplerCallback {
         // may be failed to reset them due to null samplers.
         transaction.reset_dynamic_properties();
         unsafe {
-            // XXX: When we implement scroll-linked animations, we will probably
-            // need to call apz_sample_transforms prior to omta_sample.
+            apz_sample_transforms(self.window_id, generated_frame_id, &mut transaction);
             omta_sample(self.window_id, &mut transaction);
-            apz_sample_transforms(self.window_id, generated_frame_id, &mut transaction)
         };
         transaction.get_frame_ops()
     }
@@ -1914,7 +1912,7 @@ fn wr_animation_properties_into_vec<T>(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_transaction_update_dynamic_properties(
+pub extern "C" fn wr_transaction_append_dynamic_properties(
     txn: &mut Transaction,
     opacity_array: *const WrOpacityProperty,
     opacity_count: usize,
@@ -1935,7 +1933,7 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
 
     wr_animation_properties_into_vec(color_array, color_count, &mut properties.colors);
 
-    txn.update_dynamic_properties(properties);
+    txn.append_dynamic_properties(properties);
 }
 
 #[no_mangle]
