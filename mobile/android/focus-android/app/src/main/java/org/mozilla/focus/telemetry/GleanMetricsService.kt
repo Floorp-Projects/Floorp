@@ -95,8 +95,9 @@ class GleanMetricsService(context: Context) : MetricsService {
         val installedBrowsers = BrowsersCache.all(context)
         val hasFenixInstalled = installedBrowsers.hasFirefoxBrandedBrowserInstalled
         val isFenixDefaultBrowser = installedBrowsers.isFirefoxDefaultBrowser
+        val isFocusDefaultBrowser = installedBrowsers.isDefaultBrowser
 
-        Browser.isDefault.set(settings.isDefaultBrowser())
+        Browser.isDefault.set(isFocusDefaultBrowser)
         Browser.localeOverride.set(components.store.state.locale?.displayName ?: "none")
         val shortcutsOnHomeNumber = components.appStore.state.topSites.size.toLong()
         Shortcuts.shortcutsOnHomeNumber.set(shortcutsOnHomeNumber)
