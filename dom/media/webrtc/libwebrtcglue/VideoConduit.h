@@ -84,10 +84,10 @@ class WebrtcVideoConduit
   Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
   DOMHighResTimeStamp GetNow() const override;
 
-  MediaConduitErrorCode StopTransmittingLocked();
-  MediaConduitErrorCode StartTransmittingLocked();
-  MediaConduitErrorCode StopReceivingLocked();
-  MediaConduitErrorCode StartReceivingLocked();
+  void StopTransmitting();
+  void StartTransmitting();
+  void StopReceiving();
+  void StartReceiving();
 
   /**
    * Function to select and change the encoding resolution based on incoming
@@ -161,8 +161,8 @@ class WebrtcVideoConduit
   bool GetRemoteSSRC(uint32_t* ssrc) const override;
 
   void UnsetRemoteSSRC(uint32_t ssrc) override;
-  bool SetRemoteSSRCLocked(uint32_t ssrc, uint32_t rtxSsrc);
-
+  void SetRemoteSSRCConfig(uint32_t ssrc, uint32_t rtxSsrc);
+  void SetRemoteSSRCAndRestartAsNeeded(uint32_t ssrc, uint32_t rtxSsrc);
   // Creating a recv stream or a send stream requires a local ssrc to be
   // configured. This method will generate one if needed.
   void EnsureLocalSSRC();
@@ -253,9 +253,9 @@ class WebrtcVideoConduit
   // Video Latency Test averaging filter
   void VideoLatencyUpdate(uint64_t new_sample);
 
-  MediaConduitErrorCode CreateSendStream();
+  void CreateSendStream();
   void DeleteSendStream();
-  MediaConduitErrorCode CreateRecvStream();
+  void CreateRecvStream();
   void DeleteRecvStream();
 
   void DeliverPacket(rtc::CopyOnWriteBuffer packet, PacketType type) override;

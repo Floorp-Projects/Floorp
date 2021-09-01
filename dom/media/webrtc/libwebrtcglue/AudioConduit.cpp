@@ -273,37 +273,56 @@ void WebrtcAudioConduit::OnControlConfigChange() {
     return;
   }
 
-  // Recreate/Stop/Start streams as needed.
-  AutoWriteLock lock(mLock);
-  if (mRecvStream) {
+  if (recvStreamRecreationNeeded) {
+    recvStreamReconfigureNeeded = false;
+  }
+  if (sendStreamRecreationNeeded) {
+    sendStreamReconfigureNeeded = false;
+  }
+
+  {
+    AutoWriteLock lock(mLock);
+    // Recreate/Stop/Start streams as needed.
     if (recvStreamRecreationNeeded) {
       DeleteRecvStream();
-      CreateRecvStream();
-    } else if (recvStreamReconfigureNeeded) {
-      mRecvStream->Reconfigure(mRecvStreamConfig);
     }
-  }
-  if (mSendStream) {
+    if (mControl.mReceiving) {
+      CreateRecvStream();
+    }
     if (sendStreamRecreationNeeded) {
       DeleteSendStream();
-      CreateSendStream();
-    } else if (sendStreamReconfigureNeeded) {
-      mSendStream->Reconfigure(mSendStreamConfig);
     }
+    if (mControl.mTransmitting) {
+      CreateSendStream();
+    }
+  }
+
+  // We make sure to not hold the lock while stopping/starting/reconfiguring
+  // streams, so as to not cause deadlocks. These methods can cause our platform
+  // codecs to dispatch sync runnables to main, and main may grab the lock.
+
+  if (mRecvStream && recvStreamReconfigureNeeded) {
+    MOZ_ASSERT(!recvStreamRecreationNeeded);
+    mRecvStream->Reconfigure(mRecvStreamConfig);
+  }
+
+  if (mSendStream && sendStreamReconfigureNeeded) {
+    MOZ_ASSERT(!sendStreamRecreationNeeded);
+    mSendStream->Reconfigure(mSendStreamConfig);
   }
 
   if (!mControl.mReceiving) {
-    StopReceivingLocked();
+    StopReceiving();
   }
   if (!mControl.mTransmitting) {
-    StopTransmittingLocked();
+    StopTransmitting();
   }
 
   if (mControl.mReceiving) {
-    StartReceivingLocked();
+    StartReceiving();
   }
   if (mControl.mTransmitting) {
-    StartTransmittingLocked();
+    StartTransmitting();
   }
 }
 
@@ -320,19 +339,19 @@ bool WebrtcAudioConduit::OverrideRemoteSSRC(uint32_t ssrc) {
   }
   mRecvStreamConfig.rtp.remote_ssrc = ssrc;
 
-  AutoWriteLock lock(mLock);
-  bool wasReceiving = mRecvStreamRunning;
-  bool hadRecvStream = mRecvStream;
-  DeleteRecvStream();
+  const bool wasReceiving = mRecvStreamRunning;
+  const bool hadRecvStream = mRecvStream;
+
+  StopReceiving();
+
+  if (hadRecvStream) {
+    AutoWriteLock lock(mLock);
+    DeleteRecvStream();
+    CreateRecvStream();
+  }
 
   if (wasReceiving) {
-    if (StartReceivingLocked() != kMediaConduitNoError) {
-      return false;
-    }
-  } else if (hadRecvStream) {
-    if (CreateRecvStream() != kMediaConduitNoError) {
-      return false;
-    }
+    StartReceiving();
   }
   return true;
 }
@@ -496,72 +515,72 @@ DOMHighResTimeStamp WebrtcAudioConduit::GetNow() const {
   return mCall->GetNow();
 }
 
-MediaConduitErrorCode WebrtcAudioConduit::StopTransmittingLocked() {
+void WebrtcAudioConduit::StopTransmitting() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
+  MOZ_ASSERT(!mLock.LockedForWritingByCurrentThread());
 
-  if (mSendStreamRunning) {
-    MOZ_ASSERT(mSendStream);
-    CSFLogDebug(LOGTAG, "%s Engine Already Sending. Attemping to Stop ",
-                __FUNCTION__);
-    mSendStream->Stop();
-    mSendStreamRunning = false;
+  if (!mSendStreamRunning) {
+    return;
   }
 
-  return kMediaConduitNoError;
+  if (mSendStream) {
+    CSFLogDebug(LOGTAG, "%s Stopping send stream", __FUNCTION__);
+    mSendStream->Stop();
+  }
+
+  mSendStreamRunning = false;
 }
 
-MediaConduitErrorCode WebrtcAudioConduit::StartTransmittingLocked() {
+void WebrtcAudioConduit::StartTransmitting() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
+  MOZ_ASSERT(mSendStream);
+  MOZ_ASSERT(!mLock.LockedForWritingByCurrentThread());
 
   if (mSendStreamRunning) {
-    return kMediaConduitNoError;
+    return;
   }
 
-  if (!mSendStream) {
-    CreateSendStream();
-  }
+  CSFLogDebug(LOGTAG, "%s Starting send stream", __FUNCTION__);
 
   mCall->Call()->SignalChannelNetworkState(webrtc::MediaType::AUDIO,
                                            webrtc::kNetworkUp);
   mSendStream->Start();
   mSendStreamRunning = true;
-
-  return kMediaConduitNoError;
 }
 
-MediaConduitErrorCode WebrtcAudioConduit::StopReceivingLocked() {
+void WebrtcAudioConduit::StopReceiving() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
+  MOZ_ASSERT(!mLock.LockedForWritingByCurrentThread());
 
-  if (mRecvStreamRunning) {
-    MOZ_ASSERT(mRecvStream);
+  if (!mRecvStreamRunning) {
+    return;
+  }
+
+  if (mRecvStream) {
+    CSFLogDebug(LOGTAG, "%s Stopping recv stream", __FUNCTION__);
     mRecvStream->Stop();
-    mRecvStreamRunning = false;
   }
 
-  return kMediaConduitNoError;
+  mRecvStreamRunning = false;
 }
 
-MediaConduitErrorCode WebrtcAudioConduit::StartReceivingLocked() {
+void WebrtcAudioConduit::StartReceiving() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
+  MOZ_ASSERT(mRecvStream);
+  MOZ_ASSERT(!mLock.LockedForWritingByCurrentThread());
 
   if (mRecvStreamRunning) {
-    return kMediaConduitNoError;
+    return;
   }
 
-  if (!mRecvStream) {
-    CreateRecvStream();
-  }
+  CSFLogDebug(LOGTAG, "%s Starting receive stream (SSRC %u (0x%x))",
+              __FUNCTION__, mRecvStreamConfig.rtp.remote_ssrc,
+              mRecvStreamConfig.rtp.remote_ssrc);
 
   mCall->Call()->SignalChannelNetworkState(webrtc::MediaType::AUDIO,
                                            webrtc::kNetworkUp);
   mRecvStream->Start();
   mRecvStreamRunning = true;
-
-  return kMediaConduitNoError;
 }
 
 bool WebrtcAudioConduit::SendRtp(const uint8_t* aData, size_t aLength,
@@ -784,45 +803,49 @@ webrtc::SdpAudioFormat WebrtcAudioConduit::CodecConfigToLibwebrtcFormat(
 void WebrtcAudioConduit::DeleteSendStream() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
-  if (mSendStream) {
-    mCall->Call()->DestroyAudioSendStream(mSendStream);
-    mSendStreamRunning = false;
-    mSendStream = nullptr;
+
+  if (!mSendStream) {
+    return;
   }
+
+  mCall->Call()->DestroyAudioSendStream(mSendStream);
+  mSendStreamRunning = false;
+  mSendStream = nullptr;
 }
 
-MediaConduitErrorCode WebrtcAudioConduit::CreateSendStream() {
+void WebrtcAudioConduit::CreateSendStream() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
 
-  mSendStream = mCall->Call()->CreateAudioSendStream(mSendStreamConfig);
-  if (!mSendStream) {
-    return kMediaConduitUnknownError;
+  if (mSendStream) {
+    return;
   }
 
-  return kMediaConduitNoError;
+  mSendStream = mCall->Call()->CreateAudioSendStream(mSendStreamConfig);
 }
 
 void WebrtcAudioConduit::DeleteRecvStream() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
-  if (mRecvStream) {
-    mCall->Call()->DestroyAudioReceiveStream(mRecvStream);
-    mRecvStreamRunning = false;
-    mRecvStream = nullptr;
+
+  if (!mRecvStream) {
+    return;
   }
+
+  mCall->Call()->DestroyAudioReceiveStream(mRecvStream);
+  mRecvStreamRunning = false;
+  mRecvStream = nullptr;
 }
 
-MediaConduitErrorCode WebrtcAudioConduit::CreateRecvStream() {
+void WebrtcAudioConduit::CreateRecvStream() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
 
-  mRecvStream = mCall->Call()->CreateAudioReceiveStream(mRecvStreamConfig);
-  if (!mRecvStream) {
-    return kMediaConduitUnknownError;
+  if (mRecvStream) {
+    return;
   }
 
-  return kMediaConduitNoError;
+  mRecvStream = mCall->Call()->CreateAudioReceiveStream(mRecvStreamConfig);
 }
 
 void WebrtcAudioConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
