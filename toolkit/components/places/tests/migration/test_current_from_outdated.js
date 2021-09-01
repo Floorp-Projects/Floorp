@@ -16,7 +16,7 @@ add_task(async function corrupt_database_not_exists() {
     "places.sqlite.corrupt"
   );
   Assert.ok(
-    !(await OS.File.exists(corruptPath)),
+    !(await IOUtils.exists(corruptPath)),
     "Corrupt file should not exist"
   );
 });
@@ -43,5 +43,5 @@ add_task(async function corrupt_database_exists() {
     OS.Constants.Path.profileDir,
     "places.sqlite.corrupt"
   );
-  Assert.ok(await OS.File.exists(corruptPath), "Corrupt file should exist");
+  Assert.ok(await IOUtils.exists(corruptPath), "Corrupt file should exist");
 });

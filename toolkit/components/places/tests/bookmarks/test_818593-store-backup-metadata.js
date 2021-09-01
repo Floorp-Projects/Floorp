@@ -19,7 +19,7 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
 
   let nodeCount = await PlacesBackups.saveBookmarksToJSONFile(backupFile, true);
   Assert.ok(nodeCount > 0);
-  Assert.ok(await OS.File.exists(backupFile));
+  Assert.ok(await IOUtils.exists(backupFile));
 
   // Ensure the backup would be copied to our backups folder when the original
   // backup is saved somewhere else.
@@ -45,7 +45,7 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
   Assert.equal(matches[3].length, 24);
 
   // Cleanup
-  await OS.File.remove(backupFile);
+  await IOUtils.remove(backupFile);
   await PlacesBackups.create(0);
   await PlacesUtils.bookmarks.remove(bookmark);
 });

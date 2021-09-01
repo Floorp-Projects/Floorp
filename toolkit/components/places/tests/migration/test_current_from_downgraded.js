@@ -9,7 +9,7 @@ add_task(async function setup() {
     do_get_cwd().path,
     `places_v${CURRENT_SCHEMA_VERSION}.sqlite`
   );
-  Assert.ok(await OS.File.exists(dbFile));
+  Assert.ok(await IOUtils.exists(dbFile));
   await setupPlacesDatabase(`places_v${CURRENT_SCHEMA_VERSION}.sqlite`);
   // Downgrade the schema version to the first supported one.
   let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
