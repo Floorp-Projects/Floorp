@@ -535,11 +535,8 @@ impl Document {
                 profile_scope!("GetScrollNodeState");
                 tx.send(self.scene.spatial_tree.get_scroll_node_state()).unwrap();
             }
-            FrameMsg::ResetDynamicProperties => {
-                self.dynamic_properties.reset_properties();
-            }
-            FrameMsg::AppendDynamicProperties(property_bindings) => {
-                self.dynamic_properties.add_properties(property_bindings);
+            FrameMsg::UpdateDynamicProperties(property_bindings) => {
+                self.dynamic_properties.set_properties(property_bindings);
             }
             FrameMsg::AppendDynamicTransformProperties(property_bindings) => {
                 self.dynamic_properties.add_transforms(property_bindings);
