@@ -474,8 +474,8 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
 }
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
-    const uint8_t& aUpdateType, nsTArray<CacheData>&& aData,
-    const bool& aFinal) {
+    const mozilla::a11y::CacheUpdateType& aUpdateType,
+    nsTArray<CacheData>&& aData, const bool& aFinal) {
   for (auto& entry : aData) {
     RemoteAccessible* remote = GetAccessible(entry.ID());
     if (!remote) {
