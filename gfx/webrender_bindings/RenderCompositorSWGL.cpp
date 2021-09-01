@@ -18,6 +18,9 @@ using namespace gfx;
 
 namespace wr {
 
+extern LazyLogModule gRenderThreadLog;
+#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
+
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorSWGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
@@ -33,9 +36,12 @@ RenderCompositorSWGL::RenderCompositorSWGL(
     const RefPtr<widget::CompositorWidget>& aWidget, void* aContext)
     : RenderCompositor(aWidget), mContext(aContext) {
   MOZ_ASSERT(mContext);
+  LOG("RenderCompositorSWGL::RenderCompositorSWGL()");
 }
 
 RenderCompositorSWGL::~RenderCompositorSWGL() {
+  LOG("RenderCompositorSWGL::~RenderCompositorSWGL()");
+
   wr_swgl_destroy_context(mContext);
 }
 
