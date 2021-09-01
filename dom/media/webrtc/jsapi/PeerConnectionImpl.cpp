@@ -2140,9 +2140,8 @@ void PeerConnectionImpl::ShutdownMedia() {
     }
   }
 
-  // Forget the reference so that we can transfer it to
-  // SelfDestruct().
-  mMedia.forget().take()->SelfDestruct();
+  mMedia->Shutdown();
+  mMedia = nullptr;
 }
 
 DOMMediaStream* PeerConnectionImpl::GetReceiveStream(
