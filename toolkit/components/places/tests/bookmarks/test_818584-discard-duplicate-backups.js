@@ -22,7 +22,7 @@ add_task(async function() {
     /\.json/,
     "_" + count + "_" + hash + ".json"
   );
-  await OS.File.move(oldBackup, OS.Path.join(backupFolder, oldBackupName));
+  await IOUtils.move(oldBackup, OS.Path.join(backupFolder, oldBackupName));
 
   // Create a backup.
   // This should just rename the existing backup, so in the end there should be

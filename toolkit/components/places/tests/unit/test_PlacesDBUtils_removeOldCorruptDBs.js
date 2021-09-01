@@ -13,11 +13,11 @@ async function createfiles() {
     setTime -= LAST_MODIFICATION_DAY[i] * MS_PER_DAY;
     let fileName = "places.sqlite" + (i > 0 ? "-" + i : "") + ".corrupt";
     let filePath = OS.Path.join(OS.Constants.Path.profileDir, fileName);
-    await OS.File.writeAtomic(filePath, "test-file-delete-me", {
+    await IOUtils.writeUTF8(filePath, "test-file-delete-me", {
       tmpPath: filePath + ".tmp",
     });
-    Assert.ok(await OS.File.exists(filePath), "file created: " + filePath);
-    await OS.File.setDates(filePath, setTime, setTime);
+    Assert.ok(await IOUtils.exists(filePath), "file created: " + filePath);
+    await IOUtils.touch(filePath, setTime);
   }
 }
 
@@ -29,12 +29,12 @@ add_task(async function removefiles() {
     let filePath = OS.Path.join(OS.Constants.Path.profileDir, fileName);
     if (LAST_MODIFICATION_DAY[i] >= RETAIN_DAYS) {
       Assert.ok(
-        !(await OS.File.exists(filePath)),
+        !(await IOUtils.exists(filePath)),
         "Old corrupt file has been removed" + filePath
       );
     } else {
       Assert.ok(
-        await OS.File.exists(filePath),
+        await IOUtils.exists(filePath),
         "Files that are not old are not removed" + filePath
       );
     }

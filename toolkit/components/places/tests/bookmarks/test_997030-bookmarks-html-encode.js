@@ -18,9 +18,7 @@ add_task(async function() {
     OS.Constants.Path.profileDir,
     "bookmarks.exported.997030.html"
   );
-  if (await OS.File.exists(file)) {
-    await OS.File.remove(file);
-  }
+  await IOUtils.remove(file, { ignoreAbsent: true });
   await BookmarkHTMLUtils.exportToFile(file);
 
   // Remove the bookmarks, then restore the backup.
