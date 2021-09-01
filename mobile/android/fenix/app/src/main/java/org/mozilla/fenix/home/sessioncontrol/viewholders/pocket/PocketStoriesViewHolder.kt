@@ -5,9 +5,13 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
 import android.view.View
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.state.ext.observeAsComposableState
@@ -49,10 +53,14 @@ fun PocketStories(
     client: Client
 ) {
     val stories = store
-        .observeAsComposableState { state -> state.pocketArticles }.value
+        .observeAsComposableState { state -> state.pocketStories }.value
         ?.take(STORIES_TO_SHOW_COUNT)
 
-    ExpandableCard {
+    ExpandableCard(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 40.dp)
+    ) {
         PocketRecommendations {
             PocketStories(
                 stories ?: emptyList(),

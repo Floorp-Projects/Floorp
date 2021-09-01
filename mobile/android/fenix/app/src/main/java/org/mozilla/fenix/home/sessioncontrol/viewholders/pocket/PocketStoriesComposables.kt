@@ -238,12 +238,15 @@ fun PocketRecommendations(
  * Displays [content] in an expandable card.
  */
 @Composable
-fun ExpandableCard(content: @Composable (() -> Unit)) {
+fun ExpandableCard(
+    modifier: Modifier = Modifier,
+    content: @Composable (() -> Unit)
+) {
     var isExpanded by remember { mutableStateOf(true) }
     val chevronRotationState by animateFloatAsState(targetValue = if (isExpanded) 0f else 180f)
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         shape = RoundedCornerShape(4.dp),
         onClick = { isExpanded = !isExpanded }
     ) {

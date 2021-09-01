@@ -243,7 +243,7 @@ class HomeFragment : Fragment() {
         if (requireContext().settings().pocketRecommendations) {
             lifecycleScope.async(IO) {
                 val stories = components.core.pocketStoriesService.getStories()
-                homeFragmentStore.dispatch(HomeFragmentAction.PocketArticlesChange(stories))
+                homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesChange(stories))
             }
         }
 

@@ -41,7 +41,7 @@ internal fun normalModeAdapterItems(
     showSetAsDefaultBrowserCard: Boolean,
     recentTabs: List<TabSessionState>,
     historyMetadata: List<HistoryMetadataGroup>,
-    pocketArticles: List<PocketRecommendedStory>
+    pocketStories: List<PocketRecommendedStory>
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
     var shouldShowCustomizeHome = false
@@ -81,7 +81,7 @@ internal fun normalModeAdapterItems(
         showCollections(collections, expandedCollections, items)
     }
 
-    if (context.settings().pocketRecommendations && pocketArticles.isNotEmpty()) {
+    if (context.settings().pocketRecommendations && pocketStories.isNotEmpty()) {
         shouldShowCustomizeHome = true
         items.add(AdapterItem.PocketStoriesItem)
     }
@@ -161,7 +161,7 @@ private fun HomeFragmentState.toAdapterList(context: Context): List<AdapterItem>
         showSetAsDefaultBrowserCard,
         recentTabs,
         historyMetadata,
-        pocketArticles
+        pocketStories
     )
     is Mode.Private -> privateModeAdapterItems()
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
