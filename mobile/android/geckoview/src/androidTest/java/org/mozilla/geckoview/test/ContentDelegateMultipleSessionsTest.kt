@@ -4,9 +4,9 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
-import org.mozilla.geckoview.test.util.Callbacks
 
 import androidx.annotation.AnyThread
 import androidx.test.filters.MediumTest
@@ -37,7 +37,7 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
         killAllContentProcesses()
 
         if (isMainSessionAlreadyOpen) {
-            mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
+            mainSession.waitUntilCalled(object : ContentDelegate {
                 @AssertCalled(count = 1)
                 override fun onKill(session: GeckoSession) {
                 }
@@ -108,7 +108,7 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
         // ...but we use GeckoResult.allOf for waiting on the aggregated results
         val allCrashesFound = GeckoResult.allOf(mainSessionCrash, newSessionCrash)
 
-        sessionRule.delegateUntilTestEnd(object : Callbacks.ContentDelegate {
+        sessionRule.delegateUntilTestEnd(object : ContentDelegate {
             fun reportCrash(session: GeckoSession) {
                 if (session == mainSession) {
                     mainSessionCrash.complete(null)
@@ -143,7 +143,7 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
 
         val allKillEventsReceived = GeckoResult.allOf(mainSessionKilled, newSessionKilled)
 
-        sessionRule.delegateUntilTestEnd(object : Callbacks.ContentDelegate {
+        sessionRule.delegateUntilTestEnd(object : ContentDelegate {
             override fun onKill(session: GeckoSession) {
                 if (session == mainSession) {
                     mainSessionKilled.complete(null)
