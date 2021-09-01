@@ -819,3 +819,6 @@ DUPLICATE-BASENAME-PATH: svg/struct/reftests/reference/green-100x100.html
 DUPLICATE-BASENAME-PATH: svg/struct/reftests/reference/green-100x100.svg
 
 SET TIMEOUT: mediacapture-insertable-streams/MediaStreamTrackProcessor-video.https.html
+
+CSS-COLLIDING-REF-NAME: css/css-backgrounds/reference/background-image-001-ref.html
+CSS-COLLIDING-REF-NAME: css/css-break/background-image-001-ref.html
