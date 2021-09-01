@@ -123,6 +123,11 @@ class TransactionBuilder final {
 
   void InvalidateRenderedFrame();
 
+  void UpdateDynamicProperties(
+      const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+      const nsTArray<wr::WrTransformProperty>& aTransformArray,
+      const nsTArray<wr::WrColorProperty>& aColorArray);
+
   void SetDocumentView(const LayoutDeviceIntRect& aDocRect);
 
   void UpdateScrollPosition(
@@ -214,7 +219,7 @@ class TransactionWrapper final {
  public:
   explicit TransactionWrapper(Transaction* aTxn);
 
-  void AppendDynamicProperties(
+  void UpdateDynamicProperties(
       const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
       const nsTArray<wr::WrTransformProperty>& aTransformArray,
       const nsTArray<wr::WrColorProperty>& aColorArray);
