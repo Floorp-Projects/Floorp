@@ -46,6 +46,16 @@ RWLock::~RWLock() {
 }
 #endif
 
+bool RWLock::TryReadLockInternal() {
+#ifdef XP_WIN
+  return TryAcquireSRWLockShared(NativeHandle(mRWLock));
+#else
+  int rv = pthread_rwlock_tryrdlock(NativeHandle(mRWLock));
+  MOZ_RELEASE_ASSERT(rv == 0 || rv == EBUSY, "pthread_rwlock_tryrdlock failed");
+  return rv == 0;
+#endif
+}
+
 void RWLock::ReadLockInternal() {
 #ifdef XP_WIN
   AcquireSRWLockShared(NativeHandle(mRWLock));
@@ -61,6 +71,16 @@ void RWLock::ReadUnlockInternal() {
 #else
   MOZ_RELEASE_ASSERT(pthread_rwlock_unlock(NativeHandle(mRWLock)) == 0,
                      "pthread_rwlock_unlock failed");
+#endif
+}
+
+bool RWLock::TryWriteLockInternal() {
+#ifdef XP_WIN
+  return TryAcquireSRWLockExclusive(NativeHandle(mRWLock));
+#else
+  int rv = pthread_rwlock_trywrlock(NativeHandle(mRWLock));
+  MOZ_RELEASE_ASSERT(rv == 0 || rv == EBUSY, "pthread_rwlock_trywrlock failed");
+  return rv == 0;
 #endif
 }
 
