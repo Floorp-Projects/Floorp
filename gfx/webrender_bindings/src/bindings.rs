@@ -1035,6 +1035,9 @@ impl AsyncPropertySampler for SamplerCallback {
             None => ptr::null_mut(),
         };
         let mut transaction = Transaction::new();
+        // Reset the pending properties first because omta_sample and apz_sample_transforms
+        // may be failed to reset them due to null samplers.
+        transaction.reset_dynamic_properties();
         unsafe {
             // XXX: When we implement scroll-linked animations, we will probably
             // need to call apz_sample_transforms prior to omta_sample.
