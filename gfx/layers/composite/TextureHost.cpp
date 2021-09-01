@@ -47,10 +47,6 @@
 #  include "../d3d11/CompositorD3D11.h"
 #endif
 
-#ifdef MOZ_X11
-#  include "mozilla/layers/X11TextureHost.h"
-#endif
-
 #ifdef XP_MACOSX
 #  include "../opengl/MacIOSurfaceTextureHostOGL.h"
 #endif
@@ -212,21 +208,6 @@ already_AddRefed<TextureHost> TextureHost::Create(
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
       result = CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
       break;
-
-#ifdef MOZ_X11
-    case SurfaceDescriptor::TSurfaceDescriptorX11: {
-      if (!aDeallocator->IsSameProcess()) {
-        NS_ERROR(
-            "A client process is trying to peek at our address space using a "
-            "X11Texture!");
-        return nullptr;
-      }
-
-      const SurfaceDescriptorX11& desc = aDesc.get_SurfaceDescriptorX11();
-      result = MakeAndAddRef<X11TextureHost>(aFlags, desc);
-      break;
-    }
-#endif
 
 #ifdef XP_WIN
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
