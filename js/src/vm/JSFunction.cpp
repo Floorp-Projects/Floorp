@@ -2029,16 +2029,11 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
     return nullptr;
   }
 
-  constexpr uint16_t NonCloneableFlags = FunctionFlags::EXTENDED |
-                                         FunctionFlags::RESOLVED_LENGTH |
-                                         FunctionFlags::RESOLVED_NAME;
+  constexpr uint16_t NonCloneableFlags =
+      FunctionFlags::RESOLVED_LENGTH | FunctionFlags::RESOLVED_NAME;
 
   FunctionFlags flags = fun->flags();
   flags.clearFlags(NonCloneableFlags);
-
-  if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
-    flags.setIsExtended();
-  }
 
   clone->setArgCount(fun->nargs());
   clone->setFlags(flags);
@@ -2050,10 +2045,10 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
   clone->initAtom(atom);
 
   if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
-    if (fun->isExtended() && fun->compartment() == cx->compartment()) {
-      for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++) {
-        clone->initExtendedSlot(i, fun->getExtendedSlot(i));
-      }
+    MOZ_ASSERT(fun->isExtended());
+    MOZ_ASSERT(fun->compartment() == cx->compartment());
+    for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++) {
+      clone->initExtendedSlot(i, fun->getExtendedSlot(i));
     }
   }
 
