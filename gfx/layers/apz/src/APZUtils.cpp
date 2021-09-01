@@ -98,15 +98,8 @@ bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
 }
 
 bool ShouldUseProgressivePaint() {
-  // The mutexes required for progressive painting pose a security risk
-  // on sandboxed platforms. Additionally, Android is the only platform
-  // that supports progressive painting, so if on a sandboxed platform
-  // or not on Android, we should not use progressive painting.
-#if defined(MOZ_SANDBOX) || !defined(MOZ_WIDGET_ANDROID)
+  // Progressive paint is only applicable to non-WebRender.
   return false;
-#else
-  return StaticPrefs::layers_progressive_paint_DoNotUseDirectly();
-#endif
 }
 
 SideBits GetOverscrollSideBits(const ParentLayerPoint& aOverscrollAmount) {
