@@ -54,7 +54,9 @@
       </menupopup>
     </menu>
     <menu id="context_sendTabToDevice"
-          class="sync-ui-item">
+          class="sync-ui-item"
+          data-lazy-l10n-id="tab-context-send-tabs-to-device"
+          data-l10n-args='{"tabCount": 1}'>
       <menupopup id="context_sendTabToDevicePopupMenu"
                  onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle, TabContextMenu.contextTab.multiselected);"/>
     </menu>
