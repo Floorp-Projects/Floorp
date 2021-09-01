@@ -531,8 +531,8 @@ menuitem.bookmark-item {
 
 toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   appearance: none;
-  background: Highlight !important;
-  color: HighlightText !important;
+  background: SelectedItem !important;
+  color: SelectedItemText !important;
 }
 
 /* Translation infobar */

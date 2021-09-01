@@ -437,8 +437,8 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 /* Bookmark drag and drop styles */
 
 .bookmark-item[dragover-into="true"] {
-  background: Highlight !important;
-  color: HighlightText !important;
+  background: SelectedItem !important;
+  color: SelectedItemText !important;
 }
 
 /* Translation */

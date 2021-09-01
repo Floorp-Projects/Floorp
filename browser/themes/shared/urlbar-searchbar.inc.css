@@ -109,8 +109,8 @@
 
 #urlbar-input:-moz-lwtheme::selection,
 .searchbar-textbox:-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background, light));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, light));
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Highlight, light));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, light));
 }
 
 #urlbar-input:not(:focus):-moz-lwtheme::selection,
@@ -120,14 +120,14 @@
 
 :root[lwt-toolbar-field-focus-brighttext] #urlbar-input:focus::selection,
 :root[lwt-toolbar-field-focus-brighttext] .searchbar-textbox:focus-within::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background, dark));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, dark));
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Highlight, dark));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, dark));
 }
 
 :root[lwt-toolbar-field-brighttext] #urlbar-input:not(:focus)::selection,
 :root[lwt-toolbar-field-brighttext] .searchbar-textbox:not(:focus-within)::selection {
   background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background-disabled, dark));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, dark));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, dark));
 }
 
 #urlbar:not([focused="true"]) {
@@ -310,9 +310,9 @@
 /* Use system colors for low/high contrast mode */
 @media (prefers-contrast) {
   #urlbar-search-mode-indicator {
-    background-color: Highlight;
-    outline-color: Highlight;
-    color: HighlightText;
+    background-color: SelectedItem;
+    outline-color: SelectedItem;
+    color: SelectedItemText;
   }
 
   #urlbar-search-mode-indicator-close {
