@@ -14,7 +14,7 @@ var gGfxUtils = {
   _isCapturingFrames: false,
 
   init() {
-    if (Services.prefs.getBoolPref("gfx.webrender.enable-capture")) {
+    if (Services.prefs.getBoolPref("gfx.webrender.debug.enable-capture")) {
       document.getElementById("wrCaptureCmd").removeAttribute("disabled");
       document
         .getElementById("wrToggleCaptureSequenceCmd")

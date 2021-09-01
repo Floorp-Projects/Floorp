@@ -5094,27 +5094,27 @@
   value: false
   mirror: always
 
-- name: gfx.webrender.blob.paint-flashing
+- name: gfx.webrender.debug.blob.paint-flashing
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-- name: gfx.webrender.enable-capture
+- name: gfx.webrender.debug.enable-capture
   type: bool
   value: false
   mirror: once
 
-- name: gfx.webrender.dl.dump-parent
+- name: gfx.webrender.debug.dl.dump-parent
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-- name: gfx.webrender.dl.dump-content
+- name: gfx.webrender.debug.dl.dump-content
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-- name: gfx.webrender.dl.dump-content-serialized
+- name: gfx.webrender.debug.dl.dump-content-serialized
   type: RelaxedAtomicBool
   value: false
   mirror: always
@@ -5126,7 +5126,7 @@
   mirror: once
 #endif
 
-- name: gfx.webrender.highlight-painted-layers
+- name: gfx.webrender.debug.highlight-painted-layers
   type: RelaxedAtomicBool
   value: false
   mirror: always
