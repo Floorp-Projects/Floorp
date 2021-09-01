@@ -20,8 +20,8 @@ impl ClientInfoMetrics {
     /// Creates the client info with dummy values for all.
     pub fn unknown() -> Self {
         ClientInfoMetrics {
-            app_build: "unknown".to_string(),
-            app_display_version: "unknown".to_string(),
+            app_build: "Unknown".to_string(),
+            app_display_version: "Unknown".to_string(),
         }
     }
 }
@@ -77,28 +77,6 @@ pub mod internal_metrics {
     pub static architecture: Lazy<StringMetric> = Lazy::new(|| {
         StringMetric::new(CommonMetricData {
             name: "architecture".into(),
-            category: "".into(),
-            send_in_pings: vec!["glean_client_info".into()],
-            lifetime: Lifetime::Application,
-            disabled: false,
-            ..Default::default()
-        })
-    });
-
-    pub static device_manufacturer: Lazy<StringMetric> = Lazy::new(|| {
-        StringMetric::new(CommonMetricData {
-            name: "device_manufacturer".into(),
-            category: "".into(),
-            send_in_pings: vec!["glean_client_info".into()],
-            lifetime: Lifetime::Application,
-            disabled: false,
-            ..Default::default()
-        })
-    });
-
-    pub static device_model: Lazy<StringMetric> = Lazy::new(|| {
-        StringMetric::new(CommonMetricData {
-            name: "device_model".into(),
             category: "".into(),
             send_in_pings: vec!["glean_client_info".into()],
             lifetime: Lifetime::Application,
