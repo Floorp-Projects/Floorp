@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.ContentBlocking
@@ -16,6 +17,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.util.Callbacks
 import org.junit.Assume.assumeThat
 
 @RunWith(AndroidJUnit4::class)
@@ -29,7 +31,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         session1.loadTestPath(TRACKERS_PATH)
 
         sessionRule.waitUntilCalled(
-                object : ContentBlocking.Delegate {
+                object : Callbacks.ContentBlockingDelegate {
                     @GeckoSessionTestRule.AssertCalled(count=3)
                     override fun onContentBlocked(session: GeckoSession,
                                                   event: ContentBlocking.BlockEvent) {
@@ -67,7 +69,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : ContentBlocking.Delegate {
+                object : Callbacks.ContentBlockingDelegate {
                     @GeckoSessionTestRule.AssertCalled(false)
                     override fun onContentBlocked(session: GeckoSession,
                                                   event: ContentBlocking.BlockEvent) {
@@ -85,7 +87,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         session1.reload()
 
         sessionRule.waitUntilCalled(
-                object : ContentBlocking.Delegate {
+                object : Callbacks.ContentBlockingDelegate {
                     @GeckoSessionTestRule.AssertCalled(count=3)
                     override fun onContentBlocked(session: GeckoSession,
                                                   event: ContentBlocking.BlockEvent) {
@@ -234,7 +236,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(TRACKERS_PATH)
 
         sessionRule.waitUntilCalled(
-                object : ContentBlocking.Delegate {
+                object : Callbacks.ContentBlockingDelegate {
                     @GeckoSessionTestRule.AssertCalled(count=3)
                     override fun onContentBlocked(session: GeckoSession,
                                                   event: ContentBlocking.BlockEvent) {
@@ -261,7 +263,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
-                object : ContentBlocking.Delegate {
+                object : Callbacks.ContentBlockingDelegate {
                     @GeckoSessionTestRule.AssertCalled(false)
                     override fun onContentBlocked(session: GeckoSession,
                                                   event: ContentBlocking.BlockEvent) {
@@ -278,7 +280,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.session.reload()
 
         sessionRule.waitUntilCalled(
-                object : ContentBlocking.Delegate {
+                object : Callbacks.ContentBlockingDelegate {
                     @GeckoSessionTestRule.AssertCalled(count=3)
                     override fun onContentBlocked(session: GeckoSession,
                                                   event: ContentBlocking.BlockEvent) {
@@ -339,7 +341,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.session.settings.useTrackingProtection = true
         sessionRule.session.loadTestPath(TRACKERS_PATH)
         
-        sessionRule.waitUntilCalled(object : ContentBlocking.Delegate {
+        sessionRule.waitUntilCalled(object : Callbacks.ContentBlockingDelegate {
             @AssertCalled(count = 1)
             override fun onContentBlocked(session: GeckoSession,
                                           event: ContentBlocking.BlockEvent) {

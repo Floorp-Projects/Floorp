@@ -16,9 +16,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
+import org.mozilla.geckoview.test.util.Callbacks
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.SecureRandom
@@ -59,7 +59,7 @@ class WebPushTest : BaseSessionTest() {
     fun setup() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.requireuserinteraction" to false))
         // Grant "desktop notification" permission
-        mainSession.delegateUntilTestEnd(object : PermissionDelegate {
+        mainSession.delegateUntilTestEnd(object : Callbacks.PermissionDelegate {
             override fun onContentPermissionRequest(session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
                     GeckoResult<Int>? {
                 assertThat("Should grant DESKTOP_NOTIFICATIONS permission", perm.permission, equalTo(GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION))
@@ -69,7 +69,10 @@ class WebPushTest : BaseSessionTest() {
 
         delegate = TestPushDelegate()
 
-        sessionRule.delegateUntilTestEnd(delegate!!)
+        sessionRule.addExternalDelegateUntilTestEnd(WebPushDelegate::class,
+                { d -> sessionRule.runtime.webPushController.setDelegate(d) },
+                { sessionRule.runtime.webPushController.setDelegate(null) }, delegate!!)
+
 
         mainSession.loadTestPath(PUSH_HTML_PATH)
         mainSession.waitForPageStop()
@@ -164,10 +167,15 @@ class WebPushTest : BaseSessionTest() {
 
     private fun sendNotification() {
         val notificationResult = GeckoResult<Void>()
+        val runtime = sessionRule.runtime
+        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
+        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
+
         val expectedTitle = "The title"
         val expectedBody = "The body"
 
-        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
+        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
+                unregister, object : WebNotificationDelegate {
             @GeckoSessionTestRule.AssertCalled
             override fun onShowNotification(notification: WebNotification) {
                 assertThat("Title should match", notification.title, equalTo(expectedTitle))

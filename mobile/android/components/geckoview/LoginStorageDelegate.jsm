@@ -68,12 +68,6 @@ class LoginStorageDelegate {
         GeckoViewAutocomplete.onLoginSave(selectedLogin);
       }
     );
-
-    return {
-      dismiss() {
-        prompt.dismiss();
-      },
-    };
   }
 
   promptToChangePassword(
@@ -111,12 +105,6 @@ class LoginStorageDelegate {
         );
       }
     );
-
-    return {
-      dismiss() {
-        prompt.dismiss();
-      },
-    };
   }
 
   promptToChangePasswordWithUsernames(aBrowser, aLogins, aNewLogin) {

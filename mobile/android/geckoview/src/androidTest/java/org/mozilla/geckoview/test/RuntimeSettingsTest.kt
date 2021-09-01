@@ -8,17 +8,19 @@ import android.provider.Settings
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import android.util.Log
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
+import kotlin.math.roundToInt
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.NavigationDelegate
-import org.mozilla.geckoview.GeckoSession.ProgressDelegate
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.util.Callbacks
+import java.util.concurrent.atomic.AtomicBoolean
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -156,7 +158,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
                 settings.aboutConfigEnabled, equalTo(false))
 
         mainSession.loadUri("about:config")
-        mainSession.waitUntilCalled(object : NavigationDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError):
                     GeckoResult<String>? {
@@ -167,7 +169,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
 
         settings.aboutConfigEnabled = true
 
-        mainSession.delegateDuringNextWait(object : ProgressDelegate {
+        mainSession.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
             @AssertCalled
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("about:config load should succeed", success, equalTo(true))

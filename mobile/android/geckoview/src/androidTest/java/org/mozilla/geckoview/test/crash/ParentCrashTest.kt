@@ -20,6 +20,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.TestCrashHandler
 import org.mozilla.geckoview.test.util.Environment
+import org.mozilla.geckoview.test.util.RuntimeCreator
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -34,6 +35,11 @@ class ParentCrashTest {
 
     @Before
     fun setup() {
+        // Since this test starts up its own GeckoRuntime via
+        // RemoteGeckoService, we need to shutdown any runtime already running
+        // in the RuntimeCreator.
+        RuntimeCreator.shutdownRuntime()
+
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, RemoteGeckoService::class.java)
 
