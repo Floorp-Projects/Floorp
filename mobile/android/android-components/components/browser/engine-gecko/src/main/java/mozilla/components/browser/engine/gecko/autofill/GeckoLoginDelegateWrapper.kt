@@ -20,10 +20,8 @@ import org.mozilla.geckoview.GeckoResult
  * them to [storageDelegate]. This allows us to avoid duplicating [LoginStorageDelegate] code
  * between different versions of GeckoView, by duplicating this wrapper instead.
  */
-@Suppress("Deprecation")
-// This will be addressed in https://github.com/mozilla-mobile/android-components/issues/10093
 class GeckoLoginDelegateWrapper(private val storageDelegate: LoginStorageDelegate) :
-    Autocomplete.LoginStorageDelegate {
+    Autocomplete.StorageDelegate {
 
     override fun onLoginSave(login: Autocomplete.LoginEntry) {
         storageDelegate.onLoginSave(login.toLogin())
