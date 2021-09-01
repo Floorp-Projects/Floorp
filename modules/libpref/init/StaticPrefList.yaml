@@ -9309,7 +9309,7 @@
 # 'no-referrer-when-downgrade' and 'origin-when-cross-origin'.
 - name: network.http.referer.disallowCrossSiteRelaxingDefault.pbmode
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Set the Private Browsing Default Referrer Policy applied to third-party
