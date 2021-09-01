@@ -27,7 +27,7 @@ add_task(async function test_same_date_same_hash() {
     hash +
     ".json";
   let backupFile = OS.Path.join(backupFolder, filename);
-  await IOUtils.move(tempPath, backupFile);
+  await OS.File.move(tempPath, backupFile);
 
   // Force a compressed backup which fallbacks to rename
   await PlacesBackups.create();
@@ -35,14 +35,15 @@ add_task(async function test_same_date_same_hash() {
   // check to ensure not renamed to jsonlz4
   Assert.equal(mostRecentBackupFile, backupFile);
   // inspect contents and check if valid json
+  let result = await OS.File.read(mostRecentBackupFile);
+  let decoder = new TextDecoder();
+  let jsonString = decoder.decode(result);
   info("Check is valid JSON");
-  // We initially wrote an uncompressed file, and although a backup was triggered
-  // it did not rewrite the file, so this is uncompressed.
-  await IOUtils.readJSON(mostRecentBackupFile);
+  JSON.parse(jsonString);
 
   // Cleanup
-  await IOUtils.remove(backupFile);
-  await IOUtils.remove(tempPath);
+  await OS.File.remove(backupFile);
+  await OS.File.remove(tempPath);
   PlacesBackups._backupFiles = null; // To force re-cache of backupFiles
 });
 
@@ -63,17 +64,20 @@ add_task(async function test_same_date_diff_hash() {
     count +
     "_differentHash==.json";
   let backupFile = OS.Path.join(backupFolder, filename);
-  await IOUtils.move(tempPath, backupFile);
+  await OS.File.move(tempPath, backupFile);
   await PlacesBackups.create(); // Force compressed backup
   let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
 
   // Decode lz4 compressed file to json and check if json is valid
+  let result = await OS.File.read(mostRecentBackupFile, { compression: "lz4" });
+  let decoder = new TextDecoder();
+  let jsonString = decoder.decode(result);
   info("Check is valid JSON");
-  await IOUtils.readJSON(mostRecentBackupFile, { decompress: true });
+  JSON.parse(jsonString);
 
   // Cleanup
-  await IOUtils.remove(mostRecentBackupFile);
-  await IOUtils.remove(tempPath);
+  await OS.File.remove(mostRecentBackupFile);
+  await OS.File.remove(tempPath);
   PlacesBackups._backupFiles = null; // To force re-cache of backupFiles
 });
 
@@ -106,7 +110,7 @@ add_task(async function test_diff_date_same_hash() {
     ".json";
   let backupFile = OS.Path.join(backupFolder, oldFilename);
   let newBackupFile = OS.Path.join(backupFolder, newFilename);
-  await IOUtils.move(tempPath, backupFile);
+  await OS.File.move(tempPath, backupFile);
 
   // Ensure file has been renamed correctly
   await PlacesBackups.create();
@@ -114,6 +118,6 @@ add_task(async function test_diff_date_same_hash() {
   Assert.equal(mostRecentBackupFile, newBackupFile);
 
   // Cleanup
-  await IOUtils.remove(mostRecentBackupFile);
-  await IOUtils.remove(tempPath);
+  await OS.File.remove(mostRecentBackupFile);
+  await OS.File.remove(tempPath);
 });

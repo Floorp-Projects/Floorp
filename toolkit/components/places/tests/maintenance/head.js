@@ -19,11 +19,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 async function createCorruptDb(filename) {
   let path = OS.Path.join(OS.Constants.Path.profileDir, filename);
-  await IOUtils.remove(path, { ignoreAbsent: true });
+  await OS.File.remove(path, { ignoreAbsent: true });
   // Create a corrupt database.
-  let dir = do_get_cwd().path;
+  let dir = await OS.File.getCurrentDirectory();
   let src = OS.Path.join(dir, "corruptDB.sqlite");
-  await IOUtils.copy(src, path);
+  await OS.File.copy(src, path);
 }
 
 /**
@@ -52,7 +52,7 @@ async function test_database_replacement(src, filename, shouldClone, dbStatus) {
   // Ensure that our databases don't exist yet.
   let dest = OS.Path.join(OS.Constants.Path.profileDir, filename);
   Assert.ok(
-    !(await IOUtils.exists(dest)),
+    !(await OS.File.exists(dest)),
     `"${filename} should not exist initially`
   );
   let corrupt = OS.Path.join(
@@ -60,13 +60,13 @@ async function test_database_replacement(src, filename, shouldClone, dbStatus) {
     `${filename}.corrupt`
   );
   Assert.ok(
-    !(await IOUtils.exists(corrupt)),
+    !(await OS.File.exists(corrupt)),
     `${filename}.corrupt should not exist initially`
   );
 
-  let dir = do_get_cwd().path;
+  let dir = await OS.File.getCurrentDirectory();
   src = OS.Path.join(dir, src);
-  await IOUtils.copy(src, dest);
+  await OS.File.copy(src, dest);
 
   // Create some unique stuff to check later.
   let db = await Sqlite.openConnection({ path: dest });
@@ -82,7 +82,7 @@ async function test_database_replacement(src, filename, shouldClone, dbStatus) {
   );
   Assert.equal(PlacesUtils.history.databaseStatus, dbStatus);
 
-  Assert.ok(await IOUtils.exists(dest), "The database should exist");
+  Assert.ok(await OS.File.exists(dest), "The database should exist");
 
   // Check the new database still contains our special data.
   db = await Sqlite.openConnection({ path: dest });
@@ -100,10 +100,10 @@ async function test_database_replacement(src, filename, shouldClone, dbStatus) {
 
   if (willClone) {
     Assert.ok(
-      !(await IOUtils.exists(corrupt)),
+      !(await OS.File.exists(corrupt)),
       "The corrupt db should not exist"
     );
   } else {
-    Assert.ok(await IOUtils.exists(corrupt), "The corrupt db should exist");
+    Assert.ok(await OS.File.exists(corrupt), "The corrupt db should exist");
   }
 }
