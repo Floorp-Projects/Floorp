@@ -724,15 +724,7 @@ public class WebExtensionController {
             return;
         }
 
-        final GeckoBundle senderBundle;
-        if ("GeckoView:WebExtension:Connect".equals(event) ||
-                "GeckoView:WebExtension:Message".equals(event)) {
-            senderBundle = bundle.getBundle("sender");
-        } else {
-            senderBundle = bundle;
-        }
-
-        extensionFromBundle(senderBundle).accept(extension -> {
+        extensionFromBundle(bundle).accept(extension -> {
             if ("GeckoView:WebExtension:NewTab".equals(event)) {
                 newTab(message, extension);
                 return;
@@ -767,6 +759,9 @@ public class WebExtensionController {
                 download(message, extension);
                 return;
             }
+
+            // GeckoView:WebExtension:Connect and GeckoView:WebExtension:Message
+            // are handled below.
             final String nativeApp = bundle.getString("nativeApp");
             if (nativeApp == null) {
                 if (BuildConfig.DEBUG) {
@@ -776,6 +771,7 @@ public class WebExtensionController {
                 return;
             }
 
+            final GeckoBundle senderBundle = bundle.getBundle("sender");
             final WebExtension.MessageSender sender = fromBundle(extension, senderBundle, session);
             if (sender == null) {
                 if (callback != null) {
