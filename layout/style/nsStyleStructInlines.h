@@ -179,7 +179,7 @@ bool nsStyleDisplay::IsAbsolutelyPositioned(
 }
 
 mozilla::StylePointerEvents nsStyleUI::GetEffectivePointerEvents(
-    nsIFrame* aFrame) const {
+    const nsIFrame* aFrame) const {
   if (aFrame->GetContent() && !aFrame->GetContent()->GetParent()) {
     // The root frame is not allowed to have pointer-events: none, or else
     // no frames could be hit test against and scrolling the viewport would

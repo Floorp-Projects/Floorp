@@ -253,7 +253,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // Return true if the popup is for a menulist.
   bool IsMenuList();
 
-  bool IsMouseTransparent() { return mMouseTransparent; }
+  bool IsMouseTransparent(const ComputedStyle&) const;
+  bool IsMouseTransparent() const { return IsMouseTransparent(*Style()); }
 
   static nsIContent* GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame);
   void ClearTriggerContent() { mTriggerContent = nullptr; }
@@ -619,8 +620,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
                               // position popup?
   bool mInContentShell;       // True if the popup is in a content shell
   bool mIsMenuLocked;         // Should events inside this menu be ignored?
-  bool mMouseTransparent;     // True if this is a popup is transparent to mouse
-                              // events
 
   // True if this popup has been offset due to moving off / near the edge of the
   // screen. (This is useful for ensuring that a move, which can't offset the
