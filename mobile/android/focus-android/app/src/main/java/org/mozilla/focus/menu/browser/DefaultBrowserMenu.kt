@@ -10,6 +10,7 @@ import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
+import mozilla.components.browser.menu.item.TwoStateBrowserMenuImageText
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.TabSessionState
@@ -99,23 +100,25 @@ class DefaultBrowserMenu(
     }
 
     private val mvpMenuItems by lazy {
-        val url = selectedSession?.content?.url
-        val topSites = appStore.state.topSites
-        val hasTopSite = topSites.find { it.url == url } != null
-        val canAddTopSite = url != null && !hasTopSite && topSites.size < TOP_SITES_MAX_LIMIT
 
-        val addToShortcuts = BrowserMenuImageText(
-            label = context.getString(R.string.menu_add_to_shortcuts),
-            imageResource = R.drawable.mozac_ic_pin
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.AddToShortcuts)
-        }
+        val shortcuts = TwoStateBrowserMenuImageText(
+            primaryLabel = context.getString(R.string.menu_add_to_shortcuts),
+            primaryStateIconResource = R.drawable.mozac_ic_pin,
+            secondaryLabel = context.getString(R.string.menu_remove_from_shortcuts),
+            secondaryStateIconResource = R.drawable.mozac_ic_pin_remove,
+            isInPrimaryState = {
+                appStore.state.topSites.find { it.url == selectedSession?.content?.url } == null &&
+                    selectedSession?.content?.url != null && appStore.state.topSites.size < TOP_SITES_MAX_LIMIT
+            },
+            isInSecondaryState = {
+                appStore.state.topSites.find { it.url == selectedSession?.content?.url } != null
+            },
+            primaryStateAction = { onItemTapped.invoke(ToolbarMenu.Item.AddToShortcuts) },
+            secondaryStateAction = { onItemTapped.invoke(ToolbarMenu.Item.RemoveFromShortcuts) },
+        )
 
-        val removeFromShortcuts = BrowserMenuImageText(
-            label = context.getString(R.string.menu_remove_from_shortcuts),
-            imageResource = R.drawable.mozac_ic_pin_remove
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.RemoveFromShortcuts)
+        val shortcutsDivider = BrowserMenuDivider().apply {
+            visible = shortcuts.visible
         }
 
         val findInPage = BrowserMenuImageText(
@@ -166,9 +169,8 @@ class DefaultBrowserMenu(
         listOfNotNull(
             menuToolbar,
             BrowserMenuDivider(),
-            if (canAddTopSite) addToShortcuts else null,
-            if (hasTopSite) removeFromShortcuts else null,
-            if (canAddTopSite || hasTopSite) BrowserMenuDivider() else null,
+            shortcuts,
+            shortcutsDivider,
             findInPage,
             desktopMode,
             reportSiteIssuePlaceholder,
