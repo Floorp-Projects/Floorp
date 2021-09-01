@@ -343,8 +343,7 @@ bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
       if (popupFrame->IsAnchored()) {
         // Check if the popup has a screen anchor rectangle. If not, get the
         // rectangle from the anchor element.
-        anchorRect =
-            CSSIntRect::FromUnknownRect(popupFrame->GetScreenAnchorRect());
+        anchorRect = popupFrame->GetScreenAnchorRect();
         if (anchorRect.x == -1 || anchorRect.y == -1) {
           nsCOMPtr<nsIContent> anchor = popupFrame->GetAnchor();
 
@@ -581,7 +580,7 @@ void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt) {
   } else {
     CSSPoint cssPos = LayoutDeviceIntPoint::FromUnknownPoint(aPnt) /
                       menuPopupFrame->PresContext()->CSSToDevPixelScale();
-    menuPopupFrame->MoveTo(RoundedToInt(cssPos), false);
+    menuPopupFrame->MoveTo(cssPos, false);
   }
 }
 

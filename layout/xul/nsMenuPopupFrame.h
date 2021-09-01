@@ -321,7 +321,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // If aUpdateAttrs is true, and the popup already has left or top attributes,
   // then those attributes are updated to the new location.
   // The frame may be destroyed by this method.
-  void MoveTo(const mozilla::CSSIntPoint& aPos, bool aUpdateAttrs);
+  void MoveTo(const mozilla::CSSPoint& aPos, bool aUpdateAttrs);
 
   void MoveToAnchor(nsIContent* aAnchorContent, const nsAString& aPosition,
                     int32_t aXPos, int32_t aYPos, bool aAttributesOverride);
@@ -370,7 +370,9 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   // Return the screen coordinates in CSS pixels of the popup,
   // or (-1, -1, 0, 0) if anchored.
-  nsIntRect GetScreenAnchorRect() const { return mScreenRect; }
+  mozilla::CSSIntRect GetScreenAnchorRect() const {
+    return mozilla::CSSRect::FromAppUnitsRounded(mScreenRect);
+  }
 
   mozilla::LayoutDeviceIntPoint GetLastClientOffset() const {
     return mLastClientOffset;
@@ -555,7 +557,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // override mXPos and mYPos.
   int32_t mXPos;
   int32_t mYPos;
-  nsIntRect mScreenRect;
+  nsRect mScreenRect;
   // Used for store rectangle which the popup is going to be anchored to,
   // we need that for Wayland
   nsRect mAnchorRect;
