@@ -732,15 +732,13 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
                                       const JSClass* clasp, gc::AllocKind kind,
                                       NewObjectKind newKind,
                                       ObjectFlags objectFlags = {}) {
+  MOZ_ASSERT(clasp->isNativeObject());
+
   // Some classes have specialized allocation functions and shouldn't end up
   // here.
   MOZ_ASSERT(clasp != &ArrayObject::class_);
   MOZ_ASSERT(clasp != &PlainObject::class_);
-
-  MOZ_ASSERT_IF(clasp->isJSFunction(),
-                kind == gc::AllocKind::FUNCTION ||
-                    kind == gc::AllocKind::FUNCTION_EXTENDED);
-  MOZ_ASSERT(clasp->isNativeObject());
+  MOZ_ASSERT(!clasp->isJSFunction());
 
   // For objects which can have fixed data following the object, only use
   // enough fixed slots to cover the number of reserved slots in the object,
@@ -757,13 +755,7 @@ static inline NativeObject* NewObject(JSContext* cx, Handle<TaggedProto> proto,
   }
 
   gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
-
-  NativeObject* obj;
-  if (clasp->isJSFunction()) {
-    obj = JSFunction::create(cx, kind, heap, shape);
-  } else {
-    obj = NativeObject::create(cx, kind, heap, shape);
-  }
+  NativeObject* obj = NativeObject::create(cx, kind, heap, shape);
   if (!obj) {
     return nullptr;
   }
