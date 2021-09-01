@@ -2299,7 +2299,8 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     if (visible.IsEmpty()) {
       continue;
     }
-    item->SetPaintRect(visible.GetBounds());
+    nsRect buildingRect = item->GetBuildingRect();
+    item->SetBuildingRect(visible.GetBounds());
 
     DisplayItemClip currentClip = item->GetClip();
     if (currentClip.HasClip()) {
@@ -2317,6 +2318,7 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     if (currentClip.HasClip()) {
       aCtx->Restore();
     }
+    item->SetBuildingRect(buildingRect);
   }
 }
 
