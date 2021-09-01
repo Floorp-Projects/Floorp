@@ -26,6 +26,12 @@ const networkParentSpec = generateActorSpec({
       request: {},
       response: {},
     },
+    setSaveRequestAndResponseBodies: {
+      request: {
+        save: Arg(0, "boolean"),
+      },
+      response: {},
+    },
     setBlockedUrls: {
       request: {
         urls: Arg(0, "array:string"),

@@ -316,27 +316,6 @@ class WebConsoleUI {
   }
 
   /**
-   * Setter for saving of network request and response bodies.
-   *
-   * @param boolean value
-   *        The new value you want to set.
-   */
-  async setSaveRequestAndResponseBodies(value) {
-    if (!this.webConsoleFront) {
-      // Don't continue if the webconsole disconnected.
-      return null;
-    }
-
-    const newValue = !!value;
-    const toSet = {
-      "NetworkMonitor.saveRequestAndResponseBodies": newValue,
-    };
-
-    // Make sure the web console client connection is established first.
-    return this.webConsoleFront.setPreferences(toSet);
-  }
-
-  /**
    * Connect to the server using the remote debugging protocol.
    *
    * @private
@@ -353,6 +332,7 @@ class WebConsoleUI {
         updateRequest: (id, data) =>
           this.wrapper.batchedRequestUpdates({ id, data }),
       },
+      owner: this,
     });
 
     // Listen for all target types, including:
@@ -383,6 +363,30 @@ class WebConsoleUI {
         onUpdated: this._onResourceUpdated,
       }
     );
+
+    // @backward-compat { version 93 } Starts supporting setSaveRequestAndResponseBodies.
+    //                                 But until we enable NETWORK_EVENT server watcher in the browser toolbox
+    //                                 we still have to support the console actor codepath.
+    //                                 We will be able to remove the trait check via hasTargetWatcherSupport
+    //                                 once we drop support for 92.
+    const hasNetworkResourceCommandSupport = resourceCommand.hasResourceCommandSupport(
+      resourceCommand.TYPES.NETWORK_EVENT
+    );
+    const supportsWatcherRequest = commands.targetCommand.hasTargetWatcherSupport(
+      "saveRequestAndResponseBodies"
+    );
+    if (hasNetworkResourceCommandSupport && supportsWatcherRequest) {
+      const networkFront = await commands.watcherFront.getNetworkParentActor();
+      //
+      // There is no way to view response bodies from the Browser Console, so do
+      // not waste the memory.
+      const saveBodies =
+        !this.isBrowserConsole &&
+        Services.prefs.getBoolPref(
+          "devtools.netmonitor.saveRequestAndResponseBodies"
+        );
+      await networkFront.setSaveRequestAndResponseBodies(saveBodies);
+    }
   }
 
   handleDocumentEvent(resource) {
