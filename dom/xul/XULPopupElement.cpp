@@ -271,8 +271,7 @@ already_AddRefed<DOMRect> XULPopupElement::GetOuterScreenRect() {
     // For native menus we can't query the true size. Use the anchor rect
     // instead, which at least has the position at which we were intending to
     // open the menu.
-    screenRect = Some(CSSRect(
-        CSSIntRect::FromUnknownRect(menuPopupFrame->GetScreenAnchorRect())));
+    screenRect = Some(CSSRect(menuPopupFrame->GetScreenAnchorRect()));
   } else {
     // For non-native menus, query the bounds from the widget.
     if (nsView* view = menuPopupFrame->GetView()) {
