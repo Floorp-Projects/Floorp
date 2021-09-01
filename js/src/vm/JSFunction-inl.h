@@ -32,14 +32,8 @@ inline const char* GetFunctionNameBytes(JSContext* cx, JSFunction* fun,
 inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
                                        HandleObject enclosingEnv,
                                        HandleObject proto) {
-  // These intermediate variables are needed to avoid link errors on some
-  // platforms.  Sigh.
-  gc::AllocKind finalizeKind = gc::AllocKind::FUNCTION;
-  gc::AllocKind extendedFinalizeKind = gc::AllocKind::FUNCTION_EXTENDED;
-  gc::AllocKind kind = fun->isExtended() ? extendedFinalizeKind : finalizeKind;
-
   MOZ_ASSERT(CanReuseScriptForClone(cx->realm(), fun, enclosingEnv));
-  return CloneFunctionReuseScript(cx, fun, enclosingEnv, kind, proto);
+  return CloneFunctionReuseScript(cx, fun, enclosingEnv, proto);
 }
 
 } /* namespace js */
