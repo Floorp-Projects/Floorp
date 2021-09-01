@@ -41,6 +41,8 @@ const tests = [
   { path: "data/ff-inst.exe", expected: "application/octet-stream" },
   // MP4 with invalid box size (0) for "ftyp".
   { path: "data/bug1079747.mp4", expected: "application/octet-stream" },
+  // An MP3 bytestream in a RIFF container, truncated to 512 bytes.
+  { path: "data/mp3-in-riff.wav", expected: "audio/mpeg" },
 ];
 
 // A basic listener that reads checks the if we sniffed properly.
