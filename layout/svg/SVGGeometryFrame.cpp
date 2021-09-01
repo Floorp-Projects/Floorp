@@ -479,18 +479,7 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   } else {
     // Get the bounds using a Moz2D Path object (more expensive):
     RefPtr<DrawTarget> tmpDT;
-#ifdef XP_WIN
-    // Unfortunately D2D backed DrawTarget produces bounds with rounding errors
-    // when whole number results are expected, even in the case of trivial
-    // calculations. To avoid that and meet the expectations of web content we
-    // have to use a CAIRO DrawTarget. The most efficient way to do that is to
-    // wrap the cached cairo_surface_t from ScreenReferenceSurface():
-    RefPtr<gfxASurface> refSurf =
-        gfxPlatform::GetPlatform()->ScreenReferenceSurface();
-    tmpDT = gfxPlatform::CreateDrawTargetForSurface(refSurf, IntSize(1, 1));
-#else
     tmpDT = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-#endif
 
     FillRule fillRule = SVGUtils::ToFillRule(
         HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD) ? StyleSVG()->mClipRule
