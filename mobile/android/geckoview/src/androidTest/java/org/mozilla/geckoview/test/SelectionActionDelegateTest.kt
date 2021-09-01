@@ -4,11 +4,11 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate
 import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
-import org.mozilla.geckoview.test.util.Callbacks
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -172,7 +172,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     @NullDelegate(GeckoSession.SelectionActionDelegate::class)
     @Test fun clearDelegate() {
         var counter = 0
-        mainSession.selectionActionDelegate = object : Callbacks.SelectionActionDelegate {
+        mainSession.selectionActionDelegate = object : SelectionActionDelegate {
             override fun onHideAction(session: GeckoSession, reason: Int) {
                 counter++
             }
@@ -224,14 +224,14 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                 "geckoview.selection_action.show_on_focus" to true,
                 "layout.accessiblecaret.script_change_update_mode" to 2))
 
-        mainSession.delegateDuringNextWait(object : Callbacks.SelectionActionDelegate {
+        mainSession.delegateDuringNextWait(object : SelectionActionDelegate {
             override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection) {
                 respondingWith(selection)
             }
         })
 
         content.select()
-        mainSession.waitUntilCalled(object : Callbacks.SelectionActionDelegate {
+        mainSession.waitUntilCalled(object : SelectionActionDelegate {
             @AssertCalled(count = 1)
             override fun onShowActionRequest(session: GeckoSession, selection: Selection) {
                 assertThat("Initial content should match",
@@ -266,7 +266,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
             var clientRect = RectF()
             content.select()
-            mainSession.waitUntilCalled(object : Callbacks.SelectionActionDelegate {
+            mainSession.waitUntilCalled(object : SelectionActionDelegate {
                 @AssertCalled(count = 1)
                 override fun onShowActionRequest(session: GeckoSession, selection: Selection) {
                     clientRect = selection.clientRect!!
@@ -436,7 +436,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
     private fun hasShowActionRequest(expectedFlags: Int,
                                      expectedActions: Array<out String>) = { it: SelectedContent ->
-        mainSession.forCallbacksDuringWait(object : Callbacks.SelectionActionDelegate {
+        mainSession.forCallbacksDuringWait(object : SelectionActionDelegate {
             @AssertCalled(count = 1)
             override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection) {
                 assertThat("Selection text should be valid",
@@ -462,7 +462,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     private fun changesSelectionTo(text: String) = changesSelectionTo(equalTo(text))
 
     private fun changesSelectionTo(matcher: Matcher<String>) = { _: SelectedContent ->
-        sessionRule.waitUntilCalled(object : Callbacks.SelectionActionDelegate {
+        sessionRule.waitUntilCalled(object : SelectionActionDelegate {
             @AssertCalled(count = 1)
             override fun onShowActionRequest(session: GeckoSession, selection: Selection) {
                 assertThat("New selection text should match", selection.text, matcher)
@@ -471,7 +471,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     }
 
     private fun clearsSelection() = { _: SelectedContent ->
-        sessionRule.waitUntilCalled(object : Callbacks.SelectionActionDelegate {
+        sessionRule.waitUntilCalled(object : SelectionActionDelegate {
             @AssertCalled(count = 1)
             override fun onHideAction(session: GeckoSession, reason: Int) {
                 assertThat("Hide reason should be correct",
