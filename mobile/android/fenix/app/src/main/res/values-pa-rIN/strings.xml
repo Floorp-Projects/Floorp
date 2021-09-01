@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">ਪ੍ਰਾਈਵੇਟ %s</string>
@@ -637,6 +637,22 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ ਬੰਦ ਕਰੋ</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ਹਟਾਓ</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">ਸਰਗਰਮ</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਬੰਦ ਹੋਵੇਗੀ</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">ਠੀਕ ਹੈ</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">ਰੱਦ ਕਰੋ</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ ਬੰਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ਟੈਬਾਂ ਖੋਲ੍ਹੋ</string>
@@ -664,6 +680,8 @@
     <string name="tab_tray_menu_item_share">ਸਾਰੀਆਂ ਟੈਬਾਂ ਸਾਂਝੀਆਂ ਕਰੋ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">ਤਾਜ਼ਾ ਬੰਦ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">ਤਾਜ਼ਾ ਬੰਦ ਕੀਤੀਆਂ</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">ਖਾਤਾ ਸੈਟਿੰਗਾਂ</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -960,6 +978,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">ਬੰਦ</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">ਚਾਲੂ</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">ਬੰਦ</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">ਭੰਡਾਰ</string>
@@ -1123,7 +1146,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">ਹਟਾਓ</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">ਰੱਦ ਕਰੋ</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">ਰੱਦ ਕਰੋ</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">ਪੂਰੀ ਸਕਰੀਨ ਢੰਗ ਵਿੱਚ ਜਾ ਰਿਹਾ ਹੈ</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1294,7 +1317,7 @@
     <string name="onboarding_privacy_notice_read_button">ਸਾਡੀ ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ ਨੂੰ ਪੜ੍ਹੋ</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">ਬੰਦ ਕਰੋ</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">ਬੰਦ ਕਰੋ</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">ਬਰਾਊਜ਼ ਕਰਨਾ ਸ਼ੁਰੂ ਕਰੋ</string>
@@ -1396,6 +1419,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">ਕ੍ਰਿਪਟੋ-ਮਾਈਨਰ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">ਫਿੰਗਰਪਰਿੰਟਰ</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">ਵੇਰਵੇ</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">ਪਾਬੰਦੀ ਲਗਾਏ</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">ਮਨਜ਼ੂਰ ਕੀਤੇ</string>
@@ -1420,7 +1446,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">ਬਾਹਰੀ ਇਸ਼ਤਿਹਾਰ, ਵਿਡੀਓ ਅਤੇ ਹੋਰ ਸਮੱਗਰੀ ਨੂੰ ਰੋਕਦਾ ਹੈ, ਜਿਸ ‘ਚ ਟਰੈਕ ਕਰਨ ਵਾਲਾ ਕੋਡ ਹੁੰਦਾ ਹੈ। ਕੁਝ ਵੈੱਬਸਾਈਟਾਂ ਦਾ ਕੰਮਕਾਜ ਪ੍ਰਭਾਵਿਤ ਹੋ ਸਕਦਾ ਹੈ।</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">ਜਦੋਂ ਵੀ ਢਾਲ ਜਾਮਨੀ ਰੰਗ ਦੀ ਹੋਵੇ ਤਾਂ %s ਨੇ ਸਾਈਟ ਉੱਤੇ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਹੋਵੇਗੀ। ਹੋਰ ਜਾਣਕਾਰੀ ਲਈ ਛੂਹੋ।</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">ਜਦੋਂ ਵੀ ਢਾਲ ਜਾਮਨੀ ਰੰਗ ਦੀ ਹੋਵੇ ਤਾਂ %s ਨੇ ਸਾਈਟ ਉੱਤੇ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਹੋਵੇਗੀ। ਹੋਰ ਜਾਣਕਾਰੀ ਲਈ ਛੂਹੋ।</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ਇਸ ਸਾਈਟ ਲਈ ਸੁਰੱਖਿਆ ਚਾਲੂ ਹੈ</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1503,7 +1529,14 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">ਕਦੇ ਨਾ ਸੰਭਾਲੋ</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">ਆਪੇ-ਭਰੋ</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">ਆਪੇ-ਭਰੋ</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s ਵਿੱਚ ਆਪੇ ਭਰੋ</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s ਵਰਤਣ ਦੌਰਾਨ ਵੈਬਸਾਈਟਾਂ ਵਿੱਚ ਵਰਤੋੰਕਾਰ-ਨਾਂ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ ਤੇ ਸੰਭਾਲੋ|</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">ਹੋਰ ਐਪਾਂ ਵਿੱਚ ਆਪੇ ਭਰੋ</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ਲਾਗਇਨ ਸਿੰਕ ਕਰੋ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1684,7 +1717,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ਵਰਤਣ ਲਈ ਖੋਜ ਸਤਰ</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">“%s” ਨਾਲ ਕਿਊਰੀ ਨੂੰ ਤਬਦੀਲ ਕਰੋ। ਮਿਸਾਲ ਵਜੋਂ:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">“%s” ਨਾਲ ਕਿਊਰੀ ਨੂੰ ਤਬਦੀਲ ਕਰੋ। ਮਿਸਾਲ ਵਜੋਂ:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ਹੋਰ ਜਾਣੋ</string>
 
@@ -1821,6 +1854,14 @@
 	<string name="top_sites_rename_dialog_ok">ਠੀਕ ਹੈ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ਰੱਦ ਕਰੋ</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">ਨਾ-ਸਰਗਰਮ ਟੈਬਾਂ</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 ਦਿਨ</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 ਹਫ਼ਤਾ</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">ਵੈੱਬਸਾਈਟਾਂ, ਈਮੇਲਾਂ ਅਤੇ ਸੁਨੇਹਿਆਂ ਨੂੰ Firefox ਵਿੱਚ ਆਪਣੇ ਖੋਲ੍ਹਣ ਲਈ ਲਿੰਕ ਸੈੱਟ ਕਰੋ।</string>

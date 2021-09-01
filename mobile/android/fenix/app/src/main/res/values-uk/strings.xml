@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Приватний перегляд %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -296,7 +296,7 @@
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Приватність</string>
     <!-- Preference category for privacy and security settings -->
-    <string name="preferences_category_privacy_security">Приватність та безпека</string>
+    <string name="preferences_category_privacy_security">Приватність і безпека</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Дозволи сайтів</string>
     <!-- Preference for private browsing options -->
@@ -653,7 +653,7 @@
     <string name="studies_restart_dialog_cancel">Скасувати</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application">Закриття програми для застосування змін…</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Закриття програми для застосування змін…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1147,7 +1147,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Видалити</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Скасувати</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Скасувати</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Вхід у повноекранний режим</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1317,7 +1317,7 @@
     <string name="onboarding_privacy_notice_read_button">Повідомлення про приватність</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" tools:ignore="UnusedResources">Закрити</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Закрити</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Почати перегляд</string>
@@ -1448,7 +1448,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Блокує завантаження зовнішньої реклами, відео та іншого вмісту з вбудованим кодом стеження. Може вплинути на функціональність вебсайтів.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Коли %s блокує стеження на сайті, щит стає фіолетовим. Торкніться, щоб дізнатися більше.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Коли %s блокує стеження на сайті, щит стає фіолетовим. Торкніться, щоб дізнатися більше.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Захист на цьому сайті увімкнено</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1529,7 +1529,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ніколи не зберігати</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" tools:ignore="UnusedResources">Автозаповнення</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Автозаповнення</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Автозаповнення у %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
