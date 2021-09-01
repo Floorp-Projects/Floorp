@@ -90,7 +90,7 @@ fun PocketStory(
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
             Text(
                 modifier = Modifier.padding(bottom = 2.dp),
-                text = story.domain,
+                text = story.publisher,
                 style = MaterialTheme.typography.caption,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -170,13 +170,6 @@ fun PocketRecommendations(
     ) {
         content()
 
-        // Don't yet have the bottom image from designs as a proper Android SVG.
-        Box(
-            Modifier
-                .background(Color.Red)
-                .size(64.dp, 27.dp)
-                .padding(top = 16.dp)
-        )
         // Image(
         //     painterResource(R.drawable.ic_firefox_pocket),
         //     "Firefox and Pocket logos",
@@ -269,15 +262,12 @@ private fun getFakePocketStories(limit: Int = 1): List<PocketRecommendedStory> {
 
             add(
                 PocketRecommendedStory(
-                    id = randomNumber.toLong(),
-                    url = "https://story$randomNumber.com",
                     title = "This is a ${"very ".repeat(randomNumber)} long title",
-                    domain = "Website no #$randomNumber",
-                    excerpt = "FOO",
-                    dedupeUrl = "BAR",
-                    imageSrc = "",
-                    sortId = randomNumber,
-                    publishedTimestamp = randomNumber.toString()
+                    publisher = "Publisher",
+                    url = "https://story$randomNumber.com",
+                    imageUrl = "",
+                    timeToRead = randomNumber,
+                    category = "Category #$randomNumber"
                 )
             )
         }

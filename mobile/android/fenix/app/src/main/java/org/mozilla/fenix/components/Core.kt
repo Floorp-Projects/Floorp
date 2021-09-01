@@ -324,9 +324,7 @@ class Core(
 
     @Suppress("MagicNumber")
     val pocketStoriesConfig by lazyMonitored {
-        PocketStoriesConfig(
-            BuildConfig.POCKET_TOKEN, client, Frequency(4, TimeUnit.HOURS), 7
-        )
+        PocketStoriesConfig(client, Frequency(4, TimeUnit.HOURS))
     }
     val pocketStoriesService by lazyMonitored { PocketStoriesService(context, pocketStoriesConfig) }
 

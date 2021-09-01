@@ -13,6 +13,8 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.home.HomeFragmentStore
 
+private const val STORIES_TO_SHOW_COUNT = 7
+
 /**
  * [RecyclerView.ViewHolder] that will display a list of [PocketRecommendedStory]es
  * which is to be provided in the [bind] method.
@@ -41,11 +43,13 @@ class PocketStoriesViewHolder(
 
 @Composable
 fun PocketStories(store: HomeFragmentStore) {
-    val stories = store.observeAsComposableState { state -> state.pocketArticles }
+    val stories = store
+        .observeAsComposableState { state -> state.pocketArticles }.value
+        ?.take(STORIES_TO_SHOW_COUNT)
 
     ExpandableCard {
         PocketRecommendations {
-            PocketStories(stories.value ?: emptyList())
+            PocketStories(stories ?: emptyList())
         }
     }
 }
