@@ -39,6 +39,8 @@ jobs:
             build-type: debug
             code-review: true
         run:
+            pre-gradlew:
+                - ['java', '-version']
             gradlew:
                 - 'clean'
                 - '-Pcoverage'
