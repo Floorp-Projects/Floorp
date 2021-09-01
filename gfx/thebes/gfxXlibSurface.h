@@ -88,11 +88,6 @@ class gfxXlibSurface final : public gfxASurface {
   // Find a visual and colormap pair suitable for rendering to this surface.
   bool GetColormapAndVisual(Colormap* colormap, Visual** visual);
 
-  GLXPixmap GetGLXPixmap();
-  // Binds a GLXPixmap backed by this context's surface.
-  // Primarily for use in sharing surfaces.
-  void BindGLXPixmap(GLXPixmap aPixmap);
-
   // Return true if cairo will take its slow path when this surface is used
   // in a pattern with EXTEND_PAD.  As a workaround for XRender's RepeatPad
   // not being implemented correctly on old X servers, cairo avoids XRender
@@ -113,8 +108,6 @@ class gfxXlibSurface final : public gfxASurface {
   Drawable mDrawable;
 
   const mozilla::gfx::IntSize DoSizeQuery();
-
-  GLXPixmap mGLXPixmap;
 };
 
 #endif /* GFX_XLIBSURFACE_H */
