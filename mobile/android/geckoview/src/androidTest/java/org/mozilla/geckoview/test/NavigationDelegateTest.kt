@@ -1994,11 +1994,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         val controller = sessionRule.runtime.webExtensionController
 
-        sessionRule.addExternalDelegateUntilTestEnd(
-                WebExtensionController.PromptDelegate::class,
-                controller::setPromptDelegate,
-                { controller.promptDelegate = null },
-                object : WebExtensionController.PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : WebExtensionController.PromptDelegate {
             @AssertCalled
             override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
                 return GeckoResult.allow()

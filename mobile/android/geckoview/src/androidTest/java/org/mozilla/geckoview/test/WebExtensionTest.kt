@@ -64,12 +64,6 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Before
     fun setup() {
-        sessionRule.addExternalDelegateUntilTestEnd(
-                WebExtensionController.PromptDelegate::class,
-                controller::setPromptDelegate,
-                { controller.promptDelegate = null },
-                object : WebExtensionController.PromptDelegate {}
-        )
         sessionRule.setPrefsUntilTestEnd(mapOf("extensions.isembedded" to true))
         sessionRule.runtime.webExtensionController.setTabActive(mainSession, true)
     }
@@ -515,16 +509,11 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun createNotification() {
-        sessionRule.addExternalDelegateUntilTestEnd(
-                WebNotificationDelegate::class,
-                { delegate ->
-                    sessionRule.runtime.webNotificationDelegate = delegate },
-                { sessionRule.runtime.webNotificationDelegate = null },
-                object : WebNotificationDelegate {
-                    @GeckoSessionTestRule.AssertCalled
-                    override fun onShowNotification(notification: WebNotification) {
-                    }
-                })
+        sessionRule.delegateUntilTestEnd(object : WebNotificationDelegate {
+            @AssertCalled
+            override fun onShowNotification(notification: WebNotification) {
+            }
+        })
 
         val extension = sessionRule.waitForResult(
                 controller.installBuiltIn("resource://android/assets/web_extensions/notification-test/"))
