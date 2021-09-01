@@ -530,6 +530,8 @@ class MessageChannel : HasResultCodes {
                       public nsIRunnableIPCMessageType {
    public:
     explicit MessageTask(MessageChannel* aChannel, Message&& aMessage);
+    MessageTask() = delete;
+    MessageTask(const MessageTask&) = delete;
 
     NS_DECL_ISUPPORTS_INHERITED
 
@@ -538,19 +540,30 @@ class MessageChannel : HasResultCodes {
     NS_IMETHOD GetPriority(uint32_t* aPriority) override;
     NS_DECL_NSIRUNNABLEIPCMESSAGETYPE
     void Post();
-    void Clear();
 
-    bool IsScheduled() const { return mScheduled; }
+    bool IsScheduled() const {
+      mMonitor->AssertCurrentThreadOwns();
+      return mScheduled;
+    }
 
     Message& Msg() { return mMessage; }
     const Message& Msg() const { return mMessage; }
 
    private:
-    MessageTask() = delete;
-    MessageTask(const MessageTask&) = delete;
     ~MessageTask() = default;
 
-    MessageChannel* mChannel;
+    MessageChannel* Channel() {
+      mMonitor->AssertCurrentThreadOwns();
+      MOZ_RELEASE_ASSERT(isInList());
+      return mChannel;
+    }
+
+    // The connected MessageChannel's monitor. Guards `mChannel` and
+    // `mScheduled`.
+    RefPtr<RefCountedMonitor> const mMonitor;
+    // The channel which this MessageTask is associated with. Only valid while
+    // `mMonitor` is held, and this MessageTask `isInList()`.
+    MessageChannel* const mChannel;
     Message mMessage;
     bool mScheduled : 1;
   };
