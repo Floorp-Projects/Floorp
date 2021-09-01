@@ -34,6 +34,23 @@ NS_IMPL_ISUPPORTS(nsMediaSniffer, nsIContentSniffer)
 nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
     // The string OggS, followed by the null byte.
     PATTERN_ENTRY("\xFF\xFF\xFF\xFF\xFF", "OggS", APPLICATION_OGG),
+    // The string RIFF, followed by four bytes, followed by the string WAVE,
+    // followed by 8 bytes, followed by 0x0055, the codec identifier for mp3 in
+    // a RIFF container. This entry MUST be before the next one, which is
+    // assumed to be a WAV file containing PCM data.
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF"
+                  "\x00\x00\x00\x00"
+                  "\xFF\xFF\xFF\xFF"
+                  "\x00\x00\x00\x00"
+                  "\x00\x00\x00\x00"
+                  "\xFF\xFF",
+                  "RIFF"
+                  "\x00\x00\x00\x00"
+                  "WAVE"
+                  "\x00\x00\x00\x00"
+                  "\x00\x00\x00\x00"
+                  "\x55\x00",
+                  AUDIO_MP3),
     // The string RIFF, followed by four bytes, followed by the string WAVE
     PATTERN_ENTRY("\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF",
                   "RIFF\x00\x00\x00\x00WAVE", AUDIO_WAV),
