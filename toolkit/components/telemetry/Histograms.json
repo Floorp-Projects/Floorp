@@ -6750,8 +6750,9 @@
     "description": "PLACES: Expiration steps to cleanup the database"
   },
   "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
@@ -6761,8 +6762,8 @@
   },
   "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS": {
     "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["mdeboer@mozilla.com"],
+    "products": ["firefox"],
+    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "exponential",
@@ -8507,6 +8508,18 @@
     "n_buckets": 30,
     "keyed": true,
     "description": "Number of toplevel location changes in tablet and desktop mode (only used on win10 where tablet mode is available)"
+  },
+  "FX_URLBAR_MERINO_LATENCY_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1727799],
+    "description": "Firefox: Time from request to Merino endpoint to response (ms)"
   },
   "FX_URLBAR_SELECTED_RESULT_INDEX": {
     "record_in_processes": ["main", "content"],

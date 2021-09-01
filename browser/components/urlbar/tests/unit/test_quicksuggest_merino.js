@@ -17,6 +17,8 @@ const PREF_MERINO_ENABLED = "merino.enabled";
 const PREF_REMOTE_SETTINGS_ENABLED = "quicksuggest.remoteSettings.enabled";
 const PREF_MERINO_ENDPOINT_URL = "merino.endpointURL";
 
+const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
+
 const REMOTE_SETTINGS_DATA = [
   {
     id: 1,
@@ -697,19 +699,236 @@ add_task(async function badResponses() {
   await check_results({ context, matches: [] });
 });
 
+// Tests the Merino latency stopwatch histogram.
+add_task(async function latencyTelemetry() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+
+  let histogram = Services.telemetry.getHistogramById(TELEMETRY_MERINO_LATENCY);
+  histogram.clear();
+
+  setMerinoResponse({
+    body: {
+      suggestions: [
+        {
+          full_keyword: "latencyTelemetry full_keyword",
+          title: "latencyTelemetry title",
+          url: "latencyTelemetry url",
+          icon: "latencyTelemetry icon",
+          impression_url: "latencyTelemetry impression_url",
+          click_url: "latencyTelemetry click_url",
+          block_id: 111,
+          advertiser: "latencyTelemetry advertiser",
+          is_sponsored: true,
+        },
+      ],
+    },
+  });
+
+  let context = createContext("test", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+
+  let snapshot = histogram.snapshot();
+  Assert.equal(
+    Object.values(snapshot.values).reduce((sum, value) => sum + value, 0),
+    0,
+    "Sanity check: No telemetry recorded before search"
+  );
+
+  await check_results({
+    context,
+    matches: [
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        payload: {
+          qsSuggestion: "latencyTelemetry full_keyword",
+          title: "latencyTelemetry title",
+          url: "latencyTelemetry url",
+          icon: "latencyTelemetry icon",
+          sponsoredImpressionUrl: "latencyTelemetry impression_url",
+          sponsoredClickUrl: "latencyTelemetry click_url",
+          sponsoredBlockId: 111,
+          sponsoredAdvertiser: "latencyTelemetry advertiser",
+          isSponsored: true,
+          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+          helpL10nId: "firefox-suggest-urlbar-learn-more",
+          displayUrl: "latencyTelemetry url",
+        },
+      },
+    ],
+  });
+
+  snapshot = histogram.snapshot();
+  Assert.greater(
+    Object.values(snapshot.values).reduce((sum, value) => sum + value, 0),
+    0,
+    "Telemetry recorded after search"
+  );
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
+    "Stopwatch not running after search"
+  );
+});
+
+// The Merino latency stopwatch histogram should not be updated when a search is
+// canceled.
+add_task(async function latencyTelemetryCancel() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+
+  let histogram = Services.telemetry.getHistogramById(TELEMETRY_MERINO_LATENCY);
+  histogram.clear();
+
+  // Make the server return a delayed response so we can cancel it before it
+  // finishes.
+  setMerinoResponse({
+    delay: 3000,
+    body: {
+      suggestions: [
+        {
+          full_keyword: "latencyTelemetryCancel full_keyword",
+          title: "latencyTelemetryCancel title",
+          url: "latencyTelemetryCancel url",
+          icon: "latencyTelemetryCancel icon",
+          impression_url: "latencyTelemetryCancel impression_url",
+          click_url: "latencyTelemetryCancel click_url",
+          block_id: 111,
+          advertiser: "latencyTelemetryCancel advertiser",
+          is_sponsored: true,
+        },
+      ],
+    },
+  });
+
+  let context = createContext("test", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+
+  let snapshot = histogram.snapshot();
+  Assert.equal(
+    Object.values(snapshot.values).reduce((sum, value) => sum + value, 0),
+    0,
+    "Sanity check: No telemetry recorded before search"
+  );
+
+  // Do a search but don't wait for it to finish.
+  let controller = UrlbarTestUtils.newMockController({
+    input: {
+      isPrivate: context.isPrivate,
+      onFirstResult() {
+        return false;
+      },
+      window: {
+        location: {
+          href: AppConstants.BROWSER_CHROME_URL,
+        },
+      },
+    },
+  });
+  let searchPromise = controller.startQuery(context);
+
+  // Wait for the stopwatch to start running.
+  await TestUtils.waitForCondition(
+    () => TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
+    "Waiting for stopwatch to start running"
+  );
+
+  // Now cancel the search.
+  controller.cancelQuery();
+  await searchPromise;
+
+  // The telemetry should not be recorded.
+  snapshot = histogram.snapshot();
+  Assert.equal(
+    Object.values(snapshot.values).reduce((sum, value) => sum + value, 0),
+    0,
+    "Telemetry not recorded after canceling search"
+  );
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
+    "Stopwatch not running after search"
+  );
+});
+
+// The Merino latency stopwatch histogram should not be updated when there's an
+// exception fetching the Merino server response. (This does *not* include 500
+// responses from the server since in that case a response is still fetched.)
+add_task(async function latencyTelemetryException() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+
+  // Set an invalid endpoint URL.
+  let originalURL = UrlbarPrefs.get(PREF_MERINO_ENDPOINT_URL);
+  UrlbarPrefs.set(PREF_MERINO_ENDPOINT_URL, "bogus");
+
+  let histogram = Services.telemetry.getHistogramById(TELEMETRY_MERINO_LATENCY);
+  histogram.clear();
+
+  let context = createContext("test", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+
+  let snapshot = histogram.snapshot();
+  Assert.equal(
+    Object.values(snapshot.values).reduce((sum, value) => sum + value, 0),
+    0,
+    "Sanity check: No telemetry recorded before search"
+  );
+
+  await check_results({
+    context,
+    matches: [],
+  });
+
+  // The telemetry should not be recorded.
+  snapshot = histogram.snapshot();
+  Assert.equal(
+    Object.values(snapshot.values).reduce((sum, value) => sum + value, 0),
+    0,
+    "Telemetry not recorded after search with error"
+  );
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
+    "Stopwatch not running after search"
+  );
+
+  UrlbarPrefs.set(PREF_MERINO_ENDPOINT_URL, originalURL);
+});
+
 function makeMerinoServer(endpointPath) {
   let server = makeTestServer();
-  server.registerPathHandler(endpointPath, (req, resp) => {
+  server.registerPathHandler(endpointPath, async (req, resp) => {
+    resp.processAsync();
+    if (typeof gMerinoResponse.delay == "number") {
+      await new Promise(resolve => {
+        let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+        timer.initWithCallback(
+          resolve,
+          gMerinoResponse.delay,
+          Ci.nsITimer.TYPE_ONE_SHOT
+        );
+      });
+    }
     resp.setHeader("Content-Type", gMerinoResponse.contentType, false);
     if (typeof gMerinoResponse.body == "string") {
       resp.write(gMerinoResponse.body);
     } else if (gMerinoResponse.body) {
       resp.write(JSON.stringify(gMerinoResponse.body));
     }
+    resp.finish();
   });
   return server;
 }
 
-function setMerinoResponse({ body, contentType = "application/json" }) {
-  gMerinoResponse = { body, contentType };
+function setMerinoResponse(resp) {
+  if (!resp.contentType) {
+    resp.contentType = "application/json";
+  }
+  gMerinoResponse = resp;
 }
