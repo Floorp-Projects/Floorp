@@ -7,37 +7,23 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONTokener;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.geckoview.Autocomplete;
 import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
-import org.mozilla.geckoview.GeckoRuntime.ActivityDelegate;
-import org.mozilla.geckoview.GeckoRuntime.ServiceWorkerDelegate;
 import org.mozilla.geckoview.GeckoSession;
-import org.mozilla.geckoview.GeckoSession.ContentDelegate;
-import org.mozilla.geckoview.GeckoSession.HistoryDelegate;
-import org.mozilla.geckoview.GeckoSession.MediaDelegate;
-import org.mozilla.geckoview.GeckoSession.NavigationDelegate;
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate;
-import org.mozilla.geckoview.GeckoSession.ProgressDelegate;
-import org.mozilla.geckoview.GeckoSession.PromptDelegate;
-import org.mozilla.geckoview.GeckoSession.ScrollDelegate;
-import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate;
-import org.mozilla.geckoview.GeckoSession.TextInputDelegate;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.MediaSession;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
-import org.mozilla.geckoview.WebNotificationDelegate;
-import org.mozilla.geckoview.WebPushDelegate;
 import org.mozilla.geckoview.test.util.TestServer;
 import org.mozilla.geckoview.test.util.RuntimeCreator;
 import org.mozilla.geckoview.test.util.Environment;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
+import org.mozilla.geckoview.test.util.Callbacks;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -53,8 +39,6 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import android.app.Instrumentation;
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.os.SystemClock;
@@ -745,71 +729,29 @@ public class GeckoSessionTestRule implements TestRule {
         }
     }
 
-    private static final Set<Class<?>> DEFAULT_DELEGATES = new HashSet<>();
-    static {
-        DEFAULT_DELEGATES.add(Autofill.Delegate.class);
-        DEFAULT_DELEGATES.add(ContentBlocking.Delegate.class);
-        DEFAULT_DELEGATES.add(ContentDelegate.class);
-        DEFAULT_DELEGATES.add(HistoryDelegate.class);
-        DEFAULT_DELEGATES.add(MediaDelegate.class);
-        DEFAULT_DELEGATES.add(MediaSession.Delegate.class);
-        DEFAULT_DELEGATES.add(NavigationDelegate.class);
-        DEFAULT_DELEGATES.add(PermissionDelegate.class);
-        DEFAULT_DELEGATES.add(ProgressDelegate.class);
-        DEFAULT_DELEGATES.add(PromptDelegate.class);
-        DEFAULT_DELEGATES.add(ScrollDelegate.class);
-        DEFAULT_DELEGATES.add(SelectionActionDelegate.class);
-        DEFAULT_DELEGATES.add(TextInputDelegate.class);
-    }
-
-    private static final Set<Class<?>> DEFAULT_RUNTIME_DELEGATES = new HashSet<>();
-    static {
-        DEFAULT_RUNTIME_DELEGATES.add(Autocomplete.StorageDelegate.class);
-        DEFAULT_RUNTIME_DELEGATES.add(ActivityDelegate.class);
-        DEFAULT_RUNTIME_DELEGATES.add(GeckoRuntime.Delegate.class);
-        DEFAULT_RUNTIME_DELEGATES.add(ServiceWorkerDelegate.class);
-        DEFAULT_RUNTIME_DELEGATES.add(WebNotificationDelegate.class);
-        DEFAULT_RUNTIME_DELEGATES.add(WebExtensionController.PromptDelegate.class);
-        DEFAULT_RUNTIME_DELEGATES.add(WebPushDelegate.class);
-    }
-
-    private static class DefaultImpl implements
-            // Session delegates
-            Autofill.Delegate,
-            ContentBlocking.Delegate,
-            ContentDelegate,
-            HistoryDelegate,
-            MediaDelegate,
-            MediaSession.Delegate,
-            NavigationDelegate,
-            PermissionDelegate,
-            ProgressDelegate,
-            PromptDelegate,
-            ScrollDelegate,
-            SelectionActionDelegate,
-            TextInputDelegate,
-            // Runtime delegates
-            ActivityDelegate,
-            Autocomplete.StorageDelegate,
-            GeckoRuntime.Delegate,
-            ServiceWorkerDelegate,
-            WebExtensionController.PromptDelegate,
-            WebNotificationDelegate,
-            WebPushDelegate
-    {
-        @Override
-        public GeckoResult<Intent> onStartActivityForResult(@NonNull PendingIntent intent) {
-            return null;
+    private static void addCallbackClasses(final List<Class<?>> list, final Class<?> ifce) {
+        if (!Callbacks.class.equals(ifce.getDeclaringClass())) {
+            list.add(ifce);
+            return;
         }
-        @Override
-        public void onShutdown() {}
-        @Override
-        public GeckoResult<GeckoSession> onOpenWindow(@NonNull String url) {
-            return GeckoResult.fromValue(null);
+        final Class<?>[] superIfces = ifce.getInterfaces();
+        for (final Class<?> superIfce : superIfces) {
+            addCallbackClasses(list, superIfce);
         }
     }
 
-    private static final DefaultImpl DEFAULT_IMPL = new DefaultImpl();
+    private static Set<Class<?>> getDefaultDelegates() {
+        final Class<?>[] ifces = Callbacks.class.getDeclaredClasses();
+        final List<Class<?>> list = new ArrayList<>(ifces.length);
+
+        for (final Class<?> ifce : ifces) {
+            addCallbackClasses(list, ifce);
+        }
+
+        return new HashSet<>(list);
+    }
+
+    private static final Set<Class<?>> DEFAULT_DELEGATES = getDefaultDelegates();
 
     public final Environment env = new Environment();
 
@@ -944,67 +886,28 @@ public class GeckoSessionTestRule implements TestRule {
         return mDisplays.get(mMainSession);
     }
 
-    protected static void setDelegate(final @NonNull Class<?> cls,
+    protected static Object setDelegate(final @NonNull Class<?> cls,
                                         final @NonNull GeckoSession session,
                                         final @Nullable Object delegate)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (cls == GeckoSession.TextInputDelegate.class) {
-            session.getTextInput().setDelegate((TextInputDelegate) delegate);
-        } else if (cls == ContentBlocking.Delegate.class) {
-            session.setContentBlockingDelegate((ContentBlocking.Delegate) delegate);
-        } else if (cls == Autofill.Delegate.class) {
-            session.setAutofillDelegate((Autofill.Delegate) delegate);
-        } else if (cls == MediaSession.Delegate.class) {
-            session.setMediaSessionDelegate((MediaSession.Delegate) delegate);
-        } else {
-            GeckoSession.class.getMethod("set" + cls.getSimpleName(), cls)
-                    .invoke(session, delegate);
+            return SessionTextInput.class.getMethod("setDelegate", cls)
+                   .invoke(session.getTextInput(), delegate);
         }
-    }
-
-    protected static void setRuntimeDelegate(final @NonNull Class<?> cls,
-                                             final @NonNull GeckoRuntime runtime,
-                                             final @Nullable Object delegate)
-    {
-        if (cls == Autocomplete.StorageDelegate.class) {
-            runtime.setAutocompleteStorageDelegate((Autocomplete.StorageDelegate) delegate);
-        } else if (cls == ActivityDelegate.class) {
-            runtime.setActivityDelegate((ActivityDelegate) delegate);
-        } else if (cls == GeckoRuntime.Delegate.class) {
-            runtime.setDelegate((GeckoRuntime.Delegate) delegate);
-        } else if (cls == ServiceWorkerDelegate.class) {
-            runtime.setServiceWorkerDelegate((ServiceWorkerDelegate) delegate);
-        } else if (cls == WebNotificationDelegate.class) {
-            runtime.setWebNotificationDelegate((WebNotificationDelegate) delegate);
-        } else if (cls == WebExtensionController.PromptDelegate.class) {
-            runtime.getWebExtensionController()
-                   .setPromptDelegate((WebExtensionController.PromptDelegate) delegate);
-        } else if (cls == WebPushDelegate.class) {
-            runtime.getWebPushController().setDelegate((WebPushDelegate) delegate);
-        } else {
-            throw new IllegalStateException("Unknown runtime delegate " + cls.getName());
+        if (cls == ContentBlocking.Delegate.class) {
+            return GeckoSession.class.getMethod("setContentBlockingDelegate", cls)
+                   .invoke(session, delegate);
         }
-    }
-
-    protected static Object getRuntimeDelegate(final @NonNull Class<?> cls,
-                                               final @NonNull GeckoRuntime runtime) {
-        if (cls == Autocomplete.StorageDelegate.class) {
-            return runtime.getAutocompleteStorageDelegate();
-        } else if (cls == ActivityDelegate.class) {
-            return runtime.getActivityDelegate();
-        } else if (cls == GeckoRuntime.Delegate.class) {
-            return runtime.getDelegate();
-        } else if (cls == ServiceWorkerDelegate.class) {
-            return runtime.getServiceWorkerDelegate();
-        } else if (cls == WebNotificationDelegate.class) {
-            return runtime.getWebNotificationDelegate();
-        } else if (cls == WebExtensionController.PromptDelegate.class) {
-            return runtime.getWebExtensionController().getPromptDelegate();
-        } else if (cls == WebPushDelegate.class) {
-            return runtime.getWebPushController().getDelegate();
-        } else {
-            throw new IllegalStateException("Unknown runtime delegate " + cls.getName());
+        if (cls == Autofill.Delegate.class) {
+            return GeckoSession.class.getMethod("setAutofillDelegate", cls)
+                   .invoke(session, delegate);
         }
+        if (cls == MediaSession.Delegate.class) {
+            return GeckoSession.class.getMethod("setMediaSessionDelegate", cls)
+                   .invoke(session, delegate);
+        }
+        return GeckoSession.class.getMethod("set" + cls.getSimpleName(), cls)
+               .invoke(session, delegate);
     }
 
     protected static Object getDelegate(final @NonNull Class<?> cls,
@@ -1035,9 +938,11 @@ public class GeckoSessionTestRule implements TestRule {
         final List<ExternalDelegate<?>> waitDelegates = mWaitScopeDelegates.getExternalDelegates();
         final List<ExternalDelegate<?>> testDelegates = mTestScopeDelegates.getExternalDelegates();
 
-        final Set<Class<?>> set = new HashSet<>(DEFAULT_DELEGATES);
-        set.addAll(DEFAULT_RUNTIME_DELEGATES);
+        if (waitDelegates.isEmpty() && testDelegates.isEmpty()) {
+            return DEFAULT_DELEGATES;
+        }
 
+        final Set<Class<?>> set = new HashSet<>(DEFAULT_DELEGATES);
         for (final ExternalDelegate<?> delegate : waitDelegates) {
             set.add(delegate.delegate);
         }
@@ -1048,9 +953,15 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     private void addNullDelegate(final Class<?> delegate) {
-        assertThat("Null-delegate must be valid interface class",
-                   delegate, either(isIn(DEFAULT_DELEGATES)).or(isIn(DEFAULT_RUNTIME_DELEGATES)));
-        mNullDelegates.add(delegate);
+        if (!Callbacks.class.equals(delegate.getDeclaringClass())) {
+            assertThat("Null-delegate must be valid interface class",
+                       delegate, isIn(DEFAULT_DELEGATES));
+            mNullDelegates.add(delegate);
+            return;
+        }
+        for (final Class<?> ifce : delegate.getInterfaces()) {
+            addNullDelegate(ifce);
+        }
     }
 
     protected void applyAnnotations(final Collection<Annotation> annotations,
@@ -1133,18 +1044,16 @@ public class GeckoSessionTestRule implements TestRule {
                     ignore = mCallRecordHandler.handleCall(method, args);
                 }
 
-                final boolean isDefaultDelegate =
-                        DEFAULT_DELEGATES.contains(method.getDeclaringClass());
-                final boolean isDefaultRuntimeDelegate =
-                        DEFAULT_RUNTIME_DELEGATES.contains(method.getDeclaringClass());
+                final boolean isExternalDelegate =
+                        !DEFAULT_DELEGATES.contains(method.getDeclaringClass());
 
                 if (!ignore) {
-                    if (isDefaultDelegate) {
+                    if (!isExternalDelegate) {
                         ThreadUtils.assertOnUiThread();
                     }
 
                     final GeckoSession session;
-                    if (!isDefaultDelegate) {
+                    if (isExternalDelegate) {
                         session = null;
                     } else {
                         assertThat("Callback first argument must be session object",
@@ -1170,7 +1079,7 @@ public class GeckoSessionTestRule implements TestRule {
                         call = testDelegates.prepareMethodCall(session, method);
                     }
 
-                    if (!isDefaultDelegate && !isDefaultRuntimeDelegate) {
+                    if (isExternalDelegate) {
                         assertThat("External delegate should be registered",
                                    call, notNullValue());
                     }
@@ -1179,11 +1088,8 @@ public class GeckoSessionTestRule implements TestRule {
                 Object returnValue = null;
                 try {
                     mCurrentMethodCall = call;
-                    if (call != null && call.target != null) {
-                        returnValue = method.invoke(call.target, args);
-                    } else {
-                        returnValue = method.invoke(DEFAULT_IMPL, args);
-                    }
+                    returnValue = method.invoke((call != null) ? call.target
+                                                        : Callbacks.Default.INSTANCE, args);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
                     throw unwrapRuntimeException(e);
                 } finally {
@@ -1194,18 +1100,14 @@ public class GeckoSessionTestRule implements TestRule {
             }
         };
 
-        final Set<Class<?>> delegates = new HashSet<>();
-        delegates.addAll(DEFAULT_DELEGATES);
-        delegates.addAll(DEFAULT_RUNTIME_DELEGATES);
-        final Class<?>[] classes = delegates.toArray(
-                new Class<?>[delegates.size()]);
+        final Class<?>[] classes = DEFAULT_DELEGATES.toArray(
+                new Class<?>[DEFAULT_DELEGATES.size()]);
         mCallbackProxy = Proxy.newProxyInstance(GeckoSession.class.getClassLoader(),
                                                 classes, recorder);
-        mAllDelegates = new HashSet<>(delegates);
+        mAllDelegates = new HashSet<>(DEFAULT_DELEGATES);
 
         mMainSession = new GeckoSession(settings);
         prepareSession(mMainSession);
-        prepareRuntime(getRuntime());
 
         if (mDisplaySize != null) {
             addDisplay(mMainSession, mDisplaySize.x, mDisplaySize.y);
@@ -1219,15 +1121,6 @@ public class GeckoSessionTestRule implements TestRule {
             if (RuntimeCreator.sTestSupport.get() != RuntimeCreator.TEST_SUPPORT_OK) {
                 throw new RuntimeException("Could not register TestSupport, see logs for error.");
             }
-        }
-    }
-
-    protected void prepareRuntime(final GeckoRuntime runtime) {
-        UiThreadUtils.waitForCondition(() ->
-                        RuntimeCreator.sTestSupport.get() != RuntimeCreator.TEST_SUPPORT_INITIAL,
-                env.getDefaultTimeoutMillis());
-        for (final Class<?> cls : DEFAULT_RUNTIME_DELEGATES) {
-            setRuntimeDelegate(cls, runtime, mNullDelegates.contains(cls) ? null : mCallbackProxy);
         }
     }
 
@@ -1318,12 +1211,6 @@ public class GeckoSessionTestRule implements TestRule {
         mTestScopeDelegates.clearAndAssert();
     }
 
-    protected void cleanupRuntime(final GeckoRuntime runtime) {
-        for (final Class<?> cls : DEFAULT_RUNTIME_DELEGATES) {
-            setRuntimeDelegate(cls, runtime, null);
-        }
-    }
-
     protected void cleanupSession(final GeckoSession session) {
         if (session.isOpen()) {
             session.close();
@@ -1370,7 +1257,6 @@ public class GeckoSessionTestRule implements TestRule {
             cleanupSession(session);
         }
 
-        cleanupRuntime(getRuntime());
         cleanupSession(mMainSession);
         cleanupExtensions();
 
@@ -1638,7 +1524,7 @@ public class GeckoSessionTestRule implements TestRule {
             isSessionCallback = true;
         }
 
-        assertThat("Delegate should implement a GeckoSession, GeckoRuntime delegate " +
+        assertThat("Delegate should implement a GeckoSession delegate " +
                            "or registered external delegate",
                    isSessionCallback, equalTo(true));
 
@@ -1674,17 +1560,6 @@ public class GeckoSessionTestRule implements TestRule {
             assertThat(ifce.getSimpleName() + " callbacks should be " +
                        "accessed through GeckoSessionTestRule delegate methods",
                        callback, sameInstance(mCallbackProxy));
-        }
-
-        for (final Class<?> ifce : DEFAULT_RUNTIME_DELEGATES) {
-            final Object callback = getRuntimeDelegate(ifce, getRuntime());
-            if (mNullDelegates.contains(ifce)) {
-                // Null-delegates are initially null but are allowed to be any value.
-                continue;
-            }
-            assertThat(ifce.getSimpleName() + " callbacks should be " +
-                            "accessed through GeckoSessionTestRule delegate methods",
-                    callback, sameInstance(mCallbackProxy));
         }
 
         if (methodCalls.isEmpty()) {
@@ -1821,11 +1696,9 @@ public class GeckoSessionTestRule implements TestRule {
 
         for (int index = mLastWaitStart; index < mLastWaitEnd; index++) {
             final CallRecord record = mCallRecords.get(index);
-
             if (!record.method.getDeclaringClass().isInstance(callback) ||
-                    (session != null &&
-                            DEFAULT_DELEGATES.contains(record.method.getDeclaringClass())
-                                && !session.equals(record.args[0]))) {
+                    (session != null && DEFAULT_DELEGATES.contains(
+                            record.method.getDeclaringClass()) && !session.equals(record.args[0]))) {
                 continue;
             }
 

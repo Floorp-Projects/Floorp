@@ -16,9 +16,6 @@ exclude: true
 ## v93
 - Removed deprecated ['Autocomplete.LoginStorageDelegate'][78.8].
 - Removed deprecated [`GeckoRuntime.getProfileDir`][90.5].
-- Added [`PromptInstanceDelegate`][93.1] to allow GeckoView to dismiss stale prompts.
-
-[93.1]: {{javadoc_uri}}/GeckoSession.PromptDelegate.PromptInstanceDelegate.html
 
 ## v92
 - Added [`GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS`][92.1] to
@@ -1041,4 +1038,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 021709d1ae8a08d4c43997623cf50c004573d3ed
+[api-version]: 2edc01bfffedf1eb28688320a804e243e77f67f2
