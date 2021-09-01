@@ -243,6 +243,41 @@ BaseAutoUnlock(MutexType&) -> BaseAutoUnlock<MutexType&>;
 typedef detail::BaseAutoUnlock<Mutex&> MutexAutoUnlock;
 typedef detail::BaseAutoUnlock<OffTheBooksMutex&> OffTheBooksMutexAutoUnlock;
 
+namespace detail {
+/**
+ * BaseAutoTryLock
+ * Tries to acquire the Mutex when it enters scope, and releases it when it
+ * leaves scope.
+ *
+ * MUCH PREFERRED to bare calls to Mutex.TryLock and Unlock.
+ */
+template <typename T>
+class MOZ_RAII BaseAutoTryLock {
+ public:
+  explicit BaseAutoTryLock(T& aLock)
+      : mLock(aLock.TryLock() ? &aLock : nullptr) {}
+
+  ~BaseAutoTryLock() {
+    if (mLock) {
+      mLock->Unlock();
+    }
+  }
+
+  explicit operator bool() const { return mLock; }
+
+ private:
+  BaseAutoTryLock() = delete;
+  BaseAutoTryLock(BaseAutoTryLock&) = delete;
+  BaseAutoTryLock& operator=(BaseAutoTryLock&) = delete;
+  static void* operator new(size_t) noexcept(true);
+
+  T* mLock;
+};
+}  // namespace detail
+
+typedef detail::BaseAutoTryLock<Mutex> MutexAutoTryLock;
+typedef detail::BaseAutoTryLock<OffTheBooksMutex> OffTheBooksMutexAutoTryLock;
+
 }  // namespace mozilla
 
 #endif  // ifndef mozilla_Mutex_h
