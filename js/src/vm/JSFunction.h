@@ -850,7 +850,6 @@ extern bool CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
 
 extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
                                             HandleObject enclosingEnv,
-                                            gc::AllocKind kind,
                                             HandleObject proto);
 
 extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
