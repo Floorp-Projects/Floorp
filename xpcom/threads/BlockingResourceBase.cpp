@@ -336,6 +336,12 @@ void OffTheBooksMutex::AssertCurrentThreadOwns() const {
 // Debug implementation of RWLock
 //
 
+bool RWLock::TryReadLock() {
+  bool locked = this->TryReadLockInternal();
+  MOZ_ASSERT_IF(locked, mOwningThread == nullptr);
+  return locked;
+}
+
 void RWLock::ReadLock() {
   // All we want to ensure here is that we're not attempting to acquire the
   // read lock while this thread is holding the write lock.
@@ -347,6 +353,15 @@ void RWLock::ReadLock() {
 void RWLock::ReadUnlock() {
   MOZ_ASSERT(mOwningThread == nullptr);
   this->ReadUnlockInternal();
+}
+
+bool RWLock::TryWriteLock() {
+  bool locked = this->TryWriteLockInternal();
+  if (locked) {
+    mOwningThread = PR_GetCurrentThread();
+    Acquire();
+  }
+  return locked;
 }
 
 void RWLock::WriteLock() {
