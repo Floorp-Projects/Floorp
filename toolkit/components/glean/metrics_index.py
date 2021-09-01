@@ -11,6 +11,7 @@ metrics_yamls = [
     "toolkit/components/glean/tests/test_metrics.yaml",
     "toolkit/mozapps/update/metrics.yaml",
     "browser/base/content/metrics.yaml",
+    "gfx/metrics.yaml",
 ]
 
 # The list of all Glean pings.yaml files, relative to the top src dir.
