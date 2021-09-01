@@ -1612,7 +1612,8 @@ public:
         wasTemplate = true;
         D = D2->getTemplateInstantiationPattern();
       }
-      Kind = D2->isThisDeclarationADefinition() ? "def" : "decl";
+      // We treat pure virtual declarations as definitions.
+      Kind = (D2->isThisDeclarationADefinition() || D2->isPure()) ? "def" : "decl";
       PrettyKind = "function";
       PeekRange = getFunctionPeekRange(D2);
 
@@ -1740,7 +1741,7 @@ public:
       }
     }
     if (FunctionDecl *D2 = dyn_cast<FunctionDecl>(D)) {
-      if (D2->isThisDeclarationADefinition() &&
+      if ((D2->isThisDeclarationADefinition() || D2->isPure()) &&
           // a clause at the top should have generalized and set wasTemplate so
           // it shouldn't be the case that isTemplateInstantiation() is true.
           !D2->isTemplateInstantiation() &&
