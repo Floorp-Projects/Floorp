@@ -131,7 +131,9 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDecode(
   // help us ignore any output time that is earlier than the first input time.
   // Only does that when manager doesn't have seek threshold, because we don't
   // want to mess up the seeking triggered from the higher level of media stack.
-  if (!mHasGuardedAgainstIncorrectFirstSample &&
+  // By observation so far this issue only happens on Windows 10 and enabling
+  // this on other versions might cause us discarding wrong frames.
+  if (IsWin10OrLater() && !mHasGuardedAgainstIncorrectFirstSample &&
       !mMFTManager->HasSeekThreshold()) {
     mHasGuardedAgainstIncorrectFirstSample = true;
     mMFTManager->SetSeekThreshold(aSample->mTime);
