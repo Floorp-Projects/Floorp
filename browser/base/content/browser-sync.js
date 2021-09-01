@@ -239,14 +239,13 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       label.setAttribute("class", "PanelUI-remotetabs-notabsforclient-label");
     } else {
       // If this page will display all tabs, show no additional buttons.
-      // If the next page will display all the remaining tabs, show a "Show All" button
-      // Otherwise, show a "Shore More" button
+      // Otherwise, show a "Show More" button
       let hasNextPage = client.tabs.length > maxTabs;
       let nextPageIsLastPage =
         hasNextPage &&
         maxTabs + SyncedTabsPanelList.sRemoteTabsPerPage >= client.tabs.length;
       if (nextPageIsLastPage) {
-        // When the user clicks "Show All", try to have at least sRemoteTabsNextPageMinTabs more tabs
+        // When the user clicks "Show More", try to have at least sRemoteTabsNextPageMinTabs more tabs
         // to display in order to avoid user frustration
         maxTabs = Math.min(
           client.tabs.length - SyncedTabsPanelList.sRemoteTabsNextPageMinTabs,
