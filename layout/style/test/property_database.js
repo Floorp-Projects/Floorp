@@ -5196,7 +5196,6 @@ var gCSSProperties = {
       "buttonface",
       "field",
       "highlight",
-      "highlighttext",
       "graytext",
       /* Preserve previously available specially prefixed colors */
       "-moz-activehyperlinktext",
