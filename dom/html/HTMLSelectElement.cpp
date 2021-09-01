@@ -1282,8 +1282,6 @@ void HTMLSelectElement::SaveState() {
   }
 }
 
-// nsIFormControl
-
 bool HTMLSelectElement::RestoreState(PresState* aState) {
   // Get the presentation state object to retrieve our stuff out of.
   const PresContentData& state = aState->contentData();
@@ -1334,6 +1332,8 @@ void HTMLSelectElement::RestoreStateTo(const SelectContentData& aNewSelected) {
     }
   }
 }
+
+// nsIFormControl
 
 NS_IMETHODIMP
 HTMLSelectElement::Reset() {

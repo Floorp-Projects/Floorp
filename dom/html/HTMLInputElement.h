@@ -148,6 +148,7 @@ class HTMLInputElement final : public TextControlElement,
 
   // nsGenericHTMLFormElement
   void SaveState() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool RestoreState(PresState* aState) override;
 
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
@@ -156,8 +157,6 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual bool RestoreState(PresState* aState) override;
   virtual bool AllowDrop() override;
   virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
 

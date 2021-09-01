@@ -146,17 +146,6 @@ class nsIFormControl : public nsISupports {
   NS_IMETHOD
   SubmitNamesValues(mozilla::dom::FormData* aFormData) = 0;
 
-  /**
-   * Restore from presentation state.  You pass in the presentation state for
-   * this form control (generated with GenerateStateKey() + "-C") and the form
-   * control will grab its state from there.
-   *
-   * @param aState the pres state to use to restore the control
-   * @return true if the form control was a checkbox and its
-   *         checked state was restored, false otherwise.
-   */
-  virtual bool RestoreState(mozilla::PresState* aState) = 0;
-
   virtual bool AllowDrop() = 0;
 
   /**
