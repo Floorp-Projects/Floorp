@@ -27,6 +27,12 @@ let tracker;
 // So that PERFHERDER data can be extracted from the logs.
 SimpleTest.requestCompleteLog();
 
+// We have to disable testing mode, or various debug instructions are enabled.
+// We especially want to disable redux store history, which would leak all the actions!
+SpecialPowers.pushPrefEnv({
+  set: [["devtools.testing", false]],
+});
+
 async function addTab(url) {
   const tab = BrowserTestUtils.addTab(gBrowser, url);
   gBrowser.selectedTab = tab;
