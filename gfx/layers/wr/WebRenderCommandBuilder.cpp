@@ -916,11 +916,13 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
         if (aDirty) {
           // We don't currently support doing invalidation inside 3d transforms.
           // For now just paint it as a single item.
-          aItem->SetPaintRect(aItem->GetClippedBounds(mDisplayListBuilder));
+          nsRect buildingRect = aItem->GetBuildingRect();
+          aItem->SetBuildingRect(aItem->GetClippedBounds(mDisplayListBuilder));
 
           aItem->AsPaintedDisplayItem()->Paint(mDisplayListBuilder, aContext);
           TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces,
                                aRootManager, aResources);
+          aItem->SetBuildingRect(buildingRect);
         }
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
@@ -990,7 +992,9 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
     case DisplayItemType::TYPE_MASK: {
       GP("Paint Mask\n");
       auto maskItem = static_cast<nsDisplayMasksAndClipPaths*>(aItem);
-      maskItem->SetPaintRect(maskItem->GetClippedBounds(mDisplayListBuilder));
+      nsRect buildingRect = maskItem->GetBuildingRect();
+      maskItem->SetBuildingRect(
+          maskItem->GetClippedBounds(mDisplayListBuilder));
       if (maskItem->IsValidMask()) {
         maskItem->PaintWithContentsPaintCallback(
             mDisplayListBuilder, aContext, [&] {
@@ -1007,6 +1011,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
                              aResources);
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       }
+      maskItem->SetBuildingRect(buildingRect);
       break;
     }
     case DisplayItemType::TYPE_FILTER: {
@@ -1020,12 +1025,14 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
         auto filterItem = static_cast<nsDisplayFilters*>(aItem);
 
         nsRegion visible(aItem->GetClippedBounds(mDisplayListBuilder));
-        visible.And(visible, aItem->GetBuildingRect());
-        aItem->SetPaintRect(visible.GetBounds());
+        nsRect buildingRect = aItem->GetBuildingRect();
+        visible.And(visible, buildingRect);
+        aItem->SetBuildingRect(visible.GetBounds());
 
         filterItem->Paint(mDisplayListBuilder, aContext);
         TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces, aRootManager,
                              aResources);
+        aItem->SetBuildingRect(buildingRect);
       }
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
       break;
@@ -1673,7 +1680,6 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
     return;
   }
 
-  aItem->SetPaintRect(aItem->GetBuildingRect());
   RenderRootStateManager* manager = mManager->GetRenderRootStateManager();
 
   // Note: this call to CreateWebRenderCommands can recurse back into
@@ -2163,7 +2169,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
                            : aItem->GetClippedBounds(aDisplayListBuilder);
 
   nsRegion visibleRegion(paintBounds);
-  aItem->SetPaintRect(paintBounds);
+  nsRect buildingRect = aItem->GetBuildingRect();
+  aItem->SetBuildingRect(paintBounds);
+  auto resetBuildingRect =
+      MakeScopeExit([&]() { aItem->SetBuildingRect(buildingRect); });
 
   const int32_t appUnitsPerDevPixel =
       aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
@@ -2205,19 +2214,19 @@ WebRenderCommandBuilder::GenerateFallbackData(
         ScaleToNearestPixelsOffset(paintBounds, scale.width, scale.height,
                                    appUnitsPerDevPixel, residualOffset));
 
-    visibleRect = LayerIntRect::FromUnknownRect(
-                      ScaleToNearestPixelsOffset(
-                          aItem->GetBuildingRect(), scale.width, scale.height,
-                          appUnitsPerDevPixel, residualOffset))
-                      .Intersect(dtRect);
+    visibleRect =
+        LayerIntRect::FromUnknownRect(
+            ScaleToNearestPixelsOffset(buildingRect, scale.width, scale.height,
+                                       appUnitsPerDevPixel, residualOffset))
+            .Intersect(dtRect);
   } else {
     dtRect = ScaleToOutsidePixelsOffset(paintBounds, scale.width, scale.height,
                                         appUnitsPerDevPixel, residualOffset);
 
-    visibleRect = ScaleToOutsidePixelsOffset(
-                      aItem->GetBuildingRect(), scale.width, scale.height,
-                      appUnitsPerDevPixel, residualOffset)
-                      .Intersect(dtRect);
+    visibleRect =
+        ScaleToOutsidePixelsOffset(buildingRect, scale.width, scale.height,
+                                   appUnitsPerDevPixel, residualOffset)
+            .Intersect(dtRect);
   }
 
   auto visibleSize = visibleRect.Size();
@@ -2261,8 +2270,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
         if (aItem->GetType() == DisplayItemType::TYPE_FILTER) {
           needPaint = ComputeInvalidationForDisplayList(
               aDisplayListBuilder, shift, aItem->GetChildren());
-          if (!aItem->GetBuildingRect().IsEqualInterior(
-                  fallbackData->mBuildingRect)) {
+          if (!buildingRect.IsEqualInterior(fallbackData->mBuildingRect)) {
             needPaint = true;
           }
         } else {
@@ -2392,7 +2400,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
   // Update current bounds to fallback data
   fallbackData->mBounds = paintBounds;
-  fallbackData->mBuildingRect = aItem->GetBuildingRect();
+  fallbackData->mBuildingRect = buildingRect;
 
   MOZ_ASSERT(fallbackData->GetImageKey());
 
