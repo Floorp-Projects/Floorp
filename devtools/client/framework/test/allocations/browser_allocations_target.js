@@ -1,17 +1,51 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
-"use strict";
-
-// Record allocations while spawning Commands and the first top level target
-
 const TEST_URL =
   "data:text/html;charset=UTF-8,<div>Target allocations test</div>";
 
+// Load the tracker very first in order to ensure tracking all objects created by DevTools.
+// Loader.jsm shouldn't be loaded, not any other DevTools module until an explicit user action.
+let tracker;
+{
+  const { DevToolsLoader } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm"
+  );
+  const loader = new DevToolsLoader({
+    invisibleToDebugger: true,
+  });
+  const { allocationTracker } = loader.require(
+    "chrome://mochitests/content/browser/devtools/shared/test-helpers/allocation-tracker"
+  );
+  tracker = allocationTracker({ watchDevToolsGlobals: true });
+}
+
+// So that PERFHERDER data can be extracted from the logs.
+SimpleTest.requestCompleteLog();
+
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+
 const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
+
+async function doGC() {
+  // In order to get stable results, we really have to do 3 GC attempts
+  // *and* do wait for 1s between each GC.
+  const numCycles = 3;
+  for (let i = 0; i < numCycles; i++) {
+    Cu.forceGC();
+    Cu.forceCC();
+    await new Promise(resolve => Cu.schedulePreciseShrinkingGC(resolve));
+
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+}
+
+async function addTab(url) {
+  const tab = BrowserTestUtils.addTab(gBrowser, url);
+  gBrowser.selectedTab = tab;
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  return tab;
+}
 
 async function testScript(tab) {
   const commands = await CommandsFactory.forTab(tab);
@@ -34,12 +68,50 @@ add_task(async function() {
   // shutdown of Firefox
   await testScript(tab);
 
-  const recordData = await startRecordingAllocations();
+  // Do a first pass of GC, to ensure all to-be-freed objects from the first run
+  // are really freed.
+  await doGC();
+
+  // Then, record what was already allocated, which should not be declared
+  // as potential leaks. For ex, there is all the modules already loaded
+  // in the main DevTools loader.
+  const totalBefore = tracker.stillAllocatedObjects();
 
   // Now, run the test script. This time, we record this run.
   await testScript(tab);
 
-  await stopRecordingAllocations(recordData, "target");
+  // After that, re-do some GCs in order to free all what is to-be-freed.
+  await doGC();
+
+  // Ensure that Memory API didn't ran out of buffers
+  ok(!tracker.overflowed, "Allocation were all recorded");
+
+  // And finally, retrieve the number of objects that are still allocated.
+  const totalAfter = tracker.stillAllocatedObjects();
 
   gBrowser.removeTab(tab);
+
+  const PERFHERDER_DATA = {
+    framework: {
+      name: "devtools",
+    },
+    suites: [
+      {
+        name: "total-after-gc",
+        value: totalAfter - totalBefore,
+        subtests: [
+          {
+            name: "before",
+            value: totalBefore,
+          },
+          {
+            name: "after",
+            value: totalAfter - totalBefore,
+          },
+        ],
+      },
+    ],
+  };
+  info("PERFHERDER_DATA: " + JSON.stringify(PERFHERDER_DATA));
+  ok(true, "Test succeeded");
 });

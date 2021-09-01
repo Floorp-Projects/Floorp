@@ -35,12 +35,8 @@
 
 "use strict";
 
-const { Cu, Cc, Ci } = require("chrome");
+const { Cu } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
-
-const MemoryReporter = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
-  Ci.nsIMemoryReporterManager
-);
 
 const global = Cu.getGlobalForObject(this);
 const { addDebuggerToGlobal } = ChromeUtils.import(
@@ -82,28 +78,14 @@ exports.allocationTracker = function({
     acceptGlobal = () => true;
   } else if (watchDevToolsGlobals) {
     // Only accept globals related to DevTools
-    const builtinGlobal = require("devtools/shared/builtin-modules");
     acceptGlobal = g => {
       // self-hosting-global crashes when trying to call unsafeDereference
       if (g.class == "self-hosting-global") {
-        dump("TRACKER NEW GLOBAL: - : " + g.class + "\n");
         return false;
       }
       const ref = g.unsafeDereference();
       const location = Cu.getRealmLocation(ref);
-      let accept = !!location.match(/devtools/i);
-
-      // Also ignore the dedicated Sandbox used to spawn builtin-modules,
-      // as well as its internal Sandbox used to fetch various platform globals.
-      // We ignore the global used by the dedicated loader used to load
-      // the allocation-tracker module.
-      if (
-        ref == Cu.getGlobalForObject(builtinGlobal) ||
-        ref == builtinGlobal.internalSandbox
-      ) {
-        accept = false;
-      }
-
+      const accept = !!location.match(/devtools/i);
       dump(
         "TRACKER NEW GLOBAL: " + (accept ? "+" : "-") + " : " + location + "\n"
       );
@@ -252,49 +234,9 @@ exports.allocationTracker = function({
       dbg.memory.drainAllocationsLog();
     },
 
-    /**
-     * Compute the live count of object currently allocated.
-     *
-     * `objects` attribute will count all the objects,
-     * while `objectsWithNoStack` will report how many are missing allocation site/stack.
-     */
     stillAllocatedObjects() {
-      const sensus = dbg.memory.takeCensus({
-        breakdown: { by: "allocationStack" },
-      });
-      let objectsWithStack = 0;
-      let objectsWithoutStack = 0;
-      for (const [k, v] of sensus.entries()) {
-        // Objects with missing stack will all be keyed under "noStack" string,
-        // while all others will have a stack object as key.
-        if (k === "noStack") {
-          objectsWithoutStack += v.count;
-        } else {
-          objectsWithStack += v.count;
-        }
-      }
-      return { objectsWithStack, objectsWithoutStack };
-    },
-
-    /**
-     * Reports the amount of OS memory used by the current process.
-     */
-    getAllocatedMemory() {
-      return MemoryReporter.residentUnique;
-    },
-
-    async doGC() {
-      // In order to get stable results, we really have to do 3 GC attempts
-      // *and* do wait for 1s between each GC.
-      const numCycles = 3;
-      for (let i = 0; i < numCycles; i++) {
-        Cu.forceGC();
-        Cu.forceCC();
-        await new Promise(resolve => Cu.schedulePreciseShrinkingGC(resolve));
-
-        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+      const sensus = dbg.memory.takeCensus({ breakdown: { by: "count" } });
+      return sensus.count;
     },
 
     stop() {
