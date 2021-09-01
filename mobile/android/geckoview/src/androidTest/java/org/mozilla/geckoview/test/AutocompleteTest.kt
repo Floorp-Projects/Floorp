@@ -32,7 +32,6 @@ import org.mozilla.geckoview.Autocomplete.StorageDelegate
 import org.mozilla.geckoview.Autocomplete.UsedField
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.util.Callbacks
 
 
 @RunWith(AndroidJUnit4::class)
@@ -165,7 +164,7 @@ class AutocompleteTest : BaseSessionTest() {
             }
         })
 
-        mainSession.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+        mainSession.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onCreditCardSelect(
                     session: GeckoSession,
@@ -286,7 +285,7 @@ class AutocompleteTest : BaseSessionTest() {
                     override fun onAddressSave(address: Address) {}
                 })
 
-        mainSession.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+        mainSession.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onAddressSelect(
                     session: GeckoSession,
@@ -478,7 +477,7 @@ class AutocompleteTest : BaseSessionTest() {
         // Submit the form.
         mainSession.evaluateJS("document.querySelector('#form1').submit()")
 
-        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
+        sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -544,7 +543,7 @@ class AutocompleteTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -621,7 +620,7 @@ class AutocompleteTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -737,7 +736,7 @@ class AutocompleteTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 2)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -867,7 +866,7 @@ class AutocompleteTest : BaseSessionTest() {
             })
         }
 
-        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(false)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -943,7 +942,7 @@ class AutocompleteTest : BaseSessionTest() {
             override fun onLoginUsed(login: LoginEntry, usedFields: Int) {}
         })
 
-        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(false)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -1121,7 +1120,7 @@ class AutocompleteTest : BaseSessionTest() {
         mainSession.loadTestPath(FORMS3_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+        mainSession.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -1161,7 +1160,7 @@ class AutocompleteTest : BaseSessionTest() {
         session2.loadTestPath(FORMS3_HTML_PATH)
         session2.waitForPageStop()
 
-        session2.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+        session2.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -1199,7 +1198,7 @@ class AutocompleteTest : BaseSessionTest() {
         // Reload for the last time.
         val session3 = sessionRule.createOpenSession()
 
-        session3.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+        session3.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSelect(
                     session: GeckoSession,
@@ -1372,7 +1371,7 @@ class AutocompleteTest : BaseSessionTest() {
         mainSession.loadTestPath(FORMS3_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+        mainSession.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -1412,7 +1411,7 @@ class AutocompleteTest : BaseSessionTest() {
         session2.loadTestPath(FORMS3_HTML_PATH)
         session2.waitForPageStop()
 
-        session2.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+        session2.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSave(
                     session: GeckoSession,
@@ -1450,7 +1449,7 @@ class AutocompleteTest : BaseSessionTest() {
         // Reload for the last time.
         val session3 = sessionRule.createOpenSession()
 
-        session3.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+        session3.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onLoginSelect(
                     session: GeckoSession,
@@ -1586,7 +1585,7 @@ class AutocompleteTest : BaseSessionTest() {
         mainSession.loadTestPath(FORMS4_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+        mainSession.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled
             override fun onLoginSelect(
                     session: GeckoSession,
