@@ -58,12 +58,12 @@ class HTMLTextAreaElement final : public TextControlElement,
 
   // nsGenericHTMLFormElement
   void SaveState() override;
+  bool RestoreState(PresState* aState) override;
 
   // nsIFormControl
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
-  virtual bool RestoreState(PresState* aState) override;
   virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
 
   virtual void FieldSetDisabledChanged(bool aNotify) override;
