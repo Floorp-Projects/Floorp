@@ -58,6 +58,20 @@ struct ParamTraits<mozilla::a11y::FontSize> {
 };
 
 template <>
+struct ParamTraits<mozilla::a11y::DeleteEntry> {
+  typedef mozilla::a11y::DeleteEntry paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mValue);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &(aResult->mValue));
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::a11y::Color> {
   typedef mozilla::a11y::Color paramType;
 

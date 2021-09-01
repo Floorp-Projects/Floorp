@@ -3007,7 +3007,8 @@ void LocalAccessible::SendCacheUpdate(uint64_t aCacheDomain) {
   DocAccessibleChild* ipcDoc = mDoc->IPCDoc();
   MOZ_ASSERT(ipcDoc);
 
-  RefPtr<AccAttributes> fields = BundleFieldsForCache(aCacheDomain);
+  RefPtr<AccAttributes> fields =
+      BundleFieldsForCache(aCacheDomain, CacheUpdateType::Update);
   nsTArray<CacheData> data;
   data.AppendElement(
       CacheData(IsDoc() ? 0 : reinterpret_cast<uint64_t>(UniqueID()), fields));
@@ -3015,14 +3016,23 @@ void LocalAccessible::SendCacheUpdate(uint64_t aCacheDomain) {
 }
 
 already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
-    uint64_t aCacheDomain) {
+    uint64_t aCacheDomain, CacheUpdateType aUpdateType) {
   RefPtr<AccAttributes> fields = new AccAttributes();
 
   if (aCacheDomain & CacheDomain::Name) {
     nsAutoString name;
     int32_t nameFlag = Name(name);
-    fields->SetAttribute(nsGkAtoms::explicit_name, nameFlag);
-    fields->SetAttribute(nsGkAtoms::name, name);
+    if (nameFlag != eNameOK) {
+      fields->SetAttribute(nsGkAtoms::explicit_name, nameFlag);
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::explicit_name, DeleteEntry());
+    }
+
+    if (!name.IsEmpty()) {
+      fields->SetAttribute(nsGkAtoms::name, name);
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::name, DeleteEntry());
+    }
   }
 
   if ((aCacheDomain & CacheDomain::Value) && HasNumericValue()) {
