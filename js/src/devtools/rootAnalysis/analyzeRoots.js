@@ -205,7 +205,7 @@ function edgeUsesVariable(edge, variable, body)
             return src;
         if ("PEdgeCallInstance" in edge) {
             if (expressionUsesVariable(edge.PEdgeCallInstance.Exp, variable)) {
-                if (edgeKillsVariable(edge, variable)) {
+                if (edgeStartsValueLiveRange(edge, variable)) {
                     // If the variable is being constructed, then the incoming
                     // value is not used here; it didn't exist before
                     // construction. (The analysis doesn't get told where
@@ -290,18 +290,17 @@ function expressionIsMethodOnVariable(exp, variable)
     return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
 }
 
-// Return whether the edge terminates the live range of a variable's value when
-// searching in reverse through the CFG, by setting it to some new value.
-// Examples of killing 'obj's live range:
+// Return whether the edge starts the live range of a variable's value, by setting
+// it to some new value. Examples of starting obj's live range:
 //
 //     obj = foo;
 //     obj = foo();
 //     obj = foo(obj);         // uses previous value but then sets to new value
 //     SomeClass obj(true, 1); // constructor
 //
-function edgeKillsVariable(edge, variable)
+function edgeStartsValueLiveRange(edge, variable)
 {
-    // Direct assignments kill their lhs: var = value
+    // Direct assignments start live range of lhs: var = value
     if (edge.Kind == "Assign") {
         const [lhs, rhs] = edge.Exp;
         return (expressionIsVariable(lhs, variable) &&
@@ -311,14 +310,14 @@ function edgeKillsVariable(edge, variable)
     if (edge.Kind != "Call")
         return false;
 
-    // Assignments of call results kill their lhs.
+    // Assignments of call results start live range: var = foo()
     if (1 in edge.Exp) {
         var lhs = edge.Exp[1];
         if (expressionIsVariable(lhs, variable))
             return true;
     }
 
-    // Constructor calls kill their 'this' value.
+    // Constructor calls start live range of instance: SomeClass var(...)
     if ("PEdgeCallInstance" in edge) {
         var instance = edge.PEdgeCallInstance.Exp;
 
@@ -391,12 +390,12 @@ function bodyEatsVariable(variable, body, startpoint)
         for (const edge of successors[point]) {
             if (edgeMovesVariable(edge, variable))
                 return true;
-            // edgeKillsVariable will find places where 'variable' is given a
+            // edgeStartsValueLiveRange will find places where 'variable' is given a
             // new value. Never observed in practice, since this function is
             // only called with a temporary resulting from std::move(), which
             // is used immediately for a call. But just to be robust to future
             // uses:
-            if (!edgeKillsVariable(edge, variable))
+            if (!edgeStartsValueLiveRange(edge, variable))
                 work.push(edge.Index[1]);
         }
     }
@@ -426,11 +425,7 @@ function bodyEatsVariable(variable, body, startpoint)
 //     foo(uobj);
 //     gc();
 //
-// Compare to edgeKillsVariable: killing (in backwards direction) means the
-// variable's value was live and is no longer. Invalidating means it wasn't
-// actually live after all.
-//
-function edgeInvalidatesVariable(edge, variable, body)
+function edgeEndsValueLiveRange(edge, variable, body)
 {
     // var = nullptr;
     if (edge.Kind == "Assign") {
@@ -442,6 +437,17 @@ function edgeInvalidatesVariable(edge, variable, body)
         return false;
 
     var callee = edge.Exp[0];
+
+    if (edge.Type.Kind == 'Function' &&
+        edge.Exp[0].Kind == 'Var' &&
+        edge.Exp[0].Variable.Kind == 'Func' &&
+        edge.Exp[0].Variable.Name[1] == 'MarkVariableAsGCSafe' &&
+        edge.Exp[0].Variable.Name[0].includes("JS::detail::MarkVariableAsGCSafe") &&
+        expressionIsVariable(edge.PEdgeCallArguments.Exp[0], variable))
+    {
+        // explicit JS_HAZ_VARIABLE_IS_GC_SAFE annotation
+        return true;
+    }
 
     if (edge.Type.Kind == 'Function' &&
         edge.Exp[0].Kind == 'Var' &&
@@ -664,14 +670,14 @@ function findGCBeforeValueUse(start_body, start_point, suppressed, variable)
         for (var edge of predecessors[ppoint]) {
             var source = edge.Index[0];
 
-            if (edgeInvalidatesVariable(edge, variable, body)) {
+            if (edgeEndsValueLiveRange(edge, variable, body)) {
                 // Terminate the search through this point; we thought we were
                 // within the live range, but it turns out that the variable
                 // was set to a value that we don't care about.
                 continue;
             }
 
-            var edge_kills = edgeKillsVariable(edge, variable);
+            var edge_kills = edgeStartsValueLiveRange(edge, variable);
             var edge_uses = edgeUsesVariable(edge, variable, body);
 
             if (edge_kills || edge_uses) {
@@ -803,7 +809,7 @@ function variableLiveAcrossGC(suppressed, variable)
             //
 
             // Ignore uses that are just invalidating the previous value.
-            if (edgeInvalidatesVariable(edge, variable, body))
+            if (edgeEndsValueLiveRange(edge, variable, body))
                 continue;
 
             var usePoint = edgeUsesVariable(edge, variable, body);
