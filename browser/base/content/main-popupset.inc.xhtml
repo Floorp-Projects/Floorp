@@ -382,12 +382,7 @@
     <menuitem id="blockedPopupAllowSite"
               oncommand="gPopupBlockerObserver.toggleAllowPopupsForSite(event);"/>
     <menuitem
-#ifdef XP_WIN
-              label="&editPopupSettings.label;"
-#else
-              label="&editPopupSettingsUnix.label;"
-#endif
-              accesskey="&editPopupSettings.accesskey;"
+              data-l10n-id="edit-popup-settings"
               oncommand="gPopupBlockerObserver.editPopupSettings();"/>
     <menuitem id="blockedPopupDontShowMessage"
               data-l10n-id="popups-infobar-dont-show-message"

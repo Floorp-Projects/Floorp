@@ -736,6 +736,10 @@ popups-infobar-dont-show-message =
     .label = Don’t show this message when pop-ups are blocked
     .accesskey = D
 
+edit-popup-settings =
+    .label = Manage pop-up settings…
+    .accesskey = M
+
 picture-in-picture-hide-toggle =
     .label = Hide Picture-in-Picture Toggle
     .accesskey = H
