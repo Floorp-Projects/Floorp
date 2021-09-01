@@ -503,44 +503,6 @@ void nsHtml5StreamParser::SetupDecodingFromUtf16BogoXml(
   mLastBuffer->AdvanceEnd(3);
 }
 
-void nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const uint8_t* aBuf,
-                                                      size_t aBufLen) {
-  // Avoid underspecified heuristic craziness for XHR
-  if (mMode == LOAD_AS_DATA) {
-    return;
-  }
-  // Make sure there's enough data. Require room for "<title></title>"
-  if (aBufLen < 30) {
-    return;
-  }
-  // even-numbered bytes tracked at 0, odd-numbered bytes tracked at 1
-  bool byteZero[2] = {false, false};
-  bool byteNonZero[2] = {false, false};
-  uint32_t i = 0;
-  for (; i < aBufLen; ++i) {
-    if (aBuf[i]) {
-      if (byteNonZero[1 - (i % 2)]) {
-        return;
-      }
-      byteNonZero[i % 2] = true;
-    } else {
-      if (byteZero[1 - (i % 2)]) {
-        return;
-      }
-      byteZero[i % 2] = true;
-    }
-  }
-  if (byteNonZero[0]) {
-    mEncoding = UTF_16LE_ENCODING;
-  } else {
-    mEncoding = UTF_16BE_ENCODING;
-  }
-  mCharsetSource = kCharsetFromIrreversibleAutoDetection;
-  mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
-  DontGuessEncoding();
-  mTreeBuilder->MaybeComplainAboutCharset("EncBomlessUtf16", true, 0);
-}
-
 void nsHtml5StreamParser::SetEncodingFromExpat(const char16_t* aEncoding) {
   if (aEncoding) {
     nsDependentString utf16(aEncoding);
@@ -734,15 +696,9 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
       mEncoding = WrapNotNull(encoding);
       mCharsetSource = kCharsetFromXmlDeclaration;
       mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
-    } else if (mCharsetSource < kCharsetFromIrreversibleAutoDetection) {
-      // meta scan and XML declaration check failed.
-      // Check for BOMless UTF-16 with Basic
-      // Latin content for compat with IE. See bug 631751.
-      SniffBOMlessUTF16BasicLatin(buf, bufLen);
     }
   }
-  if (mForceAutoDetection &&
-      mCharsetSource != kCharsetFromIrreversibleAutoDetection) {
+  if (mForceAutoDetection) {
     // neither meta nor XML declaration found, honor override
     FinalizeSniffingWithDetector(aFromSegment, aCountToSniffingLimit, false);
     return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
