@@ -36,12 +36,6 @@
                   "AXSubrole",
                   "is",
                   "<nil>"
-               ],
-               [
-                  "property",
-                  "AXRoleDescription",
-                  "is",
-                  "group"
                ]
             ],
             "IAccessible2" : [
@@ -74,7 +68,7 @@
   <body>
   <p>This test examines the ARIA properties for presentation used on ul element with li children.</p>
     <ul role='presentation'>
-    <li id='test' aria-label='name to force inclusion'>item 1</li>
+    <li id='test' tabindex='0' aria-label='name to force inclusion'>item 1</li>
     <li>item 2</li>
   </ul>
 
