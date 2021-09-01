@@ -72,7 +72,6 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   NS_IMETHOD SetEchConfig(const nsACString& aEchConfig) override;
   NS_IMETHOD GetPeerId(nsACString& aResult) override;
   NS_IMETHOD GetRetryEchConfig(nsACString& aEchConfig) override;
-  NS_IMETHOD DisableEarlyData(void) override;
 
   PRStatus CloseSocketAndDestroy();
 
