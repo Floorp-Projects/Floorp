@@ -441,6 +441,21 @@ void nsNSSSocketInfo::SetSharedOwningReference(SharedSSLState* aRef) {
   mOwningSharedRef = aRef;
 }
 
+NS_IMETHODIMP
+nsNSSSocketInfo::DisableEarlyData() {
+  if (!mFd) {
+    return NS_OK;
+  }
+  if (IsCanceled()) {
+    return NS_OK;
+  }
+
+  if (SSL_OptionSet(mFd, SSL_ENABLE_0RTT_DATA, false) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 void nsSSLIOLayerHelpers::Cleanup() {
   MutexAutoLock lock(mutex);
   mTLSIntoleranceInfo.Clear();
