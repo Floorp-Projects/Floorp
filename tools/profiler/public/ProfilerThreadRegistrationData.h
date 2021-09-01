@@ -110,8 +110,8 @@ class ThreadRegistrationData {
   // Written from thread, read from thread and suspended thread.
   JSContext* mJSContext = nullptr;
 
-  // If mJSContext is not null, this points at the start of a JsFrameBuffer to
-  // be used for on-thread synchronous sampling.
+  // If mJSContext is not null AND the thread is being profiled, this points at
+  // the start of a JsFrameBuffer to be used for on-thread synchronous sampling.
   JsFrame* mJsFrameBuffer = nullptr;
 
   // The profiler needs to start and stop JS sampling of JS threads at various
@@ -362,9 +362,6 @@ class ThreadRegistrationUnlockedReaderAndAtomicRWOnThread
 
   [[nodiscard]] JSContext* GetJSContext() const { return mJSContext; }
 
-  // Not null when JSContext is not null. Points at the start of JsFrameBuffer.
-  [[nodiscard]] JsFrame* GetJsFrameBuffer() const { return mJsFrameBuffer; }
-
  protected:
   ThreadRegistrationUnlockedReaderAndAtomicRWOnThread(const char* aName,
                                                       const void* aStackTop)
@@ -381,6 +378,10 @@ class ThreadRegistrationLockedRWFromAnyThread
   void SetIsBeingProfiledWithProfiledThreadData(
       ProfiledThreadData* aProfiledThreadData, const PSAutoLock&);
   void ClearIsBeingProfiledAndProfiledThreadData(const PSAutoLock&);
+
+  // Not null when JSContext is not null AND this thread is being profiled.
+  // Points at the start of JsFrameBuffer.
+  [[nodiscard]] JsFrame* GetJsFrameBuffer() const { return mJsFrameBuffer; }
 
   [[nodiscard]] const nsCOMPtr<nsIEventTarget> GetEventTarget() const {
     return mThread;

@@ -2339,9 +2339,25 @@ static void DoSyncSample(
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
   aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
-  DoSharedSample(/* aIsSynchronous = */ true, aFeatures, aThreadData,
-                 aThreadData.GetJsFrameBuffer(), aRegs, samplePos,
-                 bufferRangeStart, aBuffer, aCaptureOptions);
+  if (!aThreadData.GetJSContext()) {
+    // No JSContext, there is no JS frame buffer (and no need for it).
+    DoSharedSample(/* aIsSynchronous = */ true, aFeatures, aThreadData,
+                   /* aJsFrames = */ nullptr, aRegs, samplePos,
+                   bufferRangeStart, aBuffer, aCaptureOptions);
+  } else {
+    // JSContext is present, we need to lock the thread data to access the JS
+    // frame buffer.
+    ThreadRegistration::WithOnThreadRef([&](ThreadRegistration::OnThreadRef
+                                                aOnThreadRef) {
+      aOnThreadRef.WithConstLockedRWOnThread(
+          [&](const ThreadRegistration::LockedRWOnThread& aLockedThreadData) {
+            DoSharedSample(/* aIsSynchronous = */ true, aFeatures, aThreadData,
+                           aLockedThreadData.GetJsFrameBuffer(), aRegs,
+                           samplePos, bufferRangeStart, aBuffer,
+                           aCaptureOptions);
+          });
+    });
+  }
 }
 
 // Writes the components of a periodic sample to ActivePS's ProfileBuffer.
@@ -5773,9 +5789,26 @@ void profiler_suspend_and_sample_thread(ProfilerThreadId aThreadId,
                 // TODO: Remove this lock when on-thread sampling doesn't
                 // require it anymore.
                 PSAutoLock lock;
-                profiler_suspend_and_sample_thread(
-                    lock, aThreadData, aThreadData.GetJsFrameBuffer(), true,
-                    aFeatures, aCollector, aSampleNative);
+                if (!aThreadData.GetJSContext()) {
+                  // No JSContext, there is no JS frame buffer (and no need for
+                  // it).
+                  profiler_suspend_and_sample_thread(
+                      lock, aThreadData, /* aJsFrames = */ nullptr,
+                      /* aIsSynchronous = */ true, aFeatures, aCollector,
+                      aSampleNative);
+                } else {
+                  // JSContext is present, we need to lock the thread data to
+                  // access the JS frame buffer.
+                  aOnThreadRef.WithConstLockedRWOnThread(
+                      [&](const ThreadRegistration::LockedRWOnThread&
+                              aLockedThreadData) {
+                        profiler_suspend_and_sample_thread(
+                            lock, aThreadData,
+                            aLockedThreadData.GetJsFrameBuffer(),
+                            /* aIsSynchronous = */ true, aFeatures, aCollector,
+                            aSampleNative);
+                      });
+                }
               });
         });
   } else {
@@ -5788,7 +5821,8 @@ void profiler_suspend_and_sample_thread(ProfilerThreadId aThreadId,
                       aThreadData) {
                 JsFrameBuffer& jsFrames = CorePS::JsFrames(lock);
                 profiler_suspend_and_sample_thread(lock, aThreadData, jsFrames,
-                                                   false, aFeatures, aCollector,
+                                                   /* aIsSynchronous = */ false,
+                                                   aFeatures, aCollector,
                                                    aSampleNative);
               });
         });
