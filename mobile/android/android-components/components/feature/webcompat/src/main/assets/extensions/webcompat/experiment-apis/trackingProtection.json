@@ -4,6 +4,18 @@
     "description": "experimental API allow requests through ETP",
     "functions": [
       {
+        "name": "isDFPIActive",
+        "type": "function",
+        "description": "Returns whether dFPI is active for private/non-private browsing tabs",
+        "parameters": [
+          {
+            "type": "boolean",
+            "name": "isPrivate"
+          }
+        ],
+        "async": true
+      },
+      {
         "name": "shim",
         "type": "function",
         "description": "Set specified URL patterns as intended to be shimmed",
