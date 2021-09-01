@@ -1933,6 +1933,38 @@ static Shape* GetFunctionShape(JSContext* cx, const JSClass* clasp,
       cx, clasp, cx->realm(), TaggedProto(proto), nfixed, ObjectFlags());
 }
 
+Shape* GlobalObject::createFunctionShapeWithDefaultProto(JSContext* cx,
+                                                         bool extended) {
+  GlobalObjectData& data = cx->global()->data();
+  HeapPtr<Shape*>& shapeRef = extended
+                                  ? data.extendedFunctionShapeWithDefaultProto
+                                  : data.functionShapeWithDefaultProto;
+  MOZ_ASSERT(!shapeRef);
+
+  RootedObject proto(cx,
+                     GlobalObject::getOrCreatePrototype(cx, JSProto_Function));
+  if (!proto) {
+    return nullptr;
+  }
+
+  // Creating %Function.prototype% can end up initializing the shape.
+  if (shapeRef) {
+    return shapeRef;
+  }
+
+  gc::AllocKind allocKind =
+      extended ? gc::AllocKind::FUNCTION_EXTENDED : gc::AllocKind::FUNCTION;
+  const JSClass* clasp = FunctionClassForAllocKind(allocKind);
+
+  Shape* shape = GetFunctionShape(cx, clasp, proto, allocKind);
+  if (!shape) {
+    return nullptr;
+  }
+
+  shapeRef.init(shape);
+  return shape;
+}
+
 JSFunction* js::NewFunctionWithProto(
     JSContext* cx, Native native, unsigned nargs, FunctionFlags flags,
     HandleObject enclosingEnv, HandleAtom atom, HandleObject proto,
@@ -1949,8 +1981,8 @@ JSFunction* js::NewFunctionWithProto(
 
   RootedShape shape(cx);
   if (!proto) {
-    JSObject* funProto = &cx->global()->getPrototype(JSProto_Function);
-    shape = GetFunctionShape(cx, clasp, funProto, allocKind);
+    bool extended = (allocKind == gc::AllocKind::FUNCTION_EXTENDED);
+    shape = GlobalObject::getFunctionShapeWithDefaultProto(cx, extended);
   } else {
     shape = GetFunctionShape(cx, clasp, proto, allocKind);
   }
