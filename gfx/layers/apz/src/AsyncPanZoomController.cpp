@@ -5792,7 +5792,8 @@ void AsyncPanZoomController::SetState(PanZoomState aNewState) {
   // Intentional scoping for mutex
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    APZC_LOG("%p changing from state %d to %d\n", this, mState, aNewState);
+    APZC_LOG("%p changing from state %s to %s\n", this,
+             ToString(mState).c_str(), ToString(aNewState).c_str());
     oldState = mState;
     mState = aNewState;
   }
@@ -6114,6 +6115,64 @@ void AsyncPanZoomController::SetZoomAnimationId(
 Maybe<uint64_t> AsyncPanZoomController::GetZoomAnimationId() const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   return mZoomAnimationId;
+}
+
+std::ostream& operator<<(std::ostream& aOut,
+                         const AsyncPanZoomController::PanZoomState& aState) {
+  switch (aState) {
+    case AsyncPanZoomController::PanZoomState::NOTHING:
+      aOut << "NOTHING";
+      break;
+    case AsyncPanZoomController::PanZoomState::FLING:
+      aOut << "FLING";
+      break;
+    case AsyncPanZoomController::PanZoomState::TOUCHING:
+      aOut << "TOUCHING";
+      break;
+    case AsyncPanZoomController::PanZoomState::PANNING:
+      aOut << "PANNING";
+      break;
+    case AsyncPanZoomController::PanZoomState::PANNING_LOCKED_X:
+      aOut << "PANNING_LOCKED_X";
+      break;
+    case AsyncPanZoomController::PanZoomState::PANNING_LOCKED_Y:
+      aOut << "PANNING_LOCKED_Y";
+      break;
+    case AsyncPanZoomController::PanZoomState::PAN_MOMENTUM:
+      aOut << "PAN_MOMENTUM";
+      break;
+    case AsyncPanZoomController::PanZoomState::PINCHING:
+      aOut << "PINCHING";
+      break;
+    case AsyncPanZoomController::PanZoomState::ANIMATING_ZOOM:
+      aOut << "ANIMATING_ZOOM";
+      break;
+    case AsyncPanZoomController::PanZoomState::OVERSCROLL_ANIMATION:
+      aOut << "OVERSCROLL_ANIMATION";
+      break;
+    case AsyncPanZoomController::PanZoomState::SMOOTH_SCROLL:
+      aOut << "SMOOTH_SCROLL";
+      break;
+    case AsyncPanZoomController::PanZoomState::SMOOTHMSD_SCROLL:
+      aOut << "SMOOTHMSD_SCROLL";
+      break;
+    case AsyncPanZoomController::PanZoomState::WHEEL_SCROLL:
+      aOut << "WHEEL_SCROLL";
+      break;
+    case AsyncPanZoomController::PanZoomState::KEYBOARD_SCROLL:
+      aOut << "KEYBOARD_SCROLL";
+      break;
+    case AsyncPanZoomController::PanZoomState::AUTOSCROLL:
+      aOut << "AUTOSCROLL";
+      break;
+    case AsyncPanZoomController::PanZoomState::SCROLLBAR_DRAG:
+      aOut << "SCROLLBAR_DRAG";
+      break;
+    default:
+      aOut << "UNKNOWN_STATE";
+      break;
+  }
+  return aOut;
 }
 
 }  // namespace layers
