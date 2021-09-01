@@ -527,7 +527,7 @@ class MachCommands(MachCommandBase):
             return self.run_android_test(tests, symbols_path, manifest_path, log)
 
         return self.run_desktop_test(
-            tests, symbols_path, manifest_path, utility_path, log
+            command_context, tests, symbols_path, manifest_path, utility_path, log
         )
 
     def run_desktop_test(
