@@ -207,15 +207,6 @@ class GLXLibrary final {
 
   ////
 
-  GLXPixmap CreatePixmap(gfxASurface* aSurface);
-  void DestroyPixmap(Display* aDisplay, GLXPixmap aPixmap);
-  void BindTexImage(Display* aDisplay, GLXPixmap aPixmap);
-  void ReleaseTexImage(Display* aDisplay, GLXPixmap aPixmap);
-  void UpdateTexImage(Display* aDisplay, GLXPixmap aPixmap);
-
-  ////
-
-  bool UseTextureFromPixmap() { return mUseTextureFromPixmap; }
   bool HasRobustness() { return mHasRobustness; }
   bool HasVideoMemoryPurge() { return mHasVideoMemoryPurge; }
   bool HasCreateContextAttribs() { return mHasCreateContextAttribs; }
@@ -271,7 +262,6 @@ class GLXLibrary final {
 
   bool mInitialized = false;
   bool mTriedInitializing = false;
-  bool mUseTextureFromPixmap = false;
   bool mDebug = false;
   bool mHasRobustness = false;
   bool mHasVideoMemoryPurge = false;
