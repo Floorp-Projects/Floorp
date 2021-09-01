@@ -56,6 +56,8 @@ class TextLeafAccessible;
 class XULLabelAccessible;
 class XULTreeAccessible;
 
+enum class CacheUpdateType;
+
 #ifdef A11Y_LOG
 namespace logging {
 typedef const char* (*GetTreePrefix)(void* aData, LocalAccessible*);
@@ -883,7 +885,8 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual bool IsRemote() const override { return false; }
 
-  already_AddRefed<AccAttributes> BundleFieldsForCache(uint64_t aCacheDomain);
+  already_AddRefed<AccAttributes> BundleFieldsForCache(
+      uint64_t aCacheDomain, CacheUpdateType aUpdateType);
 
  protected:
   virtual ~LocalAccessible();
