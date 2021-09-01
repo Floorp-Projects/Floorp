@@ -79,6 +79,14 @@ class NetworkEventWatcher {
   }
 
   /**
+   * Instruct to save or ignore request and response bodies
+   * @param {Boolean} save
+   */
+  setSaveRequestAndResponseBodies(save) {
+    this.listener.saveRequestAndResponseBodies = save;
+  }
+
+  /**
    * Block requests based on the filters
    * @param {Object} filters
    */

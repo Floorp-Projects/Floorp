@@ -168,6 +168,9 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.SERVER_SENT_EVENT]: hasBrowserElement,
           [Resources.TYPES.WEBSOCKET]: hasBrowserElement,
         },
+
+        // @backward-compat { version 93 } Starts supporting setSaveRequestAndResponseBodies on the NetworkParent actor
+        saveRequestAndResponseBodies: true,
       },
     };
   },
