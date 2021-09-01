@@ -192,6 +192,11 @@ class GlobalObjectData {
                                PlainObjectSlotsKind::Limit, HeapPtr<Shape*>>;
   PlainObjectShapeArray plainObjectShapesWithDefaultProto;
 
+  // Shape for JSFunction with %Function.prototype% as proto, for both
+  // non-extended and extended functions.
+  HeapPtr<Shape*> functionShapeWithDefaultProto;
+  HeapPtr<Shape*> extendedFunctionShapeWithDefaultProto;
+
   // Global state for regular expressions.
   UniquePtr<RegExpStatics> regExpStatics;
 
@@ -1037,6 +1042,18 @@ class GlobalObject : public NativeObject {
   }
   static Shape* createPlainObjectShapeWithDefaultProto(JSContext* cx,
                                                        gc::AllocKind kind);
+
+  static Shape* getFunctionShapeWithDefaultProto(JSContext* cx, bool extended) {
+    GlobalObjectData& data = cx->global()->data();
+    Shape* shape = extended ? data.extendedFunctionShapeWithDefaultProto
+                            : data.functionShapeWithDefaultProto;
+    if (MOZ_LIKELY(shape)) {
+      return shape;
+    }
+    return createFunctionShapeWithDefaultProto(cx, extended);
+  }
+  static Shape* createFunctionShapeWithDefaultProto(JSContext* cx,
+                                                    bool extended);
 
   // Returns an object that represents the realm, used by embedder.
   static JSObject* getOrCreateRealmKeyObject(JSContext* cx,

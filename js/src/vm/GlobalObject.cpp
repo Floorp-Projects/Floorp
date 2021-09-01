@@ -1198,6 +1198,11 @@ void GlobalObjectData::trace(JSTracer* trc) {
     TraceNullableEdge(trc, &shape, "global-plain-shape");
   }
 
+  TraceNullableEdge(trc, &functionShapeWithDefaultProto,
+                    "global-function-shape");
+  TraceNullableEdge(trc, &extendedFunctionShapeWithDefaultProto,
+                    "global-ext-function-shape");
+
   if (regExpStatics) {
     regExpStatics->trace(trc);
   }
