@@ -108,8 +108,8 @@ static ICUResult FillBufferWithICUCall(Buffer& buffer,
  * A variant of FillBufferWithICUCall that accepts a mozilla::Vector rather than
  * a Buffer.
  */
-template <typename ICUStringFunction, size_t InlineSize>
-static ICUResult FillVectorWithICUCall(Vector<char16_t, InlineSize>& vector,
+template <typename ICUStringFunction, size_t InlineSize, typename CharType>
+static ICUResult FillVectorWithICUCall(Vector<CharType, InlineSize>& vector,
                                        const ICUStringFunction& strFn) {
   UErrorCode status = U_ZERO_ERROR;
   int32_t length = strFn(vector.begin(), vector.capacity(), &status);
