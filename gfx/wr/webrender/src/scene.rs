@@ -42,6 +42,11 @@ impl SceneProperties {
         }
     }
 
+    /// Reset the pending properties without flush.
+    pub fn reset_properties(&mut self) {
+        self.pending_properties = None;
+    }
+
     /// Set the current property list for this display list.
     pub fn set_properties(&mut self, properties: DynamicProperties) {
         self.pending_properties = Some(properties);
