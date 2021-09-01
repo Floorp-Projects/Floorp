@@ -25,7 +25,7 @@ fn main() {
         upload_enabled: true,
         max_events: None,
         delay_ping_lifetime_io: false,
-        app_build: "unknown".into(),
+        app_build: env!("CARGO_PKG_VERSION").into(),
         use_core_mps: false,
     };
     let mut glean = Glean::new(cfg).unwrap();
