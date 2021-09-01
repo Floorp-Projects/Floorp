@@ -105,16 +105,16 @@ add_task(async function runTests() {
   // Test if the cookie blocking info is hidden for strict mode if
   // cookieBehaviors both are BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN in
   // the strict feature value.
-  await testCookieBlockingInfoStandard(
-    "tp,tpPrivate,cookieBehavior5,cookieBehaviorPBM5,cm,fp,stp,lvl2",
+  await testCookieBlockingInfoStrict(
+    "tp,tpPrivate,cookieBehavior5,cookieBehaviorPBM5,cm,fp,stp,lvl2,rp",
     false
   );
 
   // Test if the cookie blocking info is shown for strict mode if the regular
   // cookieBehavior is BEHAVIOR_REJECT_TRACKER and the private cookieBehavior is
   // BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
-  await testCookieBlockingInfoStandard(
-    "tp,tpPrivate,cookieBehavior4,cookieBehaviorPBM5,cm,fp,stp,lvl2",
+  await testCookieBlockingInfoStrict(
+    "tp,tpPrivate,cookieBehavior4,cookieBehaviorPBM5,cm,fp,stp,lvl2,rp",
     true
   );
 
