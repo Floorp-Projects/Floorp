@@ -1921,6 +1921,10 @@ pub extern "C" fn wr_transaction_append_dynamic_properties(
     color_array: *const WrColorProperty,
     color_count: usize,
 ) {
+    if opacity_count == 0 && transform_count == 0 && color_count == 0 {
+        return;
+    }
+
     let mut properties = DynamicProperties {
         transforms: Vec::with_capacity(transform_count),
         floats: Vec::with_capacity(opacity_count),
