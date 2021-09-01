@@ -707,8 +707,15 @@ bool ReferrerInfo::ShouldIgnoreLessRestrictedPolicies(
   }
 
   bool isCrossSite = IsCrossSiteRequest(aChannel);
+  bool isPrivate = NS_UsePrivateBrowsing(aChannel);
+  bool isEnabled =
+      isPrivate
+          ? StaticPrefs::
+                network_http_referer_disallowCrossSiteRelaxingDefault_pbmode()
+          : StaticPrefs::
+                network_http_referer_disallowCrossSiteRelaxingDefault();
 
-  if (!StaticPrefs::network_http_referer_disallowCrossSiteRelaxingDefault()) {
+  if (!isEnabled) {
     // Log the warning message to console to inform that we will ignore
     // less restricted policies for cross-site requests in the future.
     if (isCrossSite) {
