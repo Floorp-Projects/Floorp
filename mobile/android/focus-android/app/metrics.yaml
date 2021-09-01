@@ -115,6 +115,40 @@ browser.search:
       - android-probes@mozilla.com
     expires: "2022-07-01"
 
+mozilla_products:
+  has_fenix_installed:
+    type: boolean
+    lifetime: application
+    description: |
+       If Fenix is installed on the users's device.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5295
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5303
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-09-01"
+  is_fenix_default_browser:
+    type: boolean
+    lifetime: application
+    description: |
+      Fenix is the default browser on user's device
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5295
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5303
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
+
 settings_screen:
   whats_new_tapped:
     type: counter

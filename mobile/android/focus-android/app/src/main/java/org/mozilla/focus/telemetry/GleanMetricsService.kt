@@ -23,6 +23,7 @@ import org.mozilla.focus.Components
 import org.mozilla.focus.GleanMetrics.Browser
 import org.mozilla.focus.GleanMetrics.GleanBuildInfo
 import org.mozilla.focus.GleanMetrics.LegacyIds
+import org.mozilla.focus.GleanMetrics.MozillaProducts
 import org.mozilla.focus.GleanMetrics.Pings
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.GleanMetrics.TrackingProtection
@@ -70,7 +71,7 @@ class GleanMetricsService(context: Context) : MetricsService {
         GlobalScope.launch(IO) {
 
             // Wait for preferences to be collected before we send the activation ping.
-            collectPrefMetrics(components, settings).await()
+            collectPrefMetrics(components, settings, context).await()
 
             // Set the client ID in Glean as part of the deletion-request.
             LegacyIds.clientId.set(UUID.fromString(TelemetryWrapper.clientId))
@@ -88,12 +89,21 @@ class GleanMetricsService(context: Context) : MetricsService {
 
     private fun collectPrefMetrics(
         components: Components,
-        settings: Settings
+        settings: Settings,
+        context: Context
     ) = CoroutineScope(IO).async {
+        val installedBrowsers = BrowsersCache.all(context)
+        val hasFenixInstalled = installedBrowsers.hasFirefoxBrandedBrowserInstalled
+        val isFenixDefaultBrowser = installedBrowsers.isFirefoxDefaultBrowser
+
         Browser.isDefault.set(settings.isDefaultBrowser())
         Browser.localeOverride.set(components.store.state.locale?.displayName ?: "none")
         val shortcutsOnHomeNumber = components.appStore.state.topSites.size.toLong()
         Shortcuts.shortcutsOnHomeNumber.set(shortcutsOnHomeNumber)
+
+        // Fenix telemetry
+        MozillaProducts.hasFenixInstalled.set(hasFenixInstalled)
+        MozillaProducts.isFenixDefaultBrowser.set(isFenixDefaultBrowser)
 
         // tracking protection metrics
         TrackingProtection.hasAdvertisingBlocked.set(settings.hasAdvertisingBlocked())
