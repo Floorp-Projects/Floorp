@@ -301,7 +301,6 @@ static void TestConstUnlockedReaderAndAtomicRWOnThread(
                                        aThreadId);
 
   EXPECT_EQ(aData.GetJSContext(), nullptr);
-  EXPECT_EQ(aData.GetJsFrameBuffer(), nullptr);
 };
 
 static void TestUnlockedRWForLockedProfiler(
@@ -343,6 +342,7 @@ static void TestConstLockedRWFromAnyThread(
                                              aAfterRegistration, aOnStackObject,
                                              aThreadId);
 
+  EXPECT_EQ(aData.GetJsFrameBuffer(), nullptr);
   EXPECT_EQ(aData.GetEventTarget(), nullptr);
 };
 
