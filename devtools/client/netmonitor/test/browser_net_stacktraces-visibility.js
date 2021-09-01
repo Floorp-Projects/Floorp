@@ -13,7 +13,7 @@ add_task(async function() {
   const REQUEST =
     "http://example.com/browser/devtools/client/netmonitor/test/request_0";
 
-  const { tab, monitor } = await initNetMonitor(URL, {
+  const { monitor } = await initNetMonitor(URL, {
     requestCount: 1,
   });
 
@@ -27,7 +27,7 @@ add_task(async function() {
   const allRequestsVisible = waitUntil(
     () => document.querySelectorAll(".request-list-item").length == 2
   );
-  await refreshTab(tab);
+  await reloadBrowser();
   await allRequestsVisible;
 
   const onStackTracesVisible = waitUntil(

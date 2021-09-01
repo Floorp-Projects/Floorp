@@ -71,7 +71,7 @@ async function testNavigation() {
   await waitUntil(() => hasCookieData("foo", "bar"));
 
   // reload the current page, and check again
-  await refreshTab();
+  await reloadBrowser();
   // wait for storage tree refresh, and check host
   info("Waiting for storage tree to refresh and show correct host…");
   await waitUntil(() => isInTree(doc, ["cookies", "http://example.net"]));

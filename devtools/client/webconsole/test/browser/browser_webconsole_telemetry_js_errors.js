@@ -18,7 +18,7 @@ add_task(async function() {
   await waitFor(() => findMessage(hud, "is not a function"));
   checkErrorDisplayedTelemetry("JSMSG_NOT_FUNCTION", 1);
 
-  await refreshTab();
+  await reloadBrowser();
 
   info("Reloading the page (and having the same error) increments the sum");
   await waitFor(() => findMessage(hud, "is not a function"));

@@ -36,7 +36,7 @@ async function testWarningNotPresent(hud) {
   info(
     "wait for the page to refresh and make sure the warning still isn't there"
   );
-  await refreshTab();
+  await reloadBrowser();
   await waitFor(() => {
     // We need to wait for 3 messages because there are two logs, plus the
     // navigation message since messages are persisted
@@ -51,7 +51,7 @@ async function testWarningPresent(hud) {
   await waitFor(() => findMessage(hud, "logging API"));
 
   info("reload the test page and wait for the warning to show");
-  await refreshTab();
+  await reloadBrowser();
   await waitFor(() => {
     return findMessages(hud, "logging API").length === 2;
   });

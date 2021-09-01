@@ -136,7 +136,7 @@ add_task(async function() {
       !state.grids[3].highlighted &&
       state.grids[3].disabled
   );
-  await refreshTab();
+  await reloadBrowser();
   await onStateRestored;
   await onGridListRestored;
 

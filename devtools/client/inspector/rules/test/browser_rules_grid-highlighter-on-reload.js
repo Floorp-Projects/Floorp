@@ -28,7 +28,7 @@ add_task(async function() {
   info("Close the toolbox before reloading the tab");
   await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
 
-  await refreshTab();
+  await reloadBrowser();
 
   info(
     "Check that the grid highlighter can be displayed after reloading the page"
