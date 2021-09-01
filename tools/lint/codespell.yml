@@ -57,6 +57,7 @@ codespell:
         - tools/tryselect/
         - uriloader/docs/
     exclude:
+        - devtools/docs/tools/storage/
         - tools/lint/cpp/mingw-headers.txt
         - tools/lint/test/test_codespell.py
     # List of extensions coming from:
