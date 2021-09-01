@@ -166,5 +166,10 @@ interface nsISSLSocketControl : nsISupports {
      * The echConfig that should be used to retry for the connection setup.
      */
     readonly attribute ACString retryEchConfig;
+
+    /**
+     * Disable early data.
+     */
+    [noscript] void disableEarlyData();
 };
 
