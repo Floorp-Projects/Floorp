@@ -613,12 +613,12 @@ PlacesController.prototype = {
       }
 
       if (item.id === "placesContext_deleteBookmark") {
-        document.l10n.setAttributes(item, "places-remove-bookmark", {
+        document.l10n.setAttributes(item, "places-delete-bookmark", {
           count: metadata.length,
         });
       }
       if (item.id === "placesContext_deleteFolder") {
-        document.l10n.setAttributes(item, "places-remove-folder", {
+        document.l10n.setAttributes(item, "places-delete-folder", {
           count: metadata.length,
         });
       }
