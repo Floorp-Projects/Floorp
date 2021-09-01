@@ -10596,7 +10596,7 @@
 
 - name: privacy.partition.bloburl_per_agent_cluster
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: privacy.window.name.update.enabled
