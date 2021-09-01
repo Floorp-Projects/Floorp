@@ -31,7 +31,7 @@ inline const char* GetFunctionNameBytes(JSContext* cx, JSFunction* fun,
 
 inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
                                        HandleObject enclosingEnv,
-                                       HandleObject proto = nullptr) {
+                                       HandleObject proto) {
   // These intermediate variables are needed to avoid link errors on some
   // platforms.  Sigh.
   gc::AllocKind finalizeKind = gc::AllocKind::FUNCTION;
