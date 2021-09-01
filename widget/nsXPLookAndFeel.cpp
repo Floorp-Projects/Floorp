@@ -206,6 +206,8 @@ static const char sColorPrefs[][41] = {
     "ui.widget3DShadow",
     "ui.textBackground",
     "ui.textForeground",
+    "ui.textSelectBackground",
+    "ui.textSelectForeground",
     "ui.textSelectBackgroundDisabled",
     "ui.textSelectBackgroundAttention",
     "ui.textHighlightBackground",
@@ -267,8 +269,8 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-dragtargetzone",
     "ui.-moz-cellhighlight",
     "ui.-moz_cellhighlighttext",
-    "ui.selecteditem",
-    "ui.selecteditemtext",
+    "ui.-moz-html-cellhighlight",
+    "ui.-moz-html-cellhighlighttext",
     "ui.-moz-buttonhoverface",
     "ui.-moz_buttonhovertext",
     "ui.-moz_menuhover",
@@ -474,11 +476,8 @@ nsXPLookAndFeel::~nsXPLookAndFeel() {
 static bool IsSpecialColor(LookAndFeel::ColorID aID, nscolor aColor) {
   using ColorID = LookAndFeel::ColorID;
 
-  if (aColor == NS_SAME_AS_FOREGROUND_COLOR) {
-    return true;
-  }
-
   switch (aID) {
+    case ColorID::TextSelectForeground:
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::IMERawInputBackground:
@@ -551,8 +550,8 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
     COLOR(MozDragtargetzone, 0xFF, 0xFF, 0xFF)
     COLOR(MozCellhighlight, 0xF0, 0xF0, 0xF0)
     COLOR(MozCellhighlighttext, 0x00, 0x00, 0x00)
-    COLOR(Selecteditem, 0x33, 0x99, 0xFF)
-    COLOR(Selecteditemtext, 0xFF, 0xFF, 0xFF)
+    COLOR(MozHtmlCellhighlight, 0x33, 0x99, 0xFF)
+    COLOR(MozHtmlCellhighlighttext, 0xFF, 0xFF, 0xFF)
     COLOR(MozButtonhoverface, 0xF0, 0xF0, 0xF0)
     COLOR(MozGtkButtonactivetext, 0x00, 0x00, 0x00)
     COLOR(MozButtonhovertext, 0x00, 0x00, 0x00)
@@ -1053,6 +1052,8 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
     case ColorID::Widget3DShadow:
     case ColorID::TextBackground:
     case ColorID::TextForeground:
+    case ColorID::TextSelectBackground:
+    case ColorID::TextSelectForeground:
     case ColorID::TextSelectBackgroundDisabled:
     case ColorID::TextSelectBackgroundAttention:
     case ColorID::TextHighlightBackground:

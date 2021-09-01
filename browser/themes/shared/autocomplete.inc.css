@@ -38,8 +38,8 @@
 }
 
 .autocomplete-richlistitem[selected] {
-  background-color: SelectedItem;
-  color: SelectedItemText;
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 /* Autocomplete richlistitem support for a two-line label display */
@@ -100,7 +100,7 @@
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"][selected] > .two-line-wrapper > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"][selected] > .two-line-wrapper > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon[selected] {
-  fill: SelectedItemText;
+  fill: HighlightText;
 }
 
 /* Login form autocompletion with origin showing and generated passwords */

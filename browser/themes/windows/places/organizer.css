@@ -10,11 +10,11 @@
   --organizer-pane-background: -moz-Dialog;
   --organizer-content-background: -moz-Dialog;
 
-  --organizer-hover-background: SelectedItem;
-  --organizer-hover-color: SelectedItemText;
-  --organizer-selected-background: SelectedItem;
-  --organizer-selected-color: SelectedItemText;
-  --organizer-outline-color: SelectedItem;
+  --organizer-hover-background: Highlight;
+  --organizer-hover-color: HighlightText;
+  --organizer-selected-background: Highlight;
+  --organizer-selected-color: HighlightText;
+  --organizer-outline-color: Highlight;
 
   --organizer-separator-color: ThreeDDarkShadow;
   --organizer-border-color: ThreeDShadow;
