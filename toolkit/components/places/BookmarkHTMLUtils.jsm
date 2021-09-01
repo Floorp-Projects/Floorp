@@ -204,7 +204,7 @@ var BookmarkHTMLUtils = Object.freeze({
   ) {
     notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aInitialImport);
     try {
-      if (!(await IOUtils.exists(aFilePath))) {
+      if (!(await OS.File.exists(aFilePath))) {
         throw new Error(
           "Cannot import from nonexisting html file: " + aFilePath
         );

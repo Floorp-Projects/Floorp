@@ -51,12 +51,13 @@ async function addBookmarks() {
  * @return {Promise}
  * @resolves to an OS.File path
  */
-async function promiseFile(aBasename) {
+function promiseFile(aBasename) {
   let path = OS.Path.join(OS.Constants.Path.profileDir, aBasename);
   info("opening " + path);
-
-  await IOUtils.writeUTF8(path, "");
-  return path;
+  return OS.File.open(path, { truncate: true }).then(aFile => {
+    aFile.close();
+    return path;
+  });
 }
 
 /**
@@ -117,7 +118,9 @@ async function checkObservers(expectPromises, expectedData) {
  */
 async function teardown(file, begin, success, fail) {
   // On restore failed, file may not exist, so wrap in try-catch.
-  await IOUtils.remove(file, { ignoreAbsent: true });
+  try {
+    await OS.File.remove(file, { ignoreAbsent: true });
+  } catch (e) {}
 
   // clean up bookmarks
   await PlacesUtils.bookmarks.eraseEverything();
@@ -185,7 +188,7 @@ add_task(async function test_json_restore_nonexist() {
   );
 
   await checkObservers(expectPromises, expectedData);
-  await teardown(file.path);
+  await teardown(file);
 });
 
 add_task(async function test_html_restore_normal() {
@@ -250,7 +253,7 @@ add_task(async function test_html_restore_nonexist() {
   );
 
   await checkObservers(expectPromises, expectedData);
-  await teardown(file.path);
+  await teardown(file);
 });
 
 add_task(async function test_html_init_restore_normal() {
@@ -315,5 +318,5 @@ add_task(async function test_html_init_restore_nonexist() {
   );
 
   await checkObservers(expectPromises, expectedData);
-  await teardown(file.path);
+  await teardown(file);
 });

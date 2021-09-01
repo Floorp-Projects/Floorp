@@ -115,7 +115,7 @@ var BookmarkJSONUtils = Object.freeze({
   ) {
     notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aReplace);
     try {
-      if (!(await IOUtils.exists(aFilePath))) {
+      if (!(await OS.File.exists(aFilePath))) {
         throw new Error("Cannot restore from nonexisting json file");
       }
 
@@ -138,14 +138,13 @@ var BookmarkJSONUtils = Object.freeze({
   /**
    * Serializes bookmarks using JSON, and writes to the supplied file path.
    *
-   * @param {path} aFilePath
-   *   Path string for the bookmarks file to be created.
-   * @param {object} [aOptions]
-   * @param {string} [failIfHashIs]
-   *   If the generated file would have the same hash defined here, will reject
-   *   with ex.becauseSameHash
-   * @param {boolean} [compress]
-   *   If true, writes file using lz4 compression
+   * @param aFilePath
+   *        OS.File path string for the bookmarks file to be created.
+   * @param [optional] aOptions
+   *        Object containing options for the export:
+   *         - failIfHashIs: if the generated file would have the same hash
+   *                         defined here, will reject with ex.becauseSameHash
+   *         - compress: if true, writes file using lz4 compression
    * @return {Promise}
    * @resolves once the file has been created, to an object with the
    *           following properties:
@@ -177,10 +176,12 @@ var BookmarkJSONUtils = Object.freeze({
     // Do not write to the tmp folder, otherwise if it has a different
     // filesystem writeAtomic will fail.  Eventual dangling .tmp files should
     // be cleaned up by the caller.
-    await IOUtils.writeUTF8(aFilePath, jsonString, {
-      compress: aOptions.compress,
-      tmpPath: OS.Path.join(aFilePath + ".tmp"),
-    });
+    let writeOptions = { tmpPath: OS.Path.join(aFilePath + ".tmp") };
+    if (aOptions.compress) {
+      writeOptions.compression = "lz4";
+    }
+
+    await OS.File.writeAtomic(aFilePath, jsonString, writeOptions);
     return { count, hash };
   },
 });
@@ -228,10 +229,10 @@ BookmarkImporter.prototype = {
   importFromCompressedFile: async function BI_importFromCompressedFile(
     aFilePath
   ) {
-    // We read as UTF8 rather than JSON, as PlacesUtils.unwrapNodes expects
-    // a JSON string.
-    let result = await IOUtils.readUTF8(aFilePath, { decompress: true });
-    await this.importFromJSON(result);
+    let aResult = await OS.File.read(aFilePath, { compression: "lz4" });
+    let decoder = new TextDecoder();
+    let jsonString = decoder.decode(aResult);
+    await this.importFromJSON(jsonString);
   },
 
   /**

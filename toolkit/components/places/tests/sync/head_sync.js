@@ -428,6 +428,6 @@ function expectBookmarkChangeNotifications(options) {
 async function setupFixtureFile(fixturePath) {
   let fixtureFile = do_get_file(fixturePath);
   let tempFile = FileTestUtils.getTempFile(fixturePath);
-  await IOUtils.copy(fixtureFile.path, tempFile.path);
+  await OS.File.copy(fixtureFile.path, tempFile.path);
   return tempFile;
 }
