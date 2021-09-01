@@ -71,6 +71,7 @@ Tool Architectures
    Responsive Design Mode <tools/responsive-design-mode.md>
    Console <tools/console-panel.md>
    Network </devtools/netmonitor/architecture.md>
+   Storage <tools/storage.md>
 
 
 Frontend
