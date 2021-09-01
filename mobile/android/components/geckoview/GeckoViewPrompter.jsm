@@ -10,11 +10,26 @@ const { GeckoViewUtils } = ChromeUtils.import(
 );
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompter");
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUUIDGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 class GeckoViewPrompter {
   constructor(aParent) {
+    this.id = gUUIDGenerator
+      .generateUUID()
+      .toString()
+      .slice(1, -1); // Discard surrounding braces
+
     if (aParent) {
       if (aParent instanceof Window) {
         this._domWin = aParent;
@@ -114,6 +129,10 @@ class GeckoViewPrompter {
     });
   }
 
+  dismiss() {
+    this._dispatcher.dispatch("GeckoView:Prompt:Dismiss", { id: this.id });
+  }
+
   asyncShowPrompt(aMsg, aCallback) {
     let handled = false;
     const onResponse = response => {
@@ -141,6 +160,7 @@ class GeckoViewPrompter {
       return;
     }
 
+    aMsg.id = this.id;
     this._dispatcher.dispatch("GeckoView:Prompt", aMsg, {
       onSuccess: onResponse,
       onError: error => {
