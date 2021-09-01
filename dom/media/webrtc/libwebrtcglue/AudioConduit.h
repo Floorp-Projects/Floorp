@@ -86,10 +86,10 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
   DOMHighResTimeStamp GetNow() const override;
 
-  MediaConduitErrorCode StopTransmittingLocked();
-  MediaConduitErrorCode StartTransmittingLocked();
-  MediaConduitErrorCode StopReceivingLocked();
-  MediaConduitErrorCode StartReceivingLocked();
+  void StopTransmitting();
+  void StartTransmitting();
+  void StopReceiving();
+  void StartReceiving();
 
   /**
    * Function to deliver externally captured audio sample for encoding and
@@ -199,9 +199,9 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   static webrtc::SdpAudioFormat CodecConfigToLibwebrtcFormat(
       const AudioCodecConfig& aConfig);
 
-  MediaConduitErrorCode CreateSendStream();
+  void CreateSendStream();
   void DeleteSendStream();
-  MediaConduitErrorCode CreateRecvStream();
+  void CreateRecvStream();
   void DeleteRecvStream();
 
   // Const so can be accessed on any thread. Most methods are called on the Call
@@ -228,13 +228,11 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   webrtc::AudioSendStream* mSendStream;
 
   // If true => mSendStream started and not stopped
-  // Written only on the Call thread. Guarded by mLock, except for reads on the
-  // Call thread.
-  bool mSendStreamRunning;
+  // Written only on the Call thread.
+  Atomic<bool> mSendStreamRunning;
   // If true => mRecvStream started and not stopped
-  // Written only on the Call thread. Guarded by mLock, except for reads on the
-  // Call thread.
-  bool mRecvStreamRunning;
+  // Written only on the Call thread.
+  Atomic<bool> mRecvStreamRunning;
 
   // Accessed only on the Call thread.
   bool mDtmfEnabled;
