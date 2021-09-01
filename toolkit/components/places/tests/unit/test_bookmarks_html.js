@@ -95,9 +95,7 @@ add_task(async function setup() {
     OS.Constants.Path.profileDir,
     "bookmarks.exported.html"
   );
-  if (await OS.File.exists(gBookmarksFileNew)) {
-    await OS.File.remove(gBookmarksFileNew);
-  }
+  await IOUtils.remove(gBookmarksFileNew, { ignoreAbsent: true });
 
   // This test must be the first one, since it setups the new bookmarks.html.
   // Test importing a pre-Places canonical bookmarks file.

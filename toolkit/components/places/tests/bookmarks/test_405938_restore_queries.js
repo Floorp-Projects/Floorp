@@ -251,5 +251,5 @@ add_task(async function() {
   }
 
   // clean up
-  await OS.File.remove(jsonFile);
+  await IOUtils.remove(jsonFile);
 });
