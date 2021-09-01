@@ -553,11 +553,12 @@ are four representations kept in memory:
   determine which code to compile, and which compiler to use. Machine code may
   be dropped in response to memory pressure, and regenerated as needed.
 
-Furthermore, SpiderMonkey tracks which types of values have appeared in
-variables and object properties. This type information can be large.
+Furthermore, SpiderMonkey's just-in-time compilers generate inline caches for
+type specialization. This information is dropped periodically to reduce memory
+usage.
 
 In a census, all the various forms of JavaScript code are placed in the
-`"script"` category. Type information is accounted to the `"types"` category.
+`"scripts"` category.
 
 
 [debugger]: Debugger-API.md
