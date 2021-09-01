@@ -61,11 +61,6 @@ appmenu-remote-tabs-sign-into-sync =
 appmenu-remote-tabs-turn-on-sync =
   .label = Turn on sync…
 
-# This is shown after the tabs list if we can show all the remaining tabs by clicking on the button
-appmenu-remote-tabs-showall =
-  .label = Show All
-  .tooltiptext = Show all tabs from this device
-
 # This is shown after the tabs list if we can display more tabs by clicking on the button
 appmenu-remote-tabs-showmore =
   .label = Show More Tabs
