@@ -81,6 +81,7 @@ fun String.toShortUrl(publicSuffixList: PublicSuffixList): String {
 }
 
 // impl via FFTV https://searchfox.org/mozilla-mobile/source/firefox-echo-show/app/src/main/java/org/mozilla/focus/utils/FormattedDomain.java#129
+@Suppress("DEPRECATION")
 fun String.isIpv4(): Boolean = Patterns.IP_ADDRESS.matcher(this).matches()
 
 // impl via FFiOS: https://github.com/mozilla-mobile/firefox-ios/blob/deb9736c905cdf06822ecc4a20152df7b342925d/Shared/Extensions/NSURLExtensions.swift#L292
