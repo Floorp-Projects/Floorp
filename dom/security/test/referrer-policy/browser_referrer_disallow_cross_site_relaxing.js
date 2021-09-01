@@ -5,9 +5,7 @@
 
 "use strict";
 
-if (SpecialPowers.useRemoteSubframes) {
-  requestLongerTimeout(3);
-}
+requestLongerTimeout(5);
 
 const TEST_DOMAIN = "https://example.com/";
 const TEST_SAME_SITE_DOMAIN = "https://test1.example.com/";
@@ -126,6 +124,7 @@ const TEST_CASES = [
     referrer: TEST_PAGE,
     test_url: TEST_PAGE,
     expect: REFERRER_FULL,
+    original: REFERRER_FULL,
   },
   // Testing that the referrer policy can be overridden with less restricted
   // policy in the same-site scenario.
@@ -134,18 +133,21 @@ const TEST_CASES = [
     referrer: TEST_PAGE,
     test_url: TEST_SAME_SITE_PAGE,
     expect: REFERRER_FULL,
+    original: REFERRER_FULL,
   },
   {
     policy: "no-referrer-when-downgrade",
     referrer: TEST_PAGE,
     test_url: TEST_SAME_SITE_PAGE,
     expect: REFERRER_FULL,
+    original: REFERRER_FULL,
   },
   {
     policy: "origin-when-cross-origin",
     referrer: TEST_PAGE,
     test_url: TEST_SAME_SITE_PAGE_HTTP,
     expect: REFERRER_ORIGIN,
+    original: REFERRER_ORIGIN,
   },
   // Testing that the referrer policy cannot be overridden with less restricted
   // policy in the cross-site scenario.
@@ -155,6 +157,7 @@ const TEST_CASES = [
     test_url: TEST_CROSS_SITE_PAGE,
     expect: REFERRER_ORIGIN,
     expect_console: "unsafe-url",
+    original: REFERRER_FULL,
   },
   {
     policy: "no-referrer-when-downgrade",
@@ -162,6 +165,7 @@ const TEST_CASES = [
     test_url: TEST_CROSS_SITE_PAGE,
     expect: REFERRER_ORIGIN,
     expect_console: "no-referrer-when-downgrade",
+    original: REFERRER_FULL,
   },
   {
     policy: "origin-when-cross-origin",
@@ -169,6 +173,7 @@ const TEST_CASES = [
     test_url: TEST_CROSS_SITE_PAGE_HTTP,
     expect: REFERRER_NONE,
     expect_console: "origin-when-cross-origin",
+    original: REFERRER_ORIGIN,
   },
   // Testing that the referrer policy can still be overridden with more
   // restricted policy in the cross-site scenario.
@@ -177,148 +182,180 @@ const TEST_CASES = [
     referrer: TEST_PAGE,
     test_url: TEST_CROSS_SITE_PAGE,
     expect: REFERRER_NONE,
+    original: REFERRER_NONE,
   },
 ];
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["network.http.referer.disallowCrossSiteRelaxingDefault", true],
       // Disable mixed content blocking to be able to test downgrade scenario.
       ["security.mixed_content.block_active_content", false],
     ],
   });
 });
 
-add_task(async function test_iframe() {
+async function runTestIniFrame(gBrowser, enabled) {
   for (let type of ["meta", "header"]) {
     for (let test of TEST_CASES) {
       info(`Test iframe: ${test.toSource()}`);
       let referrerURL = `${test.referrer}?${type}=${test.policy}`;
-      let expected = getExpectedReferrer(referrerURL, test.expect);
+      let expected = enabled
+        ? getExpectedReferrer(referrerURL, test.expect)
+        : getExpectedReferrer(referrerURL, test.original);
 
       Services.console.reset();
 
-      await BrowserTestUtils.withNewTab(referrerURL, async browser => {
-        let iframeURL = test.test_url + "?show";
+      await BrowserTestUtils.withNewTab(
+        { gBrowser, url: referrerURL },
+        async browser => {
+          let iframeURL = test.test_url + "?show";
 
-        let consolePromise = createConsoleMessageVerificationPromise(
-          test.expect_console,
-          true,
-          iframeURL
-        );
-        // Create an iframe and load the url.
-        let bc = await SpecialPowers.spawn(browser, [iframeURL], async url => {
-          let iframe = content.document.createElement("iframe");
-          iframe.src = url;
+          let consolePromise = createConsoleMessageVerificationPromise(
+            test.expect_console,
+            enabled,
+            iframeURL
+          );
+          // Create an iframe and load the url.
+          let bc = await SpecialPowers.spawn(
+            browser,
+            [iframeURL],
+            async url => {
+              let iframe = content.document.createElement("iframe");
+              iframe.src = url;
 
-          await new content.Promise(resolve => {
-            iframe.onload = () => {
-              resolve();
-            };
+              await new content.Promise(resolve => {
+                iframe.onload = () => {
+                  resolve();
+                };
 
-            content.document.body.appendChild(iframe);
-          });
+                content.document.body.appendChild(iframe);
+              });
 
-          return iframe.browsingContext;
-        });
+              return iframe.browsingContext;
+            }
+          );
 
-        await verifyResultInPage(bc, expected);
-        await consolePromise;
-        if (!test.expect_console) {
-          verifyNoConsoleMessage();
+          await verifyResultInPage(bc, expected);
+          await consolePromise;
+          if (!test.expect_console) {
+            verifyNoConsoleMessage();
+          }
         }
-      });
+      );
     }
   }
-});
+}
 
-add_task(async function test_link_click() {
+async function runTestForLinkClick(gBrowser, enabled) {
   for (let type of ["meta", "header"]) {
     for (let test of TEST_CASES) {
       info(`Test link click: ${test.toSource()}`);
       let referrerURL = `${test.referrer}?${type}=${test.policy}`;
-      let expected = getExpectedReferrer(referrerURL, test.expect);
+      let expected = enabled
+        ? getExpectedReferrer(referrerURL, test.expect)
+        : getExpectedReferrer(referrerURL, test.original);
 
       Services.console.reset();
 
-      await BrowserTestUtils.withNewTab(referrerURL, async browser => {
-        let linkURL = test.test_url + "?show";
+      await BrowserTestUtils.withNewTab(
+        { gBrowser, url: referrerURL },
+        async browser => {
+          let linkURL = test.test_url + "?show";
 
-        let consolePromise = createConsoleMessageVerificationPromise(
-          test.expect_console,
-          true,
-          linkURL
-        );
+          let consolePromise = createConsoleMessageVerificationPromise(
+            test.expect_console,
+            enabled,
+            linkURL
+          );
 
-        // Create the promise to wait for the navigation finishes.
-        let loadedPromise = BrowserTestUtils.browserLoaded(
-          browser,
-          false,
-          linkURL
-        );
+          // Create the promise to wait for the navigation finishes.
+          let loadedPromise = BrowserTestUtils.browserLoaded(
+            browser,
+            false,
+            linkURL
+          );
 
-        // Generate the link and click it to navigate.
-        await SpecialPowers.spawn(browser, [linkURL], async url => {
-          let link = content.document.createElement("a");
-          link.textContent = "Link";
-          link.setAttribute("href", url);
+          // Generate the link and click it to navigate.
+          await SpecialPowers.spawn(browser, [linkURL], async url => {
+            let link = content.document.createElement("a");
+            link.textContent = "Link";
+            link.setAttribute("href", url);
 
-          content.document.body.appendChild(link);
-          link.click();
-        });
+            content.document.body.appendChild(link);
+            link.click();
+          });
 
-        await loadedPromise;
+          await loadedPromise;
 
-        await verifyResultInPage(browser, expected);
-        await consolePromise;
-        if (!test.expect_console) {
-          verifyNoConsoleMessage();
+          await verifyResultInPage(browser, expected);
+          await consolePromise;
+          if (!test.expect_console) {
+            verifyNoConsoleMessage();
+          }
         }
-      });
+      );
     }
+  }
+}
+
+add_task(async function test_iframe() {
+  for (let enabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["network.http.referer.disallowCrossSiteRelaxingDefault", enabled]],
+    });
+
+    await runTestIniFrame(gBrowser, enabled);
   }
 });
 
-add_task(async function test_console_message_if_pref_off() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["network.http.referer.disallowCrossSiteRelaxingDefault", false]],
-  });
+add_task(async function test_iframe_pbmode() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-  for (let test of TEST_CASES) {
-    info(`Test console message if pref off: ${test.toSource()}`);
-    let referrerURL = `${test.referrer}?meta=${test.policy}`;
-
-    Services.console.reset();
-
-    await BrowserTestUtils.withNewTab(referrerURL, async browser => {
-      let iframeURL = test.test_url + "?show";
-
-      let consolePromise = createConsoleMessageVerificationPromise(
-        test.expect_console,
-        false,
-        iframeURL
-      );
-      // Create an iframe and load the url.
-      await SpecialPowers.spawn(browser, [iframeURL], async url => {
-        let iframe = content.document.createElement("iframe");
-        iframe.src = url;
-
-        await new content.Promise(resolve => {
-          iframe.onload = () => {
-            resolve();
-          };
-
-          content.document.body.appendChild(iframe);
-        });
-
-        return iframe.browsingContext;
-      });
-
-      await consolePromise;
-      if (!test.expect_console) {
-        verifyNoConsoleMessage();
-      }
+  for (let enabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [
+          "network.http.referer.disallowCrossSiteRelaxingDefault.pbmode",
+          enabled,
+        ],
+      ],
     });
+
+    await runTestIniFrame(win.gBrowser, enabled);
   }
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_link_click() {
+  for (let enabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["network.http.referer.disallowCrossSiteRelaxingDefault", enabled]],
+    });
+
+    await runTestForLinkClick(gBrowser, enabled);
+  }
+});
+
+add_task(async function test_link_click_pbmode() {
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  for (let enabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [
+          "network.http.referer.disallowCrossSiteRelaxingDefault.pbmode",
+          enabled,
+        ],
+        // Disable https first mode for private browsing mode to test downgrade
+        // cases.
+        ["dom.security.https_first_pbm", false],
+      ],
+    });
+
+    await runTestForLinkClick(win.gBrowser, enabled);
+  }
+
+  await BrowserTestUtils.closeWindow(win);
 });
