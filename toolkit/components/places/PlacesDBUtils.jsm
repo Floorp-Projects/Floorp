@@ -935,14 +935,14 @@ var PlacesDBUtils = {
       OS.Constants.Path.profileDir,
       "places.sqlite"
     );
-    let info = await OS.File.stat(placesDbPath);
+    let info = await IOUtils.stat(placesDbPath);
     logs.push(`Initial database size is ${parseInt(info.size / 1024)}KiB`);
     return PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: vacuum",
       async db => {
         await db.execute("VACUUM");
         logs.push("The database has been vacuumed");
-        info = await OS.File.stat(placesDbPath);
+        info = await IOUtils.stat(placesDbPath);
         logs.push(`Final database size is ${parseInt(info.size / 1024)}KiB`);
         return logs;
       }
@@ -995,13 +995,13 @@ var PlacesDBUtils = {
       OS.Constants.Path.profileDir,
       "places.sqlite"
     );
-    let info = await OS.File.stat(placesDbPath);
+    let info = await IOUtils.stat(placesDbPath);
     logs.push(`Places.sqlite size is ${parseInt(info.size / 1024)}KiB`);
     let faviconsDbPath = OS.Path.join(
       OS.Constants.Path.profileDir,
       "favicons.sqlite"
     );
-    info = await OS.File.stat(faviconsDbPath);
+    info = await IOUtils.stat(faviconsDbPath);
     logs.push(`Favicons.sqlite size is ${parseInt(info.size / 1024)}KiB`);
 
     // Execute each step async.
@@ -1192,7 +1192,7 @@ var PlacesDBUtils = {
             OS.Constants.Path.profileDir,
             "places.sqlite"
           );
-          let info = await OS.File.stat(placesDbPath);
+          let info = await IOUtils.stat(placesDbPath);
           return parseInt(info.size / BYTES_PER_MEBIBYTE);
         },
       },
@@ -1221,7 +1221,7 @@ var PlacesDBUtils = {
             OS.Constants.Path.profileDir,
             "favicons.sqlite"
           );
-          let info = await OS.File.stat(faviconsDbPath);
+          let info = await IOUtils.stat(faviconsDbPath);
           return parseInt(info.size / BYTES_PER_MEBIBYTE);
         },
       },
@@ -1283,39 +1283,30 @@ var PlacesDBUtils = {
         CORRUPT_DB_RETAIN_DAYS +
         " days."
     );
-    let re = /^places\.sqlite(-\d)?\.corrupt$/;
+    let re = /places\.sqlite(-\d)?\.corrupt$/;
     let currentTime = Date.now();
-    let iterator = new OS.File.DirectoryIterator(OS.Constants.Path.profileDir);
+    let children = await IOUtils.getChildren(OS.Constants.Path.profileDir);
     try {
-      await iterator.forEach(async entry => {
+      for (let entry of children) {
+        let fileInfo = await IOUtils.stat(entry);
         let lastModificationDate;
-        if (!entry.isDir && !entry.isSymLink && re.test(entry.name)) {
-          if ("winLastWriteDate" in entry) {
-            // Under Windows, additional information allows us to sort files immediately
-            // without having to perform additional I/O.
-            lastModificationDate = entry.winLastWriteDate.getTime();
-          } else {
-            // Under other OSes, we need to call OS.File.stat
-            let info = await OS.File.stat(entry.path);
-            lastModificationDate = info.lastModificationDate.getTime();
-          }
+        if (fileInfo.type == "regular" && re.test(entry)) {
+          lastModificationDate = fileInfo.lastModified;
           try {
             // Convert milliseconds to days.
             let days = Math.ceil(
               (currentTime - lastModificationDate) / MS_PER_DAY
             );
             if (days >= CORRUPT_DB_RETAIN_DAYS || days < 0) {
-              await OS.File.remove(entry.path);
+              await IOUtils.remove(entry);
             }
           } catch (error) {
-            logs.push("Could not remove file: " + entry.path, error);
+            logs.push("Could not remove file: " + entry, error);
           }
         }
-      });
+      }
     } catch (error) {
       logs.push("removeOldCorruptDBs failed", error);
-    } finally {
-      iterator.close();
     }
     return logs;
   },

@@ -8,9 +8,7 @@
 add_task(async function() {
   // Removes bookmarks.html if the file already exists.
   let HTMLFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");
-  if (await OS.File.exists(HTMLFile)) {
-    await OS.File.remove(HTMLFile);
-  }
+  await IOUtils.remove(HTMLFile, { ignoreAbsent: true });
 
   let unescaped = '<unescaped="test">';
   // Adds bookmarks and tags to the database.

@@ -324,7 +324,7 @@ class SyncedBookmarksMirror {
           ex
         );
         wasCorrupt = true;
-        await OS.File.remove(path);
+        await IOUtils.remove(path);
         await attachAndInitMirrorDatabase(db, path);
       } else {
         MirrorLog.error("Unrecoverable error attaching mirror to Places", ex);
