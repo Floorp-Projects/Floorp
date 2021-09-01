@@ -959,7 +959,7 @@ avif:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
     data_reviews:
-      - TODO
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
@@ -977,7 +977,7 @@ avif:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
     data_reviews:
-      - TODO
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
@@ -1016,7 +1016,7 @@ avif:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
     data_reviews:
-      - TODO
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
@@ -1051,7 +1051,7 @@ avif:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
     data_reviews:
-      - TODO
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
@@ -1082,7 +1082,7 @@ avif:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
     data_reviews:
-      - TODO
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
@@ -1100,7 +1100,7 @@ avif:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
     data_reviews:
-      - TODO
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
@@ -1118,7 +1118,7 @@ avif:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045
     data_reviews:
-      - TODO
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
       - cchang@mozilla.com
       - jbauman@mozilla.com
