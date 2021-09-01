@@ -680,18 +680,6 @@
         <item name="cornerSize">@dimen/top_sites_favicon_corner_size</item>
     </style>
 
-    <style name="recentTabIcon">
-        <item name="android:scaleType">fitCenter</item>
-        <item name="android:layout_gravity">center</item>
-        <item name="shapeAppearanceOverlay">@style/recentTabIconShape</item>
-    </style>
-
-    <style name="recentTabIconShape">
-        <item name="cornerFamily">rounded</item>
-        <item name="elevation">@dimen/recent_tabs_icon_elevation</item>
-        <item name="cornerSize">@dimen/recent_tabs_icon_corner_size</item>
-    </style>
-
     <style name="RecentBookmarks.FaviconCard" parent="Mozac.Widgets.Favicon">
         <item name="android:layout_width">@dimen/recent_bookmark_item_width</item>
         <item name="android:layout_height">@dimen/recent_bookmark_item_height</item>

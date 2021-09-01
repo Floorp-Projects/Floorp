@@ -22,7 +22,6 @@ class RecentTabsHeaderViewHolder(
 ) : ViewHolder(view) {
 
     init {
-
         val binding = RecentTabsHeaderBinding.bind(view)
         binding.showAllButton.setOnClickListener {
             dismissSearchDialogIfDisplayed()

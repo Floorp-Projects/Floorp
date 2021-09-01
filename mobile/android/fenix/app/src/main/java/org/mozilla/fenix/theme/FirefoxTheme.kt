@@ -6,10 +6,16 @@ package org.mozilla.fenix.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Colors
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+import mozilla.components.ui.colors.PhotonColors
 
 /**
  * The theme for Mozilla Firefox for Android (Fenix).
@@ -19,12 +25,76 @@ fun FirefoxTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        content = content,
-        colors = if (darkTheme) darkColorPalette else lightColorPalette
+    val colors = if (darkTheme) darkColorPalette else lightColorPalette
+
+    ProvideFirefoxColors(colors) {
+        MaterialTheme(
+            content = content
+        )
+    }
+}
+
+object FirefoxTheme {
+    val colors: FirefoxColors
+        @Composable
+        get() = localFirefoxColors.current
+}
+
+private val darkColorPalette = FirefoxColors(
+    surface = PhotonColors.DarkGrey50,
+    textPrimary = PhotonColors.LightGrey05,
+    textSecondary = PhotonColors.LightGrey05
+)
+
+private val lightColorPalette = FirefoxColors(
+    surface = PhotonColors.White,
+    textPrimary = PhotonColors.DarkGrey90,
+    textSecondary = PhotonColors.DarkGrey05
+)
+
+/**
+ * A custom Color Palette for Mozilla Firefox for Android (Fenix).
+ */
+@Stable
+class FirefoxColors(
+    surface: Color,
+    textPrimary: Color,
+    textSecondary: Color
+) {
+    var surface by mutableStateOf(surface)
+        private set
+    var textPrimary by mutableStateOf(textPrimary)
+        private set
+    var textSecondary by mutableStateOf(textSecondary)
+        private set
+
+    fun update(other: FirefoxColors) {
+        surface = other.surface
+        textPrimary = other.textPrimary
+        textSecondary = other.textSecondary
+    }
+
+    fun copy(): FirefoxColors = FirefoxColors(
+        surface = surface,
+        textPrimary = textPrimary,
+        textSecondary = textSecondary
     )
 }
 
-private val darkColorPalette: Colors = darkColors()
+@Composable
+fun ProvideFirefoxColors(
+    colors: FirefoxColors,
+    content: @Composable () -> Unit
+) {
+    val colorPalette = remember {
+        // Explicitly creating a new object here so we don't mutate the initial [colors]
+        // provided, and overwrite the values set in it.
+        colors.copy()
+    }
+    colorPalette.update(colors)
+    CompositionLocalProvider(localFirefoxColors provides colorPalette, content = content)
+}
 
-private val lightColorPalette: Colors = lightColors()
+private val localFirefoxColors = staticCompositionLocalOf<FirefoxColors> {
+    error("No FirefoxColors provided")
+}

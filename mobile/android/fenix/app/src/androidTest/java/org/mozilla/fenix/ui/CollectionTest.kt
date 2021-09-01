@@ -152,8 +152,10 @@ class CollectionTest {
         }.openTabDrawer {
             createCollection(webPage.title, firstCollectionName)
             verifySnackBarText("Collection saved!")
-        }.closeTabDrawer {
-        }.goToHomescreen {
+            closeTab()
+        }
+
+        homeScreen {
         }.expandCollection(firstCollectionName) {
             removeTabFromCollection(webPage.title)
             verifyTabSavedInCollection(webPage.title, false)

@@ -5,55 +5,44 @@
 package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.View
-import mozilla.components.browser.icons.BrowserIcons
-import mozilla.components.browser.state.state.ContentState
-import mozilla.components.browser.state.state.TabSessionState
-import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.RecentTabsListRowBinding
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.loadIntoView
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.view.ViewHolder
 
 /**
  * View holder for a recent tab item.
  *
+ * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param store [HomeFragmentStore] containing the list of recent tabs to be displayed.
  * @param interactor [RecentTabInteractor] which will have delegated to all user interactions.
- * @param icons an instance of [BrowserIcons] for rendering the sites icon if one isn't found
- * in [ContentState.icon].
  */
 class RecentTabViewHolder(
-    private val view: View,
-    private val interactor: RecentTabInteractor,
-    private val icons: BrowserIcons = view.context.components.core.icons
-) : ViewHolder(view) {
+    val composeView: ComposeView,
+    private val store: HomeFragmentStore,
+    private val interactor: RecentTabInteractor
+) : ViewHolder(composeView) {
 
-    fun bindTab(tab: TabSessionState): View {
-        // A page may take a while to retrieve a title, so let's show the url until we get one.
+    init {
+        composeView.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        composeView.setContent {
+            val recentTabs = store.observeAsComposableState { state -> state.recentTabs }
 
-        val biding = RecentTabsListRowBinding.bind(view)
-
-        biding.recentTabTitle.text = if (tab.content.title.isNotEmpty()) {
-            tab.content.title
-        } else {
-            tab.content.url
+            FirefoxTheme {
+                RecentTabs(
+                    recentTabs = recentTabs.value ?: emptyList(),
+                    onRecentTabClick = { interactor.onRecentTabClicked(it) }
+                )
+            }
         }
-
-        if (tab.content.icon != null) {
-            biding.recentTabIcon.setImageBitmap(tab.content.icon)
-        } else {
-            icons.loadIntoView(biding.recentTabIcon, tab.content.url)
-        }
-        biding.recentTabIcon.setImageBitmap(tab.content.icon)
-
-        itemView.setOnClickListener {
-            interactor.onRecentTabClicked(tab.id)
-        }
-
-        return itemView
     }
 
     companion object {
-        const val LAYOUT_ID = R.layout.recent_tabs_list_row
+        val LAYOUT_ID = View.generateViewId()
     }
 }
