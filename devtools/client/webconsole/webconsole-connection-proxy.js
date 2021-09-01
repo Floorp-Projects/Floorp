@@ -52,14 +52,28 @@ class WebConsoleConnectionProxy {
     const connection = (async () => {
       this.webConsoleFront = await this.target.getFront("console");
 
-      // There is no way to view response bodies from the Browser Console, so do
-      // not waste the memory.
-      const saveBodies =
-        !this.webConsoleUI.isBrowserConsole &&
-        Services.prefs.getBoolPref(
-          "devtools.netmonitor.saveRequestAndResponseBodies"
-        );
-      await this.webConsoleUI.setSaveRequestAndResponseBodies(saveBodies);
+      // @backward-compat { version 93 } 93 now supports setting this via the NetworkParent actor
+      //                  Once we support only server watcher for NETWORK_EVENT,
+      //                  we will be able to drop this in favor of code from WebConsoleUI._attachTargets.
+      //                  We have to wait for the fully enabling of NETWORK_EVENT watchers, especially on the Browser Toolbox.
+      //                  We can remove the trait check via hasTargetWatcherSupport once we drop support for 92.
+      const { targetCommand, resourceCommand } = this.webConsoleUI.hud.commands;
+      const hasNetworkResourceCommandSupport = resourceCommand.hasResourceCommandSupport(
+        resourceCommand.TYPES.NETWORK_EVENT
+      );
+      const supportsWatcherRequest = targetCommand.hasTargetWatcherSupport(
+        "saveRequestAndResponseBodies"
+      );
+      if (!hasNetworkResourceCommandSupport || !supportsWatcherRequest) {
+        // There is no way to view response bodies from the Browser Console, so do
+        // not waste the memory.
+        const saveBodies =
+          !this.webConsoleUI.isBrowserConsole &&
+          Services.prefs.getBoolPref(
+            "devtools.netmonitor.saveRequestAndResponseBodies"
+          );
+        await this.setSaveRequestAndResponseBodies(saveBodies);
+      }
 
       this._addWebConsoleFrontEventListeners();
     })();
@@ -87,6 +101,27 @@ class WebConsoleConnectionProxy {
 
   getConnectionPromise() {
     return this._connecter;
+  }
+
+  /**
+   * Setter for saving of network request and response bodies.
+   *
+   * @param boolean value
+   *        The new value you want to set.
+   */
+  async setSaveRequestAndResponseBodies(value) {
+    if (!this.webConsoleFront) {
+      // Don't continue if the webconsole disconnected.
+      return null;
+    }
+
+    const newValue = !!value;
+    const toSet = {
+      "NetworkMonitor.saveRequestAndResponseBodies": newValue,
+    };
+
+    // Make sure the web console client connection is established first.
+    return this.webConsoleFront.setPreferences(toSet);
   }
 
   /**

@@ -96,6 +96,13 @@ const NetworkParentActor = ActorClassWithSpec(networkParentSpec, {
     }
   },
 
+  setSaveRequestAndResponseBodies(save) {
+    if (!this.networkEventWatcher) {
+      throw new Error("Not listening for network events");
+    }
+    this.networkEventWatcher.setSaveRequestAndResponseBodies(save);
+  },
+
   /**
    * Sets the urls to block.
    *
