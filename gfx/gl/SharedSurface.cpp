@@ -31,11 +31,6 @@
 #  include "SharedSurfaceIO.h"
 #endif
 
-#ifdef MOZ_X11
-#  include "GLXLibrary.h"
-#  include "SharedSurfaceGLX.h"
-#endif
-
 #ifdef MOZ_WAYLAND
 #  include "gfxPlatformGtk.h"
 #  include "SharedSurfaceDMABUF.h"
@@ -97,15 +92,6 @@ UniquePtr<SurfaceFactory> SurfaceFactory::Create(
     case layers::TextureType::MacIOSurface:
 #ifdef XP_MACOSX
       return MakeUnique<SurfaceFactory_IOSurface>(gl);
-#else
-      return nullptr;
-#endif
-
-    case layers::TextureType::X11:
-#ifdef MOZ_X11
-      if (gl.GetContextType() != GLContextType::GLX) return nullptr;
-      if (!sGLXLibrary.UseTextureFromPixmap()) return nullptr;
-      return MakeUnique<SurfaceFactory_GLXDrawable>(gl);
 #else
       return nullptr;
 #endif

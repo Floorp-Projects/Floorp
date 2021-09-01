@@ -14,22 +14,7 @@
 #include "SurfaceTypes.h"
 #include "mozilla/WidgetUtils.h"
 
-#if defined(MOZ_X11)
-#  include "mozilla/layers/ShadowLayerUtilsX11.h"
-#endif
-
 namespace IPC {
-
-#if !defined(MOZ_HAVE_SURFACEDESCRIPTORX11)
-template <>
-struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
-  typedef mozilla::layers::SurfaceDescriptorX11 paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, PickleIterator*, paramType*) {
-    return false;
-  }
-};
-#endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTORX11)
 
 template <>
 struct ParamTraits<mozilla::ScreenRotation>

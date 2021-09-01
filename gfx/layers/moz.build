@@ -237,14 +237,6 @@ EXPORTS.mozilla.layers += [
     "ZoomConstraints.h",
 ]
 
-if CONFIG["MOZ_X11"]:
-    EXPORTS.mozilla.layers += [
-        "ipc/ShadowLayerUtilsX11.h",
-    ]
-    SOURCES += [
-        "ipc/ShadowLayerUtilsX11.cpp",
-    ]
-
 if CONFIG["MOZ_WAYLAND"]:
     EXPORTS.mozilla.layers += [
         "DMABUFSurfaceImage.h",

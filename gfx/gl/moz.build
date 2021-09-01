@@ -113,9 +113,8 @@ elif gl_provider == "GLX":
     SOURCES += [
         "GLContextProviderGLX.cpp",
         "GLContextProviderX11.cpp",
-        "SharedSurfaceGLX.cpp",
     ]
-    EXPORTS += ["GLContextGLX.h", "GLXLibrary.h", "SharedSurfaceGLX.h"]
+    EXPORTS += ["GLContextGLX.h", "GLXLibrary.h"]
 
 if CONFIG["MOZ_WAYLAND"]:
     SOURCES += ["GLContextProviderWayland.cpp", "SharedSurfaceDMABUF.cpp"]
