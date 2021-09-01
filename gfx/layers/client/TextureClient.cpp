@@ -48,10 +48,6 @@
 #  include "mozilla/layers/TextureD3D11.h"
 #  include "mozilla/layers/TextureDIB.h"
 #endif
-#ifdef MOZ_X11
-#  include "GLXLibrary.h"
-#  include "mozilla/layers/TextureClientX11.h"
-#endif
 #ifdef MOZ_WAYLAND
 #  include <gtk/gtkx.h>
 
@@ -296,21 +292,6 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   }
 #endif
 
-#ifdef MOZ_X11
-  gfxSurfaceType type =
-      gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
-
-  if (layersBackend == LayersBackend::LAYERS_BASIC &&
-      moz2DBackend == gfx::BackendType::CAIRO && type == gfxSurfaceType::Xlib) {
-    return TextureType::X11;
-  }
-  if (layersBackend == LayersBackend::LAYERS_OPENGL &&
-      type == gfxSurfaceType::Xlib && aFormat != SurfaceFormat::A8 &&
-      gl::sGLXLibrary.UseTextureFromPixmap()) {
-    return TextureType::X11;
-  }
-#endif
-
 #ifdef XP_MACOSX
   if (StaticPrefs::gfx_use_iosurface_textures_AtStartup()) {
     return TextureType::MacIOSurface;
@@ -390,10 +371,6 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
       return DMABUFTextureData::Create(aSize, aFormat, moz2DBackend);
 #endif
 
-#ifdef MOZ_X11
-    case TextureType::X11:
-      return X11TextureData::Create(aSize, aFormat, aTextureFlags, aAllocator);
-#endif
 #ifdef XP_MACOSX
     case TextureType::MacIOSurface:
       return MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);

@@ -239,16 +239,10 @@ EXPORTS.mozilla.layers += [
 
 if CONFIG["MOZ_X11"]:
     EXPORTS.mozilla.layers += [
-        "basic/TextureClientX11.h",
-        "composite/X11TextureHost.h",
         "ipc/ShadowLayerUtilsX11.h",
-        "opengl/X11TextureSourceOGL.h",
     ]
     SOURCES += [
-        "basic/TextureClientX11.cpp",
-        "composite/X11TextureHost.cpp",
         "ipc/ShadowLayerUtilsX11.cpp",
-        "opengl/X11TextureSourceOGL.cpp",
     ]
 
 if CONFIG["MOZ_WAYLAND"]:
