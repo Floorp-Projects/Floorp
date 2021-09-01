@@ -432,7 +432,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     offset = extra_end;
   }
 
-  if (StaticPrefs::gfx_webrender_blob_paint_flashing()) {
+  if (StaticPrefs::gfx_webrender_debug_blob_paint_flashing()) {
     dt->SetTransform(gfx::Matrix());
     float r = float(rand()) / float(RAND_MAX);
     float g = float(rand()) / float(RAND_MAX);
