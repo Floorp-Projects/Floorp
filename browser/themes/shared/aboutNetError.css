@@ -162,7 +162,6 @@ body:not(.neterror) #advancedButton {
 }
 
 #errorCode {
-  cursor: pointer;
   white-space: nowrap;
 }
 
@@ -177,7 +176,6 @@ body:not(.neterror) #advancedButton {
 }
 
 #certificateErrorDebugInformation {
-  display: none;
   background-color: var(--in-content-box-info-background) !important;
   border-top: 1px solid var(--in-content-border-color);
   width: 100%;

@@ -168,6 +168,10 @@ add_task(async function checkAdvancedDetails() {
         shortDescText.textContent.includes("expired.example.com"),
         "Should list hostname in error message."
       );
+      Assert.ok(
+        doc.getElementById("certificateErrorDebugInformation").hidden,
+        "Debug info is initially hidden"
+      );
 
       let exceptionButton = doc.getElementById("exceptionDialogButton");
       Assert.ok(
@@ -200,6 +204,11 @@ add_task(async function checkAdvancedDetails() {
       errorCode.click();
       let div = doc.getElementById("certificateErrorDebugInformation");
       let text = doc.getElementById("certificateErrorText");
+
+      Assert.ok(
+        content.getComputedStyle(div).display !== "none",
+        "Debug information is visible"
+      );
 
       let serhelper = Cc[
         "@mozilla.org/network/serialization-helper;1"

@@ -148,6 +148,22 @@ function showTls10Container() {
   setFocus("#enableTls10Button", "beforeend");
 }
 
+function toggleCertErrorDebugInfoVisibility(shouldShow) {
+  let debugInfo = document.getElementById("certificateErrorDebugInformation");
+  let copyButton = document.getElementById("copyToClipboardTop");
+
+  if (shouldShow === undefined) {
+    shouldShow = debugInfo.hidden;
+  }
+  if (shouldShow) {
+    debugInfo.hidden = false;
+    copyButton.scrollIntoView({ block: "start", behavior: "smooth" });
+    copyButton.focus();
+  } else {
+    debugInfo.hidden = true;
+  }
+}
+
 function setupAdvancedButton() {
   // Get the hostname and add it to the panel
   var panel = document.getElementById("badCertAdvancedPanel");
@@ -166,8 +182,7 @@ function setupAdvancedButton() {
       // Toggling the advanced panel must ensure that the debugging
       // information panel is hidden as well, since it's opened by the
       // error code link in the advanced panel.
-      var div = document.getElementById("certificateErrorDebugInformation");
-      div.style.display = "none";
+      toggleCertErrorDebugInfoVisibility(false);
     }
 
     if (panel.style.display == "block") {
@@ -186,8 +201,7 @@ function setupAdvancedButton() {
     // Toggling the advanced panel must ensure that the debugging
     // information panel is hidden as well, since it's opened by the
     // error code link in the advanced panel.
-    var div = document.getElementById("certificateErrorDebugInformation");
-    div.style.display = "none";
+    toggleCertErrorDebugInfoVisibility(false);
   }
 
   disallowCertOverridesIfNeeded();
@@ -1148,10 +1162,7 @@ async function setTechnicalDetailsOnCertError(
             // Toggling the advanced panel must ensure that the debugging
             // information panel is hidden as well, since it's opened by the
             // error code link in the advanced panel.
-            let div = document.getElementById(
-              "certificateErrorDebugInformation"
-            );
-            div.style.display = "none";
+            toggleCertErrorDebugInfoVisibility(false);
           }
         }
 
@@ -1199,6 +1210,7 @@ async function setTechnicalDetailsOnCertError(
       id: "errorCode",
       "data-l10n-name": "error-code-link",
       "data-telemetry-id": "error_code_link",
+      href: "#certificateErrorDebugInformation",
     },
     false
   );
@@ -1218,10 +1230,8 @@ function handleErrorCodeClick(event) {
   if (event.target.id !== "errorCode") {
     return;
   }
-
-  let debugInfo = document.getElementById("certificateErrorDebugInformation");
-  debugInfo.style.display = "block";
-  debugInfo.scrollIntoView({ block: "start", behavior: "smooth" });
+  event.preventDefault();
+  toggleCertErrorDebugInfoVisibility();
   recordClickTelemetry(event);
 }
 
