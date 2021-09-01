@@ -31,8 +31,6 @@ using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/Scrollab
 using mozilla::layers::MaybeZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using mozilla::layers::WindowKind from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
-using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
-using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::CSSIntRegion from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDeviceIntRegion from "Units.h";
@@ -237,12 +235,6 @@ parent:
 
   // Actor that represents one WebGL context.
   async PWebGL();
-
-child:
-  // Send back Compositor Frame Metrics from APZCs so tiled layers can
-  // update progressively.
-  async SharedCompositorFrameMetrics(Handle metrics, CrossProcessMutexHandle mutex, LayersId aLayersId, uint32_t aAPZCId);
-  async ReleaseSharedCompositorFrameMetrics(ViewID aId, uint32_t aAPZCId);
 };
 
 } // layers

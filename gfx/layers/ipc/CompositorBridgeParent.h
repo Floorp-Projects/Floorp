@@ -30,7 +30,6 @@
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for IShmemAllocator
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/MetricsSharingController.h"
 #include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
@@ -113,8 +112,7 @@ struct ScopedLayerTreeRegistration {
 
 class CompositorBridgeParentBase : public PCompositorBridgeParent,
                                    public HostIPCAllocator,
-                                   public mozilla::ipc::IShmemAllocator,
-                                   public MetricsSharingController {
+                                   public mozilla::ipc::IShmemAllocator {
   friend class PCompositorBridgeParent;
 
  public:
@@ -170,20 +168,12 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
                         mozilla::ipc::Shmem* aShmem) override;
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
-  // MetricsSharingController
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override {
     return HostIPCAllocator::AddRef();
   }
   NS_IMETHOD_(MozExternalRefCountType) Release() override {
     return HostIPCAllocator::Release();
   }
-  base::ProcessId RemotePid() override;
-  bool StartSharingMetrics(mozilla::ipc::SharedMemoryBasic::Handle aHandle,
-                           CrossProcessMutexHandle aMutexHandle,
-                           LayersId aLayersId, uint32_t aApzcId) override;
-  bool StopSharingMetrics(ScrollableLayerGuid::ViewID aScrollId,
-                          uint32_t aApzcId) override;
-
   virtual bool IsRemote() const { return false; }
 
   virtual UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientTexture(
@@ -504,8 +494,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
     TargetConfig mTargetConfig;
 
     CompositorController* GetCompositorController() const;
-    MetricsSharingController* CrossProcessSharingController() const;
-    MetricsSharingController* InProcessSharingController() const;
     RefPtr<UiCompositorControllerParent> mUiControllerParent;
   };
 

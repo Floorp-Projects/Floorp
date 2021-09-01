@@ -7,7 +7,6 @@
 #ifndef mozilla_layers_AsyncPanZoomController_h
 #define mozilla_layers_AsyncPanZoomController_h
 
-#include "mozilla/ipc/CrossProcessMutex.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/layers/SampleTime.h"
@@ -50,7 +49,6 @@ class AsyncDragMetrics;
 class APZCTreeManager;
 struct ScrollableLayerGuid;
 class CompositorController;
-class MetricsSharingController;
 class GestureEventListener;
 struct AsyncTransform;
 class AsyncPanZoomAnimation;
@@ -274,13 +272,6 @@ class AsyncPanZoomController {
    * can request composites.
    */
   void SetCompositorController(CompositorController* aCompositorController);
-
-  /**
-   * If we need to share the frame metrics with some other thread, this
-   * controller needs to be set and provides relevant information/APIs.
-   */
-  void SetMetricsSharingController(
-      MetricsSharingController* aMetricsSharingController);
 
   // --------------------------------------------------------------------------
   // These methods can be called from any thread.
@@ -960,7 +951,6 @@ class AsyncPanZoomController {
 
   LayersId mLayersId;
   RefPtr<CompositorController> mCompositorController;
-  RefPtr<MetricsSharingController> mMetricsSharingController;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
@@ -1696,29 +1686,6 @@ class AsyncPanZoomController {
    * including) the parent APZC down to (but excluding) this one, and excluding
    * any perspective transforms. */
   AncestorTransform mAncestorTransform;
-
-  /* ===================================================================
-   * The functions and members in this section are used for sharing the
-   * FrameMetrics across processes for the progressive tiling code.
-   */
- private:
-  /* Unique id assigned to each APZC. Used with ViewID to uniquely identify
-   * shared FrameMeterics used in progressive tile painting. */
-  const uint32_t mAPZCId;
-
-  RefPtr<ipc::SharedMemoryBasic> mSharedFrameMetricsBuffer;
-  CrossProcessMutex* mSharedLock;
-  /**
-   * Called when ever Metrics() is updated so that if it is being
-   * shared with the content process the shared FrameMetrics may be updated.
-   */
-  void UpdateSharedCompositorFrameMetrics();
-  /**
-   * Create a shared memory buffer for containing the FrameMetrics and
-   * a CrossProcessMutex that may be shared with the content process
-   * for use in progressive tiled update calculations.
-   */
-  void ShareCompositorFrameMetrics();
 
   /* ===================================================================
    * The functions and members in this section are used for testing

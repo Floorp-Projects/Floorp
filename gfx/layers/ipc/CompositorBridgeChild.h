@@ -75,14 +75,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void Destroy();
 
-  /**
-   * Lookup the FrameMetrics shared by the compositor process with the
-   * associated ScrollableLayerGuid::ViewID. The returned FrameMetrics is used
-   * in progressive paint calculations.
-   */
-  bool LookupCompositorFrameMetrics(const ScrollableLayerGuid::ViewID aId,
-                                    FrameMetrics&);
-
   static CompositorBridgeChild* Get();
 
   static bool ChildProcessHasCompositorBridge();
@@ -243,14 +235,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvSharedCompositorFrameMetrics(
-      const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
-      const CrossProcessMutexHandle& handle, const LayersId& aLayersId,
-      const uint32_t& aAPZCId);
-
-  mozilla::ipc::IPCResult RecvReleaseSharedCompositorFrameMetrics(
-      const ViewID& aId, const uint32_t& aAPZCId);
-
   mozilla::ipc::IPCResult RecvObserveLayersUpdate(
       const LayersId& aLayersId, const LayersObserverEpoch& aEpoch,
       const bool& aActive);
@@ -259,34 +243,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
       const LayersId& aLayersId, const CompositorOptions& aNewOptions);
 
   uint64_t GetNextResourceId();
-
-  void ClearSharedFrameMetricsData(LayersId aLayersId);
-
-  // Class used to store the shared FrameMetrics, mutex, and APZCId  in a hash
-  // table
-  class SharedFrameMetricsData final {
-   public:
-    SharedFrameMetricsData(
-        const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
-        const CrossProcessMutexHandle& handle, const LayersId& aLayersId,
-        const uint32_t& aAPZCId);
-
-    ~SharedFrameMetricsData();
-
-    void CopyFrameMetrics(FrameMetrics* aFrame);
-    ScrollableLayerGuid::ViewID GetViewID();
-    LayersId GetLayersId() const;
-    uint32_t GetAPZCId();
-
-   private:
-    // Pointer to the class that allows access to the shared memory that
-    // contains the shared FrameMetrics
-    RefPtr<mozilla::ipc::SharedMemoryBasic> mBuffer;
-    CrossProcessMutex* mMutex;
-    LayersId mLayersId;
-    // Unique ID of the APZC that is sharing the FrameMetrics
-    uint32_t mAPZCId;
-  };
 
   RefPtr<CompositorManagerChild> mCompositorManager;
 
@@ -298,10 +254,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // When not multi-process, hold a reference to the CompositorBridgeParent to
   // keep it alive. This reference should be null in multi-process.
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
-
-  // The ViewID of the FrameMetrics is used as the key for this hash table.
-  // While this should be safe to use since the ViewID is unique
-  nsClassHashtable<nsUint64HashKey, SharedFrameMetricsData> mFrameMetricsTable;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorBridgeChild);
 

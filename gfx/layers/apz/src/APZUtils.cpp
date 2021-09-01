@@ -97,11 +97,6 @@ bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
   return !painted.Contains(visible);
 }
 
-bool ShouldUseProgressivePaint() {
-  // Progressive paint is only applicable to non-WebRender.
-  return false;
-}
-
 SideBits GetOverscrollSideBits(const ParentLayerPoint& aOverscrollAmount) {
   SideBits sides = SideBits::eNone;
 
