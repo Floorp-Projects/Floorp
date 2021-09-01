@@ -209,13 +209,6 @@ bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
                          const FrameMetrics& aCompositorMetrics);
 
 /**
- * Wrapper around StaticPrefs::layers_progressive_paint that takes into account
- * whether the platform is supported or sandboxed. We should prefer this over
- * using the StaticPrefs getter directly.
- */
-bool ShouldUseProgressivePaint();
-
-/**
  * Returns SideBits where the given |aOverscrollAmount| overscrolls.
  */
 SideBits GetOverscrollSideBits(const ParentLayerPoint& aOverscrollAmount);

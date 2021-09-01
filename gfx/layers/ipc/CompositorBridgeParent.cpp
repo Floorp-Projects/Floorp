@@ -167,51 +167,6 @@ bool CompositorBridgeParentBase::DeallocShmem(ipc::Shmem& aShmem) {
   return PCompositorBridgeParent::DeallocShmem(aShmem);
 }
 
-base::ProcessId CompositorBridgeParentBase::RemotePid() { return OtherPid(); }
-
-bool CompositorBridgeParentBase::StartSharingMetrics(
-    ipc::SharedMemoryBasic::Handle aHandle,
-    CrossProcessMutexHandle aMutexHandle, LayersId aLayersId,
-    uint32_t aApzcId) {
-  if (!CompositorThreadHolder::IsInCompositorThread()) {
-    MOZ_ASSERT(CompositorThread());
-    CompositorThread()->Dispatch(
-        NewRunnableMethod<ipc::SharedMemoryBasic::Handle,
-                          CrossProcessMutexHandle, LayersId, uint32_t>(
-            "layers::CompositorBridgeParent::StartSharingMetrics", this,
-            &CompositorBridgeParentBase::StartSharingMetrics, aHandle,
-            aMutexHandle, aLayersId, aApzcId));
-    return true;
-  }
-
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  if (!mCanSend) {
-    return false;
-  }
-  return PCompositorBridgeParent::SendSharedCompositorFrameMetrics(
-      aHandle, aMutexHandle, aLayersId, aApzcId);
-}
-
-bool CompositorBridgeParentBase::StopSharingMetrics(
-    ScrollableLayerGuid::ViewID aScrollId, uint32_t aApzcId) {
-  if (!CompositorThreadHolder::IsInCompositorThread()) {
-    MOZ_ASSERT(CompositorThread());
-    CompositorThread()->Dispatch(
-        NewRunnableMethod<ScrollableLayerGuid::ViewID, uint32_t>(
-            "layers::CompositorBridgeParent::StopSharingMetrics", this,
-            &CompositorBridgeParentBase::StopSharingMetrics, aScrollId,
-            aApzcId));
-    return true;
-  }
-
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  if (!mCanSend) {
-    return false;
-  }
-  return PCompositorBridgeParent::SendReleaseSharedCompositorFrameMetrics(
-      aScrollId, aApzcId);
-}
-
 CompositorBridgeParent::LayerTreeState::LayerTreeState()
     : mApzcTreeManagerParent(nullptr),
       mParent(nullptr),
@@ -1663,16 +1618,6 @@ bool CompositorBridgeParent::DeallocPCompositorWidgetParent(
 
 CompositorController*
 CompositorBridgeParent::LayerTreeState::GetCompositorController() const {
-  return mParent;
-}
-
-MetricsSharingController*
-CompositorBridgeParent::LayerTreeState::CrossProcessSharingController() const {
-  return mContentCompositorBridgeParent;
-}
-
-MetricsSharingController*
-CompositorBridgeParent::LayerTreeState::InProcessSharingController() const {
   return mParent;
 }
 
