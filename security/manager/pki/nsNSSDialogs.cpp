@@ -299,10 +299,8 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
 
   // Get the parent window for the dialog
   nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
-  bool ignored = false;
   char16_t* pwTemp = nullptr;
-  rv = promptSvc->PromptPassword(parent, nullptr, msg.get(), &pwTemp, nullptr,
-                                 &ignored, _retval);
+  rv = promptSvc->PromptPassword(parent, nullptr, msg.get(), &pwTemp, _retval);
   if (NS_FAILED(rv)) {
     return rv;
   }

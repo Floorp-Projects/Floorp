@@ -119,18 +119,11 @@ BrowserElementPrompt.prototype = {
     return rv !== null;
   },
 
-  promptUsernameAndPassword(
-    title,
-    text,
-    username,
-    password,
-    checkMsg,
-    checkState
-  ) {
+  promptUsernameAndPassword(title, text, username, password) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
-  promptPassword(title, text, password, checkMsg, checkState) {
+  promptPassword(title, text, password) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 

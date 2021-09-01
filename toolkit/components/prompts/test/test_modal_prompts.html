@@ -585,17 +585,16 @@ async function runTests(util) {
     titleHidden: true,
     textHidden: false,
     passHidden: false,
-    checkHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
     textValue: "usr",
     passValue: "ssh",
-    checkMsg: "Check me out!",
-    checked: false,
     focused: "textField",
     defButton: "button0",
   };
   action = {
     buttonClick: "ok",
-    setCheckbox: true,
     textField: "newusr",
     passField: "newssh",
   };
@@ -604,14 +603,11 @@ async function runTests(util) {
 
   textVal.value = "usr";
   passVal.value = "ssh";
-  checkVal.value = false;
   promptArgs = [
     "TestTitle",
     "This is the pUAP text.",
     util.useAsync ? textVal.value : textVal,
-    util.useAsync ? passVal.value : passVal,
-    "Check me out!",
-    util.useAsync ? checkVal.value : checkVal,
+    util.useAsync ? passVal.value : passVal
   ];
   result = await util.prompt("promptUsernameAndPassword", promptArgs);
   is(util.useAsync ? result.ok : result, true, "checked expected retval");
@@ -625,11 +621,6 @@ async function runTests(util) {
     "newssh",
     "checking expected pass value"
   );
-  is(
-    util.useAsync ? result.checked : checkVal.value,
-    true,
-    "expected checkbox setting"
-  );
 
   await promptDone;
 
@@ -642,17 +633,16 @@ async function runTests(util) {
     titleHidden: true,
     textHidden: false,
     passHidden: false,
-    checkHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
     textValue: "usr",
     passValue: "ssh",
-    checkMsg: "Check me out!",
-    checked: false,
     focused: "textField",
     defButton: "button0",
   };
   action = {
     buttonClick: "cancel",
-    setCheckbox: true,
     textField: "newusr",
     passField: "newssh",
   };
@@ -661,14 +651,11 @@ async function runTests(util) {
 
   textVal.value = "usr";
   passVal.value = "ssh";
-  checkVal.value = false;
   promptArgs = [
     "TestTitle",
     "This is the pUAP text.",
     util.useAsync ? textVal.value : textVal,
-    util.useAsync ? passVal.value : passVal,
-    "Check me out!",
-    util.useAsync ? checkVal.value : checkVal,
+    util.useAsync ? passVal.value : passVal
   ];
   result = await util.prompt("promptUsernameAndPassword", promptArgs);
   is(util.useAsync ? result.ok : result, false, "checked expected retval");
@@ -679,10 +666,6 @@ async function runTests(util) {
   ok(
     (util.useAsync && result.pass == "newpass") || passVal.value == "ssh",
     "checking expected pass value"
-  );
-  ok(
-    util.useAsync ? result.checked : !checkVal.value,
-    "expected checkbox setting"
   );
 
   await promptDone;
@@ -696,30 +679,26 @@ async function runTests(util) {
     titleHidden: true,
     textHidden: true,
     passHidden: false,
-    checkHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
     textValue: "",
     passValue: "ssh",
-    checkMsg: "Check me out!",
-    checked: false,
     focused: "passField",
     defButton: "button0",
   };
   action = {
     buttonClick: "ok",
-    setCheckbox: true,
     passField: "newssh",
   };
 
   promptDone = handlePrompt(state, action);
 
   passVal.value = "ssh";
-  checkVal.value = false;
   promptArgs = [
     "TestTitle",
     "This is the promptPassword text.",
-    util.useAsync ? passVal.value : passVal,
-    "Check me out!",
-    util.useAsync ? checkVal.value : checkVal,
+    util.useAsync ? passVal.value : passVal
   ];
   result = await util.prompt("promptPassword", promptArgs);
   is(util.useAsync ? result.ok : result, true, "checked expected retval");
@@ -727,11 +706,6 @@ async function runTests(util) {
     util.useAsync ? result.pass : passVal.value,
     "newssh",
     "checking expected pass value"
-  );
-  is(
-    util.useAsync ? result.checked : checkVal.value,
-    true,
-    "expected checkbox setting"
   );
 
   await promptDone;
@@ -745,40 +719,32 @@ async function runTests(util) {
     titleHidden: true,
     textHidden: true,
     passHidden: false,
-    checkHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
     textValue: "",
     passValue: "ssh",
-    checkMsg: "Check me out!",
-    checked: false,
     focused: "passField",
     defButton: "button0",
   };
   action = {
     buttonClick: "cancel",
-    setCheckbox: true,
     passField: "newssh",
   };
 
   promptDone = handlePrompt(state, action);
 
   passVal.value = "ssh";
-  checkVal.value = false;
   promptArgs = [
     "TestTitle",
     "This is the promptPassword text.",
-    util.useAsync ? passVal.value : passVal,
-    "Check me out!",
-    util.useAsync ? checkVal.value : checkVal,
+    util.useAsync ? passVal.value : passVal
   ];
   result = await util.prompt("promptPassword", promptArgs);
   is(util.useAsync ? result.ok : result, false, "checked expected retval");
   ok(
     (util.useAsync && result.pass == "newssh") || passVal.value == "ssh",
     "checking expected pass value"
-  );
-  ok(
-    util.useAsync ? result.checked : !checkVal.value,
-    "expected checkbox setting"
   );
 
   await promptDone;
@@ -1161,30 +1127,27 @@ async function runTests(util) {
     titleHidden: true,
     textHidden: false,
     passHidden: false,
-    checkHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
     textValue: "",
     passValue: "",
-    checkMsg: "Check me out!",
-    checked: false,
     focused: "textField",
     defButton: "button0",
   };
   action = {
     buttonClick: "ok",
-    setCheckbox: true,
     textField: "username",
     passField: "password",
   };
   if (util.usePromptService && !util.useAsync) {
     promptDone = handlePrompt(state, action);
 
-    checkVal.value = false;
-    promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+    promptArgs = [channel, level, authinfo];
     isOK = await util.prompt("promptAuth", promptArgs);
     is(isOK, true, "checked expected retval");
     is(authinfo.username, "username", "checking filled username");
     is(authinfo.password, "password", "checking filled password");
-    is(checkVal.value, true, "expected checkbox setting");
 
     await promptDone;
   }
@@ -1207,35 +1170,32 @@ async function runTests(util) {
     titleHidden: true,
     textHidden: false,
     passHidden: false,
-    checkHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
     textValue: "",
     passValue: "",
-    checkMsg: "Check me out!",
-    checked: false,
     focused: "textField",
     defButton: "button0",
   };
   action = {
     buttonClick: "ok",
-    setCheckbox: true,
     textField: "username",
     passField: "password",
   };
   if (util.usePromptService && !util.useAsync) {
     promptDone = handlePrompt(state, action);
 
-    checkVal.value = false;
     var longString = "";
     for (var i = 0; i < 20; i++) longString += "abcdefghi "; // 200 chars long
     authinfo.realm = longString;
     authinfo.username = "";
     authinfo.password = "";
-    promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+    promptArgs = [channel, level, authinfo];
     isOK = await util.prompt("promptAuth", promptArgs);
     is(isOK, true, "checked expected retval");
     is(authinfo.username, "username", "checking filled username");
     is(authinfo.password, "password", "checking filled password");
-    is(checkVal.value, true, "expected checkbox setting");
 
     await promptDone;
   }
@@ -1264,29 +1224,26 @@ async function runTests(util) {
     titleHidden: true,
     textHidden: false,
     passHidden: false,
-    checkHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
     textValue: "",
     passValue: "",
-    checkMsg: "Check me out!",
-    checked: false,
     focused: "textField",
     defButton: "button0",
   };
   action = {
     buttonClick: "ok",
-    setCheckbox: false,
     textField: "username",
     passField: "password",
   };
   if (util.usePromptService && !util.useAsync) {
     promptDone = handlePrompt(state, action);
-    checkVal.value = false;
-    promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+    promptArgs = [channel, level, authinfo];
     isOK = await util.prompt("promptAuth", promptArgs);
     is(isOK, true, "checked expected retval");
     is(authinfo.username, "username", "checking filled username");
     is(authinfo.password, "password", "checking filled password");
-    is(checkVal.value, false, "expected checkbox setting");
 
     await promptDone;
   }
@@ -1309,30 +1266,27 @@ async function runTests(util) {
     titleHidden: true,
     textHidden: false,
     passHidden: false,
-    checkHidden: false,
+    checkHidden: true,
+    checkMsg: "",
+    checked: false,
     textValue: "",
     passValue: "",
-    checkMsg: "Check me out!",
-    checked: false,
     focused: "textField",
     defButton: "button0",
   };
   action = {
     buttonClick: "ok",
-    setCheckbox: false,
     textField: "username",
     passField: "password",
   };
   if (util.usePromptService && !util.useAsync) {
     promptDone = handlePrompt(state, action);
 
-    checkVal.value = false;
-    promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+    promptArgs = [channel, level, authinfo];
     isOK = await util.prompt("promptAuth", promptArgs);
     is(isOK, true, "checked expected retval");
     is(authinfo.username, "username", "checking filled username");
     is(authinfo.password, "password", "checking filled password");
-    is(checkVal.value, false, "expected checkbox setting");
 
     await promptDone;
   }
