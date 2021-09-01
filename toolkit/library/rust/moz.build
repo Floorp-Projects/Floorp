@@ -8,6 +8,13 @@ include("gkrust-features.mozbuild")
 
 RustLibrary("gkrust", gkrust_features, is_gkrust=True)
 
+for feature in gkrust_features:
+    # We don't want to enable refcount logging during rusttests, since the
+    # relevant FFI symbols wouldn't be found.
+    # Nor do we want Glean to assume there are Gecko symbols.
+    if feature not in ("gecko_refcount_logging", "glean_with_gecko"):
+        RUST_TEST_FEATURES.append(feature)
+
 # Target directory doesn't matter a lot here, since we can't share panic=abort
 # compilation artifacts with gkrust.
 RUST_TESTS = [
@@ -15,19 +22,15 @@ RUST_TESTS = [
     "servo_arc",
     "stylo_tests",
     "qcms",
+    # this does nothing, but is needed so that `gkrust_features` are recognized
+    # also see: https://github.com/rust-lang/cargo/issues/9856
+    "gkrust",
 ]
 
 if not CONFIG["MOZ_CODE_COVERAGE"]:
     # glean tests are disabled for ccov builds because some of them test panics
     # and those builds are compiled with '-Cpanic=abort -Zpanic_abort_tests'
     RUST_TESTS += ["fog"]
-
-for feature in gkrust_features:
-    # We don't want to enable refcount logging during rusttests, since the
-    # relevant FFI symbols wouldn't be found.
-    # Nor do we want Glean to assume there are Gecko symbols.
-    if feature not in ("gecko_refcount_logging", "glean_with_gecko"):
-        RUST_TEST_FEATURES.append(feature)
 
 if CONFIG["CPU_ARCH"] != "x86":
     # malloc_size_of_derive is a build dependency, so if we are doing
