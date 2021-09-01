@@ -5791,15 +5791,14 @@ static nsTArray<FileContentData> SaveFileContentData(
   return res;
 }
 
-NS_IMETHODIMP
-HTMLInputElement::SaveState() {
+void HTMLInputElement::SaveState() {
   PresState* state = nullptr;
   switch (GetValueMode()) {
     case VALUE_MODE_DEFAULT_ON:
       if (mCheckedChanged) {
         state = GetPrimaryPresState();
         if (!state) {
-          return NS_OK;
+          return;
         }
 
         state->contentData() = CheckedContentData(mChecked);
@@ -5809,7 +5808,7 @@ HTMLInputElement::SaveState() {
       if (!mFileData->mFilesOrDirectories.IsEmpty()) {
         state = GetPrimaryPresState();
         if (!state) {
-          return NS_OK;
+          return;
         }
 
         state->contentData() =
@@ -5829,21 +5828,18 @@ HTMLInputElement::SaveState() {
 
       state = GetPrimaryPresState();
       if (!state) {
-        return NS_OK;
+        return;
       }
 
       nsAutoString value;
       GetValue(value, CallerType::System);
 
-      if (!IsSingleLineTextControl(false)) {
-        nsresult rv = nsLinebreakConverter::ConvertStringLineBreaks(
-            value, nsLinebreakConverter::eLinebreakPlatform,
-            nsLinebreakConverter::eLinebreakContent);
-
-        if (NS_FAILED(rv)) {
-          NS_ERROR("Converting linebreaks failed!");
-          return rv;
-        }
+      if (!IsSingleLineTextControl(false) &&
+          NS_FAILED(nsLinebreakConverter::ConvertStringLineBreaks(
+              value, nsLinebreakConverter::eLinebreakPlatform,
+              nsLinebreakConverter::eLinebreakContent))) {
+        NS_ERROR("Converting linebreaks failed!");
+        return;
       }
 
       state->contentData() =
@@ -5862,8 +5858,6 @@ HTMLInputElement::SaveState() {
       state->disabledSet() = true;
     }
   }
-
-  return NS_OK;
 }
 
 void HTMLInputElement::DoneCreatingElement() {

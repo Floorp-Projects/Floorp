@@ -703,10 +703,7 @@ HTMLTextAreaElement::SubmitNamesValues(FormData* aFormData) {
   return aFormData->AddNameValuePair(name, value);
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::SaveState() {
-  nsresult rv = NS_OK;
-
+void HTMLTextAreaElement::SaveState() {
   // Only save if value != defaultValue (bug 62713)
   PresState* state = nullptr;
   if (mValueChanged) {
@@ -715,13 +712,11 @@ HTMLTextAreaElement::SaveState() {
       nsAutoString value;
       GetValueInternal(value, true);
 
-      rv = nsLinebreakConverter::ConvertStringLineBreaks(
-          value, nsLinebreakConverter::eLinebreakPlatform,
-          nsLinebreakConverter::eLinebreakContent);
-
-      if (NS_FAILED(rv)) {
+      if (NS_FAILED(nsLinebreakConverter::ConvertStringLineBreaks(
+              value, nsLinebreakConverter::eLinebreakPlatform,
+              nsLinebreakConverter::eLinebreakContent))) {
         NS_ERROR("Converting linebreaks failed!");
-        return rv;
+        return;
       }
 
       state->contentData() =
@@ -732,7 +727,6 @@ HTMLTextAreaElement::SaveState() {
   if (mDisabledChanged) {
     if (!state) {
       state = GetPrimaryPresState();
-      rv = NS_OK;
     }
     if (state) {
       // We do not want to save the real disabled state but the disabled
@@ -741,7 +735,6 @@ HTMLTextAreaElement::SaveState() {
       state->disabledSet() = true;
     }
   }
-  return rv;
 }
 
 bool HTMLTextAreaElement::RestoreState(PresState* aState) {
