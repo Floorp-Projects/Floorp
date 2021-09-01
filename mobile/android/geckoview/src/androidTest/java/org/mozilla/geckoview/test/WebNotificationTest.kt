@@ -25,10 +25,10 @@ class WebNotificationTest : BaseSessionTest() {
 
         // Grant "desktop notification" permission
         mainSession.delegateUntilTestEnd(object : PermissionDelegate {
-            override fun onContentPermissionRequest(session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
+            override fun onContentPermissionRequest(session: GeckoSession, perm: PermissionDelegate.ContentPermission):
                     GeckoResult<Int>? {
-                assertThat("Should grant DESKTOP_NOTIFICATIONS permission", perm.permission, equalTo(GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION))
-                return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
+                assertThat("Should grant DESKTOP_NOTIFICATIONS permission", perm.permission, equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION))
+                return GeckoResult.fromValue(PermissionDelegate.ContentPermission.VALUE_ALLOW)
             }
         })
 
@@ -39,13 +39,9 @@ class WebNotificationTest : BaseSessionTest() {
 
     @Test fun onSilentNotification() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.silent.enabled" to true))
-        val runtime = sessionRule.runtime
         val notificationResult = GeckoResult<Void>()
-        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
-        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
 
-        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
-                unregister, object : WebNotificationDelegate {
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
             @GeckoSessionTestRule.AssertCalled
             override fun onShowNotification(notification: WebNotification) {
                 assertThat("Title should match", notification.title, equalTo("The Title"))
@@ -65,15 +61,11 @@ class WebNotificationTest : BaseSessionTest() {
 
     @Test fun onShowNotification() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.vibrate.enabled" to true))
-        val runtime = sessionRule.runtime
         val notificationResult = GeckoResult<Void>()
-        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
-        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
         val requireInteraction =
                 sessionRule.getPrefs("dom.webnotifications.requireinteraction.enabled")[0] as Boolean
 
-        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
-            unregister, object : WebNotificationDelegate {
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
                 @GeckoSessionTestRule.AssertCalled
                 override fun onShowNotification(notification: WebNotification) {
                     assertThat("Title should match", notification.title, equalTo("The Title"))
@@ -101,13 +93,9 @@ class WebNotificationTest : BaseSessionTest() {
     }
 
     @Test fun onCloseNotification() {
-        val runtime = sessionRule.runtime
         val closeCalled = GeckoResult<Void>()
-        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
-        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
 
-        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
-            unregister, object : WebNotificationDelegate {
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
                 @GeckoSessionTestRule.AssertCalled
                 override fun onCloseNotification(notification: WebNotification) {
                     closeCalled.complete(null)
@@ -123,14 +111,10 @@ class WebNotificationTest : BaseSessionTest() {
     }
 
     @Test fun clickNotification() {
-        val runtime = sessionRule.runtime
         val notificationResult = GeckoResult<Void>()
-        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
-        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
         var notificationShown: WebNotification? = null
 
-        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
-            unregister, object : WebNotificationDelegate {
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
                 @GeckoSessionTestRule.AssertCalled
                 override fun onShowNotification(notification: WebNotification) {
                     notificationShown = notification
@@ -154,14 +138,10 @@ class WebNotificationTest : BaseSessionTest() {
     }
 
     @Test fun dismissNotification() {
-        val runtime = sessionRule.runtime
         val notificationResult = GeckoResult<Void>()
-        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
-        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
         var notificationShown: WebNotification? = null
 
-        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
-            unregister, object : WebNotificationDelegate {
+        sessionRule.delegateDuringNextWait(object : WebNotificationDelegate {
                 @GeckoSessionTestRule.AssertCalled
                 override fun onShowNotification(notification: WebNotification) {
                     notificationShown = notification
