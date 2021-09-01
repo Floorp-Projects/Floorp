@@ -1,6 +1,6 @@
 version: 1
 policy:
-  pullRequests: public
+  pullRequests: collaborators
 tasks:
 ###############################################################################
 # Task: Pull requests
