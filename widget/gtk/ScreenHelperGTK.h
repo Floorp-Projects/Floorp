@@ -81,7 +81,7 @@ class ScreenGetterWayland : public ScreenGetter {
 
   MonitorConfig* AddMonitorConfig(int aId);
   bool RemoveMonitorConfig(int aId);
-  already_AddRefed<Screen> MakeScreenWayland(gint aMonitor);
+  already_AddRefed<Screen> MakeScreenWayland(gint aMonitorNum);
 
   RefPtr<nsIScreen> GetScreenForWindow(nsWindow* aWindow);
   void GetScreenRectForWindow(nsWindow* aWindow, GdkRectangle* aRect);
@@ -91,7 +91,6 @@ class ScreenGetterWayland : public ScreenGetter {
 
  private:
   int GetMonitorForWindow(nsWindow* aWindow);
-  bool MonitorUsesNonIntegerScale(int aMonitor);
 
  private:
   void* mRegistry;
