@@ -35,30 +35,6 @@ class SettingsMozillaMenuRobot {
             .perform(click())
     }
 
-    fun openAboutPage() {
-        aboutFocusPageLink
-            .check(matches(isDisplayed()))
-            .perform(click())
-    }
-
-    fun openYourRightsPage() {
-        yourRightsLink
-            .check(matches(isDisplayed()))
-            .perform(click())
-    }
-
-    fun openPrivacyNotice() {
-        privacyNoticeLink
-            .check(matches(isDisplayed()))
-            .perform(click())
-    }
-
-    fun openHelpLink() {
-        helpPageLink
-            .check(matches(isDisplayed()))
-            .perform(click())
-    }
-
     fun verifyVersionNumbers() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -88,7 +64,50 @@ class SettingsMozillaMenuRobot {
         }
     }
 
-    class Transition
+    class Transition {
+        fun openAboutPage(interact: SettingsMozillaMenuRobot.() -> Unit): Transition {
+            aboutFocusPageLink
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            SettingsMozillaMenuRobot().interact()
+            return Transition()
+        }
+
+        fun openAboutPageLearnMoreLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.findObject(UiSelector().text("Learn more")).click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openYourRightsPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            yourRightsLink
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openPrivacyNotice(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            privacyNoticeLink
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openHelpLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            helpPageLink
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+    }
 }
 
 private val mozillaSettingsList =

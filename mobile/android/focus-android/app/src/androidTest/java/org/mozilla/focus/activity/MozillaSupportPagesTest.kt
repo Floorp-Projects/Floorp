@@ -8,7 +8,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.appContext
@@ -49,8 +48,10 @@ class MozillaSupportPagesTest {
         }.openMainMenu {
         }.openSettings {
         }.openMozillaSettingsMenu {
-            openAboutPage()
+        }.openAboutPage {
             verifyVersionNumbers()
+        }.openAboutPageLearnMoreLink() {
+            verifyPageURL("www.mozilla.org/en-US/about/manifesto/")
         }
     }
 
@@ -61,9 +62,7 @@ class MozillaSupportPagesTest {
         }.openMainMenu {
         }.openSettings {
         }.openMozillaSettingsMenu {
-            openHelpLink()
-        }
-        browserScreen {
+        }.openHelpLink {
             verifyPageURL("what-firefox-focus-android")
         }
     }
@@ -80,9 +79,7 @@ class MozillaSupportPagesTest {
         }.openMainMenu {
         }.openSettings {
         }.openMozillaSettingsMenu {
-            openYourRightsPage()
-        }
-        browserScreen {
+        }.openYourRightsPage {
             verifyPageContent(yourRightsString)
         }
     }
@@ -93,9 +90,7 @@ class MozillaSupportPagesTest {
         }.openMainMenu {
         }.openSettings {
         }.openMozillaSettingsMenu {
-            openPrivacyNotice()
-        }
-        browserScreen {
+        }.openPrivacyNotice {
             verifyPageURL("privacy/firefox-focus")
         }
     }
