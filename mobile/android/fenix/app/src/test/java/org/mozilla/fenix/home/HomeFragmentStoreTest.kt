@@ -7,21 +7,28 @@ package org.mozilla.fenix.home
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.pocket.PocketRecommendedStory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.POCKET_STORIES_TO_SHOW_COUNT
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
 class HomeFragmentStoreTest {
@@ -179,4 +186,112 @@ class HomeFragmentStoreTest {
             assertEquals(2, homeFragmentStore.state.historyMetadata.size)
             assertEquals(Mode.Private, homeFragmentStore.state.mode)
         }
+
+    @Test
+    fun `Test selecting a Pocket recommendations category`() = runBlocking {
+        val otherStoriesCategory = PocketRecommendedStoryCategory("other")
+        val anotherStoriesCategory = PocketRecommendedStoryCategory("another")
+        val filteredStories = listOf(mockk<PocketRecommendedStory>())
+        homeFragmentStore = HomeFragmentStore(
+            HomeFragmentState(
+                pocketStoriesCategories = listOf(
+                    otherStoriesCategory, anotherStoriesCategory
+                )
+            )
+        )
+
+        mockkStatic("org.mozilla.fenix.ext.HomeFragmentStateKt") {
+            every { any<HomeFragmentState>().getFilteredStories(any()) } returns filteredStories
+
+            homeFragmentStore.dispatch(HomeFragmentAction.SelectPocketStoriesCategory("other")).join()
+
+            verify { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+        }
+
+        assertTrue(
+            listOf(otherStoriesCategory.copy(isSelected = true))
+                .containsAll(homeFragmentStore.state.pocketStoriesCategories.filter { it.isSelected })
+        )
+        assertSame(filteredStories, homeFragmentStore.state.pocketStories)
+    }
+
+    @Test
+    fun `Test deselecting a Pocket recommendations category`() = runBlocking {
+        val otherStoriesCategory = PocketRecommendedStoryCategory("other", isSelected = true)
+        val anotherStoriesCategory = PocketRecommendedStoryCategory("another", isSelected = true)
+        val filteredStories = listOf(mockk<PocketRecommendedStory>())
+        homeFragmentStore = HomeFragmentStore(
+            HomeFragmentState(
+                pocketStoriesCategories = listOf(
+                    otherStoriesCategory, anotherStoriesCategory
+                )
+            )
+        )
+
+        mockkStatic("org.mozilla.fenix.ext.HomeFragmentStateKt") {
+            every { any<HomeFragmentState>().getFilteredStories(any()) } returns filteredStories
+
+            homeFragmentStore.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory("other")).join()
+
+            verify { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+        }
+
+        assertTrue(
+            listOf(anotherStoriesCategory)
+                .containsAll(homeFragmentStore.state.pocketStoriesCategories.filter { it.isSelected })
+        )
+        assertSame(filteredStories, homeFragmentStore.state.pocketStories)
+    }
+
+    @Test
+    fun `Test updating the list of Pocket recommended stories`() = runBlocking {
+        val story1 = PocketRecommendedStory("title1", "publisher", "url", "imageUrl", 1, "category")
+        val story2 = story1.copy("title2")
+        homeFragmentStore = HomeFragmentStore(HomeFragmentState())
+
+        homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesChange(listOf(story1, story2)))
+            .join()
+        assertTrue(homeFragmentStore.state.pocketStories.containsAll(listOf(story1, story2)))
+
+        val updatedStories = listOf(story2.copy("title3"))
+        homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesChange(updatedStories)).join()
+        assertTrue(updatedStories.containsAll(homeFragmentStore.state.pocketStories))
+    }
+
+    @Test
+    fun `Test updating the list of Pocket recommendations categories`() = runBlocking {
+        val otherStoriesCategory = PocketRecommendedStoryCategory("other")
+        val anotherStoriesCategory = PocketRecommendedStoryCategory("another", isSelected = true)
+        homeFragmentStore = HomeFragmentStore(HomeFragmentState())
+
+        mockkStatic("org.mozilla.fenix.ext.HomeFragmentStateKt") {
+            val firstFilteredStories = listOf(mockk<PocketRecommendedStory>())
+            every { any<HomeFragmentState>().getFilteredStories(any()) } returns firstFilteredStories
+
+            homeFragmentStore.dispatch(
+                HomeFragmentAction.PocketStoriesCategoriesChange(
+                    listOf(otherStoriesCategory, anotherStoriesCategory)
+                )
+            ).join()
+            verify { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            assertTrue(
+                homeFragmentStore.state.pocketStoriesCategories.containsAll(
+                    listOf(otherStoriesCategory, anotherStoriesCategory)
+                )
+            )
+            assertSame(firstFilteredStories, homeFragmentStore.state.pocketStories)
+
+            val updatedCategories = listOf(PocketRecommendedStoryCategory("yetAnother"))
+            val secondFilteredStories = listOf(mockk<PocketRecommendedStory>())
+            every { any<HomeFragmentState>().getFilteredStories(any()) } returns secondFilteredStories
+            homeFragmentStore.dispatch(
+                HomeFragmentAction.PocketStoriesCategoriesChange(
+                    updatedCategories
+                )
+            ).join()
+            verify(exactly = 2) { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            assertTrue(updatedCategories.containsAll(homeFragmentStore.state.pocketStoriesCategories))
+            assertSame(secondFilteredStories, homeFragmentStore.state.pocketStories)
+        }
+    }
 }

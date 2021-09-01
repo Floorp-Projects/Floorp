@@ -11,11 +11,14 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.ExperimentalMaterialApi
@@ -33,6 +37,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -46,6 +51,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -54,6 +61,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
@@ -183,6 +192,157 @@ fun PocketStories(
 }
 
 /**
+ * Displays a list of [PocketRecommendedStoryCategory].
+ *
+ * @param categories the categories needed to be displayed.
+ * @param onCategoryClick callback for when the user taps a category.
+ */
+@Composable
+fun PocketStoriesCategories(
+    categories: List<PocketRecommendedStoryCategory>,
+    onCategoryClick: (PocketRecommendedStoryCategory) -> Unit
+) {
+    StaggeredHorizontalGrid {
+        categories.forEach { category ->
+            PocketStoryCategory(category) {
+                onCategoryClick(it)
+            }
+        }
+    }
+}
+
+/**
+ * Displays an individual [PocketRecommendedStoryCategory].
+ *
+ * @param category the categories needed to be displayed.
+ * @param onClick callback for when the user taps this category.
+ */
+@Composable
+fun PocketStoryCategory(
+    category: PocketRecommendedStoryCategory,
+    onClick: (PocketRecommendedStoryCategory) -> Unit
+) {
+    val contentColor = when (category.isSelected) {
+        true -> Color.Blue
+        false -> Color.DarkGray
+    }
+
+    OutlinedButton(
+        onClick = { onClick(category) },
+        shape = RoundedCornerShape(32.dp),
+        border = BorderStroke(1.dp, contentColor),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = contentColor
+        ),
+        contentPadding = PaddingValues(8.dp, 7.dp)
+    ) {
+        Row {
+            Text(
+                text = category.name,
+                modifier = Modifier.alignByBaseline(),
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.mozac_ic_check),
+                contentDescription = "Expand or collapse Pocket recommended stories",
+                modifier = Modifier.alignByBaseline()
+            )
+        }
+    }
+}
+
+/**
+ * Displays a list of items as a staggered horizontal grid placing them on ltr rows and continuing
+ * on as many below rows as needed to place all items.
+ *
+ * In an effort to best utilize the available row space this can mix the items such that narrower ones
+ * are placed on the same row as wider ones if the otherwise next item doesn't fit.
+ *
+ * @param modifier to be applied to the layout.
+ * @param horizontalItemsSpacing minimum horizontal space between items. Does not add spacing to layout bounds.
+ * @param verticalItemsSpacing vertical space between items
+ * @param arrangement how the items will be horizontally aligned and spaced.
+ * @param content the children composables to be laid out.
+ */
+@Composable
+fun StaggeredHorizontalGrid(
+    modifier: Modifier = Modifier,
+    horizontalItemsSpacing: Dp = 0.dp,
+    verticalItemsSpacing: Dp = 8.dp,
+    arrangement: Arrangement.Horizontal = Arrangement.SpaceEvenly,
+    content: @Composable () -> Unit
+) {
+    Layout(content, modifier) { items, constraints ->
+        val horizontalItemsSpacingPixels = horizontalItemsSpacing.roundToPx()
+        val verticalItemsSpacingPixels = verticalItemsSpacing.roundToPx()
+        var totalHeight = 0
+        val itemsRows = mutableListOf<List<Placeable>>()
+        val notYetPlacedItems = items.map {
+            it.measure(constraints)
+        }.toMutableList()
+
+        fun getIndexOfNextPlaceableThatFitsRow(available: List<Placeable>, currentWidth: Int): Int {
+            return available.indexOfFirst {
+                currentWidth + it.width <= constraints.maxWidth
+            }
+        }
+
+        // Populate each row with as many items as possible combining wider with narrower items.
+        // This will change the order of shown categories.
+        var (currentRow, currentWidth) = mutableListOf<Placeable>() to 0
+        while (notYetPlacedItems.isNotEmpty()) {
+            if (currentRow.isEmpty()) {
+                currentRow.add(
+                    notYetPlacedItems[0].also {
+                        currentWidth += it.width
+                        totalHeight += it.height + verticalItemsSpacingPixels
+                    }
+                )
+                notYetPlacedItems.removeAt(0)
+            } else {
+                val nextPlaceableThatFitsIndex = getIndexOfNextPlaceableThatFitsRow(notYetPlacedItems, currentWidth)
+                if (nextPlaceableThatFitsIndex >= 0) {
+                    currentRow.add(
+                        notYetPlacedItems[nextPlaceableThatFitsIndex].also {
+                            currentWidth += it.width + horizontalItemsSpacingPixels
+                        }
+                    )
+                    notYetPlacedItems.removeAt(nextPlaceableThatFitsIndex)
+                } else {
+                    itemsRows.add(currentRow)
+                    currentRow = mutableListOf()
+                    currentWidth = 0
+                }
+            }
+        }
+        if (currentRow.isNotEmpty()) {
+            itemsRows.add(currentRow)
+        }
+        totalHeight -= verticalItemsSpacingPixels
+
+        // Place each item from each row on screen.
+        layout(constraints.maxWidth, totalHeight) {
+            itemsRows.forEachIndexed { rowIndex, itemRow ->
+                val itemsSizes = IntArray(itemRow.size) {
+                    itemRow[it].width +
+                        if (it < itemRow.lastIndex) horizontalItemsSpacingPixels else 0
+                }
+                val itemsPositions = IntArray(itemsSizes.size) { 0 }
+                with(arrangement) {
+                    arrange(constraints.maxWidth, itemsSizes, LayoutDirection.Ltr, itemsPositions)
+                }
+
+                itemRow.forEachIndexed { itemIndex, item ->
+                    item.place(
+                        x = itemsPositions[itemIndex],
+                        y = (rowIndex * item.height) + (rowIndex * verticalItemsSpacingPixels)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
  * Displays [content] in a layout which will have at the bottom more information about Pocket
  * and also an external link for more up-to-date content.
  */
@@ -291,6 +451,14 @@ private fun FinalDesign() {
                 stories = getFakePocketStories(7),
                 client = FakeClient()
             )
+
+            Spacer(Modifier.height(8.dp))
+
+            PocketStoriesCategories(
+                listOf("general", "health", "technology", "food", "career").map {
+                    PocketRecommendedStoryCategory(it)
+                }
+            ) { }
         }
     }
 }

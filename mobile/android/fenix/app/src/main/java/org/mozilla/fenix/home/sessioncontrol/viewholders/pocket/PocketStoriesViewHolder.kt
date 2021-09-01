@@ -5,7 +5,10 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
 import android.view.View
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,7 +21,8 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.home.HomeFragmentStore
 
-private const val STORIES_TO_SHOW_COUNT = 7
+internal const val POCKET_STORIES_TO_SHOW_COUNT = 7
+internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 7
 
 /**
  * [RecyclerView.ViewHolder] that will display a list of [PocketRecommendedStory]es
@@ -26,11 +30,14 @@ private const val STORIES_TO_SHOW_COUNT = 7
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param store [HomeFragmentStore] containing the list of Pocket stories to be displayed.
+ * @param client [Client] instance used for the stories header images.
+ * @param interactor [PocketStoriesInteractor] callback for user interaction.
  */
 class PocketStoriesViewHolder(
     val composeView: ComposeView,
     val store: HomeFragmentStore,
-    val client: Client
+    val client: Client,
+    val interactor: PocketStoriesInteractor
 ) : RecyclerView.ViewHolder(composeView) {
 
     init {
@@ -38,7 +45,7 @@ class PocketStoriesViewHolder(
             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
         )
         composeView.setContent {
-            PocketStories(store, client)
+            PocketStories(store, client) { interactor.onCategoryClick(it) }
         }
     }
 
@@ -50,11 +57,14 @@ class PocketStoriesViewHolder(
 @Composable
 fun PocketStories(
     store: HomeFragmentStore,
-    client: Client
+    client: Client,
+    onCategoryClick: (PocketRecommendedStoryCategory) -> Unit
 ) {
     val stories = store
         .observeAsComposableState { state -> state.pocketStories }.value
-        ?.take(STORIES_TO_SHOW_COUNT)
+
+    val categories = store
+        .observeAsComposableState { state -> state.pocketStoriesCategories }.value
 
     ExpandableCard(
         Modifier
@@ -62,10 +72,15 @@ fun PocketStories(
             .padding(top = 40.dp)
     ) {
         PocketRecommendations {
-            PocketStories(
-                stories ?: emptyList(),
-                client
-            )
+            Column {
+                PocketStories(stories ?: emptyList(), client)
+
+                Spacer(Modifier.height(8.dp))
+
+                PocketStoriesCategories(categories ?: emptyList()) {
+                    onCategoryClick(it)
+                }
+            }
         }
     }
 }

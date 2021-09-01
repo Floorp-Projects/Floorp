@@ -47,7 +47,6 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -111,6 +110,8 @@ import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.DefaultPocketStoriesController
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
 import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.DefaultTopSitesView
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
@@ -241,9 +242,12 @@ class HomeFragment : Fragment() {
         }
 
         if (requireContext().settings().pocketRecommendations) {
-            lifecycleScope.async(IO) {
-                val stories = components.core.pocketStoriesService.getStories()
-                homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesChange(stories))
+            lifecycleScope.launch(IO) {
+                val categories = components.core.pocketStoriesService.getStories()
+                    .groupBy { story -> story.category }
+                    .map { (category, stories) -> PocketRecommendedStoryCategory(category, stories) }
+
+                homeFragmentStore.dispatch(HomeFragmentAction.PocketStoriesCategoriesChange(categories))
             }
         }
 
@@ -327,6 +331,9 @@ class HomeFragment : Fragment() {
             ),
             historyMetadataController = DefaultHistoryMetadataController(
                 navController = findNavController()
+            ),
+            pocketStoriesController = DefaultPocketStoriesController(
+                homeStore = homeFragmentStore
             )
         )
 

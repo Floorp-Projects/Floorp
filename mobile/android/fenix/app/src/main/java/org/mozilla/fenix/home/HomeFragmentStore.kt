@@ -15,7 +15,10 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.POCKET_STORIES_TO_SHOW_COUNT
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
 
 /**
  * The [Store] for holding the [HomeFragmentState] and applying [HomeFragmentAction]s.
@@ -63,7 +66,8 @@ data class HomeFragmentState(
     val recentTabs: List<TabSessionState> = emptyList(),
     val recentBookmarks: List<BookmarkNode> = emptyList(),
     val historyMetadata: List<HistoryMetadataGroup> = emptyList(),
-    val pocketStories: List<PocketRecommendedStory> = emptyList()
+    val pocketStories: List<PocketRecommendedStory> = emptyList(),
+    val pocketStoriesCategories: List<PocketRecommendedStoryCategory> = emptyList()
 ) : State
 
 sealed class HomeFragmentAction : Action {
@@ -89,11 +93,16 @@ sealed class HomeFragmentAction : Action {
     data class RecentTabsChange(val recentTabs: List<TabSessionState>) : HomeFragmentAction()
     data class RecentBookmarksChange(val recentBookmarks: List<BookmarkNode>) : HomeFragmentAction()
     data class HistoryMetadataChange(val historyMetadata: List<HistoryMetadataGroup>) : HomeFragmentAction()
+    data class SelectPocketStoriesCategory(val categoryName: String) : HomeFragmentAction()
+    data class DeselectPocketStoriesCategory(val categoryName: String) : HomeFragmentAction()
     data class PocketStoriesChange(val pocketStories: List<PocketRecommendedStory>) : HomeFragmentAction()
+    data class PocketStoriesCategoriesChange(val storiesCategories: List<PocketRecommendedStoryCategory>) :
+        HomeFragmentAction()
     object RemoveCollectionsPlaceholder : HomeFragmentAction()
     object RemoveSetDefaultBrowserCard : HomeFragmentAction()
 }
 
+@Suppress("ReturnCount")
 private fun homeFragmentStateReducer(
     state: HomeFragmentState,
     action: HomeFragmentAction
@@ -132,6 +141,43 @@ private fun homeFragmentStateReducer(
         is HomeFragmentAction.RecentTabsChange -> state.copy(recentTabs = action.recentTabs)
         is HomeFragmentAction.RecentBookmarksChange -> state.copy(recentBookmarks = action.recentBookmarks)
         is HomeFragmentAction.HistoryMetadataChange -> state.copy(historyMetadata = action.historyMetadata)
+        is HomeFragmentAction.SelectPocketStoriesCategory -> {
+            // Selecting a category means the stories to be displayed needs to also be changed.
+            val updatedCategoriesState = state.copy(
+                pocketStoriesCategories = state.pocketStoriesCategories.map {
+                    when (it.name == action.categoryName) {
+                        true -> it.copy(isSelected = true)
+                        false -> it
+                    }
+                }
+            )
+            return updatedCategoriesState.copy(
+                pocketStories = updatedCategoriesState.getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT)
+            )
+        }
+        is HomeFragmentAction.DeselectPocketStoriesCategory -> {
+            val updatedCategoriesState = state.copy(
+                // Deselecting a category means the stories to be displayed needs to also be changed.
+                pocketStoriesCategories = state.pocketStoriesCategories.map {
+                    when (it.name == action.categoryName) {
+                        true -> it.copy(isSelected = false)
+                        false -> it
+                    }
+                }
+            )
+            return updatedCategoriesState.copy(
+                pocketStories = updatedCategoriesState.getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT)
+            )
+        }
+        is HomeFragmentAction.PocketStoriesCategoriesChange -> {
+            // Whenever categories change stories to be displayed needs to also be changed.
+            val updatedCategoriesState = state.copy(pocketStoriesCategories = action.storiesCategories)
+            return updatedCategoriesState.copy(
+                pocketStories = updatedCategoriesState.getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT)
+            ).also {
+                println("just updated stories in the state")
+            }
+        }
         is HomeFragmentAction.PocketStoriesChange -> state.copy(pocketStories = action.pocketStories)
     }
 }
