@@ -433,8 +433,6 @@ void gfxPlatform::OnMemoryPressure(layers::MemoryPressureReason aWhy) {
 
 gfxPlatform::gfxPlatform()
     : mHasVariationFontSupport(false),
-      mTotalPhysicalMemory(~0),
-      mTotalVirtualMemory(~0),
       mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo),
       mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo),
       mTilesInfoCollector(this, &gfxPlatform::GetTilesSupportInfo),
@@ -442,8 +440,7 @@ gfxPlatform::gfxPlatform()
       mCMSInfoCollector(this, &gfxPlatform::GetCMSSupportInfo),
       mDisplayInfoCollector(this, &gfxPlatform::GetDisplayInfo),
       mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
-      mScreenDepth(0),
-      mScreenPixels(0) {
+      mScreenDepth(0) {
   mAllowDownloadableFonts = UNINITIALIZED_VALUE;
   mFallbackUsesCmaps = UNINITIALIZED_VALUE;
 
@@ -454,18 +451,6 @@ gfxPlatform::gfxPlatform()
   mBidiNumeralOption = UNINITIALIZED_VALUE;
 
   InitBackendPrefs(GetBackendPrefs());
-
-#ifdef XP_WIN
-  MEMORYSTATUSEX status;
-  status.dwLength = sizeof(status);
-  if (GlobalMemoryStatusEx(&status)) {
-    mTotalPhysicalMemory = status.ullTotalPhys;
-    mTotalVirtualMemory = status.ullTotalVirtual;
-  }
-#else
-  mTotalPhysicalMemory = PR_GetPhysicalMemorySize();
-#endif
-
   VRManager::ManagerInit();
 }
 
@@ -1551,8 +1536,6 @@ void gfxPlatform::PopulateScreenInfo() {
   nsCOMPtr<nsIScreenManager> manager =
       do_GetService("@mozilla.org/gfx/screenmanager;1");
   MOZ_ASSERT(manager, "failed to get nsIScreenManager");
-
-  manager->GetTotalScreenPixels(&mScreenPixels);
 
   nsCOMPtr<nsIScreen> screen;
   manager->GetPrimaryScreen(getter_AddRefs(screen));
