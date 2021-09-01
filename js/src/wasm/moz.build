@@ -21,6 +21,8 @@ UNIFIED_SOURCES += [
     "AsmJS.cpp",
     "TypedObject.cpp",
     "WasmBaselineCompile.cpp",
+    "WasmBCFrame.cpp",
+    "WasmBCMemory.cpp",
     "WasmBinary.cpp",
     "WasmBuiltins.cpp",
     "WasmCode.cpp",
