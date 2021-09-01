@@ -1249,13 +1249,10 @@ EventStates HTMLSelectElement::IntrinsicState() const {
   return state;
 }
 
-// nsIFormControl
-
-NS_IMETHODIMP
-HTMLSelectElement::SaveState() {
+void HTMLSelectElement::SaveState() {
   PresState* presState = GetPrimaryPresState();
   if (!presState) {
-    return NS_OK;
+    return;
   }
 
   SelectContentData state;
@@ -1283,9 +1280,9 @@ HTMLSelectElement::SaveState() {
     presState->disabled() = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
     presState->disabledSet() = true;
   }
-
-  return NS_OK;
 }
+
+// nsIFormControl
 
 bool HTMLSelectElement::RestoreState(PresState* aState) {
   // Get the presentation state object to retrieve our stuff out of.

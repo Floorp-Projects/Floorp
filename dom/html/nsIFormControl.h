@@ -147,13 +147,6 @@ class nsIFormControl : public nsISupports {
   SubmitNamesValues(mozilla::dom::FormData* aFormData) = 0;
 
   /**
-   * Save to presentation state.  The form control will determine whether it
-   * has anything to save and if so, create an entry in the layout history for
-   * its pres context.
-   */
-  NS_IMETHOD SaveState() = 0;
-
-  /**
    * Restore from presentation state.  You pass in the presentation state for
    * this form control (generated with GenerateStateKey() + "-C") and the form
    * control will grab its state from there.
