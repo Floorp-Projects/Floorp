@@ -4567,7 +4567,8 @@ JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
     MOZ_ASSERT(IsAsmJSModule(fun));
     clone = CloneAsmJSModuleFunction(cx, fun);
   } else {
-    clone = CloneFunctionObject(cx, fun, parent);
+    RootedObject proto(cx, fun->staticPrototype());
+    clone = CloneFunctionObject(cx, fun, parent, proto);
   }
   if (!clone) {
     return nullptr;
@@ -4581,7 +4582,8 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
                           HandleObject parent, HandleValue newTargetv) {
   MOZ_ASSERT(fun->isArrow());
 
-  JSFunction* clone = CloneFunctionObject(cx, fun, parent);
+  RootedObject proto(cx, fun->staticPrototype());
+  JSFunction* clone = CloneFunctionObject(cx, fun, parent, proto);
   if (!clone) {
     return nullptr;
   }
