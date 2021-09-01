@@ -2007,11 +2007,20 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
 }
 
 static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
-                                           gc::AllocKind allocKind,
                                            HandleObject proto) {
   MOZ_ASSERT(proto);
 
-  const JSClass* clasp = FunctionClassForAllocKind(allocKind);
+  const JSClass* clasp = fun->getClass();
+  gc::AllocKind allocKind = fun->getAllocKind();
+
+#ifdef DEBUG
+  if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
+    MOZ_ASSERT(clasp == FunctionExtendedClassPtr);
+  } else {
+    MOZ_ASSERT(allocKind == gc::AllocKind::FUNCTION);
+    MOZ_ASSERT(clasp == FunctionClassPtr);
+  }
+#endif
 
   RootedFunction clone(cx);
   clone = static_cast<JSFunction*>(
@@ -2053,7 +2062,6 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
 
 JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
                                          HandleObject enclosingEnv,
-                                         gc::AllocKind allocKind,
                                          HandleObject proto) {
   MOZ_ASSERT(cx->realm() == fun->realm());
   MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
@@ -2061,7 +2069,7 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
   MOZ_ASSERT(!fun->isBoundFunction());
   MOZ_ASSERT(CanReuseScriptForClone(cx->realm(), fun, enclosingEnv));
 
-  RootedFunction clone(cx, NewFunctionClone(cx, fun, allocKind, proto));
+  RootedFunction clone(cx, NewFunctionClone(cx, fun, proto));
   if (!clone) {
     return nullptr;
   }
@@ -2087,8 +2095,7 @@ JSFunction* js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun) {
   MOZ_ASSERT(cx->compartment() == fun->compartment());
 
   RootedObject proto(cx, fun->staticPrototype());
-  JSFunction* clone =
-      NewFunctionClone(cx, fun, gc::AllocKind::FUNCTION_EXTENDED, proto);
+  JSFunction* clone = NewFunctionClone(cx, fun, proto);
   if (!clone) {
     return nullptr;
   }
