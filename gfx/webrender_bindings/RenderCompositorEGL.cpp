@@ -32,6 +32,9 @@
 
 namespace mozilla::wr {
 
+extern LazyLogModule gRenderThreadLog;
+#define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
+
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
@@ -57,9 +60,12 @@ EGLSurface RenderCompositorEGL::CreateEGLSurface() {
 
 RenderCompositorEGL::RenderCompositorEGL(
     const RefPtr<widget::CompositorWidget>& aWidget)
-    : RenderCompositor(aWidget), mEGLSurface(EGL_NO_SURFACE) {}
+    : RenderCompositor(aWidget), mEGLSurface(EGL_NO_SURFACE) {
+  LOG("RenderCompositorEGL::RenderCompositorEGL()");
+}
 
 RenderCompositorEGL::~RenderCompositorEGL() {
+  LOG("RenderCompositorEGL::~RenderCompositorEGL()");
 #ifdef MOZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
 #endif
