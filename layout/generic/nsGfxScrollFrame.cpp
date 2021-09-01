@@ -4260,7 +4260,7 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
     // If rootFrame is the RCD-RSF then
     // CalculateCompositionSizeForFrame did not take the document's
     // resolution into account, so we must.
-    if (rootPresContext->IsRootContentDocument() &&
+    if (rootPresContext->IsRootContentDocumentCrossProcess() &&
         rootFrame == rootPresShell->GetRootScrollFrame()) {
       MOZ_LOG(
           sDisplayportLog, LogLevel::Verbose,
