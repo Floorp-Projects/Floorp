@@ -2010,19 +2010,13 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
                                            NewObjectKind newKind,
                                            gc::AllocKind allocKind,
                                            HandleObject proto) {
-  RootedObject cloneProto(cx, proto);
-  if (!proto) {
-    if (!GetFunctionPrototype(cx, fun->generatorKind(), fun->asyncKind(),
-                              &cloneProto)) {
-      return nullptr;
-    }
-  }
+  MOZ_ASSERT(proto);
 
   const JSClass* clasp = FunctionClassForAllocKind(allocKind);
 
   RootedFunction clone(cx);
   clone = static_cast<JSFunction*>(
-      NewObjectWithClassProto(cx, clasp, cloneProto, allocKind, newKind));
+      NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind));
   if (!clone) {
     return nullptr;
   }
@@ -2095,9 +2089,9 @@ JSFunction* js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun) {
   MOZ_ASSERT(fun->isExtended());
   MOZ_ASSERT(cx->compartment() == fun->compartment());
 
-  JSFunction* clone =
-      NewFunctionClone(cx, fun, GenericObject, gc::AllocKind::FUNCTION_EXTENDED,
-                       /* proto = */ nullptr);
+  RootedObject proto(cx, fun->staticPrototype());
+  JSFunction* clone = NewFunctionClone(cx, fun, GenericObject,
+                                       gc::AllocKind::FUNCTION_EXTENDED, proto);
   if (!clone) {
     return nullptr;
   }
