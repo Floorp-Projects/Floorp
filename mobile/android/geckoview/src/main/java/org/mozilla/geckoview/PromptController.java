@@ -23,17 +23,57 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PopupPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptInstanceDelegate;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.RepostConfirmPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.SharePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthPrompt.AuthOptions;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BasePrompt.Observer;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /* package */ class PromptController {
     private static final String LOGTAG = "Prompts";
+
+    private static class PromptStorage implements BasePrompt.Observer {
+        private final Map<String, BasePrompt> mPrompts = new HashMap<>();
+
+        public void addPrompt(final String id, final BasePrompt prompt) {
+            if (mPrompts.containsKey(id)) {
+                Log.e(LOGTAG, "Prompt already exists! id=" + id);
+                if (BuildConfig.DEBUG) {
+                    throw new RuntimeException("Prompt already exists! id=" + id);
+                }
+            }
+            mPrompts.put(id, prompt);
+        }
+
+        @Override
+        public void onPromptCompleted(final BasePrompt prompt) {
+            // No need to notify this delegate since the prompt has been completed already.
+            mPrompts.remove(prompt.id);
+        }
+
+        public void dismiss(final String id) {
+            final BasePrompt prompt = mPrompts.get(id);
+            if (prompt == null) {
+                return;
+            }
+            final PromptInstanceDelegate delegate = prompt.getDelegate();
+            if (delegate != null) {
+                delegate.onPromptDismiss(prompt);
+            }
+            mPrompts.remove(prompt.id);
+        }
+    }
+
+    final PromptStorage mStorage = new PromptStorage();
+
+    public void dismissPrompt(final String id) {
+        mStorage.dismiss(id);
+    }
 
     public void handleEvent(final GeckoSession session,
                             final GeckoBundle message,
@@ -69,7 +109,7 @@ import java.util.Map;
             final GeckoSession session,
             final PromptDelegate delegate,
             final PromptHandler<PromptType> handler) {
-        final PromptType prompt = handler.newPrompt(message);
+        final PromptType prompt = handler.newPrompt(message, mStorage);
         if (prompt == null) {
             try {
                 Log.e(LOGTAG, "Invalid prompt: " + message.toJSONObject().toString());
@@ -80,21 +120,25 @@ import java.util.Map;
             return GeckoResult.fromException(
                     new IllegalArgumentException("Invalid prompt data."));
         }
+
+        mStorage.addPrompt(prompt.id, prompt);
         return handler.callDelegate(prompt, session, delegate);
     }
 
     private interface PromptHandler<PromptType extends BasePrompt> {
-        PromptType newPrompt(GeckoBundle info);
+        PromptType newPrompt(GeckoBundle info, Observer observer);
         GeckoResult<PromptResponse> callDelegate(
                 PromptType prompt, GeckoSession session, PromptDelegate delegate);
     }
 
     private static final class AlertHandler implements PromptHandler<AlertPrompt> {
         @Override
-        public AlertPrompt newPrompt(GeckoBundle info) {
+        public AlertPrompt newPrompt(final GeckoBundle info, final Observer observer) {
             return new AlertPrompt(
+                    info.getString("id"),
                     info.getString("title"),
-                    info.getString("msg"));
+                    info.getString("msg"),
+                    observer);
         }
 
         @Override
@@ -108,8 +152,10 @@ import java.util.Map;
 
     private static final class BeforeUnloadHandler implements PromptHandler<BeforeUnloadPrompt> {
         @Override
-        public BeforeUnloadPrompt newPrompt(GeckoBundle info) {
-            return new BeforeUnloadPrompt();
+        public BeforeUnloadPrompt newPrompt(final GeckoBundle info, final Observer observer) {
+            return new BeforeUnloadPrompt(
+                    info.getString("id"),
+                    observer);
         }
 
         @Override
@@ -123,10 +169,12 @@ import java.util.Map;
 
     private static final class ButtonHandler implements PromptHandler<ButtonPrompt> {
         @Override
-        public ButtonPrompt newPrompt(GeckoBundle info) {
+        public ButtonPrompt newPrompt(final GeckoBundle info, final Observer observer) {
             return new ButtonPrompt(
+                    info.getString("id"),
                     info.getString("title"),
-                    info.getString("msg"));
+                    info.getString("msg"),
+                    observer);
         }
 
         @Override
@@ -140,11 +188,13 @@ import java.util.Map;
 
     private static final class TextHandler implements PromptHandler<TextPrompt> {
         @Override
-        public TextPrompt newPrompt(GeckoBundle info) {
+        public TextPrompt newPrompt(final GeckoBundle info, final Observer observer) {
             return new TextPrompt(
+                    info.getString("id"),
                     info.getString("title"),
                     info.getString("msg"),
-                    info.getString("value"));
+                    info.getString("value"),
+                    observer);
         }
 
         @Override
@@ -158,11 +208,13 @@ import java.util.Map;
 
     private static final class AuthHandler implements PromptHandler<AuthPrompt> {
         @Override
-        public AuthPrompt newPrompt(GeckoBundle info) {
+        public AuthPrompt newPrompt(final GeckoBundle info, final Observer observer) {
             return new AuthPrompt(
+                    info.getString("id"),
                     info.getString("title"),
                     info.getString("msg"),
-                    new AuthOptions(info.getBundle("options")));
+                    new AuthOptions(info.getBundle("options")),
+                    observer);
         }
 
         @Override
@@ -176,7 +228,7 @@ import java.util.Map;
 
     private static final class ChoiceHandler implements PromptHandler<ChoicePrompt> {
         @Override
-        public ChoicePrompt newPrompt(GeckoBundle info) {
+        public ChoicePrompt newPrompt(final GeckoBundle info, final Observer observer) {
             final int intMode;
             final String mode = info.getString("mode");
             if ("menu".equals(mode)) {
@@ -201,9 +253,11 @@ import java.util.Map;
             }
 
             return new ChoicePrompt(
+                            info.getString("id"),
                             info.getString("title"),
                             info.getString("msg"),
-                            intMode, choices);
+                            intMode, choices,
+                            observer);
         }
 
         @Override
@@ -217,10 +271,12 @@ import java.util.Map;
 
     private static final class ColorHandler implements PromptHandler<ColorPrompt> {
         @Override
-        public ColorPrompt newPrompt(GeckoBundle info) {
+        public ColorPrompt newPrompt(final GeckoBundle info, final Observer observer) {
             return new ColorPrompt(
+                    info.getString("id"),
                     info.getString("title"),
-                    info.getString("value"));
+                    info.getString("value"),
+                    observer);
         }
 
         @Override
@@ -234,7 +290,7 @@ import java.util.Map;
 
     private static final class DateTimeHandler implements PromptHandler<DateTimePrompt> {
         @Override
-        public DateTimePrompt newPrompt(GeckoBundle info) {
+        public DateTimePrompt newPrompt(final GeckoBundle info, final Observer observer) {
             final String mode = info.getString("mode");
             final int intMode;
             if ("date".equals(mode)) {
@@ -255,11 +311,13 @@ import java.util.Map;
             final String minValue = info.getString("min");
             final String maxValue = info.getString("max");
             return new DateTimePrompt(
+                            info.getString("id"),
                             info.getString("title"),
                             intMode,
                             defaultValue,
                             minValue,
-                            maxValue);
+                            maxValue,
+                            observer);
         }
 
         @Override
@@ -273,7 +331,7 @@ import java.util.Map;
 
     private final static class FileHandler implements PromptHandler<FilePrompt> {
         @Override
-        public FilePrompt newPrompt(GeckoBundle info) {
+        public FilePrompt newPrompt(final GeckoBundle info, final Observer observer) {
             final String mode = info.getString("mode");
             final int intMode;
             if ("single".equals(mode)) {
@@ -287,10 +345,12 @@ import java.util.Map;
             final String[] mimeTypes = info.getStringArray("mimeTypes");
             final int capture = info.getInt("capture");
             return new FilePrompt(
+                            info.getString("id"),
                             info.getString("title"),
                             intMode,
                             capture,
-                            mimeTypes);
+                            mimeTypes,
+                            observer);
         }
 
         @Override
@@ -304,8 +364,11 @@ import java.util.Map;
 
     private static final class PopupHandler implements PromptHandler<PopupPrompt> {
         @Override
-        public PopupPrompt newPrompt(GeckoBundle info) {
-            return new PromptDelegate.PopupPrompt(info.getString("targetUri"));
+        public PopupPrompt newPrompt(final GeckoBundle info, final Observer observer) {
+            return new PopupPrompt(
+                    info.getString("id"),
+                    info.getString("targetUri"),
+                    observer);
         }
 
         @Override
@@ -319,8 +382,8 @@ import java.util.Map;
 
     private static final class RepostHandler implements PromptHandler<RepostConfirmPrompt> {
         @Override
-        public RepostConfirmPrompt newPrompt(final GeckoBundle info) {
-            return new RepostConfirmPrompt();
+        public RepostConfirmPrompt newPrompt(final GeckoBundle info, final Observer observer) {
+            return new RepostConfirmPrompt(info.getString("id"), observer);
         }
 
         @Override
@@ -334,11 +397,13 @@ import java.util.Map;
 
     private static final class ShareHandler implements PromptHandler<SharePrompt> {
         @Override
-        public SharePrompt newPrompt(GeckoBundle info) {
-            return new PromptDelegate.SharePrompt(
+        public SharePrompt newPrompt(final GeckoBundle info, final Observer observer) {
+            return new SharePrompt(
+                    info.getString("id"),
                     info.getString("title"),
                     info.getString("text"),
-                    info.getString("uri"));
+                    info.getString("uri"),
+                    observer);
         }
 
         @Override
@@ -354,7 +419,9 @@ import java.util.Map;
     private static final class LoginSaveHandler
             implements PromptHandler<AutocompleteRequest<LoginSaveOption>> {
         @Override
-        public AutocompleteRequest<LoginSaveOption> newPrompt(GeckoBundle info) {
+        public AutocompleteRequest<LoginSaveOption> newPrompt(
+                final GeckoBundle info,
+                final Observer observer) {
             final int hint = info.getInt("hint");
             final GeckoBundle[] loginBundles =
                     info.getBundleArray("logins");
@@ -372,7 +439,7 @@ import java.util.Map;
                         hint);
             }
 
-            return new AutocompleteRequest<>(options);
+            return new AutocompleteRequest<>(info.getString("id"), options, observer);
         }
 
         @Override
@@ -387,7 +454,9 @@ import java.util.Map;
     private static final class AddressSaveHandler
             implements PromptHandler<AutocompleteRequest<AddressSaveOption>> {
         @Override
-        public AutocompleteRequest<AddressSaveOption> newPrompt(GeckoBundle info) {
+        public AutocompleteRequest<AddressSaveOption> newPrompt(
+                final GeckoBundle info,
+                final Observer observer) {
             final GeckoBundle[] addressBundles =
                     info.getBundleArray("addresses");
 
@@ -405,7 +474,7 @@ import java.util.Map;
                         hint);
             }
 
-            return new AutocompleteRequest<>(options);
+            return new AutocompleteRequest<>(info.getString("id"), options, observer);
         }
 
         @Override
@@ -420,7 +489,9 @@ import java.util.Map;
     private static final class LoginSelectHandler
             implements PromptHandler<AutocompleteRequest<LoginSelectOption>> {
         @Override
-        public AutocompleteRequest<LoginSelectOption> newPrompt(GeckoBundle info) {
+        public AutocompleteRequest<LoginSelectOption> newPrompt(
+                final GeckoBundle info,
+                final Observer observer) {
             final GeckoBundle[] optionBundles =
                     info.getBundleArray("options");
 
@@ -436,7 +507,7 @@ import java.util.Map;
                         optionBundles[i]);
             }
 
-            return new AutocompleteRequest<>(options);
+            return new AutocompleteRequest<>(info.getString("id"), options, observer);
         }
 
         @Override
@@ -451,7 +522,9 @@ import java.util.Map;
     private static final class CreditCardSelectHandler
             implements PromptHandler<AutocompleteRequest<CreditCardSelectOption>> {
         @Override
-        public AutocompleteRequest<CreditCardSelectOption> newPrompt(GeckoBundle info) {
+        public AutocompleteRequest<CreditCardSelectOption> newPrompt(
+                final GeckoBundle info,
+                final Observer observer) {
             final GeckoBundle[] optionBundles =
                     info.getBundleArray("options");
 
@@ -467,7 +540,7 @@ import java.util.Map;
                         optionBundles[i]);
             }
 
-            return new AutocompleteRequest<>(options);
+            return new AutocompleteRequest<>(info.getString("id"), options, observer);
         }
 
         @Override
@@ -482,7 +555,9 @@ import java.util.Map;
     private static final class AddressSelectHandler
             implements PromptHandler<AutocompleteRequest<AddressSelectOption>> {
         @Override
-        public AutocompleteRequest<AddressSelectOption> newPrompt(GeckoBundle info) {
+        public AutocompleteRequest<AddressSelectOption> newPrompt(
+                final GeckoBundle info,
+                final Observer observer) {
             final GeckoBundle[] optionBundles =
                     info.getBundleArray("options");
 
@@ -498,7 +573,7 @@ import java.util.Map;
                         optionBundles[i]);
             }
 
-            return new AutocompleteRequest<>(options);
+            return new AutocompleteRequest<>(info.getString("id"), options, observer);
         }
 
         @Override
