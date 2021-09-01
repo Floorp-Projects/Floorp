@@ -8,9 +8,9 @@ import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.TextInputDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
+import org.mozilla.geckoview.test.util.Callbacks
 
 import androidx.test.filters.MediumTest
 import android.os.Handler;
@@ -29,6 +29,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameter
+import org.mozilla.geckoview.test.util.UiThreadUtils
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 @MediumTest
 @RunWith(Parameterized::class)
@@ -196,7 +199,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         mainSession.evaluateJS("document.querySelector('$id').focus()")
-        mainSession.waitUntilCalled(object : TextInputDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun restartInput(session: GeckoSession, reason: Int) {
                 assertThat("Reason should be correct",
@@ -205,7 +208,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         })
 
         mainSession.evaluateJS("document.querySelector('$id').blur()")
-        mainSession.waitUntilCalled(object : TextInputDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun restartInput(session: GeckoSession, reason: Int) {
                 assertThat("Reason should be correct",
@@ -240,7 +243,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
         mainSession.evaluateJS("document.querySelector('$id').focus()")
 
-        mainSession.waitUntilCalled(object : TextInputDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun restartInput(session: GeckoSession, reason: Int) {
                 assertThat("Reason should be correct",
@@ -249,10 +252,12 @@ class TextInputDelegateTest : BaseSessionTest() {
 
             @AssertCalled(count = 1, order = [2])
             override fun showSoftInput(session: GeckoSession) {
+                super.showSoftInput(session)
             }
 
             @AssertCalled(count = 0)
             override fun hideSoftInput(session: GeckoSession) {
+                super.hideSoftInput(session)
             }
         })
     }
@@ -274,7 +279,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         // but only one showSoftInput call and no hideSoftInput call.
         mainSession.evaluateJS("document.querySelector('$id').blur(); document.querySelector('$id').focus()")
 
-        mainSession.waitUntilCalled(object : TextInputDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 2, order = [1])
             override fun restartInput(session: GeckoSession, reason: Int) {
                 assertThat("Reason should be correct", reason, equalTo(forEachCall(
@@ -303,7 +308,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
 
         mainSession.evaluateJS("document.querySelector('$id').focus()")
-        mainSession.waitUntilCalled(object : TextInputDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun restartInput(session: GeckoSession, reason: Int) {
             }
@@ -318,7 +323,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         })
 
         mainSession.evaluateJS("document.querySelector('$id').blur()")
-        mainSession.waitUntilCalled(object : TextInputDelegate {
+        mainSession.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun restartInput(session: GeckoSession, reason: Int) {
             }

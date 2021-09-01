@@ -87,12 +87,16 @@ interface nsIPrompt : nsISupports
 
      boolean promptPassword(in wstring dialogTitle,
                             in wstring text,
-                            inout wstring password);
+                            inout wstring password,
+                            in wstring checkMsg,
+                            inout boolean checkValue);
 
      boolean promptUsernameAndPassword(in wstring dialogTitle,
                                        in wstring text,
                                        inout wstring username,
-                                       inout wstring password);
+                                       inout wstring password,
+                                       in wstring checkMsg,
+                                       inout boolean checkValue);
 
     boolean select(in wstring dialogTitle,
                    in wstring text,

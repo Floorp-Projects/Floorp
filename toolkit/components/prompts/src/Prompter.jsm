@@ -429,7 +429,8 @@ Prompter.prototype = {
   },
 
   /**
-   * Puts up a dialog with an edit field and a password field.
+   * Puts up a dialog with an edit field, a password field, and an optional,
+   * labeled checkbox.
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -442,15 +443,37 @@ Prompter.prototype = {
    *        when this method is called (null value is ok). Upon return, if the
    *        user pressed OK, this parameter contains a newly allocated string
    *        value. Otherwise, the parameter's value is unmodified.
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Object} checkValue - Contains the initial checked state of the
+   *        checkbox when this method is called and the final checked state
+   *        after this method returns.
    * @returns {Boolean} true for OK, false for Cancel.
    */
-  promptUsernameAndPassword(domWin, title, text, user, pass) {
+  promptUsernameAndPassword(
+    domWin,
+    title,
+    text,
+    user,
+    pass,
+    checkLabel,
+    checkValue
+  ) {
     let p = this.pickPrompter({ domWin });
-    return p.nsIPrompt_promptUsernameAndPassword(null, title, text, user, pass);
+    return p.nsIPrompt_promptUsernameAndPassword(
+      null,
+      title,
+      text,
+      user,
+      pass,
+      checkLabel,
+      checkValue
+    );
   },
 
   /**
-   * Puts up a dialog with an edit field and a password field.
+   * Puts up a dialog with an edit field, a password field, and an optional,
+   * labeled checkbox.
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -466,6 +489,11 @@ Prompter.prototype = {
    *        when this method is called (null value is ok). Upon return, if the
    *        user pressed OK, this parameter contains a newly allocated string
    *        value. Otherwise, the parameter's value is unmodified.
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Object} checkValue - Contains the initial checked state of the
+   *        checkbox when this method is called and the final checked state
+   *        after this method returns.
    * @returns {Boolean} true for OK, false for Cancel.
    */
   promptUsernameAndPasswordBC(browsingContext, modalType, ...promptArgs) {
@@ -474,7 +502,8 @@ Prompter.prototype = {
   },
 
   /**
-   * Puts up a dialog with an edit field and a password field.
+   * Puts up a dialog with an edit field, a password field, and an optional,
+   * labeled checkbox.
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -483,7 +512,10 @@ Prompter.prototype = {
    * @param {String} text - Text to appear in the body of the dialog.
    * @param {String} user - Default value for the username field.
    * @param {String} pass - Contains the default value for the password field.
-   * @returns {Promise<nsIPropertyBag<{ ok: Boolean, user: String, pass: String }>>}
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Boolean} checkValue - The initial checked state of the checkbox.
+   * @returns {Promise<nsIPropertyBag<{ ok: Boolean, checked: Boolean, user: String, pass: String }>>}
    *          A promise which resolves when the prompt is dismissed.
    */
   asyncPromptUsernameAndPassword(browsingContext, modalType, ...promptArgs) {
@@ -492,7 +524,7 @@ Prompter.prototype = {
   },
 
   /**
-   * Puts up a dialog with a password field.
+   * Puts up a dialog with a password field and an optional, labeled checkbox.
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -500,20 +532,27 @@ Prompter.prototype = {
    *        when this method is called (null value is ok). Upon return, if the
    *        user pressed OK, this parameter contains a newly allocated string
    *        value. Otherwise, the parameter's value is unmodified.
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Object} checkValue - Contains the initial checked state of the
+   *        checkbox when this method is called and the final checked state
+   *        after this method returns.
    * @returns {Boolean} true for OK, false for Cancel.
    */
-  promptPassword(domWin, title, text, pass) {
+  promptPassword(domWin, title, text, pass, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
     return p.nsIPrompt_promptPassword(
       null, // no channel.
       title,
       text,
-      pass
+      pass,
+      checkLabel,
+      checkValue
     );
   },
 
   /**
-   * Puts up a dialog with a password field.
+   * Puts up a dialog with a password field and an optional, labeled checkbox.
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -524,6 +563,11 @@ Prompter.prototype = {
    *        when this method is called (null value is ok). Upon return, if the
    *        user pressed OK, this parameter contains a newly allocated string
    *        value. Otherwise, the parameter's value is unmodified.
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Object} checkValue - Contains the initial checked state of the
+   *        checkbox when this method is called and the final checked state
+   *        after this method returns.
    * @returns {Boolean} true for OK, false for Cancel.
    */
   promptPasswordBC(browsingContext, modalType, ...promptArgs) {
@@ -532,7 +576,7 @@ Prompter.prototype = {
   },
 
   /**
-   * Puts up a dialog with a password field.
+   * Puts up a dialog with a password field and an optional, labeled checkbox.
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -540,7 +584,10 @@ Prompter.prototype = {
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
    * @param {String} pass - Contains the default value for the password field.
-   * @returns {Promise<nsIPropertyBag<{ ok: Boolean, pass: String }>>}
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Boolean} checkValue - The initial checked state of the checkbox.
+   * @returns {Promise<nsIPropertyBag<{ ok: Boolean, checked: Boolean, pass: String }>>}
    *          A promise which resolves when the prompt is dismissed.
    */
   asyncPromptPassword(browsingContext, modalType, ...promptArgs) {
@@ -609,15 +656,20 @@ Prompter.prototype = {
    * @param {Number} level - Security level of the credential transmission.
    *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
    * @param {nsIAuthInformation} authInfo - Authentication information object.
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Object} checkValue - Contains the initial checked state of the
+   *        checkbox when this method is called and the final checked state
+   *        after this method returns.
    * @returns {Boolean}
    *          true: Authentication can proceed using the values
    *          in the authInfo object.
    *          false: Authentication should be cancelled, usually because the
    *          user did not provide username/password.
    */
-  promptAuth(domWin, channel, level, authInfo) {
+  promptAuth(domWin, channel, level, authInfo, checkLabel, checkValue) {
     let p = this.pickPrompter({ domWin });
-    return p.promptAuth(channel, level, authInfo);
+    return p.promptAuth(channel, level, authInfo, checkLabel, checkValue);
   },
 
   /**
@@ -631,6 +683,11 @@ Prompter.prototype = {
    * @param {Number} level - Security level of the credential transmission.
    *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
    * @param {nsIAuthInformation} authInfo - Authentication information object.
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Object} checkValue - Contains the initial checked state of the
+   *        checkbox when this method is called and the final checked state
+   *        after this method returns.
    * @returns {Boolean}
    *          true: Authentication can proceed using the values
    *          in the authInfo object.
@@ -653,6 +710,9 @@ Prompter.prototype = {
    * @param {Number} level - Security level of the credential transmission.
    *        Any of nsIAuthPrompt2.<LEVEL_NONE|LEVEL_PW_ENCRYPTED|LEVEL_SECURE>
    * @param {nsIAuthInformation} authInfo - Authentication information object.
+   * @param {String} checkLabel - Text to appear with the checkbox.
+   *        If null, check box will not be shown.
+   * @param {Object} checkValue - Initial checked state of the checkbox.
    * @returns {Promise<nsIPropertyBag<{ ok: Boolean }>>}
    *          A promise which resolves when the prompt is dismissed.
    */
@@ -1507,7 +1567,15 @@ class ModalPrompter {
     return ok;
   }
 
-  nsIPrompt_promptUsernameAndPassword(channel, title, text, user, pass) {
+  nsIPrompt_promptUsernameAndPassword(
+    channel,
+    title,
+    text,
+    user,
+    pass,
+    checkLabel,
+    checkValue
+  ) {
     if (!title) {
       title = PromptUtils.getLocalizedString("PromptUsernameAndPassword3", [
         PromptUtils.getBrandFullName(),
@@ -1521,12 +1589,15 @@ class ModalPrompter {
       text,
       user: this.async ? user : user.value,
       pass: this.async ? pass : pass.value,
+      checkLabel,
+      checked: this.async ? checkValue : checkValue.value,
       button0Label: PromptUtils.getLocalizedString("SignIn"),
       ok: false,
     };
 
     if (this.async) {
       return this.openPromptAsync(args, result => ({
+        checked: result.checked,
         user: result.user,
         pass: result.pass,
         ok: result.ok,
@@ -1538,6 +1609,7 @@ class ModalPrompter {
     // Did user click Ok or Cancel?
     let ok = args.ok;
     if (ok) {
+      checkValue.value = args.checked;
       user.value = args.user;
       pass.value = args.pass;
     }
@@ -1545,7 +1617,7 @@ class ModalPrompter {
     return ok;
   }
 
-  nsIPrompt_promptPassword(channel, title, text, pass) {
+  nsIPrompt_promptPassword(channel, title, text, pass, checkLabel, checkValue) {
     if (!title) {
       title = PromptUtils.getLocalizedString("PromptPassword3", [
         PromptUtils.getBrandFullName(),
@@ -1558,12 +1630,15 @@ class ModalPrompter {
       title,
       text,
       pass: this.async ? pass : pass.value,
+      checkLabel,
+      checked: this.async ? checkValue : checkValue.value,
       button0Label: PromptUtils.getLocalizedString("SignIn"),
       ok: false,
     };
 
     if (this.async) {
       return this.openPromptAsync(args, result => ({
+        checked: result.checked,
         pass: result.pass,
         ok: result.ok,
       }));
@@ -1574,6 +1649,7 @@ class ModalPrompter {
     // Did user click Ok or Cancel?
     let ok = args.ok;
     if (ok) {
+      checkValue.value = args.checked;
       pass.value = args.pass;
     }
 
@@ -1643,19 +1719,21 @@ class ModalPrompter {
       title,
       text,
       user,
-      pass
+      pass,
+      null,
+      {}
     );
   }
 
   nsIAuthPrompt_promptPassword(title, text, passwordRealm, savePassword, pass) {
     // The passwordRealm and savePassword args were ignored by nsPrompt.cpp,
     // and we don't have a channel here.
-    return this.nsIPrompt_promptPassword(null, title, text, pass);
+    return this.nsIPrompt_promptPassword(null, title, text, pass, null, {});
   }
 
   /* ----------  nsIAuthPrompt2  ---------- */
 
-  promptAuth(channel, level, authInfo) {
+  promptAuth(channel, level, authInfo, checkLabel, checkValue) {
     let message = PromptUtils.makeAuthMessage(this, channel, authInfo);
 
     let [username, password] = PromptUtils.getAuthInfo(authInfo);
@@ -1665,14 +1743,23 @@ class ModalPrompter {
 
     let result;
     if (authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD) {
-      result = this.nsIPrompt_promptPassword(channel, null, message, passParam);
+      result = this.nsIPrompt_promptPassword(
+        channel,
+        null,
+        message,
+        passParam,
+        checkLabel,
+        checkValue
+      );
     } else {
       result = this.nsIPrompt_promptUsernameAndPassword(
         channel,
         null,
         message,
         userParam,
-        passParam
+        passParam,
+        checkLabel,
+        checkValue
       );
     }
 
