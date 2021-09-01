@@ -426,8 +426,14 @@ static const size_t gPageSize = 64_KiB;
 #  else
 static const size_t gPageSize = 4_KiB;
 #  endif
+static const size_t gRealPageSize = gPageSize;
 
 #else
+// When MALLOC_OPTIONS contains one or several `P`s, the page size used
+// across the allocator is multiplied by 2 for each `P`, but we also keep
+// the real page size for code paths that need it. gPageSize is thus a
+// power of two greater or equal to gRealPageSize.
+static size_t gRealPageSize;
 static size_t gPageSize;
 #endif
 
@@ -1726,7 +1732,7 @@ static void* chunk_alloc_mmap_slow(size_t size, size_t alignment) {
   void *ret, *pages;
   size_t alloc_size, leadsize;
 
-  alloc_size = size + alignment - gPageSize;
+  alloc_size = size + alignment - gRealPageSize;
   // Beware size_t wrap-around.
   if (alloc_size < size) {
     return nullptr;
@@ -3873,8 +3879,7 @@ static bool malloc_init_hard() {
     MOZ_CRASH();
   }
 #else
-  gPageSize = (size_t)result;
-  DefineGlobals();
+  gRealPageSize = gPageSize = (size_t)result;
 #endif
 
   MOZ_RELEASE_ASSERT(JEMALLOC_MAX_STATS_BINS >= NUM_SMALL_CLASSES);
@@ -3929,14 +3934,19 @@ static bool malloc_init_hard() {
           case 'J':
             opt_junk = true;
             break;
-#endif
-#ifdef MOZ_DEBUG
           case 'z':
             opt_zero = false;
             break;
           case 'Z':
             opt_zero = true;
             break;
+#  ifndef MALLOC_STATIC_PAGESIZE
+          case 'P':
+            if (gPageSize < 64_KiB) {
+              gPageSize <<= 1;
+            }
+            break;
+#  endif
 #endif
           case 'r':
             opt_randomize_small = false;
@@ -3959,6 +3969,9 @@ static bool malloc_init_hard() {
     }
   }
 
+#ifndef MALLOC_STATIC_PAGESIZE
+  DefineGlobals();
+#endif
   gRecycledSize = 0;
 
   // Initialize chunks data.
