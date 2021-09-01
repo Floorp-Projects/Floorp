@@ -310,12 +310,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1723170
          "race:mozilla::layers::APZCTreeManager::NewAPZCInstance\n"
 
-         // Bug 1723176
-         "race:mozilla::layers::AsyncPanZoomController::GetZoomAnimationId\n"
-
-         // Bug 1723730
-         "race:mozilla::layers::AsyncPanZoomController::SetZoomAnimationId\n"
-
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
