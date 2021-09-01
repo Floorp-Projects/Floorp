@@ -891,7 +891,7 @@ PlainObject* js::ObjectWithProtoOperation(JSContext* cx, HandleValue val) {
 
 JSObject* js::FunWithProtoOperation(JSContext* cx, HandleFunction fun,
                                     HandleObject parent, HandleObject proto) {
-  return CloneFunctionObject(cx, fun, parent, proto);
+  return CloneFunctionReuseScript(cx, fun, parent, proto);
 }
 
 /*
@@ -4568,7 +4568,7 @@ JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
     clone = CloneAsmJSModuleFunction(cx, fun);
   } else {
     RootedObject proto(cx, fun->staticPrototype());
-    clone = CloneFunctionObject(cx, fun, parent, proto);
+    clone = CloneFunctionReuseScript(cx, fun, parent, proto);
   }
   if (!clone) {
     return nullptr;
@@ -4583,7 +4583,7 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
   MOZ_ASSERT(fun->isArrow());
 
   RootedObject proto(cx, fun->staticPrototype());
-  JSFunction* clone = CloneFunctionObject(cx, fun, parent, proto);
+  JSFunction* clone = CloneFunctionReuseScript(cx, fun, parent, proto);
   if (!clone) {
     return nullptr;
   }
