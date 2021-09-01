@@ -21,7 +21,6 @@ import org.mozilla.focus.helpers.StringsHelper.FR_GENERAL_HEADING
 import org.mozilla.focus.helpers.StringsHelper.FR_HELP
 import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_MENU
 import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_SYSTEM_DEFAULT
-import org.mozilla.focus.helpers.StringsHelper.FR_MOTTO
 import org.mozilla.focus.helpers.StringsHelper.FR_SETTINGS
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.verifyTranslatedTextExists
@@ -50,8 +49,6 @@ class SwitchLocaleTest {
 
     @Test
     fun englishSystemLocaleTest() {
-        disableHomeScreenTips()
-
         /* Go to Settings and change language to French*/
         homeScreen {
         }.openMainMenu {
@@ -65,7 +62,6 @@ class SwitchLocaleTest {
         }
         /* Exit to main and see the UI is in French as well */
         homeScreen {
-            verifyTranslatedTextExists(FR_MOTTO)
         }.openMainMenu {
             verifyTranslatedTextExists(FR_SETTINGS)
             verifyTranslatedTextExists(FR_HELP)
@@ -120,15 +116,5 @@ class SwitchLocaleTest {
                 res.updateConfiguration(config, res.displayMetrics)
             }
         }
-    }
-}
-
-private fun disableHomeScreenTips() {
-    homeScreen {
-    }.openMainMenu {
-    }.openSettings {
-    }.openMozillaSettingsMenu {
-        switchHomeScreenTips()
-        exitToTop()
     }
 }

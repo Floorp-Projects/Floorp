@@ -6,7 +6,6 @@ package org.mozilla.focus.helpers
 object StringsHelper {
     const val FR_ENGLISH_LOCALE = "English (United States)"
     const val FR_LANGUAGE_MENU = "Langue"
-    const val FR_MOTTO = "Navigation privée automatique.\nNaviguez. Effacez. Recommencez."
     const val FR_SETTINGS = "Paramètres"
     const val FR_HELP = "Aide"
     const val FR_GENERAL_HEADING = "Général"

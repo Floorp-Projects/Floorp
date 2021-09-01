@@ -10,6 +10,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiSelector
+import junit.framework.TestCase.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.getStringResource
@@ -48,13 +49,16 @@ class HomeScreenRobot {
     fun clickOnboardingFinishBtn() = finishBtn.click()
 
     fun verifyHomeScreenTipIsDisplayed(isDisplayed: Boolean) {
-        val teaser = getStringResource(R.string.teaser)
         if (isDisplayed) {
-            homeScreenTips.waitForExists(waitingTime)
-            assertTrue(homeScreenTips.text != teaser)
+            assertTrue(homeScreenTips.waitForExists(waitingTime))
         } else {
-            assertTrue(homeScreenTips.text == teaser)
+            assertFalse(homeScreenTips.waitForExists(waitingTime))
         }
+    }
+
+    fun scrollLeftTipsCarousel() {
+        assertTrue(homeScreenTips.isScrollable)
+        homeScreenTips.swipeLeft(2)
     }
 
     class Transition {
@@ -116,4 +120,4 @@ private val finishBtn = mDevice.findObject(
 )
 
 private val homeScreenTips =
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/homeViewTipsLabel"))
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/home_tips"))

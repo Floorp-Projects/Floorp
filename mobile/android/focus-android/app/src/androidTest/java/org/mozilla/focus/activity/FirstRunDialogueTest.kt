@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -65,26 +66,21 @@ class FirstRunDialogueTest {
     fun homeScreenTipsTest() {
         webServer.start()
         webServer.enqueue(createMockResponseFromAsset("tab1.html"))
-        webServer.enqueue(createMockResponseFromAsset("tab1.html"))
-        webServer.enqueue(createMockResponseFromAsset("tab1.html"))
         val pageUrl = webServer.url("tab1.html").toString()
 
         homeScreen {
             skipFirstRun()
             verifyHomeScreenTipIsDisplayed(true)
+            // hide the keyboard to have a scrollable tips carousel
+            closeSoftKeyboard()
+            verifyHomeScreenTipIsDisplayed(true)
+            scrollLeftTipsCarousel()
+            verifyHomeScreenTipIsDisplayed(true)
         }
-        // load a page and clear data 3 times before tips stop being displayed
-        for (pageLoad in 1..3) {
-            searchScreen {
-            }.loadPage(pageUrl) {
-                verifyPageContent("Tab 1")
-            }.clearBrowsingData {
-                when (pageLoad) {
-                    1 -> verifyHomeScreenTipIsDisplayed(true)
-                    2 -> verifyHomeScreenTipIsDisplayed(true)
-                    3 -> verifyHomeScreenTipIsDisplayed(false)
-                }
-            }
+        searchScreen {
+        }.loadPage(pageUrl) {
+        }.clearBrowsingData {
+            verifyHomeScreenTipIsDisplayed(true)
         }
     }
 }
