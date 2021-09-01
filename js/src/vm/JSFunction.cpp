@@ -2022,9 +2022,24 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
   }
 #endif
 
-  RootedFunction clone(cx);
-  clone = static_cast<JSFunction*>(
-      NewObjectWithClassProto(cx, clasp, proto, allocKind, GenericObject));
+  // If |fun| also has |proto| as prototype (the common case) we can reuse its
+  // shape for the clone. This works because |fun| isn't exposed to script.
+  RootedShape shape(cx);
+  if (fun->staticPrototype() == proto) {
+    MOZ_ASSERT(fun->shape()->propMapLength() == 0);
+    MOZ_ASSERT(fun->shape()->objectFlags().isEmpty());
+    MOZ_ASSERT(fun->shape()->realm() == cx->realm());
+    shape = fun->shape();
+  } else {
+    size_t nfixed = GetGCKindSlots(allocKind);
+    shape = SharedShape::getInitialShape(
+        cx, clasp, cx->realm(), TaggedProto(proto), nfixed, ObjectFlags());
+    if (!shape) {
+      return nullptr;
+    }
+  }
+
+  JSFunction* clone = JSFunction::create(cx, allocKind, gc::DefaultHeap, shape);
   if (!clone) {
     return nullptr;
   }
