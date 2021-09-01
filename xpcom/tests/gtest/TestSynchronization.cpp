@@ -235,6 +235,35 @@ TEST(Synchronization, AutoLock)
 }
 
 //-----------------------------------------------------------------------------
+// AutoTryLock tests
+//
+TEST(Synchronization, AutoTryLock)
+{
+  Mutex l1("autotrylock");
+  MutexAutoTryLock autol1(l1);
+
+  EXPECT_TRUE(autol1);
+  l1.AssertCurrentThreadOwns();
+
+  MutexAutoTryLock autol2(l1);
+
+  EXPECT_TRUE(autol1);
+  EXPECT_FALSE(autol2);
+  l1.AssertCurrentThreadOwns();
+
+  {
+    Mutex l2("autotrylock2");
+    MutexAutoTryLock autol3(l2);
+
+    EXPECT_TRUE(autol3);
+    l1.AssertCurrentThreadOwns();
+    l2.AssertCurrentThreadOwns();
+  }
+
+  l1.AssertCurrentThreadOwns();
+}
+
+//-----------------------------------------------------------------------------
 // AutoUnlock tests
 //
 TEST(Synchronization, AutoUnlock)
