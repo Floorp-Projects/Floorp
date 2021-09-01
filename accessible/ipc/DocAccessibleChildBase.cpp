@@ -85,7 +85,7 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
           acc->BundleFieldsForCache(CacheDomain::All);
       cache.AppendElement(CacheData(id, fields));
     }
-    Unused << SendCache(0, cache, true);
+    Unused << SendCache(CacheUpdateType::Initial, cache, true);
   }
 }
 

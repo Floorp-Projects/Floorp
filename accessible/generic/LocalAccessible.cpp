@@ -3011,7 +3011,7 @@ void LocalAccessible::SendCacheUpdate(uint64_t aCacheDomain) {
   nsTArray<CacheData> data;
   data.AppendElement(
       CacheData(IsDoc() ? 0 : reinterpret_cast<uint64_t>(UniqueID()), fields));
-  ipcDoc->SendCache(1, data, true);
+  ipcDoc->SendCache(CacheUpdateType::Update, data, true);
 }
 
 already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
