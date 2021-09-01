@@ -110,7 +110,8 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
     //
     // FIXME(emilio): Why do we look at a different set of colors when using
     // standins vs. not?
-    const auto scheme = LookAndFeel::ColorScheme::Light;
+    const auto scheme = aIsChrome ? LookAndFeel::ColorSchemeForChrome()
+                                  : LookAndFeel::ColorScheme::Light;
     mColors.mDefault = LookAndFeel::Color(
         useStandins ? ColorID::Windowtext : ColorID::WindowForeground, scheme,
         standins, mColors.mDefault);
