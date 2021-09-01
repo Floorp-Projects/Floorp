@@ -29,7 +29,7 @@ class SettingsGeneralMenuRobot {
 
     fun verifyGeneralSettingsItems() {
         defaultBrowserSwitch.check(matches(isDisplayed()))
-        switchToNewTabToggleButton.check(matches(isDisplayed()))
+        languageMenuButton().check(matches(isDisplayed()))
     }
 
     fun clickSetDefaultBrowser() {
@@ -87,8 +87,6 @@ class SettingsGeneralMenuRobot {
 
 private val defaultBrowserSwitch = onView(withText("Make Firefox Focus default browser"))
 
-private val switchToNewTabToggleButton = onView(withText("Switch to link in new tab immediately"))
-
 private val openWithDialogTitle = mDevice.findObject(
     UiSelector()
         .text("Open with")
@@ -99,6 +97,6 @@ private val openWithList = mDevice.findObject(
         .resourceId("android:id/resolver_list")
 )
 
-private fun languageMenuButton(localizedText: String) = onView(withText(localizedText))
+private fun languageMenuButton(localizedText: String = "Language") = onView(withText(localizedText))
 
 private val languageMenu = UiScrollable(UiSelector().scrollable(true))
