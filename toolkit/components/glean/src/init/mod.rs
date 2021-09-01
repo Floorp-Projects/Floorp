@@ -80,7 +80,9 @@ pub unsafe extern "C" fn fog_init(
         String::from(SERVER)
     };
 
+    let mut use_core_mps = false;
     let application_id = if app_id_override.is_empty() {
+        use_core_mps = true;
         "firefox.desktop".to_string()
     } else {
         app_id_override.to_utf8().to_string()
@@ -96,7 +98,7 @@ pub unsafe extern "C" fn fog_init(
         channel: Some(channel),
         server_endpoint: Some(server),
         uploader: Some(Box::new(ViaductUploader) as Box<dyn glean::net::PingUploader>),
-        use_core_mps: true,
+        use_core_mps,
     };
 
     log::debug!("Configuration: {:#?}", configuration);
