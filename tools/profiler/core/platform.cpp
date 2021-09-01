@@ -5348,8 +5348,6 @@ ProfilingStack* profiler_register_thread(const char* aName,
                                          void* aGuessStackTop) {
   DEBUG_LOG("profiler_register_thread(%s)", aName);
 
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
   // This will call `ThreadRegistry::Register()` (see below).
   return ThreadRegistration::RegisterThread(aName, aGuessStackTop);
 }
