@@ -43,6 +43,7 @@
   * [Debugger](tools/debugger-panel.md)
   * [Responsive Design Mode](tools/responsive-design-mode.md)
   * [Console](tools/console-panel.md)
+  * [Storage](tools/storage.md)
 * [Frontend](frontend/frontend.md)
   * [Panel SVGs](frontend/svgs.md)
   * [React](frontend/react.md)
