@@ -3332,7 +3332,6 @@ gfx.omtp:
       - rhunt@mozilla.com
       - perf-telemetry-alerts@mozilla.com
       - barret@mozilla.com
-    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'
