@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test the special debug APIs give expected data</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="text/javascript" src="manifest.js"></script>
+<script class="testbody" type="text/javascript">
+add_task(async function testMozRequestDebugInfo() {
+  let video = document.createElement("video");
+  video.src = "gizmo.mp4";
+  document.body.appendChild(video);
+  await video.play();
+  let debugData = await SpecialPowers.wrap(video).mozRequestDebugInfo();
+  // Verify various members are present and as expected.
+  ok(debugData, "Should get some debug data");
+  ok(debugData.decoder.hasAudio, "Should have audio");
+  ok(debugData.decoder.hasVideo, "Should have video");
+  is(
+    debugData.decoder.reader.videoWidth,
+    560,
+    "Video should have expected width"
+  );
+  is(
+    debugData.decoder.reader.videoHeight,
+    320,
+    "Video should have expected height"
+  );
+  ok(
+    debugData.decoder.stateMachine.mediaTime >= 0,
+    "Media time should be positive"
+  );
+  removeNodeAndSource(video);
+});
+
+add_task(async function testMozDebugReaderData() {
+  let video = document.createElement("video");
+  let mediaSource = new MediaSource();
+  video.src = URL.createObjectURL(mediaSource);
+  await once(mediaSource, "sourceopen");
+  const sourceBuffer = mediaSource.addSourceBuffer("video/webm");
+  let fetchResponse = await fetch("bipbop_short_vp8.webm");
+  sourceBuffer.appendBuffer(await fetchResponse.arrayBuffer());
+  await once(sourceBuffer, "updateend");
+  mediaSource.endOfStream();
+  await once(mediaSource, "sourceended");
+  document.body.appendChild(video);
+  await video.play();
+  let debugData = await SpecialPowers.wrap(mediaSource).mozDebugReaderData();
+  // Verify various members are present and as expected.
+  ok(debugData, "Should get some debug data");
+  is(debugData.reader.videoWidth, 400, "Video should have expected width");
+  is(debugData.reader.videoHeight, 300, "Video should have expected height");
+  ok(
+    debugData.demuxer.audioTrack.numSamples > 0,
+    "Audio track should have demuxed some samples"
+  );
+  ok(
+    debugData.demuxer.audioTrack.ranges.length > 0,
+    "Audio track should have some buffered range"
+  );
+  ok(
+    debugData.demuxer.videoTrack.numSamples > 0,
+    "Video track should have demuxed some samples"
+  );
+  ok(
+    debugData.demuxer.videoTrack.ranges.length > 0,
+    "Video track should have some buffered range"
+  );
+  removeNodeAndSource(video);
+});
+</script>
+</head>
+</html>
