@@ -211,7 +211,6 @@ android {
             // reserve more memory and also create a new process after every 80 test classes. This
             // is a band-aid solution and eventually we should try to find and fix the leaks
             // instead. :)
-            maxParallelForks = 2
             forkEvery = 80
             maxHeapSize = "3072m"
             minHeapSize = "1024m"
