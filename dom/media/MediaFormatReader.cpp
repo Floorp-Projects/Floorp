@@ -3004,7 +3004,23 @@ layers::ImageContainer* MediaFormatReader::GetImageContainer() {
                               : nullptr;
 }
 
+RefPtr<GenericPromise> MediaFormatReader::RequestDebugInfo(
+    dom::MediaFormatReaderDebugInfo& aInfo) {
+  if (!OnTaskQueue()) {
+    // Run the request on the task queue if it's not already.
+    return InvokeAsync(mTaskQueue, __func__,
+                       [this, self = RefPtr{this}, &aInfo] {
+                         return RequestDebugInfo(aInfo);
+                       });
+  }
+  GetDebugInfo(aInfo);
+  return GenericPromise::CreateAndResolve(true, __func__);
+}
+
 void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
+  MOZ_ASSERT(OnTaskQueue(),
+             "Don't call this off the task queue, it's going to touch a lot of "
+             "data members");
   nsCString result;
   nsAutoCString audioDecoderName("unavailable");
   nsAutoCString videoDecoderName = audioDecoderName;
@@ -3012,34 +3028,11 @@ void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
   nsAutoCString videoType("none");
 
   AudioInfo audioInfo;
-  {
-    MutexAutoLock lock(mAudio.mMutex);
-    if (HasAudio()) {
-      audioInfo = *mAudio.GetWorkingInfo()->GetAsAudioInfo();
-      audioDecoderName = mAudio.mDecoder ? mAudio.mDecoder->GetDescriptionName()
-                                         : mAudio.mDescription;
-      audioType = audioInfo.mMimeType;
-    }
-  }
-
-  VideoInfo videoInfo;
-  {
-    MutexAutoLock lock(mVideo.mMutex);
-    if (HasVideo()) {
-      videoInfo = *mVideo.GetWorkingInfo()->GetAsVideoInfo();
-      videoDecoderName = mVideo.mDecoder ? mVideo.mDecoder->GetDescriptionName()
-                                         : mVideo.mDescription;
-      videoType = videoInfo.mMimeType;
-    }
-  }
-
-  CopyUTF8toUTF16(audioDecoderName, aInfo.mAudioDecoderName);
-  CopyUTF8toUTF16(audioType, aInfo.mAudioType);
-  aInfo.mAudioChannels = audioInfo.mChannels;
-  aInfo.mAudioRate = audioInfo.mRate / 1000.0f;
-  aInfo.mAudioFramesDecoded = mAudio.mNumSamplesOutputTotal;
-
   if (HasAudio()) {
+    audioInfo = *mAudio.GetWorkingInfo()->GetAsAudioInfo();
+    audioDecoderName = mAudio.mDecoder ? mAudio.mDecoder->GetDescriptionName()
+                                       : mAudio.mDescription;
+    audioType = audioInfo.mMimeType;
     aInfo.mAudioState.mNeedInput = NeedInput(mAudio);
     aInfo.mAudioState.mHasPromise = mAudio.HasPromise();
     aInfo.mAudioState.mWaitingPromise = !mAudio.mWaitingPromise.IsEmpty();
@@ -3063,18 +3056,18 @@ void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
     aInfo.mAudioState.mLastStreamSourceID = mAudio.mLastStreamSourceID;
   }
 
-  CopyUTF8toUTF16(videoDecoderName, aInfo.mVideoDecoderName);
-  CopyUTF8toUTF16(videoType, aInfo.mVideoType);
-  aInfo.mVideoWidth =
-      videoInfo.mDisplay.width < 0 ? 0 : videoInfo.mDisplay.width;
-  aInfo.mVideoHeight =
-      videoInfo.mDisplay.height < 0 ? 0 : videoInfo.mDisplay.height;
-  aInfo.mVideoRate = mVideo.mMeanRate.Mean();
-  aInfo.mVideoHardwareAccelerated = VideoIsHardwareAccelerated();
-  aInfo.mVideoNumSamplesOutputTotal = mVideo.mNumSamplesOutputTotal;
-  aInfo.mVideoNumSamplesSkippedTotal = mVideo.mNumSamplesSkippedTotal;
+  CopyUTF8toUTF16(audioDecoderName, aInfo.mAudioDecoderName);
+  CopyUTF8toUTF16(audioType, aInfo.mAudioType);
+  aInfo.mAudioChannels = audioInfo.mChannels;
+  aInfo.mAudioRate = audioInfo.mRate / 1000.0f;
+  aInfo.mAudioFramesDecoded = mAudio.mNumSamplesOutputTotal;
 
+  VideoInfo videoInfo;
   if (HasVideo()) {
+    videoInfo = *mVideo.GetWorkingInfo()->GetAsVideoInfo();
+    videoDecoderName = mVideo.mDecoder ? mVideo.mDecoder->GetDescriptionName()
+                                       : mVideo.mDescription;
+    videoType = videoInfo.mMimeType;
     aInfo.mVideoState.mNeedInput = NeedInput(mVideo);
     aInfo.mVideoState.mHasPromise = mVideo.HasPromise();
     aInfo.mVideoState.mWaitingPromise = !mVideo.mWaitingPromise.IsEmpty();
@@ -3097,6 +3090,17 @@ void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
     aInfo.mVideoState.mWaitingForKey = mVideo.mWaitingForKey;
     aInfo.mVideoState.mLastStreamSourceID = mVideo.mLastStreamSourceID;
   }
+
+  CopyUTF8toUTF16(videoDecoderName, aInfo.mVideoDecoderName);
+  CopyUTF8toUTF16(videoType, aInfo.mVideoType);
+  aInfo.mVideoWidth =
+      videoInfo.mDisplay.width < 0 ? 0 : videoInfo.mDisplay.width;
+  aInfo.mVideoHeight =
+      videoInfo.mDisplay.height < 0 ? 0 : videoInfo.mDisplay.height;
+  aInfo.mVideoRate = mVideo.mMeanRate.Mean();
+  aInfo.mVideoHardwareAccelerated = VideoIsHardwareAccelerated();
+  aInfo.mVideoNumSamplesOutputTotal = mVideo.mNumSamplesOutputTotal;
+  aInfo.mVideoNumSamplesSkippedTotal = mVideo.mNumSamplesSkippedTotal;
 
   // Looking at dropped frames
   FrameStatisticsData stats = mFrameStats->GetFrameStatisticsData();
