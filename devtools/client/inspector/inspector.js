@@ -263,9 +263,15 @@ Inspector.prototype = {
 
     await this.initInspectorFront(targetFront);
 
+    // the target might have been destroyed when reloading quickly,
+    // while waiting for inspector front initialization
+    if (targetFront.isDestroyed()) {
+      return;
+    }
+
     await Promise.all([
-      this._getCssProperties(),
-      this._getAccessibilityFront(),
+      this._getCssProperties(targetFront),
+      this._getAccessibilityFront(targetFront),
     ]);
   },
 
@@ -531,14 +537,12 @@ Inspector.prototype = {
     this._pendingSelectionUnique = null;
   },
 
-  _getCssProperties: async function() {
-    this._cssProperties = await this.currentTarget.getFront("cssProperties");
+  _getCssProperties: async function(targetFront) {
+    this._cssProperties = await targetFront.getFront("cssProperties");
   },
 
-  _getAccessibilityFront: async function() {
-    this.accessibilityFront = await this.currentTarget.getFront(
-      "accessibility"
-    );
+  _getAccessibilityFront: async function(targetFront) {
+    this.accessibilityFront = await targetFront.getFront("accessibility");
     return this.accessibilityFront;
   },
 
