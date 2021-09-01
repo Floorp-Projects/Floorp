@@ -17,7 +17,7 @@ add_task(async function() {
   const { Chart } = windowRequire("devtools/client/shared/widgets/Chart");
 
   const wait = waitForNetworkEvents(monitor, 1);
-  navigateTo(SIMPLE_URL);
+  await navigateTo(SIMPLE_URL);
   await wait;
 
   const pie = Chart.Pie(document, {
