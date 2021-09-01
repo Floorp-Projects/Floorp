@@ -17,6 +17,7 @@ using mozilla::a11y::role from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccType from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccGenericType from "mozilla/a11y/IPCTypes.h";
 [RefCounted] using mozilla::a11y::AccAttributes from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::CacheUpdateType from "mozilla/a11y/IPCTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 
@@ -126,12 +127,10 @@ parent:
 
   /*
    * Cache The World
-   * XXX: aUpdateType should be an enum, for now it is
-   * 0 for initial push, and 1 for partial update.
    * aFinal is false when paginating cache into several pushes,
    * and then true on the final push.
    */
-  async Cache(uint8_t aUpdateType, CacheData[] aData, bool aFinal);
+  async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aFinal);
 
 child:
   /*

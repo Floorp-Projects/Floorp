@@ -8,6 +8,7 @@
 #define mozilla_a11y_RemoteAccessibleBase_h
 
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/Role.h"
 #include "AccAttributes.h"
 #include "nsIAccessibleText.h"
@@ -192,8 +193,8 @@ class RemoteAccessibleBase : public Accessible {
 
   DocAccessibleParent* AsDoc() const { return IsDoc() ? mDoc : nullptr; }
 
-  void ApplyCache(uint8_t aUpdateType, AccAttributes* aFields) {
-    if (aUpdateType == 0 || !mCachedFields) {
+  void ApplyCache(CacheUpdateType aUpdateType, AccAttributes* aFields) {
+    if (aUpdateType == CacheUpdateType::Initial || !mCachedFields) {
       mCachedFields = aFields;
     } else {
       mCachedFields->Update(aFields);
