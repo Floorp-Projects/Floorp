@@ -1006,6 +1006,11 @@ nsresult nsHttpConnection::InitSSLParams(bool connectingToProxy,
     return rv;
   }
 
+  // If proxy is use, don't use early-data.
+  if (mConnInfo->UsingProxy()) {
+    ssl->DisableEarlyData();
+  }
+
   if (proxyStartSSL) {
     rv = ssl->ProxyStartSSL();
     if (NS_FAILED(rv)) {

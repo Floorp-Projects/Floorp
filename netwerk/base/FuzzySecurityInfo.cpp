@@ -365,5 +365,9 @@ NS_IMETHODIMP FuzzySecurityInfo::GetIsBuiltCertChainRootBuiltInRoot(
   return NS_OK;
 }
 
+NS_IMETHODIMP FuzzySecurityInfo::DisableEarlyData(void) {
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
