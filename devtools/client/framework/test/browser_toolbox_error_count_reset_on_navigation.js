@@ -59,7 +59,7 @@ add_task(async function() {
   info(
     "Reload the page and check that the error icon has the expected content"
   );
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
 
   await waitFor(
     () => getErrorIconCount(toolbox) === expectedErrorCount,
@@ -70,7 +70,7 @@ add_task(async function() {
   info(
     "Navigate to an error-less page and check that the error icon is hidden"
   );
-  navigateTo(`data:text/html;charset=utf8,No errors`);
+  await navigateTo(`data:text/html;charset=utf8,No errors`);
   await waitFor(
     () => !getErrorIcon(toolbox),
     "Error count is cleared on navigation"

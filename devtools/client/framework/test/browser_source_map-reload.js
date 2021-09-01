@@ -35,7 +35,7 @@ add_task(async function() {
   // Reload the page.  The sjs ensures that a different source file
   // will be loaded.
   sourceSeen = waitForSourceLoad(toolbox, JS_URL);
-  await refreshTab();
+  await reloadBrowser();
   await sourceSeen;
 
   info(

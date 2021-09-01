@@ -22,7 +22,7 @@ add_task(async function() {
   await clearOutput(hud);
 
   expectUncaughtExceptionNoE10s();
-  await refreshTab();
+  await reloadBrowser();
   await waitForError(hud);
 
   // Close and reopen
@@ -33,7 +33,7 @@ add_task(async function() {
   hud = await openNewTabAndConsole(TEST_URI);
 
   expectUncaughtExceptionNoE10s();
-  await refreshTab();
+  await reloadBrowser();
   await waitForError(hud);
 });
 

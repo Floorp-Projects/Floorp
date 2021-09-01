@@ -172,7 +172,7 @@ add_task(async function() {
       "When targets follow the WindowGlobal lifecycle and handle only one document, " +
         "only check that the panel refreshes correctly and emit its 'reloaded' event"
     );
-    await refreshTab();
+    await reloadBrowser();
   } else {
     info(
       "When targets follow the DocShell lifecycle and handle more than one document, " +

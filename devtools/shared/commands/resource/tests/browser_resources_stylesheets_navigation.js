@@ -113,7 +113,7 @@ add_task(async function() {
   availableResources = [];
 
   info("Check that styleSheetChangeEventsEnabled persist after reloading");
-  await refreshTab();
+  await reloadBrowser();
 
   // ⚠️ We're only getting the stylesheets for the top-level document and the remote frames;
   // the same-origin iframes stylesheets are missing.

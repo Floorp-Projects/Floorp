@@ -51,7 +51,7 @@ add_task(async function() {
   info("Reload the page, expect the highlighter to be displayed once again");
   const onRestored = waitForHighlighterTypeRestored(HIGHLIGHTER_TYPE);
   const onReloaded = inspector.once("reloaded");
-  await refreshTab();
+  await reloadBrowser();
   info("Wait for inspector to be reloaded after page reload");
   await onReloaded;
   info("Wait for the highlighter to be restored");

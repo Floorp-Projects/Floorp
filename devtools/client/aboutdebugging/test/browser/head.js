@@ -158,7 +158,7 @@ async function closeAboutDevtoolsToolbox(
 async function reloadAboutDebugging(tab) {
   info("reload about:debugging");
 
-  await refreshTab(tab);
+  await reloadBrowser(tab.linkedBrowser);
   const browser = tab.linkedBrowser;
   const document = browser.contentDocument;
   const window = browser.contentWindow;

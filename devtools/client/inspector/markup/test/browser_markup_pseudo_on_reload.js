@@ -17,7 +17,7 @@ add_task(async function() {
   info("Check that the markup-view shows the expected nodes before reload");
   await checkMarkupView(inspector);
 
-  await refreshTab();
+  await reloadBrowser();
 
   info("Check that the markup-view shows the expected nodes after reload");
   await checkMarkupView(inspector);

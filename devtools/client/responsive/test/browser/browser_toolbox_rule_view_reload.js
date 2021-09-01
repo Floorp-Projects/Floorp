@@ -30,7 +30,7 @@ addRDMTaskWithPreAndPost(
     info("Reload the current page");
     const onNewRoot = inspector.once("new-root");
     const onRuleViewRefreshed = inspector.once("rule-view-refreshed");
-    await refreshTab();
+    await reloadBrowser();
     await onNewRoot;
     await inspector.markup._waitForChildren();
     await onRuleViewRefreshed;

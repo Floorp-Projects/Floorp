@@ -44,7 +44,7 @@ add_task(async function() {
   const toolbox = await openNewTabAndToolbox(IFRAME_TEST_URI, "webconsole");
   
   info("Reload the test page, which will trigger the debugger statement in the iframe");
-  const pausedReload = refreshTab();
+  const pausedReload = reloadBrowser();
 
   const dbg = await assertDebuggerIsHighlightedAndPaused(toolbox);
   const source = findSource(dbg, IFRAME_TEST_COM_URI);
@@ -64,7 +64,7 @@ add_task(async function() {
   const toolbox = await openNewTabAndToolbox(IFRAME_TEST_URI, "webconsole");
   
   info("Reload the test page, which will trigger the debugger statement in the iframe");
-  const pausedReload = refreshTab();
+  const pausedReload = reloadBrowser();
 
   const dbg = await assertDebuggerIsHighlightedAndPaused(toolbox);
   const topLevelThread= toolbox.commands.targetCommand.targetFront.threadFront.actorID;

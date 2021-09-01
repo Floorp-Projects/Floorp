@@ -58,7 +58,7 @@ async function testNavigation() {
   );
 
   // reload the current tab and check data
-  await refreshTab();
+  await reloadBrowser();
   // wait for storage tree refresh, and check host
   info("Waiting for storage tree to refresh and show correct host…");
   await waitUntil(() => isInTree(doc, ["localStorage", "http://example.net"]));

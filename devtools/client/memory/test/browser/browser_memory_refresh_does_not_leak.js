@@ -63,7 +63,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
   );
   is(startWindows.length, 1);
 
-  await refreshTab();
+  await reloadBrowser();
 
   // Update the front as we may have switched to a new target and a new memory front
   front = panel.panelWin.gStore.getState().front;
