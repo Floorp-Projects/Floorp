@@ -9,7 +9,7 @@ mod hir;
 use glsl::parser::Parse;
 use glsl::syntax;
 use glsl::syntax::{TranslationUnit, UnaryOp};
-use hir::{Statement, SwizzleSelector, Type};
+use hir::{Statement, Type};
 use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, HashMap};
 use std::io::Read;
@@ -1465,25 +1465,6 @@ pub fn show_double(state: &OutputState, x: f64) {
     }
 }
 
-trait SwizzelSelectorExt {
-    fn to_args(&self) -> String;
-}
-
-impl SwizzelSelectorExt for SwizzleSelector {
-    fn to_args(&self) -> String {
-        let mut s = Vec::new();
-        let fs = match self.field_set {
-            hir::FieldSet::Rgba => ["R", "G", "B", "A"],
-            hir::FieldSet::Xyzw => ["X", "Y", "Z", "W"],
-            hir::FieldSet::Stpq => ["S", "T", "P", "Q"],
-        };
-        for i in &self.components {
-            s.push(fs[*i as usize])
-        }
-        s.join(", ")
-    }
-}
-
 fn expr_run_class(state: &OutputState, expr: &hir::Expr) -> hir::RunClass {
     match &expr.kind {
         hir::ExprKind::Variable(i) => symbol_run_class(&state.hir.sym(*i).decl, state.vector_mask),
@@ -2018,13 +1999,25 @@ pub fn show_hir_expr_inner(state: &OutputState, expr: &hir::Expr, top_level: boo
                 }
                 state.write("(");
                 show_hir_expr(state, &e);
-                if state.is_lval.get() && s.components.len() > 1 {
-                    state.write(").lsel(");
+                state.write(").");
+                if s.components.len() == 1 {
+                    // For single component swizzles, output a field access to
+                    // avoid stressing inlining of sel().
+                    state.write(&s.to_field_set(hir::FieldSet::Xyzw));
                 } else {
-                    state.write(").sel(");
+                    if state.is_lval.get() && s.components.len() > 1 {
+                        state.write("lsel(");
+                    } else {
+                        state.write("sel(");
+                    }
+                    for (i, c) in s.to_string().chars().enumerate() {
+                        if i > 0 {
+                            state.write(",");
+                        }
+                        write!(state, "{}", c.to_uppercase());
+                    }
+                    state.write(")");
                 }
-                state.write(&s.to_args());
-                state.write(")");
             } else {
                 state.write("(");
                 show_hir_expr(state, &e);
