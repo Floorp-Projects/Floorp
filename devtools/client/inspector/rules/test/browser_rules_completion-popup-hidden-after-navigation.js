@@ -35,7 +35,7 @@ add_task(async function() {
   ok(view.popup && view.popup.isOpen, "Popup should be opened");
 
   info("Reloading the page");
-  await refreshTab();
+  await reloadBrowser();
 
   ok(!(view.popup && view.popup.isOpen), "Popup should be closed");
 });

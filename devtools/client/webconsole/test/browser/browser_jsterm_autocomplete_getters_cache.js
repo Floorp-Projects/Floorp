@@ -108,7 +108,7 @@ add_task(async function() {
     "Reload the page to ensure asking for autocomplete again show the confirm dialog"
   );
   onPopupClose = autocompletePopup.once("popup-closed");
-  await refreshTab();
+  await reloadBrowser();
   info("tab reloaded, waiting for the popup to close");
   await onPopupClose;
 

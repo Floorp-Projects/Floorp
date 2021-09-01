@@ -44,7 +44,7 @@ add_task(async function() {
   const dbg = createDebuggerContext(toolbox);
   await waitForSource(dbg, "inline-cache.html");
   info("Reload tab to ensure debugger finds script");
-  await refreshTab();
+  await reloadBrowser();
   let pageValue = await getPageValue(tab);
   is(pageValue, "let x = 1;", "Content loads from network, has doc value 1");
   await waitForSource(dbg, "inline-cache.html");
@@ -64,7 +64,7 @@ add_task(async function() {
   makeChanges();
 
   info("Reload inside debugger with toolbox caching disabled (attempt 1)");
-  await refreshTab();
+  await reloadBrowser();
   pageValue = await getPageValue(tab);
   is(pageValue, "let x = 2;", "Content loads from network, has doc value 2");
   await waitForLoadedSource(dbg, "inline-cache.html");
@@ -79,7 +79,7 @@ add_task(async function() {
   makeChanges();
 
   info("Reload inside debugger with toolbox caching disabled (attempt 2)");
-  await refreshTab();
+  await reloadBrowser();
   pageValue = await getPageValue(tab);
   is(pageValue, "let x = 3;", "Content loads from network, has doc value 3");
   await waitForLoadedSource(dbg, "inline-cache.html");
@@ -101,7 +101,7 @@ add_task(async function() {
   // document contents.
 
   info("Reload inside debugger with toolbox caching enabled (attempt 1)");
-  await refreshTab();
+  await reloadBrowser();
   pageValue = await getPageValue(tab);
   is(pageValue, "let x = 4;", "Content loads from network, has doc value 4");
   await waitForLoadedSource(dbg, "inline-cache.html");
@@ -115,7 +115,7 @@ add_task(async function() {
   makeChanges();
 
   info("Reload inside debugger with toolbox caching enabled (attempt 2)");
-  await refreshTab();
+  await reloadBrowser();
   pageValue = await getPageValue(tab);
   is(pageValue, "let x = 5;", "Content loads from network, has doc value 5");
   await waitForLoadedSource(dbg, "inline-cache.html");

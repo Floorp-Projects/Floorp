@@ -20,7 +20,7 @@ add_task(async function() {
   info(
     "Reload the page to check that JsTerm does not steal the content page focus"
   );
-  await refreshTab();
+  await reloadBrowser();
   is(
     isInputFocused(hud),
     false,

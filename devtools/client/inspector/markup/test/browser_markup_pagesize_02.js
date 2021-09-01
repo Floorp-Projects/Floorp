@@ -18,7 +18,7 @@ add_task(async function() {
   info("Selecting the UL node");
   await clickContainer("ul", inspector);
   info("Reloading the page with the UL node selected will expand its children");
-  await refreshTab();
+  await reloadBrowser();
   await inspector.markup._waitForChildren();
 
   info("Click on the 'show all nodes' button in the UL's list of children");

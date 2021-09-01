@@ -443,24 +443,15 @@ var removeTab = async function(tab) {
 };
 
 /**
- * Refresh the provided tab.
- * @param {Object} tab The tab to be refreshed. Defaults to the currently selected tab.
- * @return Promise<undefined> resolved when the tab is successfully refreshed.
+ * Alias for navigateTo which will reuse the current URI of the provided browser
+ * to trigger a navigation.
  */
-var refreshTab = async function(tab = gBrowser.selectedTab) {
-  info("Refreshing tab.");
-  // Use navigateTo if there is a toolbox opened, and wait for panels to update after reload.
-  // Otherwise only wait for the tab's document to be loaded.
-  const isKnownTab = TabDescriptorFactory.isKnownTab(tab);
-  if (isKnownTab) {
-    await navigateTo(tab.linkedBrowser.currentURI.spec);
-  } else {
-    const finished = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gBrowser.reloadTab(tab);
-    await finished;
-  }
-  info("Tab finished refreshing.");
-};
+async function reloadBrowser({
+  browser = gBrowser.selectedBrowser,
+  isErrorPage = false,
+} = {}) {
+  return navigateTo(browser.currentURI.spec, { browser, isErrorPage });
+}
 
 /**
  * Navigate the currently selected tab to a new URL and wait for it to load.

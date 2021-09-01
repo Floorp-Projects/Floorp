@@ -64,7 +64,7 @@ async function testNavigation(shallCleanup = false) {
   // navigating. See Bug 1273802
 
   // reload the current tab, and check again
-  await refreshTab();
+  await reloadBrowser();
   // wait for storage tree refresh, and check host
   info("Checking storage tree…");
   await waitUntil(() => isInTree(doc, ["indexedDB", "http://example.net"]));
