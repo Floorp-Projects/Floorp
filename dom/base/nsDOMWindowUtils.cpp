@@ -1699,7 +1699,8 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
   NS_ENSURE_TRUE(presContext, NS_ERROR_NOT_AVAILABLE);
 
   // This should only be called on the root content document.
-  NS_ENSURE_TRUE(presContext->IsRootContentDocument(), NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(presContext->IsRootContentDocumentCrossProcess(),
+                 NS_ERROR_INVALID_ARG);
 
   FrameMetrics::ScrollOffsetUpdateType updateType;
   switch (aUpdateType) {
