@@ -469,19 +469,11 @@ class HomeFragment : Fragment() {
             openTabsTray()
         }
 
-        PrivateBrowsingButtonView(
-            binding.privateBrowsingButton,
-            browsingModeManager
-        ) { newMode ->
-            if (newMode == BrowsingMode.Private) {
-                requireContext().settings().incrementNumTimesPrivateModeOpened()
-            }
-
-            if (onboarding.userHasBeenOnboarded()) {
-                homeFragmentStore.dispatch(
-                    HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
-                )
-            }
+        PrivateBrowsingButtonView(binding.privateBrowsingButton, browsingModeManager) { newMode ->
+            sessionControlInteractor.onPrivateModeButtonClicked(
+                newMode,
+                onboarding.userHasBeenOnboarded()
+            )
         }
 
         consumeFrom(requireComponents.core.store) {

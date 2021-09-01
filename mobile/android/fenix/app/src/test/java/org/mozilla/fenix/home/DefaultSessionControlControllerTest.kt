@@ -6,7 +6,9 @@ package org.mozilla.fenix.home
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
@@ -43,6 +45,8 @@ import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserFragmentDirections
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
@@ -718,6 +722,91 @@ class DefaultSessionControlControllerTest {
 
         verify(exactly = 0) {
             navController.navigateUp()
+        }
+    }
+
+    @Test
+    fun `WHEN private mode button is selected from home THEN handle mode change`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.homeFragment
+        }
+
+        every { settings.incrementNumTimesPrivateModeOpened() } just Runs
+
+        val newMode = BrowsingMode.Private
+        val hasBeenOnboarded = true
+
+        createController().handlePrivateModeButtonClicked(newMode, hasBeenOnboarded)
+
+        verify {
+            settings.incrementNumTimesPrivateModeOpened()
+            HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
+        }
+    }
+
+    @Test
+    fun `WHEN private mode is selected on home from behind search THEN handle mode change`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+
+        every { settings.incrementNumTimesPrivateModeOpened() } just Runs
+
+        val url = "https://mozilla.org"
+        val tab = createTab(
+            id = "otherTab",
+            url = url,
+            private = false,
+            engineSession = mockk(relaxed = true)
+        )
+        store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
+
+        val newMode = BrowsingMode.Private
+        val hasBeenOnboarded = true
+
+        createController().handlePrivateModeButtonClicked(newMode, hasBeenOnboarded)
+
+        verify {
+            settings.incrementNumTimesPrivateModeOpened()
+            HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
+            navController.navigate(
+                BrowserFragmentDirections.actionGlobalSearchDialog(
+                    sessionId = null
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN private mode is deselected on home from behind search THEN handle mode change`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+
+        val url = "https://mozilla.org"
+        val tab = createTab(
+            id = "otherTab",
+            url = url,
+            private = true,
+            engineSession = mockk(relaxed = true)
+        )
+        store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
+
+        val newMode = BrowsingMode.Normal
+        val hasBeenOnboarded = true
+
+        createController().handlePrivateModeButtonClicked(newMode, hasBeenOnboarded)
+
+        verify(exactly = 0) {
+            settings.incrementNumTimesPrivateModeOpened()
+        }
+        verify {
+            HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
+            navController.navigate(
+                BrowserFragmentDirections.actionGlobalSearchDialog(
+                    sessionId = null
+                )
+            )
         }
     }
 

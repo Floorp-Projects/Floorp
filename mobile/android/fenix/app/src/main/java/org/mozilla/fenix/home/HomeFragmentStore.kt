@@ -43,13 +43,14 @@ data class Tab(
  * @property expandedCollections A set containing the ids of the [TabCollection] that are expanded
  *                               in the [HomeFragment].
  * @property mode The state of the [HomeFragment] UI.
- * @property tabs The list of opened [Tab] in the [HomeFragment].
  * @property topSites The list of [TopSite] in the [HomeFragment].
  * @property tip The current [Tip] to show on the [HomeFragment].
  * @property showCollectionPlaceholder If true, shows a placeholder when there are no collections.
+ * @property showSetAsDefaultBrowserCard If true, shows the default browser card
  * @property recentTabs The list of recent [TabSessionState] in the [HomeFragment].
  * @property recentBookmarks The list of recently saved [BookmarkNode]s to show on the [HomeFragment].
  * @property historyMetadata The list of [HistoryMetadataGroup].
+ * @property pocketArticles The list of [PocketRecommendedStory].
  */
 data class HomeFragmentState(
     val collections: List<TabCollection> = emptyList(),

@@ -15,6 +15,7 @@ import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.controller.HistoryMetadataController
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
@@ -226,5 +227,14 @@ class SessionControlInteractorTest {
     fun `WHEN Show All recently saved bookmarks button is clicked THEN the click is handled`() {
         interactor.onShowAllBookmarksClicked()
         verify { recentBookmarksController.handleShowAllBookmarksClicked() }
+    }
+
+    @Test
+    fun `WHEN private mode button is clicked THEN the click is handled`() {
+        val newMode = BrowsingMode.Private
+        val hasBeenOnboarded = true
+
+        interactor.onPrivateModeButtonClicked(newMode, hasBeenOnboarded)
+        verify { controller.handlePrivateModeButtonClicked(newMode, hasBeenOnboarded) }
     }
 }

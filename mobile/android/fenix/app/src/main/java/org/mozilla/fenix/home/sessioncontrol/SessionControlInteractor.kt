@@ -9,6 +9,7 @@ import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.controller.HistoryMetadataController
@@ -27,6 +28,11 @@ interface TabSessionInteractor {
      * "Common myths about private browsing" link in private mode.
      */
     fun onPrivateBrowsingLearnMoreClicked()
+
+    /**
+     * Called when a user clicks on the Private Mode button on the homescreen.
+     */
+    fun onPrivateModeButtonClicked(newMode: BrowsingMode, userHasBeenOnboarded: Boolean)
 }
 
 /**
@@ -307,6 +313,10 @@ class SessionControlInteractor(
 
     override fun onPrivateBrowsingLearnMoreClicked() {
         controller.handlePrivateBrowsingLearnMoreClicked()
+    }
+
+    override fun onPrivateModeButtonClicked(newMode: BrowsingMode, userHasBeenOnboarded: Boolean) {
+        controller.handlePrivateModeButtonClicked(newMode, userHasBeenOnboarded)
     }
 
     override fun onPasteAndGo(clipboardText: String) {
