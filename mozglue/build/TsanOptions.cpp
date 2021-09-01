@@ -300,13 +300,6 @@ extern "C" const char* __tsan_default_suppressions() {
 
          "race:mozilla::gl::MesaMemoryLeakWorkaround\n"
 
-
-         // Bug 1723321
-         "race:mozilla::layers::AsyncPanZoomController::AsyncPanZoomController\n"
-
-         // Bug 1723170
-         "race:mozilla::layers::APZCTreeManager::NewAPZCInstance\n"
-
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
