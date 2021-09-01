@@ -614,25 +614,16 @@ class PromptDelegate {
     return true;
   }
 
-  promptPassword(aTitle, aText, aPassword, aCheckMsg, aCheckState) {
+  promptPassword(aTitle, aText, aPassword) {
     return this._promptUsernameAndPassword(
       aTitle,
       aText,
       /* aUsername */ undefined,
-      aPassword,
-      aCheckMsg,
-      aCheckState
+      aPassword
     );
   }
 
-  promptUsernameAndPassword(
-    aTitle,
-    aText,
-    aUsername,
-    aPassword,
-    aCheckMsg,
-    aCheckState
-  ) {
+  promptUsernameAndPassword(aTitle, aText, aUsername, aPassword) {
     const msg = {
       type: "auth",
       mode: aUsername ? "auth" : "password",
@@ -642,15 +633,10 @@ class PromptDelegate {
         password: aPassword.value,
       },
     };
-    const result = this._prompter.showPrompt(
-      this._addText(aTitle, aText, this._addCheck(aCheckMsg, aCheckState, msg))
-    );
+    const result = this._prompter.showPrompt(this._addText(aTitle, aText, msg));
     // OK: result && result.password !== undefined
     // Cancel: result && result.password === undefined
     // Error: !result
-    if (result && aCheckState) {
-      aCheckState.value = !!result.checkValue;
-    }
     if (!result || result.password === undefined) {
       return false;
     }
@@ -714,10 +700,7 @@ class PromptDelegate {
     );
   }
 
-  _fillAuthInfo(aAuthInfo, aCheckState, aResult) {
-    if (aResult && aCheckState) {
-      aCheckState.value = !!aResult.checkValue;
-    }
+  _fillAuthInfo(aAuthInfo, aResult) {
     if (!aResult || aResult.password === undefined) {
       return false;
     }
@@ -741,35 +724,24 @@ class PromptDelegate {
     return true;
   }
 
-  promptAuth(aChannel, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
+  promptAuth(aChannel, aLevel, aAuthInfo) {
     const result = this._prompter.showPrompt(
-      this._addCheck(
-        aCheckMsg,
-        aCheckState,
-        this._getAuthMsg(aChannel, aLevel, aAuthInfo)
-      )
+      this._getAuthMsg(aChannel, aLevel, aAuthInfo)
     );
     // OK: result && result.password !== undefined
     // Cancel: result && result.password === undefined
     // Error: !result
-    return this._fillAuthInfo(aAuthInfo, aCheckState, result);
+    return this._fillAuthInfo(aAuthInfo, result);
   }
 
-  async asyncPromptAuth(aChannel, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
-    const check = {
-      value: aCheckState,
-    };
+  async asyncPromptAuth(aChannel, aLevel, aAuthInfo) {
     const result = await this._prompter.asyncShowPromptPromise(
-      this._addCheck(
-        aCheckMsg,
-        check,
-        this._getAuthMsg(aChannel, aLevel, aAuthInfo)
-      )
+      this._getAuthMsg(aChannel, aLevel, aAuthInfo)
     );
     // OK: result && result.password !== undefined
     // Cancel: result && result.password === undefined
     // Error: !result
-    return this._fillAuthInfo(aAuthInfo, check, result);
+    return this._fillAuthInfo(aAuthInfo, result);
   }
 
   _getAuthText(aChannel, aAuthInfo) {

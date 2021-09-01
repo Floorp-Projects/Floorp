@@ -591,13 +591,9 @@ void PK11PasswordPromptRunnable::RunOnTargetThread() {
   }
 
   nsString password;
-  // |checkState| is unused because |checkMsg| (the argument just before it) is
-  // null, but XPConnect requires it to point to a valid bool nonetheless.
-  bool checkState = false;
   bool userClickedOK = false;
   rv = prompt->PromptPassword(nullptr, promptString.get(),
-                              getter_Copies(password), nullptr, &checkState,
-                              &userClickedOK);
+                              getter_Copies(password), &userClickedOK);
   if (NS_FAILED(rv) || !userClickedOK) {
     return;
   }
