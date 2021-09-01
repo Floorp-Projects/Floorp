@@ -37,9 +37,13 @@ toolbarbutton[disabled="true"] {
 }
 
 @media (-moz-windows-classic) {
+  @media not (prefers-contrast) {
+    toolbarbutton[disabled="true"] {
+      text-shadow: 1px 1px ThreeDHighlight;
+    }
+  }
   toolbarbutton[disabled="true"] {
     color: ThreeDShadow;
-    text-shadow: 1px 1px ThreeDHighlight;
   }
 }
 
