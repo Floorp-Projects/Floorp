@@ -29,13 +29,6 @@ inline const char* GetFunctionNameBytes(JSContext* cx, JSFunction* fun,
   return js_anonymous_str;
 }
 
-inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
-                                       HandleObject enclosingEnv,
-                                       HandleObject proto) {
-  MOZ_ASSERT(CanReuseScriptForClone(cx->realm(), fun, enclosingEnv));
-  return CloneFunctionReuseScript(cx, fun, enclosingEnv, proto);
-}
-
 } /* namespace js */
 
 /* static */
