@@ -1,5 +1,5 @@
 async function importFromFixture(fixture, replace) {
-  let cwd = do_get_cwd().path;
+  let cwd = await OS.File.getCurrentDirectory();
   let path = OS.Path.join(cwd, fixture);
 
   info(`Importing from ${path}`);
