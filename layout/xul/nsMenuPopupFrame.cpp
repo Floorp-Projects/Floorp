@@ -871,8 +871,9 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
       InitPositionFromAnchorAlign(anchor, align);
     }
   }
-
-  mScreenRect = nsIntRect(-1, -1, 0, 0);
+  // When converted back to CSSIntRect it is (-1, -1, 0, 0) - as expected in
+  // nsXULPopupManager::Rollup
+  mScreenRect = nsRect(-AppUnitsPerCSSPixel(), -AppUnitsPerCSSPixel(), 0, 0);
 
   if (aAttributesOverride) {
     // Use |left| and |top| dimension attributes to position the popup if
@@ -884,11 +885,15 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
     nsresult err;
     if (!left.IsEmpty()) {
       int32_t x = left.ToInteger(&err);
-      if (NS_SUCCEEDED(err)) mScreenRect.x = x;
+      if (NS_SUCCEEDED(err)) {
+        mScreenRect.x = CSSPixel::ToAppUnits(x);
+      }
     }
     if (!top.IsEmpty()) {
       int32_t y = top.ToInteger(&err);
-      if (NS_SUCCEEDED(err)) mScreenRect.y = y;
+      if (NS_SUCCEEDED(err)) {
+        mScreenRect.y = CSSPixel::ToAppUnits(y);
+      }
     }
   }
 }
@@ -903,7 +908,8 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
   mTriggerContent = aTriggerContent;
-  mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
+  mScreenRect =
+      nsRect(CSSPixel::ToAppUnits(aXPos), CSSPixel::ToAppUnits(aYPos), 0, 0);
   mXPos = 0;
   mYPos = 0;
   mFlip = FlipType_Default;
@@ -923,7 +929,8 @@ void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
   mTriggerContent = aTriggerContent;
   mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
-  mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
+  mScreenRect =
+      nsRect(CSSPixel::ToAppUnits(aXPos), CSSPixel::ToAppUnits(aYPos), 0, 0);
   mXPos = 0;
   mYPos = 0;
   mFlip = FlipType_Default;
@@ -944,7 +951,7 @@ void nsMenuPopupFrame::InitializePopupAtRect(nsIContent* aTriggerContent,
                                              bool aAttributesOverride) {
   InitializePopup(nullptr, aTriggerContent, aPosition, 0, 0,
                   MenuPopupAnchorType_Rect, aAttributesOverride);
-  mScreenRect = aRect;
+  mScreenRect = ToAppUnits(aRect, AppUnitsPerCSSPixel());
 }
 
 void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
@@ -1433,7 +1440,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     // If anchored to a rectangle, use that rectangle. Otherwise, determine the
     // rectangle from the anchor.
     if (mAnchorType == MenuPopupAnchorType_Rect) {
-      anchorRect = ToAppUnits(mScreenRect, AppUnitsPerCSSPixel());
+      anchorRect = mScreenRect;
     } else {
       // if the frame is not specified, use the anchor node passed to OpenPopup.
       // If that wasn't specified either, use the root frame. Note that
@@ -1517,7 +1524,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     // mXPos and mYPos specify an additonal offset passed to OpenPopup that
     // should be added to the position.  We also add the offset to the anchor
     // pos so a later flip/resize takes the offset into account.
-    nscoord anchorXOffset = nsPresContext::CSSPixelsToAppUnits(mXPos);
+    nscoord anchorXOffset = CSSPixel::ToAppUnits(mXPos);
     if (IsDirectionRTL()) {
       screenPoint.x -= anchorXOffset;
       anchorRect.x -= anchorXOffset;
@@ -1525,7 +1532,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       screenPoint.x += anchorXOffset;
       anchorRect.x += anchorXOffset;
     }
-    nscoord anchorYOffset = nsPresContext::CSSPixelsToAppUnits(mYPos);
+    nscoord anchorYOffset = CSSPixel::ToAppUnits(mYPos);
     screenPoint.y += anchorYOffset;
     anchorRect.y += anchorYOffset;
 
@@ -1539,10 +1546,8 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       // Account for the margin that will end up being added to the screen
       // coordinate the next time SetPopupPosition is called.
       mAnchorType = MenuPopupAnchorType_Point;
-      mScreenRect.x =
-          nsPresContext::AppUnitsToIntCSSPixels(screenPoint.x - margin.left);
-      mScreenRect.y =
-          nsPresContext::AppUnitsToIntCSSPixels(screenPoint.y - margin.top);
+      mScreenRect.x = screenPoint.x - margin.left;
+      mScreenRect.y = screenPoint.y - margin.top;
     }
   } else {
     // The popup is positioned at a screen coordinate.
@@ -1557,11 +1562,11 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     if (mAdjustOffsetForContextMenu) {
       nsPoint offsetForContextMenuDev;
       offsetForContextMenuDev.x =
-          nsPresContext::CSSPixelsToAppUnits(LookAndFeel::GetInt(
+          CSSPixel::ToAppUnits(LookAndFeel::GetInt(
               LookAndFeel::IntID::ContextMenuOffsetHorizontal)) /
           factor;
       offsetForContextMenuDev.y =
-          nsPresContext::CSSPixelsToAppUnits(LookAndFeel::GetInt(
+          CSSPixel::ToAppUnits(LookAndFeel::GetInt(
               LookAndFeel::IntID::ContextMenuOffsetVertical)) /
           factor;
       offsetForContextMenu.x =
@@ -1571,10 +1576,8 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     }
 
     // next, convert into app units accounting for the zoom
-    screenPoint.x = presContext->DevPixelsToAppUnits(
-        nsPresContext::CSSPixelsToAppUnits(mScreenRect.x) / factor);
-    screenPoint.y = presContext->DevPixelsToAppUnits(
-        nsPresContext::CSSPixelsToAppUnits(mScreenRect.y) / factor);
+    screenPoint.x = presContext->DevPixelsToAppUnits(mScreenRect.x / factor);
+    screenPoint.y = presContext->DevPixelsToAppUnits(mScreenRect.y / factor);
     anchorRect = nsRect(screenPoint, nsSize(0, 0));
 
     // add the margins on the popup
@@ -2373,9 +2376,10 @@ void nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-void nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs) {
+void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs) {
   nsIWidget* widget = GetWidget();
-  if ((mScreenRect.x == aPos.x && mScreenRect.y == aPos.y) &&
+  nsPoint appUnitsPos = CSSPixel::ToAppUnits(aPos);
+  if ((mScreenRect.x == appUnitsPos.x && mScreenRect.y == appUnitsPos.y) &&
       (!widget || widget->GetClientOffset() == mLastClientOffset)) {
     return;
   }
@@ -2389,15 +2393,15 @@ void nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs) {
 
   // Workaround for bug 788189.  See also bug 708278 comment #25 and following.
   if (mAdjustOffsetForContextMenu) {
-    margin.left += nsPresContext::CSSPixelsToAppUnits(
+    margin.left += CSSPixel::ToAppUnits(
         LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetHorizontal));
-    margin.top += nsPresContext::CSSPixelsToAppUnits(
+    margin.top += CSSPixel::ToAppUnits(
         LookAndFeel::GetInt(LookAndFeel::IntID::ContextMenuOffsetVertical));
   }
 
   mAnchorType = MenuPopupAnchorType_Point;
-  mScreenRect.x = aPos.x - nsPresContext::AppUnitsToIntCSSPixels(margin.left);
-  mScreenRect.y = aPos.y - nsPresContext::AppUnitsToIntCSSPixels(margin.top);
+  mScreenRect.x = appUnitsPos.x - margin.left;
+  mScreenRect.y = appUnitsPos.y - margin.top;
 
   SetPopupPosition(nullptr, true, false);
 
@@ -2405,8 +2409,8 @@ void nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs) {
   if (aUpdateAttrs && (popup->HasAttr(kNameSpaceID_None, nsGkAtoms::left) ||
                        popup->HasAttr(kNameSpaceID_None, nsGkAtoms::top))) {
     nsAutoString left, top;
-    left.AppendInt(aPos.x);
-    top.AppendInt(aPos.y);
+    left.AppendInt(RoundedToInt(aPos).x);
+    top.AppendInt(RoundedToInt(aPos).y);
     popup->SetAttr(kNameSpaceID_None, nsGkAtoms::left, left, false);
     popup->SetAttr(kNameSpaceID_None, nsGkAtoms::top, top, false);
   }
