@@ -309,7 +309,7 @@ void SessionStoreUtils::RestoreScrollPosition(
 
   if (nsCOMPtr<Document> doc = aWindow.GetExtantDoc()) {
     if (nsPresContext* presContext = doc->GetPresContext()) {
-      if (presContext->IsRootContentDocument()) {
+      if (presContext->IsRootContentDocumentCrossProcess()) {
         // Use eMainThread so this takes precedence over session history
         // (ScrollFrameHelper::ScrollToRestoredPosition()).
         presContext->PresShell()->ScrollToVisual(
