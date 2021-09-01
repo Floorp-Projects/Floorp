@@ -538,8 +538,8 @@ impl Document {
             FrameMsg::ResetDynamicProperties => {
                 self.dynamic_properties.reset_properties();
             }
-            FrameMsg::UpdateDynamicProperties(property_bindings) => {
-                self.dynamic_properties.set_properties(property_bindings);
+            FrameMsg::AppendDynamicProperties(property_bindings) => {
+                self.dynamic_properties.add_properties(property_bindings);
             }
             FrameMsg::AppendDynamicTransformProperties(property_bindings) => {
                 self.dynamic_properties.add_transforms(property_bindings);
