@@ -351,13 +351,14 @@ select > option {
 }
 
 option:checked {
-  background-color: text-select-background-disabled !important;
-  color: SelectedItemText !important;
+  background-color: -moz-html-cellhighlight !important;
+  color: -moz-html-cellhighlighttext !important;
 }
 
 select:focus > option:checked,
 select:focus > optgroup > option:checked {
-  background-color: SelectedItem !important;
+  background-color: Highlight !important;
+  color: HighlightText !important;
 }
 
 optgroup {

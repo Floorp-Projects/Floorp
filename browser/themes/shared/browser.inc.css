@@ -256,7 +256,7 @@ menupopup::part(drop-indicator) {
   list-style-image: none;
   height: 2px;
   margin-inline-end: -4em;
-  background-color: SelectedItem;
+  background-color: Highlight;
   pointer-events: none;
 }
 
