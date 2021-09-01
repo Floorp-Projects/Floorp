@@ -80,10 +80,12 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     nsTArray<CacheData> cache(shownTree.Length());
     for (LocalAccessible* acc : shownTree) {
-      uint64_t id = reinterpret_cast<uint64_t>(acc->UniqueID());
       RefPtr<AccAttributes> fields =
-          acc->BundleFieldsForCache(CacheDomain::All);
-      cache.AppendElement(CacheData(id, fields));
+          acc->BundleFieldsForCache(CacheDomain::All, CacheUpdateType::Initial);
+      if (fields->Count()) {
+        uint64_t id = reinterpret_cast<uint64_t>(acc->UniqueID());
+        cache.AppendElement(CacheData(id, fields));
+      }
     }
     Unused << SendCache(CacheUpdateType::Initial, cache, true);
   }
