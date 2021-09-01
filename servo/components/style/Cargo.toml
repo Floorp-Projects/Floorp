@@ -83,7 +83,7 @@ gecko-profiler = { path = "../../../tools/profiler/rust-api" }
 
 [build-dependencies]
 lazy_static = "1"
-log = "0.4"
+log = { version = "0.4", features = ["std"] }
 bindgen = {version = "0.56", optional = true, default-features = false}
 regex = {version = "1.0", optional = true, default-features = false, features = ["perf", "std"]}
 walkdir = "2.1.4"
