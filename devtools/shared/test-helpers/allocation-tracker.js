@@ -82,14 +82,28 @@ exports.allocationTracker = function({
     acceptGlobal = () => true;
   } else if (watchDevToolsGlobals) {
     // Only accept globals related to DevTools
+    const builtinGlobal = require("devtools/shared/builtin-modules");
     acceptGlobal = g => {
       // self-hosting-global crashes when trying to call unsafeDereference
       if (g.class == "self-hosting-global") {
+        dump("TRACKER NEW GLOBAL: - : " + g.class + "\n");
         return false;
       }
       const ref = g.unsafeDereference();
       const location = Cu.getRealmLocation(ref);
-      const accept = !!location.match(/devtools/i);
+      let accept = !!location.match(/devtools/i);
+
+      // Also ignore the dedicated Sandbox used to spawn builtin-modules,
+      // as well as its internal Sandbox used to fetch various platform globals.
+      // We ignore the global used by the dedicated loader used to load
+      // the allocation-tracker module.
+      if (
+        ref == Cu.getGlobalForObject(builtinGlobal) ||
+        ref == builtinGlobal.internalSandbox
+      ) {
+        accept = false;
+      }
+
       dump(
         "TRACKER NEW GLOBAL: " + (accept ? "+" : "-") + " : " + location + "\n"
       );
