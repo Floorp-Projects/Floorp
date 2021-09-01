@@ -77,8 +77,8 @@ body {
 }
 
 .item.selected:focus > .item-title-container {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: SelectedItem;
+  color: SelectedItemText;
 }
 
 .item.client .item-twisty-container {

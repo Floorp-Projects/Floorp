@@ -98,8 +98,8 @@ menuitem.bookmark-item {
 
 /* Bookmark drag and drop styles */
 .bookmark-item[dragover-into="true"] {
-  background: Highlight !important;
-  color: HighlightText !important;
+  background: SelectedItem !important;
+  color: SelectedItemText !important;
 }
 
 .bookmark-item[cutting] > .toolbarbutton-icon,
@@ -202,8 +202,8 @@ menuitem.bookmark-item {
 
 :root:not(:-moz-lwtheme) {
   --urlbar-popup-action-color: -moz-nativehyperlinktext;
-  --autocomplete-popup-highlight-background: Highlight;
-  --autocomplete-popup-highlight-color: HighlightText;
+  --autocomplete-popup-highlight-background: SelectedItem;
+  --autocomplete-popup-highlight-color: SelectedItemText;
 }
 
 /* Translation infobar */

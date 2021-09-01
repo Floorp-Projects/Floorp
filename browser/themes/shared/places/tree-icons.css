@@ -78,7 +78,7 @@ treechildren::-moz-tree-cell-text(title, separator) {
 }
 
 treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
-  color: HighlightText;
+  color: SelectedItemText;
 }
 
 /* Remove tiny spacing in separators appearing after the twisty column */

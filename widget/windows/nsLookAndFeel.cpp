@@ -150,16 +150,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
     case ColorID::TextForeground:
       idx = COLOR_WINDOWTEXT;
       break;
-    case ColorID::TextSelectBackground:
-    case ColorID::IMESelectedRawTextBackground:
-    case ColorID::IMESelectedConvertedTextBackground:
-      idx = COLOR_HIGHLIGHT;
-      break;
-    case ColorID::TextSelectForeground:
-    case ColorID::IMESelectedRawTextForeground:
-    case ColorID::IMESelectedConvertedTextForeground:
-      idx = COLOR_HIGHLIGHTTEXT;
-      break;
     case ColorID::IMERawInputBackground:
     case ColorID::IMEConvertedTextBackground:
       aColor = NS_TRANSPARENT;
@@ -214,8 +204,10 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
       idx = COLOR_GRAYTEXT;
       break;
     case ColorID::Highlight:
-    case ColorID::MozHtmlCellhighlight:
+    case ColorID::Selecteditem:
     case ColorID::MozMenuhover:
+    case ColorID::IMESelectedRawTextBackground:
+    case ColorID::IMESelectedConvertedTextBackground:
       idx = COLOR_HIGHLIGHT;
       break;
     case ColorID::MozMenubarhovertext:
@@ -232,7 +224,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
       }
       // Fall through
     case ColorID::Highlighttext:
-    case ColorID::MozHtmlCellhighlighttext:
+    case ColorID::Selecteditemtext:
+    case ColorID::IMESelectedRawTextForeground:
+    case ColorID::IMESelectedConvertedTextForeground:
       idx = COLOR_HIGHLIGHTTEXT;
       break;
     case ColorID::Inactiveborder:
