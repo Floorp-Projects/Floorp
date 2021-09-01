@@ -45,6 +45,14 @@ var generateRequestMethods = function(actorSpec, frontProto) {
 
       return this.request(packet).then(response => {
         let ret;
+        if (!this.conn) {
+          throw new Error("Missing conn on " + this);
+        }
+        if (this.isDestroyed()) {
+          throw new Error(
+            `Can not interpret '${name}' response because front '${this.typeName}' is already destroyed.`
+          );
+        }
         try {
           ret = spec.response.read(response, this);
         } catch (ex) {

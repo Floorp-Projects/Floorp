@@ -32,6 +32,9 @@ const defer = require("devtools/shared/defer");
 class Front extends Pool {
   constructor(conn = null, targetFront = null, parentFront = null) {
     super(conn);
+    if (!conn) {
+      throw new Error("Front without conn");
+    }
     this.actorID = null;
     // The targetFront attribute represents the debuggable context. Only target-scoped
     // fronts and their children fronts will have the targetFront attribute set.
