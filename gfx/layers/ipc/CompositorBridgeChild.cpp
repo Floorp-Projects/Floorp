@@ -230,16 +230,6 @@ void CompositorBridgeChild::ShutDown() {
   }
 }
 
-bool CompositorBridgeChild::LookupCompositorFrameMetrics(
-    const ScrollableLayerGuid::ViewID aId, FrameMetrics& aFrame) {
-  SharedFrameMetricsData* data = mFrameMetricsTable.Get(aId);
-  if (data) {
-    data->CopyFrameMetrics(&aFrame);
-    return true;
-  }
-  return false;
-}
-
 void CompositorBridgeChild::InitForContent(uint32_t aNamespace) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aNamespace);
@@ -377,79 +367,6 @@ void CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (mProcessToken && XRE_IsParentProcess()) {
     GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
   }
-}
-
-mozilla::ipc::IPCResult CompositorBridgeChild::RecvSharedCompositorFrameMetrics(
-    const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
-    const CrossProcessMutexHandle& handle, const LayersId& aLayersId,
-    const uint32_t& aAPZCId) {
-  auto data =
-      MakeUnique<SharedFrameMetricsData>(metrics, handle, aLayersId, aAPZCId);
-  const auto& viewID = data->GetViewID();
-  mFrameMetricsTable.InsertOrUpdate(viewID, std::move(data));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvReleaseSharedCompositorFrameMetrics(
-    const ViewID& aId, const uint32_t& aAPZCId) {
-  if (auto entry = mFrameMetricsTable.Lookup(aId)) {
-    // The SharedFrameMetricsData may have been removed previously if
-    // a SharedFrameMetricsData with the same ViewID but later APZCId had
-    // been store and over wrote it.
-    if (entry.Data()->GetAPZCId() == aAPZCId) {
-      entry.Remove();
-    }
-  }
-  return IPC_OK();
-}
-
-CompositorBridgeChild::SharedFrameMetricsData::SharedFrameMetricsData(
-    const ipc::SharedMemoryBasic::Handle& metrics,
-    const CrossProcessMutexHandle& handle, const LayersId& aLayersId,
-    const uint32_t& aAPZCId)
-    : mMutex(nullptr), mLayersId(aLayersId), mAPZCId(aAPZCId) {
-  mBuffer = new ipc::SharedMemoryBasic;
-  mBuffer->SetHandle(metrics, ipc::SharedMemory::RightsReadOnly);
-  mBuffer->Map(sizeof(FrameMetrics));
-  mMutex = new CrossProcessMutex(handle);
-  MOZ_COUNT_CTOR(SharedFrameMetricsData);
-}
-
-CompositorBridgeChild::SharedFrameMetricsData::~SharedFrameMetricsData() {
-  // When the hash table deletes the class, delete
-  // the shared memory and mutex.
-  delete mMutex;
-  mBuffer = nullptr;
-  MOZ_COUNT_DTOR(SharedFrameMetricsData);
-}
-
-void CompositorBridgeChild::SharedFrameMetricsData::CopyFrameMetrics(
-    FrameMetrics* aFrame) {
-  const FrameMetrics* frame =
-      static_cast<const FrameMetrics*>(mBuffer->memory());
-  MOZ_ASSERT(frame);
-  mMutex->Lock();
-  *aFrame = *frame;
-  mMutex->Unlock();
-}
-
-ScrollableLayerGuid::ViewID
-CompositorBridgeChild::SharedFrameMetricsData::GetViewID() {
-  const FrameMetrics* frame =
-      static_cast<const FrameMetrics*>(mBuffer->memory());
-  MOZ_ASSERT(frame);
-  // Not locking to read of mScrollId since it should not change after being
-  // initially set.
-  return frame->GetScrollId();
-}
-
-LayersId CompositorBridgeChild::SharedFrameMetricsData::GetLayersId() const {
-  return mLayersId;
-}
-
-uint32_t CompositorBridgeChild::SharedFrameMetricsData::GetAPZCId() {
-  return mAPZCId;
 }
 
 bool CompositorBridgeChild::SendWillClose() {
@@ -841,7 +758,6 @@ PWebRenderBridgeChild* CompositorBridgeChild::AllocPWebRenderBridgeChild(
 bool CompositorBridgeChild::DeallocPWebRenderBridgeChild(
     PWebRenderBridgeChild* aActor) {
   WebRenderBridgeChild* child = static_cast<WebRenderBridgeChild*>(aActor);
-  ClearSharedFrameMetricsData(wr::AsLayersId(child->GetPipeline()));
   child->ReleaseIPDLReference();
   return true;
 }
@@ -856,15 +772,6 @@ bool CompositorBridgeChild::DeallocPWebGPUChild(webgpu::PWebGPUChild* aActor) {
   webgpu::WebGPUChild* child = static_cast<webgpu::WebGPUChild*>(aActor);
   child->ReleaseIPDLReference();
   return true;
-}
-
-void CompositorBridgeChild::ClearSharedFrameMetricsData(LayersId aLayersId) {
-  for (auto iter = mFrameMetricsTable.Iter(); !iter.Done(); iter.Next()) {
-    auto data = iter.UserData();
-    if (data->GetLayersId() == aLayersId) {
-      iter.Remove();
-    }
-  }
 }
 
 uint64_t CompositorBridgeChild::GetNextResourceId() {
