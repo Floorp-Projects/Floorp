@@ -2219,8 +2219,6 @@ bool gfxFcPlatformFontList::GetStandardFamilyName(const nsCString& aFontName,
 void gfxFcPlatformFontList::AddGenericFonts(
     StyleGenericFontFamily aGenericType, nsAtom* aLanguage,
     nsTArray<FamilyAndGeneric>& aFamilyList) {
-  bool usePrefFontList = false;
-
   const char* generic = GetGenericName(aGenericType);
   NS_ASSERTION(generic, "weird generic font type");
   if (!generic) {
@@ -2229,7 +2227,11 @@ void gfxFcPlatformFontList::AddGenericFonts(
 
   // By default, most font prefs on Linux map to "use fontconfig"
   // keywords. So only need to explicitly lookup font pref if
-  // non-default settings exist
+  // non-default settings exist, or if we are the system-ui font, which we deal
+  // with in the base class.
+  const bool isSystemUi = aGenericType == StyleGenericFontFamily::SystemUi;
+  bool usePrefFontList = isSystemUi;
+
   nsAutoCString genericToLookup(generic);
   if ((!mAlwaysUseFontconfigGenerics && aLanguage) ||
       aLanguage == nsGkAtoms::x_math) {
@@ -2262,8 +2264,10 @@ void gfxFcPlatformFontList::AddGenericFonts(
 
   // when pref fonts exist, use standard pref font lookup
   if (usePrefFontList) {
-    return gfxPlatformFontList::AddGenericFonts(aGenericType, aLanguage,
-                                                aFamilyList);
+    gfxPlatformFontList::AddGenericFonts(aGenericType, aLanguage, aFamilyList);
+    if (!isSystemUi) {
+      return;
+    }
   }
 
   PrefFontList* prefFonts = FindGenericFamilies(genericToLookup, aLanguage);
