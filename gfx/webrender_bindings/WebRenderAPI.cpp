@@ -284,6 +284,19 @@ void TransactionBuilder::InvalidateRenderedFrame() {
   wr_transaction_invalidate_rendered_frame(mTxn);
 }
 
+void TransactionBuilder::UpdateDynamicProperties(
+    const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+    const nsTArray<wr::WrTransformProperty>& aTransformArray,
+    const nsTArray<wr::WrColorProperty>& aColorArray) {
+  wr_transaction_update_dynamic_properties(
+      mTxn, aOpacityArray.IsEmpty() ? nullptr : aOpacityArray.Elements(),
+      aOpacityArray.Length(),
+      aTransformArray.IsEmpty() ? nullptr : aTransformArray.Elements(),
+      aTransformArray.Length(),
+      aColorArray.IsEmpty() ? nullptr : aColorArray.Elements(),
+      aColorArray.Length());
+}
+
 bool TransactionBuilder::IsEmpty() const {
   return wr_transaction_is_empty(mTxn);
 }
@@ -315,11 +328,11 @@ void TransactionBuilder::UpdateScrollPosition(
 
 TransactionWrapper::TransactionWrapper(Transaction* aTxn) : mTxn(aTxn) {}
 
-void TransactionWrapper::AppendDynamicProperties(
+void TransactionWrapper::UpdateDynamicProperties(
     const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
     const nsTArray<wr::WrTransformProperty>& aTransformArray,
     const nsTArray<wr::WrColorProperty>& aColorArray) {
-  wr_transaction_append_dynamic_properties(
+  wr_transaction_update_dynamic_properties(
       mTxn, aOpacityArray.IsEmpty() ? nullptr : aOpacityArray.Elements(),
       aOpacityArray.Length(),
       aTransformArray.IsEmpty() ? nullptr : aTransformArray.Elements(),

@@ -114,7 +114,9 @@ void OMTASampler::Sample(wr::TransactionWrapper& aTxn) {
 
   WrAnimations animations = SampleAnimations(previousSampleTime, sampleTime);
 
-  aTxn.AppendDynamicProperties(animations.mOpacityArrays,
+  // We do this even if the arrays are empty, because it will clear out any
+  // previous properties store on the WR side, which is desirable.
+  aTxn.UpdateDynamicProperties(animations.mOpacityArrays,
                                animations.mTransformArrays,
                                animations.mColorArrays);
 }
