@@ -1032,8 +1032,8 @@ nsresult TransceiverImpl::ConfigureVideoCodecMode() {
 }
 
 void TransceiverImpl::Stop() {
-  mTransmitPipeline->Shutdown();
-  mReceiver->Shutdown();
+  mTransmitPipeline->Stop();
+  mReceiver->Stop();
   // Make sure that stats queries stop working on this transceiver.
   UpdateSendTrack(nullptr);
 
@@ -1042,12 +1042,21 @@ void TransceiverImpl::Stop() {
   }
 
   if (mCallWrapper) {
-    mCallWrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
-        __func__, [conduit = std::move(mConduit)]() mutable {
-          if (conduit) {
-            conduit->Shutdown();
-          }
-        }));
+    InvokeAsync(mCallWrapper->mCallThread, __func__,
+                [conduit = std::move(mConduit)]() mutable {
+                  if (conduit) {
+                    conduit->Shutdown();
+                  }
+                  return GenericPromise::CreateAndResolve(
+                      true, "TransceiverImpl conduit stopped");
+                })
+        ->Then(mMainThread, __func__,
+               [pipeline = mTransmitPipeline, receiver = mReceiver]() mutable {
+                 // Shutdown pipelines when conduits are guaranteed shut down,
+                 // so that all packets sent from conduits can be delivered.
+                 pipeline->Shutdown();
+                 receiver->Shutdown();
+               });
     mCallWrapper = nullptr;
   }
 }
