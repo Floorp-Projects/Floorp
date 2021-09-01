@@ -8,6 +8,20 @@
 
 #define ANNOTATE(property) __attribute__((annotate(property)))
 
+// MarkVariableAsGCSafe is a magic function name used as an
+// explicit annotation.
+
+namespace JS {
+namespace detail {
+template <typename T>
+static void MarkVariableAsGCSafe(T&) {
+  asm("");
+}
+}  // namespace detail
+}  // namespace JS
+
+#define JS_HAZ_VARIABLE_IS_GC_SAFE(var) JS::detail::MarkVariableAsGCSafe(var)
+
 struct Cell {
   int f;
 } ANNOTATE("GC Thing");
@@ -314,6 +328,35 @@ void safevals() {
     mozilla::UniquePtr<Cell> unsafe10(&cell);
     GC();
     consume(std::move(unsafe10));
+  }
+
+  // annotated to be safe before the GC. (This doesn't make
+  // a lot of sense here; the annotation is for when some
+  // type is known to only contain safe values, eg it is
+  // initialized as empty, or it is a union and we know
+  // that the GC pointer variants are not in use.)
+  {
+    mozilla::UniquePtr<Cell> safe11(&cell);
+    JS_HAZ_VARIABLE_IS_GC_SAFE(safe11);
+    GC();
+  }
+
+  // annotate as safe value after the GC -- since nothing else
+  // has touched the variable, that means it was already safe
+  // during the GC.
+  {
+    mozilla::UniquePtr<Cell> safe12(&cell);
+    GC();
+    JS_HAZ_VARIABLE_IS_GC_SAFE(safe12);
+  }
+
+  // annotate as safe after the GC -- but we've already used it, so it's
+  // too late.
+  {
+    mozilla::UniquePtr<Cell> unsafe13(&cell);
+    GC();
+    use(unsafe13.get());
+    JS_HAZ_VARIABLE_IS_GC_SAFE(unsafe13);
   }
 }
 
