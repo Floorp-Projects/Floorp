@@ -444,7 +444,7 @@ rust_test_flag := --no-fail-fast
 force-cargo-test-run:
 	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_test_features_flag))
 
-endif
+endif # RUST_TESTS
 
 ifdef HOST_RUST_LIBRARY_FILE
 
