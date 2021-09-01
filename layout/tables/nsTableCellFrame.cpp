@@ -263,8 +263,7 @@ void nsTableCellFrame::DecorateForSelection(DrawTarget* aDrawTarget,
       if (displaySelection == nsISelectionController::SELECTION_DISABLED) {
         bordercolor = NS_RGB(176, 176, 176);  // disabled color
       } else {
-        bordercolor = LookAndFeel::Color(
-            LookAndFeel::ColorID::TextSelectBackground, this);
+        bordercolor = LookAndFeel::Color(LookAndFeel::ColorID::Highlight, this);
       }
       nscoord threePx = nsPresContext::CSSPixelsToAppUnits(3);
       if ((mRect.width > threePx) && (mRect.height > threePx)) {

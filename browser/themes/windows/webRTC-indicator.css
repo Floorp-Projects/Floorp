@@ -22,8 +22,8 @@
     --minimize-button-active-background-color: hsla(0,0%,70%,.6);
     --control-icon-unchecked-hover-background-color: hsla(0,0%,70%,.2);
     --control-icon-unchecked-active-background-color: hsla(0,0%,70%,.6);
-    --control-icon-checked-background-color: Highlight;
-    --control-icon-checked-icon-fill: HighlightText;
+    --control-icon-checked-background-color: SelectedItem;
+    --control-icon-checked-icon-fill: SelectedItemText;
     --control-icon-checked-hover-background-color: hsla(0,0%,70%,.2);
     --control-icon-checked-active-background-color: hsla(0,0%,70%,.6);
   }

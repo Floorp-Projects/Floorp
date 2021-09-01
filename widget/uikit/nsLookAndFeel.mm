@@ -76,15 +76,13 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
     case ColorID::TextForeground:
       aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
-    case ColorID::TextSelectBackground:
-    case ColorID::Highlight:  // CSS2 color
+    case ColorID::Highlight:
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case ColorID::MozMenuhover:
       aResult = NS_RGB(0xee, 0xee, 0xee);
       break;
-    case ColorID::TextSelectForeground:
-    case ColorID::Highlighttext:  // CSS2 color
+    case ColorID::Highlighttext:
     case ColorID::MozMenuhovertext:
       aResult = mColorTextSelectForeground;
       break;
@@ -199,7 +197,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
       break;
     case ColorID::MozDialogtext:
     case ColorID::MozCellhighlighttext:
-    case ColorID::MozHtmlCellhighlighttext:
+    case ColorID::Selecteditemtext:
     case ColorID::MozColheadertext:
     case ColorID::MozColheaderhovertext:
       aResult = mColorDarkText;
@@ -231,7 +229,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
       aResult = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
     case ColorID::MozCellhighlight:
-    case ColorID::MozHtmlCellhighlight:
+    case ColorID::Selecteditem:
     case ColorID::MozMacSecondaryhighlight:
       // For inactive list selection
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
