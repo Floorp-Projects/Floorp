@@ -316,6 +316,470 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **unit**: score
 
 
+.. dropdown:: raptor-youtube-playback-av1-sfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-av1-sfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-av1-sfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-av1-sfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-av1-sfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-av1-sfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-av1-sfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-av1-sfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-av1-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-1080p30-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-1080p30-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-1080p60-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-1080p60-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-full-1080p30-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-full-1080p30-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-full-1080p60-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-full-1080p60-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-sfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-h264-sfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-sfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-h264-sfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-sfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-h264-sfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-h264-sfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-h264-sfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-hfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-hfr-chrome-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-hfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-hfr-fenix-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-hfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-hfr-firefox-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-hfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-hfr-geckoview-b
+
+   * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-v9-1080p30-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-v9-1080p30-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-v9-1080p60-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-v9-1080p60-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-v9-full-1080p30-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-v9-full-1080p30-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-v9-full-1080p60-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-v9-full-1080p60-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **lower is better**: true
+   * **page cycles**: 20
+   * **page timeout**: 2700000
+   * **preferences**: {"full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&fullscreen=true&exclude=1,2>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-vp9-sfr-chrome (CH)
+   :container: + anchor-id-raptor-youtube-playback-vp9-sfr-chrome-b
+
+   * **alert threshold**: 2.0
+   * **apps**: chrome
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-vp9-sfr-fenix (FE)
+   :container: + anchor-id-raptor-youtube-playback-vp9-sfr-fenix-b
+
+   * **alert threshold**: 2.0
+   * **apps**: fenix
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-vp9-sfr-firefox (FF)
+   :container: + anchor-id-raptor-youtube-playback-vp9-sfr-firefox-b
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
+.. dropdown:: raptor-youtube-playback-vp9-sfr-geckoview (GV)
+   :container: + anchor-id-raptor-youtube-playback-vp9-sfr-geckoview-b
+
+   * **alert threshold**: 2.0
+   * **apps**: geckoview
+   * **expected**: pass
+   * **gecko profile entries**: 50000000
+   * **gecko profile interval**: 1000
+   * **gecko profile threads**: MediaPlayback
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest lower is better**: true
+   * **subtest unit**: score
+   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&exclude=1,2&muted=true&command=run>`__
+   * **type**: benchmark
+   * **unit**: score
+   * **use live sites**: true
+
+
 .. dropdown:: raptor-youtube-playback-widevine-h264-sfr-chrome (CH)
    :container: + anchor-id-raptor-youtube-playback-widevine-h264-sfr-chrome-b
 
