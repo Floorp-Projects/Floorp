@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Privee %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -120,6 +120,11 @@
     <string name="recent_tabs_header">Tebekspringe</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Alles toane</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Eardere ferkenningen</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -623,6 +628,24 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Nei in moanne slute</string>
 
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Fuortsmite</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktyf</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox kin sa no en dan ûndersiken ynstallearje en útfiere.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Mear ynfo</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">De tapassing wurdt ôfsluten om wizigingen ta te passen</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Annulearje</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">De tapassing wurdt ôfsluten om wizigingen ta te passen…</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Iepen ljepblêden</string>
@@ -650,6 +673,8 @@
     <string name="tab_tray_menu_item_share">Alle ljepblêden diele</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Koartlyn sluten ljepblêden</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">Koartlyn sluten</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Accountynstellingen</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -943,6 +968,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Ut</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Oan</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Ut</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kolleksjes</string>
@@ -1105,7 +1135,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Fuortsmite</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Annulearje</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Annulearje</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Folslein skerm wurdt iepene</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1272,7 +1302,7 @@
     <string name="onboarding_privacy_notice_read_button">Lês ús privacyferklearring</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Slute</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Slute</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Begjinne mei sneupen</string>
@@ -1374,6 +1404,9 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Details</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blokkearre</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Tastien</string>
@@ -1399,7 +1432,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Foarkomt dat eksterne advertinsjes, fideo’s en oare ynhâld dy\'t folchkoade befettet laden wurde. Kin ynfloed hawwe op de funksjonaliteit fan guon websites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Elke kear as it skyld pears is, hat %s trackers op in website blokkearre. Tik foar mear ynfo.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Elke kear as it skyld pears is, hat %s trackers op in website blokkearre. Tik foar mear ynfo.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Beskermingen foar dizze website stean OAN</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1481,7 +1514,16 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nea bewarje</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Automatysk ynfolje</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Automatysk ynfolje</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Automatysk ynfolje yn %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Brûkersnammen en wachtwurden op websites ynfolje en bewarje wylst jo %1$s brûke.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Automatysk ynfolje yn oare apps</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Brûkersnammen en wachtwurden yn oare apps op jo apparaat ynfolje.</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Oanmeldingen syngronisearje</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1665,7 +1707,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Te brûken sykterm</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Sykfraach ferfange troch ‘%s’. Bygelyks: \nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Sykfraach ferfange troch ‘%s’. Bygelyks: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Mear ynfo</string>
 
@@ -1804,6 +1846,16 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Annulearje</string>
+
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Ynaktive ljepblêden</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">Ljepblêden binne hjir %s beskikber. Dêrnei wurde ljepblêden automatysk sluten.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 dagen</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 wike</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Keppelingen fan websites, e-mail en berjochten automatysk yn Firefox iepenje.</string>

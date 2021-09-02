@@ -80,6 +80,9 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نہیں شکریہ</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">آپ ایپس میں لنکس کو خود بخود کھولنے کے لئے Firefox کو سیٹ کرسکتے ہیں۔</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">سیٹنگز پر جائیں</string>
     <!-- Text for the negative action button -->
@@ -186,6 +189,8 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ظاہرى شکل</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">ریڈر ویو کو حسب ضرورت بنائیں۔</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">اضافہ کریں</string>
     <!-- Browser menu label for editing a bookmark -->
@@ -528,6 +533,8 @@
     <string name="preference_gestures_website_pull_to_refresh">تازہ کرنے کے لیے کھینچیں</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">ٹول بار کو چھپانے کے لئے اسکرول کریں</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">ٹیبز کو تبدیل کرنے کے لیے ٹول بار کو ادھر ادھر سوائپ کریں۔</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">ٹیبز کو کھولنے کے لئے ٹول بار کو سوائپ کریں</string>
 
@@ -626,10 +633,15 @@
     <string name="studies_active">فعال</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">مزید سیکھیں</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">تبدیلیاں لاگو کرنے کے لیے ایپلیکیشن چھوڑ دی جائے گی۔</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">ٹھیک ہے</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">منسوخ کریں</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">تبدیلیاں لاگو کرنے کے لیے ایپلیکیشن چھوڑ رہے ہیں…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1066,6 +1078,10 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">مارکیٹنگ</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s تیز اور نجی ہے۔</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">مجموعہ حذف ہوگیا</string>
@@ -1266,6 +1282,8 @@
     <string name="onboarding_theme_picker_header">اپنے تھیم کا انتخاب کریں</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">خود بخود</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">آپ کے آلے کی ترتیبات کو اپناتا ہے۔</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">سیاہ تھیم</string>
 
@@ -1361,9 +1379,13 @@
     <string name="etp_cryptominers_title">کریپٹومینر</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">فنگر پرنٹرز</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">آپ کے آلے کے بارے میں منفرد شناختی ڈیٹا اکٹھا ہونے سے روکتا ہے جسے ٹریکنگ کے مقاصد کے لیے استعمال کیا جا سکتا ہے۔</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ٹریکنگ مواد</string>
 
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">ٹریکنگ کوڈ پر مشتمل اشتہارات ، ویڈیوز اور دیگر مواد کو لوڈ ہونے سے روکتا ہے۔ کچھ ویب سائٹ کی فعالیت کو متاثر کر سکتا ہے۔</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">اس سائٹ کیلئے تحفظات جاری ہیں</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1442,8 +1464,20 @@
     <!-- Preference for autofilling saved logins in Fenix -->
     <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">آٹوفل</string>
 
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s میں آٹو فل</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s استعمال کرتے ہوئے ویب سائٹس میں صارف نام اور پاس ورڈ بھریں اور محفوظ کریں۔</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">دیگر ایپس میں آٹو فل کریں ۔</string>
+
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">اپنے آلے پر موجود دیگر ایپس میں صارف نام اور پاس ورڈ بھریں۔</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">لاگ ان کو Sync کریں</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">اپنے آلات کہ مابین لاگ ان سنک کریں</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">‏‏پھر جوڑیں</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1538,6 +1572,12 @@
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">کریڈٹ کارڈز</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">کارڈز کو محفوظ کریں اور آٹو فل کریں۔</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">ڈیٹا مخفی  ہے۔</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">اپنے آلات کے مابین کارڈز سنک کریں</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">کارڈ سنک کریں </string>
     <!-- Preference option for adding a credit card -->
@@ -1572,6 +1612,8 @@
     <string name="credit_cards_cancel_button">منسوخ کریں</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">محفوظ شدہ کارڈ</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">براہ مہربانی جائز کریڈٹ کارڈ نمبر داخل کریں</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">برآیے مہربانی اس قطعہ کو بھریں۔</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
@@ -1584,6 +1626,9 @@
     <string name="credit_cards_warning_dialog_later">بعد میں</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">اپنے آلے کو ان لاک کریں</string>
+
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">محفوظ شدہ کریڈٹ کارڈ کی معلومات استعمال کرنے کے لیے غیر مقفل کریں۔</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">تلاش انجن شامل کریں</string>
