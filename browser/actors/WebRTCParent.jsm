@@ -870,6 +870,11 @@ function prompt(aActor, aBrowser, aRequest) {
               );
               item.deviceId = device.id;
               item.mediaSource = type;
+
+              // In this case the OS sharing dialog will be the only option and
+              // can be safely pre-selected.
+              menupopup.parentNode.selectedItem = item;
+              menupopup.parentNode.disabled = true;
               break;
             }
             if (type == "application") {
