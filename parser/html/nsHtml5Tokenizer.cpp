@@ -1960,7 +1960,8 @@ stateloop:
           case '\f':
           case '<':
           case '&':
-          case '\0': {
+          case '\0':
+          case ';': {
             emitOrAppendCharRefBuf(returnState);
             if (!(returnState & DATA_AND_RCDATA_MASK)) {
               cstart = pos;
@@ -1990,8 +1991,10 @@ stateloop:
             } else if (c >= 'A' && c <= 'Z') {
               firstCharKey = c - 'A';
             } else {
-              if (P::reportErrors) {
-                errNoNamedCharacterMatch();
+              if (c == ';') {
+                if (P::reportErrors) {
+                  errNoNamedCharacterMatch();
+                }
               }
               emitOrAppendCharRefBuf(returnState);
               if (!(returnState & DATA_AND_RCDATA_MASK)) {
@@ -2025,8 +2028,10 @@ stateloop:
             }
           }
           if (!hilo) {
-            if (P::reportErrors) {
-              errNoNamedCharacterMatch();
+            if (c == ';') {
+              if (P::reportErrors) {
+                errNoNamedCharacterMatch();
+              }
             }
             emitOrAppendCharRefBuf(returnState);
             if (!(returnState & DATA_AND_RCDATA_MASK)) {
@@ -2104,8 +2109,10 @@ stateloop:
         }
       outer_end:;
         if (candidate == -1) {
-          if (P::reportErrors) {
-            errNoNamedCharacterMatch();
+          if (c == ';') {
+            if (P::reportErrors) {
+              errNoNamedCharacterMatch();
+            }
           }
           emitOrAppendCharRefBuf(returnState);
           if (!(returnState & DATA_AND_RCDATA_MASK)) {
@@ -2128,8 +2135,10 @@ stateloop:
               }
               if (ch == '=' || (ch >= '0' && ch <= '9') ||
                   (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
-                if (P::reportErrors) {
-                  errNoNamedCharacterMatch();
+                if (c == ';') {
+                  if (P::reportErrors) {
+                    errNoNamedCharacterMatch();
+                  }
                 }
                 appendCharRefBufToStrBuf();
                 reconsume = true;
@@ -4614,7 +4623,6 @@ eofloop:
         continue;
       }
       case CHARACTER_REFERENCE_HILO_LOOKUP: {
-        errNoNamedCharacterMatch();
         emitOrAppendCharRefBuf(returnState);
         state = returnState;
         continue;
@@ -4663,7 +4671,6 @@ eofloop:
         }
       outer_end:;
         if (candidate == -1) {
-          errNoNamedCharacterMatch();
           emitOrAppendCharRefBuf(returnState);
           state = returnState;
           NS_HTML5_CONTINUE(eofloop);
@@ -4681,7 +4688,6 @@ eofloop:
               }
               if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') ||
                   (ch >= 'a' && ch <= 'z')) {
-                errNoNamedCharacterMatch();
                 appendCharRefBufToStrBuf();
                 state = returnState;
                 NS_HTML5_CONTINUE(eofloop);
