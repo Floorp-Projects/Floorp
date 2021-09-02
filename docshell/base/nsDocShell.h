@@ -958,7 +958,7 @@ class nsDocShell final : public nsDocLoader,
   // Determine if this type of load should update history.
   static bool ShouldUpdateGlobalHistory(uint32_t aLoadType);
   void UpdateGlobalHistoryTitle(nsIURI* aURI);
-  bool IsFrame() { return mBrowsingContext->IsFrame(); }
+  bool IsSubframe() { return mBrowsingContext->IsSubframe(); }
   bool CanSetOriginAttributes();
   bool ShouldBlockLoadingForBackButton();
   static bool ShouldDiscardLayoutState(nsIHttpChannel* aChannel);
