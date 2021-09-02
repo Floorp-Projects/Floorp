@@ -24,8 +24,6 @@ use std::f32::consts::PI;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
-pub use specified::ImageRendering;
-
 /// Computed values for an image according to CSS-IMAGES.
 /// <https://drafts.csswg.org/css-images/#image-values>
 pub type Image =
