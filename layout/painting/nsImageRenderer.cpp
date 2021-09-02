@@ -641,8 +641,8 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
         break;
       }
 
-      mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
-          nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
+      auto rendering =
+          wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
       gfx::IntSize size;
       Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
           aItem, container, aBuilder, aResources, rendering, aSc, size,
