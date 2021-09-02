@@ -15,6 +15,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "nsCOMPtr.h"
@@ -22,6 +23,7 @@
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 #include "nsWeakReference.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 
 #ifdef XP_WIN
 #  undef PostMessage
@@ -262,13 +264,13 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
   MOZ_CAN_RUN_SCRIPT
   void ClearInterval(int32_t aHandle);
 
-  already_AddRefed<Promise> CreateImageBitmap(const ImageBitmapSource& aImage,
-                                              ErrorResult& aRv);
+  already_AddRefed<Promise> CreateImageBitmap(
+      const ImageBitmapSource& aImage, const ImageBitmapOptions& aOptions,
+      ErrorResult& aRv);
 
-  already_AddRefed<Promise> CreateImageBitmap(const ImageBitmapSource& aImage,
-                                              int32_t aSx, int32_t aSy,
-                                              int32_t aSw, int32_t aSh,
-                                              ErrorResult& aRv);
+  already_AddRefed<Promise> CreateImageBitmap(
+      const ImageBitmapSource& aImage, int32_t aSx, int32_t aSy, int32_t aSw,
+      int32_t aSh, const ImageBitmapOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<Promise> Fetch(const RequestOrUSVString& aInput,
                                   const RequestInit& aInit,
