@@ -514,7 +514,9 @@ dependencies {
     implementation Deps.androidx_navigation_fragment
     implementation Deps.androidx_navigation_ui
     implementation Deps.androidx_recyclerview
+    implementation Deps.androidx_lifecycle_common
     implementation Deps.androidx_lifecycle_livedata
+    implementation Deps.androidx_lifecycle_process
     implementation Deps.androidx_lifecycle_runtime
     implementation Deps.androidx_lifecycle_viewmodel
     implementation Deps.androidx_core
