@@ -346,7 +346,18 @@ nsresult nsMacDockSupport::EnsureAppIsPinnedToDock(const nsAString& aAppPath,
       NSString* persistentAppName = [persistentAppPath lastPathComponent];
 
       if ([persistentAppName isEqual:appName]) {
-        sameNameAppIndex = index;
+        if ([appToReplacePath hasPrefix:@"/private/var/folders/"] &&
+            [appToReplacePath containsString:@"/AppTranslocation/"] &&
+            [persistentAppPath hasPrefix:@"/Volumes/"]) {
+          // This is a special case when an app with the same name was
+          // previously dragged and pinned from a quarantined DMG straight to
+          // the Dock and an attempt is now made to pin the same named app to
+          // the Dock. In this case we want to replace the currently pinned app
+          // icon.
+          toReplaceAppIndex = index;
+        } else {
+          sameNameAppIndex = index;
+        }
       } else {
         if ([browserAppNames containsObject:persistentAppName]) {
           lastBrowserAppIndex = index;
