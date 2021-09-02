@@ -29,7 +29,7 @@ fun AwesomeBar(
             .fillMaxWidth()
             .background(MaterialTheme.colors.background)
     ) {
-        val fetcher = remember { SuggestionFetcher(providers) }
+        val fetcher = remember(providers) { SuggestionFetcher(providers) }
 
         LaunchedEffect(text) {
             fetcher.fetch(text)
