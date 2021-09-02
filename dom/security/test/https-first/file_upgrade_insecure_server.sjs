@@ -61,8 +61,12 @@ function handleRequest(request, response) {
   }
 
   // make sure all the requested queries aren't upgraded to https
-  queryString += request.scheme === "http" ? "-ok" : "-error";
-
+  // except of toplevel requests
+  if (queryString === "top-level") {
+    queryString += request.scheme === "https" ? "-ok" : "-error";
+  } else {
+    queryString += request.scheme === "http" ? "-ok" : "-error";
+  }
   var receivedQueries = getState("receivedQueries");
 
   // images, scripts, etc. get queried twice, do not
