@@ -5,6 +5,7 @@
 #include "desktop_device_info.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "mozilla/Sprintf.h"
 
 #include <cstddef>
 #include <cstdlib>
