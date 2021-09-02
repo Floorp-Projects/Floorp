@@ -292,6 +292,10 @@ class RefreshDriverTimer {
   virtual void StopTimer() = 0;
   virtual void ScheduleNextTick(TimeStamp aNowTime) = 0;
 
+ public:
+  virtual bool IsTicking() const = 0;
+
+ protected:
   bool IsRootRefreshDriver(nsRefreshDriver* aDriver) {
     nsPresContext* pc = aDriver->GetPresContext();
     nsPresContext* rootContext = pc ? pc->GetRootPresContext() : nullptr;
@@ -750,6 +754,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       mVsyncChild->AddChildRefreshTimer(mVsyncObserver);
       mVsyncObserver->OnTimerStart();
     }
+    mIsTicking = true;
   }
 
   void StopTimer() override {
@@ -760,8 +765,13 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     } else if (mVsyncChild) {
       mVsyncChild->RemoveChildRefreshTimer(mVsyncObserver);
     }
+    mIsTicking = false;
   }
 
+ public:
+  bool IsTicking() const override { return mIsTicking; }
+
+ protected:
   void ScheduleNextTick(TimeStamp aNowTime) override {
     // Do nothing since we just wait for the next vsync from
     // RefreshDriverVsyncObserver.
@@ -790,6 +800,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   // After ActorDestroy(), StartTimer() and StopTimer() calls will be non-op.
   RefPtr<VsyncChild> mVsyncChild;
   TimeDuration mVsyncRate;
+  bool mIsTicking = false;
 };  // VsyncRefreshDriverTimer
 
 NS_IMPL_ISUPPORTS_INHERITED(
@@ -825,6 +836,9 @@ class StartupRefreshDriverTimer : public SimpleTimerBasedRefreshDriverTimer {
         "StartupRefreshDriverTimer::ScheduleNextTick");
     mTargetTime = newTarget;
   }
+
+ public:
+  bool IsTicking() const override { return true; }
 };
 
 /*
@@ -892,9 +906,13 @@ class InactiveRefreshDriverTimer final
     mTimer->InitWithNamedFuncCallback(TimerTickOne, this, delay,
                                       nsITimer::TYPE_ONE_SHOT,
                                       "InactiveRefreshDriverTimer::StartTimer");
+    mIsTicking = true;
   }
 
-  void StopTimer() override { mTimer->Cancel(); }
+  void StopTimer() override {
+    mTimer->Cancel();
+    mIsTicking = false;
+  }
 
   void ScheduleNextTick(TimeStamp aNowTime) override {
     if (mDisableAfterMilliseconds > 0.0 &&
@@ -921,6 +939,10 @@ class InactiveRefreshDriverTimer final
         mNextTickDuration, mNextDriverIndex, GetRefreshDriverCount());
   }
 
+ public:
+  bool IsTicking() const override { return mIsTicking; }
+
+ protected:
   /* Runs just one driver's tick. */
   void TickOne() {
     TimeStamp now = TimeStamp::Now();
@@ -951,6 +973,7 @@ class InactiveRefreshDriverTimer final
   double mNextTickDuration;
   double mDisableAfterMilliseconds;
   uint32_t mNextDriverIndex;
+  bool mIsTicking = false;
 };
 
 }  // namespace mozilla
@@ -2910,6 +2933,27 @@ Maybe<TimeStamp> nsRefreshDriver::GetNextTickHint() {
     }
   }
   return hint;
+}
+
+/* static */
+bool nsRefreshDriver::IsRegularRateTimerTicking() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (sRegularRateTimer) {
+    if (sRegularRateTimer->IsTicking()) {
+      return true;
+    }
+  }
+
+  if (sRegularRateTimerList) {
+    for (RefreshDriverTimer* timer : *sRegularRateTimerList) {
+      if (timer->IsTicking()) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 void nsRefreshDriver::Disconnect() {
