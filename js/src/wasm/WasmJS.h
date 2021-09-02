@@ -573,6 +573,8 @@ class WasmNamespaceObject : public NativeObject {
   static const ClassSpec classSpec_;
 };
 
+extern const JSClass WasmFunctionClass;
+
 }  // namespace js
 
 #endif  // wasm_js_h

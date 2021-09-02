@@ -405,6 +405,7 @@
          "RequireObjectCoercible")                                             \
   MACRO_(resolve, resolve, "resolve")                                          \
   MACRO_(result, result, "result")                                             \
+  MACRO_(results, results, "results")                                          \
   MACRO_(resumeGenerator, resumeGenerator, "resumeGenerator")                  \
   MACRO_(return, return_, "return")                                            \
   MACRO_(revoke, revoke, "revoke")                                             \
