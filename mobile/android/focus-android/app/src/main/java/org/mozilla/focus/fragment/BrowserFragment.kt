@@ -831,11 +831,12 @@ class BrowserFragment :
             blockedTrackersCount = Settings.getInstance(requireContext())
                 .getTotalBlockedTrackersCount(),
             toggleTrackingProtection = ::toggleTrackingProtection,
-            updateTrackingProtectionPolicy = {
+            updateTrackingProtectionPolicy = { tracker, isEnabled ->
                 EngineSharedPreferencesListener(requireContext())
                     .updateTrackingProtectionPolicy(
                         source = EngineSharedPreferencesListener.ChangeSource.PANEL.source,
-                        tracker = it
+                        tracker = tracker,
+                        isEnabled = isEnabled
                     )
             },
             showConnectionInfo = ::showConnectionInfo

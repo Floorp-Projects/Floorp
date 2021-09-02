@@ -28,7 +28,7 @@ class TrackingProtectionPanel(
     private val isTrackingProtectionOn: Boolean,
     private val isConnectionSecure: Boolean,
     private val toggleTrackingProtection: (Boolean) -> Unit,
-    private val updateTrackingProtectionPolicy: (String?) -> Unit,
+    private val updateTrackingProtectionPolicy: (String?, Boolean) -> Unit,
     private val showConnectionInfo: () -> Unit
 ) : BottomSheetDialog(context) {
 
@@ -134,19 +134,19 @@ class TrackingProtectionPanel(
                 dismiss()
             }
             advertising.onClickListener {
-                updateTrackingProtectionPolicy(TrackerChanged.ADVERTISING.tracker)
+                updateTrackingProtectionPolicy(TrackerChanged.ADVERTISING.tracker, advertising.isChecked)
             }
 
             analytics.onClickListener {
-                updateTrackingProtectionPolicy(TrackerChanged.ANALYTICS.tracker)
+                updateTrackingProtectionPolicy(TrackerChanged.ANALYTICS.tracker, analytics.isChecked)
             }
 
             social.onClickListener {
-                updateTrackingProtectionPolicy(TrackerChanged.SOCIAL.tracker)
+                updateTrackingProtectionPolicy(TrackerChanged.SOCIAL.tracker, social.isChecked)
             }
 
             content.onClickListener {
-                updateTrackingProtectionPolicy(TrackerChanged.CONTENT.tracker)
+                updateTrackingProtectionPolicy(TrackerChanged.CONTENT.tracker, content.isChecked)
             }
 
             securityInfo.setOnClickListener {
