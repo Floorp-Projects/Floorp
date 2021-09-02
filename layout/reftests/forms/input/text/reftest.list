@@ -16,3 +16,4 @@ fuzzy-if(skiaContent,0-1,0-500) needs-focus == select.html select-ref.html
 != autofill.html autofill-blank.html
 != autofill-preview.html autofill-preview-blank.html
 != autofill.html autofill-preview.html
+== autofill-prefilled-value.html autofill-preview.html
