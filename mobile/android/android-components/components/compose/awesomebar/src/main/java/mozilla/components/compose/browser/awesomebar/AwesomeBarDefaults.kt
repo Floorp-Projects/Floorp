@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.compose.browser.awesomebar.wrapper
+package mozilla.components.compose.browser.awesomebar
 
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.MaterialTheme

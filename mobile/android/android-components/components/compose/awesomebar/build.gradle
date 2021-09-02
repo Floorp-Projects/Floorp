@@ -38,6 +38,7 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_compose_ui
     implementation Dependencies.androidx_compose_ui_tooling
     implementation Dependencies.androidx_compose_foundation

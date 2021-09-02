@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import mozilla.components.compose.browser.awesomebar.internal.SuggestionFetcher
 import mozilla.components.compose.browser.awesomebar.internal.Suggestions
-import mozilla.components.compose.browser.awesomebar.wrapper.AwesomeBarDefaults
 import mozilla.components.concept.awesomebar.AwesomeBar
 
 /**

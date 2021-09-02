@@ -5,8 +5,10 @@
 package mozilla.components.compose.browser.awesomebar.internal
 
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -23,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
 import mozilla.components.compose.browser.awesomebar.R
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -44,7 +47,7 @@ internal fun Suggestion(
         if (icon != null) {
             SuggestionIcon(
                 icon = icon,
-                modifier = Modifier.align(Alignment.CenterVertically)
+                indicator = suggestion.indicatorIcon
             )
         }
         SuggestionTitleAndDescription(
@@ -101,15 +104,32 @@ private fun SuggestionTitleAndDescription(
 @Composable
 private fun SuggestionIcon(
     icon: Bitmap,
-    modifier: Modifier
+    indicator: Drawable?
 ) {
-    Image(
-        icon.asImageBitmap(),
-        contentDescription = null,
-        modifier = modifier
-            .width(24.dp)
-            .height(24.dp)
-    )
+    Box(
+        modifier = Modifier
+            .width(30.dp)
+            .height(38.dp)
+    ) {
+        Image(
+            icon.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .width(24.dp)
+                .height(24.dp)
+        )
+        if (indicator != null) {
+            Image(
+                indicator.toBitmap().asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(top = 22.dp, start = 14.dp)
+                    .width(16.dp)
+                    .height(16.dp)
+            )
+        }
+    }
 }
 
 @Composable
