@@ -2987,7 +2987,8 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
 
   // If we are scrolling the RCD-RSF, and a visual scroll update is pending,
   // cancel it; otherwise, it will clobber this scroll.
-  if (IsRootScrollFrameOfDocument() && presContext->IsRootContentDocument()) {
+  if (IsRootScrollFrameOfDocument() &&
+      presContext->IsRootContentDocumentCrossProcess()) {
     PresShell* ps = presContext->GetPresShell();
     if (const auto& visualScrollUpdate = ps->GetPendingVisualScrollUpdate()) {
       if (visualScrollUpdate->mVisualScrollOffset != aPt) {
