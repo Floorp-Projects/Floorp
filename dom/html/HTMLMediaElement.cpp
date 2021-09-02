@@ -7374,8 +7374,6 @@ void HTMLMediaElement::AsyncRejectPendingPlayPromises(nsresult aError) {
 }
 
 void HTMLMediaElement::GetEMEInfo(dom::EMEDebugInfo& aInfo) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "MediaKeys expects to be interacted with on main thread!");
   if (!mMediaKeys) {
     return;
   }
