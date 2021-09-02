@@ -129,7 +129,7 @@ ENameValueFlag XULMenuitemAccessible::NativeName(nsString& aName) const {
   return eNameOK;
 }
 
-void XULMenuitemAccessible::Description(nsString& aDescription) {
+void XULMenuitemAccessible::Description(nsString& aDescription) const {
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::description,
                                  aDescription);
 }

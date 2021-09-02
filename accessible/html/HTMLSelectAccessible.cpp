@@ -351,7 +351,7 @@ uint64_t HTMLComboboxAccessible::NativeState() const {
   return state;
 }
 
-void HTMLComboboxAccessible::Description(nsString& aDescription) {
+void HTMLComboboxAccessible::Description(nsString& aDescription) const {
   aDescription.Truncate();
   // First check to see if combo box itself has a description, perhaps through
   // tooltip (title attribute) or via aria-describedby

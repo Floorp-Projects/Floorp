@@ -39,7 +39,7 @@ class ApplicationAccessible : public AccessibleWrap {
   virtual GroupPos GroupPosition() override;
   virtual ENameValueFlag Name(nsString& aName) const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
-  virtual void Description(nsString& aDescription) override;
+  virtual void Description(nsString& aDescription) const override;
   virtual void Value(nsString& aValue) const override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t State() override;

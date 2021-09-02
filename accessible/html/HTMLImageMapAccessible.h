@@ -54,7 +54,7 @@ class HTMLAreaAccessible final : public HTMLLinkAccessible {
   HTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // LocalAccessible
-  virtual void Description(nsString& aDescription) override;
+  virtual void Description(nsString& aDescription) const override;
   virtual LocalAccessible* LocalChildAtPoint(
       int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
   virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const override;

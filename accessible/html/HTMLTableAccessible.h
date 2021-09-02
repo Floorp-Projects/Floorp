@@ -164,7 +164,7 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
 
   // LocalAccessible
   virtual TableAccessible* AsTable() override { return this; }
-  virtual void Description(nsString& aDescription) override;
+  virtual void Description(nsString& aDescription) const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
