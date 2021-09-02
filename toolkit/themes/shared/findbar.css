@@ -75,7 +75,7 @@ html|input.findbar-textbox:focus {
 }
 
 html|input.findbar-textbox:-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Higlight, light));
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Highlight, light));
   color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, light));
 }
 
@@ -84,7 +84,7 @@ html|input.findbar-textbox:not(:focus):-moz-lwtheme::selection {
 }
 
 :root[lwt-toolbar-field-focus-brighttext] html|input.findbar-textbox:focus::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Higlight, dark));
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Highlight, dark));
   color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, dark));
 }
 
