@@ -11,11 +11,13 @@ import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
+import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.widget.CookiesPreference
 
 class PrivacySecuritySettingsFragment :
@@ -91,6 +93,8 @@ class PrivacySecuritySettingsFragment :
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        val settings = Settings.getInstance(requireContext())
+        val engineSharedPreferencesListener = EngineSharedPreferencesListener(requireContext())
         when (preference.key) {
             resources.getString(R.string.pref_key_screen_exceptions) -> {
                 TelemetryWrapper.openExceptionsListSetting()
@@ -103,6 +107,34 @@ class PrivacySecuritySettingsFragment :
                 // We need to recreate the activity to apply the SECURE flags.
                 requireActivity().recreate()
             }
+
+            resources.getString(R.string.pref_key_privacy_block_social) ->
+                engineSharedPreferencesListener.updateTrackingProtectionPolicy(
+                    EngineSharedPreferencesListener.ChangeSource.SETTINGS.source,
+                    EngineSharedPreferencesListener.TrackerChanged.SOCIAL.tracker,
+                    settings.shouldBlockSocialTrackers()
+                )
+
+            resources.getString(R.string.pref_key_privacy_block_ads) ->
+                engineSharedPreferencesListener.updateTrackingProtectionPolicy(
+                    EngineSharedPreferencesListener.ChangeSource.SETTINGS.source,
+                    EngineSharedPreferencesListener.TrackerChanged.ADVERTISING.tracker,
+                    settings.shouldBlockAdTrackers()
+                )
+
+            resources.getString(R.string.pref_key_privacy_block_analytics) ->
+                engineSharedPreferencesListener.updateTrackingProtectionPolicy(
+                    EngineSharedPreferencesListener.ChangeSource.SETTINGS.source,
+                    EngineSharedPreferencesListener.TrackerChanged.ANALYTICS.tracker,
+                    settings.shouldBlockAnalyticTrackers()
+                )
+
+            resources.getString(R.string.pref_key_privacy_block_other3) ->
+                engineSharedPreferencesListener.updateTrackingProtectionPolicy(
+                    EngineSharedPreferencesListener.ChangeSource.SETTINGS.source,
+                    EngineSharedPreferencesListener.TrackerChanged.CONTENT.tracker,
+                    settings.shouldBlockOtherTrackers()
+                )
         }
         return super.onPreferenceTreeClick(preference)
     }

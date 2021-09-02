@@ -56,7 +56,7 @@ class PreferenceSwitch(
     private fun togglePreferenceValue(isChecked: Boolean) {
         this.isChecked = isChecked
 
-        PreferenceManager.getDefaultSharedPreferences(context).edit {
+        PreferenceManager.getDefaultSharedPreferences(context).edit(commit = true) {
             putBoolean(context.getString(key), isChecked)
         }
     }

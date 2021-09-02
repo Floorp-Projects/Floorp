@@ -19,36 +19,8 @@ class EngineSharedPreferencesListener(
 ) : SharedPreferences.OnSharedPreferenceChangeListener {
 
     override fun onSharedPreferenceChanged(preferences: SharedPreferences, key: String) {
-        val settings = Settings.getInstance(context)
 
         when (key) {
-            context.getString(R.string.pref_key_privacy_block_social) ->
-                updateTrackingProtectionPolicy(
-                    ChangeSource.SETTINGS.source,
-                    TrackerChanged.SOCIAL.tracker,
-                    settings.shouldBlockSocialTrackers()
-                )
-
-            context.getString(R.string.pref_key_privacy_block_ads) ->
-                updateTrackingProtectionPolicy(
-                    ChangeSource.SETTINGS.source,
-                    TrackerChanged.ADVERTISING.tracker,
-                    settings.shouldBlockAdTrackers()
-                )
-
-            context.getString(R.string.pref_key_privacy_block_analytics) ->
-                updateTrackingProtectionPolicy(
-                    ChangeSource.SETTINGS.source,
-                    TrackerChanged.ANALYTICS.tracker,
-                    settings.shouldBlockAnalyticTrackers()
-                )
-
-            context.getString(R.string.pref_key_privacy_block_other3) ->
-                updateTrackingProtectionPolicy(
-                    ChangeSource.SETTINGS.source,
-                    TrackerChanged.CONTENT.tracker,
-                    settings.shouldBlockOtherTrackers()
-                )
 
             context.getString(R.string.pref_key_performance_enable_cookies) ->
                 updateTrackingProtectionPolicy()
