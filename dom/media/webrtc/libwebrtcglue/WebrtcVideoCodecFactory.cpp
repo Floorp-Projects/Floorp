@@ -5,6 +5,18 @@
 
 #include "WebrtcVideoCodecFactory.h"
 
+#include "GmpVideoCodec.h"
+#include "MediaDataCodec.h"
+#include "VideoConduit.h"
+#include "mozilla/StaticPrefs_media.h"
+
+// libwebrtc includes
+#include "api/rtp_headers.h"
+#include "api/video_codecs/video_codec.h"
+#include "media/engine/encoder_simulcast_proxy.h"
+#include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_coding/codecs/vp9/include/vp9.h"
+
 namespace mozilla {
 
 std::unique_ptr<webrtc::VideoDecoder>

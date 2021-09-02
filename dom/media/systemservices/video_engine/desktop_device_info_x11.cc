@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "desktop_device_info_x11.h"
+#include "mozilla/Sprintf.h"
 
 #include <inttypes.h>
 
