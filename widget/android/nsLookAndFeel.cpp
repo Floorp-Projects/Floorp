@@ -177,6 +177,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
     case ColorID::Graytext:  // disabled text in windows, menus, etc.
       aColor = NS_RGB(0xb1, 0xa5, 0x98);
       break;
+    // FIXME: -moz-cellhighlight should show some kind of unfocused state.
     case ColorID::MozCellhighlight:
     case ColorID::Selecteditem:
     case ColorID::MozAccentColor:
