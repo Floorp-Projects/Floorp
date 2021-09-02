@@ -50,14 +50,24 @@ interface nsISHistoryListener : nsISupports
   void OnHistoryGotoIndex();
 
   /**
-   * Called before entries are removed from session history. Entries can be
-   * removed from session history for various reasons, for example to control
-   * the memory usage of the browser, to prevent users from loading documents
-   * from history, to erase evidence of prior page loads, etc.
+   * Called before entries are removed from the start of session history.
+   * Entries can be removed from session history for various reasons, for
+   * example to control the memory usage of the browser, to prevent users from
+   * loading documents from history, to erase evidence of prior page loads, etc.
    *
    * To purge documents from session history call nsISHistory::PurgeHistory().
+   *
+   * @param aNumEntries  The number of entries being removed.
    */
-  void OnHistoryPurge();
+  void OnHistoryPurge(in long aNumEntries);
+
+  /**
+   * Called before entries are removed from the end of session history. This
+   * occurs when navigating to a new page while on a previous session entry.
+   *
+   * @param aNumEntries  The number of entries being removed.
+   */
+  void OnHistoryTruncate(in long aNumEntries);
 
   /**
    * Called before an entry is replaced in the session history. Entries are

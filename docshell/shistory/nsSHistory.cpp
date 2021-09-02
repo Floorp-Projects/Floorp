@@ -830,6 +830,11 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
   }
   SHistoryChangeNotifier change(this);
 
+  int32_t truncating = Length() - 1 - mIndex;
+  if (truncating > 0) {
+    NOTIFY_LISTENERS(OnHistoryTruncate, (truncating));
+  }
+
   nsCOMPtr<nsIURI> uri = aSHEntry->GetURI();
   NOTIFY_LISTENERS(OnHistoryNewEntry, (uri, mIndex));
 
@@ -1028,7 +1033,7 @@ nsSHistory::PurgeHistory(int32_t aNumEntries) {
 
   aNumEntries = std::min(aNumEntries, Length());
 
-  NOTIFY_LISTENERS(OnHistoryPurge, ());
+  NOTIFY_LISTENERS(OnHistoryPurge, (aNumEntries));
 
   // Set all the entries hanging of the first entry that we keep
   // (mEntries[aNumEntries]) as being created as the result of a load
