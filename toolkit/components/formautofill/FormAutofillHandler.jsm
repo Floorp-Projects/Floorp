@@ -371,11 +371,13 @@ class FormAutofillSection {
       if (ChromeUtils.getClassName(element) === "HTMLInputElement" && value) {
         // For the focused input element, it will be filled with a valid value
         // anyway.
-        // For the others, the fields should be only filled when their values
-        // are empty or are the result of an earlier auto-fill.
+        // For the others, the fields should be only filled when their values are empty
+        // or their values are equal to the site prefill value
+        // or are the result of an earlier auto-fill.
         if (
           element == focusedInput ||
-          (element != focusedInput && !element.value) ||
+          (element != focusedInput &&
+            (!element.value || element.value == element.defaultValue)) ||
           fieldDetail.state == FIELD_STATES.AUTO_FILLED
         ) {
           element.focus({ preventScroll: true });
@@ -440,8 +442,8 @@ class FormAutofillSection {
             value = "";
           }
         }
-      } else if (element.value) {
-        // Skip the field if it already has text entered.
+      } else if (element.value && element.value != element.defaultValue) {
+        // Skip the field if the user has already entered text and that text is not the site prefilled value.
         continue;
       }
       element.previewValue = value;
@@ -1237,7 +1239,6 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     for (let fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       let state = profile[fieldDetail.fieldName] ? "filled" : "not_filled";
-
       if (
         fieldDetail.state == FIELD_STATES.NORMAL &&
         (ChromeUtils.getClassName(element) == "HTMLSelectElement" ||
