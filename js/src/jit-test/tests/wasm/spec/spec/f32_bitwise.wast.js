@@ -24,32 +24,20 @@ let $0 = instantiate(`(module
 
 // ./test/core/f32_bitwise.wast:10
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", -0)]),
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:11
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 0),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", 0)]),
   [value("f32", 0)],
 );
 
 // ./test/core/f32_bitwise.wast:12
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", 0),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  () => invoke($0, `copysign`, [value("f32", 0), value("f32", -0)]),
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:13
@@ -62,17 +50,17 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000000000001),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:15
 assert_return(
   () =>
     invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000000000001),
     ]),
   [value("f32", 0)],
@@ -85,7 +73,7 @@ assert_return(
       value("f32", 0),
       value("f32", -0.000000000000000000000000000000000000000000001),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:17
@@ -102,17 +90,17 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000011754944),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:19
 assert_return(
   () =>
     invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000011754944),
     ]),
   [value("f32", 0)],
@@ -125,7 +113,7 @@ assert_return(
       value("f32", 0),
       value("f32", -0.000000000000000000000000000000000000011754944),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:21
@@ -140,28 +128,20 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:22
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -0.5),
-    ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", -0.5)]),
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:23
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 0.5),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", 0.5)]),
   [value("f32", 0)],
 );
 
 // ./test/core/f32_bitwise.wast:24
 assert_return(
   () => invoke($0, `copysign`, [value("f32", 0), value("f32", -0.5)]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:25
@@ -172,28 +152,20 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:26
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -1),
-    ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", -1)]),
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:27
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 1),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", 1)]),
   [value("f32", 0)],
 );
 
 // ./test/core/f32_bitwise.wast:28
 assert_return(
   () => invoke($0, `copysign`, [value("f32", 0), value("f32", -1)]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:29
@@ -204,28 +176,20 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:30
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -6.2831855),
-    ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", -6.2831855)]),
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:31
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 6.2831855),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", 6.2831855)]),
   [value("f32", 0)],
 );
 
 // ./test/core/f32_bitwise.wast:32
 assert_return(
   () => invoke($0, `copysign`, [value("f32", 0), value("f32", -6.2831855)]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:33
@@ -238,17 +202,17 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -340282350000000000000000000000000000000),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:35
 assert_return(
   () =>
     invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 340282350000000000000000000000000000000),
     ]),
   [value("f32", 0)],
@@ -261,7 +225,7 @@ assert_return(
       value("f32", 0),
       value("f32", -340282350000000000000000000000000000000),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:37
@@ -276,28 +240,20 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:38
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -Infinity),
-    ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", -Infinity)]),
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:39
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", Infinity),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -0), value("f32", Infinity)]),
   [value("f32", 0)],
 );
 
 // ./test/core/f32_bitwise.wast:40
 assert_return(
   () => invoke($0, `copysign`, [value("f32", 0), value("f32", -Infinity)]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:41
@@ -310,17 +266,17 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:43
 assert_return(
   () =>
     invoke($0, `copysign`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
     ]),
   [value("f32", 0)],
@@ -333,7 +289,7 @@ assert_return(
       value("f32", 0),
       bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/f32_bitwise.wast:45
@@ -351,7 +307,7 @@ assert_return(
   () =>
     invoke($0, `copysign`, [
       value("f32", -0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("f32", -0.000000000000000000000000000000000000000000001)],
 );
@@ -371,7 +327,7 @@ assert_return(
   () =>
     invoke($0, `copysign`, [
       value("f32", 0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("f32", -0.000000000000000000000000000000000000000000001)],
 );
@@ -711,7 +667,7 @@ assert_return(
   () =>
     invoke($0, `copysign`, [
       value("f32", -0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("f32", -0.000000000000000000000000000000000000011754944)],
 );
@@ -731,7 +687,7 @@ assert_return(
   () =>
     invoke($0, `copysign`, [
       value("f32", 0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("f32", -0.000000000000000000000000000000000000011754944)],
 );
@@ -1068,11 +1024,7 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:118
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", -0.5),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -0.5), value("f32", -0)]),
   [value("f32", -0.5)],
 );
 
@@ -1084,11 +1036,7 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:120
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", 0.5),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", 0.5), value("f32", -0)]),
   [value("f32", -0.5)],
 );
 
@@ -1356,11 +1304,7 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:154
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", -1),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -1), value("f32", -0)]),
   [value("f32", -1)],
 );
 
@@ -1372,11 +1316,7 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:156
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", 1),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", 1), value("f32", -0)]),
   [value("f32", -1)],
 );
 
@@ -1644,11 +1584,7 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:190
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", -6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -6.2831855), value("f32", -0)]),
   [value("f32", -6.2831855)],
 );
 
@@ -1660,11 +1596,7 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:192
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", 6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", 6.2831855), value("f32", -0)]),
   [value("f32", -6.2831855)],
 );
 
@@ -1946,7 +1878,7 @@ assert_return(
   () =>
     invoke($0, `copysign`, [
       value("f32", -340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("f32", -340282350000000000000000000000000000000)],
 );
@@ -1966,7 +1898,7 @@ assert_return(
   () =>
     invoke($0, `copysign`, [
       value("f32", 340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("f32", -340282350000000000000000000000000000000)],
 );
@@ -2303,11 +2235,7 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:262
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", -Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", -Infinity), value("f32", -0)]),
   [value("f32", -Infinity)],
 );
 
@@ -2319,11 +2247,7 @@ assert_return(
 
 // ./test/core/f32_bitwise.wast:264
 assert_return(
-  () =>
-    invoke($0, `copysign`, [
-      value("f32", Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `copysign`, [value("f32", Infinity), value("f32", -0)]),
   [value("f32", -Infinity)],
 );
 
@@ -2602,7 +2526,7 @@ assert_return(
   () =>
     invoke($0, `copysign`, [
       bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [bytes("f32", [0x0, 0x0, 0xc0, 0xff])],
 );
@@ -2622,7 +2546,7 @@ assert_return(
   () =>
     invoke($0, `copysign`, [
       bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [bytes("f32", [0x0, 0x0, 0xc0, 0xff])],
 );
@@ -2958,9 +2882,7 @@ assert_return(
 );
 
 // ./test/core/f32_bitwise.wast:334
-assert_return(() => invoke($0, `abs`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]), [
-  value("f32", 0),
-]);
+assert_return(() => invoke($0, `abs`, [value("f32", -0)]), [value("f32", 0)]);
 
 // ./test/core/f32_bitwise.wast:335
 assert_return(() => invoke($0, `abs`, [value("f32", 0)]), [value("f32", 0)]);
@@ -3062,14 +2984,10 @@ assert_return(() => invoke($0, `abs`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]), [
 ]);
 
 // ./test/core/f32_bitwise.wast:352
-assert_return(() => invoke($0, `neg`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]), [
-  value("f32", 0),
-]);
+assert_return(() => invoke($0, `neg`, [value("f32", -0)]), [value("f32", 0)]);
 
 // ./test/core/f32_bitwise.wast:353
-assert_return(() => invoke($0, `neg`, [value("f32", 0)]), [
-  bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-]);
+assert_return(() => invoke($0, `neg`, [value("f32", 0)]), [value("f32", -0)]);
 
 // ./test/core/f32_bitwise.wast:354
 assert_return(

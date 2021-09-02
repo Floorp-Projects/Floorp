@@ -1551,10 +1551,10 @@ let $138 = instantiate(
 // ./test/core/simd/simd_const.wast:548
 assert_return(() => invoke($138, `f`, []), [
   new F32x4Pattern(
-    bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+    value("f32", -0),
+    value("f32", -0),
+    value("f32", -0),
+    value("f32", -0),
   ),
 ]);
 
