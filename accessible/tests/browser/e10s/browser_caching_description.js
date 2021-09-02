@@ -43,7 +43,7 @@ const tests = [
         value: "aria description",
       },
     ],
-    waitFor: [[EVENT_REORDER, matchContentDoc]],
+    waitFor: [[EVENT_NAME_CHANGE, "image"]],
     expected: "",
   },
   {
@@ -72,7 +72,7 @@ const tests = [
         value: "title",
       },
     ],
-    waitFor: [[EVENT_REORDER, matchContentDoc]],
+    waitFor: [[EVENT_NAME_CHANGE, "image"]],
     expected: "another description",
   },
   {
@@ -108,7 +108,7 @@ const tests = [
         value: "aria description",
       },
     ],
-    waitFor: [[EVENT_REORDER, matchContentDoc]],
+    waitFor: [[EVENT_NAME_CHANGE, "image"]],
     expected: "another description",
   },
   {
@@ -186,7 +186,7 @@ addAccessibleTask(
   `
   <p id="description">aria description</p>
   <p id="description2">another description</p>
-  <img id="image" />`,
+  <img id="image" src="http://example.com/a11y/accessible/tests/mochitest/moz.png" />`,
   async function(browser, accDoc) {
     let imgAcc = findAccessibleChildByID(accDoc, "image");
 
