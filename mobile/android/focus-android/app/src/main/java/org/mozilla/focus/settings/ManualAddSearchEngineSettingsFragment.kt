@@ -24,11 +24,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Request.Redirect.FOLLOW
 import mozilla.components.feature.search.ext.createSearchEngine
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.shortcut.IconGenerator
@@ -89,7 +91,9 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             val searchQuery = requireView().findViewById<EditText>(R.id.edit_search_string).text.toString()
 
             val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
-            val engineValid = pref?.validateEngineNameAndShowError(engineName) ?: false
+
+            val existingEngines = requireContext().components.store.state.search.searchEngines
+            val engineValid = pref?.validateEngineNameAndShowError(engineName, existingEngines) ?: false
             val searchValid = pref?.validateSearchQueryAndShowError(searchQuery) ?: false
             val isPartialSuccess = engineValid && searchValid
 

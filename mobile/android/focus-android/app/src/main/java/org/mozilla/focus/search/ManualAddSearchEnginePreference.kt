@@ -17,6 +17,7 @@ import android.widget.ProgressBar
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.textfield.TextInputLayout
+import mozilla.components.browser.state.search.SearchEngine
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -78,10 +79,13 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
         return bundle
     }
 
-    fun validateEngineNameAndShowError(engineName: String): Boolean {
+    fun validateEngineNameAndShowError(engineName: String, existingEngines: List<SearchEngine>): Boolean {
         val errorMessage = when {
             TextUtils.isEmpty(engineName) ->
                 context.getString(R.string.search_add_error_empty_name)
+
+            existingEngines.any { it.name.equals(engineName, ignoreCase = true) } ->
+                context.getString(R.string.search_add_error_duplicate_name)
 
             else -> null
         }
