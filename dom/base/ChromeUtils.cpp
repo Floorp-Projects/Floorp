@@ -24,6 +24,7 @@
 #include "mozilla/ProcInfo.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/ScrollingMetrics.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ContentParent.h"
@@ -1476,6 +1477,33 @@ void ChromeUtils::ConsumeInteractionData(
     return;
   }
   EventStateManager::ConsumeInteractionData(aInteractions);
+}
+
+already_AddRefed<Promise> ChromeUtils::CollectScrollingData(
+    GlobalObject& aGlobal, ErrorResult& aRv) {
+  // Creating a JS promise
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<ScrollingMetrics::ScrollingMetricsPromise> extPromise =
+      ScrollingMetrics::CollectScrollingMetrics();
+
+  extPromise->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise](const Tuple<uint32_t, uint32_t>& aResult) {
+        InteractionData out = {};
+        out.mInteractionTimeInMilliseconds = Get<0>(aResult);
+        out.mScrollingDistanceInPixels = Get<1>(aResult);
+        promise->MaybeResolve(out);
+      },
+      [promise](bool aValue) { promise->MaybeReject(NS_ERROR_FAILURE); });
+
+  return promise.forget();
 }
 
 }  // namespace mozilla::dom

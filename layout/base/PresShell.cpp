@@ -186,6 +186,7 @@
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/FocusTarget.h"
+#include "mozilla/layers/ScrollingInteractionContext.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layout/ScrollAnchorContainer.h"
@@ -3134,6 +3135,8 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 
   if (content) {
     if (aScroll) {
+      ScrollingInteractionContext scrollToAnchorContext(true);
+
       rv = ScrollContentIntoView(
           content, ScrollAxis(kScrollToTop, WhenToScroll::Always), ScrollAxis(),
           ScrollFlags::AnchorScrollFlags | aAdditionalScrollFlags);

@@ -23,6 +23,7 @@
 #include "GMPServiceChild.h"
 #include "Geolocation.h"
 #include "imgLoader.h"
+#include "ScrollingMetrics.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
 #include "mozilla/HangDetails.h"
@@ -44,6 +45,7 @@
 #include "mozilla/SimpleEnumerator.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -60,6 +62,7 @@
 #include "mozilla/dom/ChildProcessMessageManager.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/ContentPlaybackController.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -359,7 +362,6 @@ struct ProcessPriority {
 }  // namespace geckoprofiler::markers
 
 namespace mozilla {
-
 namespace dom {
 
 // IPC sender for remote GC/CC logging.
@@ -2261,6 +2263,14 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdatePerfStatsCollectionMask(
 mozilla::ipc::IPCResult ContentChild::RecvCollectPerfStatsJSON(
     CollectPerfStatsJSONResolver&& aResolver) {
   aResolver(PerfStats::CollectLocalPerfStatsJSON());
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvCollectScrollingMetrics(
+    CollectScrollingMetricsResolver&& aResolver) {
+  auto metrics = ScrollingMetrics::CollectLocalScrollingMetrics();
+  using ResolverArgs = Tuple<const uint32_t&, const uint32_t&>;
+  aResolver(ResolverArgs(Get<0>(metrics), Get<1>(metrics)));
   return IPC_OK();
 }
 
