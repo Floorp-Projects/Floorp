@@ -11,7 +11,7 @@ add_task(async function() {
     "devtools.netmonitor.responseBodyLimit"
   );
   const URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + limit;
-  const { monitor, tab } = await initNetMonitor(URL, { requestCount: 1 });
+  const { monitor } = await initNetMonitor(URL, { requestCount: 1 });
 
   info("Starting test... ");
 
@@ -20,7 +20,7 @@ add_task(async function() {
   const { document } = monitor.panelWin;
 
   const wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   // Response content will be updated asynchronously, we should make sure data is updated

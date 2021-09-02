@@ -470,7 +470,7 @@ function test() {
       });
 
       const wait = waitForNetworkEvents(monitor, 1);
-      tab.linkedBrowser.reload();
+      await reloadBrowser();
       await wait;
 
       const requestItem = getSortedRequests(store.getState())[0];

@@ -7,7 +7,7 @@
  * Test whether the StatusBar properly renders expected labels.
  */
 add_task(async () => {
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+  const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -23,7 +23,7 @@ add_task(async () => {
 
   const requestsDone = waitForNetworkEvents(monitor, 1);
   const markersDone = waitForTimelineMarkers(monitor);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await Promise.all([requestsDone, markersDone]);
 
   const statusBar = document.querySelector(".devtools-toolbar-bottom");

@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+  const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -24,7 +24,7 @@ add_task(async function() {
 
   // Load one request and assert it shows up in the list
   let wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   assertSingleRequestState();
@@ -35,7 +35,7 @@ add_task(async function() {
 
   // Load a second request and make sure they still show up
   wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   assertSingleRequestState();
