@@ -9,12 +9,12 @@ const TEST_URL = EXAMPLE_URL + "html_internal-stylesheet.html";
  * Test for the stylesheet which is loaded as internal.
  */
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(TEST_URL, {
+  const { monitor } = await initNetMonitor(TEST_URL, {
     requestCount: 2,
   });
 
   const wait = waitForNetworkEvents(monitor, 2);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   const { store } = monitor.panelWin;

@@ -40,7 +40,7 @@ add_task(async function() {
 
   // Reload debugee.
   const wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   // Perform another batch of requests.

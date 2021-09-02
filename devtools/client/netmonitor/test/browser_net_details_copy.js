@@ -6,7 +6,7 @@
  * Test that the URL Preview can be copied
  */
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+  const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });
 
@@ -18,7 +18,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   const wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   store.dispatch(Actions.toggleNetworkDetails());
@@ -67,7 +67,7 @@ add_task(async function() {
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+  const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });
 
@@ -79,7 +79,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   const wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   store.dispatch(Actions.toggleNetworkDetails());
@@ -183,7 +183,7 @@ add_task(async function() {
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(SIMPLE_UNSORTED_COOKIES_SJS, {
+  const { monitor } = await initNetMonitor(SIMPLE_UNSORTED_COOKIES_SJS, {
     requestCount: 1,
   });
   info(
@@ -196,7 +196,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   wait = waitForDOM(document, ".headers-overview");

@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+  const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -19,7 +19,7 @@ add_task(async function() {
   );
 
   const wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   EventUtils.sendMouseEvent(

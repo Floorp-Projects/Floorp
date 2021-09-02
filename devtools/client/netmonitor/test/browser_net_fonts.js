@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(FONTS_URL + "?name=fonts", {
+  const { monitor } = await initNetMonitor(FONTS_URL + "?name=fonts", {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -20,7 +20,7 @@ add_task(async function() {
 
   // Reload the page to get the font request
   const waitForRequests = waitForNetworkEvents(monitor, 3);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await waitForRequests;
 
   const wait = waitForDOMIfNeeded(

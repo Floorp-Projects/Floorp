@@ -235,7 +235,7 @@ add_task(async function() {
     monitor = newMonitor.monitor;
 
     const networkEvent = waitForNetworkEvents(monitor, 1);
-    newMonitor.tab.linkedBrowser.reload();
+    await reloadBrowser();
     await networkEvent;
 
     const wait = waitForDOM(getDoc(), ".network-details-bar");

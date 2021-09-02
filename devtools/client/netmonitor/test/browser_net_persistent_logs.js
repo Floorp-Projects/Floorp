@@ -9,7 +9,7 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(SINGLE_GET_URL, {
+  const { monitor } = await initNetMonitor(SINGLE_GET_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -67,11 +67,11 @@ add_task(async function() {
   return teardown(monitor);
 
   /**
-   * Reload the page and wait for 2 GET requests. Race-free.
+   * Reload the page and wait for 2 GET requests.
    */
-  function reloadAndWait() {
+  async function reloadAndWait() {
     const wait = waitForNetworkEvents(monitor, 2);
-    tab.linkedBrowser.reload();
+    await reloadBrowser();
     return wait;
   }
 });

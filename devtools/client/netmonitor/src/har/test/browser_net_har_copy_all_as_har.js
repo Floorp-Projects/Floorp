@@ -87,7 +87,7 @@ async function reloadAndCopyAllAsHar(tab, monitor, toolbox) {
     onDomCompleteResource,
   } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
 
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
 
   info("Waiting for network events");
   await wait;
