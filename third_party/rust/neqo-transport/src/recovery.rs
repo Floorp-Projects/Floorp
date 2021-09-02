@@ -640,8 +640,9 @@ impl LossRecovery {
         ack_delay: Duration,
     ) {
         let confirmed = self.confirmed_time.map_or(false, |t| t < send_time);
-        let sample = now - send_time;
-        rtt.update(&mut self.qlog, sample, ack_delay, confirmed, now);
+        if let Some(sample) = now.checked_duration_since(send_time) {
+            rtt.update(&mut self.qlog, sample, ack_delay, confirmed, now);
+        }
     }
 
     /// Returns (acked packets, lost packets)
