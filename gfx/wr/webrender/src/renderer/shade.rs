@@ -13,7 +13,6 @@ use crate::renderer::{
     BlendMode, DebugFlags, RendererError, RendererOptions,
     TextureSampler, VertexArrayKind, ShaderPrecacheFlags,
 };
-use crate::profiler::{self, TransactionProfile, ns_to_ms};
 
 use gleam::gl::GlType;
 use time::precise_time_ns;
@@ -97,9 +96,7 @@ impl LazilyCompiledShader {
         device: &mut Device,
         precache_flags: ShaderPrecacheFlags,
         shader_list: &ShaderFeatures,
-        profile: &mut TransactionProfile,
     ) -> Result<Self, ShaderError> {
-
         let mut features = unsorted_features.to_vec();
         features.sort();
 
@@ -125,7 +122,7 @@ impl LazilyCompiledShader {
 
         if precache_flags.intersects(ShaderPrecacheFlags::ASYNC_COMPILE | ShaderPrecacheFlags::FULL_COMPILE) {
             let t0 = precise_time_ns();
-            shader.get_internal(device, precache_flags, profile)?;
+            shader.get_internal(device, precache_flags)?;
             let t1 = precise_time_ns();
             debug!("[C: {:.1} ms ] Precache {} {:?}",
                 (t1 - t0) as f64 / 1000000.0,
@@ -143,10 +140,9 @@ impl LazilyCompiledShader {
         projection: &Transform3D<f32>,
         texture_size: Option<DeviceSize>,
         renderer_errors: &mut Vec<RendererError>,
-        profile: &mut TransactionProfile,
     ) {
         let update_projection = self.cached_projection != *projection;
-        let program = match self.get_internal(device, ShaderPrecacheFlags::FULL_COMPILE, profile) {
+        let program = match self.get_internal(device, ShaderPrecacheFlags::FULL_COMPILE) {
             Ok(program) => program,
             Err(e) => {
                 renderer_errors.push(RendererError::from(e));
@@ -168,10 +164,8 @@ impl LazilyCompiledShader {
         &mut self,
         device: &mut Device,
         precache_flags: ShaderPrecacheFlags,
-        profile: &mut TransactionProfile,
     ) -> Result<&mut Program, ShaderError> {
         if self.program.is_none() {
-            let start_time = precise_time_ns();
             let program = match self.kind {
                 ShaderKind::Primitive | ShaderKind::Brush | ShaderKind::Text | ShaderKind::Resolve | ShaderKind::Clear => {
                     create_prim_shader(
@@ -217,16 +211,11 @@ impl LazilyCompiledShader {
                 }
             };
             self.program = Some(program?);
-
-            let end_time = precise_time_ns();
-            profile.add(profiler::SHADER_BUILD_TIME, ns_to_ms(end_time - start_time));
         }
 
         let program = self.program.as_mut().unwrap();
 
         if precache_flags.contains(ShaderPrecacheFlags::FULL_COMPILE) && !program.is_initialized() {
-            let start_time = precise_time_ns();
-
             let vertex_format = match self.kind {
                 ShaderKind::Primitive |
                 ShaderKind::Brush |
@@ -295,9 +284,6 @@ impl LazilyCompiledShader {
                     );
                 }
             }
-
-            let end_time = precise_time_ns();
-            profile.add(profiler::SHADER_BUILD_TIME, ns_to_ms(end_time - start_time));
         }
 
         Ok(program)
@@ -338,7 +324,6 @@ impl BrushShader {
         shader_list: &ShaderFeatures,
         use_advanced_blend: bool,
         use_dual_source: bool,
-        profile: &mut TransactionProfile,
     ) -> Result<Self, ShaderError> {
         let opaque_features = features.to_vec();
         let opaque = LazilyCompiledShader::new(
@@ -348,7 +333,6 @@ impl BrushShader {
             device,
             precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let mut alpha_features = opaque_features.to_vec();
@@ -361,7 +345,6 @@ impl BrushShader {
             device,
             precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let advanced_blend = if use_advanced_blend {
@@ -375,7 +358,6 @@ impl BrushShader {
                 device,
                 precache_flags,
                 &shader_list,
-                profile,
             )?;
 
             Some(shader)
@@ -394,7 +376,6 @@ impl BrushShader {
                 device,
                 precache_flags,
                 &shader_list,
-                profile,
             )?;
 
             Some(shader)
@@ -412,7 +393,6 @@ impl BrushShader {
             device,
             precache_flags,
             &shader_list,
-            profile,
         )?;
 
         Ok(BrushShader {
@@ -482,7 +462,6 @@ impl TextShader {
         features: &[&'static str],
         precache_flags: ShaderPrecacheFlags,
         shader_list: &ShaderFeatures,
-        profile: &mut TransactionProfile,
     ) -> Result<Self, ShaderError> {
         let mut simple_features = features.to_vec();
         simple_features.push("ALPHA_PASS");
@@ -495,7 +474,6 @@ impl TextShader {
             device,
             precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let mut glyph_transform_features = features.to_vec();
@@ -510,7 +488,6 @@ impl TextShader {
             device,
             precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let mut debug_overdraw_features = features.to_vec();
@@ -524,7 +501,6 @@ impl TextShader {
             device,
             precache_flags,
             &shader_list,
-            profile,
         )?;
 
         Ok(TextShader { simple, glyph_transform, debug_overdraw })
@@ -647,10 +623,6 @@ impl Shaders {
         gl_type: GlType,
         options: &RendererOptions,
     ) -> Result<Self, ShaderError> {
-        // We have to pass a profile around a bunch but we aren't recording the initialization
-        // so use a dummy one.
-        let profile = &mut TransactionProfile::new();
-
         let use_dual_source_blending =
             device.get_capabilities().supports_dual_source_blending &&
             options.allow_dual_source_blending;
@@ -686,7 +658,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            profile,
         )?;
 
         let brush_blend = BrushShader::new(
@@ -697,7 +668,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            profile,
         )?;
 
         let brush_mix_blend = BrushShader::new(
@@ -708,7 +678,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            profile,
         )?;
 
         let brush_linear_gradient = BrushShader::new(
@@ -723,7 +692,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            profile,
         )?;
 
         let brush_opacity_aa = BrushShader::new(
@@ -734,7 +702,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            profile,
         )?;
 
         let brush_opacity = BrushShader::new(
@@ -745,7 +712,6 @@ impl Shaders {
             &shader_list,
             false /* advanced blend */,
             false /* dual source */,
-            profile,
         )?;
 
         let cs_blur_a8 = LazilyCompiledShader::new(
@@ -755,7 +721,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_blur_rgba8 = LazilyCompiledShader::new(
@@ -765,7 +730,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_svg_filter = LazilyCompiledShader::new(
@@ -775,7 +739,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_clip_rectangle_slow = LazilyCompiledShader::new(
@@ -785,7 +748,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_clip_rectangle_fast = LazilyCompiledShader::new(
@@ -795,7 +757,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_clip_box_shadow = LazilyCompiledShader::new(
@@ -805,7 +766,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_clip_image = LazilyCompiledShader::new(
@@ -815,7 +775,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let mut cs_scale = Vec::new();
@@ -843,7 +802,6 @@ impl Shaders {
                     device,
                     options.precache_flags,
                     &shader_list,
-                    profile,
                  )?;
 
                  let index = Self::get_compositing_shader_index(
@@ -862,7 +820,6 @@ impl Shaders {
             &[],
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let ps_text_run_dual_source = if use_dual_source_blending {
@@ -872,7 +829,6 @@ impl Shaders {
                 &dual_source_features,
                 options.precache_flags,
                 &shader_list,
-                profile,
             )?)
         } else {
             None
@@ -885,7 +841,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let ps_clear = LazilyCompiledShader::new(
@@ -895,7 +850,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         // All image configuration.
@@ -932,7 +886,6 @@ impl Shaders {
                 &shader_list,
                 use_advanced_blend_equation,
                 use_dual_source_blending,
-                profile,
             )?);
 
             image_features.push("REPETITION");
@@ -946,7 +899,6 @@ impl Shaders {
                 &shader_list,
                 use_advanced_blend_equation,
                 use_dual_source_blending,
-                profile,
             )?);
 
             image_features.clear();
@@ -998,7 +950,6 @@ impl Shaders {
                         &shader_list,
                         false /* advanced blend */,
                         false /* dual source */,
-                        profile,
                     )?;
                     brush_yuv_image[index] = Some(brush_shader);
 
@@ -1009,7 +960,6 @@ impl Shaders {
                         device,
                         options.precache_flags,
                         &shader_list,
-                        profile,
                     )?;
                     composite_yuv[index] = Some(composite_yuv_shader);
                 }
@@ -1021,7 +971,6 @@ impl Shaders {
                     device,
                     options.precache_flags,
                     &shader_list,
-                    profile,
                 )?;
 
                 let composite_rgba_fast_path_shader = LazilyCompiledShader::new(
@@ -1031,7 +980,6 @@ impl Shaders {
                     device,
                     options.precache_flags,
                     &shader_list,
-                    profile,
                 )?;
 
                 let index = Self::get_compositing_shader_index(
@@ -1053,7 +1001,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_fast_linear_gradient = LazilyCompiledShader::new(
@@ -1063,7 +1010,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_linear_gradient = LazilyCompiledShader::new(
@@ -1073,7 +1019,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_radial_gradient = LazilyCompiledShader::new(
@@ -1083,7 +1028,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_conic_gradient = LazilyCompiledShader::new(
@@ -1093,7 +1037,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_border_segment = LazilyCompiledShader::new(
@@ -1103,7 +1046,6 @@ impl Shaders {
              device,
              options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         let cs_border_solid = LazilyCompiledShader::new(
@@ -1113,7 +1055,6 @@ impl Shaders {
             device,
             options.precache_flags,
             &shader_list,
-            profile,
         )?;
 
         Ok(Shaders {
