@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.compose.browser.awesomebar
+package mozilla.components.compose.browser.awesomebar.internal
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,11 +23,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
+import mozilla.components.compose.browser.awesomebar.R
 import mozilla.components.concept.awesomebar.AwesomeBar
 
 @Composable
 internal fun Suggestion(
     suggestion: AwesomeBar.Suggestion,
+    colors: AwesomeBarColors,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
@@ -49,6 +50,7 @@ internal fun Suggestion(
         SuggestionTitleAndDescription(
             title = suggestion.title,
             description = suggestion.description,
+            colors = colors,
             modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically)
@@ -56,6 +58,7 @@ internal fun Suggestion(
         if (suggestion.editSuggestion != null) {
             AutocompleteButton(
                 onAutoComplete = { onAutoComplete(suggestion) },
+                colors = colors,
                 modifier = Modifier.align(Alignment.CenterVertically)
             )
         }
@@ -66,6 +69,7 @@ internal fun Suggestion(
 private fun SuggestionTitleAndDescription(
     title: String?,
     description: String?,
+    colors: AwesomeBarColors,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -73,7 +77,7 @@ private fun SuggestionTitleAndDescription(
     ) {
         Text(
             text = title ?: "",
-            color = MaterialTheme.colors.onBackground,
+            color = colors.title,
             fontSize = 15.sp,
             maxLines = 1,
             modifier = Modifier
@@ -83,9 +87,7 @@ private fun SuggestionTitleAndDescription(
         if (description?.isNotEmpty() == true) {
             Text(
                 text = description,
-                color = MaterialTheme.colors.onBackground.copy(
-                    alpha = ContentAlpha.medium
-                ),
+                color = colors.description,
                 fontSize = 12.sp,
                 maxLines = 1,
                 modifier = Modifier
@@ -113,11 +115,12 @@ private fun SuggestionIcon(
 @Composable
 private fun AutocompleteButton(
     onAutoComplete: () -> Unit,
+    colors: AwesomeBarColors,
     modifier: Modifier
 ) {
     Image(
         painterResource(R.drawable.mozac_ic_edit_suggestion),
-        colorFilter = ColorFilter.tint(MaterialTheme.colors.onSurface),
+        colorFilter = ColorFilter.tint(colors.autocompleteIcon),
         contentDescription = stringResource(R.string.mozac_browser_awesomebar_edit_suggestion),
         modifier = modifier
             .width(24.dp)

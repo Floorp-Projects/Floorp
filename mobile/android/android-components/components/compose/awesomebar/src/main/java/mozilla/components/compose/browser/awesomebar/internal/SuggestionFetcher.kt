@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.compose.browser.awesomebar
+package mozilla.components.compose.browser.awesomebar.internal
 
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.asCoroutineDispatcher

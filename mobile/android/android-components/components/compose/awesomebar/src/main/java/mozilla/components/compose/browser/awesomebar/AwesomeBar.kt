@@ -7,11 +7,13 @@ package mozilla.components.compose.browser.awesomebar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import mozilla.components.compose.browser.awesomebar.internal.SuggestionFetcher
+import mozilla.components.compose.browser.awesomebar.internal.Suggestions
+import mozilla.components.compose.browser.awesomebar.wrapper.AwesomeBarDefaults
 import mozilla.components.concept.awesomebar.AwesomeBar
 
 /**
@@ -20,6 +22,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 @Composable
 fun AwesomeBar(
     text: String,
+    colors: AwesomeBarColors = AwesomeBarDefaults.colors(),
     providers: List<AwesomeBar.SuggestionProvider>,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit
@@ -27,7 +30,7 @@ fun AwesomeBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colors.background)
+            .background(colors.background)
     ) {
         val fetcher = remember(providers) { SuggestionFetcher(providers) }
 
@@ -37,6 +40,7 @@ fun AwesomeBar(
 
         Suggestions(
             fetcher.state.value,
+            colors,
             onSuggestionClicked,
             onAutoComplete
         )
