@@ -16,8 +16,8 @@
 }
 
 #viewGroup > radio[selected="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: SelectedItem;
+  color: SelectedItemText;
 }
 
 #viewGroup > radio > .radio-label-box {

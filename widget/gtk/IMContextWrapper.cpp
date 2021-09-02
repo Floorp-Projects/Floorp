@@ -261,7 +261,7 @@ class SelectionStyleProvider final {
     nsAutoCString style(":selected{");
     // FYI: LookAndFeel always returns selection colors of GtkTextView.
     if (auto selectionForegroundColor =
-            GetSystemColor(LookAndFeel::ColorID::TextSelectForeground)) {
+            GetSystemColor(LookAndFeel::ColorID::Highlight)) {
       double alpha =
           static_cast<double>(NS_GET_A(*selectionForegroundColor)) / 0xFF;
       style.AppendPrintf("color:rgba(%u,%u,%u,",
@@ -274,7 +274,7 @@ class SelectionStyleProvider final {
       style.AppendPrintf(");");
     }
     if (auto selectionBackgroundColor =
-            GetSystemColor(LookAndFeel::ColorID::TextSelectBackground)) {
+            GetSystemColor(LookAndFeel::ColorID::Highlighttext)) {
       double alpha =
           static_cast<double>(NS_GET_A(*selectionBackgroundColor)) / 0xFF;
       style.AppendPrintf("background-color:rgba(%u,%u,%u,",

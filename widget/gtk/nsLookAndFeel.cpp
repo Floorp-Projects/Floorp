@@ -393,7 +393,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
 
   switch (aID) {
       // These colors don't seem to be used for anything anymore in Mozilla
-      // (except here at least TextSelectBackground and TextSelectForeground)
       // The CSS2 colors below are used.
     case ColorID::WindowBackground:
     case ColorID::WidgetBackground:
@@ -417,14 +416,13 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       aColor = mMozWindowText;
       break;
     case ColorID::WidgetSelectBackground:
-    case ColorID::TextSelectBackground:
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::MozDragtargetzone:
     case ColorID::Highlight:  // preference selected item,
       aColor = mTextSelectedBackground;
       break;
-    case ColorID::TextSelectForeground:
+    case ColorID::Highlighttext:
       if (NS_GET_A(mTextSelectedBackground) < 155) {
         aColor = NS_SAME_AS_FOREGROUND_COLOR;
         break;
@@ -433,14 +431,13 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::WidgetSelectForeground:
     case ColorID::IMESelectedRawTextForeground:
     case ColorID::IMESelectedConvertedTextForeground:
-    case ColorID::Highlighttext:
       aColor = mTextSelectedText;
       break;
-    case ColorID::MozHtmlCellhighlight:
+    case ColorID::Selecteditem:
     case ColorID::MozAccentColor:
       aColor = mAccentColor;
       break;
-    case ColorID::MozHtmlCellhighlighttext:
+    case ColorID::Selecteditemtext:
     case ColorID::MozAccentColorForeground:
       aColor = mAccentColorForeground;
       break;
