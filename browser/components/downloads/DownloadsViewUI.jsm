@@ -284,16 +284,11 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     let downloadListItemFragment = gDownloadListItemFragments.get(document);
     // When changing the markup within the fragment, please ensure that
     // the functions within DownloadsView still operate correctly.
-    // E.g. onDownloadClick() relies on brittle logic and performs/prevents
-    // actions based on the check if originaltarget was not a button.
     if (!downloadListItemFragment) {
       let MozXULElement = document.defaultView.MozXULElement;
       downloadListItemFragment = MozXULElement.parseXULToFragment(`
         <hbox class="downloadMainArea" flex="1" align="center">
-          <stack>
-            <image class="downloadTypeIcon" validate="always"/>
-            <image class="downloadBlockedBadge" />
-          </stack>
+          <image class="downloadTypeIcon" validate="always"/>
           <vbox class="downloadContainer" flex="1" pack="center">
             <description class="downloadTarget" crop="center"/>
             <description class="downloadDetails downloadDetailsNormal"
@@ -303,8 +298,8 @@ DownloadsViewUI.DownloadElementShell.prototype = {
             <description class="downloadDetails downloadDetailsButtonHover"
                          crop="end"/>
           </vbox>
+          <image class="downloadBlockedBadge" />
         </hbox>
-        <image class="downloadBlockedBadgeNew" />
         <button class="downloadButton"/>
       `);
       gDownloadListItemFragments.set(document, downloadListItemFragment);

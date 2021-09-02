@@ -54,14 +54,14 @@ add_task(async function test_download_clickable() {
 
   ok(!download._launchedFromPanel, "LaunchFromPanel should set to false");
 
-  listbox.itemChildren[0].click();
+  EventUtils.synthesizeMouseAtCenter(listbox.itemChildren[0], {});
   ok(
     download.launchWhenSucceeded,
     "Should open the file when download is finished"
   );
   ok(download._launchedFromPanel, "File was scheduled to launch from panel");
 
-  listbox.itemChildren[0].click();
+  EventUtils.synthesizeMouseAtCenter(listbox.itemChildren[0], {});
 
   ok(
     !download.launchWhenSucceeded,

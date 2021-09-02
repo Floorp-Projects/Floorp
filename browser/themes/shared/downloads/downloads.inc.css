@@ -21,28 +21,36 @@
 }
 
 #emptyDownloads {
-  padding: 1.5em 0.62em 2.1em;
+  padding: 1.5em 8px 2.1em;
   margin: 0;
   pointer-events: none;
 }
 
 @item@ {
-  height: 3.1em;
-  padding: 8px 0.31em;
+  /* Leave space for the 32x32 icon with 16px vertical padding, and/or
+   * the text in the item, with the same padding, whichever is bigger: */
+  height: max(48px, calc(16px + 2em));
+  padding-inline-end: 4px;
   margin: 0 0 8px;
   border-radius: 4px;
 }
 
-@itemFinished@[exists]:hover:not(.downloadHoveringButton),
-button.downloadButton:hover,
+.downloadMainArea {
+  padding-block: 8px;
+  padding-inline-start: 4px;
+  border-radius: 4px;
+}
+
+@itemFinished@[exists].hoveringMainArea:hover,
+@item@:is(.openWhenFinished) > .downloadMainArea:hover,
+@item@:not([verdict]) > .downloadButton:hover,
 @item@[verdict]:hover,
-@item@:hover:is(.openWhenFinished),
 .downloadsPanelFooterButton:hover {
   background-color: var(--button-hover-bgcolor);
 }
 
-@itemFinished@[exists]:hover:active,
-button.downloadButton:hover:active,
+@itemFinished@[exists].hoveringMainArea:hover:active,
+@item@:not([verdict]) > .downloadButton:hover:active,
 .downloadsPanelFooterButton[open="true"],
 @item@[verdict]:hover:active {
   background-color: var(--button-active-bgcolor);
@@ -68,65 +76,6 @@ button.downloadButton:hover:active,
 #downloadsPanel-blockedSubview-buttons {
   display: flex;
   margin-top: 1.5em;
-}
-
-.downloadBlockedBadge {
-  display: none;
-}
-
-.downloadBlockedBadgeNew {
-  background-repeat: no-repeat;
-  width: 16px;
-  height: 16px;
-  margin: 0 16px;
-}
-
-#downloadsPanel-blockedSubview[verdict="Insecure"] .downloadsPanel-blockedSubview-image,
-#downloadsPanel-blockedSubview[verdict="Malware"] .downloadsPanel-blockedSubview-image,
-@item@[verdict="Insecure"] .downloadBlockedBadgeNew,
-@item@[verdict="Malware"] .downloadBlockedBadgeNew {
-  background-image: url("chrome://global/skin/icons/error.svg");
-  -moz-context-properties: fill;
-  fill: #e22850;
-}
-
-:root[lwt-popup-brighttext] #downloadsPanel-blockedSubview[verdict="Insecure"] .downloadsPanel-blockedSubview-image,
-:root[lwt-popup-brighttext] @item@[verdict="Insecure"] .downloadBlockedBadgeNew,
-:root[lwt-popup-brighttext] #downloadsPanel-blockedSubview[verdict="Malware"] .downloadsPanel-blockedSubview-image,
-:root[lwt-popup-brighttext] @item@[verdict="Malware"] .downloadBlockedBadgeNew {
-  fill: #FF9AA2;
-}
-
-#downloadsPanel-blockedSubview[verdict="Uncommon"] .downloadsPanel-blockedSubview-image,
-@item@[verdict="Uncommon"] .downloadBlockedBadgeNew {
-  -moz-context-properties: fill;
-  fill: #0090ED;
-  background-image: url("chrome://global/skin/icons/info-filled.svg");
-}
-
-:root[lwt-popup-brighttext] #downloadsPanel-blockedSubview[verdict="Uncommon"] .downloadsPanel-blockedSubview-image,
-:root[lwt-popup-brighttext] @item@[verdict="Uncommon"] .downloadBlockedBadgeNew {
-  fill: #80EBFF;
-}
-
-.downloadsPanel-blockedSubview-image {
-  width: 16px;
-  background-repeat: no-repeat;
-  margin-inline-end: 25px;
-}
-
-.downloadsPanel-blockedSubview-title-box {
-  margin-block: 21.5px 0;
-}
-
-#downloadsPanel-blockedSubview-title {
-  -moz-box-flex: 1;
-}
-
-button.downloadButton {
-  min-width: 32px;
-  height: 32px;
-  border-radius: 4px;
 }
 
 @notKeyfocus@ .downloadsPanelFooterButton:-moz-focusring {
@@ -175,33 +124,6 @@ button.downloadButton {
   height: 32px;
 }
 
-.downloadBlockedBadge {
-  margin: 0 5px;
-  background: url("chrome://browser/skin/downloads/download-blocked.svg") top right / 16px no-repeat;
-}
-
-.downloadBlockedBadge:-moz-locale-dir(rtl) {
-  background-position-x: left;
-}
-
-#downloadsPanel-blockedSubview[verdict="PotentiallyUnwanted"] .downloadsPanel-blockedSubview-image,
-@item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadgeNew,
-@item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadge {
-  -moz-context-properties: fill;
-  fill: #ffbf00;
-  background-image: url("chrome://global/skin/icons/warning.svg");
-}
-
-@item@[verdict="Uncommon"] .downloadBlockedBadge {
-  -moz-context-properties: fill;
-  fill: #00a1f2;
-  background-image: url("chrome://global/skin/icons/info-filled.svg");
-}
-
-.downloadContainer {
-  margin-inline-end: 13px;
-}
-
 #downloadsSummaryDescription,
 .downloadTarget {
   margin: 0;
@@ -217,14 +139,18 @@ button.downloadButton {
 }
 
 /* When hovering the mouse pointer over the item, instead of the normal message
-   we display a more detailed one. */
-@item@:hover > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
-@item@:not(:hover) > .downloadMainArea > .downloadContainer > .downloadDetailsHover {
+   we display a more detailed one. For blocked downloads the entire area shows
+   the hover message, for other downloads only the main area does. */
+@item@[verdict]:hover > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
+@item@[verdict]:not(:hover) > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
+.downloadMainArea:hover > .downloadContainer > .downloadDetailsNormal,
+@item@:not([verdict]) > .downloadMainArea:not(:hover) > .downloadContainer > .downloadDetailsHover {
   display: none;
 }
 
 /* When hovering the action button in particular, instead of the usual hover
    message we display the command associated with the button. */
+@item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
 @item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
 @item@:not(.downloadHoveringButton) > .downloadMainArea > .downloadContainer > .downloadDetailsButtonHover {
   display: none;
@@ -232,11 +158,15 @@ button.downloadButton {
 
 .downloadButton {
   appearance: none;
+  min-width: 32px;
+  height: 32px;
   margin: 0;
+  margin-inline-start: 4px;
   border: none;
-  background: transparent;
   padding: 0;
+  background: transparent;
   color: inherit;
+  border-radius: 4px;
 }
 
 .downloadButton > .button-box > .button-icon {
@@ -298,3 +228,6 @@ button.downloadButton {
 
 /*** Progressmeter ***/
 %include progressmeter.inc.css
+
+/*** Blocked iconography ***/
+%include download-blockedStates.inc.css

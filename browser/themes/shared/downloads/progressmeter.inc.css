@@ -43,7 +43,10 @@ toolbar[brighttext]:-moz-lwtheme {
   appearance: none;
   display: -moz-box;
   margin-block: 5px 1px;
-  margin-inline-end: 12px;
+  /* This value is kinda odd, it's used to align with the edge of the badge,
+   * if shown, which is inside the edge of the image (the image gets 16px
+   * margin). */
+  margin-inline-end: 18px;
   border: none;
   height: 4px;
   border-radius: 2px;
