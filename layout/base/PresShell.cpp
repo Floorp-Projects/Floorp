@@ -7105,7 +7105,7 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
     nsPresContext* pc = aRootFrameToHandleEvent->PresContext();
     if (pc->IsChrome()) {
       viewportType = ViewportType::Visual;
-    } else if (pc->IsRootContentDocument()) {
+    } else if (pc->IsRootContentDocumentCrossProcess()) {
       viewportType = ViewportTypeForInputEventsRelativeToRoot();
     }
   }
