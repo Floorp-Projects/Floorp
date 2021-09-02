@@ -1956,7 +1956,7 @@ nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
       // Make scrollbar tracks opaque on the window's scroll frame to prevent
       // leaf layers from overlapping. See bug 1179780.
       if (!(CheckBooleanAttr(aFrame, nsGkAtoms::root_) &&
-            aFrame->PresContext()->IsRootContentDocument() &&
+            aFrame->PresContext()->IsRootContentDocumentCrossProcess() &&
             IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL))) {
         return eTransparent;
       }
