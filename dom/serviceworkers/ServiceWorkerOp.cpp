@@ -653,7 +653,7 @@ class PushEventOp final : public ExtendableEventOp {
     const ServiceWorkerPushEventOpArgs& args =
         mArgs.get_ServiceWorkerPushEventOpArgs();
 
-    PushEventInit pushEventInit;
+    RootedDictionary<PushEventInit> pushEventInit(aCx);
 
     if (args.data().type() != OptionalPushData::Tvoid_t) {
       auto& bytes = args.data().get_ArrayOfuint8_t();

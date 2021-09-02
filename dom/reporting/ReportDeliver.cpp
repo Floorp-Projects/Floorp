@@ -221,8 +221,9 @@ void SendReports(nsTArray<ReportDeliver::ReportData>& aReports,
   RequestOrUSVString fetchInput;
   fetchInput.SetAsRequest() = request;
 
-  RefPtr<Promise> promise = FetchRequest(
-      globalObject, fetchInput, RequestInit(), CallerType::NonSystem, error);
+  RootedDictionary<RequestInit> requestInit(RootingCx());
+  RefPtr<Promise> promise = FetchRequest(globalObject, fetchInput, requestInit,
+                                         CallerType::NonSystem, error);
   if (error.Failed()) {
     for (auto& report : aReports) {
       ++report.mFailures;

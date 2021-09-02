@@ -828,7 +828,7 @@ class SendPushEventRunnable final
     RefPtr<PushErrorReporter> errorReporter =
         new PushErrorReporter(aWorkerPrivate, mMessageId);
 
-    PushEventInit pei;
+    RootedDictionary<PushEventInit> pei(aCx);
     if (mData) {
       const nsTArray<uint8_t>& bytes = mData.ref();
       JSObject* data =
