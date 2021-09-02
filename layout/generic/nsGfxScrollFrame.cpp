@@ -3854,8 +3854,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // The composition size is essentially in visual coordinates.
     // If we are hit-testing in layout coordinates, transform the clip rect
     // to layout coordinates to match.
-    if (aBuilder->IsRelativeToLayoutViewport() &&
-        mOuter->PresContext()->IsRootContentDocument()) {
+    if (aBuilder->IsRelativeToLayoutViewport() && isRootContent) {
       clipRect = ViewportUtils::VisualToLayout(clipRect, mOuter->PresShell());
     }
   }
