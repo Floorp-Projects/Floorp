@@ -122,7 +122,7 @@ add_task(async function() {
   info(
     "Reload the page and check that the error icon has the expected content"
   );
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
 
   // (console.error, console.exception, console.assert and exception)
   expectedErrorCount = 4;

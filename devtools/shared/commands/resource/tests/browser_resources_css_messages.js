@@ -89,10 +89,7 @@ async function testWatchingCachedCssMessages() {
   // emit warnings. But it does not automatically emit warnings for the existing CSS
   // errors in the stylesheets. So here we reload the tab, which will make the Parser
   // parse the stylesheets again, this time emitting warnings.
-  const loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  tab.linkedBrowser.reload();
-  // wait for the tab to be fully loaded
-  await loaded;
+  await reloadBrowser();
   // and trigger more CSS warnings
   await triggerCSSWarning(tab);
 

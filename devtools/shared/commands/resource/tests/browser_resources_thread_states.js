@@ -292,8 +292,7 @@ async function checkPauseOnException() {
   });
 
   info("Reload the page, in order to trigger exception on load");
-  const reloaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  tab.linkedBrowser.reload();
+  const reloaded = reloadBrowser();
 
   await waitFor(
     () => availableResources.length == 1,

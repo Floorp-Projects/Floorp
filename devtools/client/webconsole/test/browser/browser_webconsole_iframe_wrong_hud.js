@@ -27,7 +27,7 @@ add_task(async function() {
   await openConsole(gBrowser.selectedTab);
 
   info("Reloading tab 1");
-  await reloadTab(tab1);
+  await reloadBrowser({ browser: tab1.linkedBrowser });
 
   info("Waiting for messages");
   await waitFor(() => findMessage(hud1, TEST_IFRAME_URI, ".message.network"));
@@ -39,9 +39,3 @@ add_task(async function() {
     "iframe network request is not displayed in tab2"
   );
 });
-
-function reloadTab(tab) {
-  const loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  tab.linkedBrowser.reload();
-  return loaded;
-}

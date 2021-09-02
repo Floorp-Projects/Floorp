@@ -160,7 +160,7 @@ add_task(async function() {
     "Check that reloading the page will notify about the terminated worker and the new existing one"
   );
   const targetsCountBeforeReload = targets.length;
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
 
   await waitFor(() => {
     return (
