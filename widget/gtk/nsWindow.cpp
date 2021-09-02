@@ -6339,12 +6339,21 @@ void nsWindow::SetWindowMouseTransparent(bool aIsTransparent) {
     return;
   }
 
+  LOG(("nsWindow::SetWindowMouseTransparent(%d) [%p]", aIsTransparent, this));
+
   cairo_rectangle_int_t emptyRect = {0, 0, 0, 0};
   cairo_region_t* region =
       aIsTransparent ? cairo_region_create_rectangle(&emptyRect) : nullptr;
   gdk_window_input_shape_combine_region(window, region, 0, 0);
   if (region) {
     cairo_region_destroy(region);
+  }
+
+  // On Wayland gdk_window_input_shape_combine_region() call is cached and
+  // applied to underlying wl_surface when GdkWindow is repainted.
+  // Force repaint of GdkWindow to apply the change immediately.
+  if (GdkIsWaylandDisplay()) {
+    gdk_window_invalidate_rect(window, nullptr, false);
   }
 }
 
