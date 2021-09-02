@@ -13,6 +13,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ClearOnShutdown.h"  // PastShutdownPhase
 #include "nsContentUtils.h"
 #include "prthread.h"
 
@@ -217,6 +218,12 @@ already_AddRefed<ClientManager> ClientManager::GetOrCreateForCurrentThread() {
   }
 
   MOZ_DIAGNOSTIC_ASSERT(cm);
+  // Check that the ClientManager instance associated to the current thread has
+  // not been kept alive when it was expected to have been already deallocated
+  // (e.g. due to a leak ClientManager's mShutdown can have ben set to true from
+  // its RevokeActor method but never fully deallocated and unset from the
+  // thread locals).
+  MOZ_DIAGNOSTIC_ASSERT(!cm->IsShutdown());
   return cm.forget();
 }
 
@@ -230,6 +237,12 @@ WorkerPrivate* ClientManager::GetWorkerPrivate() const {
 /* static */ bool ClientManager::ExpectOrForgetFutureSource(
     const ClientInfo& aClientInfo,
     bool (PClientManagerChild::*aMethod)(const IPCClientInfo&)) {
+  // Return earlier if called late in the XPCOM shutdown path,
+  // ClientManager would be already shutdown at the point.
+  if (NS_WARN_IF(PastShutdownPhase(ShutdownPhase::XPCOMShutdown))) {
+    return false;
+  }
+
   bool rv = true;
 
   RefPtr<ClientManager> mgr = ClientManager::GetOrCreateForCurrentThread();
