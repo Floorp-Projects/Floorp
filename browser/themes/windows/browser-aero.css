@@ -222,8 +222,8 @@
           stroke: ButtonText;
         }
         .titlebar-button:hover {
-          background-color: Highlight;
-          stroke: HighlightText;
+          background-color: SelectedItem;
+          stroke: SelectedItemText;
         }
 
         .titlebar-min {

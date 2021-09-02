@@ -11,7 +11,7 @@
 
 @media (-moz-windows-default-theme: 0) {
   xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-item-box {
-    background-color: Highlight;
+    background-color: SelectedItem;
   }
 
   .autofill-item-box {
