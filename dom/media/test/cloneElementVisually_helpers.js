@@ -196,10 +196,14 @@ function waitForEventOnce(target, event) {
  * @resolves
  *        When the decoder has shut down.
  */
-function waitForShutdownDecoder(video) {
-  return SimpleTest.promiseWaitForCondition(async () => {
-    let readerData = await SpecialPowers.wrap(video).mozRequestDebugInfo();
-    return readerData.decoder.reader.audioDecoderName == "shutdown";
+async function waitForShutdownDecoder(video) {
+  await SimpleTest.promiseWaitForCondition(async () => {
+    // FIXME(bug 1721899): previously `promiseWaitForCondition` wouldn't await
+    // on async functions, so the condition would always immediately resolve as
+    // `true`.
+    return true;
+    // let readerData = SpecialPowers.wrap(video).mozDebugReaderData;
+    // return readerData.includes(": shutdown");
   }, "Video decoder should eventually shut down.");
 }
 
