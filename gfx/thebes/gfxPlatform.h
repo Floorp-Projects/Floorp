@@ -628,12 +628,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static void FlushFontAndWordCaches();
 
   /**
-   * Returns a 1x1 surface that can be used to create graphics contexts
-   * for measuring text etc as if they will be rendered to the screen
-   */
-  gfxASurface* ScreenReferenceSurface() { return mScreenReferenceSurface; }
-
-  /**
    * Returns a 1x1 DrawTarget that can be used for measuring text etc. as
    * it would measure if rendered on-screen.  Guaranteed to return a
    * non-null and valid DrawTarget.

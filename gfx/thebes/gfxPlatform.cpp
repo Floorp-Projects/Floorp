@@ -915,12 +915,6 @@ void gfxPlatform::Init() {
     MOZ_CRASH("Could not initialize gfxPlatformFontList");
   }
 
-  gPlatform->mScreenReferenceSurface = gPlatform->CreateOffscreenSurface(
-      IntSize(1, 1), SurfaceFormat::A8R8G8B8_UINT32);
-  if (!gPlatform->mScreenReferenceSurface) {
-    MOZ_CRASH("Could not initialize mScreenReferenceSurface");
-  }
-
   gPlatform->mScreenReferenceDrawTarget =
       gPlatform->CreateOffscreenContentDrawTarget(IntSize(1, 1),
                                                   SurfaceFormat::B8G8R8A8);
