@@ -157,9 +157,8 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
                             /*ignoreMissingPipelines*/ false);
 
         LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), bounds.Size());
-        wr::ImageRendering filter = wr::ToImageRendering(
-            nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
-        wr::MixBlendMode mixBlendMode = wr::MixBlendMode::Normal;
+        auto filter = wr::ToImageRendering(mFrame->UsedImageRendering());
+        auto mixBlendMode = wr::MixBlendMode::Normal;
         aManager->WrBridge()->AddWebRenderParentCommand(
             OpUpdateAsyncImagePipeline(data->GetPipelineId().value(), scBounds,
                                        VideoInfo::Rotation::kDegree_0, filter,
@@ -215,8 +214,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
               area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
           LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
               dest, mFrame->PresContext()->AppUnitsPerDevPixel());
-          mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
-              nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
+          auto rendering = wr::ToImageRendering(mFrame->UsedImageRendering());
           aBuilder.PushImage(wr::ToLayoutRect(bounds), wr::ToLayoutRect(bounds),
                              !BackfaceIsHidden(), rendering, imageKey);
         }
