@@ -34,13 +34,8 @@
 </div>
 <pre id="test">
 <script class=testbody" type="application/javascript">
-SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("dom.forms.enterkeyhint");
-});
-
 add_task(async function setup() {
   await new Promise(r => SimpleTest.waitForFocus(r));
-  await SpecialPowers.setBoolPref("dom.forms.enterkeyhint", true);
 });
 
 add_task(async function basic() {
@@ -88,11 +83,16 @@ add_task(async function dynamicChange() {
   element.focus();
   is(SpecialPowers.DOMWindowUtils.focusedActionHint, "enter",
      "Initial enterKeyHint");
+
+  element.setAttribute("enterkeyhint", "next");
+  is(SpecialPowers.DOMWindowUtils.focusedActionHint, "next",
+     "enterKeyHint in InputContext has to sync with enterkeyhint attribute");
+
   element.enterKeyHint = "search";
   is(SpecialPowers.DOMWindowUtils.focusedActionHint, "search",
-     "enterKeyHint in InputContext has to sync with current enterKeyHint");
+     "enterKeyHint in InputContext has to sync with enterKeyHint setter");
 
-  document.getElementById("l2").enterKeyHint = "send";
+  document.getElementById("l2").setAttribute("enterkeyhint", "send");
   is(SpecialPowers.DOMWindowUtils.focusedActionHint, "search",
      "enterKeyHint in InputContext keeps focused enterKeyHint value");
 
