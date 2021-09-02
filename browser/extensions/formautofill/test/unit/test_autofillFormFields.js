@@ -361,6 +361,31 @@ const TESTCASES = [
       "hidden-name-2": undefined,
     },
   },
+  {
+    description:
+      "Fill credit card fields in a form where the value property is being used as a placeholder for cardholder name",
+    document: `<form>
+              <input id="cc-number" autocomplete="cc-number">
+              <input id="cc-name" autocomplete="cc-name" value="JOHN DOE">
+              <input id="cc-exp-month" autocomplete="cc-exp-month">
+              <input id="cc-exp-year" autocomplete="cc-exp-year">
+              </form>`,
+    focusedInputId: "cc-number",
+    profileData: {
+      guid: "123",
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": 6,
+      "cc-exp-year": 25,
+    },
+    expectedResult: {
+      guid: "123",
+      "cc-number": "4111111111111111",
+      "cc-name": "test name",
+      "cc-exp-month": "6",
+      "cc-exp-year": "25",
+    },
+  },
 ];
 
 const TESTCASES_INPUT_UNCHANGED = [
