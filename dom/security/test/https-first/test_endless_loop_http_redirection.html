@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title> Bug 1725646: HTTPS-First endless loop with http redirection</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+/*
+ * Description of the test:
+ *  1. We request http://example.com which HTTPS-First upgrades to https://example.com.
+ *  2. The request https://example.com receives a 307 redirection to http://example.com?start.
+ *  3. HTTPS-First upgrades http://example.com?start to https://example.com?start.
+ *  4. The request https://example.com?start receives a 307 redirection to http://example.com?start.
+ *  5. HTTPS-First detects an endless loop and breaks it (downgrades to http).
+ *  6. The request http://example.com?start, that gets JS redirected to http://example.com.
+ *  7. We start again at (1) and are in an endless loop
+ *
+ * Expected Result: HTTPS-First breaks the endless loop at (7) and reachs http://example.com
+ *
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const REQUEST_URL =
+  "http://example.com/tests/dom/security/test/https-first/file_endless_loop_http_redirection.sjs";
+
+let testWin;
+window.addEventListener("message", receiveMessage);
+
+// Receive message and verify that it is from an http site.
+async function receiveMessage(event) {
+  let data = event.data;
+  ok(data.result === "downgraded", "Broke endless loop");
+  is(data.scheme,"http", "scheme is 'http'");
+  testWin.close();
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+async function runTest() {
+  testWin = window.open(REQUEST_URL, "_blank");
+}
+
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", true]
+  ]}, runTest);
+
+</script>
+</body>
+</html>
