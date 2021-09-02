@@ -5438,7 +5438,7 @@ void nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
    * prevent window.moveTo() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
     return;
   }
 
@@ -5495,7 +5495,7 @@ void nsGlobalWindowOuter::MoveByOuter(int32_t aXDif, int32_t aYDif,
    * prevent window.moveBy() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
     return;
   }
 
@@ -5546,7 +5546,7 @@ void nsGlobalWindowOuter::ResizeToOuter(int32_t aWidth, int32_t aHeight,
    * prevent window.resizeTo() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
     return;
   }
 
@@ -5574,7 +5574,7 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
    * prevent window.resizeBy() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
     return;
   }
 
@@ -5620,7 +5620,7 @@ void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
    * prevent window.sizeToContent() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsFrame()) {
+  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
     return;
   }
 
@@ -6175,7 +6175,7 @@ bool nsGlobalWindowOuter::CanClose() {
 }
 
 void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
-  if (!mDocShell || IsInModalState() || mBrowsingContext->IsFrame()) {
+  if (!mDocShell || IsInModalState() || mBrowsingContext->IsSubframe()) {
     // window.close() is called on a frame in a frameset, on a window
     // that's already closed, or on a window for which there's
     // currently a modal dialog open. Ignore such calls.
@@ -6271,7 +6271,7 @@ nsresult nsGlobalWindowOuter::Close() {
 void nsGlobalWindowOuter::ForceClose() {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
-  if (mBrowsingContext->IsFrame() || !mDocShell) {
+  if (mBrowsingContext->IsSubframe() || !mDocShell) {
     // This may be a frame in a frameset, or a window that's already closed.
     // Ignore such calls.
     return;
