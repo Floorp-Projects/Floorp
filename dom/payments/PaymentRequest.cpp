@@ -1162,7 +1162,7 @@ bool PaymentRequest::InFullyActiveDocument() {
   }
 
   while (winContext) {
-    if (winContext->IsCached()) {
+    if (!winContext->IsCurrent()) {
       return false;
     }
     winContext = winContext->GetParentWindowContext();
