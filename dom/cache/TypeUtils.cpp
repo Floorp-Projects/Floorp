@@ -473,8 +473,9 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(const nsAString& aIn,
   GlobalObject global(cx, GetGlobalObject()->GetGlobalJSObject());
   MOZ_DIAGNOSTIC_ASSERT(!global.Failed());
 
+  RootedDictionary<RequestInit> requestInit(cx);
   SafeRefPtr<Request> request =
-      Request::Constructor(global, requestOrString, RequestInit(), aRv);
+      Request::Constructor(global, requestOrString, requestInit, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
