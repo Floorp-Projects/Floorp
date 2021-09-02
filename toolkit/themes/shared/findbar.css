@@ -75,8 +75,8 @@ html|input.findbar-textbox:focus {
 }
 
 html|input.findbar-textbox:-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background, light));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, light));
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Higlight, light));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, light));
 }
 
 html|input.findbar-textbox:not(:focus):-moz-lwtheme::selection {
@@ -84,13 +84,13 @@ html|input.findbar-textbox:not(:focus):-moz-lwtheme::selection {
 }
 
 :root[lwt-toolbar-field-focus-brighttext] html|input.findbar-textbox:focus::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background, dark));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, dark));
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Higlight, dark));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, dark));
 }
 
 :root[lwt-toolbar-field-brighttext] html|input.findbar-textbox:not(:focus)::selection {
   background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background-disabled, dark));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, dark));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, dark));
 }
 
 

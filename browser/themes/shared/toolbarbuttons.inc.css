@@ -70,7 +70,7 @@
 }
 
 #tabbrowser-arrowscrollbox[highlight]::part(scrollbutton-down) {
-  background-color: Highlight;
+  background-color: SelectedItem;
 }
 
 toolbar .toolbarbutton-1 {

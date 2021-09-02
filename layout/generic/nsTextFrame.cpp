@@ -4061,9 +4061,9 @@ void nsTextPaintStyle::InitCommonColors() {
   nscolor defaultWindowBackgroundColor =
       LookAndFeel::Color(LookAndFeel::ColorID::WindowBackground, mFrame);
   nscolor selectionTextColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::TextSelectForeground, mFrame);
+      LookAndFeel::Color(LookAndFeel::ColorID::Highlighttext, mFrame);
   nscolor selectionBGColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::TextSelectBackground, mFrame);
+      LookAndFeel::Color(LookAndFeel::ColorID::Highlight, mFrame);
 
   mSufficientContrast = std::min(
       std::min(NS_SUFFICIENT_LUMINOSITY_DIFFERENCE,
@@ -4111,7 +4111,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   }
 
   nscolor selectionBGColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::TextSelectBackground, mFrame);
+      LookAndFeel::Color(LookAndFeel::ColorID::Highlight, mFrame);
 
   switch (selectionStatus) {
     case nsISelectionController::SELECTION_ATTENTION: {
@@ -4135,7 +4135,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   }
 
   mSelectionTextColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::TextSelectForeground, mFrame);
+      LookAndFeel::Color(LookAndFeel::ColorID::Highlighttext, mFrame);
 
   if (mResolveColors) {
     // On MacOS X, only the background color gets set,
