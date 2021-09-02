@@ -1177,6 +1177,7 @@ class nsDocShell final : public nsDocLoader,
 
   // Reference to the SHEntry for this docshell until the page is destroyed.
   // Somebody give me better name
+  // Only used when SHIP is disabled.
   nsCOMPtr<nsISHEntry> mOSHE;
 
   // Reference to the SHEntry for this docshell until the page is loaded
@@ -1185,6 +1186,7 @@ class nsDocShell final : public nsDocLoader,
   // root history entries. That is, frames loaded during the parent page
   // load don't generate history entries the way frame navigation after the
   // parent has loaded does. (This isn't the only purpose of mLSHE.)
+  // Only used when SHIP is disabled.
   nsCOMPtr<nsISHEntry> mLSHE;
 
   // These are only set when fission.sessionHistoryInParent is set.
@@ -1303,6 +1305,7 @@ class nsDocShell final : public nsDocLoader,
   // Indicates to CreateContentViewer() that it is safe to cache the old
   // presentation of the page, and to SetupNewViewer() that the old viewer
   // should be passed a SHEntry to save itself into.
+  // Only used with SHIP disabled.
   bool mSavingOldViewer : 1;
 
   bool mInvisible : 1;
