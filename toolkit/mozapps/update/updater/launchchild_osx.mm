@@ -450,3 +450,59 @@ void SetGroupOwnershipAndPermissions(const char* aAppBundle) {
     }
   }
 }
+
+#if !defined(MAC_OS_X_VERSION_10_13) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
+@interface NSTask (NSTask10_13)
+@property(copy) NSURL* executableURL NS_AVAILABLE_MAC(10_13);
+@property(copy) NSArray<NSString*>* arguments;
+- (BOOL)launchAndReturnError:(NSError**)error NS_AVAILABLE_MAC(10_13);
+@end
+#endif
+
+/**
+ * Helper to launch macOS tasks via NSTask.
+ */
+static void LaunchTask(NSString* aPath, NSArray* aArguments) {
+  if (@available(macOS 10.13, *)) {
+    NSTask* task = [[NSTask alloc] init];
+    [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+    if (aArguments) {
+      [task setArguments:aArguments];
+    }
+    [task launchAndReturnError:nil];
+    [task release];
+  } else {
+    NSArray* arguments = aArguments;
+    if (!arguments) {
+      arguments = @[];
+    }
+    [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
+  }
+}
+
+static void RegisterAppWithLaunchServices(NSString* aBundlePath) {
+  NSArray* arguments = @[ @"-f", aBundlePath ];
+  LaunchTask(@"/System/Library/Frameworks/CoreServices.framework/Frameworks/"
+             @"LaunchServices.framework/Support/lsregister",
+             arguments);
+}
+
+static void StripQuarantineBit(NSString* aBundlePath) {
+  NSArray* arguments = @[ @"-d", @"com.apple.quarantine", aBundlePath ];
+  LaunchTask(@"/usr/bin/xattr", arguments);
+}
+
+bool PerformInstallationFromDMG(int argc, char** argv) {
+  MacAutoreleasePool pool;
+  if (argc < 4) {
+    return false;
+  }
+  NSString* bundlePath = [NSString stringWithUTF8String:argv[2]];
+  NSString* destPath = [NSString stringWithUTF8String:argv[3]];
+  if ([[NSFileManager defaultManager] copyItemAtPath:bundlePath toPath:destPath error:nil]) {
+    RegisterAppWithLaunchServices(destPath);
+    StripQuarantineBit(destPath);
+    return true;
+  }
+  return false;
+}
