@@ -1194,6 +1194,12 @@
   type: RelaxedAtomicUint32
   value: 3000
   mirror: always
+  
+# Maximum delay between scroll input events that will be considered a scrolling interaction (milliseconds).
+- name: browser.places.interactions.scrolling_timeout_ms
+  type: RelaxedAtomicUint32
+  value: 5000
+  mirror: always
 
 # Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
 - name: browser.privatebrowsing.forceMediaMemoryCache

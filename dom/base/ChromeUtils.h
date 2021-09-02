@@ -248,6 +248,9 @@ class ChromeUtils {
   static void ConsumeInteractionData(
       GlobalObject& aGlobal, Record<nsString, InteractionData>& aInteractions,
       ErrorResult& aRv);
+
+  static already_AddRefed<Promise> CollectScrollingData(GlobalObject& aGlobal,
+                                                        ErrorResult& aRv);
 };
 
 }  // namespace dom

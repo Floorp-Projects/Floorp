@@ -49,6 +49,8 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ScrollbarPreferences.h"
+#include "mozilla/ScrollingMetrics.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/LookAndFeel.h"
@@ -85,6 +87,7 @@
 #include "mozilla/layers/APZPublicUtils.h"
 #include "mozilla/layers/AxisPhysicsModel.h"
 #include "mozilla/layers/AxisPhysicsMSDModel.h"
+#include "mozilla/layers/ScrollingInteractionContext.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 #include "mozilla/Unused.h"
 #include "MobileViewportManager.h"
@@ -3072,6 +3075,16 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
 
   ScrollVisual();
   mAnchor.UserScrolled();
+
+  // Only report user-triggered scrolling interactions
+  bool jsOnStack = nsContentUtils::GetCurrentJSContext() != nullptr;
+  bool scrollingToAnchor = ScrollingInteractionContext::IsScrollingToAnchor();
+  if (!jsOnStack && !scrollingToAnchor) {
+    nsPoint distanceScrolled(std::abs(pt.x - curPos.x),
+                             std::abs(pt.y - curPos.y));
+    ScrollingMetrics::OnScrollingInteraction(
+        CSSPoint::FromAppUnits(distanceScrolled).Length());
+  }
 
   bool schedulePaint = true;
   if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&

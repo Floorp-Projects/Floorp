@@ -58,6 +58,7 @@ dictionary ProfilerMarkerOptions {
 dictionary InteractionData {
   unsigned long interactionCount = 0;
   unsigned long interactionTimeInMilliseconds = 0;
+  unsigned long scrollingDistanceInPixels = 0;
 };
 
 /**
@@ -583,7 +584,15 @@ partial namespace ChromeUtils {
    */
   [Throws, ChromeOnly]
   record<DOMString, InteractionData> consumeInteractionData();
-  
+
+  /**
+   * Returns a record of user scrolling interactions collected from content processes.
+   *
+   * Valid keys: "Scrolling"
+   */
+  [Throws]
+  Promise<InteractionData> collectScrollingData();
+
 };
 
 /*

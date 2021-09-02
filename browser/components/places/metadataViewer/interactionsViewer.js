@@ -480,6 +480,7 @@ function setupListeners() {
   document.getElementById("export").addEventListener("click", async e => {
     e.preventDefault();
     const data = await metadataHandler.export();
+
     const blob = new Blob([JSON.stringify(data)], {
       type: "text/json;charset=utf-8",
     });
