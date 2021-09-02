@@ -16,7 +16,6 @@
 #  include "SeekTarget.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Maybe.h"
-#  include "mozilla/MozPromise.h"
 #  include "mozilla/Mutex.h"
 #  include "mozilla/StateMirroring.h"
 #  include "mozilla/StaticPrefs_media.h"
@@ -184,11 +183,9 @@ class MediaFormatReader final
 
   RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
-  // Requests that the MediaFormatReader populates aInfo with debug information.
-  // This may be done asynchronously, and aInfo should *not* be accessed by the
-  // caller until the returned promise is resolved or rejected.
-  RefPtr<GenericPromise> RequestDebugInfo(
-      dom::MediaFormatReaderDebugInfo& aInfo);
+  // Returns a MediaDebugInfo structure
+  // Used for debugging purposes.
+  void GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo);
 
   // Switch the video decoder to NullDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
@@ -810,8 +807,6 @@ class MediaFormatReader final
   MozPromiseHolder<SetCDMPromise> mSetCDMPromise;
   TrackSet mSetCDMForTracks{};
   bool IsDecoderWaitingForCDM(TrackType aTrack);
-
-  void GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo);
 };
 
 }  // namespace mozilla
