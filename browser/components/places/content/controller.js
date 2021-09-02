@@ -88,6 +88,11 @@ function PlacesController(aView) {
     "places.forgetThisSite.clearByBaseDomain",
     false
   );
+  ChromeUtils.defineModuleGetter(
+    this,
+    "ForgetAboutSite",
+    "resource://gre/modules/ForgetAboutSite.jsm"
+  );
 }
 
 PlacesController.prototype = {
@@ -267,20 +272,7 @@ PlacesController.prototype = {
         this.remove("Remove Selection").catch(Cu.reportError);
         break;
       case "placesCmd_deleteDataHost":
-        let host;
-        if (PlacesUtils.nodeIsHost(this._view.selectedNode)) {
-          host = this._view.selectedNode.query.domain;
-        } else {
-          host = Services.io.newURI(this._view.selectedNode.uri).host;
-        }
-        let { ForgetAboutSite } = ChromeUtils.import(
-          "resource://gre/modules/ForgetAboutSite.jsm"
-        );
-        if (this.forgetSiteClearByBaseDomain) {
-          ForgetAboutSite.removeDataFromBaseDomain(host).catch(Cu.reportError);
-          break;
-        }
-        ForgetAboutSite.removeDataFromDomain(host).catch(Cu.reportError);
+        this.forgetAboutThisSite().catch(Cu.reportError);
         break;
       case "cmd_selectAll":
         this.selectAll();
@@ -1329,6 +1321,55 @@ PlacesController.prototype = {
         !PlacesUIUtils.isFolderReadOnly(parentNode)) ||
       PlacesUtils.nodeIsQuery(parentNode)
     );
+  },
+  async forgetAboutThisSite() {
+    let host;
+    if (PlacesUtils.nodeIsHost(this._view.selectedNode)) {
+      host = this._view.selectedNode.query.domain;
+    } else {
+      host = Services.io.newURI(this._view.selectedNode.uri).host;
+    }
+    let baseDomain;
+    try {
+      baseDomain = Services.eTLD.getBaseDomainFromHost(host);
+    } catch (e) {
+      // If there is no baseDomain we fall back to host
+    }
+    const [title, body, forget] = await document.l10n.formatValues([
+      { id: "places-forget-about-this-site-confirmation-title" },
+      {
+        id: "places-forget-about-this-site-confirmation-message",
+        args: { hostOrBaseDomain: baseDomain ?? host },
+      },
+      { id: "places-forget-about-this-site-forget" },
+    ]);
+
+    const flags =
+      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_1 +
+      Services.prompt.BUTTON_POS_0_DEFAULT;
+
+    let bag = await Services.prompt.asyncConfirmEx(
+      window.browsingContext,
+      Services.prompt.MODAL_TYPE_INTERNAL_WINDOW,
+      title,
+      body,
+      flags,
+      null,
+      forget,
+      null,
+      null,
+      false
+    );
+    if (!(bag.getProperty("buttonNumClicked") === 1)) {
+      return;
+    }
+
+    if (this.forgetSiteClearByBaseDomain) {
+      await this.ForgetAboutSite.removeDataFromBaseDomain(host);
+    } else {
+      await this.ForgetAboutSite.removeDataFromDomain(host);
+    }
   },
 };
 
