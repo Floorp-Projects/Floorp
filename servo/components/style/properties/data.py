@@ -476,7 +476,6 @@ class Longhand(Property):
                 "FontWeight",
                 "GreaterThanOrEqualToOneNumber",
                 "GridAutoFlow",
-                "ImageRendering",
                 "InitialLetter",
                 "Integer",
                 "JustifyContent",

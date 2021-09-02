@@ -96,6 +96,7 @@ rusty-enums = [
     "mozilla::StyleDirection",
     "mozilla::StyleFloat",
     "mozilla::StyleImageOrientation",
+    "mozilla::StyleImageRendering",
     "mozilla::StyleInert",
     "mozilla::StyleUserModify",
     "mozilla::StyleUserInput",
@@ -585,7 +586,6 @@ cbindgen-types = [
     { gecko = "StyleCaptionSide", servo = "crate::values::computed::table::CaptionSide" },
     { gecko = "StylePageSize", servo = "crate::values::computed::page::PageSize" },
     { gecko = "StyleDProperty", servo = "crate::values::specified::svg::DProperty" },
-    { gecko = "StyleImageRendering", servo = "crate::values::computed::ImageRendering" },
 ]
 
 mapped-generic-types = [

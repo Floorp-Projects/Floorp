@@ -6024,19 +6024,24 @@ nsIFrame* nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame) {
 }
 
 SamplingFilter nsLayoutUtils::GetSamplingFilterForFrame(nsIFrame* aForFrame) {
-  switch (aForFrame->UsedImageRendering()) {
-    case StyleImageRendering::Smooth:
+  SamplingFilter defaultFilter = SamplingFilter::GOOD;
+  ComputedStyle* sc;
+  if (nsCSSRendering::IsCanvasFrame(aForFrame)) {
+    nsCSSRendering::FindBackground(aForFrame, &sc);
+  } else {
+    sc = aForFrame->Style();
+  }
+
+  switch (sc->StyleVisibility()->mImageRendering) {
+    case StyleImageRendering::Optimizespeed:
+      return SamplingFilter::POINT;
     case StyleImageRendering::Optimizequality:
       return SamplingFilter::LINEAR;
     case StyleImageRendering::CrispEdges:
-    case StyleImageRendering::Optimizespeed:
-    case StyleImageRendering::Pixelated:
       return SamplingFilter::POINT;
-    case StyleImageRendering::Auto:
-      return SamplingFilter::GOOD;
+    default:
+      return defaultFilter;
   }
-  MOZ_ASSERT_UNREACHABLE("Unknown image-rendering value");
-  return SamplingFilter::GOOD;
 }
 
 /**
