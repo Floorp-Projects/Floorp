@@ -200,6 +200,16 @@ function assert_malformed(thunk, message) {
   }
 }
 
+function assert_exception(thunk) {
+  let thrown = false;
+  try {
+    thunk();
+  } catch (err) {
+    thrown = true;
+  }
+  assertEq(thrown, true, "expected an exception to be thrown");
+}
+
 function assert_return(thunk, expected) {
   let results = thunk();
 
