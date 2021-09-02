@@ -383,9 +383,12 @@ Maybe<webrtc::AudioSendStream::Stats> WebrtcAudioConduit::GetSenderStats()
   return Some(mSendStream->GetStats());
 }
 
-webrtc::Call::Stats WebrtcAudioConduit::GetCallStats() const {
+Maybe<webrtc::Call::Stats> WebrtcAudioConduit::GetCallStats() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  return mCall->Call()->GetStats();
+  if (!mCall->Call()) {
+    return Nothing();
+  }
+  return Some(mCall->Call()->GetStats());
 }
 
 void WebrtcAudioConduit::OnRtcpBye() { mRtcpByeEvent.Notify(); }
