@@ -41,9 +41,9 @@ function assert(x, msg)
         return;
     debugger;
     if (msg)
-        throw "assertion failed: " + msg + "\n" + (Error().stack);
+        throw new Error("assertion failed: " + msg + "\n");
     else
-        throw "assertion failed: " + (Error().stack);
+        throw new Error("assertion failed");
 }
 
 function defined(x) {
