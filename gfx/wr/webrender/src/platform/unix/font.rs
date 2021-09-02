@@ -351,6 +351,8 @@ impl FontContext {
             let file = FontFile::Data(bytes);
             if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
                 self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
+            } else {
+                panic!("adding raw font failed");
             }
         }
     }
@@ -362,6 +364,8 @@ impl FontContext {
             let index = native_font_handle.index;
             if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
                 self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
+            } else {
+                panic!("adding native font failed");
             }
         }
     }
