@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.graphics.Color
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
@@ -118,7 +119,7 @@ class BrowserToolbarView(
                 display.colors = display.colors.copy(
                     text = primaryTextColor,
                     securityIconSecure = primaryTextColor,
-                    securityIconInsecure = primaryTextColor,
+                    securityIconInsecure = Color.TRANSPARENT,
                     menu = primaryTextColor,
                     hint = secondaryTextColor,
                     separator = separatorColor,
