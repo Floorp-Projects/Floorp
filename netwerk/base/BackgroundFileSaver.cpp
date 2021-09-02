@@ -10,6 +10,7 @@
 #include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMArray.h"
 #include "nsComponentManagerUtils.h"
@@ -512,6 +513,10 @@ nsresult BackgroundFileSaver::ProcessStateChange() {
     if (rv != NS_ERROR_FILE_NOT_FOUND) {
       NS_ENSURE_SUCCESS(rv, rv);
 
+      // Try to clean up the inputStream if an error occurs.
+      auto closeGuard =
+          mozilla::MakeScopeExit([&] { Unused << inputStream->Close(); });
+
       char buffer[BUFFERED_IO_SIZE];
       while (true) {
         uint32_t count;
@@ -523,11 +528,21 @@ nsresult BackgroundFileSaver::ProcessStateChange() {
           break;
         }
 
-        nsresult rv =
-            mDigest->Update(BitwiseCast<unsigned char*, char*>(buffer), count);
+        rv = mDigest->Update(BitwiseCast<unsigned char*, char*>(buffer), count);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        // The pending resume operation may have been cancelled by the control
+        // thread while the worker thread was reading in the existing file.
+        // Abort reading in the original file in that case, as the digest will
+        // be discarded anyway.
+        MutexAutoLock lock(mLock);
+        if (NS_FAILED(mStatus)) {
+          return NS_ERROR_ABORT;
+        }
       }
 
+      // Close explicitly to handle any errors.
+      closeGuard.release();
       rv = inputStream->Close();
       NS_ENSURE_SUCCESS(rv, rv);
     }
