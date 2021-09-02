@@ -63,8 +63,8 @@ WindowGlobalParent* WindowContext::Canonical() {
   return static_cast<WindowGlobalParent*>(this);
 }
 
-bool WindowContext::IsCached() const {
-  return mBrowsingContext->mCurrentWindowContext != this;
+bool WindowContext::IsCurrent() const {
+  return mBrowsingContext->mCurrentWindowContext == this;
 }
 
 nsGlobalWindowInner* WindowContext::GetInnerWindow() const {
@@ -117,7 +117,7 @@ void WindowContext::AppendChildBrowsingContext(
 
   // If we're the current WindowContext in our BrowsingContext, make sure to
   // clear any cached `children` value.
-  if (!IsCached()) {
+  if (IsCurrent()) {
     BrowsingContext_Binding::ClearCachedChildrenValue(mBrowsingContext);
   }
 }
@@ -131,7 +131,7 @@ void WindowContext::RemoveChildBrowsingContext(
 
   // If we're the current WindowContext in our BrowsingContext, make sure to
   // clear any cached `children` value.
-  if (!IsCached()) {
+  if (IsCurrent()) {
     BrowsingContext_Binding::ClearCachedChildrenValue(mBrowsingContext);
   }
 }
@@ -462,7 +462,7 @@ bool WindowContext::HasValidTransientUserGestureActivation() {
 
 bool WindowContext::ConsumeTransientUserGestureActivation() {
   MOZ_ASSERT(IsInProcess());
-  MOZ_ASSERT(!IsCached());
+  MOZ_ASSERT(IsCurrent());
 
   if (!HasValidTransientUserGestureActivation()) {
     return false;
