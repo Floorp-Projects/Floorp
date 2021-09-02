@@ -50,6 +50,11 @@ void RemoteAccessible::Help(nsString& aHelp) const {
 }
 
 void RemoteAccessible::Description(nsString& aDesc) const {
+  if (mCachedFields) {
+    RemoteAccessibleBase<RemoteAccessible>::Description(aDesc);
+    return;
+  }
+
   Unused << mDoc->SendDescription(mID, &aDesc);
 }
 
