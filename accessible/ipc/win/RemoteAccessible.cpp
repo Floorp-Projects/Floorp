@@ -180,6 +180,10 @@ double RemoteAccessible::Step() const {
 }
 
 void RemoteAccessible::Description(nsString& aDesc) const {
+  if (mCachedFields) {
+    return RemoteAccessibleBase<RemoteAccessible>::Description(aDesc);
+  }
+
   aDesc.Truncate();
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
