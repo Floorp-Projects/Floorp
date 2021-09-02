@@ -286,7 +286,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
         onAvailable,
         onUpdated,
       })
-      .then(() => tab.linkedBrowser.reload());
+      .then(() => reloadBrowser());
   });
 
   is(
