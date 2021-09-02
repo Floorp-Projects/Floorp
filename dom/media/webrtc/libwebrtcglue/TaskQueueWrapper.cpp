@@ -5,6 +5,9 @@
 
 #include "TaskQueueWrapper.h"
 
+#include "mozilla/media/MediaUtils.h"
+#include "MediaEventSource.h"
+
 namespace mozilla {
 namespace {
 class MainWorker {
