@@ -49,6 +49,11 @@ const TESTCASES = [
     expectedResult: true,
   },
   {
+    document: `<input id="targetElement" value="JOHN DOE">`,
+    fieldId: "targetElement",
+    expectedResult: true,
+  },
+  {
     document: `<select id="targetElement" autocomplete="off"></select>`,
     fieldId: "targetElement",
     expectedResult: true,

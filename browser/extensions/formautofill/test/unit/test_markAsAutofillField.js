@@ -50,6 +50,17 @@ const TESTCASES = [
     targetElementId: "street-addr",
     expectedResult: ["street-addr", "city", "country", "email", "tel"],
   },
+  {
+    description: "Form containing credit card autocomplete attributes.",
+    document: `<form>
+                <input id="cc-number" autocomplete="cc-number">
+                <input id="cc-name" autocomplete="cc-name">
+                <input id="cc-exp-month" autocomplete="cc-exp-month">
+                <input id="cc-exp-year" autocomplete="cc-exp-year">
+               </form>`,
+    targetElementId: "cc-number",
+    expectedResult: ["cc-number", "cc-name", "cc-exp-month", "cc-exp-year"],
+  },
 ];
 
 let markedFieldId = [];

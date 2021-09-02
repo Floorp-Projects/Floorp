@@ -123,6 +123,18 @@ async function checkFieldPreview(elem, expectedValue) {
   is(isTextColorApplied, !!expectedValue, `Checking #${elem.id} preview style`);
 }
 
+async function checkFormFieldsStyle(profile, isPreviewing = true) {
+  const elems = document.querySelectorAll("input, select");
+
+  for (const elem of elems) {
+    const fillableValue = profile && profile[elem.id];
+    const previewValue = (isPreviewing && fillableValue) || "";
+
+    await checkFieldHighlighted(elem, !!fillableValue);
+    await checkFieldPreview(elem, previewValue);
+  }
+}
+
 function checkFieldValue(elem, expectedValue) {
   if (typeof elem === "string") {
     elem = document.querySelector(elem);
