@@ -213,8 +213,10 @@ class TargetCommand extends EventEmitter {
 
     // To be consumed by tests triggering frame navigations, spawning workers...
     this.emitForTests("processed-available-target", targetFront);
+
+    // This event is used by tests using the production codepath (i.e. disabling flags.testing)
     if (isTargetSwitching) {
-      this.emitForTests("switched-target", targetFront);
+      this.emit("switched-target", targetFront);
     }
   }
 
