@@ -6681,6 +6681,8 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
     return false;  // no entry to save into
   }
 
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent(),
+             "mOSHE cannot be non-null with SHIP");
   nsCOMPtr<nsIContentViewer> viewer = mOSHE->GetContentViewer();
   if (viewer) {
     NS_WARNING("mOSHE already has a content viewer!");
@@ -6838,6 +6840,7 @@ void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
 };
 
 void nsDocShell::ReattachEditorToWindow(nsISHEntry* aSHEntry) {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
   MOZ_ASSERT(!mIsBeingDestroyed);
 
   NS_ASSERTION(!mEditorData,
@@ -6895,6 +6898,8 @@ void nsDocShell::DetachEditorFromWindow() {
 }
 
 nsresult nsDocShell::CaptureState() {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
+
   if (!mOSHE || mOSHE == mLSHE) {
     // No entry to save into, or we're replacing the existing entry.
     return NS_ERROR_FAILURE;
@@ -6909,12 +6914,7 @@ nsresult nsDocShell::CaptureState() {
 
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(gPageCacheLog, LogLevel::Debug))) {
     nsAutoCString spec;
-    nsCOMPtr<nsIURI> uri;
-    if (mozilla::SessionHistoryInParent()) {
-      uri = mActiveEntry->GetURI();
-    } else {
-      uri = mOSHE->GetURI();
-    }
+    nsCOMPtr<nsIURI> uri = mOSHE->GetURI();
     if (uri) {
       uri->GetSpec(spec);
     }
@@ -6950,6 +6950,8 @@ nsresult nsDocShell::CaptureState() {
 
 NS_IMETHODIMP
 nsDocShell::RestorePresentationEvent::Run() {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
+
   if (mDocShell && NS_FAILED(mDocShell->RestoreFromHistory())) {
     NS_WARNING("RestoreFromHistory failed");
   }
@@ -6958,6 +6960,8 @@ nsDocShell::RestorePresentationEvent::Run() {
 
 NS_IMETHODIMP
 nsDocShell::BeginRestore(nsIContentViewer* aContentViewer, bool aTop) {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
+
   nsresult rv;
   if (!aContentViewer) {
     rv = EnsureContentViewer();
@@ -7001,6 +7005,8 @@ nsDocShell::BeginRestore(nsIContentViewer* aContentViewer, bool aTop) {
 }
 
 nsresult nsDocShell::BeginRestoreChildren() {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
+
   for (auto* childDocLoader : mChildList.ForwardRange()) {
     nsCOMPtr<nsIDocShell> child = do_QueryObject(childDocLoader);
     if (child) {
@@ -7013,6 +7019,8 @@ nsresult nsDocShell::BeginRestoreChildren() {
 
 NS_IMETHODIMP
 nsDocShell::FinishRestore() {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
+
   // First we call finishRestore() on our children.  In the simulated load,
   // all of the child frames finish loading before the main document.
 
@@ -7052,6 +7060,7 @@ nsDocShell::GetRestoringDocument(bool* aRestoring) {
 
 nsresult nsDocShell::RestorePresentation(nsISHEntry* aSHEntry,
                                          bool* aRestoring) {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
   MOZ_ASSERT(!mIsBeingDestroyed);
 
   NS_ASSERTION(mLoadType & LOAD_CMD_HISTORY,
@@ -7149,6 +7158,7 @@ bool nsDocShell::SandboxFlagsImplyCookies(const uint32_t& aSandboxFlags) {
 }
 
 nsresult nsDocShell::RestoreFromHistory() {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
   MOZ_ASSERT(mRestorePresentationEvent.IsPending());
   PresentationEventForgetter forgetter(mRestorePresentationEvent);
 
@@ -7222,9 +7232,7 @@ nsresult nsDocShell::RestoreFromHistory() {
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (rootSH) {
     mPreviousEntryIndex = rootSH->Index();
-    if (!mozilla::SessionHistoryInParent()) {
-      rootSH->LegacySHistory()->UpdateIndex();
-    }
+    rootSH->LegacySHistory()->UpdateIndex();
     mLoadedEntryIndex = rootSH->Index();
     MOZ_LOG(gPageCacheLog, LogLevel::Verbose,
             ("Previous index: %d, Loaded index: %d", mPreviousEntryIndex,
