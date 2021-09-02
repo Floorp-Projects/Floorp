@@ -61,7 +61,6 @@ win32/debug:
             - linux64-liblowercase
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -116,7 +115,6 @@ win32/opt:
             - linux64-liblowercase
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -490,7 +488,6 @@ win32-shippable/opt:
             - linux64-liblowercase
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -600,7 +597,6 @@ win32-add-on-devel/opt:
             - linux64-liblowercase
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -756,7 +752,6 @@ win32-noopt/debug:
             - linux64-liblowercase
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -802,7 +797,6 @@ win32-rusttests/opt:
             - win64-node
             - win64-winchecksec
             - win64-mozmake
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -847,7 +841,6 @@ win32-rusttests/debug:
             - win64-node
             - win64-winchecksec
             - win64-mozmake
-            - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
 
@@ -1275,7 +1268,6 @@ win32-devedition/opt:
             - linux64-liblowercase
             - linux64-winchecksec
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
