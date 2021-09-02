@@ -68,7 +68,6 @@ class nsColumnSetFrame final : public nsContainerFrame {
   }
 #endif
 
-  nsRect CalculateColumnRuleBounds(const nsPoint& aOffset) const;
   void CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRenderers,
                              gfxContext* aCtx, const nsRect& aDirtyRect,
                              const nsPoint& aPt);
