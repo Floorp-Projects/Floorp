@@ -2579,7 +2579,6 @@ impl Renderer {
                     &projection,
                     Some(self.texture_resolver.get_texture_size(source).to_f32()),
                     &mut self.renderer_errors,
-                    &mut self.profile,
                 );
 
             self.draw_instanced_batch(
@@ -2608,8 +2607,7 @@ impl Renderer {
             &mut self.device,
             &projection,
             None,
-            &mut self.renderer_errors,
-            &mut self.profile,
+            &mut self.renderer_errors
         );
 
         self.draw_instanced_batch(
@@ -2668,7 +2666,6 @@ impl Renderer {
                         &projection,
                         None,
                         &mut self.renderer_errors,
-                        &mut self.profile,
                     );
                     self.draw_instanced_batch(
                         &[instance],
@@ -2750,7 +2747,6 @@ impl Renderer {
                         .bind(
                             &mut self.device, projection, None,
                             &mut self.renderer_errors,
-                            &mut self.profile,
                         );
 
                     let _timer = self.gpu_profiler.start_timer(batch.key.kind.sampler_tag());
@@ -2827,7 +2823,6 @@ impl Renderer {
                                 projection,
                                 None,
                                 &mut self.renderer_errors,
-                                &mut self.profile,
                             );
                             self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass0 as _);
                         }
@@ -2869,7 +2864,6 @@ impl Renderer {
                     projection,
                     None,
                     &mut self.renderer_errors,
-                    &mut self.profile,
                 );
 
                 self.draw_instanced_batch(
@@ -2887,7 +2881,6 @@ impl Renderer {
                         projection,
                         None,
                         &mut self.renderer_errors,
-                        &mut self.profile,
                     );
                     self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
 
@@ -2905,7 +2898,6 @@ impl Renderer {
                         projection,
                         None,
                         &mut self.renderer_errors,
-                        &mut self.profile,
                     );
                     self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
 
@@ -3000,8 +2992,7 @@ impl Renderer {
                             &mut self.device,
                             &projection,
                             None,
-                            &mut self.renderer_errors,
-                            &mut self.profile,
+                            &mut self.renderer_errors
                         );
 
                     let textures = BatchTextures::composite_yuv(
@@ -3047,8 +3038,7 @@ impl Renderer {
                             &mut self.device,
                             &projection,
                             None,
-                            &mut self.renderer_errors,
-                            &mut self.profile,
+                            &mut self.renderer_errors
                         );
 
                     let textures = BatchTextures::composite_rgb(plane.texture);
@@ -3110,8 +3100,7 @@ impl Renderer {
                 &mut self.device,
                 projection,
                 None,
-                &mut self.renderer_errors,
-                &mut self.profile,
+                &mut self.renderer_errors
             );
 
         for item in tiles_iter {
@@ -3272,8 +3261,7 @@ impl Renderer {
                         &mut self.device,
                         projection,
                         shader_params.3,
-                        &mut self.renderer_errors,
-                        &mut self.profile,
+                        &mut self.renderer_errors
                     );
 
                 current_shader_params = shader_params;
@@ -3540,7 +3528,7 @@ impl Renderer {
 
             self.set_blend(false, framebuffer_kind);
             self.shaders.borrow_mut().cs_blur_rgba8
-                .bind(&mut self.device, projection, None, &mut self.renderer_errors, &mut self.profile);
+                .bind(&mut self.device, projection, None, &mut self.renderer_errors);
 
             if !target.vertical_blurs.is_empty() {
                 self.draw_blurs(
@@ -3627,7 +3615,6 @@ impl Renderer {
                 projection,
                 None,
                 &mut self.renderer_errors,
-                &mut self.profile,
             );
             self.draw_instanced_batch(
                 &list.slow_rectangles,
@@ -3643,7 +3630,6 @@ impl Renderer {
                 projection,
                 None,
                 &mut self.renderer_errors,
-                &mut self.profile,
             );
             self.draw_instanced_batch(
                 &list.fast_rectangles,
@@ -3658,7 +3644,7 @@ impl Renderer {
             let _gm2 = self.gpu_profiler.start_marker("box-shadows");
             let textures = BatchTextures::composite_rgb(*mask_texture_id);
             self.shaders.borrow_mut().cs_clip_box_shadow
-                .bind(&mut self.device, projection, None, &mut self.renderer_errors, &mut self.profile);
+                .bind(&mut self.device, projection, None, &mut self.renderer_errors);
             self.draw_instanced_batch(
                 items,
                 VertexArrayKind::ClipBoxShadow,
@@ -3691,7 +3677,7 @@ impl Renderer {
             }
             let textures = BatchTextures::composite_rgb(*mask_texture_id);
             self.shaders.borrow_mut().cs_clip_image
-                .bind(&mut self.device, projection, None, &mut self.renderer_errors, &mut self.profile);
+                .bind(&mut self.device, projection, None, &mut self.renderer_errors);
             self.draw_instanced_batch(
                 items,
                 VertexArrayKind::ClipImage,
@@ -3776,7 +3762,6 @@ impl Renderer {
                     &projection,
                     None,
                     &mut self.renderer_errors,
-                    &mut self.profile,
                 );
                 self.draw_instanced_batch(
                     &instances,
@@ -3820,7 +3805,7 @@ impl Renderer {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_BLUR);
 
             self.shaders.borrow_mut().cs_blur_a8
-                .bind(&mut self.device, projection, None, &mut self.renderer_errors, &mut self.profile);
+                .bind(&mut self.device, projection, None, &mut self.renderer_errors);
 
             if !target.vertical_blurs.is_empty() {
                 self.draw_blurs(
@@ -3932,7 +3917,6 @@ impl Renderer {
                     &projection,
                     None,
                     &mut self.renderer_errors,
-                    &mut self.profile,
                 );
                 self.draw_instanced_batch(
                     &instances,
@@ -3973,7 +3957,6 @@ impl Renderer {
                     &projection,
                     None,
                     &mut self.renderer_errors,
-                    &mut self.profile,
                 );
 
                 self.draw_instanced_batch(
@@ -3990,7 +3973,6 @@ impl Renderer {
                     &projection,
                     None,
                     &mut self.renderer_errors,
-                    &mut self.profile,
                 );
 
                 self.draw_instanced_batch(
@@ -4016,7 +3998,6 @@ impl Renderer {
                 &projection,
                 None,
                 &mut self.renderer_errors,
-                &mut self.profile,
             );
 
             self.draw_instanced_batch(
@@ -4040,7 +4021,6 @@ impl Renderer {
                 &projection,
                 None,
                 &mut self.renderer_errors,
-                &mut self.profile,
             );
 
             self.draw_instanced_batch(
@@ -4062,7 +4042,6 @@ impl Renderer {
                 &projection,
                 None,
                 &mut self.renderer_errors,
-                &mut self.profile,
             );
 
             if let Some(ref texture) = self.dither_matrix_texture {
@@ -4088,7 +4067,6 @@ impl Renderer {
                 &projection,
                 None,
                 &mut self.renderer_errors,
-                &mut self.profile,
             );
 
             if let Some(ref texture) = self.dither_matrix_texture {
@@ -4114,7 +4092,6 @@ impl Renderer {
                 &projection,
                 None,
                 &mut self.renderer_errors,
-                &mut self.profile,
             );
 
             if let Some(ref texture) = self.dither_matrix_texture {
@@ -4138,7 +4115,7 @@ impl Renderer {
                 match target.target_kind {
                     RenderTargetKind::Alpha => &mut shaders.cs_blur_a8,
                     RenderTargetKind::Color => &mut shaders.cs_blur_rgba8,
-                }.bind(&mut self.device, &projection, None, &mut self.renderer_errors, &mut self.profile);
+                }.bind(&mut self.device, &projection, None, &mut self.renderer_errors);
             }
 
             self.draw_blurs(
