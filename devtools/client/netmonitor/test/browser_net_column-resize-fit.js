@@ -14,7 +14,7 @@ add_task(async function() {
     Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
   );
   // Init network monitor
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+  const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -23,7 +23,7 @@ add_task(async function() {
 
   // Wait for network events (to have some requests in the table)
   const wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   info("Testing column resize to fit using double-click on draggable resizer");

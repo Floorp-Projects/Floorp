@@ -50,7 +50,7 @@ add_task(async function() {
   // some requests. Page reload should auto-resume.
   EventUtils.sendMouseEvent({ type: "click" }, pauseButton);
   const networkEvents = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await networkEvents;
   assertRequestCount(store, 1);
 

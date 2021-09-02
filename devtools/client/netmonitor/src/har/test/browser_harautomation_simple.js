@@ -22,7 +22,7 @@ add_task(async function() {
     toolId: "inspector",
   });
 
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
 
   info("Wait until the HAR file is created in the profile directory");
   await waitUntil(() => FileUtils.getFile("ProfD", HAR_PATH).exists());

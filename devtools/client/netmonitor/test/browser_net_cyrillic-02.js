@@ -9,7 +9,7 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CYRILLIC_URL, {
+  const { monitor } = await initNetMonitor(CYRILLIC_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -23,7 +23,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   await wait;
 
   const requestItem = document.querySelectorAll(".request-list-item")[0];

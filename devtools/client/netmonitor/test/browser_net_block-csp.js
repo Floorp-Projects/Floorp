@@ -24,7 +24,7 @@ add_task(async function() {
 });
 
 async function testRequestsBlockedByCSP(baseUrl, page) {
-  const { tab, monitor } = await initNetMonitor(page, { requestCount: 3 });
+  const { monitor } = await initNetMonitor(page, { requestCount: 3 });
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -38,7 +38,7 @@ async function testRequestsBlockedByCSP(baseUrl, page) {
   store.dispatch(Actions.batchEnable(false));
 
   const wait = waitForNetworkEvents(monitor, 3);
-  tab.linkedBrowser.reload();
+  await reloadBrowser();
   info("Waiting until the requests appear in netmonitor");
   await wait;
 
