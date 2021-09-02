@@ -438,7 +438,8 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
     return result;
   }
 
-  auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
+  mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
+      nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
   wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
   if (aFlags & imgIContainer::FLAG_RECORD_BLOB) {
