@@ -171,18 +171,6 @@ ImageWrapper::IsImageContainerAvailable(LayerManager* aManager,
   return mInnerImage->IsImageContainerAvailable(aManager, aFlags);
 }
 
-NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
-ImageWrapper::GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) {
-  return mInnerImage->GetImageContainer(aRenderer, aFlags);
-}
-
-NS_IMETHODIMP_(bool)
-ImageWrapper::IsImageContainerAvailableAtSize(LayerManager* aManager,
-                                              const IntSize& aSize,
-                                              uint32_t aFlags) {
-  return mInnerImage->IsImageContainerAvailableAtSize(aManager, aSize, aFlags);
-}
-
 NS_IMETHODIMP_(ImgDrawResult)
 ImageWrapper::GetImageContainerAtSize(WindowRenderer* aRenderer,
                                       const gfx::IntSize& aSize,

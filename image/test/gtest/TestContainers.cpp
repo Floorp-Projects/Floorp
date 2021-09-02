@@ -55,15 +55,18 @@ TEST_F(ImageContainers, RasterImageContainer) {
   RefPtr<WindowRenderer> renderer = new FallbackRenderer;
 
   // Get at native size.
-  RefPtr<layers::ImageContainer> nativeContainer =
-      image->GetImageContainer(renderer, imgIContainer::FLAG_SYNC_DECODE);
+  ImgDrawResult drawResult;
+  RefPtr<layers::ImageContainer> nativeContainer;
+  drawResult = image->GetImageContainerAtSize(
+      renderer, testCase.mSize, Nothing(), Nothing(),
+      imgIContainer::FLAG_SYNC_DECODE, getter_AddRefs(nativeContainer));
+  EXPECT_EQ(drawResult, ImgDrawResult::SUCCESS);
   ASSERT_TRUE(nativeContainer != nullptr);
   IntSize containerSize = nativeContainer->GetCurrentSize();
   EXPECT_EQ(testCase.mSize.width, containerSize.width);
   EXPECT_EQ(testCase.mSize.height, containerSize.height);
 
   // Upscaling should give the native size.
-  ImgDrawResult drawResult;
   IntSize requestedSize = testCase.mSize;
   requestedSize.Scale(2, 2);
   RefPtr<layers::ImageContainer> upscaleContainer;

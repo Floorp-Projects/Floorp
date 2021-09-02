@@ -1064,12 +1064,6 @@ already_AddRefed<imgIContainer> nsImageRenderer::GetImage() {
   return do_AddRef(mImageContainer);
 }
 
-bool nsImageRenderer::IsImageContainerAvailable(layers::LayerManager* aManager,
-                                                uint32_t aFlags) {
-  return mImageContainer &&
-         mImageContainer->IsImageContainerAvailable(aManager, aFlags);
-}
-
 void nsImageRenderer::PurgeCacheForViewportChange(
     const Maybe<nsSize>& aSVGViewportSize, const bool aHasIntrinsicRatio) {
   // Check if we should flush the cached data - only vector images need to do

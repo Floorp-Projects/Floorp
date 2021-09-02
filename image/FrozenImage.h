@@ -44,12 +44,6 @@ class FrozenImage : public ImageWrapper {
   NS_IMETHOD_(bool)
   IsImageContainerAvailable(layers::LayerManager* aManager,
                             uint32_t aFlags) override;
-  NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
-  GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) override;
-  NS_IMETHOD_(bool)
-  IsImageContainerAvailableAtSize(layers::LayerManager* aManager,
-                                  const gfx::IntSize& aSize,
-                                  uint32_t aFlags) override;
   NS_IMETHOD_(ImgDrawResult)
   GetImageContainerAtSize(WindowRenderer* aRenderer, const gfx::IntSize& aSize,
                           const Maybe<SVGImageContext>& aSVGContext,
