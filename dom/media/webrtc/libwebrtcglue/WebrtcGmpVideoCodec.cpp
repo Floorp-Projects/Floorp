@@ -427,6 +427,7 @@ void WebrtcGmpVideoEncoder::ReleaseGmp_g(
 
 int32_t WebrtcGmpVideoEncoder::Shutdown() {
   GMP_LOG_DEBUG("GMP Released:");
+  RegisterEncodeCompleteCallback(nullptr);
   if (mGMPThread) {
     mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoEncoder::ReleaseGmp_g,
                                         RefPtr<WebrtcGmpVideoEncoder>(this)),
