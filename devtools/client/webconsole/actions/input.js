@@ -49,6 +49,12 @@ loader.lazyRequireGetter(
   "devtools/client/shared/screenshot",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "createSimpleTableMessage",
+  "devtools/client/webconsole/utils/messages",
+  true
+);
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
@@ -168,7 +174,7 @@ function onExpressionEvaluated(response) {
 
 function handleHelperResult(response) {
   // eslint-disable-next-line complexity
-  return async ({ dispatch, hud, toolbox, webConsoleUI }) => {
+  return async ({ dispatch, hud, toolbox, webConsoleUI, getState }) => {
     const { result, helperResult } = response;
     const helperHasRawOutput = !!helperResult?.rawOutput;
     const hasNetworkResourceCommandSupport = hud.resourceCommand.hasResourceCommandSupport(
@@ -187,6 +193,25 @@ function handleHelperResult(response) {
           break;
         case "clearHistory":
           dispatch(historyActions.clearHistory());
+          break;
+        case "historyOutput":
+          const history = getState().history.entries || [];
+          const columns = new Map([
+            ["_index", "(index)"],
+            ["expression", "Expressions"],
+          ]);
+          dispatch(
+            messagesActions.messagesAdd([
+              {
+                ...createSimpleTableMessage(
+                  columns,
+                  history.map((expression, index) => {
+                    return { _index: index, expression };
+                  })
+                ),
+              },
+            ])
+          );
           break;
         case "inspectObject": {
           const objectActor = helperResult.object;
