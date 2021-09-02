@@ -376,9 +376,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void DisplayLoadError(const nsAString& aURI);
 
-  // Determine if the current BrowsingContext is in the BFCache.
-  bool IsCached() const;
-
   // Check that this browsing context is targetable for navigations (i.e. that
   // it is neither closed, cached, nor discarded).
   bool IsTargetable() const;

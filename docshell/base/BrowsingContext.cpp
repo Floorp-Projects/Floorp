@@ -611,7 +611,7 @@ bool BrowsingContext::IsActive() const {
     if (explicit_ != ExplicitActiveStatus::None) {
       return explicit_ == ExplicitActiveStatus::Active;
     }
-    if (current->IsCached()) {
+    if (mParentWindow && !mParentWindow->IsCurrent()) {
       return false;
     }
   } while ((current = current->GetParent()));
@@ -936,12 +936,8 @@ void BrowsingContext::PrepareForProcessChange() {
   MOZ_ASSERT(!mWindowProxy);
 }
 
-bool BrowsingContext::IsCached() const {
-  return mParentWindow && mParentWindow->IsCached();
-}
-
 bool BrowsingContext::IsTargetable() const {
-  return !GetClosed() && !mIsDiscarded && !IsCached();
+  return !GetClosed() && AncestorsAreCurrent();
 }
 
 bool BrowsingContext::HasOpener() const {
@@ -956,7 +952,7 @@ bool BrowsingContext::AncestorsAreCurrent() const {
     }
 
     if (WindowContext* wc = bc->GetParentWindowContext()) {
-      if (wc->IsCached() || wc->IsDiscarded()) {
+      if (!wc->IsCurrent() || wc->IsDiscarded()) {
         return false;
       }
 
