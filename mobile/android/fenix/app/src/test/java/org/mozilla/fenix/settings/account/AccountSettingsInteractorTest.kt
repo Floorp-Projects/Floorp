@@ -25,7 +25,7 @@ class AccountSettingsInteractorTest {
         val interactor = AccountSettingsInteractor(
             mockk(),
             { ranSyncNow = true },
-            mockk(),
+            { false },
             mockk()
         )
 
@@ -42,7 +42,7 @@ class AccountSettingsInteractorTest {
 
         val interactor = AccountSettingsInteractor(
             mockk(),
-            mockk(),
+            { },
             { true },
             store
         )
@@ -61,7 +61,7 @@ class AccountSettingsInteractorTest {
 
         val interactor = AccountSettingsInteractor(
             mockk(),
-            mockk(),
+            { },
             { false },
             store
         )
@@ -79,8 +79,8 @@ class AccountSettingsInteractorTest {
 
         val interactor = AccountSettingsInteractor(
             navController,
-            mockk(),
-            mockk(),
+            { },
+            { false },
             mockk()
         )
 
