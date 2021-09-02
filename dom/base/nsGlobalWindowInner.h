@@ -56,6 +56,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsSize.h"
 #include "nsCheapSets.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
 #include "nsRefreshObservers.h"
@@ -884,11 +885,15 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                   mozilla::ErrorResult& aError);
 
   already_AddRefed<mozilla::dom::Promise> CreateImageBitmap(
-      const mozilla::dom::ImageBitmapSource& aImage, mozilla::ErrorResult& aRv);
+      const mozilla::dom::ImageBitmapSource& aImage,
+      const mozilla::dom::ImageBitmapOptions& aOptions,
+      mozilla::ErrorResult& aRv);
 
   already_AddRefed<mozilla::dom::Promise> CreateImageBitmap(
       const mozilla::dom::ImageBitmapSource& aImage, int32_t aSx, int32_t aSy,
-      int32_t aSw, int32_t aSh, mozilla::ErrorResult& aRv);
+      int32_t aSw, int32_t aSh,
+      const mozilla::dom::ImageBitmapOptions& aOptions,
+      mozilla::ErrorResult& aRv);
 
   // ChromeWindow bits.  Do NOT call these unless your window is in
   // fact chrome.
