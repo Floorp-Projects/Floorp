@@ -98,6 +98,8 @@ def make_dir(dirname, exist_ok=True):
 outroot = os.path.join(testdir, "out")
 make_dir(outroot)
 
+os.environ["HAZARD_RUN_INTERNAL_TESTS"] = "1"
+
 failed = set()
 for name in cfg.tests:
     name = os.path.basename(name)
