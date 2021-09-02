@@ -11,5 +11,6 @@ DevToolsModules(
     "EvaluationResult.js",
     "NetworkEventMessage.js",
     "PageError.js",
+    "SimpleTable.js",
     "WarningGroup.js",
 )

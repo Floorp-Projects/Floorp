@@ -522,6 +522,18 @@ function createWarningGroupMessage(id, type, firstMessage) {
   });
 }
 
+function createSimpleTableMessage(columns, items, timeStamp) {
+  return new ConsoleMessage({
+    allowRepeating: false,
+    level: MESSAGE_LEVEL.LOG,
+    source: MESSAGE_SOURCE.CONSOLE_FRONTEND,
+    type: MESSAGE_TYPE.SIMPLE_TABLE,
+    columns,
+    items,
+    timeStamp: timeStamp,
+  });
+}
+
 /**
  * Given the a regular warning message, compute the label of the warning group the message
  * could be in.
@@ -778,6 +790,7 @@ function isMessageNetworkError(message) {
 
 module.exports = {
   createWarningGroupMessage,
+  createSimpleTableMessage,
   getArrayTypeNames,
   getDescriptorValue,
   getInitialMessageCountForViewport,

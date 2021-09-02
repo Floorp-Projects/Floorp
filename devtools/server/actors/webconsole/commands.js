@@ -4,7 +4,7 @@
 
 "use strict";
 
-const validCommands = ["block", "help", "screenshot", "unblock"];
+const validCommands = ["block", "help", "history", "screenshot", "unblock"];
 
 const COMMAND = "command";
 const KEY = "key";

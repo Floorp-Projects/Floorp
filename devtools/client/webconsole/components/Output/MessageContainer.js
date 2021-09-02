@@ -53,6 +53,10 @@ const componentMap = new Map([
     require("devtools/client/webconsole/components/Output/message-types/PageError"),
   ],
   [
+    "SimpleTable",
+    require("devtools/client/webconsole/components/Output/message-types/SimpleTable"),
+  ],
+  [
     "WarningGroup",
     require("devtools/client/webconsole/components/Output/message-types/WarningGroup"),
   ],
@@ -135,6 +139,9 @@ function getMessageComponent(message) {
     case MESSAGE_SOURCE.CONSOLE_FRONTEND:
       if (isWarningGroup(message)) {
         return componentMap.get("WarningGroup");
+      }
+      if (message.type === MESSAGE_TYPE.SIMPLE_TABLE) {
+        return componentMap.get("SimpleTable");
       }
       break;
   }
