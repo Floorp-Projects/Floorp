@@ -1030,12 +1030,9 @@ MsaaAccessible::get_accDescription(VARIANT varChild,
   if (accessible) {
     return accessible->get_accDescription(kVarChildIdSelf, pszDescription);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
   nsAutoString description;
-  LocalAcc()->Description(description);
+  Acc()->Description(description);
 
   *pszDescription =
       ::SysAllocStringLen(description.get(), description.Length());
