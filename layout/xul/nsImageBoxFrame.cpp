@@ -583,16 +583,6 @@ void nsDisplayXULImage::ComputeInvalidationRegion(
                                                      aInvalidRegion);
 }
 
-bool nsDisplayXULImage::CanOptimizeToImageLayer(
-    LayerManager* aManager, nsDisplayListBuilder* aBuilder) {
-  nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
-  if (!imageFrame->CanOptimizeToImageLayer()) {
-    return false;
-  }
-
-  return nsDisplayImageContainer::CanOptimizeToImageLayer(aManager, aBuilder);
-}
-
 already_AddRefed<imgIContainer> nsDisplayXULImage::GetImage() {
   nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
   if (!imageFrame->mImageRequest) {

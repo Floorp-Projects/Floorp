@@ -324,22 +324,6 @@ interface imgIContainer : nsISupports
    */
   [noscript, notxpcom] boolean isImageContainerAvailable(in LayerManager aManager,
                                                          in uint32_t aFlags);
-  /**
-   * Attempts to create an ImageContainer (and Image) containing the current
-   * frame at its native size.
-   *
-   * Avoid calling this unless you're actually going to layerize this image.
-   *
-   * @param aRenderer The WindowRenderer which will be used to render the
-   *                  ImageContainer.
-   * @param aFlags Decoding / drawing flags (in other words, FLAG_* flags).
-   *               Currently only FLAG_SYNC_DECODE and FLAG_SYNC_DECODE_IF_FAST
-   *               are supported.
-   * @return An ImageContainer for the current frame, or nullptr if one could
-   *         not be created.
-   */
-  [noscript, notxpcom] TempRefImageContainer getImageContainer(in WindowRenderer aRenderer,
-                                                               in uint32_t aFlags);
 
   /**
    * Attempts to create an ImageContainer (and Image) containing the current
@@ -369,15 +353,6 @@ interface imgIContainer : nsISupports
                                                              [const] in MaybeImageIntRegion aRegion,
                                                              in uint32_t aFlags,
                                                              out ImageContainer aOutContainer);
-
-  /**
-   * @return true if getImageContainer() is expected to return a valid
-   *         ImageContainer when passed the given @Manager, @Size and @Flags
-   *         parameters.
-   */
-  [noscript, notxpcom] boolean isImageContainerAvailableAtSize(in LayerManager aManager,
-                                                               [const] in nsIntSize aSize,
-                                                               in uint32_t aFlags);
 
   /**
    * Draw the requested frame of this image onto the context specified.

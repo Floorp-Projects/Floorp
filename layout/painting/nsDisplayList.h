@@ -3792,17 +3792,6 @@ class nsDisplayImageContainer : public nsPaintedDisplayItem {
   nsDisplayImageContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : nsPaintedDisplayItem(aBuilder, aFrame) {}
 
-  /**
-   * @return true if this display item can be optimized into an image layer.
-   * It is an error to call GetContainer() unless you've called
-   * CanOptimizeToImageLayer() first and it returned true.
-   */
-  virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
-                                       nsDisplayListBuilder* aBuilder);
-
-  already_AddRefed<layers::ImageContainer> GetContainer(
-      LayerManager* aManager, nsDisplayListBuilder* aBuilder);
-
   virtual void UpdateDrawResult(image::ImgDrawResult aResult) = 0;
   virtual already_AddRefed<imgIContainer> GetImage() = 0;
   virtual nsRect GetDestRect() const = 0;
@@ -4341,8 +4330,6 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
                                  nsRegion* aInvalidRegion) const override;
-  bool CanOptimizeToImageLayer(LayerManager* aManager,
-                               nsDisplayListBuilder* aBuilder) override;
   already_AddRefed<imgIContainer> GetImage() override;
   nsRect GetDestRect() const override;
 

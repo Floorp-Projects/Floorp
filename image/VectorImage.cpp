@@ -826,24 +826,6 @@ VectorImage::IsImageContainerAvailable(LayerManager* aManager,
 }
 
 //******************************************************************************
-NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
-VectorImage::GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) {
-  MOZ_ASSERT(aRenderer->GetBackendType() != LayersBackend::LAYERS_WR,
-             "WebRender should always use GetImageContainerAvailableAtSize!");
-  return nullptr;
-}
-
-//******************************************************************************
-NS_IMETHODIMP_(bool)
-VectorImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
-                                             const IntSize& aSize,
-                                             uint32_t aFlags) {
-  // Since we only support image containers with WebRender, and it can handle
-  // textures larger than the hw max texture size, we don't need to check aSize.
-  return !aSize.IsEmpty() && IsImageContainerAvailable(aManager, aFlags);
-}
-
-//******************************************************************************
 NS_IMETHODIMP_(ImgDrawResult)
 VectorImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
                                      const gfx::IntSize& aSize,
