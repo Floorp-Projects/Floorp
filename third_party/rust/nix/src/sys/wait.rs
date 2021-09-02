@@ -55,7 +55,7 @@ libc_bitflags!(
 /// Note that there are two Linux-specific enum variants, `PtraceEvent`
 /// and `PtraceSyscall`. Portable code should avoid exhaustively
 /// matching on `WaitStatus`.
-#[derive(Eq, PartialEq, Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum WaitStatus {
     /// The process exited normally (as with `exit()` or returning from
     /// `main`) with the given exit code. This case matches the C macro

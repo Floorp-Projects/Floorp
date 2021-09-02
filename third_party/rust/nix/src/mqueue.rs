@@ -29,20 +29,9 @@ libc_bitflags!{
 }
 
 #[repr(C)]
-#[derive(Clone, Copy)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct MqAttr {
     mq_attr: libc::mq_attr,
-}
-
-impl PartialEq<MqAttr> for MqAttr {
-    fn eq(&self, other: &MqAttr) -> bool {
-        let self_attr = self.mq_attr;
-        let other_attr = other.mq_attr;
-        self_attr.mq_flags == other_attr.mq_flags && self_attr.mq_maxmsg == other_attr.mq_maxmsg &&
-        self_attr.mq_msgsize == other_attr.mq_msgsize &&
-        self_attr.mq_curmsgs == other_attr.mq_curmsgs
-    }
 }
 
 impl MqAttr {

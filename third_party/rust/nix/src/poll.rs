@@ -4,7 +4,6 @@ use sys::time::TimeSpec;
 #[cfg(any(target_os = "android", target_os = "dragonfly", target_os = "freebsd", target_os = "linux"))]
 use sys::signal::SigSet;
 use std::os::unix::io::RawFd;
-use std::fmt;
 
 use libc;
 use Result;
@@ -19,7 +18,7 @@ use errno::Errno;
 /// After a call to `poll` or `ppoll`, the events that occured can be
 /// retrieved by calling [`revents()`](#method.revents) on the `PollFd`.
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct PollFd {
     pollfd: libc::pollfd,
 }
@@ -27,42 +26,25 @@ pub struct PollFd {
 impl PollFd {
     /// Creates a new `PollFd` specifying the events of interest
     /// for a given file descriptor.
-    pub fn new(fd: RawFd, events: EventFlags) -> PollFd {
+    pub fn new(fd: RawFd, events: PollFlags) -> PollFd {
         PollFd {
             pollfd: libc::pollfd {
                 fd: fd,
                 events: events.bits(),
-                revents: EventFlags::empty().bits(),
+                revents: PollFlags::empty().bits(),
             },
         }
     }
 
     /// Returns the events that occured in the last call to `poll` or `ppoll`.
-    pub fn revents(&self) -> Option<EventFlags> {
-        EventFlags::from_bits(self.pollfd.revents)
-    }
-}
-
-impl fmt::Debug for PollFd {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let pfd = self.pollfd;
-        let mut ds = f.debug_struct("PollFd");
-        ds.field("fd", &pfd.fd);
-        match EventFlags::from_bits(pfd.events) {
-            None => ds.field("events", &pfd.events),
-            Some(ef) => ds.field("events", &ef),
-        };
-        match EventFlags::from_bits(pfd.revents) {
-            None => ds.field("revents", &pfd.revents),
-            Some(ef) => ds.field("revents", &ef),
-        };
-        ds.finish()
+    pub fn revents(&self) -> Option<PollFlags> {
+        PollFlags::from_bits(self.pollfd.revents)
     }
 }
 
 libc_bitflags! {
     /// These flags define the different events that can be monitored by `poll` and `ppoll`
-    pub struct EventFlags: libc::c_short {
+    pub struct PollFlags: libc::c_short {
         /// There is data to read.
         POLLIN;
         /// There is some exceptional condition on the file descriptor.

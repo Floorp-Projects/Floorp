@@ -173,7 +173,7 @@ macro_rules! sockopt_impl {
     };
 
     (GetOnly, $name:ident, $level:path, $flag:path, $ty:ty, $getter:ty) => {
-        #[derive(Copy, Clone, Debug)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         pub struct $name;
 
         getsockopt_impl!($name, $level, $flag, $ty, $getter);
@@ -184,14 +184,14 @@ macro_rules! sockopt_impl {
     };
 
     (SetOnly, $name:ident, $level:path, $flag:path, $ty:ty, $setter:ty) => {
-        #[derive(Copy, Clone, Debug)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         pub struct $name;
 
         setsockopt_impl!($name, $level, $flag, $ty, $setter);
     };
 
     (Both, $name:ident, $level:path, $flag:path, $ty:ty, $getter:ty, $setter:ty) => {
-        #[derive(Copy, Clone, Debug)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         pub struct $name;
 
         setsockopt_impl!($name, $level, $flag, $ty, $setter);
@@ -275,7 +275,8 @@ sockopt_impl!(Both, TcpCongestion, libc::IPPROTO_TCP, libc::TCP_CONGESTION, OsSt
     target_os = "android",
     target_os = "ios",
     target_os = "linux",
-    target_os = "macos"
+    target_os = "macos",
+    target_os = "netbsd",
 ))]
 sockopt_impl!(Both, Ipv4PacketInfo, libc::IPPROTO_IP, libc::IP_PKTINFO, bool);
 #[cfg(any(
@@ -283,10 +284,77 @@ sockopt_impl!(Both, Ipv4PacketInfo, libc::IPPROTO_IP, libc::IP_PKTINFO, bool);
     target_os = "freebsd",
     target_os = "ios",
     target_os = "linux",
-    target_os = "macos"
+    target_os = "macos",
+    target_os = "netbsd",
+    target_os = "openbsd",
 ))]
 sockopt_impl!(Both, Ipv6RecvPacketInfo, libc::IPPROTO_IPV6, libc::IPV6_RECVPKTINFO, bool);
+#[cfg(any(
+    target_os = "freebsd",
+    target_os = "ios",
+    target_os = "macos",
+    target_os = "netbsd",
+    target_os = "openbsd",
+))]
+sockopt_impl!(Both, Ipv4RecvIf, libc::IPPROTO_IP, libc::IP_RECVIF, bool);
+#[cfg(any(
+    target_os = "freebsd",
+    target_os = "ios",
+    target_os = "macos",
+    target_os = "netbsd",
+    target_os = "openbsd",
+))]
+sockopt_impl!(Both, Ipv4RecvDstAddr, libc::IPPROTO_IP, libc::IP_RECVDSTADDR, bool);
 
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+#[derive(Copy, Clone, Debug)]
+pub struct AlgSetAeadAuthSize;
+
+// ALG_SET_AEAD_AUTH_SIZE read the length from passed `option_len`
+// See https://elixir.bootlin.com/linux/v4.4/source/crypto/af_alg.c#L222
+#[cfg(any(target_os = "android", target_os = "linux"))]
+impl SetSockOpt for AlgSetAeadAuthSize {
+    type Val = usize;
+
+    fn set(&self, fd: RawFd, val: &usize) -> Result<()> {
+        unsafe {
+            let res = libc::setsockopt(fd,
+                                       libc::SOL_ALG,
+                                       libc::ALG_SET_AEAD_AUTHSIZE,
+                                       ::std::ptr::null(),
+                                       *val as libc::socklen_t);
+            Errno::result(res).map(drop)
+        }
+    }
+}
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+#[derive(Clone, Debug)]
+pub struct AlgSetKey<T>(::std::marker::PhantomData<T>);
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+impl<T> Default for AlgSetKey<T> {
+    fn default() -> Self {
+        AlgSetKey(Default::default())
+    }
+}
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+impl<T> SetSockOpt for AlgSetKey<T> where T: AsRef<[u8]> + Clone {
+    type Val = T;
+
+    fn set(&self, fd: RawFd, val: &T) -> Result<()> {
+        unsafe {
+            let res = libc::setsockopt(fd,
+                                       libc::SOL_ALG,
+                                       libc::ALG_SET_KEY,
+                                       val.as_ref().as_ptr() as *const _,
+                                       val.as_ref().len() as libc::socklen_t);
+            Errno::result(res).map(drop)
+        }
+    }
+}
 
 /*
  *
@@ -609,23 +677,4 @@ mod test {
         close(s).unwrap();
     }
 
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn is_so_mark_functional() {
-        use super::super::*;
-        use ::unistd::Uid;
-        use ::std::io::{self, Write};
-
-        if !Uid::current().is_root() {
-            let stderr = io::stderr();
-            let mut handle = stderr.lock();
-            writeln!(handle, "SO_MARK requires root privileges. Skipping test.").unwrap();
-            return;
-        }
-
-        let s = socket(AddressFamily::Inet, SockType::Stream, SockFlag::empty(), None).unwrap();
-        setsockopt(s, super::Mark, &1337).unwrap();
-        let mark = getsockopt(s, super::Mark).unwrap();
-        assert_eq!(mark, 1337);
-    }
 }

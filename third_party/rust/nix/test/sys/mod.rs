@@ -25,6 +25,8 @@ mod test_uio;
 
 #[cfg(target_os = "linux")]
 mod test_epoll;
+#[cfg(target_os = "linux")]
+mod test_inotify;
 mod test_pthread;
 #[cfg(any(target_os = "android",
           target_os = "dragonfly",

@@ -1,12 +1,14 @@
-use nix::fcntl::{fcntl, FcntlArg, FdFlag, open, OFlag, readlink};
+use nix::fcntl::{self, fcntl, FcntlArg, FdFlag, open, OFlag, readlink};
 use nix::unistd::*;
 use nix::unistd::ForkResult::*;
 use nix::sys::signal::{SaFlags, SigAction, SigHandler, SigSet, Signal, sigaction};
 use nix::sys::wait::*;
 use nix::sys::stat::{self, Mode, SFlag};
+use nix::errno::Errno;
+use nix::Error;
 use std::{env, iter};
 use std::ffi::CString;
-use std::fs::{self, File};
+use std::fs::{self, DirBuilder, File};
 use std::io::Write;
 use std::os::unix::prelude::*;
 use tempfile::{self, tempfile};
@@ -273,7 +275,7 @@ cfg_if!{
 #[test]
 fn test_fchdir() {
     // fchdir changes the process's cwd
-    let _m = ::CWD_MTX.lock().expect("Mutex got poisoned by another test");
+    let _dr = ::DirRestore::new();
 
     let tmpdir = tempfile::tempdir().unwrap();
     let tmpdir_path = tmpdir.path().canonicalize().unwrap();
@@ -288,7 +290,7 @@ fn test_fchdir() {
 #[test]
 fn test_getcwd() {
     // chdir changes the process's cwd
-    let _m = ::CWD_MTX.lock().expect("Mutex got poisoned by another test");
+    let _dr = ::DirRestore::new();
 
     let tmpdir = tempfile::tempdir().unwrap();
     let tmpdir_path = tmpdir.path().canonicalize().unwrap();
@@ -331,6 +333,7 @@ fn test_chown() {
 
 #[test]
 fn test_fchownat() {
+    let _dr = ::DirRestore::new();
     // Testing for anything other than our own UID/GID is hard.
     let uid = Some(getuid());
     let gid = Some(getgid());
@@ -386,28 +389,50 @@ fn test_lseek64() {
     close(tmpfd).unwrap();
 }
 
-// Skip on FreeBSD because FreeBSD's CI environment is jailed, and jails
-// aren't allowed to use acct(2)
-#[cfg(not(target_os = "freebsd"))]
+cfg_if!{
+    if #[cfg(any(target_os = "android", target_os = "linux"))] {
+        macro_rules! require_acct{
+            () => {
+                require_capability!(CAP_SYS_PACCT);
+            }
+        }
+    } else if #[cfg(target_os = "freebsd")] {
+        macro_rules! require_acct{
+            () => {
+                skip_if_not_root!("test_acct");
+                skip_if_jailed!("test_acct");
+            }
+        }
+    } else {
+        macro_rules! require_acct{
+            () => {
+                skip_if_not_root!("test_acct");
+            }
+        }
+    }
+}
+
 #[test]
 fn test_acct() {
     use tempfile::NamedTempFile;
     use std::process::Command;
     use std::{thread, time};
 
-    skip_if_not_root!("test_acct");
+    let _m = ::FORK_MTX.lock().expect("Mutex got poisoned by another test");
+    require_acct!();
+
     let file = NamedTempFile::new().unwrap();
     let path = file.path().to_str().unwrap();
 
     acct::enable(path).unwrap();
-    Command::new("echo").arg("Hello world");
-    acct::disable().unwrap();
 
     loop {
+        Command::new("echo").arg("Hello world");
         let len = fs::metadata(path).unwrap().len();
         if len > 0 { break; }
         thread::sleep(time::Duration::from_millis(10));
     }
+    acct::disable().unwrap();
 }
 
 #[test]
@@ -573,4 +598,72 @@ fn test_symlinkat() {
             .unwrap(),
         target
     );
+}
+
+
+#[test]
+fn test_unlinkat_dir_noremovedir() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let dirname = "foo_dir";
+    let dirpath = tempdir.path().join(dirname);
+
+    // Create dir
+    DirBuilder::new().recursive(true).create(&dirpath).unwrap();
+
+    // Get file descriptor for base directory
+    let dirfd = fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty()).unwrap();
+
+    // Attempt unlink dir at relative path without proper flag
+    let err_result = unlinkat(Some(dirfd), dirname, UnlinkatFlags::NoRemoveDir).unwrap_err();
+    assert!(err_result == Error::Sys(Errno::EISDIR) || err_result == Error::Sys(Errno::EPERM));
+ }
+
+#[test]
+fn test_unlinkat_dir_removedir() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let dirname = "foo_dir";
+    let dirpath = tempdir.path().join(dirname);
+
+    // Create dir
+    DirBuilder::new().recursive(true).create(&dirpath).unwrap();
+
+    // Get file descriptor for base directory
+    let dirfd = fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty()).unwrap();
+
+    // Attempt unlink dir at relative path with proper flag
+    unlinkat(Some(dirfd), dirname, UnlinkatFlags::RemoveDir).unwrap();
+    assert!(!dirpath.exists());
+ }
+
+#[test]
+fn test_unlinkat_file() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let filename = "foo.txt";
+    let filepath = tempdir.path().join(filename);
+
+    // Create file
+    File::create(&filepath).unwrap();
+
+    // Get file descriptor for base directory
+    let dirfd = fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty()).unwrap();
+
+    // Attempt unlink file at relative path
+    unlinkat(Some(dirfd), filename, UnlinkatFlags::NoRemoveDir).unwrap();
+    assert!(!filepath.exists());
+ }
+
+#[test]
+fn test_access_not_existing() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let dir = tempdir.path().join("does_not_exist.txt");
+    assert_eq!(access(&dir, AccessFlags::F_OK).err().unwrap().as_errno().unwrap(),
+               Errno::ENOENT);
+}
+
+#[test]
+fn test_access_file_exists() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let path  = tempdir.path().join("does_exist.txt");
+    let _file = File::create(path.clone()).unwrap();
+    assert!(access(&path, AccessFlags::R_OK | AccessFlags::W_OK).is_ok());
 }

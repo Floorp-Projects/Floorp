@@ -266,6 +266,35 @@ pub unsafe fn madvise(addr: *mut c_void, length: size_t, advise: MmapAdvise) -> 
     Errno::result(libc::madvise(addr, length, advise as i32)).map(drop)
 }
 
+/// Set protection of memory mapping.
+///
+/// See [`mprotect(3)`](http://pubs.opengroup.org/onlinepubs/9699919799/functions/mprotect.html) for
+/// details.
+///
+/// # Safety
+///
+/// Calls to `mprotect` are inherently unsafe, as changes to memory protections can lead to
+/// SIGSEGVs.
+///
+/// ```
+/// # use nix::libc::size_t;
+/// # use nix::sys::mman::{mmap, mprotect, MapFlags, ProtFlags};
+/// # use std::ptr;
+/// const ONE_K: size_t = 1024;
+/// let mut slice: &mut [u8] = unsafe {
+///     let mem = mmap(ptr::null_mut(), ONE_K, ProtFlags::PROT_NONE,
+///                    MapFlags::MAP_ANON | MapFlags::MAP_PRIVATE, -1, 0).unwrap();
+///     mprotect(mem, ONE_K, ProtFlags::PROT_READ | ProtFlags::PROT_WRITE).unwrap();
+///     std::slice::from_raw_parts_mut(mem as *mut u8, ONE_K)
+/// };
+/// assert_eq!(slice[0], 0x00);
+/// slice[0] = 0xFF;
+/// assert_eq!(slice[0], 0xFF);
+/// ```
+pub unsafe fn mprotect(addr: *mut c_void, length: size_t, prot: ProtFlags) -> Result<()> {
+    Errno::result(libc::mprotect(addr, length, prot.bits())).map(drop)
+}
+
 pub unsafe fn msync(addr: *mut c_void, length: size_t, flags: MsFlags) -> Result<()> {
     Errno::result(libc::msync(addr, length, flags.bits())).map(drop)
 }

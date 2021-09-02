@@ -360,7 +360,8 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(target_os = "linux", target_os = "android"))]
         EDQUOT          => "Quota exceeded",
 
-        #[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd", target_os = "dragonfly"))]
+        #[cfg(any(target_os = "linux", target_os = "android",
+                  target_os = "openbsd", target_os = "dragonfly"))]
         ENOMEDIUM       => "No medium found",
 
         #[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd"))]
@@ -408,70 +409,112 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(target_os = "freebsd")]
         ECAPMODE        => "Not permitted in capability mode",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         ENEEDAUTH       => "Need authenticator",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EOVERFLOW       => "Value too large to be stored in data type",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "netbsd"))]
         EILSEQ          => "Illegal byte sequence",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         ENOATTR         => "Attribute not found",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EBADMSG         => "Bad message",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EPROTO          => "Protocol error",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "ios"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "ios", target_os = "openbsd", ))]
         ENOTRECOVERABLE => "State not recoverable",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "ios"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "ios", target_os = "openbsd"))]
         EOWNERDEAD      => "Previous owner died",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         ENOTSUP         => "Operation not supported",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EPROCLIM        => "Too many processes",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EUSERS          => "Too many users",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EDQUOT          => "Disc quota exceeded",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         ESTALE          => "Stale NFS file handle",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EREMOTE         => "Too many levels of remote in path",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EBADRPC         => "RPC struct is bad",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         ERPCMISMATCH    => "RPC version wrong",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EPROGUNAVAIL    => "RPC prog. not avail",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EPROGMISMATCH   => "Program version wrong",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EPROCUNAVAIL    => "Bad procedure for program",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EFTYPE          => "Inappropriate file type or format",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         EAUTH           => "Authentication error",
 
-        #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly", target_os = "ios", target_os = "openbsd", target_os = "netbsd"))]
+        #[cfg(any(target_os = "macos", target_os = "freebsd",
+                  target_os = "dragonfly", target_os = "ios",
+                  target_os = "openbsd", target_os = "netbsd"))]
         ECANCELED       => "Operation canceled",
 
         #[cfg(any(target_os = "macos", target_os = "ios"))]
@@ -675,6 +718,7 @@ mod consts {
 
     pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
     pub const EDEADLOCK:   Errno = Errno::EDEADLK;
+    pub const ENOTSUP:     Errno = Errno::EOPNOTSUPP;
 
     pub fn from_i32(e: i32) -> Errno {
         use self::Errno::*;
@@ -1587,6 +1631,10 @@ mod consts {
         EIDRM           = libc::EIDRM,
         ENOMSG          = libc::ENOMSG,
         ENOTSUP         = libc::ENOTSUP,
+        EBADMSG         = libc::EBADMSG,
+        ENOTRECOVERABLE = libc::ENOTRECOVERABLE,
+        EOWNERDEAD      = libc::EOWNERDEAD,
+        EPROTO          = libc::EPROTO,
     }
 
     pub const ELAST: Errno       = Errno::ENOTSUP;
@@ -1689,6 +1737,10 @@ mod consts {
             libc::EIDRM => EIDRM,
             libc::ENOMSG => ENOMSG,
             libc::ENOTSUP => ENOTSUP,
+            libc::EBADMSG => EBADMSG,
+            libc::ENOTRECOVERABLE => ENOTRECOVERABLE,
+            libc::EOWNERDEAD => EOWNERDEAD,
+            libc::EPROTO => EPROTO,
             _   => UnknownErrno,
         }
     }

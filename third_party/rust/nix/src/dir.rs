@@ -3,7 +3,7 @@ use errno::Errno;
 use fcntl::{self, OFlag};
 use libc;
 use std::os::unix::io::{AsRawFd, IntoRawFd, RawFd};
-use std::{ffi, fmt, ptr};
+use std::{ffi, ptr};
 use sys;
 
 #[cfg(target_os = "linux")]
@@ -25,9 +25,9 @@ use libc::{dirent, readdir_r};
 ///    * returns entries for `.` (current directory) and `..` (parent directory).
 ///    * returns entries' names as a `CStr` (no allocation or conversion beyond whatever libc
 ///      does).
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Dir(
-    // This could be ptr::NonNull once nix requires Rust 1.25.
-    *mut libc::DIR
+    ptr::NonNull<libc::DIR>
 );
 
 impl Dir {
@@ -59,7 +59,8 @@ impl Dir {
             unsafe { libc::close(fd) };
             return Err(e);
         };
-        Ok(Dir(d))
+        // Always guaranteed to be non-null by the previous check
+        Ok(Dir(ptr::NonNull::new(d).unwrap()))
     }
 
     /// Returns an iterator of `Result<Entry>` which rewinds when finished.
@@ -78,25 +79,17 @@ unsafe impl Send for Dir {}
 
 impl AsRawFd for Dir {
     fn as_raw_fd(&self) -> RawFd {
-        unsafe { libc::dirfd(self.0) }
-    }
-}
-
-impl fmt::Debug for Dir {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Dir")
-            .field("fd", &self.as_raw_fd())
-            .finish()
+        unsafe { libc::dirfd(self.0.as_ptr()) }
     }
 }
 
 impl Drop for Dir {
     fn drop(&mut self) {
-        unsafe { libc::closedir(self.0) };
+        unsafe { libc::closedir(self.0.as_ptr()) };
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, Hash, PartialEq)]
 pub struct Iter<'d>(&'d mut Dir);
 
 impl<'d> Iterator for Iter<'d> {
@@ -111,7 +104,7 @@ impl<'d> Iterator for Iter<'d> {
             // Probably fine here too then.
             let mut ent: Entry = Entry(::std::mem::uninitialized());
             let mut result = ptr::null_mut();
-            if let Err(e) = Errno::result(readdir_r((self.0).0, &mut ent.0, &mut result)) {
+            if let Err(e) = Errno::result(readdir_r((self.0).0.as_ptr(), &mut ent.0, &mut result)) {
                 return Some(Err(e));
             }
             if result == ptr::null_mut() {
@@ -125,17 +118,17 @@ impl<'d> Iterator for Iter<'d> {
 
 impl<'d> Drop for Iter<'d> {
     fn drop(&mut self) {
-        unsafe { libc::rewinddir((self.0).0) }
+        unsafe { libc::rewinddir((self.0).0.as_ptr()) }
     }
 }
 
 /// A directory entry, similar to `std::fs::DirEntry`.
 ///
 /// Note that unlike the std version, this may represent the `.` or `..` entries.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Entry(dirent);
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Type {
     Fifo,
     CharacterDevice,
@@ -196,15 +189,5 @@ impl Entry {
             libc::DT_SOCK => Some(Type::Socket),
             /* libc::DT_UNKNOWN | */ _ => None,
         }
-    }
-}
-
-impl fmt::Debug for Entry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Entry")
-            .field("ino", &self.ino())
-            .field("file_name", &self.file_name())
-            .field("file_type", &self.file_type())
-            .finish()
     }
 }

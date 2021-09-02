@@ -265,8 +265,7 @@ const SIGNALS: [Signal; 31] = [
 
 pub const NSIG: libc::c_int = 32;
 
-#[derive(Clone, Copy)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct SignalIterator {
     next: usize,
 }
@@ -328,8 +327,7 @@ libc_enum! {
     }
 }
 
-#[derive(Clone, Copy)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct SigSet {
     sigset: libc::sigset_t
 }
@@ -427,7 +425,7 @@ impl AsRef<libc::sigset_t> for SigSet {
 
 /// A signal handler.
 #[allow(unknown_lints)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum SigHandler {
     /// Default signal handling.
     SigDfl,
@@ -441,8 +439,7 @@ pub enum SigHandler {
 }
 
 /// Action to take on receipt of a signal. Corresponds to `sigaction`.
-#[derive(Clone, Copy)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct SigAction {
     sigaction: libc::sigaction
 }
@@ -650,6 +647,22 @@ pub fn kill<T: Into<Option<Signal>>>(pid: ::unistd::Pid, signal: T) -> Result<()
     Errno::result(res).map(drop)
 }
 
+/// Send a signal to a process group [(see
+/// killpg(3))](http://pubs.opengroup.org/onlinepubs/9699919799/functions/killpg.html).
+///
+/// If `pgrp` less then or equal 1, the behavior is platform-specific.
+/// If `signal` is `None`, `killpg` will only preform error checking and won't
+/// send any signal.
+pub fn killpg<T: Into<Option<Signal>>>(pgrp: ::unistd::Pid, signal: T) -> Result<()> {
+    let res = unsafe { libc::killpg(pgrp.into(),
+                                  match signal.into() {
+                                      Some(s) => s as libc::c_int,
+                                      None => 0,
+                                  }) };
+
+    Errno::result(res).map(drop)
+}
+
 pub fn raise(signal: Signal) -> Result<()> {
     let res = unsafe { libc::raise(signal as libc::c_int) };
 
@@ -667,7 +680,7 @@ pub type type_of_thread_id = libc::pid_t;
 // sigval is actually a union of a int and a void*.  But it's never really used
 // as a pointer, because neither libc nor the kernel ever dereference it.  nix
 // therefore presents it as an intptr_t, which is how kevent uses it.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum SigevNotify {
     /// No notification will be delivered
     SigevNone,
@@ -694,7 +707,6 @@ mod sigevent {
     use libc;
     use std::mem;
     use std::ptr;
-    use std::fmt::{self, Debug};
     use super::SigevNotify;
     #[cfg(any(target_os = "freebsd", target_os = "linux"))]
     use super::type_of_thread_id;
@@ -702,7 +714,7 @@ mod sigevent {
     /// Used to request asynchronous notification of the completion of certain
     /// events, such as POSIX AIO and timers.
     #[repr(C)]
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     pub struct SigEvent {
         sigevent: libc::sigevent
     }
@@ -772,28 +784,6 @@ mod sigevent {
         }
     }
 
-    impl Debug for SigEvent {
-        #[cfg(any(target_os = "freebsd", target_os = "linux"))]
-        fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-            fmt.debug_struct("SigEvent")
-                .field("sigev_notify", &self.sigevent.sigev_notify)
-                .field("sigev_signo", &self.sigevent.sigev_signo)
-                .field("sigev_value", &self.sigevent.sigev_value.sival_ptr)
-                .field("sigev_notify_thread_id",
-                        &self.sigevent.sigev_notify_thread_id)
-                .finish()
-        }
-
-        #[cfg(not(any(target_os = "freebsd", target_os = "linux")))]
-        fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-            fmt.debug_struct("SigEvent")
-                .field("sigev_notify", &self.sigevent.sigev_notify)
-                .field("sigev_signo", &self.sigevent.sigev_signo)
-                .field("sigev_value", &self.sigevent.sigev_value.sival_ptr)
-                .finish()
-        }
-    }
-
     impl<'a> From<&'a libc::sigevent> for SigEvent {
         fn from(sigevent: &libc::sigevent) -> Self {
             SigEvent{ sigevent: *sigevent }
@@ -855,12 +845,6 @@ mod tests {
 
         assert!(two_signals.contains(SIGUSR1));
         assert!(two_signals.contains(SIGUSR2));
-    }
-
-    // This test doesn't actually test get_mask functionality, see the set_mask test for that.
-    #[test]
-    fn test_thread_signal_get_mask() {
-        assert!(SigSet::thread_get_mask().is_ok());
     }
 
     #[test]
@@ -967,8 +951,6 @@ mod tests {
         }).join().unwrap();
     }
 
-    // TODO(#251): Re-enable after figuring out flakiness.
-    #[cfg(not(any(target_os = "macos", target_os = "ios")))]
     #[test]
     fn test_sigwait() {
         thread::spawn(|| {

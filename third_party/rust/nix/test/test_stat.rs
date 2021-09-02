@@ -1,13 +1,15 @@
 use std::fs::{self, File};
-use std::os::unix::fs::symlink;
+use std::os::unix::fs::{symlink, PermissionsExt};
 use std::os::unix::prelude::AsRawFd;
 use std::time::{Duration, UNIX_EPOCH};
+use std::path::Path;
 
 #[cfg(not(any(target_os = "netbsd")))]
-use libc::{S_IFMT, S_IFLNK};
+use libc::{S_IFMT, S_IFLNK, mode_t};
 
-use nix::fcntl;
-use nix::sys::stat::{self, fchmod, fchmodat, futimens, stat, utimes, utimensat};
+use nix::{fcntl, Error};
+use nix::errno::{Errno};
+use nix::sys::stat::{self, fchmod, fchmodat, futimens, stat, utimes, utimensat, mkdirat};
 #[cfg(any(target_os = "linux",
           target_os = "haiku",
           target_os = "ios",
@@ -154,6 +156,7 @@ fn test_fchmod() {
 
 #[test]
 fn test_fchmodat() {
+    let _dr = ::DirRestore::new();
     let tempdir = tempfile::tempdir().unwrap();
     let filename = "foo.txt";
     let fullpath = tempdir.path().join(filename);
@@ -241,6 +244,7 @@ fn test_futimens() {
 
 #[test]
 fn test_utimensat() {
+    let _dr = ::DirRestore::new();
     let tempdir = tempfile::tempdir().unwrap();
     let filename = "foo.txt";
     let fullpath = tempdir.path().join(filename);
@@ -257,4 +261,36 @@ fn test_utimensat() {
     utimensat(None, filename, &TimeSpec::seconds(500), &TimeSpec::seconds(800),
               UtimensatFlags::FollowSymlink).unwrap();
     assert_times_eq(500, 800, &fs::metadata(&fullpath).unwrap());
+}
+
+#[test]
+fn test_mkdirat_success_path() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let filename = "example_subdir";
+    let dirfd = fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty()).unwrap();
+    assert!((mkdirat(dirfd, filename, Mode::S_IRWXU)).is_ok());
+    assert!(Path::exists(&tempdir.path().join(filename)));
+}
+
+#[test]
+fn test_mkdirat_success_mode() {
+    let expected_bits = stat::SFlag::S_IFDIR.bits() | stat::Mode::S_IRWXU.bits();
+    let tempdir = tempfile::tempdir().unwrap();
+    let filename = "example_subdir";
+    let dirfd = fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty()).unwrap();
+    assert!((mkdirat(dirfd, filename, Mode::S_IRWXU)).is_ok());
+    let permissions = fs::metadata(tempdir.path().join(filename)).unwrap().permissions();
+    let mode = permissions.mode();
+    assert_eq!(mode as mode_t, expected_bits)
+}
+
+#[test]
+fn test_mkdirat_fail() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let not_dir_filename= "example_not_dir";
+    let filename = "example_subdir_dir";
+    let dirfd = fcntl::open(&tempdir.path().join(not_dir_filename), fcntl::OFlag::O_CREAT,
+                            stat::Mode::empty()).unwrap();
+    let result = mkdirat(dirfd, filename, Mode::S_IRWXU).unwrap_err();
+    assert_eq!(result, Error::Sys(Errno::ENOTDIR));
 }

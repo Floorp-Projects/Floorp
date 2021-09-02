@@ -3,11 +3,12 @@ use std::path::Path;
 use std::os::unix::prelude::*;
 use tempfile::tempfile;
 
+use libc::{_exit, STDOUT_FILENO};
 use nix::fcntl::{OFlag, open};
 use nix::pty::*;
 use nix::sys::stat;
 use nix::sys::termios::*;
-use nix::unistd::{write, close};
+use nix::unistd::{write, close, pause};
 
 /// Regression test for Issue #659
 /// This is the correct way to explicitly close a `PtyMaster`
@@ -100,7 +101,7 @@ fn test_ptsname_unique() {
 /// this test we perform the basic act of getting a file handle for a connect master/slave PTTY
 /// pair.
 #[test]
-fn test_open_ptty_pair() {    
+fn test_open_ptty_pair() {
     let _m = ::PTSNAME_MTX.lock().expect("Mutex got poisoned by another test");
 
     // Open a new PTTY master
@@ -200,4 +201,35 @@ fn test_openpty_with_termios() {
 
     close(pty.master).unwrap();
     close(pty.slave).unwrap();
+}
+
+#[test]
+fn test_forkpty() {
+    use nix::unistd::ForkResult::*;
+    use nix::sys::signal::*;
+    use nix::sys::wait::wait;
+    // forkpty calls openpty which uses ptname(3) internally.
+    let _m0 = ::PTSNAME_MTX.lock().expect("Mutex got poisoned by another test");
+    // forkpty spawns a child process
+    let _m1 = ::FORK_MTX.lock().expect("Mutex got poisoned by another test");
+
+    let string = "naninani\n";
+    let echoed_string = "naninani\r\n";
+    let pty = forkpty(None, None).unwrap();
+    match pty.fork_result {
+        Child => {
+            write(STDOUT_FILENO, string.as_bytes()).unwrap();
+            pause();  // we need the child to stay alive until the parent calls read
+            unsafe { _exit(0); }
+        },
+        Parent { child } => {
+            let mut buf = [0u8; 10];
+            assert!(child.as_raw() > 0);
+            ::read_exact(pty.master, &mut buf);
+            kill(child, SIGTERM).unwrap();
+            wait().unwrap(); // keep other tests using generic wait from getting our child
+            assert_eq!(&buf, echoed_string.as_bytes());
+            close(pty.master).unwrap();
+        },
+    }
 }
