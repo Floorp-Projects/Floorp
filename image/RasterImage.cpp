@@ -647,42 +647,7 @@ Tuple<ImgDrawResult, IntSize> RasterImage::GetImageContainerSize(
 NS_IMETHODIMP_(bool)
 RasterImage::IsImageContainerAvailable(LayerManager* aManager,
                                        uint32_t aFlags) {
-  return IsImageContainerAvailableAtSize(aManager, mSize.ToUnknownSize(),
-                                         aFlags);
-}
-
-NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
-RasterImage::GetImageContainer(WindowRenderer* aRenderer, uint32_t aFlags) {
-  // Strip out unsupported flags for raster images.
-  uint32_t flags = aFlags & ~(FLAG_RECORD_BLOB);
-
-  RefPtr<ImageContainer> container;
-  ImgDrawResult drawResult =
-      GetImageContainerImpl(aRenderer, mSize.ToUnknownSize(), Nothing(),
-                            Nothing(), flags, getter_AddRefs(container));
-
-  // We silence the unused warning here because anything that needs the draw
-  // result should be using GetImageContainerAtSize, not GetImageContainer.
-  (void)drawResult;
-  return container.forget();
-}
-
-NS_IMETHODIMP_(bool)
-RasterImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
-                                             const IntSize& aRequestedSize,
-                                             uint32_t aFlags) {
-  // We check the minimum size because while we support downscaling, we do not
-  // support upscaling. If aRequestedSize > mSize, we will never give a larger
-  // surface than mSize. If mSize > aRequestedSize, and mSize > maxTextureSize,
-  // we still want to use image containers if aRequestedSize <= maxTextureSize.
-  int32_t maxTextureSize = aManager->GetMaxTextureSize();
-  if (!LoadHasSize() || aRequestedSize.IsEmpty() ||
-      min(mSize.width, aRequestedSize.width) > maxTextureSize ||
-      min(mSize.height, aRequestedSize.height) > maxTextureSize) {
-    return false;
-  }
-
-  return true;
+  return LoadHasSize();
 }
 
 NS_IMETHODIMP_(ImgDrawResult)

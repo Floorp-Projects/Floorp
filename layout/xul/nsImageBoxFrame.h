@@ -163,8 +163,6 @@ class nsDisplayXULImage final : public nsDisplayImageContainer {
   }
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayXULImage)
 
-  virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
-                                       nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<imgIContainer> GetImage() override;
   virtual nsRect GetDestRect() const override;
   virtual void UpdateDrawResult(

@@ -3612,29 +3612,6 @@ static bool RoundedRectContainsRect(const nsRect& aRoundedRect,
   return rgn.Contains(aContainedRect);
 }
 
-bool nsDisplayBackgroundImage::CanOptimizeToImageLayer(
-    LayerManager* aManager, nsDisplayListBuilder* aBuilder) {
-  if (!mBackgroundStyle) {
-    return false;
-  }
-
-  // We currently can't handle tiled backgrounds.
-  if (!mDestRect.Contains(mFillRect)) {
-    return false;
-  }
-
-  // For 'contain' and 'cover', we allow any pixel of the image to be sampled
-  // because there isn't going to be any spriting/atlasing going on.
-  const nsStyleImageLayers::Layer& layer =
-      mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
-  bool allowPartialImages = layer.mSize.IsContain() || layer.mSize.IsCover();
-  if (!allowPartialImages && !mFillRect.Contains(mDestRect)) {
-    return false;
-  }
-
-  return nsDisplayImageContainer::CanOptimizeToImageLayer(aManager, aBuilder);
-}
-
 nsRect nsDisplayBackgroundImage::GetDestRect() const { return mDestRect; }
 
 already_AddRefed<imgIContainer> nsDisplayBackgroundImage::GetImage() {
@@ -4111,79 +4088,6 @@ nsRect nsDisplayThemedBackground::GetBoundsInternal() {
       presContext->DeviceContext(), mFrame,
       mFrame->StyleDisplay()->EffectiveAppearance(), &r);
   return r + ToReferenceFrame();
-}
-
-already_AddRefed<ImageContainer> nsDisplayImageContainer::GetContainer(
-    LayerManager* aManager, nsDisplayListBuilder* aBuilder) {
-  nsCOMPtr<imgIContainer> image = GetImage();
-  if (!image) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Must call CanOptimizeToImage() and get true "
-        "before calling GetContainer()");
-    return nullptr;
-  }
-
-  uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
-  if (aBuilder->ShouldSyncDecodeImages()) {
-    flags |= imgIContainer::FLAG_SYNC_DECODE;
-  }
-
-  RefPtr<ImageContainer> container = image->GetImageContainer(aManager, flags);
-  if (!container || !container->HasCurrentImage()) {
-    return nullptr;
-  }
-
-  return container.forget();
-}
-
-bool nsDisplayImageContainer::CanOptimizeToImageLayer(
-    LayerManager* aManager, nsDisplayListBuilder* aBuilder) {
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                       ? imgIContainer::FLAG_SYNC_DECODE
-                       : imgIContainer::FLAG_NONE;
-
-  nsCOMPtr<imgIContainer> image = GetImage();
-  if (!image) {
-    return false;
-  }
-
-  if (!image->IsImageContainerAvailable(aManager, flags)) {
-    return false;
-  }
-
-  int32_t imageWidth;
-  int32_t imageHeight;
-  image->GetWidth(&imageWidth);
-  image->GetHeight(&imageHeight);
-
-  if (imageWidth == 0 || imageHeight == 0) {
-    NS_ASSERTION(false, "invalid image size");
-    return false;
-  }
-
-  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  const LayoutDeviceRect destRect(
-      LayoutDeviceIntRect::FromAppUnitsToNearest(GetDestRect(), factor));
-
-  // Calculate the scaling factor for the frame.
-  const gfxSize scale =
-      gfxSize(destRect.width / imageWidth, destRect.height / imageHeight);
-
-  if (scale.width < 0.34 || scale.height < 0.34) {
-    // This would look awful as long as we can't use high-quality downscaling
-    // for image layers (bug 803703), so don't turn this into an image layer.
-    return false;
-  }
-
-  if (mFrame->IsImageFrame() || mFrame->IsImageControlFrame()) {
-    // Image layer doesn't support draw focus ring for image map.
-    nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
-    if (f->HasImageMap()) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 #if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
