@@ -96,8 +96,7 @@ libc_bitflags!(
 /// Wrapper type for `if_dqblk`
 // FIXME: Change to repr(transparent)
 #[repr(C)]
-#[derive(Clone, Copy)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Dqblk(libc::dqblk);
 
 impl Default for Dqblk {

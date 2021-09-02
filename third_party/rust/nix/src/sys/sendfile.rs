@@ -38,7 +38,7 @@ cfg_if! {
                  target_os = "macos"))] {
         use sys::uio::IoVec;
 
-        #[allow(missing_debug_implementations)]
+        #[derive(Clone, Debug, Eq, Hash, PartialEq)]
         struct SendfileHeaderTrailer<'a>(
             libc::sf_hdtr,
             Option<Vec<IoVec<&'a [u8]>>>,

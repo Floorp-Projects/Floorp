@@ -3066,7 +3066,7 @@ dependencies = [
 [[package]]
 name = "minidump_writer_linux"
 version = "0.1.0"
-source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=85551909b95a5cf553a85dbcddfa5f117cfbbe0e#85551909b95a5cf553a85dbcddfa5f117cfbbe0e"
+source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=029ac0d54b237f27dc7d8d4e51bc0fb076e5e852#029ac0d54b237f27dc7d8d4e51bc0fb076e5e852"
 dependencies = [
  "byteorder",
  "goblin",
@@ -3438,8 +3438,9 @@ checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
 
 [[package]]
 name = "nix"
-version = "0.13.1"
-source = "git+https://github.com/shravanrn/nix/?rev=4af6c367603869a30fddb5ffb0aba2b9477ba92e#4af6c367603869a30fddb5ffb0aba2b9477ba92e"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b2e0b4f3320ed72aaedb9a5ac838690a8047c7b275da22711fddff4f8a14229"
 dependencies = [
  "bitflags",
  "cc",

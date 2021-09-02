@@ -176,8 +176,7 @@ use ::unistd::Pid;
 /// This is a wrapper around the `libc::termios` struct that provides a safe interface for the
 /// standard fields. The only safe way to obtain an instance of this struct is to extract it from
 /// an open port using `tcgetattr()`.
-#[derive(Clone)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Termios {
     inner: RefCell<libc::termios>,
     /// Input mode flags (see `termios.c_iflag` documentation)

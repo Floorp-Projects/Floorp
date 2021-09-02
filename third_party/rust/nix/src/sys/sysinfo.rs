@@ -6,8 +6,7 @@ use Result;
 use errno::Errno;
 
 /// System info structure returned by `sysinfo`.
-#[derive(Copy, Clone)]
-#[allow(missing_debug_implementations)] // libc::sysinfo doesn't impl Debug
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct SysInfo(libc::sysinfo);
 
 impl SysInfo {

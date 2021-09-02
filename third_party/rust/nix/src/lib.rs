@@ -8,12 +8,14 @@
 // latest bitflags triggers a rustc bug with cross-crate macro expansions causing dead_code
 // warnings even though the macro expands into something with allow(dead_code)
 #![allow(dead_code)]
-// #![cfg_attr(test, deny(warnings))]
+#![cfg_attr(test, deny(warnings))]
 #![recursion_limit = "500"]
 #![deny(unused)]
 #![deny(unstable_features)]
 #![deny(missing_copy_implementations)]
 #![deny(missing_debug_implementations)]
+// XXX Allow deprecated items until release 0.16.0.  See issue #1096.
+#![allow(deprecated)]
 
 // External crates
 #[macro_use]
@@ -35,7 +37,8 @@ pub mod errno;
 pub mod features;
 pub mod fcntl;
 #[deny(missing_docs)]
-#[cfg(any(target_os = "dragonfly",
+#[cfg(any(target_os = "android",
+          target_os = "dragonfly",
           target_os = "freebsd",
           target_os = "ios",
           target_os = "linux",
@@ -61,8 +64,6 @@ pub mod net;
 pub mod poll;
 #[deny(missing_docs)]
 pub mod pty;
-#[cfg(any(target_os = "android",
-          target_os = "linux"))]
 pub mod sched;
 pub mod sys;
 // This can be implemented for other platforms as soon as libc
@@ -97,7 +98,7 @@ pub type Result<T> = result::Result<T, Error>;
 /// error has a corresponding errno (usually the one from the
 /// underlying OS) to which it can be mapped in addition to
 /// implementing other common traits.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Error {
     Sys(Errno),
     InvalidPath,

@@ -57,8 +57,7 @@ libc_bitflags!(
 /// For more information see the [`statvfs(3)` man pages](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sys_statvfs.h.html).
 // FIXME: Replace with repr(transparent)
 #[repr(C)]
-#[derive(Clone, Copy)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Statvfs(libc::statvfs);
 
 impl Statvfs {
