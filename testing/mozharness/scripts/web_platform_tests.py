@@ -375,9 +375,26 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd.append("--timeout-multiplier=0.25")
 
         test_paths = set()
+        test_type_suite = {
+            "testharness": "web-platform-tests",
+            "crashtest": "web-platform-tests-crashtest",
+            "print-reftest": "web-platform-tests-print-reftest",
+            "reftest": "web-platform-tests-reftest",
+            "wdspec": "web-platform-tests-wdspec",
+        }
+        test_type_cfg = {}
+        all_test_suites = set()
+        for test_type in test_suites:
+            test_type_cfg[test_type] = {}
+            (
+                test_type_cfg[test_type]["try_options"],
+                test_type_cfg[test_type]["try_tests"],
+            ) = self.try_args(test_type_suite[test_type])
+            all_test_suites |= set(test_type_cfg[test_type]["try_tests"])
+
         if not (self.verify_enabled or self.per_test_coverage):
             mozharness_test_paths = json.loads(
-                os.environ.get("MOZHARNESS_TEST_PATHS", '""')
+                os.environ.get("MOZHARNESS_TEST_PATHS", '"{}"')
             )
             if mozharness_test_paths:
                 path = os.path.join(dirs["abs_fetches_dir"], "wpt_tests_by_group.json")
@@ -387,7 +404,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
                 cmd.append("--test-groups={}".format(path))
 
-                for key in mozharness_test_paths.keys():
+                for key in sorted(all_test_suites):
                     paths = mozharness_test_paths.get(key, [])
                     for path in paths:
                         if not path.startswith("/"):
@@ -418,23 +435,19 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd.append("--webdriver-binary=%s" % geckodriver_path)
             cmd.append("--webdriver-arg=-vv")  # enable trace logs
 
-        test_type_suite = {
-            "testharness": "web-platform-tests",
-            "crashtest": "web-platform-tests-crashtest",
-            "print-reftest": "web-platform-tests-print-reftest",
-            "reftest": "web-platform-tests-reftest",
-            "wdspec": "web-platform-tests-wdspec",
-        }
         for test_type in test_types:
-            try_options, try_tests = self.try_args(test_type_suite[test_type])
-
             cmd.extend(
                 self.query_options(
-                    options, try_options, str_format_values=str_format_values
+                    options,
+                    test_type_cfg[test_type]["try_options"],
+                    str_format_values=str_format_values,
                 )
             )
             cmd.extend(
-                self.query_tests_args(try_tests, str_format_values=str_format_values)
+                self.query_tests_args(
+                    test_type_cfg[test_type]["try_tests"],
+                    str_format_values=str_format_values,
+                )
             )
         if "include" in c and c["include"]:
             cmd.append("--include=%s" % c["include"])
