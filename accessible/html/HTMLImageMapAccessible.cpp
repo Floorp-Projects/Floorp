@@ -133,7 +133,7 @@ ENameValueFlag HTMLAreaAccessible::NativeName(nsString& aName) const {
   return eNameOK;
 }
 
-void HTMLAreaAccessible::Description(nsString& aDescription) {
+void HTMLAreaAccessible::Description(nsString& aDescription) const {
   aDescription.Truncate();
 
   // Still to do - follow IE's standard here

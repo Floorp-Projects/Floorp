@@ -161,7 +161,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Get the description of this accessible.
    */
-  virtual void Description(nsString& aDescription);
+  virtual void Description(nsString& aDescription) const;
 
   /**
    * Get the value of this accessible.
@@ -901,7 +901,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    * Return the accessible description provided by native markup. It doesn't
    * take into account ARIA markup used to specify the description.
    */
-  virtual void NativeDescription(nsString& aDescription);
+  void NativeDescription(nsString& aDescription) const;
 
   /**
    * Return object attributes provided by native markup. It doesn't take into
