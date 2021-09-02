@@ -957,8 +957,9 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           break;
         }
 #endif
+        case nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE:
         case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
-          SendCacheUpdate(CacheDomain::Name);
+          SendCacheUpdate(CacheDomain::NameAndDescription);
           ipcDoc->SendEvent(id, aEvent->GetEventType());
           break;
         }
@@ -3019,7 +3020,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     uint64_t aCacheDomain, CacheUpdateType aUpdateType) {
   RefPtr<AccAttributes> fields = new AccAttributes();
 
-  if (aCacheDomain & CacheDomain::Name) {
+  if (aCacheDomain & CacheDomain::NameAndDescription) {
     nsAutoString name;
     int32_t nameFlag = Name(name);
     if (nameFlag != eNameOK) {
@@ -3032,6 +3033,14 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(nsGkAtoms::name, name);
     } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(nsGkAtoms::name, DeleteEntry());
+    }
+
+    nsAutoString description;
+    Description(description);
+    if (!description.IsEmpty()) {
+      fields->SetAttribute(nsGkAtoms::description, description);
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::description, DeleteEntry());
     }
   }
 
