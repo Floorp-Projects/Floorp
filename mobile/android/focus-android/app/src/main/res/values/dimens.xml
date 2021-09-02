@@ -71,4 +71,8 @@
 
     <dimen name="search_suggestions_padding_start">56dp</dimen>
     <dimen name="search_suggestions_padding_with_icon">16dp</dimen>
+
+    <!-- Override the default menu width values from AC. -->
+    <dimen name="mozac_browser_menu_width_min" tools:ignore="UnusedResources">112dp</dimen>
+    <dimen name="mozac_browser_menu_width_max" tools:ignore="UnusedResources">314dp</dimen>
 </resources>
