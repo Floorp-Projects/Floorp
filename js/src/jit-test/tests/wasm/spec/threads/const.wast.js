@@ -1853,9 +1853,7 @@ let $201 = instantiate(
 );
 
 // ./test/core/const.wast:656
-assert_return(() => invoke($201, `f`, []), [
-  bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-]);
+assert_return(() => invoke($201, `f`, []), [value("f32", -0)]);
 
 // ./test/core/const.wast:657
 let $202 = instantiate(

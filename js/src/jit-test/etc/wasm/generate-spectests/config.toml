@@ -60,3 +60,16 @@ parent = "spec"
 # Skip in jit-test when it's not enabled
 directive = "; skip-if: !wasmSimdEnabled()"
 excluded_tests = []
+
+[[repos]]
+name = "exception-handling"
+url = "https://github.com/WebAssembly/exception-handling"
+branch = "master"
+parent = "spec"
+# Skip in jit-test when it's not enabled
+directive = "; --wasm-exceptions; skip-if: !wasmExceptionsEnabled()"
+excluded_tests = [
+  # This gets included due to divergence between the proposal repo and the
+  # upstream spec, it can be removed when the repo is rebased.
+  "global.wast"
+]

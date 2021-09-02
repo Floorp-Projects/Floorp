@@ -26,28 +26,19 @@ let $0 = instantiate(`(module
 )`);
 
 // ./test/core/f32_cmp.wast:13
-assert_return(
-  () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", -0), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:14
-assert_return(
-  () =>
-    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", -0), value("f32", 0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:15
-assert_return(
-  () =>
-    invoke($0, `eq`, [value("f32", 0), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", 0), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:16
 assert_return(() => invoke($0, `eq`, [value("f32", 0), value("f32", 0)]), [
@@ -58,7 +49,7 @@ assert_return(() => invoke($0, `eq`, [value("f32", 0), value("f32", 0)]), [
 assert_return(
   () =>
     invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 0)],
@@ -68,7 +59,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 0)],
@@ -98,7 +89,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 0)],
@@ -108,7 +99,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 0)],
@@ -135,18 +126,14 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:25
-assert_return(
-  () =>
-    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -0.5)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", -0), value("f32", -0.5)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:26
-assert_return(
-  () =>
-    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0.5)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", -0), value("f32", 0.5)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:27
 assert_return(() => invoke($0, `eq`, [value("f32", 0), value("f32", -0.5)]), [
@@ -159,18 +146,14 @@ assert_return(() => invoke($0, `eq`, [value("f32", 0), value("f32", 0.5)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:29
-assert_return(
-  () =>
-    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -1)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", -0), value("f32", -1)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:30
-assert_return(
-  () =>
-    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 1)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", -0), value("f32", 1)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:31
 assert_return(() => invoke($0, `eq`, [value("f32", 0), value("f32", -1)]), [
@@ -184,21 +167,13 @@ assert_return(() => invoke($0, `eq`, [value("f32", 0), value("f32", 1)]), [
 
 // ./test/core/f32_cmp.wast:33
 assert_return(
-  () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -6.2831855),
-    ]),
+  () => invoke($0, `eq`, [value("f32", -0), value("f32", -6.2831855)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:34
 assert_return(
-  () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 6.2831855),
-    ]),
+  () => invoke($0, `eq`, [value("f32", -0), value("f32", 6.2831855)]),
   [value("i32", 0)],
 );
 
@@ -218,7 +193,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -340282350000000000000000000000000000000),
     ]),
   [value("i32", 0)],
@@ -228,7 +203,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 340282350000000000000000000000000000000),
     ]),
   [value("i32", 0)],
@@ -256,21 +231,13 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:41
 assert_return(
-  () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -Infinity),
-    ]),
+  () => invoke($0, `eq`, [value("f32", -0), value("f32", -Infinity)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:42
 assert_return(
-  () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", Infinity),
-    ]),
+  () => invoke($0, `eq`, [value("f32", -0), value("f32", Infinity)]),
   [value("i32", 0)],
 );
 
@@ -289,40 +256,28 @@ assert_return(
 // ./test/core/f32_cmp.wast:45
 assert_return(
   () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-    ]),
+    invoke($0, `eq`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:46
 assert_return(
   () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-    ]),
+    invoke($0, `eq`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:47
 assert_return(
   () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+    invoke($0, `eq`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:48
 assert_return(
   () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-    ]),
+    invoke($0, `eq`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0x7f])]),
   [value("i32", 0)],
 );
 
@@ -359,7 +314,7 @@ assert_return(
   () =>
     invoke($0, `eq`, [
       value("f32", -0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -379,7 +334,7 @@ assert_return(
   () =>
     invoke($0, `eq`, [
       value("f32", 0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -759,7 +714,7 @@ assert_return(
   () =>
     invoke($0, `eq`, [
       value("f32", -0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -779,7 +734,7 @@ assert_return(
   () =>
     invoke($0, `eq`, [
       value("f32", 0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -1155,11 +1110,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:133
-assert_return(
-  () =>
-    invoke($0, `eq`, [value("f32", -0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", -0.5), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:134
 assert_return(() => invoke($0, `eq`, [value("f32", -0.5), value("f32", 0)]), [
@@ -1167,11 +1120,9 @@ assert_return(() => invoke($0, `eq`, [value("f32", -0.5), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:135
-assert_return(
-  () =>
-    invoke($0, `eq`, [value("f32", 0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", 0.5), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:136
 assert_return(() => invoke($0, `eq`, [value("f32", 0.5), value("f32", 0)]), [
@@ -1456,11 +1407,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:173
-assert_return(
-  () =>
-    invoke($0, `eq`, [value("f32", -1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", -1), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:174
 assert_return(() => invoke($0, `eq`, [value("f32", -1), value("f32", 0)]), [
@@ -1468,11 +1417,9 @@ assert_return(() => invoke($0, `eq`, [value("f32", -1), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:175
-assert_return(
-  () =>
-    invoke($0, `eq`, [value("f32", 1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `eq`, [value("f32", 1), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:176
 assert_return(() => invoke($0, `eq`, [value("f32", 1), value("f32", 0)]), [
@@ -1745,11 +1692,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:213
 assert_return(
-  () =>
-    invoke($0, `eq`, [
-      value("f32", -6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `eq`, [value("f32", -6.2831855), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -1761,11 +1704,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:215
 assert_return(
-  () =>
-    invoke($0, `eq`, [
-      value("f32", 6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `eq`, [value("f32", 6.2831855), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -2076,7 +2015,7 @@ assert_return(
   () =>
     invoke($0, `eq`, [
       value("f32", -340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -2096,7 +2035,7 @@ assert_return(
   () =>
     invoke($0, `eq`, [
       value("f32", 340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -2473,11 +2412,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:293
 assert_return(
-  () =>
-    invoke($0, `eq`, [
-      value("f32", -Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `eq`, [value("f32", -Infinity), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -2489,11 +2424,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:295
 assert_return(
-  () =>
-    invoke($0, `eq`, [
-      value("f32", Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `eq`, [value("f32", Infinity), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -2802,20 +2733,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:333
 assert_return(
   () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0xc0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:334
 assert_return(
   () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0xa0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -2836,20 +2761,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:337
 assert_return(
   () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:338
 assert_return(
   () =>
-    invoke($0, `eq`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `eq`, [bytes("f32", [0x0, 0x0, 0xa0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -3552,28 +3471,19 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:413
-assert_return(
-  () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", -0), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:414
-assert_return(
-  () =>
-    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", -0), value("f32", 0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:415
-assert_return(
-  () =>
-    invoke($0, `ne`, [value("f32", 0), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", 0), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:416
 assert_return(() => invoke($0, `ne`, [value("f32", 0), value("f32", 0)]), [
@@ -3584,7 +3494,7 @@ assert_return(() => invoke($0, `ne`, [value("f32", 0), value("f32", 0)]), [
 assert_return(
   () =>
     invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 1)],
@@ -3594,7 +3504,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 1)],
@@ -3624,7 +3534,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 1)],
@@ -3634,7 +3544,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 1)],
@@ -3661,18 +3571,14 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:425
-assert_return(
-  () =>
-    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -0.5)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", -0), value("f32", -0.5)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:426
-assert_return(
-  () =>
-    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0.5)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", -0), value("f32", 0.5)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:427
 assert_return(() => invoke($0, `ne`, [value("f32", 0), value("f32", -0.5)]), [
@@ -3685,18 +3591,14 @@ assert_return(() => invoke($0, `ne`, [value("f32", 0), value("f32", 0.5)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:429
-assert_return(
-  () =>
-    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -1)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", -0), value("f32", -1)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:430
-assert_return(
-  () =>
-    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 1)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", -0), value("f32", 1)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:431
 assert_return(() => invoke($0, `ne`, [value("f32", 0), value("f32", -1)]), [
@@ -3710,21 +3612,13 @@ assert_return(() => invoke($0, `ne`, [value("f32", 0), value("f32", 1)]), [
 
 // ./test/core/f32_cmp.wast:433
 assert_return(
-  () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -6.2831855),
-    ]),
+  () => invoke($0, `ne`, [value("f32", -0), value("f32", -6.2831855)]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:434
 assert_return(
-  () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 6.2831855),
-    ]),
+  () => invoke($0, `ne`, [value("f32", -0), value("f32", 6.2831855)]),
   [value("i32", 1)],
 );
 
@@ -3744,7 +3638,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -340282350000000000000000000000000000000),
     ]),
   [value("i32", 1)],
@@ -3754,7 +3648,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 340282350000000000000000000000000000000),
     ]),
   [value("i32", 1)],
@@ -3782,21 +3676,13 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:441
 assert_return(
-  () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -Infinity),
-    ]),
+  () => invoke($0, `ne`, [value("f32", -0), value("f32", -Infinity)]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:442
 assert_return(
-  () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", Infinity),
-    ]),
+  () => invoke($0, `ne`, [value("f32", -0), value("f32", Infinity)]),
   [value("i32", 1)],
 );
 
@@ -3815,40 +3701,28 @@ assert_return(
 // ./test/core/f32_cmp.wast:445
 assert_return(
   () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-    ]),
+    invoke($0, `ne`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0xff])]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:446
 assert_return(
   () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-    ]),
+    invoke($0, `ne`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0xff])]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:447
 assert_return(
   () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+    invoke($0, `ne`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:448
 assert_return(
   () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-    ]),
+    invoke($0, `ne`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0x7f])]),
   [value("i32", 1)],
 );
 
@@ -3885,7 +3759,7 @@ assert_return(
   () =>
     invoke($0, `ne`, [
       value("f32", -0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -3905,7 +3779,7 @@ assert_return(
   () =>
     invoke($0, `ne`, [
       value("f32", 0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -4285,7 +4159,7 @@ assert_return(
   () =>
     invoke($0, `ne`, [
       value("f32", -0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -4305,7 +4179,7 @@ assert_return(
   () =>
     invoke($0, `ne`, [
       value("f32", 0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -4681,11 +4555,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:533
-assert_return(
-  () =>
-    invoke($0, `ne`, [value("f32", -0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", -0.5), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:534
 assert_return(() => invoke($0, `ne`, [value("f32", -0.5), value("f32", 0)]), [
@@ -4693,11 +4565,9 @@ assert_return(() => invoke($0, `ne`, [value("f32", -0.5), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:535
-assert_return(
-  () =>
-    invoke($0, `ne`, [value("f32", 0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", 0.5), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:536
 assert_return(() => invoke($0, `ne`, [value("f32", 0.5), value("f32", 0)]), [
@@ -4982,11 +4852,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:573
-assert_return(
-  () =>
-    invoke($0, `ne`, [value("f32", -1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", -1), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:574
 assert_return(() => invoke($0, `ne`, [value("f32", -1), value("f32", 0)]), [
@@ -4994,11 +4862,9 @@ assert_return(() => invoke($0, `ne`, [value("f32", -1), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:575
-assert_return(
-  () =>
-    invoke($0, `ne`, [value("f32", 1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ne`, [value("f32", 1), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:576
 assert_return(() => invoke($0, `ne`, [value("f32", 1), value("f32", 0)]), [
@@ -5271,11 +5137,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:613
 assert_return(
-  () =>
-    invoke($0, `ne`, [
-      value("f32", -6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `ne`, [value("f32", -6.2831855), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -5287,11 +5149,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:615
 assert_return(
-  () =>
-    invoke($0, `ne`, [
-      value("f32", 6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `ne`, [value("f32", 6.2831855), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -5602,7 +5460,7 @@ assert_return(
   () =>
     invoke($0, `ne`, [
       value("f32", -340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -5622,7 +5480,7 @@ assert_return(
   () =>
     invoke($0, `ne`, [
       value("f32", 340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -5999,11 +5857,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:693
 assert_return(
-  () =>
-    invoke($0, `ne`, [
-      value("f32", -Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `ne`, [value("f32", -Infinity), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -6015,11 +5869,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:695
 assert_return(
-  () =>
-    invoke($0, `ne`, [
-      value("f32", Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `ne`, [value("f32", Infinity), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -6328,20 +6178,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:733
 assert_return(
   () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0xc0, 0xff]), value("f32", -0)]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:734
 assert_return(
   () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0xa0, 0xff]), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -6362,20 +6206,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:737
 assert_return(
   () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f]), value("f32", -0)]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:738
 assert_return(
   () =>
-    invoke($0, `ne`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `ne`, [bytes("f32", [0x0, 0x0, 0xa0, 0x7f]), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -7078,28 +6916,19 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:813
-assert_return(
-  () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", -0), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:814
-assert_return(
-  () =>
-    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", -0), value("f32", 0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:815
-assert_return(
-  () =>
-    invoke($0, `lt`, [value("f32", 0), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", 0), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:816
 assert_return(() => invoke($0, `lt`, [value("f32", 0), value("f32", 0)]), [
@@ -7110,7 +6939,7 @@ assert_return(() => invoke($0, `lt`, [value("f32", 0), value("f32", 0)]), [
 assert_return(
   () =>
     invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 0)],
@@ -7120,7 +6949,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 1)],
@@ -7150,7 +6979,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 0)],
@@ -7160,7 +6989,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 1)],
@@ -7187,18 +7016,14 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:825
-assert_return(
-  () =>
-    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -0.5)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", -0), value("f32", -0.5)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:826
-assert_return(
-  () =>
-    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0.5)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", -0), value("f32", 0.5)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:827
 assert_return(() => invoke($0, `lt`, [value("f32", 0), value("f32", -0.5)]), [
@@ -7211,18 +7036,14 @@ assert_return(() => invoke($0, `lt`, [value("f32", 0), value("f32", 0.5)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:829
-assert_return(
-  () =>
-    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -1)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", -0), value("f32", -1)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:830
-assert_return(
-  () =>
-    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 1)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", -0), value("f32", 1)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:831
 assert_return(() => invoke($0, `lt`, [value("f32", 0), value("f32", -1)]), [
@@ -7236,21 +7057,13 @@ assert_return(() => invoke($0, `lt`, [value("f32", 0), value("f32", 1)]), [
 
 // ./test/core/f32_cmp.wast:833
 assert_return(
-  () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -6.2831855),
-    ]),
+  () => invoke($0, `lt`, [value("f32", -0), value("f32", -6.2831855)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:834
 assert_return(
-  () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 6.2831855),
-    ]),
+  () => invoke($0, `lt`, [value("f32", -0), value("f32", 6.2831855)]),
   [value("i32", 1)],
 );
 
@@ -7270,7 +7083,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -340282350000000000000000000000000000000),
     ]),
   [value("i32", 0)],
@@ -7280,7 +7093,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 340282350000000000000000000000000000000),
     ]),
   [value("i32", 1)],
@@ -7308,21 +7121,13 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:841
 assert_return(
-  () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -Infinity),
-    ]),
+  () => invoke($0, `lt`, [value("f32", -0), value("f32", -Infinity)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:842
 assert_return(
-  () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", Infinity),
-    ]),
+  () => invoke($0, `lt`, [value("f32", -0), value("f32", Infinity)]),
   [value("i32", 1)],
 );
 
@@ -7341,40 +7146,28 @@ assert_return(
 // ./test/core/f32_cmp.wast:845
 assert_return(
   () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-    ]),
+    invoke($0, `lt`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:846
 assert_return(
   () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-    ]),
+    invoke($0, `lt`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:847
 assert_return(
   () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+    invoke($0, `lt`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:848
 assert_return(
   () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-    ]),
+    invoke($0, `lt`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0x7f])]),
   [value("i32", 0)],
 );
 
@@ -7411,7 +7204,7 @@ assert_return(
   () =>
     invoke($0, `lt`, [
       value("f32", -0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -7431,7 +7224,7 @@ assert_return(
   () =>
     invoke($0, `lt`, [
       value("f32", 0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -7811,7 +7604,7 @@ assert_return(
   () =>
     invoke($0, `lt`, [
       value("f32", -0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -7831,7 +7624,7 @@ assert_return(
   () =>
     invoke($0, `lt`, [
       value("f32", 0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -8207,11 +8000,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:933
-assert_return(
-  () =>
-    invoke($0, `lt`, [value("f32", -0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", -0.5), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:934
 assert_return(() => invoke($0, `lt`, [value("f32", -0.5), value("f32", 0)]), [
@@ -8219,11 +8010,9 @@ assert_return(() => invoke($0, `lt`, [value("f32", -0.5), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:935
-assert_return(
-  () =>
-    invoke($0, `lt`, [value("f32", 0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", 0.5), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:936
 assert_return(() => invoke($0, `lt`, [value("f32", 0.5), value("f32", 0)]), [
@@ -8508,11 +8297,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:973
-assert_return(
-  () =>
-    invoke($0, `lt`, [value("f32", -1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", -1), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:974
 assert_return(() => invoke($0, `lt`, [value("f32", -1), value("f32", 0)]), [
@@ -8520,11 +8307,9 @@ assert_return(() => invoke($0, `lt`, [value("f32", -1), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:975
-assert_return(
-  () =>
-    invoke($0, `lt`, [value("f32", 1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `lt`, [value("f32", 1), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:976
 assert_return(() => invoke($0, `lt`, [value("f32", 1), value("f32", 0)]), [
@@ -8797,11 +8582,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1013
 assert_return(
-  () =>
-    invoke($0, `lt`, [
-      value("f32", -6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `lt`, [value("f32", -6.2831855), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -8813,11 +8594,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1015
 assert_return(
-  () =>
-    invoke($0, `lt`, [
-      value("f32", 6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `lt`, [value("f32", 6.2831855), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -9128,7 +8905,7 @@ assert_return(
   () =>
     invoke($0, `lt`, [
       value("f32", -340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -9148,7 +8925,7 @@ assert_return(
   () =>
     invoke($0, `lt`, [
       value("f32", 340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -9525,11 +9302,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1093
 assert_return(
-  () =>
-    invoke($0, `lt`, [
-      value("f32", -Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `lt`, [value("f32", -Infinity), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -9541,11 +9314,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1095
 assert_return(
-  () =>
-    invoke($0, `lt`, [
-      value("f32", Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `lt`, [value("f32", Infinity), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -9854,20 +9623,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:1133
 assert_return(
   () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0xc0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1134
 assert_return(
   () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0xa0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -9888,20 +9651,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:1137
 assert_return(
   () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1138
 assert_return(
   () =>
-    invoke($0, `lt`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `lt`, [bytes("f32", [0x0, 0x0, 0xa0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -10604,28 +10361,19 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:1213
-assert_return(
-  () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", -0), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1214
-assert_return(
-  () =>
-    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", -0), value("f32", 0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1215
-assert_return(
-  () =>
-    invoke($0, `le`, [value("f32", 0), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", 0), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1216
 assert_return(() => invoke($0, `le`, [value("f32", 0), value("f32", 0)]), [
@@ -10636,7 +10384,7 @@ assert_return(() => invoke($0, `le`, [value("f32", 0), value("f32", 0)]), [
 assert_return(
   () =>
     invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 0)],
@@ -10646,7 +10394,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 1)],
@@ -10676,7 +10424,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 0)],
@@ -10686,7 +10434,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 1)],
@@ -10713,18 +10461,14 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:1225
-assert_return(
-  () =>
-    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -0.5)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", -0), value("f32", -0.5)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1226
-assert_return(
-  () =>
-    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0.5)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", -0), value("f32", 0.5)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1227
 assert_return(() => invoke($0, `le`, [value("f32", 0), value("f32", -0.5)]), [
@@ -10737,18 +10481,14 @@ assert_return(() => invoke($0, `le`, [value("f32", 0), value("f32", 0.5)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:1229
-assert_return(
-  () =>
-    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -1)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", -0), value("f32", -1)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1230
-assert_return(
-  () =>
-    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 1)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", -0), value("f32", 1)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1231
 assert_return(() => invoke($0, `le`, [value("f32", 0), value("f32", -1)]), [
@@ -10762,21 +10502,13 @@ assert_return(() => invoke($0, `le`, [value("f32", 0), value("f32", 1)]), [
 
 // ./test/core/f32_cmp.wast:1233
 assert_return(
-  () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -6.2831855),
-    ]),
+  () => invoke($0, `le`, [value("f32", -0), value("f32", -6.2831855)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1234
 assert_return(
-  () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 6.2831855),
-    ]),
+  () => invoke($0, `le`, [value("f32", -0), value("f32", 6.2831855)]),
   [value("i32", 1)],
 );
 
@@ -10796,7 +10528,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -340282350000000000000000000000000000000),
     ]),
   [value("i32", 0)],
@@ -10806,7 +10538,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 340282350000000000000000000000000000000),
     ]),
   [value("i32", 1)],
@@ -10834,21 +10566,13 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1241
 assert_return(
-  () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -Infinity),
-    ]),
+  () => invoke($0, `le`, [value("f32", -0), value("f32", -Infinity)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1242
 assert_return(
-  () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", Infinity),
-    ]),
+  () => invoke($0, `le`, [value("f32", -0), value("f32", Infinity)]),
   [value("i32", 1)],
 );
 
@@ -10867,40 +10591,28 @@ assert_return(
 // ./test/core/f32_cmp.wast:1245
 assert_return(
   () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-    ]),
+    invoke($0, `le`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1246
 assert_return(
   () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-    ]),
+    invoke($0, `le`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1247
 assert_return(
   () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+    invoke($0, `le`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1248
 assert_return(
   () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-    ]),
+    invoke($0, `le`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0x7f])]),
   [value("i32", 0)],
 );
 
@@ -10937,7 +10649,7 @@ assert_return(
   () =>
     invoke($0, `le`, [
       value("f32", -0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -10957,7 +10669,7 @@ assert_return(
   () =>
     invoke($0, `le`, [
       value("f32", 0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -11337,7 +11049,7 @@ assert_return(
   () =>
     invoke($0, `le`, [
       value("f32", -0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -11357,7 +11069,7 @@ assert_return(
   () =>
     invoke($0, `le`, [
       value("f32", 0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -11733,11 +11445,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:1333
-assert_return(
-  () =>
-    invoke($0, `le`, [value("f32", -0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", -0.5), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1334
 assert_return(() => invoke($0, `le`, [value("f32", -0.5), value("f32", 0)]), [
@@ -11745,11 +11455,9 @@ assert_return(() => invoke($0, `le`, [value("f32", -0.5), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:1335
-assert_return(
-  () =>
-    invoke($0, `le`, [value("f32", 0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", 0.5), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1336
 assert_return(() => invoke($0, `le`, [value("f32", 0.5), value("f32", 0)]), [
@@ -12034,11 +11742,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:1373
-assert_return(
-  () =>
-    invoke($0, `le`, [value("f32", -1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", -1), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1374
 assert_return(() => invoke($0, `le`, [value("f32", -1), value("f32", 0)]), [
@@ -12046,11 +11752,9 @@ assert_return(() => invoke($0, `le`, [value("f32", -1), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:1375
-assert_return(
-  () =>
-    invoke($0, `le`, [value("f32", 1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `le`, [value("f32", 1), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1376
 assert_return(() => invoke($0, `le`, [value("f32", 1), value("f32", 0)]), [
@@ -12323,11 +12027,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1413
 assert_return(
-  () =>
-    invoke($0, `le`, [
-      value("f32", -6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `le`, [value("f32", -6.2831855), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -12339,11 +12039,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1415
 assert_return(
-  () =>
-    invoke($0, `le`, [
-      value("f32", 6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `le`, [value("f32", 6.2831855), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -12654,7 +12350,7 @@ assert_return(
   () =>
     invoke($0, `le`, [
       value("f32", -340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -12674,7 +12370,7 @@ assert_return(
   () =>
     invoke($0, `le`, [
       value("f32", 340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -13051,11 +12747,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1493
 assert_return(
-  () =>
-    invoke($0, `le`, [
-      value("f32", -Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `le`, [value("f32", -Infinity), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -13067,11 +12759,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1495
 assert_return(
-  () =>
-    invoke($0, `le`, [
-      value("f32", Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `le`, [value("f32", Infinity), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -13380,20 +13068,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:1533
 assert_return(
   () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0xc0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1534
 assert_return(
   () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0xa0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -13414,20 +13096,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:1537
 assert_return(
   () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1538
 assert_return(
   () =>
-    invoke($0, `le`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `le`, [bytes("f32", [0x0, 0x0, 0xa0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -14130,28 +13806,19 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:1613
-assert_return(
-  () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", -0), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1614
-assert_return(
-  () =>
-    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", -0), value("f32", 0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1615
-assert_return(
-  () =>
-    invoke($0, `gt`, [value("f32", 0), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", 0), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1616
 assert_return(() => invoke($0, `gt`, [value("f32", 0), value("f32", 0)]), [
@@ -14162,7 +13829,7 @@ assert_return(() => invoke($0, `gt`, [value("f32", 0), value("f32", 0)]), [
 assert_return(
   () =>
     invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 1)],
@@ -14172,7 +13839,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 0)],
@@ -14202,7 +13869,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 1)],
@@ -14212,7 +13879,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 0)],
@@ -14239,18 +13906,14 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:1625
-assert_return(
-  () =>
-    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -0.5)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", -0), value("f32", -0.5)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1626
-assert_return(
-  () =>
-    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0.5)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", -0), value("f32", 0.5)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1627
 assert_return(() => invoke($0, `gt`, [value("f32", 0), value("f32", -0.5)]), [
@@ -14263,18 +13926,14 @@ assert_return(() => invoke($0, `gt`, [value("f32", 0), value("f32", 0.5)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:1629
-assert_return(
-  () =>
-    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -1)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", -0), value("f32", -1)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1630
-assert_return(
-  () =>
-    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 1)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", -0), value("f32", 1)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1631
 assert_return(() => invoke($0, `gt`, [value("f32", 0), value("f32", -1)]), [
@@ -14288,21 +13947,13 @@ assert_return(() => invoke($0, `gt`, [value("f32", 0), value("f32", 1)]), [
 
 // ./test/core/f32_cmp.wast:1633
 assert_return(
-  () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -6.2831855),
-    ]),
+  () => invoke($0, `gt`, [value("f32", -0), value("f32", -6.2831855)]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:1634
 assert_return(
-  () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 6.2831855),
-    ]),
+  () => invoke($0, `gt`, [value("f32", -0), value("f32", 6.2831855)]),
   [value("i32", 0)],
 );
 
@@ -14322,7 +13973,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -340282350000000000000000000000000000000),
     ]),
   [value("i32", 1)],
@@ -14332,7 +13983,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 340282350000000000000000000000000000000),
     ]),
   [value("i32", 0)],
@@ -14360,21 +14011,13 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1641
 assert_return(
-  () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -Infinity),
-    ]),
+  () => invoke($0, `gt`, [value("f32", -0), value("f32", -Infinity)]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:1642
 assert_return(
-  () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", Infinity),
-    ]),
+  () => invoke($0, `gt`, [value("f32", -0), value("f32", Infinity)]),
   [value("i32", 0)],
 );
 
@@ -14393,40 +14036,28 @@ assert_return(
 // ./test/core/f32_cmp.wast:1645
 assert_return(
   () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-    ]),
+    invoke($0, `gt`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1646
 assert_return(
   () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-    ]),
+    invoke($0, `gt`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1647
 assert_return(
   () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+    invoke($0, `gt`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1648
 assert_return(
   () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-    ]),
+    invoke($0, `gt`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0x7f])]),
   [value("i32", 0)],
 );
 
@@ -14463,7 +14094,7 @@ assert_return(
   () =>
     invoke($0, `gt`, [
       value("f32", -0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -14483,7 +14114,7 @@ assert_return(
   () =>
     invoke($0, `gt`, [
       value("f32", 0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -14863,7 +14494,7 @@ assert_return(
   () =>
     invoke($0, `gt`, [
       value("f32", -0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -14883,7 +14514,7 @@ assert_return(
   () =>
     invoke($0, `gt`, [
       value("f32", 0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -15259,11 +14890,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:1733
-assert_return(
-  () =>
-    invoke($0, `gt`, [value("f32", -0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", -0.5), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1734
 assert_return(() => invoke($0, `gt`, [value("f32", -0.5), value("f32", 0)]), [
@@ -15271,11 +14900,9 @@ assert_return(() => invoke($0, `gt`, [value("f32", -0.5), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:1735
-assert_return(
-  () =>
-    invoke($0, `gt`, [value("f32", 0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", 0.5), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1736
 assert_return(() => invoke($0, `gt`, [value("f32", 0.5), value("f32", 0)]), [
@@ -15560,11 +15187,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:1773
-assert_return(
-  () =>
-    invoke($0, `gt`, [value("f32", -1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", -1), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:1774
 assert_return(() => invoke($0, `gt`, [value("f32", -1), value("f32", 0)]), [
@@ -15572,11 +15197,9 @@ assert_return(() => invoke($0, `gt`, [value("f32", -1), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:1775
-assert_return(
-  () =>
-    invoke($0, `gt`, [value("f32", 1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `gt`, [value("f32", 1), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:1776
 assert_return(() => invoke($0, `gt`, [value("f32", 1), value("f32", 0)]), [
@@ -15849,11 +15472,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1813
 assert_return(
-  () =>
-    invoke($0, `gt`, [
-      value("f32", -6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `gt`, [value("f32", -6.2831855), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -15865,11 +15484,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1815
 assert_return(
-  () =>
-    invoke($0, `gt`, [
-      value("f32", 6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `gt`, [value("f32", 6.2831855), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -16180,7 +15795,7 @@ assert_return(
   () =>
     invoke($0, `gt`, [
       value("f32", -340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -16200,7 +15815,7 @@ assert_return(
   () =>
     invoke($0, `gt`, [
       value("f32", 340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -16577,11 +16192,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1893
 assert_return(
-  () =>
-    invoke($0, `gt`, [
-      value("f32", -Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `gt`, [value("f32", -Infinity), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -16593,11 +16204,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:1895
 assert_return(
-  () =>
-    invoke($0, `gt`, [
-      value("f32", Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `gt`, [value("f32", Infinity), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -16906,20 +16513,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:1933
 assert_return(
   () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0xc0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1934
 assert_return(
   () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0xa0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -16940,20 +16541,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:1937
 assert_return(
   () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:1938
 assert_return(
   () =>
-    invoke($0, `gt`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `gt`, [bytes("f32", [0x0, 0x0, 0xa0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -17656,28 +17251,19 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:2013
-assert_return(
-  () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", -0), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:2014
-assert_return(
-  () =>
-    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", -0), value("f32", 0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:2015
-assert_return(
-  () =>
-    invoke($0, `ge`, [value("f32", 0), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", 0), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:2016
 assert_return(() => invoke($0, `ge`, [value("f32", 0), value("f32", 0)]), [
@@ -17688,7 +17274,7 @@ assert_return(() => invoke($0, `ge`, [value("f32", 0), value("f32", 0)]), [
 assert_return(
   () =>
     invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 1)],
@@ -17698,7 +17284,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000000000001),
     ]),
   [value("i32", 0)],
@@ -17728,7 +17314,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 1)],
@@ -17738,7 +17324,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 0.000000000000000000000000000000000000011754944),
     ]),
   [value("i32", 0)],
@@ -17765,18 +17351,14 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:2025
-assert_return(
-  () =>
-    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -0.5)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", -0), value("f32", -0.5)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:2026
-assert_return(
-  () =>
-    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 0.5)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", -0), value("f32", 0.5)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:2027
 assert_return(() => invoke($0, `ge`, [value("f32", 0), value("f32", -0.5)]), [
@@ -17789,18 +17371,14 @@ assert_return(() => invoke($0, `ge`, [value("f32", 0), value("f32", 0.5)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:2029
-assert_return(
-  () =>
-    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", -1)]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", -0), value("f32", -1)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:2030
-assert_return(
-  () =>
-    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0x0, 0x80]), value("f32", 1)]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", -0), value("f32", 1)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:2031
 assert_return(() => invoke($0, `ge`, [value("f32", 0), value("f32", -1)]), [
@@ -17814,21 +17392,13 @@ assert_return(() => invoke($0, `ge`, [value("f32", 0), value("f32", 1)]), [
 
 // ./test/core/f32_cmp.wast:2033
 assert_return(
-  () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -6.2831855),
-    ]),
+  () => invoke($0, `ge`, [value("f32", -0), value("f32", -6.2831855)]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:2034
 assert_return(
-  () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", 6.2831855),
-    ]),
+  () => invoke($0, `ge`, [value("f32", -0), value("f32", 6.2831855)]),
   [value("i32", 0)],
 );
 
@@ -17848,7 +17418,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", -340282350000000000000000000000000000000),
     ]),
   [value("i32", 1)],
@@ -17858,7 +17428,7 @@ assert_return(
 assert_return(
   () =>
     invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
       value("f32", 340282350000000000000000000000000000000),
     ]),
   [value("i32", 0)],
@@ -17886,21 +17456,13 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:2041
 assert_return(
-  () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", -Infinity),
-    ]),
+  () => invoke($0, `ge`, [value("f32", -0), value("f32", -Infinity)]),
   [value("i32", 1)],
 );
 
 // ./test/core/f32_cmp.wast:2042
 assert_return(
-  () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      value("f32", Infinity),
-    ]),
+  () => invoke($0, `ge`, [value("f32", -0), value("f32", Infinity)]),
   [value("i32", 0)],
 );
 
@@ -17919,40 +17481,28 @@ assert_return(
 // ./test/core/f32_cmp.wast:2045
 assert_return(
   () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-    ]),
+    invoke($0, `ge`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:2046
 assert_return(
   () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-    ]),
+    invoke($0, `ge`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0xff])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:2047
 assert_return(
   () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+    invoke($0, `ge`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:2048
 assert_return(
   () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-    ]),
+    invoke($0, `ge`, [value("f32", -0), bytes("f32", [0x0, 0x0, 0xa0, 0x7f])]),
   [value("i32", 0)],
 );
 
@@ -17989,7 +17539,7 @@ assert_return(
   () =>
     invoke($0, `ge`, [
       value("f32", -0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -18009,7 +17559,7 @@ assert_return(
   () =>
     invoke($0, `ge`, [
       value("f32", 0.000000000000000000000000000000000000000000001),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -18389,7 +17939,7 @@ assert_return(
   () =>
     invoke($0, `ge`, [
       value("f32", -0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -18409,7 +17959,7 @@ assert_return(
   () =>
     invoke($0, `ge`, [
       value("f32", 0.000000000000000000000000000000000000011754944),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -18785,11 +18335,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:2133
-assert_return(
-  () =>
-    invoke($0, `ge`, [value("f32", -0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", -0.5), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:2134
 assert_return(() => invoke($0, `ge`, [value("f32", -0.5), value("f32", 0)]), [
@@ -18797,11 +18345,9 @@ assert_return(() => invoke($0, `ge`, [value("f32", -0.5), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:2135
-assert_return(
-  () =>
-    invoke($0, `ge`, [value("f32", 0.5), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", 0.5), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:2136
 assert_return(() => invoke($0, `ge`, [value("f32", 0.5), value("f32", 0)]), [
@@ -19086,11 +18632,9 @@ assert_return(
 );
 
 // ./test/core/f32_cmp.wast:2173
-assert_return(
-  () =>
-    invoke($0, `ge`, [value("f32", -1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", -1), value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/f32_cmp.wast:2174
 assert_return(() => invoke($0, `ge`, [value("f32", -1), value("f32", 0)]), [
@@ -19098,11 +18642,9 @@ assert_return(() => invoke($0, `ge`, [value("f32", -1), value("f32", 0)]), [
 ]);
 
 // ./test/core/f32_cmp.wast:2175
-assert_return(
-  () =>
-    invoke($0, `ge`, [value("f32", 1), bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 1)],
-);
+assert_return(() => invoke($0, `ge`, [value("f32", 1), value("f32", -0)]), [
+  value("i32", 1),
+]);
 
 // ./test/core/f32_cmp.wast:2176
 assert_return(() => invoke($0, `ge`, [value("f32", 1), value("f32", 0)]), [
@@ -19375,11 +18917,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:2213
 assert_return(
-  () =>
-    invoke($0, `ge`, [
-      value("f32", -6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `ge`, [value("f32", -6.2831855), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -19391,11 +18929,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:2215
 assert_return(
-  () =>
-    invoke($0, `ge`, [
-      value("f32", 6.2831855),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `ge`, [value("f32", 6.2831855), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -19706,7 +19240,7 @@ assert_return(
   () =>
     invoke($0, `ge`, [
       value("f32", -340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 0)],
 );
@@ -19726,7 +19260,7 @@ assert_return(
   () =>
     invoke($0, `ge`, [
       value("f32", 340282350000000000000000000000000000000),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
     ]),
   [value("i32", 1)],
 );
@@ -20103,11 +19637,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:2293
 assert_return(
-  () =>
-    invoke($0, `ge`, [
-      value("f32", -Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `ge`, [value("f32", -Infinity), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -20119,11 +19649,7 @@ assert_return(
 
 // ./test/core/f32_cmp.wast:2295
 assert_return(
-  () =>
-    invoke($0, `ge`, [
-      value("f32", Infinity),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($0, `ge`, [value("f32", Infinity), value("f32", -0)]),
   [value("i32", 1)],
 );
 
@@ -20432,20 +19958,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:2333
 assert_return(
   () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0xc0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:2334
 assert_return(
   () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0xff]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0xa0, 0xff]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
@@ -20466,20 +19986,14 @@ assert_return(
 // ./test/core/f32_cmp.wast:2337
 assert_return(
   () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 
 // ./test/core/f32_cmp.wast:2338
 assert_return(
   () =>
-    invoke($0, `ge`, [
-      bytes("f32", [0x0, 0x0, 0xa0, 0x7f]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+    invoke($0, `ge`, [bytes("f32", [0x0, 0x0, 0xa0, 0x7f]), value("f32", -0)]),
   [value("i32", 0)],
 );
 

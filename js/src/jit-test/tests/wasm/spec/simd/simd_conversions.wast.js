@@ -53,27 +53,7 @@ assert_return(
 
 // ./test/core/simd/simd_conversions.wast:37
 assert_return(
-  () =>
-    invoke($0, `f64x2.promote_low_f32x4`, [
-      bytes("v128", [
-        0x0,
-        0x0,
-        0x0,
-        0x80,
-        0x0,
-        0x0,
-        0x0,
-        0x80,
-        0x0,
-        0x0,
-        0x0,
-        0x80,
-        0x0,
-        0x0,
-        0x0,
-        0x80,
-      ]),
-    ]),
+  () => invoke($0, `f64x2.promote_low_f32x4`, [f32x4([-0, -0, -0, -0])]),
   [new F64x2Pattern(value("f64", -0), value("f64", -0))],
 );
 
@@ -350,8 +330,8 @@ assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [f64x2([0, 0])]), [
 // ./test/core/simd/simd_conversions.wast:75
 assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [f64x2([-0, -0])]), [
   new F32x4Pattern(
-    bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+    value("f32", -0),
+    value("f32", -0),
     value("f32", 0),
     value("f32", 0),
   ),
@@ -387,8 +367,8 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
+      value("f32", -0),
       value("f32", 0),
       value("f32", 0),
     ),
@@ -1207,8 +1187,8 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
+      value("f32", -0),
       value("f32", 0),
       value("f32", 0),
     ),
@@ -1245,8 +1225,8 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
+      value("f32", -0),
       value("f32", 0),
       value("f32", 0),
     ),

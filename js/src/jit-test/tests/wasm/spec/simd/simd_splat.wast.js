@@ -1694,11 +1694,7 @@ assert_return(() => invoke($2, `as-i32x4_eq-operands1`, [-1, -1]), [
 
 // ./test/core/simd/simd_splat.wast:333
 assert_return(
-  () =>
-    invoke($2, `as-f32x4_eq-operands`, [
-      value("f32", 0),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-    ]),
+  () => invoke($2, `as-f32x4_eq-operands`, [value("f32", 0), value("f32", -0)]),
   [i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff])],
 );
 
