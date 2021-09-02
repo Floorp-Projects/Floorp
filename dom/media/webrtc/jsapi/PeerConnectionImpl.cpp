@@ -2682,8 +2682,12 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             });
             constructCommonRemoteInboundRtpStats(remote, aTimestamp,
                                                  reportBlockData);
-            remote.mJitter.Construct(audioStats->jitter_ms / 1000.0);
-            remote.mPacketsLost.Construct(audioStats->packets_lost);
+            if (audioStats->jitter_ms >= 0) {
+              remote.mJitter.Construct(audioStats->jitter_ms / 1000.0);
+            }
+            if (audioStats->packets_lost >= 0) {
+              remote.mPacketsLost.Construct(audioStats->packets_lost);
+            }
             if (audioStats->rtt_ms >= 0) {
               remote.mRoundTripTime.Construct(audioStats->rtt_ms / 1000.0);
             }
