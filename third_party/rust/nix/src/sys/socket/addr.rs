@@ -2,12 +2,15 @@ use super::sa_family_t;
 use {Error, Result, NixPath};
 use errno::Errno;
 use libc;
-use std::{fmt, hash, mem, net, ptr, slice};
+use std::{fmt, mem, net, ptr, slice};
 use std::ffi::OsStr;
+use std::hash::{Hash, Hasher};
 use std::path::Path;
 use std::os::unix::ffi::OsStrExt;
 #[cfg(any(target_os = "android", target_os = "linux"))]
 use ::sys::socket::addr::netlink::NetlinkAddr;
+#[cfg(any(target_os = "android", target_os = "linux"))]
+use ::sys::socket::addr::alg::AlgAddr;
 #[cfg(any(target_os = "ios", target_os = "macos"))]
 use std::os::unix::io::RawFd;
 #[cfg(any(target_os = "ios", target_os = "macos"))]
@@ -21,6 +24,8 @@ use ::sys::socket::addr::sys_control::SysControlAddr;
           target_os = "netbsd",
           target_os = "openbsd"))]
 pub use self::datalink::LinkAddr;
+#[cfg(target_os = "linux")]
+pub use self::vsock::VsockAddr;
 
 /// These constants specify the protocol family to be used
 /// in [`socket`](fn.socket.html) and [`socketpair`](fn.socketpair.html)
@@ -238,12 +243,14 @@ impl AddressFamily {
                       target_os = "netbsd",
                       target_os = "openbsd"))]
             libc::AF_LINK => Some(AddressFamily::Link),
+            #[cfg(target_os = "linux")]
+            libc::AF_VSOCK => Some(AddressFamily::Vsock),
             _ => None
         }
     }
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum InetAddr {
     V4(libc::sockaddr_in),
     V6(libc::sockaddr_in6),
@@ -329,52 +336,6 @@ impl InetAddr {
     }
 }
 
-impl PartialEq for InetAddr {
-    fn eq(&self, other: &InetAddr) -> bool {
-        match (*self, *other) {
-            (InetAddr::V4(ref a), InetAddr::V4(ref b)) => {
-                a.sin_port == b.sin_port &&
-                    a.sin_addr.s_addr == b.sin_addr.s_addr
-            }
-            (InetAddr::V6(ref a), InetAddr::V6(ref b)) => {
-                a.sin6_port == b.sin6_port &&
-                    a.sin6_addr.s6_addr == b.sin6_addr.s6_addr &&
-                    a.sin6_flowinfo == b.sin6_flowinfo &&
-                    a.sin6_scope_id == b.sin6_scope_id
-            }
-            _ => false,
-        }
-    }
-}
-
-impl Eq for InetAddr {
-}
-
-impl hash::Hash for InetAddr {
-    fn hash<H: hash::Hasher>(&self, s: &mut H) {
-        match *self {
-            InetAddr::V4(ref a) => {
-                ( a.sin_family,
-                  a.sin_port,
-                  a.sin_addr.s_addr ).hash(s)
-            }
-            InetAddr::V6(ref a) => {
-                ( a.sin6_family,
-                  a.sin6_port,
-                  &a.sin6_addr.s6_addr,
-                  a.sin6_flowinfo,
-                  a.sin6_scope_id ).hash(s)
-            }
-        }
-    }
-}
-
-impl Clone for InetAddr {
-    fn clone(&self) -> InetAddr {
-        *self
-    }
-}
-
 impl fmt::Display for InetAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -384,18 +345,12 @@ impl fmt::Display for InetAddr {
     }
 }
 
-impl fmt::Debug for InetAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
-    }
-}
-
 /*
  *
  * ===== IpAddr =====
  *
  */
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum IpAddr {
     V4(Ipv4Addr),
     V6(Ipv6Addr),
@@ -416,20 +371,19 @@ impl IpAddr {
         IpAddr::V6(Ipv6Addr::new(a, b, c, d, e, f, g, h))
     }
 
-    /*
     pub fn from_std(std: &net::IpAddr) -> IpAddr {
         match *std {
             net::IpAddr::V4(ref std) => IpAddr::V4(Ipv4Addr::from_std(std)),
             net::IpAddr::V6(ref std) => IpAddr::V6(Ipv6Addr::from_std(std)),
         }
     }
+
     pub fn to_std(&self) -> net::IpAddr {
         match *self {
             IpAddr::V4(ref ip) => net::IpAddr::V4(ip.to_std()),
             IpAddr::V6(ref ip) => net::IpAddr::V6(ip.to_std()),
         }
     }
-    */
 }
 
 impl fmt::Display for IpAddr {
@@ -441,19 +395,13 @@ impl fmt::Display for IpAddr {
     }
 }
 
-impl fmt::Debug for IpAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
-    }
-}
-
 /*
  *
  * ===== Ipv4Addr =====
  *
  */
 
-#[derive(Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Ipv4Addr(pub libc::in_addr);
 
 impl Ipv4Addr {
@@ -486,38 +434,10 @@ impl Ipv4Addr {
     }
 }
 
-impl PartialEq for Ipv4Addr {
-    fn eq(&self, other: &Ipv4Addr) -> bool {
-        self.0.s_addr == other.0.s_addr
-    }
-}
-
-impl Eq for Ipv4Addr {
-}
-
-impl hash::Hash for Ipv4Addr {
-    fn hash<H: hash::Hasher>(&self, s: &mut H) {
-        let saddr = self.0.s_addr;
-        saddr.hash(s)
-    }
-}
-
-impl Clone for Ipv4Addr {
-    fn clone(&self) -> Ipv4Addr {
-        *self
-    }
-}
-
 impl fmt::Display for Ipv4Addr {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let octets = self.octets();
         write!(fmt, "{}.{}.{}.{}", octets[0], octets[1], octets[2], octets[3])
-    }
-}
-
-impl fmt::Debug for Ipv4Addr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
     }
 }
 
@@ -527,7 +447,7 @@ impl fmt::Debug for Ipv4Addr {
  *
  */
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Ipv6Addr(pub libc::in6_addr);
 
 // Note that IPv6 addresses are stored in big endian order on all architectures.
@@ -575,18 +495,6 @@ impl fmt::Display for Ipv6Addr {
     }
 }
 
-impl fmt::Debug for Ipv6Addr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
-    }
-}
-
-/*
- *
- * ===== UnixAddr =====
- *
- */
-
 /// A wrapper around `sockaddr_un`.
 ///
 /// This also tracks the length of `sun_path` address (excluding
@@ -595,7 +503,7 @@ impl fmt::Debug for Ipv6Addr {
 /// does not require that `sun_len` include the terminating null even for normal
 /// sockets.  Note that the actual sockaddr length is greater by
 /// `offset_of!(libc::sockaddr_un, sun_path)`
-#[derive(Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct UnixAddr(pub libc::sockaddr_un, pub usize);
 
 impl UnixAddr {
@@ -647,7 +555,7 @@ impl UnixAddr {
                                      ret.sun_path.as_mut_ptr().offset(1) as *mut u8,
                                      path.len());
 
-            Ok(UnixAddr(ret, path.len() + 1))
+            Ok(UnixAddr(ret, ret.sun_path.len()))
         }
     }
 
@@ -687,27 +595,6 @@ impl UnixAddr {
     }
 }
 
-impl PartialEq for UnixAddr {
-    fn eq(&self, other: &UnixAddr) -> bool {
-        self.sun_path() == other.sun_path()
-    }
-}
-
-impl Eq for UnixAddr {
-}
-
-impl hash::Hash for UnixAddr {
-    fn hash<H: hash::Hasher>(&self, s: &mut H) {
-        ( self.0.sun_family, self.sun_path() ).hash(s)
-    }
-}
-
-impl Clone for UnixAddr {
-    fn clone(&self) -> UnixAddr {
-        *self
-    }
-}
-
 impl fmt::Display for UnixAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.1 == 0 {
@@ -721,25 +608,29 @@ impl fmt::Display for UnixAddr {
     }
 }
 
-impl fmt::Debug for UnixAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
+impl PartialEq for UnixAddr {
+    fn eq(&self, other: &UnixAddr) -> bool {
+        self.sun_path() == other.sun_path()
     }
 }
 
-/*
- *
- * ===== Sock addr =====
- *
- */
+impl Eq for UnixAddr {}
+
+impl Hash for UnixAddr {
+    fn hash<H: Hasher>(&self, s: &mut H) {
+        ( self.0.sun_family, self.sun_path() ).hash(s)
+    }
+}
 
 /// Represents a socket address
-#[derive(Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum SockAddr {
     Inet(InetAddr),
     Unix(UnixAddr),
     #[cfg(any(target_os = "android", target_os = "linux"))]
     Netlink(NetlinkAddr),
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    Alg(AlgAddr),
     #[cfg(any(target_os = "ios", target_os = "macos"))]
     SysControl(SysControlAddr),
     /// Datalink address (MAC)
@@ -751,7 +642,9 @@ pub enum SockAddr {
               target_os = "macos",
               target_os = "netbsd",
               target_os = "openbsd"))]
-    Link(LinkAddr)
+    Link(LinkAddr),
+    #[cfg(target_os = "linux")]
+    Vsock(VsockAddr),
 }
 
 impl SockAddr {
@@ -768,9 +661,19 @@ impl SockAddr {
         SockAddr::Netlink(NetlinkAddr::new(pid, groups))
     }
 
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    pub fn new_alg(alg_type: &str, alg_name: &str) -> SockAddr {
+        SockAddr::Alg(AlgAddr::new(alg_type, alg_name))
+    }
+
     #[cfg(any(target_os = "ios", target_os = "macos"))]
     pub fn new_sys_control(sockfd: RawFd, name: &str, unit: u32) -> Result<SockAddr> {
         SysControlAddr::from_name(sockfd, name, unit).map(|a| SockAddr::SysControl(a))
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn new_vsock(cid: u32, port: u32) -> SockAddr {
+        SockAddr::Vsock(VsockAddr::new(cid, port))
     }
 
     pub fn family(&self) -> AddressFamily {
@@ -780,6 +683,8 @@ impl SockAddr {
             SockAddr::Unix(..) => AddressFamily::Unix,
             #[cfg(any(target_os = "android", target_os = "linux"))]
             SockAddr::Netlink(..) => AddressFamily::Netlink,
+            #[cfg(any(target_os = "android", target_os = "linux"))]
+            SockAddr::Alg(..) => AddressFamily::Alg,
             #[cfg(any(target_os = "ios", target_os = "macos"))]
             SockAddr::SysControl(..) => AddressFamily::System,
             #[cfg(any(target_os = "android", target_os = "linux"))]
@@ -790,7 +695,9 @@ impl SockAddr {
                       target_os = "macos",
                       target_os = "netbsd",
                       target_os = "openbsd"))]
-            SockAddr::Link(..) => AddressFamily::Link
+            SockAddr::Link(..) => AddressFamily::Link,
+            #[cfg(target_os = "linux")]
+            SockAddr::Vsock(..) => AddressFamily::Vsock,
         }
     }
 
@@ -835,6 +742,9 @@ impl SockAddr {
                         Some(SockAddr::Link(ether_addr))
                     }
                 },
+                #[cfg(target_os = "linux")]
+                Some(AddressFamily::Vsock) => Some(SockAddr::Vsock(
+                    VsockAddr(*(addr as *const libc::sockaddr_vm)))),
                 // Other address families are currently not supported and simply yield a None
                 // entry instead of a proper conversion to a `SockAddr`.
                 Some(_) | None => None,
@@ -856,6 +766,8 @@ impl SockAddr {
             SockAddr::Unix(UnixAddr(ref addr, len)) => (mem::transmute(addr), (len + offset_of!(libc::sockaddr_un, sun_path)) as libc::socklen_t),
             #[cfg(any(target_os = "android", target_os = "linux"))]
             SockAddr::Netlink(NetlinkAddr(ref sa)) => (mem::transmute(sa), mem::size_of::<libc::sockaddr_nl>() as libc::socklen_t),
+            #[cfg(any(target_os = "android", target_os = "linux"))]
+            SockAddr::Alg(AlgAddr(ref sa)) => (mem::transmute(sa), mem::size_of::<libc::sockaddr_alg>() as libc::socklen_t),
             #[cfg(any(target_os = "ios", target_os = "macos"))]
             SockAddr::SysControl(SysControlAddr(ref sa)) => (mem::transmute(sa), mem::size_of::<libc::sockaddr_ctl>() as libc::socklen_t),
             #[cfg(any(target_os = "android", target_os = "linux"))]
@@ -867,67 +779,9 @@ impl SockAddr {
                       target_os = "netbsd",
                       target_os = "openbsd"))]
             SockAddr::Link(LinkAddr(ref ether_addr)) => (mem::transmute(ether_addr), mem::size_of::<libc::sockaddr_dl>() as libc::socklen_t),
+            #[cfg(target_os = "linux")]
+            SockAddr::Vsock(VsockAddr(ref sa)) => (mem::transmute(sa), mem::size_of::<libc::sockaddr_vm>() as libc::socklen_t),
         }
-    }
-}
-
-impl PartialEq for SockAddr {
-    fn eq(&self, other: &SockAddr) -> bool {
-        match (*self, *other) {
-            (SockAddr::Inet(ref a), SockAddr::Inet(ref b)) => {
-                a == b
-            }
-            (SockAddr::Unix(ref a), SockAddr::Unix(ref b)) => {
-                a == b
-            }
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            (SockAddr::Netlink(ref a), SockAddr::Netlink(ref b)) => {
-                a == b
-            }
-            #[cfg(any(target_os = "android",
-                      target_os = "dragonfly",
-                      target_os = "freebsd",
-                      target_os = "ios",
-                      target_os = "linux",
-                      target_os = "macos",
-                      target_os = "netbsd",
-                      target_os = "openbsd"))]
-            (SockAddr::Link(ref a), SockAddr::Link(ref b)) => {
-                a == b
-            }
-            _ => false,
-        }
-    }
-}
-
-impl Eq for SockAddr {
-}
-
-impl hash::Hash for SockAddr {
-    fn hash<H: hash::Hasher>(&self, s: &mut H) {
-        match *self {
-            SockAddr::Inet(ref a) => a.hash(s),
-            SockAddr::Unix(ref a) => a.hash(s),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Netlink(ref a) => a.hash(s),
-            #[cfg(any(target_os = "ios", target_os = "macos"))]
-            SockAddr::SysControl(ref a) => a.hash(s),
-            #[cfg(any(target_os = "android",
-                      target_os = "dragonfly",
-                      target_os = "freebsd",
-                      target_os = "ios",
-                      target_os = "linux",
-                      target_os = "macos",
-                      target_os = "netbsd",
-                      target_os = "openbsd"))]
-            SockAddr::Link(ref ether_addr) => ether_addr.hash(s)
-        }
-    }
-}
-
-impl Clone for SockAddr {
-    fn clone(&self) -> SockAddr {
-        *self
     }
 }
 
@@ -938,6 +792,8 @@ impl fmt::Display for SockAddr {
             SockAddr::Unix(ref unix) => unix.fmt(f),
             #[cfg(any(target_os = "android", target_os = "linux"))]
             SockAddr::Netlink(ref nl) => nl.fmt(f),
+            #[cfg(any(target_os = "android", target_os = "linux"))]
+            SockAddr::Alg(ref nl) => nl.fmt(f),
             #[cfg(any(target_os = "ios", target_os = "macos"))]
             SockAddr::SysControl(ref sc) => sc.fmt(f),
             #[cfg(any(target_os = "android",
@@ -948,7 +804,9 @@ impl fmt::Display for SockAddr {
                       target_os = "macos",
                       target_os = "netbsd",
                       target_os = "openbsd"))]
-            SockAddr::Link(ref ether_addr) => ether_addr.fmt(f)
+            SockAddr::Link(ref ether_addr) => ether_addr.fmt(f),
+            #[cfg(target_os = "linux")]
+            SockAddr::Vsock(ref svm) => svm.fmt(f),
         }
     }
 }
@@ -958,29 +816,9 @@ pub mod netlink {
     use ::sys::socket::addr::AddressFamily;
     use libc::{sa_family_t, sockaddr_nl};
     use std::{fmt, mem};
-    use std::hash::{Hash, Hasher};
 
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
     pub struct NetlinkAddr(pub sockaddr_nl);
-
-    // , PartialEq, Eq, Debug, Hash
-    impl PartialEq for NetlinkAddr {
-        fn eq(&self, other: &Self) -> bool {
-            let (inner, other) = (self.0, other.0);
-            (inner.nl_family, inner.nl_pid, inner.nl_groups) ==
-            (other.nl_family, other.nl_pid, other.nl_groups)
-        }
-    }
-
-    impl Eq for NetlinkAddr {}
-
-    impl Hash for NetlinkAddr {
-        fn hash<H: Hasher>(&self, s: &mut H) {
-            let inner = self.0;
-            (inner.nl_family, inner.nl_pid, inner.nl_groups).hash(s);
-        }
-    }
-
 
     impl NetlinkAddr {
         pub fn new(pid: u32, groups: u32) -> NetlinkAddr {
@@ -1006,8 +844,65 @@ pub mod netlink {
             write!(f, "pid: {} groups: {}", self.pid(), self.groups())
         }
     }
+}
 
-    impl fmt::Debug for NetlinkAddr {
+#[cfg(any(target_os = "android", target_os = "linux"))]
+pub mod alg {
+    use libc::{AF_ALG, sockaddr_alg, c_char};
+    use std::{fmt, mem, str};
+    use std::hash::{Hash, Hasher};
+    use std::ffi::CStr;
+
+    #[derive(Copy, Clone)]
+    pub struct AlgAddr(pub sockaddr_alg);
+
+    // , PartialEq, Eq, Debug, Hash
+    impl PartialEq for AlgAddr {
+        fn eq(&self, other: &Self) -> bool {
+            let (inner, other) = (self.0, other.0);
+            (inner.salg_family, &inner.salg_type[..], inner.salg_feat, inner.salg_mask, &inner.salg_name[..]) ==
+            (other.salg_family, &other.salg_type[..], other.salg_feat, other.salg_mask, &other.salg_name[..])
+        }
+    }
+
+    impl Eq for AlgAddr {}
+
+    impl Hash for AlgAddr {
+        fn hash<H: Hasher>(&self, s: &mut H) {
+            let inner = self.0;
+            (inner.salg_family, &inner.salg_type[..], inner.salg_feat, inner.salg_mask, &inner.salg_name[..]).hash(s);
+        }
+    }
+
+    impl AlgAddr {
+        pub fn new(alg_type: &str, alg_name: &str) -> AlgAddr {
+            let mut addr: sockaddr_alg = unsafe { mem::zeroed() };
+            addr.salg_family = AF_ALG as u16;
+            addr.salg_type[..alg_type.len()].copy_from_slice(alg_type.to_string().as_bytes());
+            addr.salg_name[..alg_name.len()].copy_from_slice(alg_name.to_string().as_bytes());
+
+            AlgAddr(addr)
+        }
+
+
+        pub fn alg_type(&self) -> &CStr {
+            unsafe { CStr::from_ptr(self.0.salg_type.as_ptr() as *const c_char) }
+        }
+
+        pub fn alg_name(&self) -> &CStr {
+            unsafe { CStr::from_ptr(self.0.salg_name.as_ptr() as *const c_char) }
+        }
+    }
+
+    impl fmt::Display for AlgAddr {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "type: {} alg: {}",
+                   self.alg_name().to_string_lossy(),
+                   self.alg_type().to_string_lossy())
+        }
+    }
+
+    impl fmt::Debug for AlgAddr {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             fmt::Display::fmt(self, f)
         }
@@ -1019,11 +914,13 @@ pub mod sys_control {
     use ::sys::socket::addr::AddressFamily;
     use libc::{self, c_uchar};
     use std::{fmt, mem};
-    use std::hash::{Hash, Hasher};
     use std::os::unix::io::RawFd;
     use {Errno, Error, Result};
 
+    // FIXME: Move type into `libc`
     #[repr(C)]
+    #[derive(Clone, Copy)]
+    #[allow(missing_debug_implementations)]
     pub struct ctl_ioc_info {
         pub ctl_id: u32,
         pub ctl_name: [c_uchar; MAX_KCTL_NAME],
@@ -1035,27 +932,9 @@ pub mod sys_control {
 
     ioctl_readwrite!(ctl_info, CTL_IOC_MAGIC, CTL_IOC_INFO, ctl_ioc_info);
 
-    #[derive(Copy, Clone)]
     #[repr(C)]
+    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     pub struct SysControlAddr(pub libc::sockaddr_ctl);
-
-    impl PartialEq for SysControlAddr {
-        fn eq(&self, other: &Self) -> bool {
-            let (inner, other) = (self.0, other.0);
-            (inner.sc_id, inner.sc_unit) ==
-            (other.sc_id, other.sc_unit)
-        }
-    }
-
-    impl Eq for SysControlAddr {}
-
-    impl Hash for SysControlAddr {
-        fn hash<H: Hasher>(&self, s: &mut H) {
-            let inner = self.0;
-            (inner.sc_id, inner.sc_unit).hash(s);
-        }
-    }
-
 
     impl SysControlAddr {
         pub fn new(id: u32, unit: u32) -> SysControlAddr {
@@ -1099,27 +978,15 @@ pub mod sys_control {
             fmt::Debug::fmt(self, f)
         }
     }
-
-    impl fmt::Debug for SysControlAddr {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            f.debug_struct("SysControlAddr")
-                .field("sc_len", &self.0.sc_len)
-                .field("sc_family", &self.0.sc_family)
-                .field("ss_sysaddr", &self.0.ss_sysaddr)
-                .field("sc_id", &self.0.sc_id)
-                .field("sc_unit", &self.0.sc_unit)
-                .finish()
-        }
-    }
 }
 
 
 #[cfg(any(target_os = "android", target_os = "linux"))]
 mod datalink {
-    use super::{libc, hash, fmt, AddressFamily};
+    use super::{libc, fmt, AddressFamily};
 
     /// Hardware Address
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     pub struct LinkAddr(pub libc::sockaddr_ll);
 
     impl LinkAddr {
@@ -1167,26 +1034,6 @@ mod datalink {
         }
     }
 
-    impl Eq for LinkAddr {}
-
-    impl PartialEq for LinkAddr {
-        fn eq(&self, other: &Self) -> bool {
-            let (a, b) = (self.0, other.0);
-            (a.sll_family, a.sll_protocol, a.sll_ifindex, a.sll_hatype,
-                a.sll_pkttype, a.sll_halen, a.sll_addr) ==
-            (b.sll_family, b.sll_protocol, b.sll_ifindex, b.sll_hatype,
-                b.sll_pkttype, b.sll_halen, b.sll_addr)
-        }
-    }
-
-    impl hash::Hash for LinkAddr {
-        fn hash<H: hash::Hasher>(&self, s: &mut H) {
-            let a = self.0;
-            (a.sll_family, a.sll_protocol, a.sll_ifindex, a.sll_hatype,
-                a.sll_pkttype, a.sll_halen, a.sll_addr).hash(s);
-        }
-    }
-
     impl fmt::Display for LinkAddr {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             let addr = self.addr();
@@ -1199,12 +1046,6 @@ mod datalink {
                 addr[5])
         }
     }
-
-    impl fmt::Debug for LinkAddr {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            fmt::Display::fmt(self, f)
-        }
-    }
 }
 
 #[cfg(any(target_os = "dragonfly",
@@ -1214,10 +1055,10 @@ mod datalink {
           target_os = "netbsd",
           target_os = "openbsd"))]
 mod datalink {
-    use super::{libc, hash, fmt, AddressFamily};
+    use super::{libc, fmt, AddressFamily};
 
     /// Hardware Address
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     pub struct LinkAddr(pub libc::sockaddr_dl);
 
     impl LinkAddr {
@@ -1289,52 +1130,6 @@ mod datalink {
         }
     }
 
-    impl Eq for LinkAddr {}
-
-    impl PartialEq for LinkAddr {
-        #[cfg(any(target_os = "freebsd",
-                  target_os = "ios",
-                  target_os = "macos",
-                  target_os = "netbsd",
-                  target_os = "openbsd"))]
-        fn eq(&self, other: &Self) -> bool {
-            let (a, b) = (self.0, other.0);
-            (a.sdl_len, a.sdl_family, a.sdl_index, a.sdl_type,
-                a.sdl_nlen, a.sdl_alen, a.sdl_slen, &a.sdl_data[..]) ==
-            (b.sdl_len, b.sdl_family, b.sdl_index, b.sdl_type,
-                b.sdl_nlen, b.sdl_alen, b.sdl_slen, &b.sdl_data[..])
-        }
-
-        #[cfg(target_os = "dragonfly")]
-        fn eq(&self, other: &Self) -> bool {
-            let (a, b) = (self.0, other.0);
-            (a.sdl_len, a.sdl_family, a.sdl_index, a.sdl_type, a.sdl_nlen,
-                a.sdl_alen, a.sdl_slen, a.sdl_data, a.sdl_rcf, a.sdl_route) ==
-            (b.sdl_len, b.sdl_family, b.sdl_index, b.sdl_type, b.sdl_nlen,
-                b.sdl_alen, b.sdl_slen, b.sdl_data, b.sdl_rcf, b.sdl_route)
-        }
-    }
-
-    impl hash::Hash for LinkAddr {
-        #[cfg(any(target_os = "freebsd",
-                  target_os = "ios",
-                  target_os = "macos",
-                  target_os = "netbsd",
-                  target_os = "openbsd"))]
-        fn hash<H: hash::Hasher>(&self, s: &mut H) {
-            let a = self.0;
-            (a.sdl_len, a.sdl_family, a.sdl_index, a.sdl_type,
-                a.sdl_nlen, a.sdl_alen, a.sdl_slen, &a.sdl_data[..]).hash(s);
-        }
-
-        #[cfg(target_os = "dragonfly")]
-        fn hash<H: hash::Hasher>(&self, s: &mut H) {
-            let a = self.0;
-            (a.sdl_len, a.sdl_family, a.sdl_index, a.sdl_type, a.sdl_nlen,
-                a.sdl_alen, a.sdl_slen, a.sdl_data, a.sdl_rcf, a.sdl_route).hash(s);
-        }
-    }
-
     impl fmt::Display for LinkAddr {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             let addr = self.addr();
@@ -1347,8 +1142,67 @@ mod datalink {
                 addr[5])
         }
     }
+}
 
-    impl fmt::Debug for LinkAddr {
+#[cfg(target_os = "linux")]
+pub mod vsock {
+    use ::sys::socket::addr::AddressFamily;
+    use libc::{sa_family_t, sockaddr_vm};
+    use std::{fmt, mem};
+    use std::hash::{Hash, Hasher};
+
+    #[derive(Copy, Clone)]
+    pub struct VsockAddr(pub sockaddr_vm);
+
+    impl PartialEq for VsockAddr {
+        fn eq(&self, other: &Self) -> bool {
+            let (inner, other) = (self.0, other.0);
+            (inner.svm_family, inner.svm_cid, inner.svm_port) ==
+            (other.svm_family, other.svm_cid, other.svm_port)
+        }
+    }
+
+    impl Eq for VsockAddr {}
+
+    impl Hash for VsockAddr {
+        fn hash<H: Hasher>(&self, s: &mut H) {
+            let inner = self.0;
+            (inner.svm_family, inner.svm_cid, inner.svm_port).hash(s);
+        }
+    }
+
+    /// VSOCK Address
+    ///
+    /// The address for AF_VSOCK socket is defined as a combination of a
+    /// 32-bit Context Identifier (CID) and a 32-bit port number.
+    impl VsockAddr {
+        pub fn new(cid: u32, port: u32) -> VsockAddr {
+            let mut addr: sockaddr_vm = unsafe { mem::zeroed() };
+            addr.svm_family = AddressFamily::Vsock as sa_family_t;
+            addr.svm_cid = cid;
+            addr.svm_port = port;
+
+            VsockAddr(addr)
+        }
+
+        /// Context Identifier (CID)
+        pub fn cid(&self) -> u32 {
+            self.0.svm_cid
+        }
+
+        /// Port number
+        pub fn port(&self) -> u32 {
+            self.0.svm_port
+        }
+    }
+
+    impl fmt::Display for VsockAddr {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "cid: {} port: {}", self.cid(), self.port())
+        }
+    }
+
+    impl fmt::Debug for VsockAddr {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             fmt::Display::fmt(self, f)
         }
@@ -1357,9 +1211,11 @@ mod datalink {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(any(target_os = "dragonfly",
+    #[cfg(any(target_os = "android",
+              target_os = "dragonfly",
               target_os = "freebsd",
               target_os = "ios",
+              target_os = "linux",
               target_os = "macos",
               target_os = "netbsd",
               target_os = "openbsd"))]
@@ -1404,5 +1260,19 @@ mod tests {
             },
             _ => { unreachable!() }
         };
+    }
+
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[test]
+    fn test_abstract_sun_path() {
+        let name = String::from("nix\0abstract\0test");
+        let addr = UnixAddr::new_abstract(name.as_bytes()).unwrap();
+
+        let sun_path1 = addr.sun_path();
+        let sun_path2 = [0u8, 110, 105, 120, 0, 97, 98, 115, 116, 114, 97, 99, 116, 0, 116, 101, 115, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        assert_eq!(sun_path1.len(), sun_path2.len());
+        for i in 0..sun_path1.len() {
+            assert_eq!(sun_path1[i], sun_path2[i]);
+        }
     }
 }

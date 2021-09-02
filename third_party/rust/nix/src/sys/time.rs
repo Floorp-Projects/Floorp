@@ -1,4 +1,5 @@
 use std::{cmp, fmt, ops};
+use std::convert::From;
 use libc::{c_long, timespec, timeval};
 pub use libc::{time_t, suseconds_t};
 
@@ -44,7 +45,7 @@ pub trait TimeValLike: Sized {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct TimeSpec(timespec);
 
 const NANOS_PER_SEC: i64 = 1_000_000_000;
@@ -65,25 +66,6 @@ impl AsRef<timespec> for TimeSpec {
         &self.0
     }
 }
-
-impl fmt::Debug for TimeSpec {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("TimeSpec")
-            .field("tv_sec", &self.tv_sec())
-            .field("tv_nsec", &self.tv_nsec())
-            .finish()
-    }
-}
-
-impl PartialEq for TimeSpec {
-    // The implementation of cmp is simplified by assuming that the struct is
-    // normalized.  That is, tv_nsec must always be within [0, 1_000_000_000)
-    fn eq(&self, other: &TimeSpec) -> bool {
-        self.tv_sec() == other.tv_sec() && self.tv_nsec() == other.tv_nsec()
-    }
-}
-
-impl Eq for TimeSpec {}
 
 impl Ord for TimeSpec {
     // The implementation of cmp is simplified by assuming that the struct is
@@ -258,7 +240,7 @@ impl fmt::Display for TimeSpec {
 
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct TimeVal(timeval);
 
 const MICROS_PER_SEC: i64 = 1_000_000;
@@ -276,25 +258,6 @@ impl AsRef<timeval> for TimeVal {
         &self.0
     }
 }
-
-impl fmt::Debug for TimeVal {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("TimeVal")
-            .field("tv_sec", &self.tv_sec())
-            .field("tv_usec", &self.tv_usec())
-            .finish()
-    }
-}
-
-impl PartialEq for TimeVal {
-    // The implementation of cmp is simplified by assuming that the struct is
-    // normalized.  That is, tv_usec must always be within [0, 1_000_000)
-    fn eq(&self, other: &TimeVal) -> bool {
-        self.tv_sec() == other.tv_sec() && self.tv_usec() == other.tv_usec()
-    }
-}
-
-impl Eq for TimeVal {}
 
 impl Ord for TimeVal {
     // The implementation of cmp is simplified by assuming that the struct is
@@ -464,6 +427,12 @@ impl fmt::Display for TimeVal {
         }
 
         Ok(())
+    }
+}
+
+impl From<timeval> for TimeVal {
+    fn from(tv: timeval) -> Self {
+        TimeVal(tv)
     }
 }
 

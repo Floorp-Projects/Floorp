@@ -10,6 +10,12 @@ fn test_kill_none() {
 }
 
 #[test]
+fn test_killpg_none() {
+    killpg(getpgrp(), None)
+        .expect("Should be able to send signal to my process group.");
+}
+
+#[test]
 fn test_old_sigaction_flags() {
     extern "C" fn handler(_: ::libc::c_int) {}
     let act = SigAction::new(

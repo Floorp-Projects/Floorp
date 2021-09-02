@@ -3,23 +3,139 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.13.1] - 2019-06-10
+## [Unreleased] - ReleaseDate
 ### Added
 ### Changed
-- Changed some public types from reexports of libc types like `uint32_t` to the
-  native equivalents like u32.
-  ([#1072](https://github.com/nix-rust/nix/pull/1072))
+### Fixed
+### Removed
+
+## [0.15.0] - 10 August 2019
+### Added
+- Added `MSG_WAITALL` to `MsgFlags` in `sys::socket`.
+  ([#1079](https://github.com/nix-rust/nix/pull/1079))
+- Implemented `Clone`, `Copy`, `Debug`, `Eq`, `Hash`, and `PartialEq` for most
+  types that support them. ([#1035](https://github.com/nix-rust/nix/pull/1035))
+- Added `copy_file_range` wrapper
+  ([#1069](https://github.com/nix-rust/nix/pull/1069))
+- Add `mkdirat`.
+  ([#1084](https://github.com/nix-rust/nix/pull/1084))
+- Add `posix_fadvise`.
+  ([#1089](https://github.com/nix-rust/nix/pull/1089))
+- Added `AF_VSOCK` to `AddressFamily`.
+  ([#1091](https://github.com/nix-rust/nix/pull/1091))
+- Add `unlinkat`
+  ([#1058](https://github.com/nix-rust/nix/pull/1058))
+- Add `renameat`.
+  ([#1097](https://github.com/nix-rust/nix/pull/1097))
+
+### Changed
+- Support for `ifaddrs` now present when building for Android.
+  ([#1077](https://github.com/nix-rust/nix/pull/1077))
+- Minimum supported Rust version is now 1.31.0
+  ([#1035](https://github.com/nix-rust/nix/pull/1035))
+  ([#1095](https://github.com/nix-rust/nix/pull/1095))
+- Now functions `statfs()` and `fstatfs()` return result with `Statfs` wrapper
+  ([#928](https://github.com/nix-rust/nix/pull/928))
 
 ### Fixed
-- Fixed the build on Android and Linux/mips with recent versions of libc.
-  ([#1072](https://github.com/nix-rust/nix/pull/1072))
-- Fixed build on Linux/arm and Linux/s390x with the latest Rust libc
-  ([52102cb](https://github.com/nix-rust/nix/commit/52102cb76398c4dfb9ea141b98c5b01a2e050973))
+- Enabled `sched_yield` for all nix hosts.
+  ([#1090](https://github.com/nix-rust/nix/pull/1090))
+
+### Removed
+
+## [0.14.1] - 2019-06-06
+### Added
+- Macros exported by `nix` may now be imported via `use` on the Rust 2018
+  edition without importing helper macros on Linux targets.
+  ([#1066](https://github.com/nix-rust/nix/pull/1066))
+
+  For example, in Rust 2018, the `ioctl_read_bad!` macro can now be imported
+  without importing the `convert_ioctl_res!` macro.
+
+  ```rust
+  use nix::ioctl_read_bad;
+
+  ioctl_read_bad!(tcgets, libc::TCGETS, libc::termios);
+  ```
+
+### Changed
+- Changed some public types from reexports of libc types like `uint32_t` to the
+  native equivalents like `u32.`
+  ([#1072](https://github.com/nix-rust/nix/pull/1072/commits))
+
+### Fixed
+- Fix the build on Android and Linux/mips with recent versions of libc.
+  ([#1072](https://github.com/nix-rust/nix/pull/1072/commits))
+
+### Removed
+
+## [0.14.0] - 2019-05-21
+### Added
+- Add IP_RECVIF & IP_RECVDSTADDR. Enable IP_PKTINFO and IP6_PKTINFO on netbsd/openbsd.
+  ([#1002](https://github.com/nix-rust/nix/pull/1002))
+- Added `inotify_init1`, `inotify_add_watch` and `inotify_rm_watch` wrappers for
+  Android and Linux. ([#1016](https://github.com/nix-rust/nix/pull/1016))
+- Add `ALG_SET_IV`, `ALG_SET_OP` and `ALG_SET_AEAD_ASSOCLEN` control messages and `AF_ALG`
+  socket types on Linux and Android ([#1031](https://github.com/nix-rust/nix/pull/1031))
+- Add killpg
+  ([#1034](https://github.com/nix-rust/nix/pull/1034))
+- Added ENOTSUP errno support for Linux and Android.
+  ([#969](https://github.com/nix-rust/nix/pull/969))
+- Add several errno constants from OpenBSD 6.2
+  ([#1036](https://github.com/nix-rust/nix/pull/1036))
+- Added `from_std` and `to_std` methods for `sys::socket::IpAddr`
+  ([#1043](https://github.com/nix-rust/nix/pull/1043))
+- Added `nix::unistd:seteuid` and `nix::unistd::setegid` for those platforms that do
+  not support `setresuid` nor `setresgid` respectively.
+  ([#1044](https://github.com/nix-rust/nix/pull/1044))
+- Added a `access` wrapper
+  ([#1045](https://github.com/nix-rust/nix/pull/1045))
+- Add `forkpty`
+  ([#1042](https://github.com/nix-rust/nix/pull/1042))
+- Add `sched_yield`
+  ([#1050](https://github.com/nix-rust/nix/pull/1050))
+
+### Changed
+- `PollFd` event flags renamed to `PollFlags` ([#1024](https://github.com/nix-rust/nix/pull/1024/))
+- `recvmsg` now returns an Iterator over `ControlMessageOwned` objects rather
+  than `ControlMessage` objects.  This is sadly not backwards-compatible.  Fix
+  code like this:
+  ```rust
+  if let ControlMessage::ScmRights(&fds) = cmsg {
+  ```
+
+  By replacing it with code like this:
+  ```rust
+  if let ControlMessageOwned::ScmRights(fds) = cmsg {
+  ```
+  ([#1020](https://github.com/nix-rust/nix/pull/1020))
+- Replaced `CmsgSpace` with the `cmsg_space` macro.
+  ([#1020](https://github.com/nix-rust/nix/pull/1020))
+
+### Fixed
+- Fixed multiple bugs when using `sendmsg` and `recvmsg` with ancillary control messages
+  ([#1020](https://github.com/nix-rust/nix/pull/1020))
+- Macros exported by `nix` may now be imported via `use` on the Rust 2018
+  edition without importing helper macros for BSD targets.
+  ([#1041](https://github.com/nix-rust/nix/pull/1041))
+
+  For example, in Rust 2018, the `ioctl_read_bad!` macro can now be imported
+  without importing the `convert_ioctl_res!` macro.
+
+  ```rust
+  use nix::ioctl_read_bad;
+
+  ioctl_read_bad!(tcgets, libc::TCGETS, libc::termios);
+  ```
 
 ### Removed
 - `Daemon`, `NOTE_REAP`, and `NOTE_EXIT_REPARENTED` are now deprecated on OSX
   and iOS.
   ([#1033](https://github.com/nix-rust/nix/pull/1033))
+- `PTRACE_GETREGS`, `PTRACE_SETREGS`, `PTRACE_GETFPREGS`, and
+  `PTRACE_SETFPREGS` have been removed from some platforms where they never
+  should've been defined in the first place.
+  ([#1055](https://github.com/nix-rust/nix/pull/1055))
 
 ## [0.13.0] - 2019-01-15
 ### Added
@@ -35,6 +151,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   ([#1010](https://github.com/nix-rust/nix/pull/1010))
 - Added `nix::sys::signal::signal`.
   ([#817](https://github.com/nix-rust/nix/pull/817))
+- Added an `mprotect` wrapper.
+  ([#991](https://github.com/nix-rust/nix/pull/991))
 
 ### Changed
 ### Fixed

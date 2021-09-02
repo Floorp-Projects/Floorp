@@ -1,5 +1,4 @@
-use libc::{c_ulong, c_int};
-use libc;
+use libc::{self, c_ulong, c_int};
 use {Result, NixPath};
 use errno::Errno;
 

@@ -1,6 +1,19 @@
 use rand::{thread_rng, Rng};
 use nix::sys::socket::{socket, sockopt, getsockopt, setsockopt, AddressFamily, SockType, SockFlag, SockProtocol};
 
+#[cfg(target_os = "linux")]
+#[test]
+fn is_so_mark_functional() {
+    use nix::sys::socket::sockopt;
+
+    require_capability!(CAP_NET_ADMIN);
+
+    let s = socket(AddressFamily::Inet, SockType::Stream, SockFlag::empty(), None).unwrap();
+    setsockopt(s, sockopt::Mark, &1337).unwrap();
+    let mark = getsockopt(s, sockopt::Mark).unwrap();
+    assert_eq!(mark, 1337);
+}
+
 #[test]
 fn test_so_buf() {
     let fd = socket(AddressFamily::Inet, SockType::Datagram, SockFlag::empty(), SockProtocol::Udp)

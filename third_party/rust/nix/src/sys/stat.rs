@@ -284,3 +284,11 @@ pub fn utimensat<P: ?Sized + NixPath>(
 
     Errno::result(res).map(drop)
 }
+
+pub fn mkdirat<P: ?Sized + NixPath>(fd: RawFd, path: &P, mode: Mode) -> Result<()> {
+    let res = path.with_nix_path(|cstr| {
+        unsafe { libc::mkdirat(fd, cstr.as_ptr(), mode.bits() as mode_t) }
+    })?;
+
+    Errno::result(res).map(drop)
+}

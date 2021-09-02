@@ -44,7 +44,7 @@ macro_rules! ioc {
 /// ioctl_write_int_bad!(kvm_create_vm, request_code_none!(KVMIO, 0x03));
 /// # fn main() {}
 /// ```
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! request_code_none {
     ($g:expr, $n:expr) => (ioc!($crate::sys::ioctl::VOID, $g, $n, 0))
 }
@@ -55,7 +55,7 @@ macro_rules! request_code_none {
 ///
 /// You should only use this macro directly if the `ioctl` you're working
 /// with is "bad" and you cannot use `ioctl_write_int!()` directly.
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! request_code_write_int {
     ($g:expr, $n:expr) => (ioc!($crate::sys::ioctl::VOID, $g, $n, ::std::mem::size_of::<$crate::libc::c_int>()))
 }
@@ -70,7 +70,7 @@ macro_rules! request_code_write_int {
 /// The read/write direction is relative to userland, so this
 /// command would be userland is reading and the kernel is
 /// writing.
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! request_code_read {
     ($g:expr, $n:expr, $len:expr) => (ioc!($crate::sys::ioctl::OUT, $g, $n, $len))
 }
@@ -85,7 +85,7 @@ macro_rules! request_code_read {
 /// The read/write direction is relative to userland, so this
 /// command would be userland is writing and the kernel is
 /// reading.
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! request_code_write {
     ($g:expr, $n:expr, $len:expr) => (ioc!($crate::sys::ioctl::IN, $g, $n, $len))
 }
@@ -96,7 +96,7 @@ macro_rules! request_code_write {
 ///
 /// You should only use this macro directly if the `ioctl` you're working
 /// with is "bad" and you cannot use `ioctl_readwrite!()` directly.
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! request_code_readwrite {
     ($g:expr, $n:expr, $len:expr) => (ioc!($crate::sys::ioctl::INOUT, $g, $n, $len))
 }

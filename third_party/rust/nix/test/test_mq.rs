@@ -55,8 +55,8 @@ fn test_mq_getattr() {
     };
     let mqd = r.unwrap();
 
-    let read_attr = mq_getattr(mqd);
-    assert!(read_attr.unwrap() == initial_attr);
+    let read_attr = mq_getattr(mqd).unwrap();
+    assert_eq!(read_attr, initial_attr);
     mq_close(mqd).unwrap();
 }
 
@@ -79,21 +79,21 @@ fn test_mq_setattr() {
     let mqd = r.unwrap();
 
     let new_attr =  MqAttr::new(0, 20, MSG_SIZE * 2, 100);
-    let old_attr = mq_setattr(mqd, &new_attr);
-    assert!(old_attr.unwrap() == initial_attr);
+    let old_attr = mq_setattr(mqd, &new_attr).unwrap();
+    assert_eq!(old_attr, initial_attr);
 
-    let new_attr_get = mq_getattr(mqd);
+    let new_attr_get = mq_getattr(mqd).unwrap();
     // The following tests make sense. No changes here because according to the Linux man page only
     // O_NONBLOCK can be set (see tests below)
-    assert!(new_attr_get.unwrap() != new_attr);
+    assert_ne!(new_attr_get, new_attr);
 
     let new_attr_non_blocking =  MqAttr::new(MQ_OFlag::O_NONBLOCK.bits() as c_long, 10, MSG_SIZE, 0);
     mq_setattr(mqd, &new_attr_non_blocking).unwrap();
-    let new_attr_get = mq_getattr(mqd);
+    let new_attr_get = mq_getattr(mqd).unwrap();
 
     // now the O_NONBLOCK flag has been set
-    assert!(new_attr_get.unwrap() != initial_attr);
-    assert!(new_attr_get.unwrap() == new_attr_non_blocking);
+    assert_ne!(new_attr_get, initial_attr);
+    assert_eq!(new_attr_get, new_attr_non_blocking);
     mq_close(mqd).unwrap();
 }
 

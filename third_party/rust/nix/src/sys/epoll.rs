@@ -42,8 +42,7 @@ libc_bitflags!{
     }
 }
 
-#[allow(missing_debug_implementations)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[repr(C)]
 pub struct EpollEvent {
     event: libc::epoll_event,

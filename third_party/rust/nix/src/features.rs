@@ -39,7 +39,7 @@ mod os {
                 b'.' | b'-' => {
                     curr += 1;
                 }
-                b'0'...b'9' => {
+                b'0'..=b'9' => {
                     match curr {
                         0 => digit(&mut major, b),
                         1 => digit(&mut minor, b),

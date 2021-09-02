@@ -1144,6 +1144,42 @@ pub fn unlink<P: ?Sized + NixPath>(path: &P) -> Result<()> {
     Errno::result(res).map(drop)
 }
 
+/// Flags for `unlinkat` function.
+#[derive(Clone, Copy, Debug)]
+pub enum UnlinkatFlags {
+    RemoveDir,
+    NoRemoveDir,
+}
+
+/// Remove a directory entry
+///
+/// In the case of a relative path, the directory entry to be removed is determined relative to
+/// the directory associated with the file descriptor `dirfd` or the current working directory
+/// if `dirfd` is `None`. In the case of an absolute `path` `dirfd` is ignored. If `flag` is
+/// `UnlinkatFlags::RemoveDir` then removal of the directory entry specified by `dirfd` and `path`
+/// is performed.
+///
+/// # References
+/// See also [unlinkat(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/unlinkat.html)
+pub fn unlinkat<P: ?Sized + NixPath>(
+    dirfd: Option<RawFd>,
+    path: &P,
+    flag: UnlinkatFlags,
+) -> Result<()> {
+    let atflag =
+        match flag {
+            UnlinkatFlags::RemoveDir => AtFlags::AT_REMOVEDIR,
+            UnlinkatFlags::NoRemoveDir => AtFlags::empty(),
+        };
+    let res = path.with_nix_path(|cstr| {
+        unsafe {
+            libc::unlinkat(at_rawfd(dirfd), cstr.as_ptr(), atflag.bits() as libc::c_int)
+        }
+    })?;
+    Errno::result(res).map(drop)
+}
+
+
 #[inline]
 pub fn chroot<P: ?Sized + NixPath>(path: &P) -> Result<()> {
     let res = path.with_nix_path(|cstr| {
@@ -1233,6 +1269,26 @@ pub fn getegid() -> Gid {
     Gid(unsafe { libc::getegid() })
 }
 
+/// Set the effective user ID
+///
+/// See also [seteuid(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/seteuid.html)
+#[inline]
+pub fn seteuid(euid: Uid) -> Result<()> {
+    let res = unsafe { libc::seteuid(euid.into()) };
+
+    Errno::result(res).map(drop)
+}
+
+/// Set the effective group ID
+///
+/// See also [setegid(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/setegid.html)
+#[inline]
+pub fn setegid(egid: Gid) -> Result<()> {
+    let res = unsafe { libc::setegid(egid.into()) };
+
+    Errno::result(res).map(drop)
+}
+
 /// Set the user ID
 ///
 /// See also [setuid(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/setuid.html)
@@ -1243,7 +1299,7 @@ pub fn setuid(uid: Uid) -> Result<()> {
     Errno::result(res).map(drop)
 }
 
-/// Set the user ID
+/// Set the group ID
 ///
 /// See also [setgid(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/setgid.html)
 #[inline]
@@ -2310,4 +2366,29 @@ mod setres {
 
         Errno::result(res).map(drop)
     }
+}
+
+libc_bitflags!{
+    /// Options for access()
+    pub struct AccessFlags : c_int {
+        /// Test for existence of file.
+        F_OK;
+        /// Test for read permission.
+        R_OK;
+        /// Test for write permission.
+        W_OK;
+        /// Test for execute (search) permission.
+        X_OK;
+    }
+}
+
+/// Checks the file named by `path` for accessibility according to the flags given by `amode`
+/// See [access(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/access.html)
+pub fn access<P: ?Sized + NixPath>(path: &P, amode: AccessFlags) -> Result<()> {
+    let res = path.with_nix_path(|cstr| {
+        unsafe {
+            libc::access(cstr.as_ptr(), amode.bits)
+        }
+    })?;
+    Errno::result(res).map(drop)
 }
