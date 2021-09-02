@@ -200,22 +200,23 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
     promises.AppendElement(InvokeAsync(
         mCallThread, __func__,
         [conduit = mPipeline->mConduit, recvTrackId]() mutable {
-          dom::RTCBandwidthEstimationInternal bw;
-          const auto& stats = conduit->GetCallStats();
-          bw.mTrackIdentifier = recvTrackId;
-          bw.mSendBandwidthBps.Construct(stats.send_bandwidth_bps / 8);
-          bw.mMaxPaddingBps.Construct(stats.max_padding_bitrate_bps / 8);
-          bw.mReceiveBandwidthBps.Construct(stats.recv_bandwidth_bps / 8);
-          bw.mPacerDelayMs.Construct(stats.pacer_delay_ms);
-          if (stats.rtt_ms >= 0) {
-            bw.mRttMs.Construct(stats.rtt_ms);
-          }
-
           auto report = MakeUnique<dom::RTCStatsCollection>();
-          if (!report->mBandwidthEstimations.AppendElement(std::move(bw),
-                                                           fallible)) {
-            mozalloc_handle_oom(0);
-          }
+          const Maybe<webrtc::Call::Stats> stats = conduit->GetCallStats();
+          stats.apply([&](const auto& aStats) {
+            dom::RTCBandwidthEstimationInternal bw;
+            bw.mTrackIdentifier = recvTrackId;
+            bw.mSendBandwidthBps.Construct(aStats.send_bandwidth_bps / 8);
+            bw.mMaxPaddingBps.Construct(aStats.max_padding_bitrate_bps / 8);
+            bw.mReceiveBandwidthBps.Construct(aStats.recv_bandwidth_bps / 8);
+            bw.mPacerDelayMs.Construct(aStats.pacer_delay_ms);
+            if (aStats.rtt_ms >= 0) {
+              bw.mRttMs.Construct(aStats.rtt_ms);
+            }
+            if (!report->mBandwidthEstimations.AppendElement(std::move(bw),
+                                                             fallible)) {
+              mozalloc_handle_oom(0);
+            }
+          });
           return RTCStatsPromise::CreateAndResolve(std::move(report), __func__);
         }));
   }

@@ -1114,9 +1114,12 @@ Maybe<webrtc::VideoSendStream::Stats> WebrtcVideoConduit::GetSenderStats()
   return Some(mSendStream->GetStats());
 }
 
-webrtc::Call::Stats WebrtcVideoConduit::GetCallStats() const {
+Maybe<webrtc::Call::Stats> WebrtcVideoConduit::GetCallStats() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  return mCall->Call()->GetStats();
+  if (!mCall->Call()) {
+    return Nothing();
+  }
+  return Some(mCall->Call()->GetStats());
 }
 
 MediaConduitErrorCode WebrtcVideoConduit::Init() {

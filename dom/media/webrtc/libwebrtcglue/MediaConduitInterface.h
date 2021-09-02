@@ -159,7 +159,7 @@ class MediaSessionConduit {
   virtual Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() = 0;
   virtual Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() = 0;
 
-  virtual webrtc::Call::Stats GetCallStats() const = 0;
+  virtual Maybe<webrtc::Call::Stats> GetCallStats() const = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
 
