@@ -157,10 +157,12 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
                                          aScheme);
       break;
     case ColorID::MozMenuhover:
+    case ColorID::Selecteditem:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlColor);
       break;
     case ColorID::MozAccentColorForeground:
     case ColorID::MozMenuhovertext:
+    case ColorID::Selecteditemtext:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlTextColor);
       break;
     case ColorID::IMESelectedRawTextBackground:
@@ -295,7 +297,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::MozDialogtext:
     case ColorID::MozCellhighlighttext:
-    case ColorID::Selecteditemtext:
     case ColorID::MozColheadertext:
     case ColorID::MozColheaderhovertext:
       color = GetColorFromNSColor(NSColor.controlTextColor);
@@ -336,7 +337,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::MozCellhighlight:
     case ColorID::MozMacSecondaryhighlight:
-    case ColorID::Selecteditem:
       // For inactive list selection
       color = GetColorFromNSColor(NSColor.secondarySelectedControlColor);
       break;
