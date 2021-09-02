@@ -20,6 +20,7 @@
 
 #include "mozilla/BinarySearch.h"
 #include "mozilla/EnumeratedRange.h"
+#include "mozilla/Sprintf.h"
 
 #include <algorithm>
 
@@ -39,7 +40,6 @@
 #include "wasm/WasmProcess.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmStubs.h"
-
 
 using namespace js;
 using namespace js::jit;
