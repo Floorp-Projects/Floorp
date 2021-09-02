@@ -35,8 +35,12 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
+const { Cu, Cc, Ci } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
+
+const MemoryReporter = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
+  Ci.nsIMemoryReporterManager
+);
 
 const global = Cu.getGlobalForObject(this);
 const { addDebuggerToGlobal } = ChromeUtils.import(
@@ -234,9 +238,49 @@ exports.allocationTracker = function({
       dbg.memory.drainAllocationsLog();
     },
 
+    /**
+     * Compute the live count of object currently allocated.
+     *
+     * `objects` attribute will count all the objects,
+     * while `objectsWithNoStack` will report how many are missing allocation site/stack.
+     */
     stillAllocatedObjects() {
-      const sensus = dbg.memory.takeCensus({ breakdown: { by: "count" } });
-      return sensus.count;
+      const sensus = dbg.memory.takeCensus({
+        breakdown: { by: "allocationStack" },
+      });
+      let objectsWithStack = 0;
+      let objectsWithoutStack = 0;
+      for (const [k, v] of sensus.entries()) {
+        // Objects with missing stack will all be keyed under "noStack" string,
+        // while all others will have a stack object as key.
+        if (k === "noStack") {
+          objectsWithoutStack += v.count;
+        } else {
+          objectsWithStack += v.count;
+        }
+      }
+      return { objectsWithStack, objectsWithoutStack };
+    },
+
+    /**
+     * Reports the amount of OS memory used by the current process.
+     */
+    getAllocatedMemory() {
+      return MemoryReporter.residentUnique;
+    },
+
+    async doGC() {
+      // In order to get stable results, we really have to do 3 GC attempts
+      // *and* do wait for 1s between each GC.
+      const numCycles = 3;
+      for (let i = 0; i < numCycles; i++) {
+        Cu.forceGC();
+        Cu.forceCC();
+        await new Promise(resolve => Cu.schedulePreciseShrinkingGC(resolve));
+
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     },
 
     stop() {

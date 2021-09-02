@@ -3,25 +3,23 @@
 
 "use strict";
 
-// Record allocations while spawning Commands and the first top level target
+// Record allocations while opening and closing DevTools
 
 const TEST_URL =
   "data:text/html;charset=UTF-8,<div>Target allocations test</div>";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {
-  CommandsFactory,
-} = require("devtools/shared/commands/commands-factory");
+const { gDevTools } = require("devtools/client/framework/devtools");
 
 async function testScript(tab) {
-  const commands = await CommandsFactory.forTab(tab);
-  await commands.targetCommand.startListening();
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "inspector",
+  });
 
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  // destroy the commands to also destroy the dedicated client.
-  await commands.destroy();
+  await toolbox.destroy();
 }
 
 add_task(async function() {
@@ -37,9 +35,11 @@ add_task(async function() {
   const recordData = await startRecordingAllocations();
 
   // Now, run the test script. This time, we record this run.
-  await testScript(tab);
+  for (let i = 0; i < 3; i++) {
+    await testScript(tab);
+  }
 
-  await stopRecordingAllocations(recordData, "target");
+  await stopRecordingAllocations(recordData, "toolbox");
 
   gBrowser.removeTab(tab);
 });

@@ -26,6 +26,7 @@ add_task(async function() {
   const before = tracker.stillAllocatedObjects();
 
   /* eslint-disable no-undef */
+  // This will allocation 1001 objects. The array and 1000 elements in it.
   Cu.evalInSandbox(
     "let list; new " +
       function() {
@@ -44,8 +45,8 @@ add_task(async function() {
 
   const allocations = tracker.countAllocations();
   ok(
-    allocations > 1000,
-    `At least 1000 objects are reported as created (${allocations})`
+    allocations >= 1001,
+    `At least 1001 objects are reported as created (${allocations})`
   );
 
   // Uncomment this and comment the call to `countAllocations` to debug the allocations.
@@ -53,10 +54,14 @@ add_task(async function() {
   // tracker.logAllocationSites();
 
   const afterCreation = tracker.stillAllocatedObjects();
+  is(
+    afterCreation.objectsWithStack - before.objectsWithStack,
+    1001,
+    "We got exactly the expected number of objects recorded with an allocation site"
+  );
   ok(
-    afterCreation - before > 1000,
-    `At least 1000 more objects are reported still allocated (${before}` +
-      ` + ${afterCreation - before} -> ${afterCreation})`
+    afterCreation.objectsWithStack > before.objectsWithStack,
+    "We got some random number of objects without an allocation site"
   );
 
   Cu.evalInSandbox(
@@ -72,10 +77,14 @@ add_task(async function() {
   Cu.forceCC();
 
   const afterGC = tracker.stillAllocatedObjects();
+  is(
+    afterCreation.objectsWithStack - afterGC.objectsWithStack,
+    1001,
+    "All the expected objects were reported freed in the count with allocation sites"
+  );
   ok(
-    afterCreation - afterGC > 1000,
-    `At least 1000 less objects are reported still allocated (${afterCreation}` +
-      ` -(${afterGC - afterCreation})-> ${afterGC})`
+    afterGC.objectsWithoutStack < afterCreation.objectsWithoutStack,
+    "And we released some random number of objects without an allocation site"
   );
 
   tracker.stop();
