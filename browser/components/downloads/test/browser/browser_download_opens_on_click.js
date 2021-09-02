@@ -75,7 +75,7 @@ add_task(async function test_download_opens_on_click() {
 
   ok(!download._launchedFromPanel, "LaunchFromPanel should set to false");
 
-  listbox.itemChildren[0].click();
+  EventUtils.synthesizeMouseAtCenter(listbox.itemChildren[0], {});
 
   ok(
     download.launchWhenSucceeded,
