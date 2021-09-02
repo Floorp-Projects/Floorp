@@ -31,13 +31,13 @@ class nsDisplayColumnRule : public nsPaintedDisplayItem {
   }
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayColumnRule)
 
-  /**
-   * Returns the frame's ink overflow rect instead of the frame's bounds.
-   */
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
     *aSnap = false;
-    return static_cast<nsColumnSetFrame*>(mFrame)->CalculateColumnRuleBounds(
-        ToReferenceFrame());
+    // We just return the frame's ink-overflow rect, which is guaranteed to
+    // contain all the column-rule areas.  It's not worth calculating the exact
+    // union of those areas since it would only lead to performance improvements
+    // during painting in rare edge cases.
+    return mFrame->InkOverflowRect() + ToReferenceFrame();
   }
 
   bool CreateWebRenderCommands(
@@ -162,17 +162,6 @@ void nsColumnSetFrame::ForEachColumnRule(
     child = nextSibling;
     nextSibling = nextSibling->GetNextSibling();
   }
-}
-
-nsRect nsColumnSetFrame::CalculateColumnRuleBounds(
-    const nsPoint& aOffset) const {
-  nsRect combined;
-  ForEachColumnRule(
-      [&combined](const nsRect& aLineRect) {
-        combined = combined.Union(aLineRect);
-      },
-      aOffset);
-  return combined;
 }
 
 void nsColumnSetFrame::CreateBorderRenderers(
