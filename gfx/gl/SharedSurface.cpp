@@ -77,6 +77,7 @@ void SharedSurface::UnlockProd() {
 UniquePtr<SurfaceFactory> SurfaceFactory::Create(
     GLContext* const pGl, const layers::TextureType consumerType) {
   auto& gl = *pGl;
+
   switch (consumerType) {
     case layers::TextureType::D3D11:
 #ifdef XP_WIN
@@ -132,6 +133,12 @@ UniquePtr<SurfaceFactory> SurfaceFactory::Create(
     case layers::TextureType::Last:
       break;
   }
+
+#ifdef MOZ_X11
+  // Silence a warning.
+  Unused << gl;
+#endif
+
   return nullptr;
 }
 
