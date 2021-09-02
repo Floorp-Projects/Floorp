@@ -1157,6 +1157,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mInNormalTick(false),
       mAttemptedExtraTickSinceLastVsync(false),
       mHasExceededAfterLoadTickPeriod(false),
+      mHasStartedTimerAtLeastOnce(false),
       mWarningThreshold(REFRESH_WAIT_WARNING) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext,
@@ -1564,6 +1565,22 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
     if (mActiveTimer) mActiveTimer->RemoveRefreshDriver(this);
     mActiveTimer = newTimer;
     mActiveTimer->AddRefreshDriver(this);
+
+    if (!mHasStartedTimerAtLeastOnce) {
+      mHasStartedTimerAtLeastOnce = true;
+      if (profiler_can_accept_markers()) {
+        nsCString text = "initial timer start "_ns;
+        if (mPresContext->Document()->GetDocumentURI()) {
+          text.Append(
+              mPresContext->Document()->GetDocumentURI()->GetSpecOrDefault());
+        }
+
+        PROFILER_MARKER_TEXT("nsRefreshDriver", LAYOUT,
+                             MarkerOptions(MarkerInnerWindowIdFromDocShell(
+                                 GetDocShell(mPresContext))),
+                             text);
+      }
+    }
 
     // If the timer has ticked since we last ticked, consider doing a 'catch-up'
     // tick immediately.
