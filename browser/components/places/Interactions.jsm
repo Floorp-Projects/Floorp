@@ -74,28 +74,6 @@ function monotonicNow() {
 }
 
 /**
- * The TypingInteraction object measures time spent typing on the current interaction.
- * This is consists of the current typing metrics as well as accumulated typing metrics.
- */
-class TypingInteraction {
-  /**
-   * Returns an object with all current and accumulated typing metrics.
-   *
-   * @returns {object} with properties typingTime, keypresses
-   */
-  getTypingInteraction() {
-    let typingInteraction = { typingTime: 0, keypresses: 0 };
-    const interactionData = ChromeUtils.consumeInteractionData();
-    const typing = interactionData.Typing;
-    if (typing) {
-      typingInteraction.typingTime += typing.interactionTimeInMilliseconds;
-      typingInteraction.keypresses += typing.interactionCount;
-    }
-    return typingInteraction;
-  }
-}
-
-/**
  * @typedef {object} DocumentInfo
  *   DocumentInfo is used to pass document information from the child process
  *   to _Interactions.
@@ -150,13 +128,6 @@ class _Interactions {
    * @type {WeakMap<browser, InteractionInfo>}
    */
   #interactions = new WeakMap();
-
-  /**
-   * This tracks and reports the typing interactions
-   *
-   * @type {TypingInteraction}
-   */
-  #typingInteraction = new TypingInteraction();
 
   /**
    * Tracks the currently active window so that we can avoid recording
@@ -240,6 +211,7 @@ class _Interactions {
     this.#userIsIdle = false;
     this._pageViewStartTime = Cu.now();
     ChromeUtils.consumeInteractionData();
+    await _Interactions.interactionUpdatePromise;
     await this.store.reset();
   }
 
@@ -320,7 +292,7 @@ class _Interactions {
   }
 
   /**
-   * Updates the current interaction.
+   * Updates the current interaction
    *
    * @param {Browser} [browser]
    *   The browser object that has triggered the update, if known. This is
@@ -328,10 +300,48 @@ class _Interactions {
    *   optimization to avoid obtaining the browser object.
    */
   #updateInteraction(browser = undefined) {
-    if (
-      !this.#activeWindow ||
-      (browser && browser.ownerGlobal != this.#activeWindow)
-    ) {
+    _Interactions.#updateInteraction_async(
+      browser,
+      this.#activeWindow,
+      this.#userIsIdle,
+      this.#interactions,
+      this._pageViewStartTime,
+      this.store
+    );
+  }
+
+  /**
+   * Stores the promise created in updateInteraction_async so that we can await its fulfillment
+   * when sychronization is needed.
+   */
+  static interactionUpdatePromise = Promise.resolve();
+
+  /**
+   * Returns the interactions update promise to be used when sychronization is needed from tests.
+   */
+  get interactionUpdatePromise() {
+    return _Interactions.interactionUpdatePromise;
+  }
+
+  /**
+   * Updates the current interaction on fulfillment of the asynchronous collection of scrolling interactions.
+   *
+   *  @param {Browser} browser
+   *  @param {DOMWindow} activeWindow
+   *  @param {boolean} userIsIdle
+   *  @param {WeakMap<browser, InteractionInfo>} interactions
+   *  @param {number} pageViewStartTime
+   *  @param {InteractionsStore} store
+   */
+  static async #updateInteraction_async(
+    browser,
+    activeWindow,
+    userIsIdle,
+    interactions,
+    pageViewStartTime,
+    store
+  ) {
+    if (!activeWindow || (browser && browser.ownerGlobal != activeWindow)) {
       logConsole.debug("Not updating interaction as there is no active window");
       return;
     }
@@ -340,30 +350,48 @@ class _Interactions {
     // have already updated it when idle was signalled.
     // Sometimes an interaction may be signalled before idle is cleared, however
     // worst case we'd only loose approx 2 seconds of interaction detail.
-    if (this.#userIsIdle) {
+    if (userIsIdle) {
       logConsole.debug("Not updating interaction as the user is idle");
       return;
     }
 
     if (!browser) {
-      browser = this.#activeWindow.gBrowser.selectedTab.linkedBrowser;
+      browser = activeWindow.gBrowser.selectedTab.linkedBrowser;
     }
 
-    let interaction = this.#interactions.get(browser);
+    let interaction = interactions.get(browser);
     if (!interaction) {
       logConsole.debug("No interaction to update");
       return;
     }
 
-    interaction.totalViewTime += Cu.now() - this._pageViewStartTime;
-    this._pageViewStartTime = Cu.now();
+    interaction.totalViewTime += Cu.now() - pageViewStartTime;
+    Interactions._pageViewStartTime = Cu.now();
 
-    const typingInteraction = this.#typingInteraction.getTypingInteraction();
-    interaction.typingTime += typingInteraction.typingTime;
-    interaction.keypresses += typingInteraction.keypresses;
-    interaction.updated_at = monotonicNow();
+    const interactionData = ChromeUtils.consumeInteractionData();
+    const typing = interactionData.Typing;
+    if (typing) {
+      interaction.typingTime += typing.interactionTimeInMilliseconds;
+      interaction.keypresses += typing.interactionCount;
+    }
 
-    this.store.add(interaction);
+    // Collect the scrolling data and add the interaction to the store on completion
+    _Interactions.interactionUpdatePromise = _Interactions.interactionUpdatePromise
+      .then(async () => ChromeUtils.collectScrollingData())
+      .then(
+        result => {
+          interaction.scrollingTime += result.interactionTimeInMilliseconds;
+          interaction.scrollingDistance += result.scrollingDistanceInPixels;
+
+          interaction.updated_at = monotonicNow();
+
+          logConsole.debug("Add to store: ", interaction);
+          store.add(interaction);
+        },
+        reason => {
+          Cu.reportError(reason);
+        }
+      );
   }
 
   /**

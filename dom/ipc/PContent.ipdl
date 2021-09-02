@@ -627,6 +627,8 @@ child:
     async UpdatePerfStatsCollectionMask(uint64_t aMask);
     async CollectPerfStatsJSON() returns (nsCString aStats);
 
+    async CollectScrollingMetrics() returns (uint32_t pixelsScrolled, uint32_t scrollDurationMS);
+
     async NotifyAlertsObserver(nsCString topic, nsString data);
 
     async GeolocationUpdate(nsIDOMGeoPosition aPosition);

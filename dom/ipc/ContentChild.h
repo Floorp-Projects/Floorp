@@ -320,6 +320,9 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvCollectPerfStatsJSON(
       CollectPerfStatsJSONResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvCollectScrollingMetrics(
+      CollectScrollingMetricsResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvNotifyAlertsObserver(const nsCString& aType,
                                                    const nsString& aData);
 
