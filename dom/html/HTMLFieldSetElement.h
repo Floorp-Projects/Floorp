@@ -45,10 +45,12 @@ class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
                                  bool aNotify, ErrorResult& aRv) override;
   virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
 
+  // nsGenericHTMLElement
+  virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
+
   // nsIFormControl
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(FormData* aFormData) override { return NS_OK; }
-  virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   const nsIContent* GetFirstLegend() const { return mFirstLegend; }
