@@ -3231,6 +3231,7 @@ public class Tokenizer implements Locator, Locator2 {
                         case '<':
                         case '&':
                         case '\u0000':
+                        case ';':
                             emitOrAppendCharRefBuf(returnState);
                             if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                 cstart = pos;
@@ -3259,11 +3260,9 @@ public class Tokenizer implements Locator, Locator2 {
                                 firstCharKey = c - 'A';
                             } else {
                                 // No match
-                                /*
-                                 * If no match can be made, then this is a parse
-                                 * error.
-                                 */
-                                errNoNamedCharacterMatch();
+                                if (c == ';') {
+                                    errNoNamedCharacterMatch();
+                                }
                                 emitOrAppendCharRefBuf(returnState);
                                 if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos;
@@ -3330,11 +3329,9 @@ public class Tokenizer implements Locator, Locator2 {
                             }
                         }
                         if (hilo == 0) {
-                            /*
-                             * If no match can be made, then this is a parse
-                             * error.
-                             */
-                            errNoNamedCharacterMatch();
+                            if (c == ';') {
+                                errNoNamedCharacterMatch();
+                            }
                             emitOrAppendCharRefBuf(returnState);
                             if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                 cstart = pos;
@@ -3423,10 +3420,9 @@ public class Tokenizer implements Locator, Locator2 {
 
                     if (candidate == -1) {
                         // reconsume deals with CR, LF or nul
-                        /*
-                         * If no match can be made, then this is a parse error.
-                         */
-                        errNoNamedCharacterMatch();
+                        if (c == ';') {
+                            errNoNamedCharacterMatch();
+                        }
                         emitOrAppendCharRefBuf(returnState);
                         if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                             cstart = pos;
@@ -3470,7 +3466,9 @@ public class Tokenizer implements Locator, Locator2 {
                                      * after the U+0026 AMPERSAND (&) must be
                                      * unconsumed, and nothing is returned.
                                      */
-                                    errNoNamedCharacterMatch();
+                                    if (c == ';') {
+                                        errNoNamedCharacterMatch();
+                                    }
                                     appendCharRefBufToStrBuf();
                                     reconsume = true;
                                     state = transition(state, returnState, reconsume, pos);
@@ -3536,6 +3534,7 @@ public class Tokenizer implements Locator, Locator2 {
                          * I'm ∉ I tell you.
                          */
                     }
+                    // XXX reorder point
                 case CONSUME_NCR:
                     if (++pos == endPos) {
                         break stateloop;
@@ -6637,7 +6636,6 @@ public class Tokenizer implements Locator, Locator2 {
                     state = returnState;
                     continue;
                 case CHARACTER_REFERENCE_HILO_LOOKUP:
-                    errNoNamedCharacterMatch();
                     emitOrAppendCharRefBuf(returnState);
                     state = returnState;
                     continue;
@@ -6691,10 +6689,6 @@ public class Tokenizer implements Locator, Locator2 {
                     }
 
                     if (candidate == -1) {
-                        /*
-                         * If no match can be made, then this is a parse error.
-                         */
-                        errNoNamedCharacterMatch();
                         emitOrAppendCharRefBuf(returnState);
                         state = returnState;
                         continue eofloop;
@@ -6732,7 +6726,6 @@ public class Tokenizer implements Locator, Locator2 {
                                      * after the U+0026 AMPERSAND (&) must be
                                      * unconsumed, and nothing is returned.
                                      */
-                                    errNoNamedCharacterMatch();
                                     appendCharRefBufToStrBuf();
                                     state = returnState;
                                     continue eofloop;
