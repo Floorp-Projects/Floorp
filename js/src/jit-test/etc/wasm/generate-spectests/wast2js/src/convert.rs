@@ -178,7 +178,10 @@ fn convert_directive(
             module,
             message,
         } => {
-            let text = module_to_js_string(&module, wast)?;
+            let text = match module {
+                wast::QuoteModule::Module(m) => module_to_js_string(&m, wast)?,
+                wast::QuoteModule::Quote(source) => quote_module_to_js_string(source)?,
+            };
             writeln!(
                 out,
                 "assert_invalid(() => instantiate(`{}`), `{}`);",
@@ -213,6 +216,16 @@ fn convert_directive(
                 "assert_unlinkable(() => instantiate(`{}`), `{}`);",
                 text,
                 escape_template_string(message)
+            )?;
+        }
+        AssertException {
+            span: _,
+            exec,
+        } => {
+            writeln!(
+                out,
+                "assert_exception(() => {});",
+                execute_to_js(current_instance, exec, wast)?,
             )?;
         }
     }
