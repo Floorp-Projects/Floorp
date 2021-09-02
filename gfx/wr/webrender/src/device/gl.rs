@@ -2240,6 +2240,8 @@ impl Device {
         program: &mut Program,
         descriptor: &VertexDescriptor,
     ) -> Result<(), ShaderError> {
+        profile_scope!(&format!("compile shader {}", program.source_info.base_filename));
+
         let _guard = CrashAnnotatorGuard::new(
             &self.crash_annotator,
             CrashAnnotation::CompileShader,
