@@ -172,7 +172,7 @@ class WebrtcVideoConduit
 
   Maybe<webrtc::VideoReceiveStream::Stats> GetReceiverStats() const override;
   Maybe<webrtc::VideoSendStream::Stats> GetSenderStats() const override;
-  webrtc::Call::Stats GetCallStats() const override;
+  Maybe<webrtc::Call::Stats> GetCallStats() const override;
 
   bool AddFrameHistory(dom::Sequence<dom::RTCVideoFrameHistoryInternal>*
                            outHistories) const override;
