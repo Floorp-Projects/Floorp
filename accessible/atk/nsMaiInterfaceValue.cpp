@@ -19,6 +19,9 @@ extern "C" {
 
 static void getCurrentValueCB(AtkValue* obj, GValue* value) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
+  if (acc) {
+    return;
+  }
 
   memset(value, 0, sizeof(GValue));
   double accValue = acc->CurValue();
@@ -30,6 +33,9 @@ static void getCurrentValueCB(AtkValue* obj, GValue* value) {
 
 static void getMaximumValueCB(AtkValue* obj, GValue* value) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
+  if (acc) {
+    return;
+  }
 
   memset(value, 0, sizeof(GValue));
   double accValue = acc->MaxValue();
@@ -41,6 +47,9 @@ static void getMaximumValueCB(AtkValue* obj, GValue* value) {
 
 static void getMinimumValueCB(AtkValue* obj, GValue* value) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
+  if (acc) {
+    return;
+  }
 
   memset(value, 0, sizeof(GValue));
   double accValue = acc->MinValue();
@@ -52,6 +61,9 @@ static void getMinimumValueCB(AtkValue* obj, GValue* value) {
 
 static void getMinimumIncrementCB(AtkValue* obj, GValue* minimumIncrement) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
+  if (acc) {
+    return;
+  }
 
   memset(minimumIncrement, 0, sizeof(GValue));
   double accValue = acc->Step();
