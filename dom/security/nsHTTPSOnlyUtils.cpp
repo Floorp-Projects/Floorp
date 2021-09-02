@@ -324,9 +324,7 @@ bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(
   // then we are dealing with an upgrade downgrade scenario and we have to break
   // the cycle.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
-  // Since https-first also accepts http sites, endless loops can also be
-  // triggered by http sites
-  if (!triggeringPrincipal->SchemeIs("https") && !enforceForHTTPSFirstMode) {
+  if (!triggeringPrincipal->SchemeIs("https")) {
     return false;
   }
 
