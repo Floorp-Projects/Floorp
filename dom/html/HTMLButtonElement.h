@@ -46,7 +46,6 @@ class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
   // overriden nsIFormControl methods
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
-  virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
 
   virtual void FieldSetDisabledChanged(bool aNotify) override;
 
@@ -90,6 +89,7 @@ class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
   // nsGenericHTMLElement
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                int32_t* aTabIndex) override;
+  virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
 
   // WebIDL
   bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }

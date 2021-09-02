@@ -181,10 +181,6 @@ class nsIFormControl : public nsISupports {
    */
   inline bool AllowDraggableChildren() const;
 
-  virtual bool IsDisabledForEvents(mozilla::WidgetEvent* aEvent) {
-    return false;
-  }
-
   // Returns a number for this form control that is unique within its
   // owner document.  This is used by nsContentUtils::GenerateStateKey
   // to identify form controls that are inserted into the document by

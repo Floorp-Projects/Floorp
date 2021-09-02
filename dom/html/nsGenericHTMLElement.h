@@ -262,6 +262,11 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   already_AddRefed<mozilla::dom::ElementInternals> AttachInternals(
       ErrorResult& aRv);
 
+  // Returns true if the event should not be handled from GetEventTargetParent.
+  virtual bool IsDisabledForEvents(mozilla::WidgetEvent* aEvent) {
+    return false;
+  }
+
  protected:
   virtual ~nsGenericHTMLElement() = default;
 
