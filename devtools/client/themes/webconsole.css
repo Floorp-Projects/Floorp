@@ -848,6 +848,50 @@ a.learn-more-link.webconsole-learn-more-link {
   background-color: var(--table-zebra-background);
 }
 
+/* Simple Table */
+.message .simple-table {
+  width: 100%;
+  border-collapse: collapse;
+  --simpletable-border: var(--theme-splitter-color);
+  margin-block-end: var(--attachment-margin-block-end);
+  color: var(--theme-body-color);
+  text-align: left;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--simpletable-border);
+  table-layout: fixed;
+  margin-top: 3px;
+}
+
+.simple-table-header {
+  background-color: var(--theme-toolbar-background);
+  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--simpletable-border);
+}
+
+.simple-table-header > th {
+  padding: 5px 4px;
+  font-weight: inherit;
+}
+
+.simple-table-header > th:nth-child(odd) {
+  width: 10%;
+}
+
+.simple-table td {
+  padding: 3px 4px;
+  text-overflow: ellipsis;
+  border-left: 1px solid var(--simpletable-border);
+}
+
+.simple-table td:nth-child(2n) span {
+  color: var(--theme-body-color);
+}
+
+.simple-table tr:nth-child(even) {
+  background-color: var(--table-zebra-background);
+}
+
 /* Object Inspector */
 .webconsole-app .object-inspector.tree {
   display: inline-block;

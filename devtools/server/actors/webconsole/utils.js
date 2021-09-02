@@ -581,6 +581,24 @@ WebConsoleCommands._registerOriginal("screenshot", function(owner, args = {}) {
 });
 
 /**
+ * Shows a history of commands and expressions previously executed within the command line.
+ *
+ * @param object args
+ *               The arguments to be passed to the history
+ * @return void
+ */
+WebConsoleCommands._registerOriginal("history", function(owner, args = {}) {
+  owner.helperResult = (async () => {
+    // everything is handled on the client side, so we return a very simple object with
+    // the args
+    return {
+      type: "historyOutput",
+      args,
+    };
+  })();
+});
+
+/**
  * Block specific resource from loading
  *
  * @param object args
