@@ -64,6 +64,16 @@ static LazyLogModule sUpdateLog("updatedriver");
 #endif
 #define LOG(args) MOZ_LOG(sUpdateLog, mozilla::LogLevel::Debug, args)
 
+#ifdef XP_WIN
+#  define UPDATER_BIN "updater.exe"
+#  define MAINTENANCE_SVC_NAME L"MozillaMaintenance"
+#elif XP_MACOSX
+#  define UPDATER_APP "updater.app"
+#  define UPDATER_BIN "org.mozilla.updater"
+#else
+#  define UPDATER_BIN "updater"
+#endif
+
 #ifdef XP_MACOSX
 static void UpdateDriverSetupMacCommandLine(int& argc, char**& argv,
                                             bool restart) {
