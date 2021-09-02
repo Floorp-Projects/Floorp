@@ -41,7 +41,7 @@ void Help(nsString& aHelp) const;
 /**
  * Set aDesc to the description of the proxied accessible.
  */
-void Description(nsString& aDesc) const;
+void Description(nsString& aDesc) const override;
 
 /**
  * Get the set of attributes on the proxied accessible.

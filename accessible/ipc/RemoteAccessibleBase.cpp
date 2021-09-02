@@ -176,6 +176,13 @@ ENameValueFlag RemoteAccessibleBase<Derived>::Name(nsString& aName) const {
 }
 
 template <class Derived>
+void RemoteAccessibleBase<Derived>::Description(nsString& aDescription) const {
+  if (mCachedFields) {
+    mCachedFields->GetAttribute(nsGkAtoms::description, aDescription);
+  }
+}
+
+template <class Derived>
 double RemoteAccessibleBase<Derived>::CurValue() const {
   if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
     return *value;
