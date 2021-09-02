@@ -156,6 +156,23 @@ static void ScheduleTimedOut(nsITimer* aTimer, void* aClosure) {
   runnable->Schedule(true);
 }
 
+void IdleTaskRunner::ScheduleAfterDelay(TimeDuration aDelay) {
+  if (!mScheduleTimer) {
+    mScheduleTimer = NS_NewTimer();
+    if (!mScheduleTimer) {
+      return;
+    }
+  } else {
+    mScheduleTimer->Cancel();
+  }
+
+  mScheduleTimer->InitWithNamedFuncCallback(
+      ScheduleTimedOut, this,
+      static_cast<unsigned long>(aDelay.ToMilliseconds()),
+      nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, mName);
+  return;
+}
+
 void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
   if (!mCallback) {
     return;
@@ -169,6 +186,14 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
   mDeadline = TimeStamp();
 
   TimeStamp now = TimeStamp::Now();
+  // This task isn't due to start yet
+  if (now < mStartTime) {
+    // + 1 to round milliseconds up to be sure to wait until after
+    // mStartTime.
+    ScheduleAfterDelay(mStartTime - now + TimeDuration::FromMilliseconds(1));
+    return;
+  }
+
   if (nsRefreshDriver::IsRegularRateTimerTicking()) {
     if (!mTask) {
       // If a task was already scheduled, no point rescheduling.
@@ -178,37 +203,23 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
     }
     // Ensure we get called at some point, even if RefreshDriver is stopped.
     SetTimerInternal(mMaxDelay);
-  } else {
-    if (aAllowIdleDispatch) {
-      SetTimerInternal(mMaxDelay);
-      if (!mTask) {
-        // If we have mTask we've already scheduled one, and the refresh driver
-        // shouldn't be running if we hit this code path.
-        mTask = new IdleTaskRunnerTask(this);
-        RefPtr<Task> task(mTask);
-        TaskController::Get()->AddTask(task.forget());
-      }
-    } else {
-      if (!mScheduleTimer) {
-        mScheduleTimer = NS_NewTimer();
-        if (!mScheduleTimer) {
-          return;
-        }
-      } else {
-        mScheduleTimer->Cancel();
-      }
-      // We weren't allowed to do idle dispatch immediately, do it after a
-      // short timeout. (Or wait for our start time if we haven't started yet.)
-      uint32_t waitToSchedule = 16; /* ms */
-      if (now < mStartTime) {
-        // + 1 to round milliseconds up to be sure to wait until after
-        // mStartTime.
-        waitToSchedule = (mStartTime - now).ToMilliseconds() + 1;
-      }
-      mScheduleTimer->InitWithNamedFuncCallback(
-          ScheduleTimedOut, this, waitToSchedule,
-          nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, mName);
-    }
+    return;
+  }
+
+  // We aren't allowed to do idle dispatch now.  So have it run after a short
+  // timeout.
+  if (!aAllowIdleDispatch) {
+    ScheduleAfterDelay(TimeDuration::FromMilliseconds(16));
+    return;
+  }
+
+  SetTimerInternal(mMaxDelay);
+  if (!mTask) {
+    // If we have mTask we've already scheduled one, and the refresh driver
+    // shouldn't be running if we hit this code path.
+    mTask = new IdleTaskRunnerTask(this);
+    RefPtr<Task> task(mTask);
+    TaskController::Get()->AddTask(task.forget());
   }
 }
 
