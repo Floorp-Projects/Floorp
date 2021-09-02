@@ -27,27 +27,6 @@
   height: 32px;
 }
 
-.downloadBlockedBadge {
-  margin: 0 5px;
-  background: url("chrome://browser/skin/downloads/download-blocked.svg") top right / 16px no-repeat;
-}
-
-.downloadBlockedBadge:-moz-locale-dir(rtl) {
-  background-position-x: left;
-}
-
-@item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadge {
-  background-image: url("chrome://global/skin/icons/warning.svg");
-  -moz-context-properties: fill;
-  fill: #FFBF00;
-}
-
-@item@[verdict="Uncommon"] .downloadBlockedBadge {
-  -moz-context-properties: fill;
-  fill: #00a1f2;
-  background-image: url("chrome://global/skin/icons/info-filled.svg");
-}
-
 .downloadTarget {
   margin: 0;
 }
@@ -123,3 +102,6 @@
 
 /*** Progressmeter ***/
 %include progressmeter.inc.css
+
+/*** Blocked iconography ***/
+%include download-blockedStates.inc.css

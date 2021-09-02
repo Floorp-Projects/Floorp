@@ -38,7 +38,6 @@
   skin/classic/browser/customizableui/density-touch.svg        (../shared/customizableui/density-touch.svg)
   skin/classic/browser/customizableui/whimsy.png               (../shared/customizableui/whimsy.png)
   skin/classic/browser/downloads/contentAreaDownloadsView.css  (../shared/downloads/contentAreaDownloadsView.css)
-  skin/classic/browser/downloads/download-blocked.svg          (../shared/downloads/download-blocked.svg)
   skin/classic/browser/downloads/download-summary.svg          (../shared/downloads/download-summary.svg)
   skin/classic/browser/downloads/downloads.svg                 (../shared/downloads/downloads.svg)
   skin/classic/browser/downloads/notification-finish-animation.svg       (../shared/downloads/notification-finish-animation.svg)
