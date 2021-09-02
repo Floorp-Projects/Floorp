@@ -523,8 +523,7 @@ fn copy_from_staging_to_cache_using_draw_calls(
                     &mut renderer.device,
                     &projection,
                     None,
-                    &mut renderer.renderer_errors,
-                    &mut renderer.profile,
+                    &mut renderer.renderer_errors
                 );
 
             prev_dst = Some(copy.dest_texture_id);
