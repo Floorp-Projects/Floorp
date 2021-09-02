@@ -551,13 +551,8 @@ static void MaybeFireNameChange(AtkObject* aAtkObj, const nsString& aNewName) {
 
 const gchar* getDescriptionCB(AtkObject* aAtkObj) {
   nsAutoString uniDesc;
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap) {
-    if (accWrap->IsDefunct()) return nullptr;
-
-    accWrap->Description(uniDesc);
-  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
-    proxy->Description(uniDesc);
+  if (Accessible* acc = GetInternalObj(aAtkObj)) {
+    acc->Description(uniDesc);
   } else {
     return nullptr;
   }

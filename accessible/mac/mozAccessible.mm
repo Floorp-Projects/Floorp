@@ -629,11 +629,7 @@ struct RoleDescrComparator {
   // What needs to go here is actually the accDescription of an item.
   // The MSAA acc_help method has nothing to do with this one.
   nsAutoString helpText;
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    acc->Description(helpText);
-  } else {
-    mGeckoAccessible->AsRemote()->Description(helpText);
-  }
+  mGeckoAccessible->Description(helpText);
 
   return nsCocoaUtils::ToNSString(helpText);
 

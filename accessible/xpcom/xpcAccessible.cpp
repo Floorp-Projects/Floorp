@@ -256,11 +256,7 @@ xpcAccessible::GetDescription(nsAString& aDescription) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
   nsAutoString desc;
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-    proxy->Description(desc);
-  } else {
-    Intl()->Description(desc);
-  }
+  IntlGeneric()->Description(desc);
 
   aDescription.Assign(desc);
 
