@@ -19,6 +19,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
+import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.awesomebar.R
 import mozilla.components.concept.awesomebar.AwesomeBar
 
@@ -34,6 +36,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 internal fun Suggestion(
     suggestion: AwesomeBar.Suggestion,
     colors: AwesomeBarColors,
+    orientation: AwesomeBarOrientation,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
@@ -61,6 +64,7 @@ internal fun Suggestion(
         if (suggestion.editSuggestion != null) {
             AutocompleteButton(
                 onAutoComplete = { onAutoComplete(suggestion) },
+                orientation = orientation,
                 colors = colors,
                 modifier = Modifier.align(Alignment.CenterVertically)
             )
@@ -133,9 +137,11 @@ private fun SuggestionIcon(
 }
 
 @Composable
+@Suppress("MagicNumber")
 private fun AutocompleteButton(
     onAutoComplete: () -> Unit,
     colors: AwesomeBarColors,
+    orientation: AwesomeBarOrientation,
     modifier: Modifier
 ) {
     Image(
@@ -145,6 +151,13 @@ private fun AutocompleteButton(
         modifier = modifier
             .width(24.dp)
             .height(24.dp)
+            .rotate(
+                if (orientation == AwesomeBarOrientation.BOTTOM) {
+                    270f
+                } else {
+                    0f
+                }
+            )
             .clickable { onAutoComplete() }
     )
 }

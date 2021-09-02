@@ -8,18 +8,26 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
+import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.concept.awesomebar.AwesomeBar
 
 @Composable
 internal fun Suggestions(
     suggestions: List<AwesomeBar.Suggestion>,
     colors: AwesomeBarColors,
+    orientation: AwesomeBarOrientation,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit
 ) {
     LazyColumn {
         items(suggestions) { suggestion ->
-            Suggestion(suggestion, colors, onSuggestionClicked, onAutoComplete)
+            Suggestion(
+                suggestion,
+                colors,
+                orientation,
+                onSuggestionClicked,
+                onAutoComplete
+            )
         }
     }
 }

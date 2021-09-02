@@ -8,7 +8,6 @@ import androidx.compose.material.ContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
 
 /**
  * Contains the default values used by the AwesomeBar.
