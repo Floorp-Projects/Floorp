@@ -26,9 +26,9 @@ class Delegate {
       sender: {
         envType: "addon_child",
         url: "test-runner-support:///",
-        extensionId: TEST_SUPPORT_EXTENSION_ID,
       },
       data,
+      extensionId: TEST_SUPPORT_EXTENSION_ID,
       nativeApp: "test-runner-support",
     };
 
