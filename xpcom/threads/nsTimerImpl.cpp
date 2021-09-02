@@ -595,9 +595,9 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
 
   AUTO_PROFILER_LABEL("nsTimerImpl::Fire", OTHER);
 
-  TimeStamp fireTime = TimeStamp::Now();
+  TimeStamp now = TimeStamp::Now();
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
-    TimeDuration delta = fireTime - oldTimeout;
+    TimeDuration delta = now - oldTimeout;
     int32_t d = delta.ToMilliseconds();  // delta in ms
     sDeltaSum += abs(d);
     sDeltaSumSquared += double(d) * double(d);
@@ -626,26 +626,14 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
       [&](const FuncCallback& f) { f.mFunc(mITimer, f.mClosure); },
       [&](const ClosureCallback& c) { c.mFunc(mITimer); });
 
-  TimeStamp now = TimeStamp::Now();
-
   MutexAutoLock lock(mMutex);
   if (aGeneration == mGeneration) {
     if (IsRepeating()) {
       // Repeating timer has not been re-init or canceled; reschedule
       if (IsSlack()) {
-        mTimeout = now + mDelay;
+        mTimeout = TimeStamp::Now() + mDelay;
       } else {
-        if (mDelay) {
-          // If we are late enough finishing the callback that we have missed
-          // some firings, do not attempt to play catchup, just get back on the
-          // cadence we're supposed to maintain.
-          unsigned missedFirings =
-              static_cast<unsigned>((now - mTimeout) / mDelay);
-          mTimeout += mDelay * (missedFirings + 1);
-        } else {
-          // Can we stop allowing repeating timers with delay 0?
-          mTimeout = now;
-        }
+        mTimeout = mTimeout + mDelay;
       }
       gThreadWrapper.AddTimer(this, lock);
     } else {
@@ -660,7 +648,7 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
 
   MOZ_LOG(GetTimerLog(), LogLevel::Debug,
           ("[this=%p] Took %fms to fire timer callback\n", this,
-           (now - fireTime).ToMilliseconds()));
+           (TimeStamp::Now() - now).ToMilliseconds()));
 }
 
 // See the big comment above GetTimerFiringsLog() to understand this code.
