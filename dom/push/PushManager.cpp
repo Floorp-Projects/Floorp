@@ -452,7 +452,7 @@ already_AddRefed<Promise> PushManager::PermissionState(
 
 already_AddRefed<Promise> PushManager::PerformSubscriptionActionFromWorker(
     SubscriptionAction aAction, ErrorResult& aRv) {
-  PushSubscriptionOptionsInit options;
+  RootedDictionary<PushSubscriptionOptionsInit> options(RootingCx());
   return PerformSubscriptionActionFromWorker(aAction, options, aRv);
 }
 
