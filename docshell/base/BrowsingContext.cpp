@@ -2094,7 +2094,7 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
     return;
   }
 
-  if (IsFrame()) {
+  if (IsSubframe()) {
     // .close() on frames is a no-op.
     return;
   }
@@ -3486,7 +3486,7 @@ bool BrowsingContext::ShouldUpdateSessionHistory(uint32_t aLoadType) {
   // an iframe in shift-reload case.
   return nsDocShell::ShouldUpdateGlobalHistory(aLoadType) &&
          (!(aLoadType & nsIDocShell::LOAD_CMD_RELOAD) ||
-          (IsForceReloadType(aLoadType) && IsFrame()));
+          (IsForceReloadType(aLoadType) && IsSubframe()));
 }
 
 nsresult BrowsingContext::CheckLocationChangeRateLimit(CallerType aCallerType) {

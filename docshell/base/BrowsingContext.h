@@ -392,13 +392,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool IsChrome() const { return !IsContent(); }
 
   bool IsTop() const { return !GetParent(); }
-  bool IsFrame() const { return !IsTop(); }
+  bool IsSubframe() const { return !IsTop(); }
 
   bool IsTopContent() const { return IsContent() && IsTop(); }
 
   bool IsInSubtreeOf(BrowsingContext* aContext);
 
-  bool IsContentSubframe() const { return IsContent() && IsFrame(); }
+  bool IsContentSubframe() const { return IsContent() && IsSubframe(); }
 
   // non-zero
   uint64_t Id() const { return mBrowsingContextId; }
