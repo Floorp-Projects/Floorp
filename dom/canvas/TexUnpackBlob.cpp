@@ -407,7 +407,7 @@ bool TexUnpackBlob::ConvertIfNeeded(
   if (!rowLength || !rowCount) return true;
 
   const auto srcIsPremult = (mDesc.srcAlphaType == gfxAlphaType::Premult);
-  const auto& dstIsPremult = unpacking.mPremultiplyAlpha;
+  auto dstIsPremult = unpacking.mPremultiplyAlpha;
   const auto fnHasPremultMismatch = [&]() {
     if (mDesc.srcAlphaType == gfxAlphaType::Opaque) return false;
 
@@ -418,7 +418,12 @@ bool TexUnpackBlob::ConvertIfNeeded(
 
   const auto srcOrigin =
       (unpacking.mFlipY ? gl::OriginPos::TopLeft : gl::OriginPos::BottomLeft);
-  const auto dstOrigin = gl::OriginPos::BottomLeft;
+  auto dstOrigin = gl::OriginPos::BottomLeft;
+
+  if (!mDesc.applyUnpackTransforms) {
+    dstIsPremult = srcIsPremult;
+    dstOrigin = srcOrigin;
+  }
 
   if (srcFormat != dstFormat) {
     webgl->GeneratePerfWarning(

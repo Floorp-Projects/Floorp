@@ -1062,6 +1062,7 @@ struct TexUnpackBlobDesc final {
   RefPtr<gfx::DataSourceSurface> dataSurf;
 
   WebGLPixelStore unpacking;
+  bool applyUnpackTransforms = true;
 
   void Shrink(const webgl::PackingInfo&);
 };
