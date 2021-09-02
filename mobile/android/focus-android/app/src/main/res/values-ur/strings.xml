@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">آپ کے برائوزنگ سابقات مٹا دیئے گئے ہیں۔</string>
 
+    <string name="feedback_erase2">براؤزنگ کی سابقات صاف ہو گئی۔</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">ٹیب کی برائوزنگ سابقات مٹا دی گئی ہیں۔</string>
 
@@ -46,6 +48,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">ابتدائی اسکرین پر اظافہ کریں</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">شارٹ کٹ میں شامل کریں</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">شارٹ کٹ سے ہٹائیں</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">نیا کیا ہے</string>
     <string name="menu_settings">سیٹنگیں</string>
@@ -60,10 +67,19 @@
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">ٹریکر بلاک کردہ</string>
 
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">اسے بند کرنے سے سائٹ کے کچھ مسائل ٹھیک ہو سکتے ہیں۔</string>
+
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">مواد کو روکیں</string>
     <!-- This is the subtitle content blocking toggle -->
     <string name="menu_content_blocking_subtitle">کچھ سائٹس کو ٹھیک کرنے کے لئے بند کر دیں</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">ان کے ذریعہ %1$s</string>
 
     <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
          sharing an URL. -->
@@ -107,6 +123,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">نجی طور پر طلاش کرے</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s آپ کو کنٹرول دیتی ہے </p>
+<p> اسکو نجی برائوزر کی طرح استعمال کریں:
+  <ul> 
+    <li> اپلی کیشن میں ہی تلاش اور براؤز کریں </li>
+    <li>ٹریکررٰ کو بلاک کریں (یا سٹینگوں کی تازہ کاری کر کے ٹریکررٰ کو اجازت دیں)۔ </li>
+    <li> کوکیز کے ساتھ تلاش اور براؤزنگ سابقات کو بھی حذف کرنے کیلیے مٹائیں </li>
+  </ul>
+</p>
+<p>%1$s کی پیداوار ہے۔ ھماری مہم ایک صحت مند کھلے انٹرنیٹ کو فروعٰ دینا ہے۔ Mozilla<br/>
+<a href="%2$s"> مزید جانیے </a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">رازداری اور سلامتی</string>
 
@@ -121,6 +150,9 @@
     <!-- About the app and help are links that are inside this menu -->
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">%1$s کے بارے میں، مدد</string>
+
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">توسيعى سراغ کاری تحفظ</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">ویب مواد</string>
@@ -232,7 +264,16 @@
     <string name="preference_privacy_block_content_summary2">اہل بنانے کی وجہ سے شاید چند صفحات غیر متوقع برتائو کر سکتے ہیں</string>
     <string name="preference_privacy_category_cookies">کوکیز بلاک کری٘ں</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">نہیں شکریہ</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">صرف 3-فریق کی ٹریکر کوکیاں بلاک کریں</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">صرف 3-فریق کی کوکیاں بلاک کریں</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">جی ہاں برائے مہربانی</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">ایپ کو غیر مقفل کرنے کے لیے فنگر پرنٹ کا استعمال کریں۔</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -266,6 +307,9 @@
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">مزید سیکھیں</string>
 
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla صرف اس کو جمع کرنے کی کوشش کرتا ہے جو ہمیں ہر کسی کے لئے %1$s فراہم کرنے اور بہتر بنانے کی ضرورت ہے۔</string>
+
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">رازداری کا نوٹس</string>
 
@@ -275,6 +319,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">تنصیب شدہ تلاش انجن</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">تلاش انجن کا  انتخاب  کریں </string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">طےشدہ تلاش انجن بحال کریں</string>
 
@@ -283,6 +330,11 @@
     <string name="preference_search_add2">ایک اور تلاش انجن کا اضافہ کریں</string>
     <string name="preference_search_remove_title">تلاش انجن ہٹائیں</string>
     <string name="preference_search_remove">ہٹائیں</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">ایک اور تلاش انجن کا اضافہ کریں</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">اپنا پسندیدہ انجن منتخب کریں</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -304,6 +356,8 @@
     <string name="search_add_error_duplicate_name">ایک تنصیب شدہ تلاش کے انجن پہلے ہی اس نام کا استعمال کر رہا ہے۔</string>
 
     <string name="search_add_error_empty_search">ایک سٹرنگ داخل کریں</string>
+
+    <string name="search_add_error_format">پڑتال کریں کہ سرچ سٹرنگ مثال کی شکل سے میل کھاتا ہے</string>
 
     <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
     <string name="content_description_clear_input">ان پٹ صاف کریں</string>
@@ -436,8 +490,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">اظافہ کریں</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">جی ہاں</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">منسوخ کریں</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">نہیں</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -503,6 +563,9 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">ڈیسک ٹاپ سائٹ کی درخواست کریں</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">ڈیسک ٹاپ سائٹ</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">نقل شدہ URL</string>
 
@@ -519,6 +582,9 @@
      %1$s is replaced with the app name -->
     <string name="biometric_auth_title">%1$s کو غیر فعال کریں</string>
 
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">جاری رکھنے کے لیے فنگر پرنٹ سینسر کو چھوئیں۔</string>
+
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">نیا سیشن</string>
@@ -533,6 +599,13 @@
     <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
      This is displayed during the authentication flow as the app launches. -->
     <string name="biometric_auth_not_recognized_error">فنگر پرنٹ کی پہچان نہیں ہو سکی. دوبارہ کوشش کریں۔</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">انگلی بہت تیزی سے حرکت میں آئی۔ دوبارہ کوشش کریں.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">تلاش تجاویز دکھائیں</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">نہیں</string>
@@ -557,8 +630,14 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">سوئچ کریں</string>
 
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">فوری طور پر نئے ٹیب میں لنک پر سوئچ کریں۔</string>
+
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_category_safe_browsing">محفوظ براؤزنگ</string>
+
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">ممکنہ طور پر خطرناک اور دھوکہ دہی والی سائٹوں کو بلاک کریں۔</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">استثنیات</string>
@@ -569,8 +648,16 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">تمام ویب سائٹیں ہٹائیں</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">کوکیز بلاک کری٘ں</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">کیا آپ کوکیز کو بلاک کرنا چاہتے ہیں؟</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">ٹیب تباہ ہوگیا</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">معذرت ہمیں اس ٹیب کے ساتھ ایک مسئلہ درپیش ہے۔</string>
     <!-- Subtitle for the tab crash report screen -->
     <string name="tab_crash_report_description">ایک نجی براؤزر کے طور پر، ہم کبھی بھی اس ٹیب کو محفوظ یا بحال نہیں کرسکتے ہیں۔</string>
     <!-- Label for button to close the tab-->
@@ -580,5 +667,33 @@
     <string name="crash_report_send_crash_label">تباہی کی رپورٹ Mozilla کو ارسال کریں</string>
 
     <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">ٹریکرز %s سے بلاک ہیں۔</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">مواد</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">اشتہار</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">سماجی</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">تجزیہ</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">توسيعى سراغ کاری تحفظ</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">اس سائٹ کیلئے تحفظات بند ہیں</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">اس سائٹ کیلئے تحفظات چالو ہیں</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">کنکشن محفوظ ہے۔</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">کنکشن محفوظ نہیں ہے</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">واپس جائیں</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">ہٹائیں</string>
 
     </resources>

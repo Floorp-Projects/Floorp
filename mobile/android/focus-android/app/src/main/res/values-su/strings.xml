@@ -558,7 +558,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s disanggakeun dina katangtuan <a href="%2$s">Lisénsi Publik Mozilla</a> jeung lisénsi sumber nembrak lianna.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Anjeun teu dibéré idin atawa lisénsi nanaon kana mérek dagang Mozilla Foundation atawa pihak mana ogé, kaasup ngaran atawa logo Mozilla, Firefox, atawa %1$s. Embaran leuwih lengkep bisa dibaca <a href="%2$s">di dieu</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Kodeu sumber lianna pikeun %1$s nyampak dina rupa-rupa <a href="%2$s">lisénsi</a> bébas jeung sumber nembrak séjénna.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s ogé maké daptar peungpeukan nu disayagakeun ku Disconnect, Inc. minangka karya anu misah jeung indepénden dina <a href="%2$s">GNU General Public License v3</a>, sarta sayaga<a href="%3$s">di dieu</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Sandiasma</string>
     <string name="gv_prompt_password_hint">Kecap sandi</string>
     <string name="gv_prompt_clear">Beresihan</string>
@@ -665,6 +686,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Lokana ngaco?\n Coba pareuman Salindung Palacak</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Eusi loka leungit atawa polahna ahéng?\n
+    Coba pareuman Salindung Palacakan Tingkat Lanjut</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Hontal aksés sakali toél ka loka-loka anu pangmindengna dianjangan%1$s Menu > Tambahkeun ka layar Tepas]]></string>
@@ -682,8 +708,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Muka hiji tutumbu dina hiji tab anyar\n Pencét lila tutumbu dina kacana</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Hayang nempo pérsi weuteuh hiji loka?\n
+        Aktipkeun Loka Déstop ti menu %1$s</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Pareuman tips dina layar mimiti</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Hayang angger mareuman Salindung Palacakan Tingkat Lanjut pikeun loka anu anjeun percaya?\n
+        Asupkeun kana anu diiwalkeun dina Setélan
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Kantenan, kami boga pidangan anyar!\n Baca leuwih lengkep ngeunaan ieu jeung nu anyar lianna ka %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Jieun takulan ka loka anu mindeng dianjangan:\n
+    Pilih Tambah ka Takulan ti menu %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Tab anyar dibuka</string>
@@ -745,6 +791,8 @@
     <string name="analytics">Analitika</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="enhanced_tracking_protection">Protéksi Palacakan Tingkat Lanjut</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Salindung PAREUM pikeun ieu loka</string>
     <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
     <string name="enhanced_tracking_protection_state_on">Perlindungan AKTIP pikeun ieu loka</string>
 
@@ -752,6 +800,9 @@
     <string name="secure_connection">Sambungan aman</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">Sambungan teu aman</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Palacak jeung Skrip Peungpeukeun</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">Balik deui</string>

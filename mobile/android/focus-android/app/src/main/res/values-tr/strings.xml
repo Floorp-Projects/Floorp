@@ -711,8 +711,28 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Bağlantıları yeni sekmede açabilirsiniz\n Bir sayfadaki herhangi bir bağlantıya uzun basın</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Bir sitenin tam versiyonunu mu görmek istiyorsunuz?\n
+        %1$s menüsünden masaüstü sitesine geçebilirsiniz</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Başlangıç ​​ekranında ipuçlarını kapat</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Güvendiğiniz bir siteye gelişmiş izlenme korumasını kapatmak mı istiyorsunuz?\n
+        Ayarlardan o siteyi izinli listenize ekleyebilirsiniz
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Tasarımımız yenilendi!\n Yeni tasarım ve diğer %1$s güncellemeleri hakkında bilgi alın.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">En çok ziyaret ettiğiniz sitelere kısayol oluşturun:\n
+    %1$s menüsünden “Kısayollara ekle”yi seçin</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Yeni sekme açıldı</string>

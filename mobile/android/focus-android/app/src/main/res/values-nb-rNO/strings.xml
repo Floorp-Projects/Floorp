@@ -719,6 +719,21 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Slå av tips på startskjermen</string>
 
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Vil du beholde utvidet sporingsbeskyttelse avslått for et nettsted du stoler på?\n
+        Legg den til tillatelseslisten i innstillinger
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Ja, vi har et nytt utseende!\n Finn ut mer om dette og andre oppdateringer for %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Lag snarveier til nettstedene du besøker mest:\n
+    Velg Legg til i snarveier fra %1$s-menyen</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Ny fane åpnet</string>
 
@@ -797,4 +812,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Fjern</string>
 
-    </resources>
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Lagrede og delte bilder &lt;b&gt;vil ikke bli&lt;/b&gt; fjernet når du sletter %1$s-historikken</string>
+</resources>
