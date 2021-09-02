@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.fragment
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -83,8 +84,11 @@ class AboutFragment : BaseSettingsLikeFragment() {
                 .replaceAfter("<br/>", "")
                 .replace("<br/>", "")
 
+        val gecko = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) " \uD83E\uDD8E " else " GV: "
+
         val engineIndicator =
-            " \uD83E\uDD8E " + BuildConfig.MOZ_APP_VERSION + "-" + BuildConfig.MOZ_APP_BUILDID
+            gecko + BuildConfig.MOZ_APP_VERSION + "-" + BuildConfig.MOZ_APP_BUILDID
+
         val packageInfo =
             requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
 
