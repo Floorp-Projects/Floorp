@@ -169,17 +169,7 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
   mDeadline = TimeStamp();
 
   TimeStamp now = TimeStamp::Now();
-  bool useRefreshDriver = false;
-  if (now >= mStartTime) {
-    // Detect whether the refresh driver is ticking by checking if
-    // GetIdleDeadlineHint returns its input parameter.
-    useRefreshDriver = (nsRefreshDriver::GetIdleDeadlineHint(now) != now);
-  } else {
-    NS_WARNING_ASSERTION(!aAllowIdleDispatch,
-                         "early callback, or time went backwards");
-  }
-
-  if (useRefreshDriver) {
+  if (nsRefreshDriver::IsRegularRateTimerTicking()) {
     if (!mTask) {
       // If a task was already scheduled, no point rescheduling.
       mTask = new IdleTaskRunnerTask(this);
@@ -189,7 +179,6 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
     // Ensure we get called at some point, even if RefreshDriver is stopped.
     SetTimerInternal(mMaxDelay);
   } else {
-    // RefreshDriver doesn't seem to be running.
     if (aAllowIdleDispatch) {
       SetTimerInternal(mMaxDelay);
       if (!mTask) {
