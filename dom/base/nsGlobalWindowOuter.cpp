@@ -7312,6 +7312,8 @@ void nsGlobalWindowOuter::EnsureSizeAndPositionUpToDate() {
 }
 
 already_AddRefed<nsISupports> nsGlobalWindowOuter::SaveWindowState() {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
+
   if (!mContext || !GetWrapperPreserveColor()) {
     // The window may be getting torn down; don't bother saving state.
     return nullptr;
@@ -7336,6 +7338,8 @@ already_AddRefed<nsISupports> nsGlobalWindowOuter::SaveWindowState() {
 }
 
 nsresult nsGlobalWindowOuter::RestoreWindowState(nsISupports* aState) {
+  MOZ_ASSERT(!mozilla::SessionHistoryInParent());
+
   if (!mContext || !GetWrapperPreserveColor()) {
     // The window may be getting torn down; don't bother restoring state.
     return NS_OK;
