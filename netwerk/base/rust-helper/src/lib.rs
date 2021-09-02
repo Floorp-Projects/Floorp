@@ -325,7 +325,7 @@ pub extern "C" fn rust_parse_etc_hosts<'a>(path: &'a nsACString, callback: Parsi
     for line in file.lines() {
         let line = match line {
             Ok(l) => l,
-            Err(..) => break,
+            Err(..) => continue,
         };
 
         let mut iter = line.split('#').next().unwrap().split_whitespace();
