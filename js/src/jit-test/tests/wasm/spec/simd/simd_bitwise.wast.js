@@ -1548,10 +1548,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
+      value("f32", -0),
+      value("f32", -0),
+      value("f32", -0),
     ),
   ],
 );
@@ -2189,10 +2189,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
-      bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+      value("f32", -0),
+      value("f32", -0),
+      value("f32", -0),
+      value("f32", -0),
     ),
   ],
 );

@@ -168,10 +168,9 @@ assert_return(() => invoke($0, `i32.trunc_f32_s`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:65
-assert_return(
-  () => invoke($0, `i32.trunc_f32_s`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `i32.trunc_f32_s`, [value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/conversions.wast:66
 assert_return(
@@ -296,10 +295,9 @@ assert_return(() => invoke($0, `i32.trunc_f32_u`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:88
-assert_return(
-  () => invoke($0, `i32.trunc_f32_u`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `i32.trunc_f32_u`, [value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/conversions.wast:89
 assert_return(
@@ -753,10 +751,9 @@ assert_return(() => invoke($0, `i64.trunc_f32_s`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:163
-assert_return(
-  () => invoke($0, `i64.trunc_f32_s`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i64", 0n)],
-);
+assert_return(() => invoke($0, `i64.trunc_f32_s`, [value("f32", -0)]), [
+  value("i64", 0n),
+]);
 
 // ./test/core/conversions.wast:164
 assert_return(
@@ -893,10 +890,9 @@ assert_return(() => invoke($0, `i64.trunc_f32_u`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:188
-assert_return(
-  () => invoke($0, `i64.trunc_f32_u`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i64", 0n)],
-);
+assert_return(() => invoke($0, `i64.trunc_f32_u`, [value("f32", -0)]), [
+  value("i64", 0n),
+]);
 
 // ./test/core/conversions.wast:189
 assert_return(
@@ -1341,11 +1337,9 @@ assert_return(() => invoke($0, `i32.trunc_sat_f32_s`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:266
-assert_return(
-  () =>
-    invoke($0, `i32.trunc_sat_f32_s`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `i32.trunc_sat_f32_s`, [value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/conversions.wast:267
 assert_return(
@@ -1475,11 +1469,9 @@ assert_return(() => invoke($0, `i32.trunc_sat_f32_u`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:289
-assert_return(
-  () =>
-    invoke($0, `i32.trunc_sat_f32_u`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", 0)],
-);
+assert_return(() => invoke($0, `i32.trunc_sat_f32_u`, [value("f32", -0)]), [
+  value("i32", 0),
+]);
 
 // ./test/core/conversions.wast:290
 assert_return(
@@ -1918,11 +1910,9 @@ assert_return(() => invoke($0, `i64.trunc_sat_f32_s`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:360
-assert_return(
-  () =>
-    invoke($0, `i64.trunc_sat_f32_s`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i64", 0n)],
-);
+assert_return(() => invoke($0, `i64.trunc_sat_f32_s`, [value("f32", -0)]), [
+  value("i64", 0n),
+]);
 
 // ./test/core/conversions.wast:361
 assert_return(
@@ -2064,11 +2054,9 @@ assert_return(() => invoke($0, `i64.trunc_sat_f32_u`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:385
-assert_return(
-  () =>
-    invoke($0, `i64.trunc_sat_f32_u`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i64", 0n)],
-);
+assert_return(() => invoke($0, `i64.trunc_sat_f32_u`, [value("f32", -0)]), [
+  value("i64", 0n),
+]);
 
 // ./test/core/conversions.wast:386
 assert_return(
@@ -2847,10 +2835,9 @@ assert_return(() => invoke($0, `f64.promote_f32`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:547
-assert_return(
-  () => invoke($0, `f64.promote_f32`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("f64", -0)],
-);
+assert_return(() => invoke($0, `f64.promote_f32`, [value("f32", -0)]), [
+  value("f64", -0),
+]);
 
 // ./test/core/conversions.wast:548
 assert_return(
@@ -2963,7 +2950,7 @@ assert_return(() => invoke($0, `f32.demote_f64`, [value("f64", 0)]), [
 
 // ./test/core/conversions.wast:566
 assert_return(() => invoke($0, `f32.demote_f64`, [value("f64", -0)]), [
-  bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+  value("f32", -0),
 ]);
 
 // ./test/core/conversions.wast:567
@@ -2987,7 +2974,7 @@ assert_return(
         -0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005,
       ),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/conversions.wast:569
@@ -3341,7 +3328,7 @@ assert_return(
         -0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022250738585072014,
       ),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/conversions.wast:613
@@ -3365,7 +3352,7 @@ assert_return(
         -0.0000000000000000000000000000000000000000000007006492321624085,
       ),
     ]),
-  [bytes("f32", [0x0, 0x0, 0x0, 0x80])],
+  [value("f32", -0)],
 );
 
 // ./test/core/conversions.wast:615
@@ -3397,7 +3384,7 @@ assert_return(() => invoke($0, `f32.reinterpret_i32`, [0]), [value("f32", 0)]);
 
 // ./test/core/conversions.wast:619
 assert_return(() => invoke($0, `f32.reinterpret_i32`, [-2147483648]), [
-  bytes("f32", [0x0, 0x0, 0x0, 0x80]),
+  value("f32", -0),
 ]);
 
 // ./test/core/conversions.wast:620
@@ -3525,11 +3512,9 @@ assert_return(() => invoke($0, `i32.reinterpret_f32`, [value("f32", 0)]), [
 ]);
 
 // ./test/core/conversions.wast:645
-assert_return(
-  () =>
-    invoke($0, `i32.reinterpret_f32`, [bytes("f32", [0x0, 0x0, 0x0, 0x80])]),
-  [value("i32", -2147483648)],
-);
+assert_return(() => invoke($0, `i32.reinterpret_f32`, [value("f32", -0)]), [
+  value("i32", -2147483648),
+]);
 
 // ./test/core/conversions.wast:646
 assert_return(
