@@ -56,8 +56,9 @@ fn main() {
         .clang_arg("-I../..");
 
     match env::var_os("MOZ_TOPOBJDIR") {
-        Some(path) => {
-            let path = PathBuf::from(path).join("js/src/rust/extra-bindgen-flags");
+        Some(objdir) => {
+            let generated_src = PathBuf::from(objdir).join("js/src");
+            let path = generated_src.clone().join("rust/extra-bindgen-flags");
 
             let mut extra_flags = String::new();
             File::open(&path)
@@ -75,6 +76,11 @@ fn main() {
             for flag in extra_flags {
                 generator = generator.clang_arg(flag);
             }
+
+            generator = generator.clang_arg(format!(
+                "-I{}",
+                generated_src.to_str().expect("path is utf8 encoded")
+            ));
         }
         None => {
             println!("cargo:warning=MOZ_TOPOBJDIR should be set by default, otherwise the build is not guaranted to finish.");
