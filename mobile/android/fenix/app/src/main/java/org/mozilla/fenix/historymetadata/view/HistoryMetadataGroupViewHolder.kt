@@ -5,36 +5,55 @@
 package org.mozilla.fenix.historymetadata.view
 
 import android.view.View
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
+import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.HistoryMetadataGroupBinding
-import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
+import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.view.ViewHolder
 
 /**
  * View holder for a history metadata group item.
  *
+ * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param store [HomeFragmentStore] containing the list of history metadata groups to be displayed.
  * @property interactor [HistoryMetadataInteractor] which will have delegated to all user
  * interactions.
  */
 class HistoryMetadataGroupViewHolder(
-    view: View,
+    val composeView: ComposeView,
+    private val store: HomeFragmentStore,
     private val interactor: HistoryMetadataInteractor
-) : ViewHolder(view) {
+) : ViewHolder(composeView) {
 
-    private val binding = HistoryMetadataGroupBinding.bind(view)
+    init {
+        composeView.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        composeView.setContent {
+            val recentVisits = store.observeAsComposableState { state -> state.historyMetadata }
 
-    fun bind(historyMetadataGroup: HistoryMetadataGroup) {
-        binding.historyMetadataGroupTitle.text = historyMetadataGroup.title
-
-        itemView.isActivated = historyMetadataGroup.expanded
-
-        itemView.setOnClickListener {
-            interactor.onToggleHistoryMetadataGroupExpanded(historyMetadataGroup)
+            FirefoxTheme {
+                RecentlyVisited(
+                    recentVisits = recentVisits.value ?: emptyList(),
+                    menuItems = listOfNotNull(
+                        RecentVisitMenuItem(
+                            title = stringResource(R.string.recently_visited_delete_from_history),
+                            onClick = {
+                                // no-op
+                            }
+                        )
+                    ),
+                    onRecentVisitClick = { interactor.onHistoryMetadataGroupClicked(it) }
+                )
+            }
         }
     }
 
     companion object {
-        const val LAYOUT_ID = R.layout.history_metadata_group
+        val LAYOUT_ID = View.generateViewId()
     }
 }

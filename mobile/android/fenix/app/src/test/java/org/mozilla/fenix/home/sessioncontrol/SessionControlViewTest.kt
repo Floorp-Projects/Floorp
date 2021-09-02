@@ -89,7 +89,7 @@ class SessionControlViewTest {
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<BookmarkNode>()
         val recentTabs = emptyList<TabSessionState>()
-        val historyMetadata = listOf(HistoryMetadataGroup("title", emptyList(), false))
+        val historyMetadata = listOf(HistoryMetadataGroup("title", emptyList()))
         val pocketArticles = emptyList<PocketRecommendedStory>()
 
         val results = normalModeAdapterItems(

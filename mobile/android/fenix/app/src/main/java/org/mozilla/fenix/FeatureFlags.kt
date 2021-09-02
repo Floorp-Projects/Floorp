@@ -42,7 +42,7 @@ object FeatureFlags {
     /**
      * Enables UI features based on history metadata.
      */
-    val historyMetadataUIFeature = Config.channel.isDebug
+    val historyMetadataUIFeature = Config.channel.isNightlyOrDebug
 
     /**
      * Enables the recently saved bookmarks feature in the home screen.

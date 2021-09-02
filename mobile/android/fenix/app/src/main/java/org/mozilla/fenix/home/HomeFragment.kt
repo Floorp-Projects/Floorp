@@ -326,10 +326,6 @@ class HomeFragment : Fragment() {
                 navController = findNavController()
             ),
             historyMetadataController = DefaultHistoryMetadataController(
-                activity = activity,
-                settings = components.settings,
-                homeFragmentStore = homeFragmentStore,
-                selectOrAddUseCase = components.useCases.tabsUseCases.selectOrAddTab,
                 navController = findNavController()
             )
         )

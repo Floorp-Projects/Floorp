@@ -10,6 +10,7 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.library.history.History
+import org.mozilla.fenix.library.history.toHistoryMetadata
 import org.mozilla.fenix.perf.runBlockingIncrement
 
 /**
@@ -60,17 +61,7 @@ class DefaultPagedHistoryProvider(
                                 id = items.first().createdAt.toInt(),
                                 title = searchTerm,
                                 visitedAt = items.first().updatedAt,
-                                items = items.map {
-                                    History.Metadata(
-                                        id = it.createdAt.toInt(),
-                                        title = it.title?.takeIf(String::isNotEmpty)
-                                            ?: it.key.url.tryGetHostFromUrl(),
-                                        url = it.key.url,
-                                        visitedAt = it.createdAt,
-                                        totalViewTime = it.totalViewTime,
-                                        historyMetadataKey = it.key
-                                    )
-                                }
+                                items = items.map { it.toHistoryMetadata() }
                             )
                         }
                 }

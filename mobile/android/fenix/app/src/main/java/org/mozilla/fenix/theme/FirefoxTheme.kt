@@ -43,13 +43,15 @@ object FirefoxTheme {
 private val darkColorPalette = FirefoxColors(
     surface = PhotonColors.DarkGrey50,
     textPrimary = PhotonColors.LightGrey05,
-    textSecondary = PhotonColors.LightGrey05
+    textSecondary = PhotonColors.LightGrey05,
+    dividerLine = PhotonColors.DarkGrey05
 )
 
 private val lightColorPalette = FirefoxColors(
     surface = PhotonColors.White,
     textPrimary = PhotonColors.DarkGrey90,
-    textSecondary = PhotonColors.DarkGrey05
+    textSecondary = PhotonColors.DarkGrey05,
+    dividerLine = PhotonColors.LightGrey30
 )
 
 /**
@@ -59,7 +61,8 @@ private val lightColorPalette = FirefoxColors(
 class FirefoxColors(
     surface: Color,
     textPrimary: Color,
-    textSecondary: Color
+    textSecondary: Color,
+    dividerLine: Color
 ) {
     var surface by mutableStateOf(surface)
         private set
@@ -67,17 +70,21 @@ class FirefoxColors(
         private set
     var textSecondary by mutableStateOf(textSecondary)
         private set
+    var dividerLine by mutableStateOf(dividerLine)
+        private set
 
     fun update(other: FirefoxColors) {
         surface = other.surface
         textPrimary = other.textPrimary
         textSecondary = other.textSecondary
+        dividerLine = other.dividerLine
     }
 
     fun copy(): FirefoxColors = FirefoxColors(
         surface = surface,
         textPrimary = textPrimary,
-        textSecondary = textSecondary
+        textSecondary = textSecondary,
+        dividerLine = dividerLine
     )
 }
 

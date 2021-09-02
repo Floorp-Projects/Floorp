@@ -69,7 +69,8 @@ internal fun normalModeAdapterItems(
 
     if (historyMetadata.isNotEmpty()) {
         shouldShowCustomizeHome = true
-        showHistoryMetadata(historyMetadata, items)
+        items.add(AdapterItem.HistoryMetadataHeader)
+        items.add(AdapterItem.HistoryMetadataGroup)
     }
 
     if (collections.isEmpty()) {
@@ -90,23 +91,6 @@ internal fun normalModeAdapterItems(
     }
 
     return items
-}
-
-private fun showHistoryMetadata(
-    historyMetadata: List<HistoryMetadataGroup>,
-    items: MutableList<AdapterItem>
-) {
-    items.add(AdapterItem.HistoryMetadataHeader)
-
-    historyMetadata.forEach { container ->
-        items.add(AdapterItem.HistoryMetadataGroup(historyMetadataGroup = container))
-
-        if (container.expanded) {
-            container.historyMetadata.forEach {
-                items.add(AdapterItem.HistoryMetadataItem(it))
-            }
-        }
-    }
 }
 
 private fun showCollections(

@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
@@ -23,7 +22,6 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.historymetadata.view.HistoryMetadataGroupViewHolder
 import org.mozilla.fenix.historymetadata.view.HistoryMetadataHeaderViewHolder
-import org.mozilla.fenix.historymetadata.view.HistoryMetadataViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksViewHolder
@@ -165,19 +163,7 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object RecentTabItem : AdapterItem(RecentTabViewHolder.LAYOUT_ID)
 
     object HistoryMetadataHeader : AdapterItem(HistoryMetadataHeaderViewHolder.LAYOUT_ID)
-
-    data class HistoryMetadataGroup(val historyMetadataGroup: org.mozilla.fenix.historymetadata.HistoryMetadataGroup) :
-        AdapterItem(HistoryMetadataGroupViewHolder.LAYOUT_ID) {
-        override fun sameAs(other: AdapterItem) =
-            other is HistoryMetadataGroup && historyMetadataGroup == other.historyMetadataGroup
-
-        override fun contentsSameAs(other: AdapterItem): Boolean {
-            (other as? HistoryMetadataGroup)?.let {
-                return it.historyMetadataGroup.expanded == this.historyMetadataGroup.expanded &&
-                    it.historyMetadataGroup.title == this.historyMetadataGroup.title
-            } ?: return false
-        }
-    }
+    object HistoryMetadataGroup : AdapterItem(HistoryMetadataGroupViewHolder.LAYOUT_ID)
 
     data class RecentBookmarks(val recentBookmarks: List<BookmarkNode>) :
         AdapterItem(RecentBookmarksViewHolder.LAYOUT_ID) {
@@ -202,13 +188,6 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
                 new == old
             }
         }
-    }
-
-    data class HistoryMetadataItem(val historyMetadata: HistoryMetadata) : AdapterItem(
-        HistoryMetadataViewHolder.LAYOUT_ID
-    ) {
-        override fun sameAs(other: AdapterItem) =
-            other is HistoryMetadataItem && historyMetadata.key.url == other.historyMetadata.key.url
     }
 
     object PocketStoriesItem :
@@ -248,7 +227,7 @@ class SessionControlAdapter(
 ) : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(AdapterItemDiffCallback()) {
 
     // This method triggers the ComplexMethod lint error when in fact it's quite simple.
-    @SuppressWarnings("ComplexMethod", "LongMethod")
+    @SuppressWarnings("ComplexMethod", "LongMethod", "ReturnCount")
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
             PocketStoriesViewHolder.LAYOUT_ID -> return PocketStoriesViewHolder(
@@ -257,6 +236,11 @@ class SessionControlAdapter(
                 components.core.client
             )
             RecentTabViewHolder.LAYOUT_ID -> return RecentTabViewHolder(
+                composeView = ComposeView(parent.context),
+                store = store,
+                interactor = interactor
+            )
+            HistoryMetadataGroupViewHolder.LAYOUT_ID -> return HistoryMetadataGroupViewHolder(
                 composeView = ComposeView(parent.context),
                 store = store,
                 interactor = interactor
@@ -312,11 +296,6 @@ class SessionControlAdapter(
                 view,
                 interactor
             )
-            HistoryMetadataGroupViewHolder.LAYOUT_ID -> HistoryMetadataGroupViewHolder(
-                view,
-                interactor
-            )
-            HistoryMetadataViewHolder.LAYOUT_ID -> HistoryMetadataViewHolder(view, interactor)
             else -> throw IllegalStateException()
         }
     }
@@ -387,12 +366,7 @@ class SessionControlAdapter(
                     (item as AdapterItem.RecentBookmarks).recentBookmarks
                 )
             }
-            is HistoryMetadataViewHolder -> {
-                holder.bind((item as AdapterItem.HistoryMetadataItem).historyMetadata)
-            }
-            is HistoryMetadataGroupViewHolder -> {
-                holder.bind((item as AdapterItem.HistoryMetadataGroup).historyMetadataGroup)
-            }
+            is HistoryMetadataGroupViewHolder,
             is RecentTabViewHolder,
             is PocketStoriesViewHolder -> {
                 // no-op. This ViewHolder receives the HomeStore as argument and will observe that

@@ -7,17 +7,11 @@ package org.mozilla.fenix.historymetadata.controller
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.navigation.NavController
-import mozilla.components.concept.storage.HistoryMetadataKey
-import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
-import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.HomeFragmentStore
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.library.history.toHistoryMetadata
 
 /**
  * An interface that handles the view manipulation of the history metadata in the Home screen.
@@ -25,47 +19,22 @@ import org.mozilla.fenix.utils.Settings
 interface HistoryMetadataController {
 
     /**
-     * @see [HistoryMetadataInteractor.onHistoryMetadataItemClicked]
-     */
-    fun handleHistoryMetadataItemClicked(url: String, historyMetadata: HistoryMetadataKey)
-
-    /**
      * @see [HistoryMetadataInteractor.onHistoryMetadataShowAllClicked]
      */
     fun handleHistoryShowAllClicked()
 
     /**
-     * @see [HistoryMetadataInteractor.onToggleHistoryMetadataGroupExpanded]
+     * @see [HistoryMetadataInteractor.onHistoryMetadataGroupClicked]
      */
-    fun handleToggleHistoryMetadataGroupExpanded(historyMetadataGroup: HistoryMetadataGroup)
+    fun handleHistoryMetadataGroupClicked(historyMetadataGroup: HistoryMetadataGroup)
 }
 
 /**
  * The default implementation of [HistoryMetadataController].
  */
 class DefaultHistoryMetadataController(
-    private val activity: HomeActivity,
-    private val settings: Settings,
-    private val homeFragmentStore: HomeFragmentStore,
-    private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,
     private val navController: NavController
 ) : HistoryMetadataController {
-
-    override fun handleHistoryMetadataItemClicked(
-        url: String,
-        historyMetadata: HistoryMetadataKey
-    ) {
-        val tabId = selectOrAddUseCase.invoke(
-            url = url,
-            historyMetadata = historyMetadata
-        )
-
-        if (settings.openNextTabInDesktopMode) {
-            activity.handleRequestDesktopMode(tabId)
-        }
-
-        activity.openToBrowser(BrowserDirection.FromHome)
-    }
 
     override fun handleHistoryShowAllClicked() {
         dismissSearchDialogIfDisplayed()
@@ -74,10 +43,12 @@ class DefaultHistoryMetadataController(
         )
     }
 
-    override fun handleToggleHistoryMetadataGroupExpanded(historyMetadataGroup: HistoryMetadataGroup) {
-        homeFragmentStore.dispatch(
-            HomeFragmentAction.HistoryMetadataExpanded(
-                historyMetadataGroup
+    override fun handleHistoryMetadataGroupClicked(historyMetadataGroup: HistoryMetadataGroup) {
+        navController.navigate(
+            HomeFragmentDirections.actionGlobalHistoryMetadataGroup(
+                title = historyMetadataGroup.title,
+                historyMetadataItems = historyMetadataGroup.historyMetadata
+                    .map { it.toHistoryMetadata() }.toTypedArray()
             )
         )
     }

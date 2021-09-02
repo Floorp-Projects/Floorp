@@ -161,27 +161,6 @@ class SessionControlInteractorTest {
     }
 
     @Test
-    fun onHistoryMetadataItemClicked() {
-        val historyEntry = HistoryMetadata(
-            key = HistoryMetadataKey("http://www.mozilla.com", null, null),
-            title = "mozilla",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis(),
-            totalViewTime = 10,
-            documentType = DocumentType.Regular,
-            previewImageUrl = null
-        )
-
-        interactor.onHistoryMetadataItemClicked(historyEntry.key.url, historyEntry.key)
-        verify {
-            historyMetadataController.handleHistoryMetadataItemClicked(
-                historyEntry.key.url,
-                historyEntry.key
-            )
-        }
-    }
-
-    @Test
     fun onHistoryMetadataShowAllClicked() {
         interactor.onHistoryMetadataShowAllClicked()
         verify { historyMetadataController.handleHistoryShowAllClicked() }
@@ -202,8 +181,8 @@ class SessionControlInteractorTest {
             title = "mozilla",
             historyMetadata = listOf(historyEntry)
         )
-        interactor.onToggleHistoryMetadataGroupExpanded(historyGroup)
-        verify { historyMetadataController.handleToggleHistoryMetadataGroupExpanded(historyGroup) }
+        interactor.onHistoryMetadataGroupClicked(historyGroup)
+        verify { historyMetadataController.handleHistoryMetadataGroupClicked(historyGroup) }
     }
 
     @Test

@@ -10,9 +10,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.storage.DocumentType
-import mozilla.components.concept.storage.HistoryMetadata
-import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -121,33 +118,6 @@ class HomeFragmentStoreTest {
         homeFragmentStore.dispatch(HomeFragmentAction.HistoryMetadataChange(historyMetadata)).join()
 
         assertEquals(historyMetadata, homeFragmentStore.state.historyMetadata)
-    }
-
-    @Test
-    fun `Test changing the expanded history metadata in HomeFragmentStore`() = runBlocking {
-        val historyEntry = HistoryMetadata(
-            key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
-            title = "mozilla",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis(),
-            totalViewTime = 10,
-            documentType = DocumentType.Regular,
-            previewImageUrl = null
-        )
-        val historyGroup = HistoryMetadataGroup(
-            title = "mozilla",
-            historyMetadata = listOf(historyEntry),
-            expanded = false
-        )
-
-        val historyMetadata = listOf(historyGroup)
-        homeFragmentStore.dispatch(HomeFragmentAction.HistoryMetadataChange(historyMetadata)).join()
-
-        assertEquals(historyMetadata, homeFragmentStore.state.historyMetadata)
-
-        homeFragmentStore.dispatch(HomeFragmentAction.HistoryMetadataExpanded(historyGroup)).join()
-
-        assertTrue(homeFragmentStore.state.historyMetadata.find { it.title == historyEntry.key.searchTerm }!!.expanded)
     }
 
     @Test

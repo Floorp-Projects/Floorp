@@ -6,10 +6,12 @@ package org.mozilla.fenix.library.history
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
 /**
  * Class representing a history entry.
@@ -75,6 +77,21 @@ sealed class History : Parcelable {
         val items: List<Metadata>,
         override val selected: Boolean = false
     ) : History()
+}
+
+/**
+ * Extension function for converting a [HistoryMetadata] into a [History.Metadata].
+ */
+fun HistoryMetadata.toHistoryMetadata(): History.Metadata {
+    return History.Metadata(
+        id = createdAt.toInt(),
+        title = title?.takeIf(String::isNotEmpty)
+            ?: key.url.tryGetHostFromUrl(),
+        url = key.url,
+        visitedAt = createdAt,
+        totalViewTime = totalViewTime,
+        historyMetadataKey = key
+    )
 }
 
 /**

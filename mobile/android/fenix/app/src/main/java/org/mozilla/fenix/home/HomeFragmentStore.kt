@@ -89,7 +89,6 @@ sealed class HomeFragmentAction : Action {
     data class RecentTabsChange(val recentTabs: List<TabSessionState>) : HomeFragmentAction()
     data class RecentBookmarksChange(val recentBookmarks: List<BookmarkNode>) : HomeFragmentAction()
     data class HistoryMetadataChange(val historyMetadata: List<HistoryMetadataGroup>) : HomeFragmentAction()
-    data class HistoryMetadataExpanded(val historyMetadataGroup: HistoryMetadataGroup) : HomeFragmentAction()
     data class PocketArticlesChange(val pocketArticles: List<PocketRecommendedStory>) : HomeFragmentAction()
     object RemoveCollectionsPlaceholder : HomeFragmentAction()
     object RemoveSetDefaultBrowserCard : HomeFragmentAction()
@@ -133,18 +132,6 @@ private fun homeFragmentStateReducer(
         is HomeFragmentAction.RecentTabsChange -> state.copy(recentTabs = action.recentTabs)
         is HomeFragmentAction.RecentBookmarksChange -> state.copy(recentBookmarks = action.recentBookmarks)
         is HomeFragmentAction.HistoryMetadataChange -> state.copy(historyMetadata = action.historyMetadata)
-        is HomeFragmentAction.HistoryMetadataExpanded -> {
-            state.copy(
-                historyMetadata = state.historyMetadata.toMutableList()
-                    .map {
-                        if (it == action.historyMetadataGroup) {
-                            it.copy(expanded = it.expanded.not())
-                        } else {
-                            it
-                        }
-                    }
-            )
-        }
         is HomeFragmentAction.PocketArticlesChange -> state.copy(pocketArticles = action.pocketArticles)
     }
 }

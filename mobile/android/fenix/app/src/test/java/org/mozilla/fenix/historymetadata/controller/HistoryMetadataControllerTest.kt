@@ -5,6 +5,7 @@
 package org.mozilla.fenix.historymetadata.controller
 
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -14,20 +15,14 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
-import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
-import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.HomeFragmentStore
-import org.mozilla.fenix.utils.Settings
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryMetadataControllerTest {
@@ -37,10 +32,6 @@ class HistoryMetadataControllerTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
-    private val activity: HomeActivity = mockk(relaxed = true)
-    private val settings: Settings = mockk(relaxed = true)
-    private val homeFragmentStore: HomeFragmentStore = mockk(relaxed = true)
-    private val selectOrAddUseCase: SelectOrAddUseCase = mockk(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
 
     private lateinit var controller: DefaultHistoryMetadataController
@@ -53,10 +44,6 @@ class HistoryMetadataControllerTest {
 
         controller = spyk(
             DefaultHistoryMetadataController(
-                activity = activity,
-                settings = settings,
-                homeFragmentStore = homeFragmentStore,
-                selectOrAddUseCase = selectOrAddUseCase,
                 navController = navController
             )
         )
@@ -65,26 +52,6 @@ class HistoryMetadataControllerTest {
     @After
     fun cleanUp() {
         testDispatcher.cleanupTestCoroutines()
-    }
-
-    @Test
-    fun handleHistoryMetadataItemClicked() {
-        val historyEntry = HistoryMetadata(
-            key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
-            title = "mozilla",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis(),
-            totalViewTime = 10,
-            documentType = DocumentType.Regular,
-            previewImageUrl = null
-        )
-
-        controller.handleHistoryMetadataItemClicked(historyEntry.key.url, historyEntry.key)
-
-        verify {
-            selectOrAddUseCase.invoke(historyEntry.key.url, historyEntry.key)
-            activity.openToBrowser(BrowserDirection.FromHome)
-        }
     }
 
     @Test
@@ -100,7 +67,7 @@ class HistoryMetadataControllerTest {
     }
 
     @Test
-    fun handleToggleHistoryMetadataGroupExpanded() {
+    fun handleToggleHistoryMetadataGroupClicked() {
         val historyEntry = HistoryMetadata(
             key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
             title = "mozilla",
@@ -115,13 +82,11 @@ class HistoryMetadataControllerTest {
             historyMetadata = listOf(historyEntry)
         )
 
-        controller.handleToggleHistoryMetadataGroupExpanded(historyGroup)
+        controller.handleHistoryMetadataGroupClicked(historyGroup)
 
         verify {
-            homeFragmentStore.dispatch(
-                HomeFragmentAction.HistoryMetadataExpanded(
-                    historyGroup
-                )
+            navController.navigate(
+                match<NavDirections> { it.actionId == R.id.action_global_history_metadata_group }
             )
         }
     }

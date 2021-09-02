@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.historymetadata.interactor
 
-import mozilla.components.concept.storage.HistoryMetadataKey
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 
 /**
@@ -13,25 +12,16 @@ import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 interface HistoryMetadataInteractor {
 
     /**
-     * Selects an existing tab with the matching [HistoryMetadataKey] or adds a new tab with the
-     * given [url]. Called when a user clicks on a history metadata item.
-     *
-     * @param url The URL to open.
-     * @param historyMetadata The [HistoryMetadataKey] to match for an existing tab.
-     */
-    fun onHistoryMetadataItemClicked(url: String, historyMetadata: HistoryMetadataKey)
-
-    /**
      * Shows the history fragment. Called when a user clicks on the "Show all" button besides the
      * history metadata header.
      */
     fun onHistoryMetadataShowAllClicked()
 
     /**
-     * Toggles whether or not a history metadata group is expanded. Called when a user clicks on
-     * a history metadata group.
+     * Navigates to the history metadata group fragment to display the group. Called when a user
+     * clicks on a history metadata group.
      *
      * @param historyMetadataGroup The [HistoryMetadataGroup] to toggle its expanded state.
      */
-    fun onToggleHistoryMetadataGroupExpanded(historyMetadataGroup: HistoryMetadataGroup)
+    fun onHistoryMetadataGroupClicked(historyMetadataGroup: HistoryMetadataGroup)
 }
