@@ -54,7 +54,7 @@ uint64_t XULComboboxAccessible::NativeState() const {
   return state | states::HASPOPUP;
 }
 
-void XULComboboxAccessible::Description(nsString& aDescription) {
+void XULComboboxAccessible::Description(nsString& aDescription) const {
   aDescription.Truncate();
   // Use description of currently focused option
   nsCOMPtr<nsIDOMXULMenuListElement> menuListElm = Elm()->AsXULMenuList();
