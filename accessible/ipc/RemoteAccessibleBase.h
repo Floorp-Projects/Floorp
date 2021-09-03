@@ -195,9 +195,16 @@ class RemoteAccessibleBase : public Accessible {
   DocAccessibleParent* AsDoc() const { return IsDoc() ? mDoc : nullptr; }
 
   void ApplyCache(CacheUpdateType aUpdateType, AccAttributes* aFields) {
-    if (aUpdateType == CacheUpdateType::Initial || !mCachedFields) {
+    if (aUpdateType == CacheUpdateType::Initial) {
       mCachedFields = aFields;
     } else {
+      if (!mCachedFields) {
+        // The fields cache can be uninitialized if there were no cache-worthy
+        // fields in the initial cache push.
+        // We don't do a simple assign because we don't want to store the
+        // DeleteEntry entries.
+        mCachedFields = new AccAttributes();
+      }
       mCachedFields->Update(aFields);
     }
   }
