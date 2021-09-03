@@ -57,7 +57,7 @@ class nsDisplayColumnRule : public nsPaintedDisplayItem {
 void nsDisplayColumnRule::Paint(nsDisplayListBuilder* aBuilder,
                                 gfxContext* aCtx) {
   static_cast<nsColumnSetFrame*>(mFrame)->CreateBorderRenderers(
-      mBorderRenderers, aCtx, GetPaintRect(), ToReferenceFrame());
+      mBorderRenderers, aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame());
 
   for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end();
        iter++) {
