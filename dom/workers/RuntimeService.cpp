@@ -299,10 +299,8 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
           GetWorkerPref<bool>("asyncstack_capture_debuggee_only"_ns))
       .setPrivateClassFields(
           GetWorkerPref<bool>("experimental.private_fields"_ns))
-#ifdef NIGHTLY_BUILD
       .setClassStaticBlocks(
           GetWorkerPref<bool>("experimental.class_static_blocks"_ns))
-#endif
       .setPrivateClassMethods(
           GetWorkerPref<bool>("experimental.private_methods"_ns))
       .setErgnomicBrandChecks(
