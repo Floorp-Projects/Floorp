@@ -310,18 +310,9 @@ release-flatpak-repackage
 -------------------------
 Generate an installer using Flathub's Flatpak format.
 
-release-snap-push
------------------
-Pushes Snap repackage on Snap store.
-
 release-flatpak-push
 --------------------
 Pushes Flatpak repackage on Flathub
-
-release-secondary-snap-push
----------------------------
-Performs the same function as `release-snap-push`, except for the beta channel as part of RC
-Releases.
 
 release-secondary-flatpak-push
 ------------------------------
