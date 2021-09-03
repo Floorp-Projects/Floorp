@@ -613,7 +613,7 @@ void nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   nsRect viewportRect =
       mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
 
-  nsRect clipRect = GetPaintRect().Intersect(viewportRect);
+  nsRect clipRect = GetPaintRect(aBuilder, aContext).Intersect(viewportRect);
 
   uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 

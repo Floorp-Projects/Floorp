@@ -2529,7 +2529,7 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
                                                       IsSubpixelAADisabled());
 
     ImgDrawResult result = static_cast<nsTreeBodyFrame*>(mFrame)->PaintTreeBody(
-        *aCtx, GetPaintRect(), ToReferenceFrame(), aBuilder);
+        *aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame(), aBuilder);
 
     nsDisplayTreeBodyGeometry::UpdateDrawResult(this, result);
   }
