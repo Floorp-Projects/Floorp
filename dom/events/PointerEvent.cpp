@@ -87,6 +87,7 @@ already_AddRefed<PointerEvent> PointerEvent::Constructor(
                     aParam.mClientX, aParam.mClientY, false, false, false,
                     false, aParam.mButton, aParam.mRelatedTarget);
   e->InitializeExtraMouseEventDictionaryMembers(aParam);
+  e->mPointerType = Some(aParam.mPointerType);
 
   WidgetPointerEvent* widgetEvent = e->mEvent->AsPointerEvent();
   widgetEvent->pointerId = aParam.mPointerId;
@@ -140,6 +141,11 @@ NS_IMPL_RELEASE_INHERITED(PointerEvent, MouseEvent)
 
 void PointerEvent::GetPointerType(nsAString& aPointerType,
                                   CallerType aCallerType) {
+  if (mPointerType.isSome()) {
+    aPointerType = mPointerType.value();
+    return;
+  }
+
   if (ShouldResistFingerprinting(aCallerType)) {
     aPointerType.AssignLiteral("mouse");
     return;
