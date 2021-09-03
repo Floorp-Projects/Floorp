@@ -1150,7 +1150,9 @@ Maybe<ModuleScope::ParserData*> NewModuleScopeData(JSContext* cx,
   ParserBindingNameVector lets(cx);
   ParserBindingNameVector consts(cx);
 
-  bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
+  bool allBindingsClosedOver =
+      pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
+
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
     // Imports are indirect bindings and must not be given known slots.
     ParserBindingName binding(bi.name(),
