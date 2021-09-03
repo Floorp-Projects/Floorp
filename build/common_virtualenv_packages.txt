@@ -91,7 +91,7 @@ pth:third_party/python/pluggy
 pth:third_party/python/ply
 pth:third_party/python/py
 pth:third_party/python/pyasn1
-pth:third_party/python/pyasn1-modules
+pth:third_party/python/pyasn1_modules
 pth:third_party/python/pylru
 pth:third_party/python/pyrsistent
 pth:third_party/python/pystache
