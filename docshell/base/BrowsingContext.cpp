@@ -859,7 +859,10 @@ void BrowsingContext::Detach(bool aFromIPC) {
       }
     });
   } else if (!aFromIPC) {
-    auto callback = [](auto) {};
+    // Hold a strong reference to ourself until the responses come back to
+    // ensure the BrowsingContext isn't cleaned up before the parent process
+    // acknowledges the discard request.
+    auto callback = [self = RefPtr{this}](auto) {};
     ContentChild::GetSingleton()->SendDiscardBrowsingContext(this, callback,
                                                              callback);
   }
