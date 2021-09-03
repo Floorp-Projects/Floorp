@@ -1775,10 +1775,10 @@ TEST(GeckoProfiler, Markers)
                                MS::Format::FilePath);
       schema.AddKeyFormatSearchable("key with string not-searchable",
                                     MS::Format::String,
-                                    MS::Searchable::notSearchable);
+                                    MS::Searchable::NotSearchable);
       schema.AddKeyLabelFormatSearchable("key with label duration searchable",
                                          "label duration", MS::Format::Duration,
-                                         MS::Searchable::searchable);
+                                         MS::Searchable::Searchable);
       schema.AddKeyFormat("key with time", MS::Format::Time);
       schema.AddKeyFormat("key with seconds", MS::Format::Seconds);
       schema.AddKeyFormat("key with milliseconds", MS::Format::Milliseconds);
