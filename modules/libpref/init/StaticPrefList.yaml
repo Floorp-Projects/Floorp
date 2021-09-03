@@ -3765,12 +3765,6 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
-# Is the 'delegatesFocus' attribute for shadow dom
-- name: dom.shadowdom.delegatesFocus.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is the 'assign' API for slot element enabled?
 - name: dom.shadowdom.slot.assign.enabled
   type: bool
