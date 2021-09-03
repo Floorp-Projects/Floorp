@@ -15,8 +15,11 @@ appmenuitem-new-tab =
     .label = New tab
 appmenuitem-new-window =
     .label = New window
-appmenuitem-new-private-window =
+# Variables
+# $shortcut (string) - Keyboard shortcut to open a new private browsing window
+appmenuitem-new-private-window2 =
     .label = New private window
+    .tooltiptext = Open a new private browsing window ({ $shortcut })
 appmenuitem-passwords =
     .label = Passwords
 appmenuitem-addons-and-themes =
