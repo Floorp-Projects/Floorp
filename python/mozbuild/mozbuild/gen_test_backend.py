@@ -32,9 +32,14 @@ def gen_test_backend():
 
         print("No build detected, test metadata may be incomplete.")
 
+        substs = EmptyConfig.default_substs
+
+        # Set ENABLE_TESTS so we still pick up manifests that are defined in
+        # moz.build files behind a TEST_DIRS variable.
+        substs["ENABLE_TESTS"] = "1"
+
         # If 'JS_STANDALONE' is set, tests that don't require an objdir won't
         # be picked up due to bug 1345209.
-        substs = EmptyConfig.default_substs
         if "JS_STANDALONE" in substs:
             del substs["JS_STANDALONE"]
 
