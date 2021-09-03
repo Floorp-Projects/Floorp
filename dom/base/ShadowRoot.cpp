@@ -48,11 +48,12 @@ NS_IMPL_ADDREF_INHERITED(ShadowRoot, DocumentFragment)
 NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 
 ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
-                       SlotAssignmentMode aSlotAssignment,
+                       bool aDelegatesFocus, SlotAssignmentMode aSlotAssignment,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : DocumentFragment(std::move(aNodeInfo)),
       DocumentOrShadowRoot(this),
       mMode(aMode),
+      mDelegatesFocus(aDelegatesFocus),
       mSlotAssignment(aSlotAssignment),
       mIsUAWidget(false),
       mIsAvailableToElementInternals(false) {
