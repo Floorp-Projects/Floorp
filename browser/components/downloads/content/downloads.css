@@ -91,7 +91,7 @@
 #downloadsPanel-blockedSubview,
 #downloadsPanel-mainView {
   font: caption;
-  width: 35em;
+  min-width: 37em;
   padding: 0.62em;
 }
 
