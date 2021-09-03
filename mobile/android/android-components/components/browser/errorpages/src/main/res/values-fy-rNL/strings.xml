@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Probleem by it laden fan de side</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Opnij probearje</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Tebek</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Kin oanfraach net foltôgje</string>
@@ -269,7 +263,7 @@
       
           <strong>ww</strong>.example.com yn stee fan 
       
-          <strong>www</strong>.exemple.com.</li>
+          <strong>www</strong>.example.com.</li>
       
         <li>As jo gjin siden lade kinne, kontrolearje dan de gegevens- of wifi-ferbining fan jo apparaat.</li>
       
