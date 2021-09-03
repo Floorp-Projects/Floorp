@@ -197,7 +197,7 @@ install a recent enough Python 3.
 """.strip()
 
 
-def bootstrap(topsrcdir):
+def initialize(topsrcdir):
     # Ensure we are running Python 3.6+. We run this check as soon as
     # possible to avoid a cryptic import/usage error.
     if sys.version_info < (3, 6):
