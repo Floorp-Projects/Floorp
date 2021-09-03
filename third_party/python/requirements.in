@@ -34,6 +34,7 @@ pathspec==0.8
 pip-tools==5.5.0
 ply==3.10
 pyasn1==0.4.8
+pyasn1-modules==0.2.8
 pytest==3.6.2
 python-hglib==2.4
 pytoml==0.1.10
