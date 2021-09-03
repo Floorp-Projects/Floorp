@@ -62,6 +62,56 @@ LazyLogModule gMediaTrackGraphLog("MediaTrackGraph");
  */
 static nsTHashMap<nsUint32HashKey, MediaTrackGraphImpl*> gGraphs;
 
+const AudioDataValue* AudioInputSamples::Data() const {
+  return mData.Elements();
+}
+
+size_t AudioInputSamples::FrameCount() const {
+  MOZ_ASSERT(mChannels > 0);
+  return mData.Length() / mChannels;
+}
+
+TrackRate AudioInputSamples::Rate() const { return mRate; }
+
+uint32_t AudioInputSamples::Channels() const { return mChannels; }
+
+bool AudioInputSamples::IsEmpty() const { return mData.IsEmpty(); }
+
+void AudioInputSamples::Push(const AudioDataValue* aBuffer, size_t aFrames,
+                             TrackRate aRate, uint32_t aChannels) {
+  MOZ_ASSERT(aRate > 0);
+  MOZ_ASSERT(aChannels > 0);
+
+  if (mRate == 0) {
+    mRate = aRate;
+  }
+  if (mChannels == 0) {
+    mChannels = aChannels;
+  }
+
+  MOZ_ASSERT(aRate == mRate);
+  MOZ_ASSERT(aChannels == mChannels);
+
+  CheckedInt<size_t> samples(aFrames);
+  samples *= static_cast<size_t>(aChannels);
+  MOZ_ASSERT(samples.isValid());
+
+  size_t oldLen = mData.Length();
+  size_t newLen = oldLen + samples.value();
+  if (newLen > mData.Capacity()) {
+    mData.SetCapacity(newLen);
+  }
+  mData.SetLengthAndRetainStorage(newLen);
+  AudioDataValue* dest = mData.Elements() + oldLen;
+  PodCopy(dest, aBuffer, samples.value());
+}
+
+void AudioInputSamples::Clear() {
+  mRate = 0;
+  mChannels = 0;
+  mData.ClearAndRetainStorage();
+}
+
 NativeInputTrack* NativeInputTrack::Create(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -85,8 +135,7 @@ size_t NativeInputTrack::RemoveUser() {
 
 void NativeInputTrack::DestroyImpl() {
   MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
-  mInputData = Nothing();
-  mOutputData = Nothing();
+  mInputData.Clear();
   ProcessedMediaTrack::DestroyImpl();
 }
 
@@ -95,26 +144,23 @@ void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
   TRACE_COMMENT("NativeInputTrack::ProcessInput", "%p", this);
 
-  if (!mInputData) {
+  if (mInputData.IsEmpty()) {
     return;
   }
 
-  // One NotifyInputData might have multiple following ProcessInput calls, but
-  // we only process one input per NotifyInputData call.
-  NativeInputTrack::BufferInfo inputInfo = mInputData.extract();
+  // The number of NotifyInputData and ProcessInput calls could be different. We
+  // always process the input data from NotifyInputData in the first
+  // ProcessInput after the NotifyInputData
 
-  MOZ_ASSERT(mInputChannels == inputInfo.mChannels);
-  MOZ_ASSERT(inputInfo.mChannels >= 1 && inputInfo.mChannels <= 8,
-             "Support up to 8 channels");
+  // The mSegment will be the de-interleaved audio data converted from
+  // mInputData
 
   GetData<AudioSegment>()->Clear();
   GetData<AudioSegment>()->AppendFromInterleavedBuffer(
-      inputInfo.mBuffer, inputInfo.mFrames, inputInfo.mChannels,
+      mInputData.Data(), mInputData.FrameCount(), mInputData.Channels(),
       PRINCIPAL_HANDLE_NONE);
 
-  LOG(LogLevel::Verbose,
-      ("NativeInputTrack %p Appending %zu frames of raw audio", this,
-       inputInfo.mFrames));
+  mInputData.Clear();
 }
 
 uint32_t NativeInputTrack::NumberOfChannels() const {
@@ -127,9 +173,8 @@ void NativeInputTrack::NotifyOutputData(MediaTrackGraphImpl* aGraph,
                                         TrackRate aRate, uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
   MOZ_ASSERT(aGraph == mGraph, "Receive output data from another graph");
-  mOutputData = Some(BufferInfo{aBuffer, aFrames, aChannels, aRate});
   for (auto& listener : mDataUsers) {
-    listener->NotifyOutputData(aGraph, *mOutputData);
+    listener->NotifyOutputData(aGraph, aBuffer, aFrames, aRate, aChannels);
   }
 }
 
@@ -138,7 +183,7 @@ void NativeInputTrack::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph == mGraph,
              "Receive input stopped signal from another graph");
   mInputChannels = 0;
-  mInputData = Nothing();
+  mInputData.Clear();
   for (auto& listener : mDataUsers) {
     listener->NotifyInputStopped(aGraph);
   }
@@ -156,10 +201,10 @@ void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
   if (!mInputChannels) {
     mInputChannels = aChannels;
   }
-  mInputData = Some(BufferInfo{const_cast<AudioDataValue*>(aBuffer), aFrames,
-                               aChannels, aRate});
+  mInputData.Push(aBuffer, aFrames, aRate, aChannels);
   for (auto& listener : mDataUsers) {
-    listener->NotifyInputData(aGraph, *mInputData, aAlreadyBuffered);
+    listener->NotifyInputData(aGraph, aBuffer, aFrames, aRate, aChannels,
+                              aAlreadyBuffered);
   }
 }
 
@@ -167,8 +212,7 @@ void NativeInputTrack::DeviceChanged(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
   MOZ_ASSERT(aGraph == mGraph,
              "Receive device changed signal from another graph");
-  mInputData = Nothing();
-  mOutputData = Nothing();
+  mInputData.Clear();
   for (auto& listener : mDataUsers) {
     listener->DeviceChanged(aGraph);
   }
