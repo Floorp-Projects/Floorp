@@ -3059,14 +3059,25 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
       availableFreeSpace -= item.MainSize();
     }
 
-    FLEX_LOG(" available free space = %" PRId64, availableFreeSpace.value);
+    FLEX_LOG(" available free space: %" PRId64 "; flex items should \"%s\"",
+             availableFreeSpace.value, isUsingFlexGrow ? "grow" : "shrink");
 
     // The sign of our free space should agree with the type of flexing
-    // (grow/shrink) that we're doing (except if we've had integer overflow,
-    // which is unlikely given we've used 64-bit arithmetic). Any disagreement
-    // should've made us use the other type of flexing, or should've been
-    // resolved in FreezeItemsEarly.
-    MOZ_ASSERT((isUsingFlexGrow && availableFreeSpace >= 0) ||
+    // (grow/shrink) that we're doing. Any disagreement should've made us use
+    // the other type of flexing, or should've been resolved in
+    // FreezeItemsEarly.
+    //
+    // Note: it's possible that an individual flex item has huge
+    // margin/border/padding that makes either its
+    // MarginBorderPaddingSizeInMainAxis() or OuterMainSize() negative due to
+    // integer overflow. If that happens, the accumulated
+    // mTotalOuterHypotheticalMainSize or mTotalItemMBP could be negative due to
+    // that one item's negative (overflowed) size. In that case, we throw up our
+    // hands and don't require isUsingFlexGrow to agree with availableFreeSpace.
+    // Luckily, we won't get stuck in the algorithm below, and just distribute
+    // the wrong availableFreeSpace with the wrong grow/shrink factors.
+    MOZ_ASSERT(!(mTotalOuterHypotheticalMainSize >= 0 && mTotalItemMBP >= 0) ||
+                   (isUsingFlexGrow && availableFreeSpace >= 0) ||
                    (!isUsingFlexGrow && availableFreeSpace <= 0),
                "availableFreeSpace's sign should match isUsingFlexGrow");
 
