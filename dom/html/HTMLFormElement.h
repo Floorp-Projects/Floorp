@@ -207,13 +207,13 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool IsLastActiveElement(const nsIFormControl* aControl) const;
 
   /**
-   * Check whether a given nsIFormControl is the default submit
+   * Check whether a given nsGenericHTMLFormElement is the default submit
    * element.  This is different from just comparing to
    * GetDefaultSubmitElement() in certain situations inside an update
-   * when GetDefaultSubmitElement() might not be up to date.  aControl
+   * when GetDefaultSubmitElement() might not be up to date. aElement
    * is expected to not be null.
    */
-  bool IsDefaultSubmitElement(const nsIFormControl* aControl) const;
+  bool IsDefaultSubmitElement(const nsGenericHTMLFormElement* aElement) const;
 
   /**
    * Flag the form to know that a button or image triggered scripted form
