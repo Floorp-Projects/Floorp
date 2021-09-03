@@ -95,7 +95,7 @@ add_task(async function test_experiment_expose_Telemetry() {
   const feature = new ExperimentFeature(featureId);
 
   Services.telemetry.clearEvents();
-  feature.getAllVariables({ sendExposureEvent: true });
+  feature.recordExposureEvent();
 
   TelemetryTestUtils.assertEvents(
     [
