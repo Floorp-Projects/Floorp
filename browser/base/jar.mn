@@ -104,6 +104,8 @@ browser.jar:
         content/browser/blockedSite.js                  (content/blockedSite.js)
         content/browser/upgradeDialog.html            (content/upgradeDialog.html)
         content/browser/upgradeDialog.js              (content/upgradeDialog.js)
+        content/browser/spotlight.html                (content/spotlight.html)
+        content/browser/spotlight.js                  (content/spotlight.js)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/certerror/aboutNetError.xhtml
 

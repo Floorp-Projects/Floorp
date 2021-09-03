@@ -1,6 +1,7 @@
 import { PanelTestProvider } from "lib/PanelTestProvider.jsm";
 import update_schema from "content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json";
 import whats_new_schema from "content-src/asrouter/templates/OnboardingMessage/WhatsNewMessage.schema.json";
+import spotlight_schema from "content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json";
 
 describe("PanelTestProvider", () => {
   let messages;
@@ -10,7 +11,7 @@ describe("PanelTestProvider", () => {
   it("should have a message", () => {
     // Careful: when changing this number make sure that new messages also go
     // through schema verifications.
-    assert.lengthOf(messages, 9);
+    assert.lengthOf(messages, 10);
   });
   it("should be a valid message", () => {
     const updateMessages = messages.filter(
@@ -28,6 +29,14 @@ describe("PanelTestProvider", () => {
       assert.jsonSchema(message.content, whats_new_schema);
       // Not part of `message.content` so it can't be enforced through schema
       assert.property(message, "order");
+    }
+  });
+  it("should be a valid message", () => {
+    const spotlightMessages = messages.filter(
+      ({ template }) => template === "spotlight"
+    );
+    for (let message of spotlightMessages) {
+      assert.jsonSchema(message.content, spotlight_schema);
     }
   });
 });
