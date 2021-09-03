@@ -33,13 +33,6 @@ another Python version. Ensure a modern Python can be found in the paths
 defined by the $PATH environment variable and try again.
 """.lstrip()
 
-here = os.path.abspath(os.path.dirname(__file__))
-
-
-# We can't import six.ensure_binary() or six.ensure_text() because this module
-# has to run stand-alone.  Instead we'll implement an abbreviated version of the
-# checks it does.
-
 
 class VirtualenvHelper(object):
     """Contains basic logic for getting information about virtualenvs."""
