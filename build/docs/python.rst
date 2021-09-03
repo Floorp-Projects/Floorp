@@ -83,7 +83,7 @@ the build system.
 
 * mach reinvents the virtualenv.
 
-  There is code in ``build/mach_bootstrap.py`` that configures ``sys.path``
+  There is code in ``build/mach_initialize.py`` that configures ``sys.path``
   much the same way the virtualenv does. There are various bugs tracking
   this. However, no clear solution has yet been devised. It's not a huge
   problem and thus not a huge priority.
