@@ -40,7 +40,6 @@ class CompositorD3D11 : public Compositor {
   already_AddRefed<DataTextureSource> CreateDataTextureSource(
       TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 
-  bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override;
   int32_t GetMaxTextureSize() const final;
 
   void MakeCurrent(MakeCurrentFlags aFlags = 0) override {}

@@ -200,12 +200,6 @@ class CompositorOGL final : public Compositor {
 
   bool SupportsPartialTextureUpdate() override;
 
-  bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override {
-    if (!mGLContext) return false;
-    int32_t maxSize = GetMaxTextureSize();
-    return aSize <= gfx::IntSize(maxSize, maxSize);
-  }
-
   int32_t GetMaxTextureSize() const override;
 
   /**

@@ -53,12 +53,6 @@ JSObject* CanvasContext::WrapObject(JSContext* aCx,
   return dom::GPUCanvasContext_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<layers::Layer> CanvasContext::GetCanvasLayer(
-    nsDisplayListBuilder* aBuilder, layers::Layer* aOldLayer,
-    layers::LayerManager* aManager) {
-  return nullptr;
-}
-
 bool CanvasContext::UpdateWebRenderCanvasData(
     nsDisplayListBuilder* aBuilder, WebRenderCanvasData* aCanvasData) {
   return true;
