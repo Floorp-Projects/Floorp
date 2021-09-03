@@ -8,7 +8,6 @@
 
 #include "gfxTypes.h"
 
-#include "gfxASurface.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"

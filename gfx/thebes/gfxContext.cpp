@@ -14,7 +14,6 @@
 
 #include "gfxMatrix.h"
 #include "gfxUtils.h"
-#include "gfxASurface.h"
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
 

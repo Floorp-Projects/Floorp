@@ -9,6 +9,7 @@
 #include "WinCompositorWidget.h"
 
 class nsWindow;
+class gfxASurface;
 
 namespace mozilla {
 namespace widget {
