@@ -3324,22 +3324,10 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     PerfStats::AutoMetricRecording<PerfStats::Metric::DisplayListBuilding>
         autoRecording;
     {
-      // If a scrollable container layer is created in
-      // nsDisplayList::PaintForFrame, it will be the scroll parent for display
-      // items that are built in the BuildDisplayListForStackingContext call
-      // below. We need to set the scroll parent on the display list builder
-      // while we build those items, so that they can pick up their scroll
-      // parent's id.
       ViewID id = ScrollableLayerGuid::NULL_SCROLL_ID;
-      if (ignoreViewportScrolling && presContext->IsRootContentDocument()) {
-        if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
-          if (nsIContent* content = rootScrollFrame->GetContent()) {
-            id = nsLayoutUtils::FindOrCreateIDFor(content);
-          }
-        }
-      } else if (presShell->GetDocument() &&
-                 presShell->GetDocument()->IsRootDisplayDocument() &&
-                 !presShell->GetRootScrollFrame()) {
+      if (presShell->GetDocument() &&
+          presShell->GetDocument()->IsRootDisplayDocument() &&
+          !presShell->GetRootScrollFrame()) {
         // In cases where the root document is a XUL document, we want to take
         // the ViewID from the root element, as that will be the ViewID of the
         // root APZC in the tree. Skip doing this in cases where we know
