@@ -19,7 +19,7 @@ extern "C" {
 
 static void getCurrentValueCB(AtkValue* obj, GValue* value) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
-  if (acc) {
+  if (!acc) {
     return;
   }
 
@@ -33,7 +33,7 @@ static void getCurrentValueCB(AtkValue* obj, GValue* value) {
 
 static void getMaximumValueCB(AtkValue* obj, GValue* value) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
-  if (acc) {
+  if (!acc) {
     return;
   }
 
@@ -47,7 +47,7 @@ static void getMaximumValueCB(AtkValue* obj, GValue* value) {
 
 static void getMinimumValueCB(AtkValue* obj, GValue* value) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
-  if (acc) {
+  if (!acc) {
     return;
   }
 
@@ -61,7 +61,7 @@ static void getMinimumValueCB(AtkValue* obj, GValue* value) {
 
 static void getMinimumIncrementCB(AtkValue* obj, GValue* minimumIncrement) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
-  if (acc) {
+  if (!acc) {
     return;
   }
 
