@@ -79,34 +79,29 @@ fun ImageLoader(
         )
     }
 
-    if (!scope.hasStartedLoading.value) {
-        scope.PerformLoad()
+    LaunchedEffect(scope.url) {
+        scope.load()
     }
 
     scope.content()
 }
 
-@Composable
-private fun InternalImageLoaderScope.PerformLoad() {
-    hasStartedLoading.value = true
+private suspend fun InternalImageLoaderScope.load() {
+    val bitmap = withContext(Dispatchers.IO) {
+        fetchAndDecode(
+            client,
+            url,
+            private,
+            connectTimeout,
+            readTimeout,
+            desiredSize
+        )
+    }
 
-    LaunchedEffect(url) {
-        val bitmap = withContext(Dispatchers.IO) {
-            fetchAndDecode(
-                client,
-                url,
-                private,
-                connectTimeout,
-                readTimeout,
-                desiredSize
-            )
-        }
-
-        if (bitmap != null) {
-            loaderState.value = ImageLoaderState.Image(BitmapPainter(bitmap.asImageBitmap()))
-        } else {
-            loaderState.value = ImageLoaderState.Failed
-        }
+    if (bitmap != null) {
+        loaderState.value = ImageLoaderState.Image(BitmapPainter(bitmap.asImageBitmap()))
+    } else {
+        loaderState.value = ImageLoaderState.Failed
     }
 }
 

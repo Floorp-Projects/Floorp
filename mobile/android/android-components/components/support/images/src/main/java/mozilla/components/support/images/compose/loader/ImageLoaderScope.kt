@@ -75,9 +75,7 @@ internal class InternalImageLoaderScope(
     val readTimeout: Pair<Long, TimeUnit>,
     val desiredSize: DesiredSize,
     override val loaderState: MutableState<ImageLoaderState> = mutableStateOf(ImageLoaderState.Loading)
-) : ImageLoaderScope {
-    val hasStartedLoading: MutableState<Boolean> = mutableStateOf(false)
-}
+) : ImageLoaderScope
 
 @Composable
 private fun ImageLoaderScope.WithInternalScope(
