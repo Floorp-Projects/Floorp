@@ -67,11 +67,6 @@ pub trait SelectorMapEntry: Sized + Clone {
     fn selector(&self) -> SelectorIter<SelectorImpl>;
 }
 
-#[inline(always)]
-fn bucket_attributes() -> bool {
-    static_prefs::pref!("layout.css.bucket-attribute-names.enabled")
-}
-
 /// Map element data to selector-providing objects for which the last simple
 /// selector starts with them.
 ///
@@ -109,8 +104,6 @@ pub struct SelectorMap<T: 'static> {
     pub class_hash: MaybeCaseInsensitiveHashMap<Atom, SmallVec<[T; 1]>>,
     /// A hash from local name to rules which contain that local name selector.
     pub local_name_hash: PrecomputedHashMap<LocalName, SmallVec<[T; 1]>>,
-    /// A hash from attributes to rules which contain that attribute selector.
-    pub attribute_hash: PrecomputedHashMap<LocalName, SmallVec<[T; 1]>>,
     /// A hash from namespace to rules which contain that namespace selector.
     pub namespace_hash: PrecomputedHashMap<Namespace, SmallVec<[T; 1]>>,
     /// All other rules.
@@ -136,7 +129,6 @@ impl<T: 'static> SelectorMap<T> {
             root: SmallVec::new(),
             id_hash: MaybeCaseInsensitiveHashMap::new(),
             class_hash: MaybeCaseInsensitiveHashMap::new(),
-            attribute_hash: HashMap::default(),
             local_name_hash: HashMap::default(),
             namespace_hash: HashMap::default(),
             other: SmallVec::new(),
@@ -149,7 +141,6 @@ impl<T: 'static> SelectorMap<T> {
         self.root.clear();
         self.id_hash.clear();
         self.class_hash.clear();
-        self.attribute_hash.clear();
         self.local_name_hash.clear();
         self.namespace_hash.clear();
         self.other.clear();
@@ -226,21 +217,6 @@ impl SelectorMap<Rule> {
                 )
             }
         });
-
-        if bucket_attributes() {
-            element.each_attr_name(|name| {
-                if let Some(rules) = self.attribute_hash.get(name) {
-                    SelectorMap::get_matching_rules(
-                        element,
-                        rules,
-                        matching_rules_list,
-                        context,
-                        flags_setter,
-                        cascade_level,
-                    )
-                }
-            });
-        }
 
         if let Some(rules) = self.local_name_hash.get(rule_hash_target.local_name()) {
             SelectorMap::get_matching_rules(
@@ -326,7 +302,6 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
                         .class_hash
                         .try_entry(class.clone(), quirks_mode)?
                         .or_insert_with(SmallVec::new),
-                    Bucket::Attribute { name, lower_name } |
                     Bucket::LocalName { name, lower_name } => {
                         // If the local name in the selector isn't lowercase,
                         // insert it into the rule hash twice. This means that,
@@ -341,19 +316,13 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
                         // selector, the rulehash lookup may produce superfluous
                         // selectors, but the subsequent selector matching work
                         // will filter them out.
-                        let is_attribute = matches!($bucket, Bucket::Attribute { .. });
-                        let hash = if is_attribute {
-                            &mut self.attribute_hash
-                        } else {
-                            &mut self.local_name_hash
-                        };
                         if name != lower_name {
-                            hash
+                            self.local_name_hash
                                 .try_entry(lower_name.clone())?
                                 .or_insert_with(SmallVec::new)
                                 .try_push($entry.clone())?;
                         }
-                        hash
+                        self.local_name_hash
                             .try_entry(name.clone())?
                             .or_insert_with(SmallVec::new)
                     },
@@ -440,29 +409,8 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
 
         let mut done = false;
         element.each_class(|class| {
-            if done {
-                return;
-            }
-            if let Some(v) = self.class_hash.get(class, quirks_mode) {
-                for entry in v.iter() {
-                    if !f(&entry) {
-                        done = true;
-                        return;
-                    }
-                }
-            }
-        });
-
-        if done {
-            return false;
-        }
-
-        if bucket_attributes() {
-            element.each_attr_name(|name| {
-                if done {
-                    return;
-                }
-                if let Some(v) = self.attribute_hash.get(name) {
+            if !done {
+                if let Some(v) = self.class_hash.get(class, quirks_mode) {
                     for entry in v.iter() {
                         if !f(&entry) {
                             done = true;
@@ -470,11 +418,10 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
                         }
                     }
                 }
-            });
-
-            if done {
-                return false;
             }
+        });
+        if done {
+            return false;
         }
 
         if let Some(v) = self.local_name_hash.get(element.local_name()) {
@@ -560,10 +507,6 @@ enum Bucket<'a> {
         name: &'a LocalName,
         lower_name: &'a LocalName,
     },
-    Attribute {
-        name: &'a LocalName,
-        lower_name: &'a LocalName,
-    },
     Class(&'a Atom),
     ID(&'a Atom),
     Root,
@@ -577,10 +520,9 @@ impl<'a> Bucket<'a> {
             Bucket::Universal => 0,
             Bucket::Namespace(..) => 1,
             Bucket::LocalName { .. } => 2,
-            Bucket::Attribute { .. } => 3,
-            Bucket::Class(..) => 4,
-            Bucket::ID(..) => 5,
-            Bucket::Root => 6,
+            Bucket::Class(..) => 3,
+            Bucket::ID(..) => 4,
+            Bucket::Root => 5,
         }
     }
 
@@ -600,18 +542,6 @@ fn specific_bucket_for<'a>(
         Component::Root => Bucket::Root,
         Component::ID(ref id) => Bucket::ID(id),
         Component::Class(ref class) => Bucket::Class(class),
-        Component::AttributeInNoNamespace { ref local_name, .. } if bucket_attributes() => Bucket::Attribute {
-            name: local_name,
-            lower_name: local_name,
-        },
-        Component::AttributeInNoNamespaceExists { ref local_name, ref local_name_lower } if bucket_attributes() => Bucket::Attribute {
-            name: local_name,
-            lower_name: local_name_lower,
-        },
-        Component::AttributeOther(ref selector) if bucket_attributes() => Bucket::Attribute {
-            name: &selector.local_name,
-            lower_name: &selector.local_name_lower,
-        },
         Component::LocalName(ref selector) => Bucket::LocalName {
             name: &selector.name,
             lower_name: &selector.lower_name,
