@@ -1311,10 +1311,20 @@ void nsFocusManager::NotifyFocusStateChange(Element* aElement,
       eventStateToAdd |= NS_EVENT_STATE_FOCUSRING;
     }
     aElement->AddStates(eventStateToAdd);
+
+    for (nsIContent* host = aElement->GetContainingShadowHost(); host;
+         host = host->GetContainingShadowHost()) {
+      host->AsElement()->AddStates(NS_EVENT_STATE_FOCUS);
+    }
   } else {
     EventStates eventStateToRemove =
         NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING;
     aElement->RemoveStates(eventStateToRemove);
+
+    for (nsIContent* host = aElement->GetContainingShadowHost(); host;
+         host = host->GetContainingShadowHost()) {
+      host->AsElement()->RemoveStates(NS_EVENT_STATE_FOCUS);
+    }
   }
 
   for (nsIContent* content = aElement; content && content != commonAncestor;
@@ -2106,7 +2116,36 @@ Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
     }
   }
 
-  return frame->IsFocusable(aFlags & FLAG_BYMOUSE) ? aElement : nullptr;
+  if (frame->IsFocusable(aFlags & FLAG_BYMOUSE)) {
+    return aElement;
+  }
+
+  if (ShadowRoot* root = aElement->GetShadowRoot()) {
+    if (root->DelegatesFocus()) {
+      // If focus target is a shadow-including inclusive ancestor of the
+      // currently focused area of a top-level browsing context's DOM anchor,
+      // then return null.
+      if (nsPIDOMWindowInner* innerWindow =
+              aElement->OwnerDoc()->GetInnerWindow()) {
+        BrowsingContext* bc = innerWindow->GetBrowsingContext();
+        if (bc && bc->IsTop()) {
+          if (Element* focusedElement = innerWindow->GetFocusedElement()) {
+            if (focusedElement->IsShadowIncludingInclusiveDescendantOf(
+                    aElement)) {
+              return nullptr;
+            }
+          }
+        }
+      }
+
+      if (Element* firstFocusable =
+              root->GetFirstFocusable(aFlags & FLAG_BYMOUSE)) {
+        return firstFocusable;
+      }
+    }
+  }
+
+  return nullptr;
 }
 
 bool nsFocusManager::Blur(BrowsingContext* aBrowsingContextToClear,
