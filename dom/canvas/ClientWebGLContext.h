@@ -909,9 +909,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // nsICanvasRenderingContextInternal / nsAPostRefreshObserver
   // -------------------------------------------------------------------------
  public:
-  already_AddRefed<layers::Layer> GetCanvasLayer(
-      nsDisplayListBuilder* builder, layers::Layer* oldLayer,
-      layers::LayerManager* manager) override;
   bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                 layers::CanvasRenderer* aRenderer) override;
   // Note that 'clean' here refers to its invalidation state, not the
