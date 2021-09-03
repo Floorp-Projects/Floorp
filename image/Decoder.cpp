@@ -248,9 +248,7 @@ void Decoder::CompleteDecode() {
 
   // If PostDecodeDone() has not been called, we may need to send teardown
   // notifications if it is unrecoverable.
-  if (mDecodeDone) {
-    MOZ_ASSERT(HasError() || mCurrentFrame, "Should have an error or a frame");
-  } else {
+  if (!mDecodeDone) {
     // We should always report an error to the console in this case.
     mShouldReportError = true;
 
@@ -262,6 +260,18 @@ void Decoder::CompleteDecode() {
     } else {
       // We're not usable. Record some final progress indicating the error.
       mProgress |= FLAG_DECODE_COMPLETE | FLAG_HAS_ERROR;
+    }
+  }
+
+  if (mDecodeDone) {
+    MOZ_ASSERT(HasError() || mCurrentFrame, "Should have an error or a frame");
+
+    // If this image wasn't animated and isn't a transient image, mark its frame
+    // as optimizable. We don't support optimizing animated images and
+    // optimizing transient images isn't worth it.
+    if (!HasAnimation() &&
+        !(mDecoderFlags & DecoderFlags::IMAGE_IS_TRANSIENT) && mCurrentFrame) {
+      mCurrentFrame->SetOptimizable();
     }
   }
 }
@@ -340,6 +350,11 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
     return RawAccessFrameRef();
   }
 
+  if (frameNum == 1) {
+    MOZ_ASSERT(aPreviousFrame, "Must provide a previous frame when animated");
+    aPreviousFrame->SetRawAccessOnly();
+  }
+
   if (frameNum > 0) {
     if (aPreviousFrame->GetDisposalMethod() !=
         DisposalMethod::RESTORE_PREVIOUS) {
@@ -404,6 +419,10 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
     if (!ref) {
       frame->Abort();
       return RawAccessFrameRef();
+    }
+
+    if (frameNum > 0) {
+      frame->SetRawAccessOnly();
     }
   }
 
