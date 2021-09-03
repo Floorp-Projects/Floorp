@@ -14,7 +14,7 @@ use self::test::Bencher;
 
 use super::{
     parse_important, parse_nth, parse_one_declaration, parse_one_rule, stylesheet_encoding,
-    AtRuleParser, AtRuleType, BasicParseError, BasicParseErrorKind, Color, CowRcStr,
+    AtRuleParser, BasicParseError, BasicParseErrorKind, Color, CowRcStr,
     DeclarationListParser, DeclarationParser, Delimiter, EncodingSupport, ParseError,
     ParseErrorKind, Parser, ParserInput, ParserState, QualifiedRuleParser, RuleListParser,
     SourceLocation, ToCss, Token, TokenSerializationType, UnicodeRange, RGBA,
@@ -922,8 +922,7 @@ impl<'i> DeclarationParser<'i> for JsonParser {
 }
 
 impl<'i> AtRuleParser<'i> for JsonParser {
-    type PreludeNoBlock = Vec<Value>;
-    type PreludeBlock = Vec<Value>;
+    type Prelude = Vec<Value>;
     type AtRule = Value;
     type Error = ();
 
@@ -931,24 +930,23 @@ impl<'i> AtRuleParser<'i> for JsonParser {
         &mut self,
         name: CowRcStr<'i>,
         input: &mut Parser<'i, 't>,
-    ) -> Result<AtRuleType<Vec<Value>, Vec<Value>>, ParseError<'i, ()>> {
+    ) -> Result<Vec<Value>, ParseError<'i, ()>> {
         let prelude = vec![
             "at-rule".to_json(),
             name.to_json(),
             Value::Array(component_values_to_json(input)),
         ];
         match_ignore_ascii_case! { &*name,
-            "media" | "foo-with-block" => Ok(AtRuleType::WithBlock(prelude)),
             "charset" => {
                 Err(input.new_error(BasicParseErrorKind::AtRuleInvalid(name.clone()).into()))
             },
-            _ => Ok(AtRuleType::WithoutBlock(prelude)),
+            _ => Ok(prelude),
         }
     }
 
-    fn rule_without_block(&mut self, mut prelude: Vec<Value>, _: &ParserState) -> Value {
+    fn rule_without_block(&mut self, mut prelude: Vec<Value>, _: &ParserState) -> Result<Value, ()> {
         prelude.push(Value::Null);
-        Value::Array(prelude)
+        Ok(Value::Array(prelude))
     }
 
     fn parse_block<'t>(

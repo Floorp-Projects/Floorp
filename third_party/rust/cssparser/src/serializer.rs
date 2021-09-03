@@ -107,6 +107,8 @@ impl<'a> ToCss for Token<'a> {
                 write_numeric(value, int_value, has_sign, dest)?;
                 // Disambiguate with scientific notation.
                 let unit = &**unit;
+                // TODO(emilio): This doesn't handle e.g. 100E1m, which gets us
+                // an unit of "E1m"...
                 if unit == "e" || unit == "E" || unit.starts_with("e-") || unit.starts_with("E-") {
                     dest.write_str("\\65 ")?;
                     serialize_name(&unit[1..], dest)?;
