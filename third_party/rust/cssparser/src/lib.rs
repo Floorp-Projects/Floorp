@@ -79,7 +79,7 @@ pub use crate::parser::{BasicParseError, BasicParseErrorKind, ParseError, ParseE
 pub use crate::parser::{Delimiter, Delimiters, Parser, ParserInput, ParserState};
 pub use crate::rules_and_declarations::{parse_important, parse_one_declaration};
 pub use crate::rules_and_declarations::{parse_one_rule, RuleListParser};
-pub use crate::rules_and_declarations::{AtRuleParser, AtRuleType, QualifiedRuleParser};
+pub use crate::rules_and_declarations::{AtRuleParser, QualifiedRuleParser};
 pub use crate::rules_and_declarations::{DeclarationListParser, DeclarationParser};
 pub use crate::serializer::{serialize_identifier, serialize_name, serialize_string};
 pub use crate::serializer::{CssStringWriter, ToCss, TokenSerializationType};
