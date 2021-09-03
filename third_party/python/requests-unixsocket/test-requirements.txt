@@ -1,4 +1,0 @@
-pytest
-pytest-capturelog
-pytest-pep8
-waitress
