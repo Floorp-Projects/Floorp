@@ -4060,13 +4060,15 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   bool topLayerIsOpaque = false;
   if (nsDisplayWrapList* topLayerWrapList =
           MaybeCreateTopLayerItems(aBuilder, &topLayerIsOpaque)) {
-    // If the top layer content is opaque, and we're the root content document,
-    // we can drop the display items behind it. We only support doing this for
-    // the root document, since the top layer content might have fixed position
-    // items that have a scrolltarget referencing the APZ data for the document.
-    // APZ builds this data implicitly for the root document, but subdocuments
-    // need their display items to generate it, so we can't cull those.
-    if (topLayerIsOpaque && mOuter->PresContext()->IsRootContentDocument()) {
+    // If the top layer content is opaque, and we're the root content document
+    // in the process, we can drop the display items behind it. We only support
+    // doing this for the root content document in the process, since the top
+    // layer content might have fixed position items that have a scrolltarget
+    // referencing the APZ data for the document. APZ builds this data
+    // implicitly for the root content document in the process, but subdocuments
+    // etc need their display items to generate it, so we can't cull those.
+    if (topLayerIsOpaque &&
+        mOuter->PresContext()->IsRootContentDocumentInProcess()) {
       set.DeleteAll(aBuilder);
     }
     set.PositionedDescendants()->AppendToTop(topLayerWrapList);
