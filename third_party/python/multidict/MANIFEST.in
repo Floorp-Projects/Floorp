@@ -1,0 +1,14 @@
+include LICENSE
+include CHANGES.rst
+include README.rst
+include Makefile
+graft multidict
+graft docs
+graft tests
+global-exclude *.pyc
+include multidict/*.c
+exclude multidict/_multidict.html
+exclude multidict/*.so
+exclude multidict/*.pyd
+exclude multidict/*.pyd
+prune docs/_build

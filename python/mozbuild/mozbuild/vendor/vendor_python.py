@@ -95,7 +95,7 @@ class VendorPython(MozbuildObject):
 
         ignore = ()
         if not keep_extra_files:
-            ignore = ("*/doc", "*/docs", "*/test", "*/tests")
+            ignore = ("*/doc", "*/docs", "*/test", "*/tests", "**/.git")
         finder = FileFinder(src)
         for archive, _ in finder.find("*"):
             _, ext = os.path.splitext(archive)
