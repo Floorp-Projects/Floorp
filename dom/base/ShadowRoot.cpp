@@ -752,6 +752,41 @@ void ShadowRoot::MaybeUnslotHostChild(nsIContent& aChild) {
   slot->EnqueueSlotChangeEvent();
 }
 
+Element* ShadowRoot::GetFirstFocusable(bool aWithMouse) const {
+  for (nsIContent* child = GetFirstChild(); child;
+       child = child->GetNextNode()) {
+    if (auto* slot = HTMLSlotElement::FromNode(child)) {
+      const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
+      for (const auto& node : assignedNodes) {
+        if (node->IsElement()) {
+          Element* assignedElement = node->AsElement();
+          if (nsIFrame* frame = assignedElement->GetPrimaryFrame()) {
+            if (frame->IsFocusable(aWithMouse)) {
+              return assignedElement;
+            }
+          }
+        }
+      }
+    }
+
+    if (child->IsElement()) {
+      if (nsIFrame* frame = child->GetPrimaryFrame()) {
+        if (frame->IsFocusable(aWithMouse)) {
+          return child->AsElement();
+        }
+      }
+    }
+
+    if (ShadowRoot* root = child->GetShadowRoot()) {
+      if (Element* firstFocusable = root->GetFirstFocusable(aWithMouse)) {
+        return firstFocusable;
+      }
+    }
+  }
+
+  return nullptr;
+}
+
 void ShadowRoot::MaybeSlotHostChild(nsIContent& aChild) {
   MOZ_ASSERT(aChild.GetParent() == GetHost());
   // Check to ensure that the child not an anonymous subtree root because even
