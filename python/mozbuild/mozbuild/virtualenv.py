@@ -207,7 +207,10 @@ class VirtualenvManager(VirtualenvHelper):
             if current_paths != required_paths:
                 return False
 
-        if env_requirements.pypi_requirements:
+        if (
+            env_requirements.pypi_requirements
+            or env_requirements.pypi_optional_requirements
+        ):
             pip_json = self._run_pip(
                 ["list", "--format", "json"], stdout=subprocess.PIPE
             ).stdout
@@ -220,6 +223,13 @@ class VirtualenvManager(VirtualenvHelper):
                     installed_packages.get(requirement.package_name, None)
                     != requirement.version
                 ):
+                    return False
+
+            for requirement in env_requirements.pypi_optional_requirements:
+                installed_version = installed_packages.get(
+                    requirement.package_name, None
+                )
+                if installed_version and installed_version != requirement.version:
                     return False
 
         return True
