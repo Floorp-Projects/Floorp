@@ -100,10 +100,14 @@ bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
   if (mSendStreamConfig.rtp.ssrc == aSSRCs[0]) {
     return true;
   }
-  // Update the value of the ssrcs in the config structure.
-  mRecvStreamConfig.rtp.local_ssrc = aSSRCs[0];
-  mSendStreamConfig.rtp.ssrc = aSSRCs[0];
 
+  {
+    MutexAutoLock lock(mMutex);  // Avoid racing against GetLocalSSRCs
+    // Update the value of the ssrcs in the config structure.
+    mRecvStreamConfig.rtp.local_ssrc = aSSRCs[0];
+  }
+
+  mSendStreamConfig.rtp.ssrc = aSSRCs[0];
   mRecvChannelProxy->SetLocalSSRC(aSSRCs[0]);
 
   return RecreateSendStreamIfExists();
