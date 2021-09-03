@@ -15,4 +15,6 @@ LOCAL_INCLUDES += [
     "/image/encoders/png",
 ]
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
 FINAL_LIBRARY = "xul"
