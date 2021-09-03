@@ -687,7 +687,7 @@
 
     <!-- Tip displayed on home view explaining how to disable tracking protection
     The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection">Wuket in website frjemd?\n Probearje Beskerming tsjin folgjen út te skeakeljen</string>
+    <string name="tip_disable_tracking_protection">Wurket in website net goed?\n Probearje Beskerming tsjin folgjen út te skeakeljen</string>
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
@@ -727,7 +727,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Jawis, wy hawwe in frisse nije útstrieling! Mear ynfo hjiroer en oer oare updates fan %1$s.</string>
+    <string name="tip_fresh_look">Jawis, wy hawwe in frisse nije útstrieling!\n Mear ynfo hjiroer en oer oare updates fan %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->

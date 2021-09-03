@@ -124,7 +124,16 @@
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
-    <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie ihn als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
+    <string name="about_content"><![CDATA[<p>%1$s gibt Ihnen die Kontrolle.</p>
+<p>Verwenden Sie ihn als privaten Browser:
+  <ul>
+    <li>Suchen und blättern Sie in der App</li>
+    <li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>
+    <li>Entfernen Sie Cookies, um Such- und Browserverlauf zu löschen</li>
+  </ul>
+</p>
+<p>%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu fördern.<br/>
+<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Datenschutz &amp; Sicherheit</string>
@@ -555,17 +564,17 @@
   <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
-    <string name="your_rights_content2"><![CDATA["%1$s steht unter der "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" und anderen Open-Source-Lizenzen."]]></string>
+    <string name="your_rights_content2"><![CDATA[%1$s steht unter der <a href="%2$s">Mozilla Public License</a> und anderen Open-Source-Lizenzen.]]></string>
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
-    <string name="your_rights_content3"><![CDATA[Ihnen werden keine Rechte oder Lizenzen an den Markenrechten der Mozilla Foundation oder einer anderen Partei eingeräumt, dazu zählen die Namen und Logos von Mozilla, Firefox oder %1$s. Weitere Informationen finden Sie <a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hier</a>.]]></string>
+    <string name="your_rights_content3"><![CDATA[Ihnen werden keine Rechte oder Lizenzen an den Markenrechten der Mozilla Foundation oder einer anderen Partei eingeräumt, dazu zählen die Namen und Logos von Mozilla, Firefox oder %1$s. Weitere Informationen finden Sie <a href="%2$s">hier</a>.]]></string>
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
-    <string name="your_rights_content4"><![CDATA[Sonstiger Quelltext für %1$s steht unter diversen anderen freien und Open-Source-<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lizenzen</a>.]]></string>
+    <string name="your_rights_content4"><![CDATA[Sonstiger Quelltext für %1$s steht unter diversen anderen freien und Open-Source-<a href="%2$s">Lizenzen</a>.]]></string>
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)

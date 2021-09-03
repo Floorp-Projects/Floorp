@@ -45,7 +45,7 @@
     <string name="menu_open_with_a_browser2">بازکردن…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
-    <string name="menu_add_to_home_screen">افزودن به صفحه‌ی خانه</string>
+    <string name="menu_add_to_home_screen">افزودن به صفحهٔ خانه</string>
 
     <!-- Menu item: Add the current site as a shortcut on the Home screen -->
     <string name="menu_add_to_shortcuts">افزودن به میان‌برها</string>
@@ -64,21 +64,21 @@
          Next to this label is a switch that allows the user to temporarily enable / disable the
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
-    <string name="menu_trackers_blocked_title">دنبال کننده‌های مسدود شده</string>
+    <string name="menu_trackers_blocked_title">ردیاب‌های مسدود شده</string>
 
     <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
     trackers have been blocked for the currently loaded website.  -->
-    <string name="menu_trackers_blocked_subtitle">خاموش‌ کردن این ممکن است بتواند تعدادی از مشکلات این سایت را حل کند</string>
+    <string name="menu_trackers_blocked_subtitle">خاموش کردن این ممکن است بتواند تعدادی از مشکلات این سایت را حل کند</string>
 
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
-    <string name="menu_content_blocking">مسدودکردن محتوا</string>
+    <string name="menu_content_blocking">مسدود کردن محتوا</string>
     <!-- This is the subtitle content blocking toggle -->
     <string name="menu_content_blocking_subtitle">خاموش کردن برای حل مشکل چند سایت</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="menu_custom_tab_branding">نیرو گرفته توسط%1$s</string>
+    <string name="menu_custom_tab_branding">نیرو گرفته توسط %1$s</string>
 
     <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
          sharing an URL. -->
@@ -121,6 +121,19 @@
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">جست‌وجو ناشناس</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s شما را تحت کنترل قرار می‌دهد.</p>
+<p>از این به عنوان یک مرورگر خصوصی استفاده کنید:
+  <ul>
+    <li>مستقیما در برنامه جست‌وجو و مرور کنید</li>
+    <li>ردیاب‌ها را مسدود کنید (یا تنظیمات را برای اجازه دادن به ردیاب‌ها تغییر دهید)</li>
+    <li>کوکی‌ها را مانند جست‌وجو و تاریخچه مرور پاک یا حذف کنید</li>
+  </ul>
+</p>
+<p>%1$s توسط موزیلا ساخته شده است. ماموریت ما تا رواج یک اینترنت سالم و باز است.<br/>
+<a href="%2$s">بیشتر بدانید</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">حریم خصوصی و امنیت</string>
@@ -341,6 +354,9 @@
     <!-- Action for dding an additional search engine to the list -->
     <string name="preference_search_add3">افزودن موتور جست‌وجوی دیگر</string>
 
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">گزینش موتور مورد نظر شما:</string>
+
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
     <string name="preference_homescreen_tips">نمایش نکات صفحه اصلی</string>
@@ -508,6 +524,10 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">خیر</string>
 
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">میان‌بر بدون محافظت پیشرفته در برابر ردیابی گشوده خواهد شد</string>
+
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
@@ -538,7 +558,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s تحت شرایط <a href="%2$s">پروانه عمومی موزیلا</a> و سایر مجوزهای متن‌ باز در اختیار شما قرار می‌گیرد.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[شما از حقی در خصوص علائم تجاری بنیاد موزیلا و یا هر شخص ثالثی، از جمله نام یا نشان موزیلا،  فایرفاکس یا %1$s برخوردار نیستید. اطلاعات بیشتر در <a href="%2$s"> اینجا</a> قابل دسترسی است.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[کد منبع بیشتری برای %1$sتحت تعداد دیگری از <a href="%2$s">پروانه‌های</a> آزاد و متن‌باز در دسترس است.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s همچنین از فهرست‌های مسدودی فراهم شده توسط Disconnect استفاده می‌کند. به عنوان کارهای جدا و مستقل تحت <a href="%2$s">نگارش 3 پروانه جامع همگانی گنو</a> و <a href="%3$s">اینجا</a> در دسترس است.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">نام کاربری</string>
     <string name="gv_prompt_password_hint">کلمه عبور</string>
     <string name="gv_prompt_clear">پاک کردن</string>
@@ -579,6 +620,9 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">درخواست نسخه رومیزی پایگاه</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">نسخه‌ی میزکار پایگاه اینترنتی</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">برداشتURL</string>
 
@@ -602,6 +646,10 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">جلسه جدید</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">باز کردن پیوند در یک نشست تازه</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">نشانه اثرانگشت</string>
 
@@ -612,6 +660,13 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">انگشت خیلی سریع حرکت کرد. مجدد تلاش کنید.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">پیشنهادهای جست‌وجو نمایش داده شوند؟</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">برای دریافت پیشنهادات، %1$s نیاز دارد تا چیزی که در نوار آدرس می‌نویسید را به موتور جست‌وجو ارسال کند.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">خیر</string>
@@ -631,6 +686,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">سایت رفتار غیرمنتظره‌ای دارد؟\n محافظت از دنبال کردن را خاموش کنید</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">محتوا در سایت وجود ندارد یا عجیب عمل می‌کنید؟\n
+    سعی کنید محافظت پیشرفته در برابر ردیابی را خاموش کنید</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[با اشاره یک انگشت به سایت های پربازدید خود دسترسی داشته باشید%1$s فهرست> اضافه کردن به صفحه خانگی]]></string>
@@ -648,8 +708,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">بازکردن یک پیوند در زبانه جدید\n نگاه داشتن بیشتر انگشت برای باز کردن پیوند در صفحه</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">آیا می‌خواهید نسخه کامل یک سایت را ببینید؟\n
+        از منوی %1$s، نسخه‌ی میزکار پایگاه اینترنتی را روشن کنید</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">خاموش کردن نکات راهنما بر روی صفحه آغازین</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">آیا می‌خواهید محافظت پیشرفته در برابر ردیابی را برای سایتی که به آن اعتماد دارید، خاموش کنید؟\n
+        آن را به فهرست مجاز در تنظیمات اضافه کنید
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">چرا بله، ما ظاهر جدیدی داریم!\n  درباره این و سایر به‌ روز رسانی‌ها در %1$s بیشتر بخوانید.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">برای سایت‌هایی که بیشتر از آنها بازدید می‌کنید، میانبر ایجاد کنید:\n
+    از منوی %1$s افزودن به میانبرها را انتخاب کنید</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">زبانه‌ي جدیدی باز شده است</string>

@@ -64,7 +64,7 @@
          Next to this label is a switch that allows the user to temporarily enable / disable the
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
-    <string name="menu_trackers_blocked_title">Engellenen takipçi</string>
+    <string name="menu_trackers_blocked_title">Takipçileri engelle</string>
 
     <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
     trackers have been blocked for the currently loaded website.  -->

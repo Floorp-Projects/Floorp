@@ -692,7 +692,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Ci seria u cuntenutu chì manca o u situ si cumpurteria d’una manera strana ?\n
+    <string name="tip_disable_tracking_protection3">Ci seria u cuntenutu chì manca o u situ si cumpurteria d’una manera strana ?\n
     Pruvate di disattivà a prutezzione rinfurzata contr’à u spiunagiu</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -733,6 +733,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
     <string name="tip_fresh_look">Hè vera, avemu un aspettu tuttu novu ! Sapene di più apprupositu di què è d’altre mudificazioni nant’à %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Create l’accurtatoghji per i siti chì vo visitate u più :\n
+    Selezziunate « Aghjunghje à l’accurtatoghji » in u listinu di %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nova unghjetta aperta</string>

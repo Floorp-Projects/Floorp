@@ -501,7 +501,7 @@
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">მალსახმობების დამატება მთავარ ეკრანზე</string>
     <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_shortcut_text">%1$s-ის დახმარებით, სწრაფად შეგიძლიათ დაუბრუნდეთ რჩეულ საიტებს. უბრალოდ, მიუთითეთ \&quot;მთავარ ეკრანზე დამატება\&quot;, %1$s-ის მენიუდან.</string>
+    <string name="firstrun_shortcut_text">%1$s-ის დახმარებით, სწრაფად შეგიძლიათ დაუბრუნდეთ რჩეულ საიტებს. მარტივად მიუთითეთ \&quot;მთავარ ეკრანზე დამატება\&quot;, %1$s-ის მენიუდან.</string>
 
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">ჩვევად აქციეთ პირადულობის დაცვა</string>

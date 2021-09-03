@@ -78,7 +78,7 @@
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="menu_custom_tab_branding">Con tecnologia de %1$s</string>
+    <string name="menu_custom_tab_branding">Con tecnología de %1$s</string>
 
     <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
          sharing an URL. -->

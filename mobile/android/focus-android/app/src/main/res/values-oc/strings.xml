@@ -122,6 +122,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Recèrca privada</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s vos dòna lo contraròtla.</p>
+<p>Utiliza-lo coma un navegador privat :
+  <ul>
+    <li>Recercatz e navegatz dins l’aplicacion</li>
+    <li>Blocatz los traçadors (o cambiatz lo paramètre per autorizar los traçadors)</li>
+    <li>Escafatz los cookies e los istorics de recèrcas e navegacion</li>
+  </ul>
+</p>
+<p>%1$s es produch per Mozilla. Nòstra mission es d’encoratjar un Internet en bona santat e dobèrt.<br/>
+<a href="%2$s">Ne saber mai</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Vida privada e seguretat</string>
 
@@ -548,6 +561,11 @@
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
     <string name="your_rights_content2"><![CDATA[%1$s es distribuit jols tèrmes de la <a href="%2$s">Licéncia publica de Mozilla</a> e d’autras licéncias open source.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Donatz pas cap de drech de marca o de licéncia sus las marcas depausadas de la Fondacion Mozilla o de tèrces, aquò inclutz sens cap de limit los noms e logos de Firefox. Mai d’informacions sus las marcas se tròban <a href="%2$s">aquí</a>.]]></string>
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
