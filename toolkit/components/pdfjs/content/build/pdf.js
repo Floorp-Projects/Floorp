@@ -549,7 +549,7 @@ exports.stringToUTF8String = stringToUTF8String;
 exports.unreachable = unreachable;
 exports.utf8StringToString = utf8StringToString;
 exports.warn = warn;
-exports.VerbosityLevel = exports.Util = exports.UNSUPPORTED_FEATURES = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.IsLittleEndianCached = exports.IsEvalSupportedCached = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UNSUPPORTED_FEATURES = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.IsLittleEndianCached = exports.IsEvalSupportedCached = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 
 __w_pdfjs_require__(3);
 
@@ -563,9 +563,17 @@ const RenderingIntentFlag = {
   PRINT: 0x04,
   ANNOTATIONS_FORMS: 0x10,
   ANNOTATIONS_STORAGE: 0x20,
+  ANNOTATIONS_DISABLE: 0x40,
   OPLIST: 0x100
 };
 exports.RenderingIntentFlag = RenderingIntentFlag;
+const AnnotationMode = {
+  DISABLE: 0,
+  ENABLE: 1,
+  ENABLE_FORMS: 2,
+  ENABLE_STORAGE: 3
+};
+exports.AnnotationMode = AnnotationMode;
 const PermissionFlag = {
   PRINT: 0x04,
   MODIFY_CONTENTS: 0x08,
@@ -1880,9 +1888,9 @@ function getDocument(src) {
   return task;
 }
 
-function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
+async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
-    return Promise.reject(new Error("Worker was destroyed"));
+    throw new Error("Worker was destroyed");
   }
 
   if (pdfDataRangeTransport) {
@@ -1892,9 +1900,9 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     source.contentDispositionFilename = pdfDataRangeTransport.contentDispositionFilename;
   }
 
-  return worker.messageHandler.sendWithPromise("GetDocRequest", {
+  const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.11.142',
+    apiVersion: '2.11.191',
     source: {
       data: source.data,
       url: source.url,
@@ -1914,13 +1922,13 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     useSystemFonts: source.useSystemFonts,
     cMapUrl: source.useWorkerFetch ? source.cMapUrl : null,
     standardFontDataUrl: source.useWorkerFetch ? source.standardFontDataUrl : null
-  }).then(function (workerId) {
-    if (worker.destroyed) {
-      throw new Error("Worker was destroyed");
-    }
-
-    return workerId;
   });
+
+  if (worker.destroyed) {
+    throw new Error("Worker was destroyed");
+  }
+
+  return workerId;
 }
 
 class PDFDocumentLoadingTask {
@@ -1945,18 +1953,16 @@ class PDFDocumentLoadingTask {
     return this._capability.promise;
   }
 
-  destroy() {
+  async destroy() {
     this.destroyed = true;
-    const transportDestroyed = !this._transport ? Promise.resolve() : this._transport.destroy();
-    return transportDestroyed.then(() => {
-      this._transport = null;
+    await this._transport?.destroy();
+    this._transport = null;
 
-      if (this._worker) {
-        this._worker.destroy();
+    if (this._worker) {
+      this._worker.destroy();
 
-        this._worker = null;
-      }
-    });
+      this._worker = null;
+    }
   }
 
 }
@@ -2233,7 +2239,7 @@ class PDFPageProxy {
   getAnnotations({
     intent = "display"
   } = {}) {
-    const intentArgs = this._transport.getRenderingIntent(intent, {});
+    const intentArgs = this._transport.getRenderingIntent(intent);
 
     let promise = this._annotationPromises.get(intentArgs.cacheKey);
 
@@ -2258,22 +2264,18 @@ class PDFPageProxy {
     canvasContext,
     viewport,
     intent = "display",
-    renderInteractiveForms = false,
+    annotationMode = _util.AnnotationMode.ENABLE,
     transform = null,
     imageLayer = null,
     canvasFactory = null,
     background = null,
-    includeAnnotationStorage = false,
     optionalContentConfigPromise = null
   }) {
     if (this._stats) {
       this._stats.time("Overall");
     }
 
-    const intentArgs = this._transport.getRenderingIntent(intent, {
-      renderForms: renderInteractiveForms === true,
-      includeAnnotationStorage: includeAnnotationStorage === true
-    });
+    const intentArgs = this._transport.getRenderingIntent(intent, annotationMode);
 
     this.pendingCleanup = false;
 
@@ -2380,7 +2382,8 @@ class PDFPageProxy {
   }
 
   getOperatorList({
-    intent = "display"
+    intent = "display",
+    annotationMode = _util.AnnotationMode.ENABLE
   } = {}) {
     function operatorListChanged() {
       if (intentState.operatorList.lastChunk) {
@@ -2389,9 +2392,7 @@ class PDFPageProxy {
       }
     }
 
-    const intentArgs = this._transport.getRenderingIntent(intent, {
-      isOpList: true
-    });
+    const intentArgs = this._transport.getRenderingIntent(intent, annotationMode, true);
 
     let intentState = this._intentStates.get(intentArgs.cacheKey);
 
@@ -2676,7 +2677,7 @@ class PDFPageProxy {
       }
     }
 
-    intentState.streamReader.cancel(new _util.AbortException(reason?.message)).catch(() => {});
+    intentState.streamReader.cancel(new _util.AbortException(reason.message)).catch(() => {});
     intentState.streamReader = null;
 
     if (this._transport.destroyed) {
@@ -3112,11 +3113,7 @@ class WorkerTransport {
     return (0, _util.shadow)(this, "annotationStorage", new _annotation_storage.AnnotationStorage());
   }
 
-  getRenderingIntent(intent, {
-    renderForms = false,
-    includeAnnotationStorage = false,
-    isOpList = false
-  }) {
+  getRenderingIntent(intent, annotationMode = _util.AnnotationMode.ENABLE, isOpList = false) {
     let renderingIntent = _util.RenderingIntentFlag.DISPLAY;
     let lastModified = "";
 
@@ -3136,13 +3133,25 @@ class WorkerTransport {
         (0, _util.warn)(`getRenderingIntent - invalid intent: ${intent}`);
     }
 
-    if (renderForms) {
-      renderingIntent += _util.RenderingIntentFlag.ANNOTATIONS_FORMS;
-    }
+    switch (annotationMode) {
+      case _util.AnnotationMode.DISABLE:
+        renderingIntent += _util.RenderingIntentFlag.ANNOTATIONS_DISABLE;
+        break;
 
-    if (includeAnnotationStorage) {
-      renderingIntent += _util.RenderingIntentFlag.ANNOTATIONS_STORAGE;
-      lastModified = this.annotationStorage.lastModified;
+      case _util.AnnotationMode.ENABLE:
+        break;
+
+      case _util.AnnotationMode.ENABLE_FORMS:
+        renderingIntent += _util.RenderingIntentFlag.ANNOTATIONS_FORMS;
+        break;
+
+      case _util.AnnotationMode.ENABLE_STORAGE:
+        renderingIntent += _util.RenderingIntentFlag.ANNOTATIONS_STORAGE;
+        lastModified = this.annotationStorage.lastModified;
+        break;
+
+      default:
+        (0, _util.warn)(`getRenderingIntent - invalid annotationMode: ${annotationMode}`);
     }
 
     if (isOpList) {
@@ -3569,8 +3578,6 @@ class WorkerTransport {
   getPageIndex(ref) {
     return this.messageHandler.sendWithPromise("GetPageIndex", {
       ref
-    }).catch(function (reason) {
-      return Promise.reject(new Error(reason));
     });
   }
 
@@ -3972,9 +3979,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.11.142';
+const version = '2.11.191';
 exports.version = version;
-const build = '56e7bb626';
+const build = 'da15dbf96';
 exports.build = build;
 
 /***/ }),
@@ -7405,6 +7412,9 @@ function wrapReason(reason) {
     case "MissingPDFException":
       return new _util.MissingPDFException(reason.message);
 
+    case "PasswordException":
+      return new _util.PasswordException(reason.message, reason.code);
+
     case "UnexpectedResponseException":
       return new _util.UnexpectedResponseException(reason.message, reason.status);
 
@@ -8661,7 +8671,7 @@ class AnnotationElement {
     this.linkService = parameters.linkService;
     this.downloadManager = parameters.downloadManager;
     this.imageResourcesPath = parameters.imageResourcesPath;
-    this.renderInteractiveForms = parameters.renderInteractiveForms;
+    this.renderForms = parameters.renderForms;
     this.svgFactory = parameters.svgFactory;
     this.annotationStorage = parameters.annotationStorage;
     this.enableScripting = parameters.enableScripting;
@@ -9079,7 +9089,7 @@ class WidgetAnnotationElement extends AnnotationElement {
 
 class TextWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
-    const isRenderable = parameters.renderInteractiveForms || !parameters.data.hasAppearance && !!parameters.data.fieldValue;
+    const isRenderable = parameters.renderForms || !parameters.data.hasAppearance && !!parameters.data.fieldValue;
     super(parameters, {
       isRenderable
     });
@@ -9104,7 +9114,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
     this.container.className = "textWidgetAnnotation";
     let element = null;
 
-    if (this.renderInteractiveForms) {
+    if (this.renderForms) {
       const storedData = storage.getValue(id, {
         value: this.data.fieldValue,
         valueAsString: this.data.fieldValue
@@ -9333,7 +9343,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
     super(parameters, {
-      isRenderable: parameters.renderInteractiveForms
+      isRenderable: parameters.renderForms
     });
   }
 
@@ -9408,7 +9418,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
 class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
     super(parameters, {
-      isRenderable: parameters.renderInteractiveForms
+      isRenderable: parameters.renderForms
     });
   }
 
@@ -9504,7 +9514,7 @@ class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
 class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
     super(parameters, {
-      isRenderable: parameters.renderInteractiveForms
+      isRenderable: parameters.renderForms
     });
   }
 
@@ -10314,7 +10324,7 @@ class AnnotationLayer {
         linkService: parameters.linkService,
         downloadManager: parameters.downloadManager,
         imageResourcesPath: parameters.imageResourcesPath || "",
-        renderInteractiveForms: parameters.renderInteractiveForms !== false,
+        renderForms: parameters.renderForms !== false,
         svgFactory: new _display_utils.DOMSVGFactory(),
         annotationStorage: parameters.annotationStorage || new _annotation_storage.AnnotationStorage(),
         enableScripting: parameters.enableScripting,
@@ -11276,7 +11286,7 @@ class XfaLayer {
 
           html.addEventListener("change", event => {
             storage.setValue(id, {
-              value: event.target.getAttribute("xfaOn")
+              value: event.target.checked ? event.target.getAttribute("xfaOn") : event.target.getAttribute("xfaOff")
             });
           });
         } else {
@@ -11529,40 +11539,10 @@ Object.defineProperty(exports, "RenderingCancelledException", ({
     return _display_utils.RenderingCancelledException;
   }
 }));
-Object.defineProperty(exports, "build", ({
+Object.defineProperty(exports, "AnnotationMode", ({
   enumerable: true,
   get: function () {
-    return _api.build;
-  }
-}));
-Object.defineProperty(exports, "getDocument", ({
-  enumerable: true,
-  get: function () {
-    return _api.getDocument;
-  }
-}));
-Object.defineProperty(exports, "LoopbackPort", ({
-  enumerable: true,
-  get: function () {
-    return _api.LoopbackPort;
-  }
-}));
-Object.defineProperty(exports, "PDFDataRangeTransport", ({
-  enumerable: true,
-  get: function () {
-    return _api.PDFDataRangeTransport;
-  }
-}));
-Object.defineProperty(exports, "PDFWorker", ({
-  enumerable: true,
-  get: function () {
-    return _api.PDFWorker;
-  }
-}));
-Object.defineProperty(exports, "version", ({
-  enumerable: true,
-  get: function () {
-    return _api.version;
+    return _util.AnnotationMode;
   }
 }));
 Object.defineProperty(exports, "CMapCompressionType", ({
@@ -11655,6 +11635,42 @@ Object.defineProperty(exports, "VerbosityLevel", ({
     return _util.VerbosityLevel;
   }
 }));
+Object.defineProperty(exports, "build", ({
+  enumerable: true,
+  get: function () {
+    return _api.build;
+  }
+}));
+Object.defineProperty(exports, "getDocument", ({
+  enumerable: true,
+  get: function () {
+    return _api.getDocument;
+  }
+}));
+Object.defineProperty(exports, "LoopbackPort", ({
+  enumerable: true,
+  get: function () {
+    return _api.LoopbackPort;
+  }
+}));
+Object.defineProperty(exports, "PDFDataRangeTransport", ({
+  enumerable: true,
+  get: function () {
+    return _api.PDFDataRangeTransport;
+  }
+}));
+Object.defineProperty(exports, "PDFWorker", ({
+  enumerable: true,
+  get: function () {
+    return _api.PDFWorker;
+  }
+}));
+Object.defineProperty(exports, "version", ({
+  enumerable: true,
+  get: function () {
+    return _api.version;
+  }
+}));
 Object.defineProperty(exports, "AnnotationLayer", ({
   enumerable: true,
   get: function () {
@@ -11688,9 +11704,9 @@ Object.defineProperty(exports, "XfaLayer", ({
 
 var _display_utils = __w_pdfjs_require__(1);
 
-var _api = __w_pdfjs_require__(6);
-
 var _util = __w_pdfjs_require__(2);
+
+var _api = __w_pdfjs_require__(6);
 
 var _annotation_layer = __w_pdfjs_require__(18);
 
@@ -11704,8 +11720,8 @@ var _svg = __w_pdfjs_require__(21);
 
 var _xfa_layer = __w_pdfjs_require__(22);
 
-const pdfjsVersion = '2.11.142';
-const pdfjsBuild = '56e7bb626';
+const pdfjsVersion = '2.11.191';
+const pdfjsBuild = 'da15dbf96';
 ;
 })();
 
