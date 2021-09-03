@@ -28,6 +28,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "ImageContainer.h"
+#include "ImageLayers.h"
 #include "nsStyleUtil.h"
 #include <algorithm>
 
