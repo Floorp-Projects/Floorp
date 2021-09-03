@@ -430,8 +430,7 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
 class DisplayListBuilder final {
  public:
   explicit DisplayListBuilder(wr::PipelineId aId,
-                              layers::WebRenderBackend aBackend,
-                              layers::DisplayItemCache* aCache = nullptr);
+                              layers::WebRenderBackend aBackend);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
@@ -444,7 +443,7 @@ class DisplayListBuilder final {
              const Maybe<usize>& aEnd);
   void DumpSerializedDisplayList();
 
-  void Begin();
+  void Begin(layers::DisplayItemCache* aCache = nullptr);
   void End(wr::BuiltDisplayList& aOutDisplayList);
   void End(layers::DisplayListData& aOutTransaction);
 
