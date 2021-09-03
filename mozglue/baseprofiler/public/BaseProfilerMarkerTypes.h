@@ -41,9 +41,9 @@ struct MediaSampleMarker {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.AddKeyLabelFormat("sampleStartTimeUs", "Sample start time",
-                             MS::Format::microseconds);
+                             MS::Format::Microseconds);
     schema.AddKeyLabelFormat("sampleEndTimeUs", "Sample end time",
-                             MS::Format::microseconds);
+                             MS::Format::Microseconds);
     return schema;
   }
 };

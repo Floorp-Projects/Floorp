@@ -37,12 +37,12 @@ struct FileIOMarker {
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
               MS::Location::TimelineFileIO};
     schema.AddKeyLabelFormatSearchable("operation", "Operation",
-                                       MS::Format::string,
+                                       MS::Format::String,
                                        MS::Searchable::searchable);
-    schema.AddKeyLabelFormatSearchable("source", "Source", MS::Format::string,
+    schema.AddKeyLabelFormatSearchable("source", "Source", MS::Format::String,
                                        MS::Searchable::searchable);
     schema.AddKeyLabelFormatSearchable("filename", "Filename",
-                                       MS::Format::filePath,
+                                       MS::Format::FilePath,
                                        MS::Searchable::searchable);
     return schema;
   }

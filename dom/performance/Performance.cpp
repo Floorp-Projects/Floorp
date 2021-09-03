@@ -258,10 +258,10 @@ struct UserTimingMarker {
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.SetAllLabels("{marker.data.name}");
     schema.AddStaticLabelValue("Marker", "UserTiming");
-    schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::string);
-    schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
-    schema.AddKeyLabelFormat("startMark", "Start Mark", MS::Format::string);
-    schema.AddKeyLabelFormat("endMark", "End Mark", MS::Format::string);
+    schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::String);
+    schema.AddKeyLabelFormat("name", "Name", MS::Format::String);
+    schema.AddKeyLabelFormat("startMark", "Start Mark", MS::Format::String);
+    schema.AddKeyLabelFormat("endMark", "End Mark", MS::Format::String);
     schema.AddStaticLabelValue("Description",
                                "UserTimingMeasure is created using the DOM API "
                                "performance.measure().");
