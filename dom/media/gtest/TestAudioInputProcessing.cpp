@@ -71,9 +71,7 @@ TEST(TestAudioInputProcessing, UnaccountedPacketizerBuffering)
     processedTime = 0;
     nextTime = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(nrFrames);
     generator.GenerateInterleaved(buffer.Elements(), nrFrames);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), nrFrames, channels, rate},
+    aip->NotifyInputData(graph, buffer.Elements(), nrFrames, rate, channels,
                          nextTime - nrFrames);
     aip->ProcessInput(graph, nullptr);
     aip->Pull(graph, processedTime, nextTime, segment.GetDuration(), &segment,
@@ -91,9 +89,7 @@ TEST(TestAudioInputProcessing, UnaccountedPacketizerBuffering)
     processedTime = nextTime;
     nextTime = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(2 * nrFrames);
     generator.GenerateInterleaved(buffer.Elements(), nrFrames);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), nrFrames, channels, rate},
+    aip->NotifyInputData(graph, buffer.Elements(), nrFrames, rate, channels,
                          nextTime - (2 * nrFrames));
     aip->ProcessInput(graph, nullptr);
     aip->Pull(graph, processedTime, nextTime, segment.GetDuration(), &segment,
@@ -139,10 +135,7 @@ TEST(TestAudioInputProcessing, InputDataCapture)
     nextTime = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(frames);
 
     generator.GenerateInterleaved(buffer.Elements(), frames);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), frames, channels, rate},
-                         0);
+    aip->NotifyInputData(graph, buffer.Elements(), frames, rate, channels, 0);
     buffer.ClearAndRetainStorage();
     aip->ProcessInput(graph, nullptr);
     aip->Pull(graph, processedTime, nextTime, segment.GetDuration(), &segment,
@@ -161,9 +154,7 @@ TEST(TestAudioInputProcessing, InputDataCapture)
     nextTime = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(2 * frames);
 
     generator.GenerateInterleaved(buffer.Elements(), frames);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), frames, channels, rate},
+    aip->NotifyInputData(graph, buffer.Elements(), frames, rate, channels,
                          0 /* ignored */);
     buffer.ClearAndRetainStorage();
     aip->ProcessInput(graph, nullptr);
@@ -184,9 +175,7 @@ TEST(TestAudioInputProcessing, InputDataCapture)
     // nextTime) now but it's ok since we don't call ProcessInput here.
 
     generator.GenerateInterleaved(buffer.Elements(), frames);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), frames, channels, rate},
+    aip->NotifyInputData(graph, buffer.Elements(), frames, rate, channels,
                          0 /* ignored */);
     Unused << processedTime;
     buffer.ClearAndRetainStorage();
@@ -203,9 +192,7 @@ TEST(TestAudioInputProcessing, InputDataCapture)
     processedTime = nextTime;
     nextTime = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(4 * frames);
     generator.GenerateInterleaved(buffer.Elements(), frames);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), frames, channels, rate},
+    aip->NotifyInputData(graph, buffer.Elements(), frames, rate, channels,
                          0 /* ignored */);
     buffer.ClearAndRetainStorage();
     aip->ProcessInput(graph, nullptr);
@@ -258,10 +245,7 @@ TEST(TestAudioInputProcessing, InputDataCapturePassThrough)
     generator.GenerateInterleaved(buffer.Elements(), frames);
     source.AppendFromInterleavedBuffer(buffer.Elements(), frames, channels,
                                        PRINCIPAL_HANDLE_NONE);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), frames, channels, rate},
-                         0);
+    aip->NotifyInputData(graph, buffer.Elements(), frames, rate, channels, 0);
     buffer.ClearAndRetainStorage();
     aip->ProcessInput(graph, &source);
     aip->Pull(graph, processedTime, nextTime, segment.GetDuration(), &segment,
@@ -283,9 +267,7 @@ TEST(TestAudioInputProcessing, InputDataCapturePassThrough)
     generator.GenerateInterleaved(buffer.Elements(), frames);
     source.AppendFromInterleavedBuffer(buffer.Elements(), frames, channels,
                                        PRINCIPAL_HANDLE_NONE);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), frames, channels, rate},
+    aip->NotifyInputData(graph, buffer.Elements(), frames, rate, channels,
                          0 /* ignored */);
     buffer.ClearAndRetainStorage();
     aip->ProcessInput(graph, &source);
@@ -309,9 +291,7 @@ TEST(TestAudioInputProcessing, InputDataCapturePassThrough)
     generator.GenerateInterleaved(buffer.Elements(), frames);
     source.AppendFromInterleavedBuffer(buffer.Elements(), frames, channels,
                                        PRINCIPAL_HANDLE_NONE);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), frames, channels, rate},
+    aip->NotifyInputData(graph, buffer.Elements(), frames, rate, channels,
                          0 /* ignored */);
     Unused << processedTime;
     buffer.ClearAndRetainStorage();
@@ -330,9 +310,7 @@ TEST(TestAudioInputProcessing, InputDataCapturePassThrough)
     generator.GenerateInterleaved(buffer.Elements(), frames);
     source.AppendFromInterleavedBuffer(buffer.Elements(), frames, channels,
                                        PRINCIPAL_HANDLE_NONE);
-    aip->NotifyInputData(graph,
-                         AudioInputProcessing::BufferInfo{
-                             buffer.Elements(), frames, channels, rate},
+    aip->NotifyInputData(graph, buffer.Elements(), frames, rate, channels,
                          0 /* ignored */);
     buffer.ClearAndRetainStorage();
     aip->ProcessInput(graph, &source);
