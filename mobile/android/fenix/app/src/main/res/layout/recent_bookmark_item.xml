@@ -2,64 +2,40 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<com.google.android.material.card.MaterialCardView
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/bookmark_item"
     android:layout_width="@dimen/recent_bookmark_item_width"
     android:layout_height="@dimen/recent_bookmark_item_height"
-    android:layout_marginEnd="8dp"
-    android:layout_marginBottom="16dp"
-    android:scrollbars="none"
-    android:nestedScrollingEnabled="false"
-    android:importantForAccessibility="no"
-    style="@style/RecentBookmarks.FaviconCard">
+    android:padding="4dp">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/favicon_image"
         style="@style/recentBookmarkFavicon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginTop="24dp"
-        android:layout_gravity="center_horizontal" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/tab_tray_item_divider_normal_theme"
-        android:importantForAccessibility="no"
-        android:layout_marginTop="72dp"
-        android:clickable="false"/>
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:paddingBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/bookmark_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/bookmark_title"
-        android:layout_width="match_parent"
-        android:layout_height="30dp"
-        android:layout_marginTop="72dp"
-        android:maxHeight="30dp"
-        android:paddingStart="16dp"
-        android:paddingTop="7dp"
-        android:paddingEnd="16dp"
-        android:scrollbars="none"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:ellipsize="end"
+        android:importantForAccessibility="yes"
         android:maxLines="1"
         android:nestedScrollingEnabled="false"
-        android:importantForAccessibility="yes"
-        android:textAppearance="@style/recentBookmarkItemTitleText"
+        android:scrollbars="none"
+        android:textAppearance="@style/recentBookmarkItemSubTitleText"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         tools:text="Recently Saved bookmark item" />
 
-    <TextView
-        android:id="@+id/bookmark_subtitle"
-        android:layout_width="match_parent"
-        android:layout_height="16dp"
-        android:layout_marginTop="105dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:scrollbars="none"
-        android:nestedScrollingEnabled="false"
-        android:textAppearance="@style/recentBookmarkItemSubTitleText"
-        tools:text="Subtitle text"
-        android:textColor="@color/home_recent_bookmarks_item_url" />
-</com.google.android.material.card.MaterialCardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

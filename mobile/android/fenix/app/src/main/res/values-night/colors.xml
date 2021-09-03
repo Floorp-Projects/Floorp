@@ -94,7 +94,6 @@
 
     <!-- Home screen -->
     <color name="home_show_all_button_text">@color/photonLightGrey50</color>
-    <color name="home_recent_bookmarks_item_url">@color/photonLightGrey50</color>
 
     <!-- Search Widget -->
     <color name="search_widget_background">@color/inset_dark_theme</color>

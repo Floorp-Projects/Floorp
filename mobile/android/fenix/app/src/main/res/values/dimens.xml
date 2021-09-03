@@ -95,11 +95,11 @@
     <dimen name="home_item_elevation">5dp</dimen>
 
     <!-- Home - Recently saved bookmarks -->
-    <dimen name="recent_bookmark_item_height">128dp</dimen>
-    <dimen name="recent_bookmark_item_width">152dp</dimen>
+    <dimen name="recent_bookmark_item_height">132dp</dimen>
+    <dimen name="recent_bookmark_item_width">161dp</dimen>
     <dimen name="recent_bookmark_item_favicon_height">72dp</dimen>
     <dimen name="recent_bookmark_item_favicon_elevation">0dp</dimen>
-    <dimen name="recent_bookmark_item_favicon_corner_size">4dp</dimen>
+    <dimen name="recent_bookmark_item_favicon_corner_size">8dp</dimen>
 
     <!-- Browser Fragment -->
     <!--The size of the gap between the tab preview and content layout.-->

@@ -283,7 +283,6 @@
 
     <!-- Home screen -->
     <color name="home_show_all_button_text">@color/photonDarkGrey05</color>
-    <color name="home_recent_bookmarks_item_url">@color/photonDarkGrey05</color>
 
     <!-- Quick action buttons-->
 

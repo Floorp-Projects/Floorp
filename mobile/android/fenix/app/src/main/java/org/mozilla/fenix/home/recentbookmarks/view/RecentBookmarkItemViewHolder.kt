@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.recentbookmarks.view
 
 import android.view.View
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.RecentBookmarkItemBinding
 import org.mozilla.fenix.ext.components
@@ -23,7 +22,6 @@ class RecentBookmarkItemViewHolder(
         val binding = RecentBookmarkItemBinding.bind(view)
 
         binding.bookmarkTitle.text = bookmark.title ?: bookmark.url
-        binding.bookmarkSubtitle.text = bookmark.url?.tryGetHostFromUrl() ?: bookmark.title ?: ""
 
         binding.bookmarkItem.setOnClickListener {
             interactor.onRecentBookmarkClicked(bookmark)

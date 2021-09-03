@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import io.mockk.mockk
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Before
@@ -65,13 +64,10 @@ class RecentBookmarkItemViewHolderTest {
     }
 
     @Test
-    fun `GIVEN a bookmark exists in the list THEN set the title text and subtitle from item`() {
+    fun `GIVEN a bookmark exists in the list THEN set the title text`() {
         RecentBookmarkItemViewHolder(binding.root, interactor).bind(bookmarkWithUrl)
 
-        val hostFromUrl = bookmarkWithUrl.url?.tryGetHostFromUrl()
-
         Assert.assertEquals(bookmarkWithUrl.title, binding.bookmarkTitle.text)
-        Assert.assertEquals(hostFromUrl, binding.bookmarkSubtitle.text)
     }
 
     @Test

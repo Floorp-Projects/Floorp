@@ -680,15 +680,6 @@
         <item name="cornerSize">@dimen/top_sites_favicon_corner_size</item>
     </style>
 
-    <style name="RecentBookmarks.FaviconCard" parent="Mozac.Widgets.Favicon">
-        <item name="android:layout_width">@dimen/recent_bookmark_item_width</item>
-        <item name="android:layout_height">@dimen/recent_bookmark_item_height</item>
-        <item name="android:padding">16dp</item>
-        <item name="cardBackgroundColor">?mozac_widget_favicon_background_color</item>
-        <item name="cardCornerRadius">8dp</item>
-        <item name="cardElevation">@dimen/home_item_elevation</item>
-    </style>
-
     <style name="recentBookmarkFavicon">
         <item name="android:layout_width">@dimen/recent_bookmark_item_width</item>
         <item name="android:layout_height">@dimen/recent_bookmark_item_favicon_height</item>
@@ -701,15 +692,6 @@
         <item name="cornerFamily">rounded</item>
         <item name="elevation">@dimen/recent_bookmark_item_favicon_elevation</item>
         <item name="cornerSize">@dimen/recent_bookmark_item_favicon_corner_size</item>
-    </style>
-
-    <style name="recentBookmarkItemTitleText" parent="Body16TextStyle">
-        <item name="android:gravity">start</item>
-        <item name="android:textAlignment">gravity</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:textColor">?primaryText</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:maxLines">1</item>
     </style>
 
     <style name="recentBookmarkItemSubTitleText" parent="Body12TextStyle">
