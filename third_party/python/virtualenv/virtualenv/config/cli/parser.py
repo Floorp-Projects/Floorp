@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
+import os
 from argparse import SUPPRESS, ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
 from collections import OrderedDict
 
@@ -47,9 +48,11 @@ class VirtualEnvConfigParser(ArgumentParser):
     Custom option parser which updates its defaults by checking the configuration files and environmental variables
     """
 
-    def __init__(self, options=None, *args, **kwargs):
-        self.file_config = IniConfig()
+    def __init__(self, options=None, env=None, *args, **kwargs):
+        env = os.environ if env is None else env
+        self.file_config = IniConfig(env)
         self.epilog_list = []
+        self.env = env
         kwargs["epilog"] = self.file_config.epilog
         kwargs["add_help"] = False
         kwargs["formatter_class"] = HelpFormatter
@@ -75,7 +78,7 @@ class VirtualEnvConfigParser(ArgumentParser):
             names = OrderedDict((i.lstrip("-").replace("-", "_"), None) for i in action.option_strings)
             outcome = None
             for name in names:
-                outcome = get_env_var(name, as_type)
+                outcome = get_env_var(name, as_type, self.env)
                 if outcome is not None:
                     break
             if outcome is None and self.file_config:
@@ -101,6 +104,7 @@ class VirtualEnvConfigParser(ArgumentParser):
         self._fix_defaults()
         self.options._src = "cli"
         try:
+            namespace.env = self.env
             return super(VirtualEnvConfigParser, self).parse_known_args(args, namespace=namespace)
         finally:
             self.options._src = None
