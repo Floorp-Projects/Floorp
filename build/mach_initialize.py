@@ -26,18 +26,17 @@ from types import ModuleType
 
 
 STATE_DIR_FIRST_RUN = """
-mach and the build system store shared state in a common directory on the
-filesystem. The following directory will be created:
+Mach and the build system store shared state in a common directory
+on the filesystem. The following directory will be created:
 
-  {userdir}
+  {}
 
-If you would like to use a different directory, hit CTRL+c and set the
-MOZBUILD_STATE_PATH environment variable to the directory you would like to
-use and re-run mach. For this change to take effect forever, you'll likely
-want to export this environment variable from your shell's init scripts.
+If you would like to use a different directory, hit CTRL+c, set the
+MOZBUILD_STATE_PATH environment variable to the directory you'd like to
+use, and run Mach again.
 
 Press ENTER/RETURN to continue or CTRL+c to abort.
-""".lstrip()
+""".strip()
 
 
 # Individual files providing mach commands.
@@ -226,6 +225,8 @@ def initialize(topsrcdir):
         site_paths = set(site.getsitepackages() + [site.getusersitepackages()])
         sys.path = [path for path in sys.path if path not in site_paths]
 
+    state_dir = _create_state_dir()
+
     sys.path[0:0] = mach_sys_path(topsrcdir)
     import mach.base
     import mach.main
@@ -332,26 +333,6 @@ def initialize(topsrcdir):
         if key is None:
             return
         if key == "state_dir":
-            state_dir = get_state_dir()
-            if state_dir == os.environ.get("MOZBUILD_STATE_PATH"):
-                if not os.path.exists(state_dir):
-                    print(
-                        "Creating global state directory from environment variable: %s"
-                        % state_dir
-                    )
-                    os.makedirs(state_dir, mode=0o770)
-            else:
-                if not os.path.exists(state_dir):
-                    if not os.environ.get("MOZ_AUTOMATION"):
-                        print(STATE_DIR_FIRST_RUN.format(userdir=state_dir))
-                        try:
-                            sys.stdin.readline()
-                        except KeyboardInterrupt:
-                            sys.exit(1)
-
-                    print("\nCreating default state directory: %s" % state_dir)
-                    os.makedirs(state_dir, mode=0o770)
-
             return state_dir
 
         if key == "local_state_dir":
@@ -381,7 +362,7 @@ def initialize(topsrcdir):
 
     if not driver.settings_paths:
         # default global machrc location
-        driver.settings_paths.append(get_state_dir())
+        driver.settings_paths.append(state_dir)
     # always load local repository configuration
     driver.settings_paths.append(topsrcdir)
 
@@ -448,6 +429,39 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
                 int(math.ceil(float(memory_total) / (1024 * 1024 * 1024)))
             )
     telemetry.submit(is_bootstrap)
+
+
+def _create_state_dir():
+    # Global build system and mach state is stored in a central directory. By
+    # default, this is ~/.mozbuild. However, it can be defined via an
+    # environment variable. We detect first run (by lack of this directory
+    # existing) and notify the user that it will be created. The logic for
+    # creation is much simpler for the "advanced" environment variable use
+    # case. For default behavior, we educate users and give them an opportunity
+    # to react.
+    state_dir = os.environ.get("MOZBUILD_STATE_PATH")
+    if state_dir:
+        if not os.path.exists(state_dir):
+            print(
+                "Creating global state directory from environment variable: {}".format(
+                    state_dir
+                )
+            )
+    else:
+        state_dir = os.path.expanduser("~/.mozbuild")
+        if not os.path.exists(state_dir):
+            if not os.environ.get("MOZ_AUTOMATION"):
+                print(STATE_DIR_FIRST_RUN.format(state_dir))
+                try:
+                    sys.stdin.readline()
+                    print("\n")
+                except KeyboardInterrupt:
+                    sys.exit(1)
+
+            print("Creating default state directory: {}".format(state_dir))
+
+    os.makedirs(state_dir, mode=0o770, exist_ok=True)
+    return state_dir
 
 
 # Hook import such that .pyc/.pyo files without a corresponding .py file in
