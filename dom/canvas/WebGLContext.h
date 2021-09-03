@@ -470,10 +470,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   WebGLTexture* GetActiveTex(const GLenum texTarget) const;
 
-  already_AddRefed<layers::Layer> GetCanvasLayer(nsDisplayListBuilder* builder,
-                                                 layers::Layer* oldLayer,
-                                                 layers::LayerManager* manager);
-
   Maybe<ICRData> InitializeCanvasRenderer(layers::LayersBackend backend);
 
   gl::GLContext* GL() const { return gl; }
