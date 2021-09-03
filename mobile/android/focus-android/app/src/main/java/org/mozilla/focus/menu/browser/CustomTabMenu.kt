@@ -135,6 +135,7 @@ class CustomTabMenu(
         val poweredBy = BrowserMenuCategory(
             label = context.getString(R.string.menu_custom_tab_branding, context.getString(R.string.app_name)),
             textSize = CAPTION_TEXT_SIZE,
+            textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
             textStyle = Typeface.NORMAL
         )
 
