@@ -36,9 +36,9 @@ if PY2:
         pass  # pragma: no cov
 
 
-def periodic_update(distribution, for_py_version, wheel, search_dirs, app_data, do_periodic_update, env):
+def periodic_update(distribution, for_py_version, wheel, search_dirs, app_data, do_periodic_update):
     if do_periodic_update:
-        handle_auto_update(distribution, for_py_version, wheel, search_dirs, app_data, env)
+        handle_auto_update(distribution, for_py_version, wheel, search_dirs, app_data)
 
     now = datetime.now()
 
@@ -57,14 +57,14 @@ def periodic_update(distribution, for_py_version, wheel, search_dirs, app_data, 
     return wheel
 
 
-def handle_auto_update(distribution, for_py_version, wheel, search_dirs, app_data, env):
+def handle_auto_update(distribution, for_py_version, wheel, search_dirs, app_data):
     embed_update_log = app_data.embed_update_log(distribution, for_py_version)
     u_log = UpdateLog.from_dict(embed_update_log.read())
     if u_log.needs_update:
         u_log.periodic = True
         u_log.started = datetime.now()
         embed_update_log.write(u_log.to_dict())
-        trigger_update(distribution, for_py_version, wheel, search_dirs, app_data, periodic=True, env=env)
+        trigger_update(distribution, for_py_version, wheel, search_dirs, app_data, periodic=True)
 
 
 DATETIME_FMT = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -169,7 +169,7 @@ class UpdateLog(object):
         return self.started is None or now - self.started > timedelta(hours=1)
 
 
-def trigger_update(distribution, for_py_version, wheel, search_dirs, app_data, env, periodic):
+def trigger_update(distribution, for_py_version, wheel, search_dirs, app_data, periodic):
     wheel_path = None if wheel is None else str(wheel.path)
     cmd = [
         sys.executable,
@@ -185,7 +185,7 @@ def trigger_update(distribution, for_py_version, wheel, search_dirs, app_data, e
         .strip()
         .format(distribution, for_py_version, wheel_path, str(app_data), [str(p) for p in search_dirs], periodic),
     ]
-    debug = env.get(str("_VIRTUALENV_PERIODIC_UPDATE_INLINE")) == str("1")
+    debug = os.environ.get(str("_VIRTUALENV_PERIODIC_UPDATE_INLINE")) == str("1")
     pipe = None if debug else subprocess.PIPE
     kwargs = {"stdout": pipe, "stderr": pipe}
     if not debug and sys.platform == "win32":
@@ -236,7 +236,6 @@ def _run_do_update(app_data, distribution, embed_filename, for_py_version, perio
             search_dirs=search_dirs,
             app_data=app_data,
             to_folder=wheelhouse,
-            env=os.environ,
         )
         if dest is None or (u_log.versions and u_log.versions[0].filename == dest.name):
             break
@@ -302,13 +301,13 @@ def _pypi_get_distribution_info(distribution):
     return content
 
 
-def manual_upgrade(app_data, env):
+def manual_upgrade(app_data):
     threads = []
 
     for for_py_version, distribution_to_package in BUNDLE_SUPPORT.items():
         # load extra search dir for the given for_py
         for distribution in distribution_to_package.keys():
-            thread = Thread(target=_run_manual_upgrade, args=(app_data, distribution, for_py_version, env))
+            thread = Thread(target=_run_manual_upgrade, args=(app_data, distribution, for_py_version))
             thread.start()
             threads.append(thread)
 
@@ -316,7 +315,7 @@ def manual_upgrade(app_data, env):
         thread.join()
 
 
-def _run_manual_upgrade(app_data, distribution, for_py_version, env):
+def _run_manual_upgrade(app_data, distribution, for_py_version):
     start = datetime.now()
     from .bundle import from_bundle
 
@@ -327,7 +326,6 @@ def _run_manual_upgrade(app_data, distribution, for_py_version, env):
         search_dirs=[],
         app_data=app_data,
         do_periodic_update=False,
-        env=env,
     )
     logging.warning(
         "upgrade %s for python %s with current %s",

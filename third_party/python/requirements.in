@@ -1,41 +1,47 @@
+# ONLY ADD PACKAGES USED BY PYTHON 3 TO THIS LIST!
+#
+# Python 2-only packages should be vendored manually by running:
+#
+#    $ pip download <package>==<version>
+#
+# Then for the package and each dependency:
+#
+#    $ pip hash <package>.whl  # verify the hash against the one on PyPi (e.g https://pypi.org/project/<package>/<version>/#files)
+#    $ unzip <package>.whl -d <package>
+#    $ echo <version> > <package>/VERSION
+#    $ hg add <package>/VERSION
+#
+# Note `pip download` may return `tar.gz` files if there is no `.whl` (wheel)
+# available. When downloading wheels, make sure that they are cross-platform.
+# If not you may need to specify `--no-binary :<package1>,<package2>:` to get
+# the source distribution instead for those particular packages.
+
 attrs==19.1.0
 blessings==1.7
-cbor2==4.0.1
 compare-locales==8.1.0
 cookies==2.2.1
 coverage==5.1
-cram==0.7
 distro==1.4.0
 ecdsa==0.15
 esprima==4.0.1
 fluent.migrate==0.11
 fluent.syntax==0.18.1
-funcsigs==1.0.2
 glean_parser==3.6.0
 jsmin==2.1.0
 json-e==2.7.0
-mohawk==0.3.4
 mozilla-version==0.3.4
 pathspec==0.8
 pip-tools==5.5.0
 ply==3.10
 pyasn1==0.4.8
-pyasn1-modules==0.2.8
-pylru==1.0.9
-pystache==0.5.4
 pytest==3.6.2
 python-hglib==2.4
 pytoml==0.1.10
 pyyaml==5.4.1
 redo==2.0.3
 requests==2.25.1
-requests-unixsocket==0.2.0
 responses==0.10.6
-rsa==3.1.4
 sentry-sdk==0.14.3
 six==1.13.0
-slugid==1.0.7
-taskcluster==6.0.0
-taskcluster-urls==11.0.0
 voluptuous==0.12.1
 yamllint==1.23

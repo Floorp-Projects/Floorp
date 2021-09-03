@@ -12,8 +12,9 @@ import platform
 import re
 import sys
 import sysconfig
-import warnings
 from collections import OrderedDict, namedtuple
+from distutils import dist
+from distutils.command.install import SCHEME_KEYS
 from string import digits
 
 VersionInfo = namedtuple("VersionInfo", ["major", "minor", "micro", "releaselevel", "serial"])
@@ -117,28 +118,10 @@ class PythonInfo(object):
         # note we must choose the original and not the pure executable as shim scripts might throw us off
         return self.original_executable
 
-    def install_path(self, key):
-        result = self.distutils_install.get(key)
-        if result is None:  # use sysconfig if distutils is unavailable
-            # set prefixes to empty => result is relative from cwd
-            prefixes = self.prefix, self.exec_prefix, self.base_prefix, self.base_exec_prefix
-            config_var = {k: "" if v in prefixes else v for k, v in self.sysconfig_vars}
-            result = self.sysconfig_path(key, config_var=config_var).lstrip(os.sep)
-        return result
-
     @staticmethod
     def _distutils_install():
-        # use distutils primarily because that's what pip does
-        # https://github.com/pypa/pip/blob/main/src/pip/_internal/locations.py#L95
+        # follow https://github.com/pypa/pip/blob/main/src/pip/_internal/locations.py#L95
         # note here we don't import Distribution directly to allow setuptools to patch it
-        with warnings.catch_warnings():  # disable warning for PEP-632
-            warnings.simplefilter("ignore")
-            try:
-                from distutils import dist
-                from distutils.command.install import SCHEME_KEYS
-            except ImportError:  # if removed or not installed ignore
-                return {}
-
         d = dist.Distribution({"script_args": "--no-user-cfg"})  # conf files not parsed so they do not hijack paths
         if hasattr(sys, "_framework"):
             sys._framework = None  # disable macOS static paths for framework
@@ -194,7 +177,7 @@ class PythonInfo(object):
         )
         if not os.path.exists(path):  # some broken packaging don't respect the sysconfig, fallback to distutils path
             # the pattern include the distribution name too at the end, remove that via the parent call
-            fallback = os.path.join(self.prefix, os.path.dirname(self.install_path("headers")))
+            fallback = os.path.join(self.prefix, os.path.dirname(self.distutils_install["headers"]))
             if os.path.exists(fallback):
                 path = fallback
         return path
@@ -325,13 +308,12 @@ class PythonInfo(object):
         return data
 
     @classmethod
-    def from_exe(cls, exe, app_data=None, raise_on_error=True, ignore_cache=False, resolve_to_host=True, env=None):
+    def from_exe(cls, exe, app_data=None, raise_on_error=True, ignore_cache=False, resolve_to_host=True):
         """Given a path to an executable get the python information"""
         # this method is not used by itself, so here and called functions can import stuff locally
         from virtualenv.discovery.cached_py_info import from_exe
 
-        env = os.environ if env is None else env
-        proposed = from_exe(cls, app_data, exe, env=env, raise_on_error=raise_on_error, ignore_cache=ignore_cache)
+        proposed = from_exe(cls, app_data, exe, raise_on_error=raise_on_error, ignore_cache=ignore_cache)
         # noinspection PyProtectedMember
         if isinstance(proposed, PythonInfo) and resolve_to_host:
             try:
@@ -381,7 +363,7 @@ class PythonInfo(object):
 
     _cache_exe_discovery = {}
 
-    def discover_exe(self, app_data, prefix, exact=True, env=None):
+    def discover_exe(self, app_data, prefix, exact=True):
         key = prefix, exact
         if key in self._cache_exe_discovery and prefix:
             logging.debug("discover exe from cache %s - exact %s: %r", prefix, exact, self._cache_exe_discovery[key])
@@ -391,10 +373,9 @@ class PythonInfo(object):
         possible_names = self._find_possible_exe_names()
         possible_folders = self._find_possible_folders(prefix)
         discovered = []
-        env = os.environ if env is None else env
         for folder in possible_folders:
             for name in possible_names:
-                info = self._check_exe(app_data, folder, name, exact, discovered, env)
+                info = self._check_exe(app_data, folder, name, exact, discovered)
                 if info is not None:
                     self._cache_exe_discovery[key] = info
                     return info
@@ -407,11 +388,11 @@ class PythonInfo(object):
         msg = "failed to detect {} in {}".format("|".join(possible_names), os.pathsep.join(possible_folders))
         raise RuntimeError(msg)
 
-    def _check_exe(self, app_data, folder, name, exact, discovered, env):
+    def _check_exe(self, app_data, folder, name, exact, discovered):
         exe_path = os.path.join(folder, name)
         if not os.path.exists(exe_path):
             return None
-        info = self.from_exe(exe_path, app_data, resolve_to_host=False, raise_on_error=False, env=env)
+        info = self.from_exe(exe_path, app_data, resolve_to_host=False, raise_on_error=False)
         if info is None:  # ignore if for some reason we can't query
             return None
         for item in ["implementation", "architecture", "version_info"]:
