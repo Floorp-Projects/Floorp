@@ -82,19 +82,11 @@ talos-ref-hw:
     - talos-webgl
 
 raptor-firefox:
-    - raptor-youtube-playback-av1-sfr-firefox
-    - raptor-youtube-playback-h264-sfr-firefox
-    - raptor-youtube-playback-hfr-firefox
-    - raptor-youtube-playback-vp9-sfr-firefox
     - raptor-youtube-playback-widevine-hfr-firefox
     - raptor-youtube-playback-widevine-h264-sfr-firefox
     - raptor-youtube-playback-widevine-vp9-sfr-firefox
 
 raptor-chrome:
-    - raptor-youtube-playback-av1-sfr-chrome
-    - raptor-youtube-playback-h264-sfr-chrome
-    - raptor-youtube-playback-hfr-chrome
-    - raptor-youtube-playback-vp9-sfr-chrome
     - raptor-youtube-playback-widevine-hfr-chrome
     - raptor-youtube-playback-widevine-h264-sfr-chrome
     - raptor-youtube-playback-widevine-vp9-sfr-chrome
