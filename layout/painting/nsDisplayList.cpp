@@ -53,11 +53,11 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "imgIContainer.h"
+#include "Layers.h"
 #include "nsBoxFrame.h"
 #include "nsImageFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
-#include "ImageLayers.h"
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
 #include "nsSubDocumentFrame.h"
