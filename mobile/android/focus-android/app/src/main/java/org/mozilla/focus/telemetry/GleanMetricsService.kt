@@ -94,8 +94,8 @@ class GleanMetricsService(context: Context) : MetricsService {
         context: Context
     ) = CoroutineScope(IO).async {
         val installedBrowsers = BrowsersCache.all(context)
-        val hasFenixInstalled = installedBrowsers.hasFirefoxBrandedBrowserInstalled
-        val isFenixDefaultBrowser = installedBrowsers.isFirefoxDefaultBrowser
+        val hasFenixInstalled = FenixProductDetector.getInstalledFenixVersions(context).isNotEmpty()
+        val isFenixDefaultBrowser = FenixProductDetector.isFenixDefaultBrowser(installedBrowsers.defaultBrowser)
         val isFocusDefaultBrowser = installedBrowsers.isDefaultBrowser
 
         Browser.isDefault.set(isFocusDefaultBrowser)
