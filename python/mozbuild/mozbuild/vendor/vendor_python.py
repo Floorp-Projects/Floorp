@@ -21,14 +21,7 @@ class VendorPython(MozbuildObject):
         self.log_manager.enable_unstructured()
 
         vendor_dir = mozpath.join(self.topsrcdir, os.path.join("third_party", "python"))
-
         self.activate_virtualenv()
-        pip_compile = os.path.join(self.virtualenv_manager.bin_path, "pip-compile")
-        if not os.path.exists(pip_compile):
-            path = os.path.normpath(
-                os.path.join(self.topsrcdir, "third_party", "python", "pip_tools")
-            )
-            self.virtualenv_manager.install_pip_package(path, vendored=True)
         spec = os.path.join(vendor_dir, "requirements.in")
         requirements = os.path.join(vendor_dir, "requirements.txt")
 
@@ -41,7 +34,10 @@ class VendorPython(MozbuildObject):
             # resolve the dependencies and update requirements.txt
             subprocess.check_output(
                 [
-                    pip_compile,
+                    self.virtualenv_manager.python_path,
+                    "-m",
+                    "piptools",
+                    "compile",
                     tmpspec,
                     "--no-header",
                     "--no-index",
