@@ -44,6 +44,10 @@ const OptionKind = {
 };
 exports.OptionKind = OptionKind;
 const defaultOptions = {
+  annotationMode: {
+    value: 2,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
+  },
   cursorToolOnLoad: {
     value: 0,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
@@ -112,10 +116,6 @@ const defaultOptions = {
   renderer: {
     value: "canvas",
     kind: OptionKind.VIEWER
-  },
-  renderInteractiveForms: {
-    value: true,
-    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   sidebarViewOnLoad: {
     value: -1,
@@ -660,8 +660,8 @@ const PDFViewerApplication = {
       renderer: _app_options.AppOptions.get("renderer"),
       l10n: this.l10n,
       textLayerMode: _app_options.AppOptions.get("textLayerMode"),
+      annotationMode: _app_options.AppOptions.get("annotationMode"),
       imageResourcesPath: _app_options.AppOptions.get("imageResourcesPath"),
-      renderInteractiveForms: _app_options.AppOptions.get("renderInteractiveForms"),
       enablePrintAutoRotate: _app_options.AppOptions.get("enablePrintAutoRotate"),
       useOnlyCssZoom: _app_options.AppOptions.get("useOnlyCssZoom"),
       maxCanvasPixels: _app_options.AppOptions.get("maxCanvasPixels")
@@ -936,15 +936,8 @@ const PDFViewerApplication = {
     this.pdfOutlineViewer.reset();
     this.pdfAttachmentViewer.reset();
     this.pdfLayerViewer.reset();
-
-    if (this.pdfHistory) {
-      this.pdfHistory.reset();
-    }
-
-    if (this.findBar) {
-      this.findBar.reset();
-    }
-
+    this.pdfHistory?.reset();
+    this.findBar?.reset();
     this.toolbar.reset();
     this.secondaryToolbar.reset();
 
@@ -1506,7 +1499,7 @@ const PDFViewerApplication = {
     if (info.IsXFAPresent && !info.IsAcroFormPresent && !pdfDocument.isPureXfa) {
       console.warn("Warning: XFA support is not enabled");
       this.fallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
-    } else if ((info.IsAcroFormPresent || info.IsXFAPresent) && !this.pdfViewer.renderInteractiveForms) {
+    } else if ((info.IsAcroFormPresent || info.IsXFAPresent) && !this.pdfViewer.renderForms) {
       console.warn("Warning: Interactive form support is not enabled");
       this.fallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
     }
@@ -1759,10 +1752,7 @@ const PDFViewerApplication = {
     if (this.printService) {
       this.printService.destroy();
       this.printService = null;
-
-      if (this.pdfDocument) {
-        this.pdfDocument.annotationStorage.resetModified();
-      }
+      this.pdfDocument?.annotationStorage.resetModified();
     }
 
     this.forceRendering();
@@ -1773,11 +1763,7 @@ const PDFViewerApplication = {
   },
 
   requestPresentationMode() {
-    if (!this.pdfPresentationMode) {
-      return;
-    }
-
-    this.pdfPresentationMode.request();
+    this.pdfPresentationMode?.request();
   },
 
   triggerPrinting() {
@@ -9637,7 +9623,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.11.142';
+    const viewerVersion = '2.11.191';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9651,9 +9637,9 @@ class BaseViewer {
     this.findController = options.findController || null;
     this._scriptingManager = options.scriptingManager || null;
     this.removePageBorders = options.removePageBorders || false;
-    this.textLayerMode = Number.isInteger(options.textLayerMode) ? options.textLayerMode : _ui_utils.TextLayerMode.ENABLE;
+    this.textLayerMode = options.textLayerMode ?? _ui_utils.TextLayerMode.ENABLE;
+    this._annotationMode = options.annotationMode ?? _pdfjsLib.AnnotationMode.ENABLE_FORMS;
     this.imageResourcesPath = options.imageResourcesPath || "";
-    this.renderInteractiveForms = options.renderInteractiveForms !== false;
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
     this.renderer = options.renderer || _ui_utils.RendererType.CANVAS;
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
@@ -9702,6 +9688,10 @@ class BaseViewer {
     return this._pages.every(function (pageView) {
       return pageView?.pdfPage;
     });
+  }
+
+  get renderForms() {
+    return this._annotationMode === _pdfjsLib.AnnotationMode.ENABLE_FORMS;
   }
 
   get enableScripting() {
@@ -9949,6 +9939,7 @@ class BaseViewer {
         scale: scale * _ui_utils.CSS_UNITS
       });
       const textLayerFactory = this.textLayerMode !== _ui_utils.TextLayerMode.DISABLE && !isPureXfa ? this : null;
+      const annotationLayerFactory = this._annotationMode !== _pdfjsLib.AnnotationMode.DISABLE ? this : null;
       const xfaLayerFactory = isPureXfa ? this : null;
 
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
@@ -9962,12 +9953,12 @@ class BaseViewer {
           renderingQueue: this.renderingQueue,
           textLayerFactory,
           textLayerMode: this.textLayerMode,
-          annotationLayerFactory: this,
+          annotationLayerFactory,
+          annotationMode: this._annotationMode,
           xfaLayerFactory,
           textHighlighterFactory: this,
           structTreeLayerFactory: this,
           imageResourcesPath: this.imageResourcesPath,
-          renderInteractiveForms: this.renderInteractiveForms,
           renderer: this.renderer,
           useOnlyCssZoom: this.useOnlyCssZoom,
           maxCanvasPixels: this.maxCanvasPixels,
@@ -10609,13 +10600,13 @@ class BaseViewer {
     });
   }
 
-  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderInteractiveForms = false, l10n = _l10n_utils.NullL10n, enableScripting = null, hasJSActionsPromise = null, mouseState = null) {
+  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderForms = true, l10n = _l10n_utils.NullL10n, enableScripting = null, hasJSActionsPromise = null, mouseState = null) {
     return new _annotation_layer_builder.AnnotationLayerBuilder({
       pageDiv,
       pdfPage,
       annotationStorage: annotationStorage || this.pdfDocument?.annotationStorage,
       imageResourcesPath,
-      renderInteractiveForms,
+      renderForms,
       linkService: this.linkService,
       downloadManager: this.downloadManager,
       l10n,
@@ -11006,7 +10997,7 @@ class AnnotationLayerBuilder {
     downloadManager,
     annotationStorage = null,
     imageResourcesPath = "",
-    renderInteractiveForms = true,
+    renderForms = true,
     l10n = _l10n_utils.NullL10n,
     enableScripting = false,
     hasJSActionsPromise = null,
@@ -11017,7 +11008,7 @@ class AnnotationLayerBuilder {
     this.linkService = linkService;
     this.downloadManager = downloadManager;
     this.imageResourcesPath = imageResourcesPath;
-    this.renderInteractiveForms = renderInteractiveForms;
+    this.renderForms = renderForms;
     this.l10n = l10n;
     this.annotationStorage = annotationStorage;
     this.enableScripting = enableScripting;
@@ -11031,11 +11022,7 @@ class AnnotationLayerBuilder {
     return Promise.all([this.pdfPage.getAnnotations({
       intent
     }), this._hasJSActionsPromise]).then(([annotations, hasJSActions = false]) => {
-      if (this._cancelled) {
-        return;
-      }
-
-      if (annotations.length === 0) {
+      if (this._cancelled || annotations.length === 0) {
         return;
       }
 
@@ -11047,7 +11034,7 @@ class AnnotationLayerBuilder {
         annotations,
         page: this.pdfPage,
         imageResourcesPath: this.imageResourcesPath,
-        renderInteractiveForms: this.renderInteractiveForms,
+        renderForms: this.renderForms,
         linkService: this.linkService,
         downloadManager: this.downloadManager,
         annotationStorage: this.annotationStorage,
@@ -11088,12 +11075,12 @@ class AnnotationLayerBuilder {
 exports.AnnotationLayerBuilder = AnnotationLayerBuilder;
 
 class DefaultAnnotationLayerFactory {
-  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderInteractiveForms = true, l10n = _l10n_utils.NullL10n, enableScripting = false, hasJSActionsPromise = null, mouseState = null) {
+  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderForms = true, l10n = _l10n_utils.NullL10n, enableScripting = false, hasJSActionsPromise = null, mouseState = null) {
     return new AnnotationLayerBuilder({
       pageDiv,
       pdfPage,
       imageResourcesPath,
-      renderInteractiveForms,
+      renderForms,
       linkService: new _pdf_link_service.SimpleLinkService(),
       l10n,
       annotationStorage,
@@ -11246,9 +11233,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFPageView = void 0;
 
-var _ui_utils = __webpack_require__(3);
-
 var _pdfjsLib = __webpack_require__(4);
+
+var _ui_utils = __webpack_require__(3);
 
 var _app_options = __webpack_require__(1);
 
@@ -11272,9 +11259,9 @@ class PDFPageView {
     this.pdfPageRotate = defaultViewport.rotation;
     this._optionalContentConfigPromise = options.optionalContentConfigPromise || null;
     this.hasRestrictedScaling = false;
-    this.textLayerMode = Number.isInteger(options.textLayerMode) ? options.textLayerMode : _ui_utils.TextLayerMode.ENABLE;
+    this.textLayerMode = options.textLayerMode ?? _ui_utils.TextLayerMode.ENABLE;
+    this._annotationMode = options.annotationMode ?? _pdfjsLib.AnnotationMode.ENABLE_FORMS;
     this.imageResourcesPath = options.imageResourcesPath || "";
-    this.renderInteractiveForms = options.renderInteractiveForms !== false;
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
     this.maxCanvasPixels = options.maxCanvasPixels || MAX_CANVAS_PIXELS;
     this.eventBus = options.eventBus;
@@ -11792,9 +11779,9 @@ class PDFPageView {
       return finishPaintTask(reason);
     });
 
-    if (this.annotationLayerFactory) {
+    if (this._annotationMode !== _pdfjsLib.AnnotationMode.DISABLE && this.annotationLayerFactory) {
       if (!this.annotationLayer) {
-        this.annotationLayer = this.annotationLayerFactory.createAnnotationLayerBuilder(div, pdfPage, null, this.imageResourcesPath, this.renderInteractiveForms, this.l10n, null, null, null);
+        this.annotationLayer = this.annotationLayerFactory.createAnnotationLayerBuilder(div, pdfPage, null, this.imageResourcesPath, this._annotationMode === _pdfjsLib.AnnotationMode.ENABLE_FORMS, this.l10n, null, null, null);
       }
 
       this._renderAnnotationLayer();
@@ -11920,7 +11907,7 @@ class PDFPageView {
       canvasContext: ctx,
       transform,
       viewport: this.viewport,
-      renderInteractiveForms: this.renderInteractiveForms,
+      annotationMode: this._annotationMode,
       optionalContentConfigPromise: this._optionalContentConfigPromise
     };
     const renderTask = this.pdfPage.render(renderContext);
@@ -12245,7 +12232,7 @@ class TextHighlighter {
     function appendTextToDiv(divIdx, fromOffset, toOffset, className) {
       let div = textDivs[divIdx];
 
-      if (div.nodeType === 3) {
+      if (div.nodeType === Node.TEXT_NODE) {
         const span = document.createElement("span");
         div.parentNode.insertBefore(span, div);
         span.appendChild(div);
@@ -12399,9 +12386,7 @@ class TextLayerBuilder {
     this.textContentItemsStr = [];
     this.textContentStream = null;
     this.renderingDone = false;
-    this.pageIdx = pageIndex;
-    this.pageNumber = this.pageIdx + 1;
-    this.matches = [];
+    this.pageNumber = pageIndex + 1;
     this.viewport = viewport;
     this.textDivs = [];
     this.textLayerRenderTask = null;
@@ -12433,12 +12418,8 @@ class TextLayerBuilder {
     }
 
     this.cancel();
-    this.textDivs = [];
-
-    if (this.highlighter) {
-      this.highlighter.setTextMapping(this.textDivs, this.textContentItemsStr);
-    }
-
+    this.textDivs.length = 0;
+    this.highlighter?.setTextMapping(this.textDivs, this.textContentItemsStr);
     const textLayerFrag = document.createDocumentFragment();
     this.textLayerRenderTask = (0, _pdfjsLib.renderTextLayer)({
       textContent: this.textContent,
@@ -12547,13 +12528,13 @@ class XfaLayerBuilder {
   constructor({
     pageDiv,
     pdfPage,
-    xfaHtml,
-    annotationStorage
+    annotationStorage,
+    xfaHtml
   }) {
     this.pageDiv = pageDiv;
     this.pdfPage = pdfPage;
-    this.xfaHtml = xfaHtml;
     this.annotationStorage = annotationStorage;
+    this.xfaHtml = xfaHtml;
     this.div = null;
     this._cancelled = false;
   }
@@ -12574,14 +12555,16 @@ class XfaLayerBuilder {
       this.pageDiv.appendChild(div);
       parameters.div = div;
 
-      _pdfjsLib.XfaLayer.render(parameters);
+      const result = _pdfjsLib.XfaLayer.render(parameters);
 
-      return Promise.resolve();
+      return Promise.resolve(result);
     }
 
     return this.pdfPage.getXfa().then(xfa => {
-      if (this._cancelled) {
-        return Promise.resolve();
+      if (this._cancelled || !xfa) {
+        return {
+          textDivs: []
+        };
       }
 
       const parameters = {
@@ -14023,6 +14006,7 @@ class BasePreferences {
 
     Object.defineProperty(this, "defaults", {
       value: Object.freeze({
+        "annotationMode": 2,
         "cursorToolOnLoad": 0,
         "defaultZoomValue": "",
         "disablePageLabels": false,
@@ -14033,7 +14017,6 @@ class BasePreferences {
         "historyUpdateUrl": false,
         "ignoreDestinationZoom": false,
         "pdfBugEnabled": false,
-        "renderInteractiveForms": true,
         "sidebarViewOnLoad": -1,
         "scrollModeOnLoad": -1,
         "spreadModeOnLoad": -1,
@@ -14183,7 +14166,7 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
           rotation: size.rotation
         }),
         intent: "print",
-        includeAnnotationStorage: true,
+        annotationMode: _pdfjsLib.AnnotationMode.ENABLE_STORAGE,
         optionalContentConfigPromise
       };
       currentRenderTask = thisRenderTask = pdfPage.render(renderContext);
@@ -14351,8 +14334,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.11.142';
-const pdfjsBuild = '56e7bb626';
+const pdfjsVersion = '2.11.191';
+const pdfjsBuild = 'da15dbf96';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
