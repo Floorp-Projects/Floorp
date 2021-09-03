@@ -277,4 +277,12 @@ open class PlacesHistoryStorage(
             }
         }
     }
+
+    override suspend fun deleteHistoryMetadata(key: HistoryMetadataKey) {
+        withContext(writeScope.coroutineContext) {
+            handlePlacesExceptions("deleteHistoryMetadata") {
+                places.writer().deleteHistoryMetadata(key.into())
+            }
+        }
+    }
 }

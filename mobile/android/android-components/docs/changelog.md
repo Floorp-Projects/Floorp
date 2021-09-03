@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **concept-storage**, **browser-storage-sync**
+  * 🌟️ New API: `HistoryMetadataStorage.deleteHistoryMetadata`, allows removing specific metadata entries.
+
 # 93.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v92.0.0...v93.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/140?closed=1)

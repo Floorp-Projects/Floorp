@@ -126,4 +126,9 @@ interface HistoryMetadataStorage {
      * @param olderThan A timestamp to delete records by. Exclusive.
      */
     suspend fun deleteHistoryMetadataOlderThan(olderThan: Long)
+
+    /**
+     * Deletes metadata records that match [HistoryMetadataKey].
+     */
+    suspend fun deleteHistoryMetadata(key: HistoryMetadataKey)
 }
