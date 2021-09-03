@@ -126,7 +126,7 @@ void MarkerSchema::Stream(JSONWriter& aWriter,
                 if (aData.mSearchable) {
                   aWriter.BoolProperty(
                       "searchable",
-                      *aData.mSearchable == Searchable::searchable);
+                      *aData.mSearchable == Searchable::Searchable);
                 }
               },
               [&aWriter](const StaticData& aStaticData) {

@@ -4543,7 +4543,7 @@ void TestUserMarker() {
       MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
       schema.SetTooltipLabel("tooltip for test-minimal");
       schema.AddKeyLabelFormatSearchable("text", "Text", MS::Format::String,
-                                         MS::Searchable::searchable);
+                                         MS::Searchable::Searchable);
       return schema;
     }
   };
