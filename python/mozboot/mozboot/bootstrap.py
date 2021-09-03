@@ -337,6 +337,28 @@ class Bootstrapper(object):
 
         self.instance.warn_if_pythonpath_is_set()
 
+        if sys.platform.startswith("darwin") and not os.environ.get(
+            "MACH_I_DO_WANT_TO_USE_ROSETTA"
+        ):
+            # If running on arm64 mac, check whether we're running under
+            # Rosetta and advise against it.
+            proc = subprocess.run(
+                ["sysctl", "-n", "sysctl.proc_translated"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+            if (
+                proc.returncode == 0
+                and proc.stdout.decode("ascii", "replace").strip() == "1"
+            ):
+                print(
+                    "Python is being emulated under Rosetta. Please use a native "
+                    "Python instead. If you still really want to go ahead, set "
+                    "the MACH_I_DO_WANT_TO_USE_ROSETTA environment variable.",
+                    file=sys.stderr,
+                )
+                return 1
+
         state_dir = self.create_state_dir()
         self.instance.state_dir = state_dir
 
