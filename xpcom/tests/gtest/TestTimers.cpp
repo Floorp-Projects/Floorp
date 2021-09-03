@@ -9,13 +9,17 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 #include "prinrval.h"
 #include "prmon.h"
 #include "prthread.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Services.h"
 
+#include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/StaticPrefs_timer.h"
 
 #include <list>
 #include <vector>
@@ -94,53 +98,176 @@ class TimerCallback final : public nsITimerCallback {
 
 NS_IMPL_ISUPPORTS(TimerCallback, nsITimerCallback)
 
-TEST(Timers, TargetedTimers)
-{
-  AutoCreateAndDestroyReentrantMonitor newMon;
-  ASSERT_TRUE(newMon);
+class TimerHelper {
+ public:
+  explicit TimerHelper(nsIEventTarget* aTarget)
+      : mStart(TimeStamp::Now()),
+        mTimer(NS_NewTimer(aTarget)),
+        mMonitor(__func__),
+        mTarget(aTarget) {}
 
-  AutoTestThread testThread;
-  ASSERT_TRUE(testThread);
-
-  nsIThread* notifiedThread = nullptr;
-
-  nsCOMPtr<nsITimerCallback> callback =
-      new TimerCallback(&notifiedThread, newMon);
-  ASSERT_TRUE(callback);
-
-  nsIEventTarget* target = static_cast<nsIEventTarget*>(testThread);
-
-  nsCOMPtr<nsITimer> timer;
-  nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(timer), callback, 2000,
-                                        nsITimer::TYPE_ONE_SHOT, target);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-
-  ReentrantMonitorAutoEnter mon(*newMon);
-  while (!notifiedThread) {
-    mon.Wait();
+  ~TimerHelper() {
+    MonitorAutoLock lock(mMonitor);
+    mTimer->Cancel();
   }
-  ASSERT_EQ(notifiedThread, testThread);
+
+  static void ClosureCallback(nsITimer*, void* aClosure) {
+    reinterpret_cast<TimerHelper*>(aClosure)->Notify();
+  }
+
+  // We do not use nsITimerCallback, because that results in a circular
+  // reference. One of the properties we want from TimerHelper is for the
+  // timer to be canceled when it goes out of scope.
+  void Notify() {
+    MonitorAutoLock lock(mMonitor);
+    EXPECT_TRUE(mTarget->IsOnCurrentThread());
+    TimeDuration elapsed = TimeStamp::Now() - mStart;
+    mStart = TimeStamp::Now();
+    mLastDelay = Some(elapsed.ToMilliseconds());
+    if (mBlockTime) {
+      PR_Sleep(mBlockTime);
+    }
+    mMonitor.Notify();
+  }
+
+  nsresult SetTimer(uint32_t aDelay, uint8_t aType) {
+    MonitorAutoLock lock(mMonitor);
+    mTimer->Cancel();
+    mStart = TimeStamp::Now();
+    return mTimer->InitWithNamedFuncCallback(
+        ClosureCallback, this, aDelay, aType, "TimerHelper::ClosureCallback");
+  }
+
+  Maybe<uint32_t> Wait(uint32_t aLimitMs) {
+    return WaitAndBlockCallback(aLimitMs, 0);
+  }
+
+  // Waits for callback, and if it occurs within the limit, causes the callback
+  // to block for the specified time. Useful for testing cases where the
+  // callback takes a long time to return.
+  Maybe<uint32_t> WaitAndBlockCallback(uint32_t aLimitMs, uint32_t aBlockTime) {
+    MonitorAutoLock lock(mMonitor);
+    mBlockTime = aBlockTime;
+    TimeStamp start = TimeStamp::Now();
+    while (!mLastDelay.isSome()) {
+      mMonitor.Wait(TimeDuration::FromMilliseconds(aLimitMs));
+      TimeDuration elapsed = TimeStamp::Now() - start;
+      uint32_t elapsedMs = static_cast<uint32_t>(elapsed.ToMilliseconds());
+      if (elapsedMs >= aLimitMs) {
+        break;
+      }
+      aLimitMs -= elapsedMs;
+      start = TimeStamp::Now();
+    }
+    mBlockTime = 0;
+    return std::move(mLastDelay);
+  }
+
+ private:
+  TimeStamp mStart;
+  RefPtr<nsITimer> mTimer;
+  mutable Monitor mMonitor;
+  uint32_t mBlockTime = 0;
+  Maybe<uint32_t> mLastDelay;
+  RefPtr<nsIEventTarget> mTarget;
+};
+
+class SimpleTimerTest : public ::testing::Test {
+ public:
+  std::unique_ptr<TimerHelper> MakeTimer(uint32_t aDelay, uint8_t aType) {
+    std::unique_ptr<TimerHelper> timer(new TimerHelper(mThread));
+    timer->SetTimer(aDelay, aType);
+    return timer;
+  }
+
+  void PauseTimerThread() {
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    observerService->NotifyObservers(nullptr, "sleep_notification", nullptr);
+  }
+
+  void ResumeTimerThread() {
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    observerService->NotifyObservers(nullptr, "wake_notification", nullptr);
+  }
+
+ protected:
+  AutoTestThread mThread;
+};
+
+#ifdef XP_MACOSX
+// For some reason, our OS X testers fire timed condition waits _extremely_
+// late (as much as 200ms).
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1726915
+const unsigned kSlowdownFactor = 50;
+#elif XP_WIN
+// Windows also needs some extra leniency, but not nearly as much as our OS X
+// testers
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1729035
+const unsigned kSlowdownFactor = 5;
+#else
+const unsigned kSlowdownFactor = 1;
+#endif
+
+TEST_F(SimpleTimerTest, OneShot) {
+  auto timer = MakeTimer(100 * kSlowdownFactor, nsITimer::TYPE_ONE_SHOT);
+  auto res = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(res.isSome());
+  ASSERT_LT(*res, 110U * kSlowdownFactor);
+  ASSERT_GT(*res, 95U * kSlowdownFactor);
 }
 
-TEST(Timers, TimerWithStoppedTarget)
-{
-  AutoTestThread testThread;
-  ASSERT_TRUE(testThread);
+TEST_F(SimpleTimerTest, TimerWithStoppedTarget) {
+  mThread->Shutdown();
+  auto timer = MakeTimer(100 * kSlowdownFactor, nsITimer::TYPE_ONE_SHOT);
+  auto res = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_FALSE(res.isSome());
+}
 
-  nsIEventTarget* target = static_cast<nsIEventTarget*>(testThread);
+TEST_F(SimpleTimerTest, SlackRepeating) {
+  auto timer = MakeTimer(100 * kSlowdownFactor, nsITimer::TYPE_REPEATING_SLACK);
+  auto delay =
+      timer->WaitAndBlockCallback(110 * kSlowdownFactor, 50 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 110U * kSlowdownFactor);
+  ASSERT_GT(*delay, 95U * kSlowdownFactor);
+  // REPEATING_SLACK timers re-schedule with the full duration when the timer
+  // callback completes
 
-  // If this is called, we'll assert
-  nsCOMPtr<nsITimerCallback> callback = new TimerCallback(nullptr, nullptr);
-  ASSERT_TRUE(callback);
+  delay = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 160U * kSlowdownFactor);
+  ASSERT_GT(*delay, 145U * kSlowdownFactor);
+}
 
-  nsCOMPtr<nsITimer> timer;
-  nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(timer), callback, 100,
-                                        nsITimer::TYPE_ONE_SHOT, target);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+TEST_F(SimpleTimerTest, RepeatingPrecise) {
+  auto timer = MakeTimer(100 * kSlowdownFactor,
+                         nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
+  auto delay =
+      timer->WaitAndBlockCallback(110 * kSlowdownFactor, 50 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 110U * kSlowdownFactor);
+  ASSERT_GT(*delay, 95U * kSlowdownFactor);
 
-  testThread->Shutdown();
+  // Delays smaller than the timer's period do not effect the period.
+  delay = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 110U * kSlowdownFactor);
+  ASSERT_GT(*delay, 95U * kSlowdownFactor);
 
-  PR_Sleep(400);
+  // Delays larger than the timer's period should result in the skipping of
+  // firings, but the cadence should remain the same.
+  delay =
+      timer->WaitAndBlockCallback(110 * kSlowdownFactor, 150 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 110U * kSlowdownFactor);
+  ASSERT_GT(*delay, 95U * kSlowdownFactor);
+
+  delay = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 210U * kSlowdownFactor);
+  ASSERT_GT(*delay, 195U * kSlowdownFactor);
 }
 
 // gtest on 32bit Win7 debug build is unstable and somehow this test
@@ -234,8 +361,7 @@ class FindExpirationTimeState final {
   }
 };
 
-TEST(Timers, FindExpirationTime)
-{
+TEST_F(SimpleTimerTest, FindExpirationTime) {
   {
     FindExpirationTimeState state;
     // 0 low priority timers
@@ -385,6 +511,97 @@ TEST(Timers, FindExpirationTime)
 }
 
 #endif
+
+// Do these _after_ FindExpirationTime; apparently pausing the timer thread
+// schedules minute-long timers, which FindExpirationTime waits out before
+// starting.
+TEST_F(SimpleTimerTest, SleepWakeOneShot) {
+  if (StaticPrefs::timer_ignore_sleep_wake_notifications()) {
+    return;
+  }
+  auto timer = MakeTimer(100 * kSlowdownFactor, nsITimer::TYPE_ONE_SHOT);
+  PauseTimerThread();
+  auto delay = timer->Wait(200 * kSlowdownFactor);
+  ResumeTimerThread();
+  ASSERT_FALSE(delay.isSome());
+}
+
+TEST_F(SimpleTimerTest, SleepWakeRepeatingSlack) {
+  if (StaticPrefs::timer_ignore_sleep_wake_notifications()) {
+    return;
+  }
+  auto timer = MakeTimer(100 * kSlowdownFactor, nsITimer::TYPE_REPEATING_SLACK);
+  PauseTimerThread();
+  auto delay = timer->Wait(200 * kSlowdownFactor);
+  ResumeTimerThread();
+  ASSERT_FALSE(delay.isSome());
+
+  // Timer thread slept for ~200ms, longer than the duration of the timer, so
+  // it should fire pretty much immediately.
+  delay = timer->Wait(10 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 210 * kSlowdownFactor);
+  ASSERT_GT(*delay, 199 * kSlowdownFactor);
+
+  delay = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 110U * kSlowdownFactor);
+  ASSERT_GT(*delay, 95U * kSlowdownFactor);
+
+  PauseTimerThread();
+  delay = timer->Wait(50 * kSlowdownFactor);
+  ResumeTimerThread();
+  ASSERT_FALSE(delay.isSome());
+
+  // Timer thread only slept for ~50 ms, shorter than the duration of the
+  // timer, so there should be no effect on the timing.
+  delay = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 110U * kSlowdownFactor);
+  ASSERT_GT(*delay, 95U * kSlowdownFactor);
+}
+
+TEST_F(SimpleTimerTest, SleepWakeRepeatingPrecise) {
+  if (StaticPrefs::timer_ignore_sleep_wake_notifications()) {
+    return;
+  }
+  auto timer = MakeTimer(100 * kSlowdownFactor,
+                         nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
+  PauseTimerThread();
+  auto delay = timer->Wait(350 * kSlowdownFactor);
+  ResumeTimerThread();
+  ASSERT_FALSE(delay.isSome());
+
+  // Timer thread slept longer than the duration of the timer, so it should
+  // fire pretty much immediately.
+  delay = timer->Wait(10 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 360U * kSlowdownFactor);
+  ASSERT_GT(*delay, 349U * kSlowdownFactor);
+
+  // After that, we should get back on our original cadence
+  delay = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 60U * kSlowdownFactor);
+  ASSERT_GT(*delay, 45U * kSlowdownFactor);
+
+  delay = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 110U * kSlowdownFactor);
+  ASSERT_GT(*delay, 95U * kSlowdownFactor);
+
+  PauseTimerThread();
+  delay = timer->Wait(50 * kSlowdownFactor);
+  ResumeTimerThread();
+  ASSERT_FALSE(delay.isSome());
+
+  // Timer thread only slept for ~50 ms, shorter than the duration of the
+  // timer, so there should be no effect on the timing.
+  delay = timer->Wait(110 * kSlowdownFactor);
+  ASSERT_TRUE(delay.isSome());
+  ASSERT_LT(*delay, 110U * kSlowdownFactor);
+  ASSERT_GT(*delay, 95U * kSlowdownFactor);
+}
 
 #define FUZZ_MAX_TIMEOUT 9
 class FuzzTestThreadState final : public nsITimerCallback {
