@@ -1756,37 +1756,37 @@ nsGenericHTMLFormElement* HTMLFormElement::GetDefaultSubmitElement() const {
 }
 
 bool HTMLFormElement::IsDefaultSubmitElement(
-    const nsIFormControl* aControl) const {
-  MOZ_ASSERT(aControl, "Unexpected call");
+    const nsGenericHTMLFormElement* aElement) const {
+  MOZ_ASSERT(aElement, "Unexpected call");
 
-  if (aControl == mDefaultSubmitElement) {
+  if (aElement == mDefaultSubmitElement) {
     // Yes, it is
     return true;
   }
 
-  if (mDefaultSubmitElement || (aControl != mFirstSubmitInElements &&
-                                aControl != mFirstSubmitNotInElements)) {
+  if (mDefaultSubmitElement || (aElement != mFirstSubmitInElements &&
+                                aElement != mFirstSubmitNotInElements)) {
     // It isn't
     return false;
   }
 
   // mDefaultSubmitElement is null, but we have a non-null submit around
-  // (aControl, in fact).  figure out whether it's in fact the default submit
+  // (aElement, in fact).  figure out whether it's in fact the default submit
   // and just hasn't been set that way yet.  Note that we can't just call
   // HandleDefaultSubmitRemoval because we might need to notify to handle that
   // correctly and we don't know whether that's safe right here.
   if (!mFirstSubmitInElements || !mFirstSubmitNotInElements) {
-    // We only have one first submit; aControl has to be it
+    // We only have one first submit; aElement has to be it
     return true;
   }
 
   // We have both kinds of submits.  Check which comes first.
-  nsIFormControl* defaultSubmit =
+  nsGenericHTMLFormElement* defaultSubmit =
       CompareFormControlPosition(mFirstSubmitInElements,
                                  mFirstSubmitNotInElements, this) < 0
           ? mFirstSubmitInElements
           : mFirstSubmitNotInElements;
-  return aControl == defaultSubmit;
+  return aElement == defaultSubmit;
 }
 
 bool HTMLFormElement::ImplicitSubmissionIsDisabled() const {
