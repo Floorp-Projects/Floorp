@@ -41,7 +41,7 @@ Note: Most marker-related identifiers are in the ``mozilla`` namespace, to be ad
         using MS = MarkerSchema;
         MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
         schema.SetChartLabel("Number: {marker.data.number}");
-        schema.AddKeyLabelFormat("number", "Number", MS::Format::number);
+        schema.AddKeyLabelFormat("number", "Number", MS::Format::Number);
         return schema;
       }
     };
@@ -420,13 +420,13 @@ Each row may either be:
 
     // …
         schema.AddKeyLabelFormatSearchable(
-            "myString", "My String", MS::Format::string, true);
+            "myString", "My String", MS::Format::String, true);
         schema.AddKeyLabelFormat(
-            "myBytes", "My Bytes", MS::Format::bytes);
+            "myBytes", "My Bytes", MS::Format::Bytes);
         schema.AddKeyLabelFormat(
-            "myUrl", "My URL", MS::Format::url);
+            "myUrl", "My URL", MS::Format::Url);
         schema.AddKeyLabelFormat(
-            "myTime", "Event time", MS::Format::time);
+            "myTime", "Event time", MS::Format::Time);
 
 Finally the ``schema`` object is returned from the function:
 

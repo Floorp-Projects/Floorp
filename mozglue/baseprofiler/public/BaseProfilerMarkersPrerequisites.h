@@ -701,43 +701,43 @@ class MarkerSchema {
     // String types.
 
     // Show the URL, and handle PII sanitization
-    url,
+    Url,
     // Show the file path, and handle PII sanitization.
-    filePath,
+    FilePath,
     // Important, do not put URL or file path information here, as it will not
     // be sanitized. Please be careful with including other types of PII here as
     // well.
     // e.g. "Label: Some String"
-    string,
+    String,
 
     // ----------------------------------------------------
     // Numeric types
 
     // For time data that represents a duration of time.
     // e.g. "Label: 5s, 5ms, 5μs"
-    duration,
+    Duration,
     // Data that happened at a specific time, relative to the start of the
     // profile. e.g. "Label: 15.5s, 20.5ms, 30.5μs"
-    time,
+    Time,
     // The following are alternatives to display a time only in a specific unit
     // of time.
-    seconds,       // "Label: 5s"
-    milliseconds,  // "Label: 5ms"
-    microseconds,  // "Label: 5μs"
-    nanoseconds,   // "Label: 5ns"
+    Seconds,       // "Label: 5s"
+    Milliseconds,  // "Label: 5ms"
+    Microseconds,  // "Label: 5μs"
+    Nanoseconds,   // "Label: 5ns"
     // e.g. "Label: 5.55mb, 5 bytes, 312.5kb"
-    bytes,
+    Bytes,
     // This should be a value between 0 and 1.
     // "Label: 50%"
-    percentage,
+    Percentage,
     // The integer should be used for generic representations of numbers.
     // Do not use it for time information.
     // "Label: 52, 5,323, 1,234,567"
-    integer,
+    Integer,
     // The decimal should be used for generic representations of numbers.
     // Do not use it for time information.
     // "Label: 52.23, 0.0054, 123,456.78"
-    decimal
+    Decimal
   };
 
   enum class Searchable { notSearchable, searchable };

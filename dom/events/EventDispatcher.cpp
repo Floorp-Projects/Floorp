@@ -1059,7 +1059,7 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
               schema.SetTooltipLabel("{marker.data.eventType} - DOMEvent");
               schema.SetTableLabel("{marker.data.eventType}");
               schema.AddKeyLabelFormat("latency", "Latency",
-                                       MS::Format::duration);
+                                       MS::Format::Duration);
               return schema;
             }
           };
