@@ -25,6 +25,10 @@ JSObject* JSWindowActorChild::WrapObject(JSContext* aCx,
 
 WindowGlobalChild* JSWindowActorChild::GetManager() const { return mManager; }
 
+WindowContext* JSWindowActorChild::GetWindowContext() const {
+  return mManager ? mManager->WindowContext() : nullptr;
+}
+
 void JSWindowActorChild::Init(const nsACString& aName,
                               WindowGlobalChild* aManager) {
   MOZ_ASSERT(!mManager, "Cannot Init() a JSWindowActorChild twice!");

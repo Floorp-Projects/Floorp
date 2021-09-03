@@ -46,6 +46,7 @@ class JSWindowActorParent final : public JSActor {
   }
 
   WindowGlobalParent* GetManager() const;
+  WindowContext* GetWindowContext() const;
   void Init(const nsACString& aName, WindowGlobalParent* aManager);
   void ClearManager() override;
   CanonicalBrowsingContext* GetBrowsingContext(ErrorResult& aRv);
