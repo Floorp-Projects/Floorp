@@ -7322,6 +7322,11 @@ already_AddRefed<nsISupports> nsGlobalWindowOuter::SaveWindowState() {
   nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal();
   NS_ASSERTION(inner, "No inner window to save");
 
+  if (WindowContext* wc = inner->GetWindowContext()) {
+    MOZ_ASSERT(!wc->GetWindowStateSaved());
+    Unused << wc->SetWindowStateSaved(true);
+  }
+
   // Don't do anything else to this inner window! After this point, all
   // calls to SetTimeoutOrInterval will create entries in the timeout
   // list that will only run after this window has come out of the bfcache.
@@ -7362,6 +7367,11 @@ nsresult nsGlobalWindowOuter::RestoreWindowState(nsISupports* aState) {
       fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL |
                                        nsIFocusManager::FLAG_SHOWRING);
     }
+  }
+
+  if (WindowContext* wc = inner->GetWindowContext()) {
+    MOZ_ASSERT(wc->GetWindowStateSaved());
+    Unused << wc->SetWindowStateSaved(false);
   }
 
   inner->Thaw();

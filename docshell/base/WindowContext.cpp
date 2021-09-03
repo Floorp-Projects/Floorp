@@ -18,6 +18,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIScriptError.h"
+#include "nsIXULRuntime.h"
 #include "nsRefPtrHashtable.h"
 #include "nsContentUtils.h"
 
@@ -65,6 +66,13 @@ WindowGlobalParent* WindowContext::Canonical() {
 
 bool WindowContext::IsCurrent() const {
   return mBrowsingContext->mCurrentWindowContext == this;
+}
+
+bool WindowContext::IsInBFCache() {
+  if (mozilla::SessionHistoryInParent()) {
+    return mBrowsingContext->IsInBFCache();
+  }
+  return TopWindowContext()->GetWindowStateSaved();
 }
 
 nsGlobalWindowInner* WindowContext::GetInnerWindow() const {
@@ -352,6 +360,12 @@ void WindowContext::DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>,
       }
     }
   }
+}
+
+bool WindowContext::CanSet(FieldIndex<IDX_WindowStateSaved>, bool aValue,
+                           ContentParent* aSource) {
+  return !mozilla::SessionHistoryInParent() && IsTop() &&
+         CheckOnlyOwningProcessCanSet(aSource);
 }
 
 void WindowContext::CreateFromIPC(IPCInitializer&& aInit) {
