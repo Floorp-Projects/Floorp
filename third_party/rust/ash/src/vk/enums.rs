@@ -919,45 +919,7 @@ impl Result {
     #[doc = "An unknown error has occurred, due to an implementation or application bug"]
     pub const ERROR_UNKNOWN: Self = Self(-13);
 }
-impl ::std::error::Error for Result {
-    fn description(&self) -> &str {
-        let name = match *self {
-            Result::SUCCESS => Some("Command completed successfully"),
-            Result::NOT_READY => Some("A fence or query has not yet completed"),
-            Result::TIMEOUT => Some("A wait operation has not completed in the specified time"),
-            Result::EVENT_SET => Some("An event is signaled"),
-            Result::EVENT_RESET => Some("An event is unsignaled"),
-            Result::INCOMPLETE => Some("A return array was too small for the result"),
-            Result::ERROR_OUT_OF_HOST_MEMORY => Some("A host memory allocation has failed"),
-            Result::ERROR_OUT_OF_DEVICE_MEMORY => Some("A device memory allocation has failed"),
-            Result::ERROR_INITIALIZATION_FAILED => Some("Initialization of a object has failed"),
-            Result::ERROR_DEVICE_LOST => {
-                Some("The logical device has been lost. See <<devsandqueues-lost-device>>")
-            }
-            Result::ERROR_MEMORY_MAP_FAILED => Some("Mapping of a memory object has failed"),
-            Result::ERROR_LAYER_NOT_PRESENT => Some("Layer specified does not exist"),
-            Result::ERROR_EXTENSION_NOT_PRESENT => Some("Extension specified does not exist"),
-            Result::ERROR_FEATURE_NOT_PRESENT => {
-                Some("Requested feature is not available on this device")
-            }
-            Result::ERROR_INCOMPATIBLE_DRIVER => Some("Unable to find a Vulkan driver"),
-            Result::ERROR_TOO_MANY_OBJECTS => {
-                Some("Too many objects of the type have already been created")
-            }
-            Result::ERROR_FORMAT_NOT_SUPPORTED => {
-                Some("Requested format is not supported on this device")
-            }
-            Result::ERROR_FRAGMENTED_POOL => Some(
-                "A requested pool allocation has failed due to fragmentation of the pool's memory",
-            ),
-            Result::ERROR_UNKNOWN => {
-                Some("An unknown error has occurred, due to an implementation or application bug")
-            }
-            _ => None,
-        };
-        name.unwrap_or("unknown error")
-    }
-}
+impl ::std::error::Error for Result {}
 impl fmt::Display for Result {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let name = match *self {
@@ -997,7 +959,7 @@ impl fmt::Display for Result {
         if let Some(x) = name {
             fmt.write_str(x)
         } else {
-            self.0.fmt(fmt)
+            <Self as fmt::Debug>::fmt(self, fmt)
         }
     }
 }
@@ -1128,6 +1090,8 @@ impl ColorSpaceKHR {
 }
 impl ColorSpaceKHR {
     pub const SRGB_NONLINEAR: Self = Self(0);
+    #[deprecated = "Backwards-compatible alias containing a typo"]
+    pub const COLORSPACE_SRGB_NONLINEAR: Self = Self::SRGB_NONLINEAR;
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1189,9 +1153,13 @@ impl DebugReportObjectTypeEXT {
     pub const SURFACE_KHR: Self = Self(26);
     pub const SWAPCHAIN_KHR: Self = Self(27);
     pub const DEBUG_REPORT_CALLBACK_EXT: Self = Self(28);
+    #[deprecated = "Backwards-compatible alias containing a typo"]
+    pub const DEBUG_REPORT: Self = Self::DEBUG_REPORT_CALLBACK_EXT;
     pub const DISPLAY_KHR: Self = Self(29);
     pub const DISPLAY_MODE_KHR: Self = Self(30);
     pub const VALIDATION_CACHE_EXT: Self = Self(33);
+    #[deprecated = "Backwards-compatible alias containing a typo"]
+    pub const VALIDATION_CACHE: Self = Self::VALIDATION_CACHE_EXT;
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1283,6 +1251,7 @@ impl ValidationFeatureDisableEXT {
     pub const OBJECT_LIFETIMES: Self = Self(4);
     pub const CORE_CHECKS: Self = Self(5);
     pub const UNIQUE_HANDLES: Self = Self(6);
+    pub const SHADER_VALIDATION_CACHE: Self = Self(7);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1682,6 +1651,10 @@ impl DriverId {
     pub const MESA_LLVMPIPE: Self = Self(13);
     #[doc = "MoltenVK"]
     pub const MOLTENVK: Self = Self(14);
+    #[doc = "Core Avionics & Industrial Inc."]
+    pub const COREAVI_PROPRIETARY: Self = Self(15);
+    #[doc = "Juice Technologies, Inc."]
+    pub const JUICE_PROPRIETARY: Self = Self(16);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1974,6 +1947,9 @@ impl PerformanceCounterScopeKHR {
     pub const COMMAND_BUFFER: Self = Self(0);
     pub const RENDER_PASS: Self = Self(1);
     pub const COMMAND: Self = Self(2);
+    pub const QUERY_SCOPE_COMMAND_BUFFER: Self = Self::COMMAND_BUFFER;
+    pub const QUERY_SCOPE_RENDER_PASS: Self = Self::RENDER_PASS;
+    pub const QUERY_SCOPE_COMMAND: Self = Self::COMMAND;
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2033,8 +2009,7 @@ impl PerformanceConfigurationTypeINTEL {
     }
 }
 impl PerformanceConfigurationTypeINTEL {
-    pub const PERFORMANCE_CONFIGURATION_TYPE_COMMAND_QUEUE_METRICS_DISCOVERY_ACTIVATED_INTEL: Self =
-        Self(0);
+    pub const COMMAND_QUEUE_METRICS_DISCOVERY_ACTIVATED: Self = Self(0);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2049,7 +2024,7 @@ impl QueryPoolSamplingModeINTEL {
     }
 }
 impl QueryPoolSamplingModeINTEL {
-    pub const QUERY_POOL_SAMPLING_MODE_MANUAL_INTEL: Self = Self(0);
+    pub const MANUAL: Self = Self(0);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2064,8 +2039,8 @@ impl PerformanceOverrideTypeINTEL {
     }
 }
 impl PerformanceOverrideTypeINTEL {
-    pub const PERFORMANCE_OVERRIDE_TYPE_NULL_HARDWARE_INTEL: Self = Self(0);
-    pub const PERFORMANCE_OVERRIDE_TYPE_FLUSH_GPU_CACHES_INTEL: Self = Self(1);
+    pub const NULL_HARDWARE: Self = Self(0);
+    pub const FLUSH_GPU_CACHES: Self = Self(1);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2080,8 +2055,8 @@ impl PerformanceParameterTypeINTEL {
     }
 }
 impl PerformanceParameterTypeINTEL {
-    pub const PERFORMANCE_PARAMETER_TYPE_HW_COUNTERS_SUPPORTED_INTEL: Self = Self(0);
-    pub const PERFORMANCE_PARAMETER_TYPE_STREAM_MARKER_VALIDS_INTEL: Self = Self(1);
+    pub const HW_COUNTERS_SUPPORTED: Self = Self(0);
+    pub const STREAM_MARKER_VALIDS: Self = Self(1);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2096,11 +2071,11 @@ impl PerformanceValueTypeINTEL {
     }
 }
 impl PerformanceValueTypeINTEL {
-    pub const PERFORMANCE_VALUE_TYPE_UINT32_INTEL: Self = Self(0);
-    pub const PERFORMANCE_VALUE_TYPE_UINT64_INTEL: Self = Self(1);
-    pub const PERFORMANCE_VALUE_TYPE_FLOAT_INTEL: Self = Self(2);
-    pub const PERFORMANCE_VALUE_TYPE_BOOL_INTEL: Self = Self(3);
-    pub const PERFORMANCE_VALUE_TYPE_STRING_INTEL: Self = Self(4);
+    pub const UINT32: Self = Self(0);
+    pub const UINT64: Self = Self(1);
+    pub const FLOAT: Self = Self(2);
+    pub const BOOL: Self = Self(3);
+    pub const STRING: Self = Self(4);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2215,4 +2190,54 @@ impl FragmentShadingRateTypeNV {
 impl FragmentShadingRateTypeNV {
     pub const FRAGMENT_SIZE: Self = Self(0);
     pub const ENUMS: Self = Self(1);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkProvokingVertexModeEXT.html>"]
+pub struct ProvokingVertexModeEXT(pub(crate) i32);
+impl ProvokingVertexModeEXT {
+    pub const fn from_raw(x: i32) -> Self {
+        ProvokingVertexModeEXT(x)
+    }
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl ProvokingVertexModeEXT {
+    pub const FIRST_VERTEX: Self = Self(0);
+    pub const LAST_VERTEX: Self = Self(1);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkAccelerationStructureMotionInstanceTypeNV.html>"]
+pub struct AccelerationStructureMotionInstanceTypeNV(pub(crate) i32);
+impl AccelerationStructureMotionInstanceTypeNV {
+    pub const fn from_raw(x: i32) -> Self {
+        AccelerationStructureMotionInstanceTypeNV(x)
+    }
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl AccelerationStructureMotionInstanceTypeNV {
+    pub const STATIC: Self = Self(0);
+    pub const MATRIX_MOTION: Self = Self(1);
+    pub const SRT_MOTION: Self = Self(2);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkQueryResultStatusKHR.html>"]
+pub struct QueryResultStatusKHR(pub(crate) i32);
+impl QueryResultStatusKHR {
+    pub const fn from_raw(x: i32) -> Self {
+        QueryResultStatusKHR(x)
+    }
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl QueryResultStatusKHR {
+    pub const ERROR: Self = Self(-1);
+    pub const NOT_READY: Self = Self(0);
+    pub const COMPLETE: Self = Self(1);
 }

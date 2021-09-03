@@ -1,6 +1,5 @@
-#![allow(dead_code)]
-use crate::version::{DeviceV1_0, InstanceV1_0};
 use crate::vk;
+use crate::{Device, Instance};
 use std::ffi::c_void;
 use std::ffi::CStr;
 use std::mem;
@@ -12,12 +11,11 @@ pub struct PushDescriptor {
 }
 
 impl PushDescriptor {
-    pub fn new<I: InstanceV1_0, D: DeviceV1_0>(instance: &I, device: &D) -> PushDescriptor {
+    pub fn new(instance: &Instance, device: &Device) -> Self {
         let push_descriptors_fn = vk::KhrPushDescriptorFn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-
-        PushDescriptor {
+        Self {
             handle: instance.handle(),
             push_descriptors_fn,
         }

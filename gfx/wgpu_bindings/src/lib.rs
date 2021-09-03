@@ -68,12 +68,6 @@ pub struct AdapterInformation {
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
-enum ShaderModuleSource<'a> {
-    SpirV(Cow<'a, [u32]>),
-    Wgsl(Cow<'a, str>),
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
 struct ImplicitLayout<'a> {
     pipeline: id::PipelineLayoutId,
     bind_groups: Cow<'a, [id::BindGroupLayoutId]>,
@@ -96,7 +90,7 @@ enum DeviceAction<'a> {
     CreateShaderModule(
         id::ShaderModuleId,
         wgc::pipeline::ShaderModuleDescriptor<'a>,
-        ShaderModuleSource<'a>,
+        Cow<'a, str>,
     ),
     CreateComputePipeline(
         id::ComputePipelineId,

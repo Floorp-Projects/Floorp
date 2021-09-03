@@ -132,6 +132,7 @@ pub(super) fn map_builtin(word: spirv::Word) -> Result<crate::BuiltIn, Error> {
         // fragment
         Some(Bi::FragDepth) => crate::BuiltIn::FragDepth,
         Some(Bi::FrontFacing) => crate::BuiltIn::FrontFacing,
+        Some(Bi::PrimitiveId) => crate::BuiltIn::PrimitiveIndex,
         Some(Bi::SampleId) => crate::BuiltIn::SampleIndex,
         Some(Bi::SampleMask) => crate::BuiltIn::SampleMask,
         // compute
@@ -140,6 +141,7 @@ pub(super) fn map_builtin(word: spirv::Word) -> Result<crate::BuiltIn, Error> {
         Some(Bi::LocalInvocationIndex) => crate::BuiltIn::LocalInvocationIndex,
         Some(Bi::WorkgroupId) => crate::BuiltIn::WorkGroupId,
         Some(Bi::WorkgroupSize) => crate::BuiltIn::WorkGroupSize,
+        Some(Bi::NumWorkgroups) => crate::BuiltIn::NumWorkGroups,
         _ => return Err(Error::UnsupportedBuiltIn(word)),
     })
 }
@@ -153,7 +155,10 @@ pub(super) fn map_storage_class(word: spirv::Word) -> Result<super::ExtendedClas
         Some(Sc::Output) => Ec::Output,
         Some(Sc::Private) => Ec::Global(crate::StorageClass::Private),
         Some(Sc::UniformConstant) => Ec::Global(crate::StorageClass::Handle),
-        Some(Sc::StorageBuffer) => Ec::Global(crate::StorageClass::Storage),
+        Some(Sc::StorageBuffer) => Ec::Global(crate::StorageClass::Storage {
+            //Note: this is restricted by decorations later
+            access: crate::StorageAccess::all(),
+        }),
         // we expect the `Storage` case to be filtered out before calling this function.
         Some(Sc::Uniform) => Ec::Global(crate::StorageClass::Uniform),
         Some(Sc::Workgroup) => Ec::Global(crate::StorageClass::WorkGroup),

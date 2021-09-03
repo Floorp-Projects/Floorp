@@ -15,13 +15,20 @@ publish = false
 default = []
 
 [dependencies.wgc]
-path = "../wgpu/wgpu-core"
 package = "wgpu-core"
-features = ["cross", "replay", "trace", "serial-pass"]
+git = "https://github.com/gfx-rs/wgpu"
+rev = "d23288e"
+features = ["replay", "trace", "serial-pass"]
 
 [dependencies.wgt]
-path = "../wgpu/wgpu-types"
 package = "wgpu-types"
+git = "https://github.com/gfx-rs/wgpu"
+rev = "d23288e"
+
+[dependencies.wgh]
+package = "wgpu-hal"
+git = "https://github.com/gfx-rs/wgpu"
+rev = "d23288e"
 
 [dependencies]
 bincode = "1"

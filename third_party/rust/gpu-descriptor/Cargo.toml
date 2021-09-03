@@ -13,11 +13,11 @@
 [package]
 edition = "2018"
 name = "gpu-descriptor"
-version = "0.1.1"
+version = "0.2.1"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 description = "Implementation agnostic descriptor allocator for Vulkan like APIs"
 homepage = "https://github.com/zakarumych/gpu-descriptor"
-documentation = "https://docs.rs/gpu-descriptor-types/0.1.0"
+documentation = "https://docs.rs/gpu-descriptor"
 keywords = ["gpu", "vulkan", "no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/zakarumych/gpu-descriptor"

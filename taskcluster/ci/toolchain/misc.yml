@@ -200,25 +200,6 @@ wrench-deps:
         toolchain:
             - linux64-rust-1.47  # whatever m-c is built with
 
-wgpu-deps:
-    description: "Downloads all the crates needed for testing wgpu"
-    treeherder:
-        symbol: Wgpu(deps)
-    worker:
-        docker-image: {in-tree: wgpu}
-    run:
-        script: wgpu-deps-vendoring.sh
-        sparse-profile: null
-        resources:
-            - 'gfx/wgpu/Cargo.lock'
-        toolchain-artifact: public/build/wgpu-deps.tar.bz2
-    fetches:
-        fetch:
-            - android-rs-glue
-        toolchain:
-            # this requires resolver=2 in Naga
-            - linux64-rust-1.51  # whatever m-c is built with
-
 linux64-liblowercase:
     description: "liblowercase"
     treeherder:

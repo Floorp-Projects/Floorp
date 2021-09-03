@@ -207,7 +207,7 @@ bool GetCanvasContextType(const nsAString& str,
   }
 
   if (StaticPrefs::dom_webgpu_enabled()) {
-    if (str.EqualsLiteral("gpupresent")) {
+    if (str.EqualsLiteral("webgpu")) {
       *out_type = dom::CanvasContextType::WebGPU;
       return true;
     }
