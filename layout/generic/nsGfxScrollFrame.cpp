@@ -3708,8 +3708,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // of the viewport, so most layer implementations would create a layer buffer
   // that's much larger than necessary. Creating independent layers for each
   // scrollbar works around the problem.
-  bool createLayersForScrollbars =
-      mIsRoot && mOuter->PresContext()->IsRootContentDocument();
+  bool createLayersForScrollbars = isRootContent;
 
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   MOZ_ASSERT(sf);
