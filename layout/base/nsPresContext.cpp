@@ -2417,7 +2417,7 @@ bool nsPresContext::IsRootContentDocumentCrossProcess() const {
 void nsPresContext::NotifyNonBlankPaint() {
   MOZ_ASSERT(!mHadNonBlankPaint);
   mHadNonBlankPaint = true;
-  if (IsRootContentDocument()) {
+  if (IsRootContentDocumentCrossProcess()) {
     RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
     if (timing && !IsPrintingOrPrintPreview()) {
       timing->NotifyNonBlankPaintForRootContentDocument();
@@ -2482,7 +2482,7 @@ void nsPresContext::NotifyPaintStatusReset() {
 
 void nsPresContext::NotifyDOMContentFlushed() {
   NS_ENSURE_TRUE_VOID(mPresShell);
-  if (IsRootContentDocument()) {
+  if (IsRootContentDocumentCrossProcess()) {
     RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
     if (timing) {
       timing->NotifyDOMContentFlushedForRootContentDocument();
