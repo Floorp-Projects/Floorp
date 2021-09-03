@@ -326,7 +326,7 @@ struct ProcessPriorityChange {
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.AddKeyFormat("Before", MS::Format::string);
     schema.AddKeyFormat("After", MS::Format::string);
     schema.AddStaticLabelValue("Note",
@@ -352,7 +352,7 @@ struct ProcessPriority {
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.AddKeyFormat("Priority", MS::Format::string);
     schema.AddKeyFormat("Marker cause", MS::Format::string);
     schema.SetAllLabels("priority: {marker.data.Priority}");

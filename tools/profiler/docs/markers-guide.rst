@@ -39,7 +39,7 @@ Note: Most marker-related identifiers are in the ``mozilla`` namespace, to be ad
       // Where and how to display the marker and its data.
       static MarkerSchema MarkerTypeDisplay() {
         using MS = MarkerSchema;
-        MS schema(MS::Location::markerChart, MS::Location::markerTable);
+        MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
         schema.SetChartLabel("Number: {marker.data.number}");
         schema.AddKeyLabelFormat("number", "Number", MS::Format::number);
         return schema;
@@ -372,7 +372,7 @@ Marker Chart and the Marker Table panels:
 .. code-block:: c++
 
     // …
-        MS schema(MS::Location::markerChart, MS::Location::markerTable);
+        MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
 
 Some labels can optionally be specified, to display certain information in different
 locations: ``SetChartLabel``, ``SetTooltipLabel``, and ``SetTableLabel``; or

@@ -255,7 +255,7 @@ struct UserTimingMarker {
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.SetAllLabels("{marker.data.name}");
     schema.AddStaticLabelValue("Marker", "UserTiming");
     schema.AddKeyLabelFormat("entryType", "Entry Type", MS::Format::string);

@@ -1053,8 +1053,8 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
             }
             static MarkerSchema MarkerTypeDisplay() {
               using MS = MarkerSchema;
-              MS schema{MS::Location::markerChart, MS::Location::markerTable,
-                        MS::Location::timelineOverview};
+              MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+                        MS::Location::TimelineOverview};
               schema.SetChartLabel("{marker.data.eventType}");
               schema.SetTooltipLabel("{marker.data.eventType} - DOMEvent");
               schema.SetTableLabel("{marker.data.eventType}");

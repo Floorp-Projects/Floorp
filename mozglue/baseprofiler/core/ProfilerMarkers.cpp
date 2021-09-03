@@ -146,19 +146,19 @@ void MarkerSchema::Stream(JSONWriter& aWriter,
 Span<const char> MarkerSchema::LocationToStringSpan(
     MarkerSchema::Location aLocation) {
   switch (aLocation) {
-    case Location::markerChart:
+    case Location::MarkerChart:
       return mozilla::MakeStringSpan("marker-chart");
-    case Location::markerTable:
+    case Location::MarkerTable:
       return mozilla::MakeStringSpan("marker-table");
-    case Location::timelineOverview:
+    case Location::TimelineOverview:
       return mozilla::MakeStringSpan("timeline-overview");
-    case Location::timelineMemory:
+    case Location::TimelineMemory:
       return mozilla::MakeStringSpan("timeline-memory");
-    case Location::timelineIPC:
+    case Location::TimelineIPC:
       return mozilla::MakeStringSpan("timeline-ipc");
-    case Location::timelineFileIO:
+    case Location::TimelineFileIO:
       return mozilla::MakeStringSpan("timeline-fileio");
-    case Location::stackChart:
+    case Location::StackChart:
       return mozilla::MakeStringSpan("stack-chart");
     default:
       MOZ_CRASH("Unexpected Location enum");
