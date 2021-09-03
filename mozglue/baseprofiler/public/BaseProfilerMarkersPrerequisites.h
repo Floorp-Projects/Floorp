@@ -675,20 +675,20 @@ class JSONWriter;
 class MarkerSchema {
  public:
   enum class Location : unsigned {
-    markerChart,
-    markerTable,
+    MarkerChart,
+    MarkerTable,
     // This adds markers to the main marker timeline in the header.
-    timelineOverview,
+    TimelineOverview,
     // In the timeline, this is a section that breaks out markers that are
     // related to memory. When memory counters are enabled, this is its own
     // track, otherwise it is displayed with the main thread.
-    timelineMemory,
+    TimelineMemory,
     // This adds markers to the IPC timeline area in the header.
-    timelineIPC,
+    TimelineIPC,
     // This adds markers to the FileIO timeline area in the header.
-    timelineFileIO,
+    TimelineFileIO,
     // TODO - This is not supported yet.
-    stackChart
+    StackChart
   };
 
   // Used as constructor parameter, to explicitly specify that the location (and
