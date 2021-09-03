@@ -249,7 +249,8 @@ impl ::selectors::SelectorImpl for SelectorImpl {
     type NonTSPseudoClass = NonTSPseudoClass;
 
     fn should_collect_attr_hash(name: &AtomIdent) -> bool {
-        !crate::bloom::is_attr_name_excluded_from_filter(name)
+        static_prefs::pref!("layout.css.bloom-filter-attribute-names.enabled") &&
+            !crate::bloom::is_attr_name_excluded_from_filter(name)
     }
 }
 
