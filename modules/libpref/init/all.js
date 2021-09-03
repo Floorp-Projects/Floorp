@@ -345,7 +345,7 @@ pref("browser.chrome.image_icons.max_size", 1024);
 pref("browser.triple_click_selects_paragraph", true);
 
 // Enable fillable forms in the PDF viewer.
-pref("pdfjs.renderInteractiveForms", true);
+pref("pdfjs.annotationMode", 2);
 
 // Enable JavaScript support in the PDF viewer.
 pref("pdfjs.enableScripting", true);
