@@ -10,8 +10,8 @@
 /*
  * Having problems?
  *
- * See the User Manual at:
- *   https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Using_nsCOMPtr
+ * See the documentation at:
+ *   https://firefox-source-docs.mozilla.org/xpcom/refptr.html
  *
  *
  * nsCOMPtr
