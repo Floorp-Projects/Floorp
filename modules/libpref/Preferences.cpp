@@ -4396,7 +4396,7 @@ struct Internals {
     }
     static MarkerSchema MarkerTypeDisplay() {
       using MS = MarkerSchema;
-      MS schema{MS::Location::markerChart, MS::Location::markerTable};
+      MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
       schema.AddKeyLabelFormat("prefName", "Name", MS::Format::string);
       schema.AddKeyLabelFormat("prefKind", "Kind", MS::Format::string);
       schema.AddKeyLabelFormat("prefType", "Type", MS::Format::string);

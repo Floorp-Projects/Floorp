@@ -53,8 +53,8 @@ class MOZ_RAII AutoProfilerStyleMarker {
       }
       static MarkerSchema MarkerTypeDisplay() {
         using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable,
-                  MS::Location::timelineOverview};
+        MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+                  MS::Location::TimelineOverview};
         schema.AddKeyLabelFormat("elementsTraversed", "Elements traversed",
                                  MS::Format::integer);
         schema.AddKeyLabelFormat("elementsStyled", "Elements styled",

@@ -1761,10 +1761,10 @@ TEST(GeckoProfiler, Markers)
       // that correctly matches StreamJSONMarkerData data above! Instead we only
       // test that it outputs the expected JSON at the end.
       using MS = mozilla::MarkerSchema;
-      MS schema{MS::Location::markerChart,      MS::Location::markerTable,
-                MS::Location::timelineOverview, MS::Location::timelineMemory,
-                MS::Location::timelineIPC,      MS::Location::timelineFileIO,
-                MS::Location::stackChart};
+      MS schema{MS::Location::MarkerChart,      MS::Location::MarkerTable,
+                MS::Location::TimelineOverview, MS::Location::TimelineMemory,
+                MS::Location::TimelineIPC,      MS::Location::TimelineFileIO,
+                MS::Location::StackChart};
       // All label functions.
       schema.SetChartLabel("chart label");
       schema.SetTooltipLabel("tooltip label");

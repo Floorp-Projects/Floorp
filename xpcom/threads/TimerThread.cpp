@@ -567,7 +567,7 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
       }
       static MarkerSchema MarkerTypeDisplay() {
         using MS = MarkerSchema;
-        MS schema{MS::Location::markerChart, MS::Location::markerTable};
+        MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
         schema.AddKeyLabelFormatSearchable("name", "Name", MS::Format::string,
                                            MS::Searchable::searchable);
         schema.AddKeyLabelFormat("delay", "Delay", MS::Format::milliseconds);
