@@ -44,8 +44,7 @@ ContentSessionStore::ContentSessionStore(nsIDocShell* aDocShell)
       mPrivateChanged(false),
       mIsPrivate(false),
       mDocCapChanged(false),
-      mSHistoryChanged(false),
-      mSHistoryChangedFromParent(false) {
+      mSHistoryChanged(false) {
   MOZ_ASSERT(mDocShell);
   // Check that value at startup as it might have
   // been set before the frame script was loaded.
@@ -104,11 +103,6 @@ bool ContentSessionStore::GetPrivateModeEnabled() {
 
 void ContentSessionStore::SetSHistoryChanged() {
   mSHistoryChanged = mozilla::SessionHistoryInParent();
-}
-
-// Request "collect sessionHistory" from the parent process
-void ContentSessionStore::SetSHistoryFromParentChanged() {
-  mSHistoryChangedFromParent = mozilla::SessionHistoryInParent();
 }
 
 void ContentSessionStore::OnDocumentStart() {
@@ -388,53 +382,6 @@ nsresult TabListener::Observe(nsISupports* aSubject, const char* aTopic,
 
   NS_ERROR("Unexpected topic");
   return NS_ERROR_UNEXPECTED;
-}
-
-nsCString CollectPosition(Document& aDocument) {
-  PresShell* presShell = aDocument.GetPresShell();
-  if (!presShell) {
-    return ""_ns;
-  }
-  nsPoint scrollPos = presShell->GetVisualViewportOffset();
-  int scrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
-  int scrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
-  if ((scrollX != 0) || (scrollY != 0)) {
-    return nsPrintfCString("%d,%d", scrollX, scrollY);
-  }
-
-  return ""_ns;
-}
-
-int CollectPositions(BrowsingContext* aBrowsingContext,
-                     nsTArray<nsCString>& aPositions,
-                     nsTArray<int32_t>& aPositionDescendants) {
-  if (aBrowsingContext->CreatedDynamically()) {
-    return 0;
-  }
-
-  nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
-  if (!window) {
-    return 0;
-  }
-
-  Document* document = window->GetDoc();
-  if (!document) {
-    return 0;
-  }
-
-  /* Collect data from current frame */
-  aPositions.AppendElement(CollectPosition(*document));
-  aPositionDescendants.AppendElement(0);
-  unsigned long currentIdx = aPositions.Length() - 1;
-
-  /* Collect data from all child frame */
-  // This is not going to work for fission. Bug 1572084 for tracking it.
-  for (auto& child : aBrowsingContext->Children()) {
-    aPositionDescendants[currentIdx] +=
-        CollectPositions(child, aPositions, aPositionDescendants);
-  }
-
-  return aPositionDescendants[currentIdx] + 1;
 }
 
 bool TabListener::ForceFlushFromParent() {
