@@ -284,7 +284,7 @@ class TestWriteMozinfo(unittest.TestCase, Base):
                 MOZ_WIDGET_TOOLKIT="windows",
             )
         )
-        tempdir = tempfile.tempdir
+        tempdir = tempfile.gettempdir()
         c.topsrcdir = tempdir
         with NamedTemporaryFile(
             dir=os.path.normpath(c.topsrcdir), mode="wt"
