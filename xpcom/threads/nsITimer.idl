@@ -90,12 +90,14 @@ interface nsITimer : nsISupports
 
   /**
    * A TYPE_REPEATING_PRECISE_CAN_SKIP repeating timer aims to have constant
-   * period between firings.  The processing time for each timer callback
-   * should not influence the timer period.  However this timer type
-   * guarantees that it will not queue up new events to fire the callback
-   * until the previous callback event finishes firing.  If the callback
-   * takes a long time, then the next callback will be scheduled immediately
-   * afterward, but only once.  This is the only non-slack timer available.
+   * period between firings.  The processing time for each timer callback will
+   * not influence the timer period.  If the callback finishes after the next
+   * firing(s) should have happened (either because the callback took a long
+   * time, or the callback was called extremely late), that firing(s) is
+   * skipped, but the following sequence of firing times will not be altered.
+   * This timer type guarantees that it will not queue up new events to fire
+   * the callback until the previous callback event finishes firing.  This is
+   * the only non-slack timer available.
    */
   const short TYPE_REPEATING_PRECISE_CAN_SKIP = 3;
 
