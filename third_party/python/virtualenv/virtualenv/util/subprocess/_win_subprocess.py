@@ -155,7 +155,8 @@ class Popen(subprocess.Popen):
                 args = args.decode('utf-8')
         startupinfo.dwFlags |= _subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = _subprocess.SW_HIDE
-        comspec = os.environ.get("COMSPEC", unicode("cmd.exe"))
+        env = os.environ if env is None else env
+        comspec = env.get("COMSPEC", unicode("cmd.exe"))
         if (
             _subprocess.GetVersion() >= 0x80000000 or
             os.path.basename(comspec).lower() == "command.com"

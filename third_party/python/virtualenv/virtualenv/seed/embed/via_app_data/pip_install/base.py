@@ -51,12 +51,27 @@ class PipInstall(object):
         # 1. first extract the wheel
         logging.debug("build install image for %s to %s", self._wheel.name, self._image_dir)
         with zipfile.ZipFile(str(self._wheel)) as zip_ref:
+            self._shorten_path_if_needed(zip_ref)
             zip_ref.extractall(str(self._image_dir))
             self._extracted = True
         # 2. now add additional files not present in the distribution
         new_files = self._generate_new_files()
         # 3. finally fix the records file
         self._fix_records(new_files)
+
+    def _shorten_path_if_needed(self, zip_ref):
+        if os.name == "nt":
+            to_folder = str(self._image_dir)
+            # https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation
+            zip_max_len = max(len(i) for i in zip_ref.namelist())
+            path_len = zip_max_len + len(to_folder)
+            if path_len > 260:
+                self._image_dir.mkdir(exist_ok=True)  # to get a short path must exist
+
+                from virtualenv.util.path import get_short_path_name
+
+                to_folder = get_short_path_name(to_folder)
+                self._image_dir = Path(to_folder)
 
     def _records_text(self, files):
         record_data = "\n".join(
