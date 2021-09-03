@@ -17,6 +17,7 @@ class Seeder(object):
         :param enabled: a flag weather the seeder is enabled or not
         """
         self.enabled = enabled
+        self.env = options.env
 
     @classmethod
     def add_parser_arguments(cls, parser, interpreter, app_data):

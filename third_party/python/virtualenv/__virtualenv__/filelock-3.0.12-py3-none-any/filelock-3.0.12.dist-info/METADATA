@@ -24,6 +24,7 @@ Classifier: Topic :: System
 Classifier: Topic :: Internet
 Classifier: Topic :: Software Development :: Libraries
 Description-Content-Type: text/markdown
+License-File: LICENSE
 
 # py-filelock
 
