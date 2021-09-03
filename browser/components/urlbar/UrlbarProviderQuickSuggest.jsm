@@ -259,20 +259,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
       let isQuickSuggestLinkClicked =
         details.selIndex == resultIndex && details.selType !== "help";
       let {
+        qsSuggestion, // The full keyword
         sponsoredAdvertiser,
         sponsoredImpressionUrl,
         sponsoredClickUrl,
         sponsoredBlockId,
       } = result.payload;
       // impression
-      //
-      // Set `search_query` and `matched_keywords` to empty string, both of
-      // them are required fields for the impression, so we need to keep them
-      // in the payload. See bug 1725492 for more details.
       PartnerLinkAttribution.sendContextualServicesPing(
         {
-          search_query: "",
-          matched_keywords: "",
+          search_query: details.searchString,
+          matched_keywords: qsSuggestion || details.searchString,
           advertiser: sponsoredAdvertiser,
           block_id: sponsoredBlockId,
           position: telemetryResultIndex,

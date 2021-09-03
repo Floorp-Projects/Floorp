@@ -505,12 +505,12 @@ function assertCustomImpression(index) {
   Assert.equal(payload.position, index + 1, "Should set the position");
   Assert.equal(
     payload.search_query,
-    "",
+    TEST_SEARCH_STRING,
     "Should set the search_query to an empty string"
   );
   Assert.equal(
     payload.matched_keywords,
-    "",
+    TEST_SEARCH_STRING,
     "Should set the matched_keywords to an empty string"
   );
 }
