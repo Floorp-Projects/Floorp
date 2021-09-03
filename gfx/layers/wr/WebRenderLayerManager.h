@@ -103,7 +103,9 @@ class WebRenderLayerManager final : public LayerManager {
   already_AddRefed<ContainerLayer> CreateContainerLayer() override {
     return nullptr;
   }
+  already_AddRefed<ImageLayer> CreateImageLayer() override { return nullptr; }
   already_AddRefed<ColorLayer> CreateColorLayer() override { return nullptr; }
+  already_AddRefed<CanvasLayer> CreateCanvasLayer() override { return nullptr; }
 
   bool NeedsWidgetInvalidation() override { return false; }
 

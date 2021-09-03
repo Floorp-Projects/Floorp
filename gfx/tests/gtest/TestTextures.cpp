@@ -16,7 +16,6 @@
 #include "mozilla/RefPtr.h"
 #include "gfx2DGlue.h"
 #include "gfxImageSurface.h"
-#include "gfxPlatform.h"
 #include "gfxTypes.h"
 #include "ImageContainer.h"
 #include "mozilla/layers/ImageDataSerializer.h"
