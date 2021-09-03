@@ -48,12 +48,11 @@ NS_IMPL_ADDREF_INHERITED(ShadowRoot, DocumentFragment)
 NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 
 ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
-                       bool aDelegatesFocus, SlotAssignmentMode aSlotAssignment,
+                       SlotAssignmentMode aSlotAssignment,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : DocumentFragment(std::move(aNodeInfo)),
       DocumentOrShadowRoot(this),
       mMode(aMode),
-      mDelegatesFocus(aDelegatesFocus),
       mSlotAssignment(aSlotAssignment),
       mIsUAWidget(false),
       mIsAvailableToElementInternals(false) {
@@ -750,41 +749,6 @@ void ShadowRoot::MaybeUnslotHostChild(nsIContent& aChild) {
 
   slot->RemoveAssignedNode(aChild);
   slot->EnqueueSlotChangeEvent();
-}
-
-Element* ShadowRoot::GetFirstFocusable(bool aWithMouse) const {
-  for (nsIContent* child = GetFirstChild(); child;
-       child = child->GetNextNode()) {
-    if (auto* slot = HTMLSlotElement::FromNode(child)) {
-      const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
-      for (const auto& node : assignedNodes) {
-        if (node->IsElement()) {
-          Element* assignedElement = node->AsElement();
-          if (nsIFrame* frame = assignedElement->GetPrimaryFrame()) {
-            if (frame->IsFocusable(aWithMouse)) {
-              return assignedElement;
-            }
-          }
-        }
-      }
-    }
-
-    if (child->IsElement()) {
-      if (nsIFrame* frame = child->GetPrimaryFrame()) {
-        if (frame->IsFocusable(aWithMouse)) {
-          return child->AsElement();
-        }
-      }
-    }
-
-    if (ShadowRoot* root = child->GetShadowRoot()) {
-      if (Element* firstFocusable = root->GetFirstFocusable(aWithMouse)) {
-        return firstFocusable;
-      }
-    }
-  }
-
-  return nullptr;
 }
 
 void ShadowRoot::MaybeSlotHostChild(nsIContent& aChild) {

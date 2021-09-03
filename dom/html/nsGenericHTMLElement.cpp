@@ -2381,13 +2381,6 @@ void nsGenericHTMLElement::Click(CallerType aCallerType) {
 
 bool nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                            int32_t* aTabIndex) {
-  if (ShadowRoot* root = GetShadowRoot()) {
-    if (root->DelegatesFocus()) {
-      *aIsFocusable = false;
-      return true;
-    }
-  }
-
   Document* doc = GetComposedDoc();
   if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
     // In designMode documents we only allow focusing the document.
