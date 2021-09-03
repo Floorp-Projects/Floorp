@@ -84,7 +84,7 @@ def _parse_mach_env_requirements(
         elif action == "pypi-optional":
             if len(params.split(":", maxsplit=1)) != 2:
                 raise Exception(
-                    "Expected pypi-optional package to have a repercussion"
+                    "Expected pypi-optional package to have a repercussion "
                     'description in the format "package:fallback explanation", '
                     'found "{}"'.format(params)
                 )
