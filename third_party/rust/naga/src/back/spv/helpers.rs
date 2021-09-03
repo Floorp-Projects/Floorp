@@ -25,7 +25,7 @@ pub(super) fn map_storage_class(class: crate::StorageClass) -> spirv::StorageCla
         crate::StorageClass::Handle => spirv::StorageClass::UniformConstant,
         crate::StorageClass::Function => spirv::StorageClass::Function,
         crate::StorageClass::Private => spirv::StorageClass::Private,
-        crate::StorageClass::Storage => spirv::StorageClass::StorageBuffer,
+        crate::StorageClass::Storage { .. } => spirv::StorageClass::StorageBuffer,
         crate::StorageClass::Uniform => spirv::StorageClass::Uniform,
         crate::StorageClass::WorkGroup => spirv::StorageClass::Workgroup,
         crate::StorageClass::PushConstant => spirv::StorageClass::PushConstant,
@@ -46,5 +46,18 @@ pub(super) fn contains_builtin(
             .any(|member| contains_builtin(member.binding.as_ref(), member.ty, arena, built_in))
     } else {
         false // unreachable
+    }
+}
+
+impl crate::StorageClass {
+    pub(super) fn to_spirv_semantics_and_scope(self) -> (spirv::MemorySemantics, spirv::Scope) {
+        match self {
+            Self::Storage { .. } => (spirv::MemorySemantics::UNIFORM_MEMORY, spirv::Scope::Device),
+            Self::WorkGroup => (
+                spirv::MemorySemantics::WORKGROUP_MEMORY,
+                spirv::Scope::Workgroup,
+            ),
+            _ => (spirv::MemorySemantics::empty(), spirv::Scope::Invocation),
+        }
     }
 }

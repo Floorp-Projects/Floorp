@@ -39,6 +39,10 @@ vk_bitflags_wrapped!(
     0b1111111111111111111111111111111,
     Flags
 );
+// ignore clippy::use_self false positives
+// changing GpaSqShaderStageFlags::PS.0 to Self::PS.0 as suggested by clippy generates:
+// error[E0401]: can't use generic parameters from outer function
+#[allow(clippy::use_self)]
 impl fmt::Debug for GpaSqShaderStageFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
@@ -54,21 +58,21 @@ impl fmt::Debug for GpaSqShaderStageFlags {
     }
 }
 impl GpaSqShaderStageFlags {
-    pub const PS: Self = GpaSqShaderStageFlags(0b1);
-    pub const VS: Self = GpaSqShaderStageFlags(0b10);
-    pub const GS: Self = GpaSqShaderStageFlags(0b100);
-    pub const ES: Self = GpaSqShaderStageFlags(0b1000);
-    pub const HS: Self = GpaSqShaderStageFlags(0b10000);
-    pub const LS: Self = GpaSqShaderStageFlags(0b100000);
-    pub const CS: Self = GpaSqShaderStageFlags(0b1000000);
+    pub const PS: Self = Self(0b1);
+    pub const VS: Self = Self(0b10);
+    pub const GS: Self = Self(0b100);
+    pub const ES: Self = Self(0b1000);
+    pub const HS: Self = Self(0b10000);
+    pub const LS: Self = Self(0b100000);
+    pub const CS: Self = Self(0b1000000);
 }
 
 impl StructureType {
-    pub const PHYSICAL_DEVICE_GPA_FEATURES_AMD: Self = StructureType(1000133000);
-    pub const PHYSICAL_DEVICE_GPA_PROPERTIES_AMD: Self = StructureType(1000133001);
-    pub const GPA_SAMPLE_BEGIN_INFO_AMD: Self = StructureType(1000133002);
-    pub const GPA_SESSION_CREATE_INFO_AMD: Self = StructureType(1000133003);
-    pub const GPA_DEVICE_CLOCK_MODE_INFO_AMD: Self = StructureType(1000133004);
+    pub const PHYSICAL_DEVICE_GPA_FEATURES_AMD: Self = Self(1000133000);
+    pub const PHYSICAL_DEVICE_GPA_PROPERTIES_AMD: Self = Self(1000133001);
+    pub const GPA_SAMPLE_BEGIN_INFO_AMD: Self = Self(1000133002);
+    pub const GPA_SESSION_CREATE_INFO_AMD: Self = Self(1000133003);
+    pub const GPA_DEVICE_CLOCK_MODE_INFO_AMD: Self = Self(1000133004);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -76,19 +80,19 @@ impl StructureType {
 pub struct GpaDeviceClockModeAmd(pub(crate) i32);
 impl GpaDeviceClockModeAmd {
     pub fn from_raw(x: i32) -> Self {
-        GpaDeviceClockModeAmd(x)
+        Self(x)
     }
     pub fn as_raw(self) -> i32 {
         self.0
     }
 }
 impl GpaDeviceClockModeAmd {
-    pub const DEFAULT: Self = GpaDeviceClockModeAmd(0);
-    pub const QUERY: Self = GpaDeviceClockModeAmd(1);
-    pub const PROFILING: Self = GpaDeviceClockModeAmd(2);
-    pub const MIN_MEMORY: Self = GpaDeviceClockModeAmd(3);
-    pub const MIN_ENGINE: Self = GpaDeviceClockModeAmd(4);
-    pub const PEAK: Self = GpaDeviceClockModeAmd(5);
+    pub const DEFAULT: Self = Self(0);
+    pub const QUERY: Self = Self(1);
+    pub const PROFILING: Self = Self(2);
+    pub const MIN_MEMORY: Self = Self(3);
+    pub const MIN_ENGINE: Self = Self(4);
+    pub const PEAK: Self = Self(5);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -96,45 +100,45 @@ impl GpaDeviceClockModeAmd {
 pub struct GpaPerfBlockAmd(pub(crate) i32);
 impl GpaPerfBlockAmd {
     pub fn from_raw(x: i32) -> Self {
-        GpaPerfBlockAmd(x)
+        Self(x)
     }
     pub fn as_raw(self) -> i32 {
         self.0
     }
 }
 impl GpaPerfBlockAmd {
-    pub const CPF: Self = GpaPerfBlockAmd(0);
-    pub const IA: Self = GpaPerfBlockAmd(1);
-    pub const VGT: Self = GpaPerfBlockAmd(2);
-    pub const PA: Self = GpaPerfBlockAmd(3);
-    pub const SC: Self = GpaPerfBlockAmd(4);
-    pub const SPI: Self = GpaPerfBlockAmd(5);
-    pub const SQ: Self = GpaPerfBlockAmd(6);
-    pub const SX: Self = GpaPerfBlockAmd(7);
-    pub const TA: Self = GpaPerfBlockAmd(8);
-    pub const TD: Self = GpaPerfBlockAmd(9);
-    pub const TCP: Self = GpaPerfBlockAmd(10);
-    pub const TCC: Self = GpaPerfBlockAmd(11);
-    pub const TCA: Self = GpaPerfBlockAmd(12);
-    pub const DB: Self = GpaPerfBlockAmd(13);
-    pub const CB: Self = GpaPerfBlockAmd(14);
-    pub const GDS: Self = GpaPerfBlockAmd(15);
-    pub const SRBM: Self = GpaPerfBlockAmd(16);
-    pub const GRBM: Self = GpaPerfBlockAmd(17);
-    pub const GRBM_SE: Self = GpaPerfBlockAmd(18);
-    pub const RLC: Self = GpaPerfBlockAmd(19);
-    pub const DMA: Self = GpaPerfBlockAmd(20);
-    pub const MC: Self = GpaPerfBlockAmd(21);
-    pub const CPG: Self = GpaPerfBlockAmd(22);
-    pub const CPC: Self = GpaPerfBlockAmd(23);
-    pub const WD: Self = GpaPerfBlockAmd(24);
-    pub const TCS: Self = GpaPerfBlockAmd(25);
-    pub const ATC: Self = GpaPerfBlockAmd(26);
-    pub const ATC_L2: Self = GpaPerfBlockAmd(27);
-    pub const MC_VM_L2: Self = GpaPerfBlockAmd(28);
-    pub const EA: Self = GpaPerfBlockAmd(29);
-    pub const RPB: Self = GpaPerfBlockAmd(30);
-    pub const RMI: Self = GpaPerfBlockAmd(31);
+    pub const CPF: Self = Self(0);
+    pub const IA: Self = Self(1);
+    pub const VGT: Self = Self(2);
+    pub const PA: Self = Self(3);
+    pub const SC: Self = Self(4);
+    pub const SPI: Self = Self(5);
+    pub const SQ: Self = Self(6);
+    pub const SX: Self = Self(7);
+    pub const TA: Self = Self(8);
+    pub const TD: Self = Self(9);
+    pub const TCP: Self = Self(10);
+    pub const TCC: Self = Self(11);
+    pub const TCA: Self = Self(12);
+    pub const DB: Self = Self(13);
+    pub const CB: Self = Self(14);
+    pub const GDS: Self = Self(15);
+    pub const SRBM: Self = Self(16);
+    pub const GRBM: Self = Self(17);
+    pub const GRBM_SE: Self = Self(18);
+    pub const RLC: Self = Self(19);
+    pub const DMA: Self = Self(20);
+    pub const MC: Self = Self(21);
+    pub const CPG: Self = Self(22);
+    pub const CPC: Self = Self(23);
+    pub const WD: Self = Self(24);
+    pub const TCS: Self = Self(25);
+    pub const ATC: Self = Self(26);
+    pub const ATC_L2: Self = Self(27);
+    pub const MC_VM_L2: Self = Self(28);
+    pub const EA: Self = Self(29);
+    pub const RPB: Self = Self(30);
+    pub const RMI: Self = Self(31);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -142,16 +146,16 @@ impl GpaPerfBlockAmd {
 pub struct GpaSampleTypeAmd(pub(crate) i32);
 impl GpaSampleTypeAmd {
     pub fn from_raw(x: i32) -> Self {
-        GpaSampleTypeAmd(x)
+        Self(x)
     }
     pub fn as_raw(self) -> i32 {
         self.0
     }
 }
 impl GpaSampleTypeAmd {
-    pub const CUMULATIVE: Self = GpaSampleTypeAmd(0);
-    pub const TRACE: Self = GpaSampleTypeAmd(1);
-    pub const TIMING: Self = GpaSampleTypeAmd(2);
+    pub const CUMULATIVE: Self = Self(0);
+    pub const TRACE: Self = Self(1);
+    pub const TIMING: Self = Self(2);
 }
 
 handle_nondispatchable!(GpaSessionAmd, UNKNOWN);
@@ -200,8 +204,8 @@ pub struct PhysicalDeviceGpaPropertiesAmd {
 }
 
 impl ::std::default::Default for PhysicalDeviceGpaPropertiesAmd {
-    fn default() -> PhysicalDeviceGpaPropertiesAmd {
-        PhysicalDeviceGpaPropertiesAmd {
+    fn default() -> Self {
+        Self {
             s_type: StructureType::PHYSICAL_DEVICE_GPA_PROPERTIES_AMD,
             p_next: ::std::ptr::null_mut(),
             flags: Flags::default(),
@@ -215,7 +219,7 @@ impl ::std::default::Default for PhysicalDeviceGpaPropertiesAmd {
 impl PhysicalDeviceGpaPropertiesAmd {
     pub fn builder<'a>() -> PhysicalDeviceGpaPropertiesAmdBuilder<'a> {
         PhysicalDeviceGpaPropertiesAmdBuilder {
-            inner: PhysicalDeviceGpaPropertiesAmd::default(),
+            inner: Self::default(),
             marker: ::std::marker::PhantomData,
         }
     }
@@ -365,7 +369,7 @@ unsafe impl Sync for AmdGpaInterfaceFn {}
 
 impl ::std::clone::Clone for AmdGpaInterfaceFn {
     fn clone(&self) -> Self {
-        AmdGpaInterfaceFn {
+        Self {
             create_gpa_session: self.create_gpa_session,
             destroy_gpa_session: self.destroy_gpa_session,
             set_gpa_device_clock_mode: self.set_gpa_device_clock_mode,
@@ -386,7 +390,7 @@ impl AmdGpaInterfaceFn {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        AmdGpaInterfaceFn {
+        Self {
             create_gpa_session: unsafe {
                 extern "system" fn create_gpa_session_amd(
                     _device: Device,
@@ -629,8 +633,8 @@ impl AmdGpaInterfaceFn {
 // Extension: `VK_AMD_wave_limits`
 
 impl StructureType {
-    pub const WAVE_LIMIT_AMD: Self = StructureType(1000045000);
-    pub const PHYSICAL_DEVICE_WAVE_LIMIT_PROPERTIES_AMD: Self = StructureType(1000045001);
+    pub const WAVE_LIMIT_AMD: Self = Self(1000045000);
+    pub const PHYSICAL_DEVICE_WAVE_LIMIT_PROPERTIES_AMD: Self = Self(1000045001);
 }
 
 #[repr(C)]
@@ -643,8 +647,8 @@ pub struct PhysicalDeviceWaveLimitPropertiesAmd {
 }
 
 impl ::std::default::Default for PhysicalDeviceWaveLimitPropertiesAmd {
-    fn default() -> PhysicalDeviceWaveLimitPropertiesAmd {
-        PhysicalDeviceWaveLimitPropertiesAmd {
+    fn default() -> Self {
+        Self {
             s_type: StructureType::PHYSICAL_DEVICE_WAVE_LIMIT_PROPERTIES_AMD,
             p_next: ::std::ptr::null_mut(),
             cu_count: u32::default(),
@@ -655,7 +659,7 @@ impl ::std::default::Default for PhysicalDeviceWaveLimitPropertiesAmd {
 impl PhysicalDeviceWaveLimitPropertiesAmd {
     pub fn builder<'a>() -> PhysicalDeviceWaveLimitPropertiesAmdBuilder<'a> {
         PhysicalDeviceWaveLimitPropertiesAmdBuilder {
-            inner: PhysicalDeviceWaveLimitPropertiesAmd::default(),
+            inner: Self::default(),
             marker: ::std::marker::PhantomData,
         }
     }

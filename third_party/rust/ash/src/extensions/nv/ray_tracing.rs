@@ -1,8 +1,7 @@
-#![allow(dead_code)]
 use crate::prelude::*;
-use crate::version::{DeviceV1_0, InstanceV1_0, InstanceV1_1};
 use crate::vk;
 use crate::RawPtr;
+use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
 
@@ -13,18 +12,18 @@ pub struct RayTracing {
 }
 
 impl RayTracing {
-    pub fn new<I: InstanceV1_0, D: DeviceV1_0>(instance: &I, device: &D) -> RayTracing {
+    pub fn new(instance: &Instance, device: &Device) -> Self {
         let ray_tracing_fn = vk::NvRayTracingFn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        RayTracing {
+        Self {
             handle: device.handle(),
             ray_tracing_fn,
         }
     }
 
-    pub unsafe fn get_properties<I: InstanceV1_1>(
-        instance: &I,
+    pub unsafe fn get_properties(
+        instance: &Instance,
         pdevice: vk::PhysicalDevice,
     ) -> vk::PhysicalDeviceRayTracingPropertiesNV {
         let mut props_rt = vk::PhysicalDeviceRayTracingPropertiesNV::default();

@@ -1,7 +1,7 @@
 use super::{compose::validate_compose, ComposeError, FunctionInfo, ShaderStages, TypeFlags};
 use crate::{
     arena::{Arena, Handle},
-    proc::ResolveError,
+    proc::{ProcError, ResolveError},
 };
 
 #[derive(Clone, Debug, thiserror::Error)]
@@ -17,8 +17,8 @@ pub enum ExpressionError {
     InvalidBaseType(Handle<crate::Expression>),
     #[error("Accessing with index {0:?} can't be done")]
     InvalidIndexType(Handle<crate::Expression>),
-    #[error("Accessing index {1} is out of {0:?} bounds")]
-    IndexOutOfBounds(Handle<crate::Expression>, u32),
+    #[error("Accessing index {1:?} is out of {0:?} bounds")]
+    IndexOutOfBounds(Handle<crate::Expression>, crate::ScalarValue),
     #[error("The expression {0:?} may only be indexed by a constant")]
     IndexMustBeConstant(Handle<crate::Expression>),
     #[error("Function argument {0:?} doesn't exist")]
@@ -41,6 +41,8 @@ pub enum ExpressionError {
     InvalidSwizzleComponent(crate::SwizzleComponent, crate::VectorSize),
     #[error(transparent)]
     Compose(#[from] ComposeError),
+    #[error(transparent)]
+    Proc(#[from] ProcError),
     #[error("Operation {0:?} can't work with {1:?}")]
     InvalidUnaryOperandType(crate::UnaryOperator, Handle<crate::Expression>),
     #[error("Operation {0:?} can't work with {1:?} and {2:?}")]
@@ -59,6 +61,8 @@ pub enum ExpressionError {
     Type(#[from] ResolveError),
     #[error("Not a global variable")]
     ExpectedGlobalVariable,
+    #[error("Not a global variable or a function argument")]
+    ExpectedGlobalOrArgument,
     #[error("Calling an undeclared function {0:?}")]
     CallToUndeclaredFunction(Handle<crate::Function>),
     #[error("Needs to be an image instead of {0:?}")]
@@ -89,8 +93,8 @@ pub enum ExpressionError {
     InvalidSampleOffset(crate::ImageDimension, Handle<crate::Constant>),
     #[error("Depth reference {0:?} is not a scalar float")]
     InvalidDepthReference(Handle<crate::Expression>),
-    #[error("Sample level is not compatible with the image dimension {0:?}")]
-    InvalidSampleLevel(crate::ImageDimension),
+    #[error("Depth sample level can only be Auto or Zero")]
+    InvalidDepthSampleLevel,
     #[error("Sample level (exact) type {0:?} is not a scalar float")]
     InvalidSampleLevelExactType(Handle<crate::Expression>),
     #[error("Sample level (bias) type {0:?} is not a scalar float")]
@@ -103,6 +107,8 @@ pub enum ExpressionError {
     WrongArgumentCount(crate::MathFunction),
     #[error("Argument [{1}] to {0:?} as expression {2:?} has an invalid type.")]
     InvalidArgumentType(crate::MathFunction, u32, Handle<crate::Expression>),
+    #[error("Atomic result type can't be {0:?} of {1} bytes")]
+    InvalidAtomicResultType(crate::ScalarKind, crate::Bytes),
 }
 
 struct ExpressionTypeResolver<'a> {
@@ -144,8 +150,9 @@ impl super::Validator {
 
         let stages = match *expression {
             E::Access { base, index } => {
+                let base_type = resolver.resolve(base)?;
                 // See the documentation for `Expression::Access`.
-                let dynamic_indexing_restricted = match *resolver.resolve(base)? {
+                let dynamic_indexing_restricted = match *base_type {
                     Ti::Vector { .. } => false,
                     Ti::Matrix { .. } | Ti::Array { .. } => true,
                     Ti::Pointer { .. } | Ti::ValuePointer { size: Some(_), .. } => false,
@@ -174,6 +181,36 @@ impl super::Validator {
                 {
                     return Err(ExpressionError::IndexMustBeConstant(base));
                 }
+
+                // If we know both the length and the index, we can do the
+                // bounds check now.
+                if let crate::proc::IndexableLength::Known(known_length) =
+                    base_type.indexable_length(module)?
+                {
+                    if let E::Constant(k) = function.expressions[index] {
+                        if let crate::Constant {
+                            // We must treat specializable constants as unknown.
+                            specialization: None,
+                            // Non-scalar indices should have been caught above.
+                            inner: crate::ConstantInner::Scalar { value, .. },
+                            ..
+                        } = module.constants[k]
+                        {
+                            match value {
+                                crate::ScalarValue::Uint(u) if u >= known_length as u64 => {
+                                    return Err(ExpressionError::IndexOutOfBounds(base, value));
+                                }
+                                crate::ScalarValue::Sint(s)
+                                    if s < 0 || s >= known_length as i64 =>
+                                {
+                                    return Err(ExpressionError::IndexOutOfBounds(base, value));
+                                }
+                                _ => (),
+                            }
+                        }
+                    }
+                }
+
                 ShaderStages::all()
             }
             E::AccessIndex { base, index } => {
@@ -208,7 +245,10 @@ impl super::Validator {
 
                 let limit = resolve_index_limit(module, base, resolver.resolve(base)?, true)?;
                 if index >= limit {
-                    return Err(ExpressionError::IndexOutOfBounds(base, index));
+                    return Err(ExpressionError::IndexOutOfBounds(
+                        base,
+                        crate::ScalarValue::Uint(limit as _),
+                    ));
                 }
                 ShaderStages::all()
             }
@@ -303,24 +343,26 @@ impl super::Validator {
                 depth_ref,
             } => {
                 // check the validity of expressions
-                let image_var = match function.expressions[image] {
+                let image_ty = match function.expressions[image] {
                     crate::Expression::GlobalVariable(var_handle) => {
-                        &module.global_variables[var_handle]
+                        module.global_variables[var_handle].ty
                     }
+                    crate::Expression::FunctionArgument(i) => function.arguments[i as usize].ty,
                     _ => return Err(ExpressionError::ExpectedGlobalVariable),
                 };
-                let sampler_var = match function.expressions[sampler] {
+                let sampler_ty = match function.expressions[sampler] {
                     crate::Expression::GlobalVariable(var_handle) => {
-                        &module.global_variables[var_handle]
+                        module.global_variables[var_handle].ty
                     }
+                    crate::Expression::FunctionArgument(i) => function.arguments[i as usize].ty,
                     _ => return Err(ExpressionError::ExpectedGlobalVariable),
                 };
-                let comparison = match module.types[sampler_var.ty].inner {
+                let comparison = match module.types[sampler_ty].inner {
                     Ti::Sampler { comparison } => comparison,
-                    _ => return Err(ExpressionError::ExpectedSamplerType(sampler_var.ty)),
+                    _ => return Err(ExpressionError::ExpectedSamplerType(sampler_ty)),
                 };
 
-                let (class, dim) = match module.types[image_var.ty].inner {
+                let (class, dim) = match module.types[image_ty].inner {
                     Ti::Image {
                         class,
                         arrayed,
@@ -341,7 +383,7 @@ impl super::Validator {
                         }
                         (class, dim)
                     }
-                    _ => return Err(ExpressionError::ExpectedImageType(image_var.ty)),
+                    _ => return Err(ExpressionError::ExpectedImageType(image_ty)),
                 };
 
                 // check sampling and comparison properties
@@ -350,7 +392,7 @@ impl super::Validator {
                         kind: crate::ScalarKind::Float,
                         multi: false,
                     } => false,
-                    crate::ImageClass::Depth => true,
+                    crate::ImageClass::Depth { multi: false } => true,
                     _ => return Err(ExpressionError::InvalidImageClass(class)),
                 };
                 if comparison != depth_ref.is_some() || (comparison && !image_depth) {
@@ -411,19 +453,17 @@ impl super::Validator {
                         } => {}
                         _ => return Err(ExpressionError::InvalidDepthReference(expr)),
                     }
+                    match level {
+                        crate::SampleLevel::Auto | crate::SampleLevel::Zero => {}
+                        _ => return Err(ExpressionError::InvalidDepthSampleLevel),
+                    }
                 }
 
                 // check level properties
-                let can_level = match class {
-                    crate::ImageClass::Sampled { multi, .. } => !multi,
-                    crate::ImageClass::Storage { .. } => unreachable!(),
-                    crate::ImageClass::Depth { .. } => true,
-                };
                 match level {
-                    // require `can_level` here?
                     crate::SampleLevel::Auto => ShaderStages::FRAGMENT,
                     crate::SampleLevel::Zero => ShaderStages::all(),
-                    crate::SampleLevel::Exact(expr) if can_level => {
+                    crate::SampleLevel::Exact(expr) => {
                         match *resolver.resolve(expr)? {
                             Ti::Scalar {
                                 kind: Sk::Float, ..
@@ -470,7 +510,6 @@ impl super::Validator {
                         }
                         ShaderStages::all()
                     }
-                    _ => return Err(ExpressionError::InvalidSampleLevel(dim)),
                 }
             }
             E::ImageLoad {
@@ -479,13 +518,14 @@ impl super::Validator {
                 array_index,
                 index,
             } => {
-                let var = match function.expressions[image] {
+                let ty = match function.expressions[image] {
                     crate::Expression::GlobalVariable(var_handle) => {
-                        &module.global_variables[var_handle]
+                        module.global_variables[var_handle].ty
                     }
+                    crate::Expression::FunctionArgument(i) => function.arguments[i as usize].ty,
                     _ => return Err(ExpressionError::ExpectedGlobalVariable),
                 };
-                match module.types[var.ty].inner {
+                match module.types[ty].inner {
                     Ti::Image {
                         class,
                         arrayed,
@@ -528,36 +568,38 @@ impl super::Validator {
                             }
                         }
                     }
-                    _ => return Err(ExpressionError::ExpectedImageType(var.ty)),
+                    _ => return Err(ExpressionError::ExpectedImageType(ty)),
                 }
                 ShaderStages::all()
             }
             E::ImageQuery { image, query } => {
-                let var = match function.expressions[image] {
+                let ty = match function.expressions[image] {
                     crate::Expression::GlobalVariable(var_handle) => {
-                        &module.global_variables[var_handle]
+                        module.global_variables[var_handle].ty
                     }
+                    crate::Expression::FunctionArgument(i) => function.arguments[i as usize].ty,
                     _ => return Err(ExpressionError::ExpectedGlobalVariable),
                 };
-                match module.types[var.ty].inner {
+                match module.types[ty].inner {
                     Ti::Image { class, arrayed, .. } => {
                         let can_level = match class {
                             crate::ImageClass::Sampled { multi, .. } => !multi,
+                            crate::ImageClass::Depth { multi } => !multi,
                             crate::ImageClass::Storage { .. } => false,
-                            crate::ImageClass::Depth { .. } => true,
                         };
                         let good = match query {
                             crate::ImageQuery::NumLayers => arrayed,
                             crate::ImageQuery::Size { level: None } => true,
                             crate::ImageQuery::Size { level: Some(_) }
                             | crate::ImageQuery::NumLevels => can_level,
+                            //TODO: forbid on storage images
                             crate::ImageQuery::NumSamples => !can_level,
                         };
                         if !good {
                             return Err(ExpressionError::InvalidImageClass(class));
                         }
                     }
-                    _ => return Err(ExpressionError::ExpectedImageType(var.ty)),
+                    _ => return Err(ExpressionError::ExpectedImageType(ty)),
                 }
                 ShaderStages::all()
             }
@@ -889,6 +931,9 @@ impl super::Validator {
                     | Mf::Acos
                     | Mf::Asin
                     | Mf::Atan
+                    | Mf::Asinh
+                    | Mf::Acosh
+                    | Mf::Atanh
                     | Mf::Ceil
                     | Mf::Floor
                     | Mf::Round
@@ -1043,7 +1088,7 @@ impl super::Validator {
                             _ => return Err(ExpressionError::InvalidArgumentType(fun, 0, arg)),
                         }
                     }
-                    Mf::FaceForward | Mf::Fma | Mf::Mix | Mf::SmoothStep => {
+                    Mf::FaceForward | Mf::Fma | Mf::SmoothStep => {
                         let (arg1_ty, arg2_ty) = match (arg1_ty, arg2_ty) {
                             (Some(ty1), Some(ty2)) => (ty1, ty2),
                             _ => return Err(ExpressionError::WrongArgumentCount(fun)),
@@ -1070,6 +1115,46 @@ impl super::Validator {
                                 2,
                                 arg2.unwrap(),
                             ));
+                        }
+                    }
+                    Mf::Mix => {
+                        let (arg1_ty, arg2_ty) = match (arg1_ty, arg2_ty) {
+                            (Some(ty1), Some(ty2)) => (ty1, ty2),
+                            _ => return Err(ExpressionError::WrongArgumentCount(fun)),
+                        };
+                        let arg_width = match *arg_ty {
+                            Ti::Scalar {
+                                kind: Sk::Float,
+                                width,
+                            }
+                            | Ti::Vector {
+                                kind: Sk::Float,
+                                width,
+                                ..
+                            } => width,
+                            _ => return Err(ExpressionError::InvalidArgumentType(fun, 0, arg)),
+                        };
+                        if arg1_ty != arg_ty {
+                            return Err(ExpressionError::InvalidArgumentType(
+                                fun,
+                                1,
+                                arg1.unwrap(),
+                            ));
+                        }
+                        // the last argument can always be a scalar
+                        match *arg2_ty {
+                            Ti::Scalar {
+                                kind: Sk::Float,
+                                width,
+                            } if width == arg_width => {}
+                            _ if arg2_ty == arg_ty => {}
+                            _ => {
+                                return Err(ExpressionError::InvalidArgumentType(
+                                    fun,
+                                    2,
+                                    arg2.unwrap(),
+                                ));
+                            }
                         }
                     }
                     Mf::Inverse | Mf::Determinant => {
@@ -1108,27 +1193,32 @@ impl super::Validator {
                 }
                 ShaderStages::all()
             }
-            E::As {
-                expr,
-                kind,
-                convert,
-            } => {
-                let prev_kind = resolver
-                    .resolve(expr)?
-                    .scalar_kind()
-                    .ok_or(ExpressionError::InvalidCastArgument)?;
+            E::As { kind, convert, .. } => {
                 match convert {
                     Some(width) if !self.check_width(kind, width) => {
-                        return Err(ExpressionError::InvalidCastArgument)
-                    }
-                    None if prev_kind == Sk::Bool || kind == Sk::Bool => {
                         return Err(ExpressionError::InvalidCastArgument)
                     }
                     _ => {}
                 }
                 ShaderStages::all()
             }
-            E::Call(function) => other_infos[function.index()].available_stages,
+            E::CallResult(function) => other_infos[function.index()].available_stages,
+            E::AtomicResult {
+                kind,
+                width,
+                comparison: _,
+            } => {
+                let good = match kind {
+                    crate::ScalarKind::Uint | crate::ScalarKind::Sint => {
+                        self.check_width(kind, width)
+                    }
+                    _ => false,
+                };
+                if !good {
+                    return Err(ExpressionError::InvalidAtomicResultType(kind, width));
+                }
+                ShaderStages::all()
+            }
             E::ArrayLength(expr) => match *resolver.resolve(expr)? {
                 Ti::Pointer { base, .. } => {
                     if let Some(&Ti::Array {

@@ -1,83 +1,126 @@
-use pp_rs::token::PreprocessorError;
-
-use super::lex::Lexer;
-use super::parser;
-use super::{ast::Profile, error::ErrorKind};
-use super::{ast::Program, SourceMetadata};
-use crate::front::glsl::error::ExpectedToken;
-use crate::{
-    front::glsl::{token::TokenValue, Token},
-    ShaderStage,
+use super::{
+    ast::Profile,
+    error::ExpectedToken,
+    error::{Error, ErrorKind},
+    token::TokenValue,
+    Options, Parser, SourceMetadata,
 };
-
-fn parse_program<'a>(
-    source: &str,
-    entry_points: &'a crate::FastHashMap<String, ShaderStage>,
-) -> Result<Program<'a>, ErrorKind> {
-    let mut program = Program::new(entry_points);
-    let defines = crate::FastHashMap::default();
-    let lex = Lexer::new(source, &defines);
-    let mut parser = parser::Parser::new(&mut program, lex);
-
-    parser.parse()?;
-    Ok(program)
-}
+use crate::ShaderStage;
+use pp_rs::token::PreprocessorError;
 
 #[test]
 fn version() {
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Vertex);
+    let mut parser = Parser::default();
+
     // invalid versions
     assert_eq!(
-        parse_program("#version 99000", &entry_points)
+        parser
+            .parse(
+                &Options::from(ShaderStage::Vertex),
+                "#version 99000\n void main(){}",
+            )
             .err()
             .unwrap(),
-        ErrorKind::InvalidVersion(SourceMetadata { start: 9, end: 14 }, 99000),
+        vec![Error {
+            kind: ErrorKind::InvalidVersion(99000),
+            meta: SourceMetadata { start: 9, end: 14 }
+        }],
     );
 
     assert_eq!(
-        parse_program("#version 449", &entry_points).err().unwrap(),
-        ErrorKind::InvalidVersion(SourceMetadata { start: 9, end: 12 }, 449)
+        parser
+            .parse(
+                &Options::from(ShaderStage::Vertex),
+                "#version 449\n void main(){}",
+            )
+            .err()
+            .unwrap(),
+        vec![Error {
+            kind: ErrorKind::InvalidVersion(449),
+            meta: SourceMetadata { start: 9, end: 12 }
+        }]
     );
 
     assert_eq!(
-        parse_program("#version 450 smart", &entry_points)
+        parser
+            .parse(
+                &Options::from(ShaderStage::Vertex),
+                "#version 450 smart\n void main(){}",
+            )
             .err()
             .unwrap(),
-        ErrorKind::InvalidProfile(SourceMetadata { start: 13, end: 18 }, "smart".into())
+        vec![Error {
+            kind: ErrorKind::InvalidProfile("smart".into()),
+            meta: SourceMetadata { start: 13, end: 18 },
+        }]
     );
 
     assert_eq!(
-        parse_program("#version 450\nvoid f(){} #version 450", &entry_points)
+        parser
+            .parse(
+                &Options::from(ShaderStage::Vertex),
+                "#version 450\nvoid main(){} #version 450",
+            )
             .err()
             .unwrap(),
-        ErrorKind::InvalidToken(
-            Token {
-                value: TokenValue::Unknown(PreprocessorError::UnexpectedHash),
-                meta: SourceMetadata { start: 24, end: 25 }
+        vec![
+            Error {
+                kind: ErrorKind::PreprocessorError(PreprocessorError::UnexpectedHash,),
+                meta: SourceMetadata { start: 27, end: 28 },
             },
-            vec![ExpectedToken::Eof]
-        )
+            Error {
+                kind: ErrorKind::InvalidToken(
+                    TokenValue::Identifier("version".into()),
+                    vec![ExpectedToken::Eof]
+                ),
+                meta: SourceMetadata { start: 28, end: 35 }
+            }
+        ]
     );
 
     // valid versions
-    let program = parse_program("  #  version 450\nvoid main() {}", &entry_points).unwrap();
-    assert_eq!((program.version, program.profile), (450, Profile::Core));
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            "  #  version 450\nvoid main() {}",
+        )
+        .unwrap();
+    assert_eq!(
+        (parser.metadata().version, parser.metadata().profile),
+        (450, Profile::Core)
+    );
 
-    let program = parse_program("#version 450\nvoid main() {}", &entry_points).unwrap();
-    assert_eq!((program.version, program.profile), (450, Profile::Core));
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            "#version 450\nvoid main() {}",
+        )
+        .unwrap();
+    assert_eq!(
+        (parser.metadata().version, parser.metadata().profile),
+        (450, Profile::Core)
+    );
 
-    let program = parse_program("#version 450 core\nvoid main() {}", &entry_points).unwrap();
-    assert_eq!((program.version, program.profile), (450, Profile::Core));
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            "#version 450 core\nvoid main() {}",
+        )
+        .unwrap();
+    assert_eq!(
+        (parser.metadata().version, parser.metadata().profile),
+        (450, Profile::Core)
+    );
 }
 
 #[test]
 fn control_flow() {
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Vertex);
+    let mut parser = Parser::default();
 
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             if (true) {
@@ -87,12 +130,13 @@ fn control_flow() {
             }
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             if (true) {
@@ -100,12 +144,13 @@ fn control_flow() {
             }
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             int x;
@@ -122,11 +167,13 @@ fn control_flow() {
             }
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
-    let _program = parse_program(
-        r#"
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             int x = 0;
@@ -138,12 +185,13 @@ fn control_flow() {
             } while(x >= 4)
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             int x = 0;
@@ -154,18 +202,18 @@ fn control_flow() {
             return x;
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 }
 
 #[test]
 fn declarations() {
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Fragment);
+    let mut parser = Parser::default();
 
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #version 450
         layout(location = 0) in vec2 v_uv;
         layout(location = 0) out vec4 o_color;
@@ -173,13 +221,16 @@ fn declarations() {
         layout(set = 1, binding = 2) uniform sampler tex_sampler;
 
         layout(early_fragment_tests) in;
-        "#,
-        &entry_points,
-    )
-    .unwrap();
 
-    let _program = parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #version 450
         layout(std140, set = 2, binding = 0)
         uniform u_locals {
@@ -187,27 +238,33 @@ fn declarations() {
             float load_time;
             ivec4 atlas_offs;
         };
-        "#,
-        &entry_points,
-    )
-    .unwrap();
 
-    let _program = parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #version 450
-        layout(push_constant, set = 2, binding = 0)
+        layout(push_constant)
         uniform u_locals {
             vec3 model_offs;
             float load_time;
             ivec4 atlas_offs;
         };
-        "#,
-        &entry_points,
-    )
-    .unwrap();
 
-    let _program = parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #version 450
         layout(std430, set = 2, binding = 0)
         uniform u_locals {
@@ -215,13 +272,16 @@ fn declarations() {
             float load_time;
             ivec4 atlas_offs;
         };
-        "#,
-        &entry_points,
-    )
-    .unwrap();
 
-    let _program = parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #version 450
         layout(std140, set = 2, binding = 0)
         uniform u_locals {
@@ -234,27 +294,42 @@ fn declarations() {
             block_var.load_time * block_var.model_offs;
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #version 450
         float vector = vec4(1.0 / 17.0,  9.0 / 17.0,  3.0 / 17.0, 11.0 / 17.0);
+
+        void main() {}
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
+        #version 450
+        precision highp float;
+
+        void main() {}
+        "#,
+        )
+        .unwrap();
 }
 
 #[test]
 fn textures() {
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Fragment);
+    let mut parser = Parser::default();
 
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #version 450
         layout(location = 0) in vec2 v_uv;
         layout(location = 0) out vec4 o_color;
@@ -262,32 +337,34 @@ fn textures() {
         layout(set = 1, binding = 2) uniform sampler tex_sampler;
         void main() {
             o_color = texture(sampler2D(tex, tex_sampler), v_uv);
+            o_color.a = texture(sampler2D(tex, tex_sampler), v_uv, 2.0).a;
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 }
 
 #[test]
 fn functions() {
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Vertex);
+    let mut parser = Parser::default();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void test1(float);
         void test1(float) {}
 
         void main() {}
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void test2(float a) {}
         void test3(float a, float b) {}
@@ -295,35 +372,40 @@ fn functions() {
 
         void main() {}
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         float test(float a) { return a; }
 
         void main() {}
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         float test(vec4 p) {
             return p.x;
         }
+
+        void main() {}
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
     // Function overloading
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         float test(vec2 p);
         float test(vec3 p);
@@ -340,14 +422,17 @@ fn functions() {
         float test(vec4 p) {
             return p.x;
         }
+
+        void main() {}
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
     assert_eq!(
-        parse_program(
-            r#"
+        parser
+            .parse(
+                &Options::from(ShaderStage::Vertex),
+                r#"
                 #  version 450
                 int test(vec4 p) {
                     return p.x;
@@ -356,24 +441,27 @@ fn functions() {
                 float test(vec4 p) {
                     return p.x;
                 }
+
+                void main() {}
                 "#,
-            &entry_points
-        )
-        .err()
-        .unwrap(),
-        ErrorKind::SemanticError(
-            SourceMetadata {
+            )
+            .err()
+            .unwrap(),
+        vec![Error {
+            kind: ErrorKind::SemanticError("Function already defined".into()),
+            meta: SourceMetadata {
                 start: 134,
                 end: 152
             },
-            "Function already defined".into()
-        )
+        }]
     );
 
     println!();
 
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         float callee(uint q) {
             return float(q);
@@ -382,14 +470,17 @@ fn functions() {
         float caller() {
             callee(1u);
         }
+
+        void main() {}
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
     // Nested function call
-    let _program = parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
             #  version 450
             layout(set = 0, binding = 1) uniform texture2D t_noise;
             layout(set = 0, binding = 2) uniform sampler s_noise;
@@ -398,12 +489,13 @@ fn functions() {
                 textureLod(sampler2D(t_noise, s_noise), vec2(1.0), 0);
             }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void fun(vec2 in_parameter, out float out_parameter) {
             ivec2 _ = ivec2(in_parameter);
@@ -414,30 +506,30 @@ fn functions() {
             fun(vec2(1.0), a);
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 }
 
 #[test]
 fn constants() {
     use crate::{Constant, ConstantInner, ScalarValue};
+    let mut parser = Parser::default();
 
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Vertex);
-
-    let program = parse_program(
-        r#"
+    let module = parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         const float a = 1.0;
         float global = a;
         const float b = a;
-        "#,
-        &entry_points,
-    )
-    .unwrap();
 
-    let mut constants = program.module.constants.iter();
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    let mut constants = module.constants.iter();
 
     assert_eq!(
         constants.next().unwrap().1,
@@ -455,12 +547,39 @@ fn constants() {
 }
 
 #[test]
-fn implicit_conversions() {
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Vertex);
+fn function_overloading() {
+    let mut parser = Parser::default();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
+        #  version 450
+
+        float saturate(float v) { return clamp(v, 0.0, 1.0); }
+        vec2 saturate(vec2 v) { return clamp(v, vec2(0.0), vec2(1.0)); }
+        vec3 saturate(vec3 v) { return clamp(v, vec3(0.0), vec3(1.0)); }
+        vec4 saturate(vec4 v) { return clamp(v, vec4(0.0), vec4(1.0)); }
+
+        void main() {
+            float v1 = saturate(1.5);
+            vec2 v2 = saturate(vec2(0.5, 1.5));
+            vec3 v3 = saturate(vec3(0.5, 1.5, 2.5));
+            vec3 v4 = saturate(vec4(0.5, 1.5, 2.5, 3.5));
+        }
+        "#,
+        )
+        .unwrap();
+}
+
+#[test]
+fn implicit_conversions() {
+    let mut parser = Parser::default();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             mat4 a = mat4(1);
@@ -468,91 +587,158 @@ fn implicit_conversions() {
             float c = 1 + 2.0;
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
+
+    assert_eq!(
+        parser
+            .parse(
+                &Options::from(ShaderStage::Vertex),
+                r#"
+                #  version 450
+                void test(int a) {}
+                void test(uint a) {}
+
+                void main() {
+                    test(1.0);
+                }
+                "#,
+            )
+            .err()
+            .unwrap(),
+        vec![Error {
+            kind: ErrorKind::SemanticError("Unknown function \'test\'".into()),
+            meta: SourceMetadata {
+                start: 156,
+                end: 165
+            },
+        }]
+    );
+
+    assert_eq!(
+        parser
+            .parse(
+                &Options::from(ShaderStage::Vertex),
+                r#"
+                #  version 450
+                void test(float a) {}
+                void test(uint a) {}
+
+                void main() {
+                    test(1);
+                }
+                "#,
+            )
+            .err()
+            .unwrap(),
+        vec![Error {
+            kind: ErrorKind::SemanticError("Ambiguous best function for \'test\'".into()),
+            meta: SourceMetadata {
+                start: 158,
+                end: 165
+            },
+        }]
+    );
 }
 
 #[test]
 fn structs() {
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Fragment);
+    let mut parser = Parser::default();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         Test {
             vec4 pos;
           } xx;
-        "#,
-        &entry_points,
-    )
-    .unwrap_err();
 
-    parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap_err();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         struct Test {
             vec4 pos;
         };
-        "#,
-        &entry_points,
-    )
-    .unwrap();
 
-    parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         const int NUM_VECS = 42;
         struct Test {
             vec4 vecs[NUM_VECS];
         };
-        "#,
-        &entry_points,
-    )
-    .unwrap();
 
-    parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         struct Hello {
             vec4 test;
         } test() {
             return Hello( vec4(1.0) );
         }
-        "#,
-        &entry_points,
-    )
-    .unwrap();
 
-    parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         struct Test {};
-        "#,
-        &entry_points,
-    )
-    .unwrap_err();
 
-    parse_program(
-        r#"
+        void main() {}
+        "#,
+        )
+        .unwrap_err();
+
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         inout struct Test {
             vec4 x;
         };
+
+        void main() {}
         "#,
-        &entry_points,
-    )
-    .unwrap_err();
+        )
+        .unwrap_err();
 }
 
 #[test]
 fn swizzles() {
-    let mut entry_points = crate::FastHashMap::default();
-    entry_points.insert("".to_string(), ShaderStage::Fragment);
+    let mut parser = Parser::default();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             vec4 v = vec4(1);
@@ -561,31 +747,84 @@ fn swizzles() {
             v.xyz.zxy.yx.xy = vec2(5.0, 1.0);
         }
         "#,
-        &entry_points,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             vec4 v = vec4(1);
             v.xx = vec2(5.0);
         }
         "#,
-        &entry_points,
-    )
-    .unwrap_err();
+        )
+        .unwrap_err();
 
-    parse_program(
-        r#"
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
         #  version 450
         void main() {
             vec3 v = vec3(1);
             v.w = 2.0;
         }
         "#,
-        &entry_points,
-    )
-    .unwrap_err();
+        )
+        .unwrap_err();
+}
+
+#[test]
+fn expressions() {
+    let mut parser = Parser::default();
+
+    // Vector indexing
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
+        #  version 450
+        float test(int index) {
+            vec4 v = vec4(1.0, 2.0, 3.0, 4.0);
+            return v[index] + 1.0;
+        }
+
+        void main() {}
+        "#,
+        )
+        .unwrap();
+
+    // Prefix increment/decrement
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
+        #  version 450
+        void main() {
+            uint index = 0;
+            
+            --index;
+            ++index;
+        }
+        "#,
+        )
+        .unwrap();
+
+    // Dynamic indexing of array
+    parser
+        .parse(
+            &Options::from(ShaderStage::Vertex),
+            r#"
+        #  version 450
+        void main() {
+            const vec4 positions[1] = { vec4(0) };
+
+            gl_Position = positions[gl_VertexIndex];
+        }
+        "#,
+        )
+        .unwrap();
 }

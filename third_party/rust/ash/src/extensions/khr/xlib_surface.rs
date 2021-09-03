@@ -1,8 +1,7 @@
-#![allow(dead_code)]
 use crate::prelude::*;
-use crate::version::{EntryV1_0, InstanceV1_0};
 use crate::vk;
 use crate::RawPtr;
+use crate::{EntryCustom, Instance};
 use std::ffi::CStr;
 use std::mem;
 
@@ -13,11 +12,11 @@ pub struct XlibSurface {
 }
 
 impl XlibSurface {
-    pub fn new<E: EntryV1_0, I: InstanceV1_0>(entry: &E, instance: &I) -> XlibSurface {
+    pub fn new<L>(entry: &EntryCustom<L>, instance: &Instance) -> Self {
         let surface_fn = vk::KhrXlibSurfaceFn::load(|name| unsafe {
             mem::transmute(entry.get_instance_proc_addr(instance.handle(), name.as_ptr()))
         });
-        XlibSurface {
+        Self {
             handle: instance.handle(),
             xlib_surface_fn: surface_fn,
         }
@@ -44,7 +43,7 @@ impl XlibSurface {
             .result_with_success(surface)
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceXlibPresentationSupportKHR.html"]
+    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceXlibPresentationSupportKHR.html>"]
     pub unsafe fn get_physical_device_xlib_presentation_support(
         &self,
         physical_device: vk::PhysicalDevice,

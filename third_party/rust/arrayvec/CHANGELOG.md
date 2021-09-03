@@ -1,56 +1,109 @@
 Recent Changes (arrayvec)
--------------------------
+=========================
 
-- 0.5.2
+## 0.7.1
 
-  - Add `is_empty` methods for ArrayVec and ArrayString by @nicbn
-  - Implement `TryFrom<Slice>` for ArrayVec by @paulkernfeld
-  - Add `unstable-const-fn` to make `new` methods const by @m-ou-se
-  - Run miri in CI and a few related fixes by @RalfJung
-  - Fix outdated comment by @Phlosioneer
-  - Move changelog to a separate file by @Luro02
-  - Remove deprecated `Error::description` by @AnderEnder
-  - Use pointer method `add` by @hbina
+- Add new ArrayVec methods `.take()` and `.into_inner_unchecked()` by @conradludgate
+- `clone_from` now uses `truncate` when needed by @a1phyr
 
-- 0.5.1
+## 0.7.0
 
-  - Add `as_ptr`, `as_mut_ptr` accessors directly on the `ArrayVec` by @tbu-
-    (matches the same addition to `Vec` which happened in Rust 1.37).
-  - Add method `ArrayString::len` (now available directly, not just through deref to str).
-  - Use raw pointers instead of `&mut [u8]` for encoding chars into `ArrayString`
-    (uninit best practice fix).
-  - Use raw pointers instead of `get_unchecked_mut` where the target may be
-    uninitialized everywhere relevant in the ArrayVec implementation
-    (uninit best practice fix).
-  - Changed inline hints on many methods, mainly removing inline hints
-  - `ArrayVec::dispose` is now deprecated (it has no purpose anymore)
+- `fn new_const` is now the way to const-construct arrayvec and arraystring,
+  and `fn new` has been reverted to a regular "non-const" function.
+  This works around performance issue #182, where the const fn version did not
+  optimize well. Change by @bluss with thanks to @rodrimati1992 and @niklasf
+  for analyzing the problem.
 
-- 0.4.12
+- The deprecated feature flag `unstable-const-fn` was removed, since it's not needed
 
-  - Use raw pointers instead of `get_unchecked_mut` where the target may be
-    uninitialized everywhere relevant in the ArrayVec implementation.
+- Optimize `.retain()` by using the same algorithm as in std, change by @niklasf,
+  issue #174. Original optimization in Rust std by @oxalica in rust-lang/rust/pull/81126
 
-- 0.5.0
+## 0.6.1
 
-  - Use `MaybeUninit` (now unconditionally) in the implementation of
-    `ArrayVec`
-  - Use `MaybeUninit` (now unconditionally) in the implementation of
-    `ArrayString`
-  - The crate feature for serde serialization is now named `serde`.
-  - Updated the `Array` trait interface, and it is now easier to use for
-    users outside the crate.
-  - Add `FromStr` impl for `ArrayString` by @despawnerer
-  - Add method `try_extend_from_slice` to `ArrayVec`, which is always
-    effecient by @Thomasdezeeuw.
-  - Add method `remaining_capacity` by @Thomasdezeeuw
-  - Improve performance of the `extend` method.
-  - The index type of zero capacity vectors is now itself zero size, by
-    @clarfon
-  - Use `drop_in_place` for truncate and clear methods. This affects drop order
-    and resume from panic during drop.
-  - Use Rust 2018 edition for the implementation
-  - Require Rust 1.36 or later, for the unconditional `MaybeUninit`
-    improvements.
+- The ``ArrayVec::new`` and ``ArrayString::new`` constructors are properly
+  const fns on stable and the feature flag ``unstable-const-fn`` is now deprecated.
+  by @rodrimati1992
+
+- Small fix to the capacity check macro by @Xaeroxe
+- Typo fix in documentation by @cuviper
+- Small code cleanup by @bluss
+
+## 0.6.0
+
+- The **const generics** release 🎉. Arrayvec finally implements what it
+  wanted to implement, since its first version: a vector backed by an array,
+  with generic parameters for the arbitrary element type *and* backing array
+  capacity.
+
+  The New type syntax is `ArrayVec<T, CAP>` where `CAP` is the arrayvec capacity.
+  For arraystring the syntax is `ArrayString<CAP>`.
+
+  Length is stored internally as u32; this limits the maximum capacity. The size
+  of the `ArrayVec` or `ArrayString` structs for the same capacity may grow
+  slightly compared with the previous version (depending on padding requirements
+  for the element type). Change by @bluss.
+
+- Arrayvec's `.extend()` and `FromIterator`/`.collect()` to arrayvec now
+  **panic** if the capacity of the arrayvec is exceeded. Change by @bluss.
+
+- Arraystring now implements `TryFrom<&str>` and `TryFrom<fmt::Arguments>` by
+  @c410-f3r
+
+- Minimum supported rust version is Rust 1.51
+
+## 0.5.2
+
+- Add `is_empty` methods for ArrayVec and ArrayString by @nicbn
+- Implement `TryFrom<Slice>` for ArrayVec by @paulkernfeld
+- Add `unstable-const-fn` to make `new` methods const by @m-ou-se
+- Run miri in CI and a few related fixes by @RalfJung
+- Fix outdated comment by @Phlosioneer
+- Move changelog to a separate file by @Luro02
+- Remove deprecated `Error::description` by @AnderEnder
+- Use pointer method `add` by @hbina
+
+## 0.5.1
+
+- Add `as_ptr`, `as_mut_ptr` accessors directly on the `ArrayVec` by @tbu-
+  (matches the same addition to `Vec` which happened in Rust 1.37).
+- Add method `ArrayString::len` (now available directly, not just through deref to str).
+- Use raw pointers instead of `&mut [u8]` for encoding chars into `ArrayString`
+  (uninit best practice fix).
+- Use raw pointers instead of `get_unchecked_mut` where the target may be
+  uninitialized everywhere relevant in the ArrayVec implementation
+  (uninit best practice fix).
+- Changed inline hints on many methods, mainly removing inline hints
+- `ArrayVec::dispose` is now deprecated (it has no purpose anymore)
+
+## 0.4.12
+
+- Use raw pointers instead of `get_unchecked_mut` where the target may be
+  uninitialized everywhere relevant in the ArrayVec implementation.
+
+## 0.5.0
+
+- Use `MaybeUninit` (now unconditionally) in the implementation of
+  `ArrayVec`
+- Use `MaybeUninit` (now unconditionally) in the implementation of
+  `ArrayString`
+- The crate feature for serde serialization is now named `serde`.
+- Updated the `Array` trait interface, and it is now easier to use for
+  users outside the crate.
+- Add `FromStr` impl for `ArrayString` by @despawnerer
+- Add method `try_extend_from_slice` to `ArrayVec`, which is always
+  effecient by @Thomasdezeeuw.
+- Add method `remaining_capacity` by @Thomasdezeeuw
+- Improve performance of the `extend` method.
+- The index type of zero capacity vectors is now itself zero size, by
+  @clarfon
+- Use `drop_in_place` for truncate and clear methods. This affects drop order
+  and resume from panic during drop.
+- Use Rust 2018 edition for the implementation
+- Require Rust 1.36 or later, for the unconditional `MaybeUninit`
+  improvements.
+
+## Older releases
 
 - 0.4.11
 
