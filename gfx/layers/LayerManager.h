@@ -61,8 +61,10 @@ class Layer;
 class LayerMetricsWrapper;
 class PaintedLayer;
 class ContainerLayer;
+class ImageLayer;
 class ColorLayer;
 class CompositorBridgeChild;
+class CanvasLayer;
 class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
@@ -325,9 +327,19 @@ class LayerManager : public WindowRenderer {
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer() = 0;
   /**
    * CONSTRUCTION PHASE ONLY
+   * Create an ImageLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<ImageLayer> CreateImageLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
    * Create a ColorLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ColorLayer> CreateColorLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a CanvasLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() = 0;
   /**
    * CONSTRUCTION PHASE ONLY
    * Create a ReadbackLayer for this manager's layer tree.
@@ -374,6 +386,10 @@ class LayerManager : public WindowRenderer {
    */
   virtual already_AddRefed<mozilla::gfx::DrawTarget> CreateDrawTarget(
       const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
+
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) {
+    return true;
+  }
 
   /**
    * This setter can be used anytime. The user data for all keys is

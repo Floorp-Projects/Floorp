@@ -35,6 +35,7 @@ class nsDisplayListBuilder;
 class ClientWebGLContext;
 class PresShell;
 namespace layers {
+class CanvasLayer;
 class CanvasRenderer;
 class CompositableHandle;
 class Layer;
@@ -52,6 +53,7 @@ class SourceSurface;
 class nsICanvasRenderingContextInternal : public nsISupports,
                                           public nsAPostRefreshObserver {
  public:
+  using CanvasLayer = mozilla::layers::CanvasLayer;
   using CanvasRenderer = mozilla::layers::CanvasRenderer;
   using Layer = mozilla::layers::Layer;
   using LayerManager = mozilla::layers::LayerManager;
@@ -140,6 +142,11 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   // for possibly reinitializing with SetDimensions/InitializeWithSurface.
   NS_IMETHOD Reset() = 0;
 
+  // Return the CanvasLayer for this context, creating
+  // one for the given layer manager if not available.
+  virtual already_AddRefed<Layer> GetCanvasLayer(
+      mozilla::nsDisplayListBuilder* builder, Layer* oldLayer,
+      LayerManager* manager) = 0;
   virtual already_AddRefed<mozilla::layers::Image> GetAsImage() {
     return nullptr;
   }
@@ -152,6 +159,11 @@ class nsICanvasRenderingContextInternal : public nsISupports,
                                         CanvasRenderer* aRenderer) {
     return false;
   }
+
+  // Return true if the canvas should be forced to be "inactive" to ensure
+  // it can be drawn to the screen even if it's too large to be blitted by
+  // an accelerated CanvasLayer.
+  virtual bool ShouldForceInactiveLayer(LayerManager* manager) { return false; }
 
   virtual void MarkContextClean() = 0;
 
