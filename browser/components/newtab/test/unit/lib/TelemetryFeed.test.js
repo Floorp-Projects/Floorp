@@ -20,6 +20,7 @@ const FAKE_UUID = "{foo-123-foo}";
 const FAKE_ROUTER_MESSAGE_PROVIDER = [{ id: "cfr", enabled: true }];
 const FAKE_TELEMETRY_ID = "foo123";
 
+// eslint-disable-next-line max-statements
 describe("TelemetryFeed", () => {
   let globals;
   let sandbox;
@@ -774,6 +775,16 @@ describe("TelemetryFeed", () => {
       assert.equal(pingType, "infobar");
     });
   });
+  describe("#applySpotlightPolicy", () => {
+    it("should set client_id and set pingType", async () => {
+      let pingData = { action: "foo" };
+      const { ping, pingType } = await instance.applySpotlightPolicy(pingData);
+
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.equal(pingType, "spotlight");
+      assert.notProperty(ping, "action");
+    });
+  });
   describe("#applyMomentsPolicy", () => {
     it("should use client_id and message_id in prerelease", async () => {
       globals.set("UpdateUtils", {
@@ -1044,6 +1055,18 @@ describe("TelemetryFeed", () => {
       await instance.createASRouterEvent(action);
 
       assert.calledOnce(instance.applyMomentsPolicy);
+    });
+    it("should call applySpotlightPolicy if action equals to spotlight_user_event", async () => {
+      const data = {
+        action: "spotlight_user_event",
+        event: "CLICK",
+        message_id: "SPOTLIGHT_MESSAGE_93",
+      };
+      sandbox.stub(instance, "applySpotlightPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applySpotlightPolicy);
     });
     it("should call applyUndesiredEventPolicy if action equals to asrouter_undesired_event", async () => {
       const data = {

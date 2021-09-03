@@ -620,6 +620,9 @@ this.TelemetryFeed = class TelemetryFeed {
       case "infobar_user_event":
         event = await this.applyInfoBarPolicy(event);
         break;
+      case "spotlight_user_event":
+        event = await this.applySpotlightPolicy(event);
+        break;
       case "moments_user_event":
         event = await this.applyMomentsPolicy(event);
         break;
@@ -673,6 +676,13 @@ this.TelemetryFeed = class TelemetryFeed {
     ping.browser_session_id = browserSessionId;
     delete ping.action;
     return { ping, pingType: "infobar" };
+  }
+
+  async applySpotlightPolicy(ping) {
+    ping.client_id = await this.telemetryClientId;
+    ping.browser_session_id = browserSessionId;
+    delete ping.action;
+    return { ping, pingType: "spotlight" };
   }
 
   /**
@@ -1003,6 +1013,8 @@ this.TelemetryFeed = class TelemetryFeed {
       case msg.DOORHANGER_TELEMETRY:
       // Intentional fall-through
       case msg.INFOBAR_TELEMETRY:
+      // Intentional fall-through
+      case msg.SPOTLIGHT_TELEMETRY:
       // Intentional fall-through
       case at.AS_ROUTER_TELEMETRY_USER_EVENT:
         this.handleASRouterUserEvent(action);

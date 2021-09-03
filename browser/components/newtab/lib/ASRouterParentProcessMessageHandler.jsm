@@ -34,7 +34,8 @@ class ASRouterParentProcessMessageHandler {
       case msg.TOOLBAR_BADGE_TELEMETRY:
       case msg.TOOLBAR_PANEL_TELEMETRY:
       case msg.MOMENTS_PAGE_TELEMETRY:
-      case msg.DOORHANGER_TELEMETRY: {
+      case msg.DOORHANGER_TELEMETRY:
+      case msg.SPOTLIGHT_TELEMETRY: {
         return this.handleTelemetry({ type, data });
       }
       default: {

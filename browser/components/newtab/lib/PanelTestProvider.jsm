@@ -210,6 +210,39 @@ const MESSAGES = () => [
       patterns: ["*://*/*.pdf"],
     },
   },
+  {
+    id: "SPOTLIGHT_MESSAGE_93",
+    template: "spotlight",
+    content: {
+      template: "logo-and-content",
+      logoImageURL: "chrome://branding/content/about-logo.svg",
+      body: {
+        title: {
+          label: "Looks like you're using public Wi-Fi",
+        },
+        text: {
+          label:
+            "To hide your location and browsing activity, consider a Virtual Private Network. It will help keep you protected when browsing in public spaces like airports and coffee shops.",
+        },
+        primary: {
+          label: "Stay private with Mozilla VPN",
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.mozilla.org/en-US/products/vpn/",
+              where: "tabshifted",
+            },
+          },
+        },
+        secondary: {
+          label: {
+            string_id: "cfr-doorhanger-extension-cancel-button",
+          },
+        },
+      },
+    },
+    frequency: { lifetime: 3 },
+  },
 ];
 
 const PanelTestProvider = {

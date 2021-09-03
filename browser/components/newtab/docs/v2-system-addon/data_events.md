@@ -994,6 +994,30 @@ What's New panel client_id is reported in all the channels.
 }
 ```
 
+## Spotlight pings
+
+This reports when the user interacts with the Messaging System Spotlight component
+Similar policy applied as for the Infobar messages: client_id is reported in all
+ the channels. Currently this is only used in experiments.
+
+```
+{
+  "experiments" : {
+    "exp1" : {
+      "branch" : "treatment-a"
+    }
+  },
+  "addon_version" : "20210115035053",
+  "release_channel" : "release",
+  "locale" : "en-US",
+  "event" : ["IMPRESSION", "CLICK", "DISMISS"],
+  "client_id" : "c4beb4bf-4feb-9c4e-9587-9323b28c2e50",
+  "version" : "93",
+  "message_id" : "SPOTLIGHT_MESSAGE_93",
+  "browser_session_id" : "93714e76-9919-ca49-b697-5e7c09a1394f"
+}
+```
+
 ## Messaging-experiments pings
 
 As the new experiment platform, the Messaging experiment manager is now managing & operating all the experiments of Firefox Messaging System, including the first-run experience (about:welcome), CFR, Whats-new-panel, Moments Page, and Snippets.

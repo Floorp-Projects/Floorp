@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SnippetsTestMessageProvider:
     "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
   PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.jsm",
+  Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
   ToolbarBadgeHub: "resource://activity-stream/lib/ToolbarBadgeHub.jsm",
   ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
   MomentsPageHub: "resource://activity-stream/lib/MomentsPageHub.jsm",
@@ -1181,6 +1182,9 @@ class _ASRouter {
         break;
       case "infobar":
         InfoBar.showInfoBarMessage(browser, message, this.dispatchCFRAction);
+        break;
+      case "spotlight":
+        Spotlight.showSpotlightDialog(browser, message, this.dispatchCFRAction);
         break;
     }
 
