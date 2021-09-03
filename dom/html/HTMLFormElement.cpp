@@ -1802,13 +1802,13 @@ bool HTMLFormElement::ImplicitSubmissionIsDisabled() const {
 }
 
 bool HTMLFormElement::IsLastActiveElement(
-    const nsIFormControl* aControl) const {
-  MOZ_ASSERT(aControl, "Unexpected call");
+    const nsGenericHTMLFormElement* aElement) const {
+  MOZ_ASSERT(aElement, "Unexpected call");
 
   for (auto* element : Reversed(mControls->mElements)) {
     // XXX How about date/time control?
     if (element->IsTextControl(false) && !element->IsDisabled()) {
-      return element == aControl;
+      return element == aElement;
     }
   }
   return false;

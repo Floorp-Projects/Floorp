@@ -201,10 +201,10 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool ImplicitSubmissionIsDisabled() const;
 
   /**
-   * Check whether a given nsIFormControl is the last single line input control
-   * that is not disabled. aControl is expected to not be null.
+   * Check whether a given nsGenericHTMLFormElement is the last single line
+   * input control that is not disabled. aElement is expected to not be null.
    */
-  bool IsLastActiveElement(const nsIFormControl* aControl) const;
+  bool IsLastActiveElement(const nsGenericHTMLFormElement* aElement) const;
 
   /**
    * Check whether a given nsGenericHTMLFormElement is the default submit
