@@ -42,8 +42,6 @@ BorderStyle ToBorderStyle(StyleBorderStyle aStyle) {
       return wr::BorderStyle::Inset;
     case StyleBorderStyle::Outset:
       return wr::BorderStyle::Outset;
-    default:
-      MOZ_ASSERT(false);
   }
   return wr::BorderStyle::None;
 }
@@ -63,6 +61,24 @@ wr::RepeatMode ToRepeatMode(StyleBorderImageRepeat aRepeat) {
   }
 
   return wr::RepeatMode::Stretch;
+}
+
+ImageRendering ToImageRendering(StyleImageRendering aImageRendering) {
+  switch (aImageRendering) {
+    case StyleImageRendering::Auto:
+    case StyleImageRendering::Smooth:
+    case StyleImageRendering::Optimizequality:
+      return wr::ImageRendering::Auto;
+    case StyleImageRendering::CrispEdges:
+      // FIXME(bug 1728831): Historically we've returned Pixelated here, but
+      // this should arguably pass CrispEdges to WebRender?
+      // return wr::ImageRendering::CrispEdges;
+      [[fallthrough]];
+    case StyleImageRendering::Optimizespeed:
+    case StyleImageRendering::Pixelated:
+      return wr::ImageRendering::Pixelated;
+  }
+  return wr::ImageRendering::Auto;
 }
 
 void Assign_WrVecU8(wr::WrVecU8& aVec, mozilla::ipc::ByteBuf&& aOther) {
