@@ -51,7 +51,6 @@
 #  error "Platform not recognized"
 #endif
 
-#include "gfxASurface.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxFailure.h"
 #include "gfxPlatform.h"
@@ -582,10 +581,6 @@ void GLContextEGL::GetWSIInfo(nsCString* const out) const {
       (const char*)mEgl->mLib->fQueryString(nullptr, LOCAL_EGL_EXTENSIONS));
 #endif
 }
-
-// hold a reference to the given surface
-// for the lifetime of this context.
-void GLContextEGL::HoldSurface(gfxASurface* aSurf) { mThebesSurface = aSurf; }
 
 bool GLContextEGL::HasExtBufferAge() const {
   return mEgl->IsExtensionSupported(EGLExtension::EXT_buffer_age);

@@ -6,7 +6,6 @@
 
 #include "nsDeviceContext.h"
 #include <algorithm>      // for max
-#include "gfxASurface.h"  // for gfxASurface, etc
 #include "gfxContext.h"
 #include "gfxImageSurface.h"     // for gfxImageSurface
 #include "gfxPoint.h"            // for gfxSize

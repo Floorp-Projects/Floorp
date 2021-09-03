@@ -12,7 +12,6 @@
 #include "nsRegion.h"
 #include <memory>
 
-class gfxASurface;
 namespace mozilla {
 namespace layers {
 class SurfaceTextureImage;
@@ -92,10 +91,6 @@ class GLContextEGL final : public GLContext {
 
   virtual void GetWSIInfo(nsCString* const out) const override;
 
-  // hold a reference to the given surface
-  // for the lifetime of this context.
-  void HoldSurface(gfxASurface* aSurf);
-
   EGLSurface GetEGLSurface() const { return mSurface; }
 
   bool HasExtBufferAge() const;
@@ -138,7 +133,6 @@ class GLContextEGL final : public GLContext {
   const EGLSurface mFallbackSurface;
 
   EGLSurface mSurfaceOverride = EGL_NO_SURFACE;
-  RefPtr<gfxASurface> mThebesSurface;
   bool mBound = false;
 
   bool mIsPBuffer = false;
