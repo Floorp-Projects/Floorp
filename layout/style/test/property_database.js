@@ -8934,7 +8934,14 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["auto"],
-    other_values: ["optimizeSpeed", "optimizeQuality", "-moz-crisp-edges"],
+    other_values: [
+      "optimizeSpeed",
+      "optimizeQuality",
+      "-moz-crisp-edges",
+      "crisp-edges",
+      "smooth",
+      "pixelated",
+    ],
     invalid_values: [],
   },
   isolation: {
