@@ -83,7 +83,11 @@ private fun SuggestionTitleAndDescription(
         modifier = modifier
     ) {
         Text(
-            text = title ?: "",
+            text = if (title.isNullOrEmpty()) {
+                description ?: ""
+            } else {
+                title
+            },
             color = colors.title,
             fontSize = 15.sp,
             maxLines = 1,
