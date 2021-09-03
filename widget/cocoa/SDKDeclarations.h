@@ -30,6 +30,12 @@ using NSAppearanceName = NSString*;
 @property(class, strong, readonly) NSColor* systemPurpleColor NS_AVAILABLE_MAC(10_10);
 @end
 
+@interface NSTask (NSTask10_13)
+@property(copy) NSURL* executableURL NS_AVAILABLE_MAC(10_13);
+@property(copy) NSArray<NSString*>* arguments;
+- (BOOL)launchAndReturnError:(NSError**)error NS_AVAILABLE_MAC(10_13);
+@end
+
 #endif
 
 #if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
