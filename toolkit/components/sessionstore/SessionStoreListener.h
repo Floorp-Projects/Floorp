@@ -33,19 +33,16 @@ class ContentSessionStore {
 
   void SetSHistoryChanged();
   // request "collect sessionHistory" which is happened in the parent process
-  void SetSHistoryFromParentChanged();
   bool GetAndClearSHistoryChanged() {
     bool ret = mSHistoryChanged;
     mSHistoryChanged = false;
-    mSHistoryChangedFromParent = false;
     return ret;
   }
 
   void OnDocumentStart();
   void OnDocumentEnd();
   bool UpdateNeeded() {
-    return mPrivateChanged || mDocCapChanged || mSHistoryChanged ||
-           mSHistoryChangedFromParent;
+    return mPrivateChanged || mDocCapChanged || mSHistoryChanged;
   }
 
  private:
@@ -63,9 +60,6 @@ class ContentSessionStore {
   //    2. webProgress changes to STATE_STOP
   //    3. receiving "DOMTitleChanged" event
   bool mSHistoryChanged;
-  // mSHistoryChangedFromParent means there are history changes which
-  // are found by session history listener in the parent process.
-  bool mSHistoryChangedFromParent;
 };
 
 class TabListener : public nsIDOMEventListener,
