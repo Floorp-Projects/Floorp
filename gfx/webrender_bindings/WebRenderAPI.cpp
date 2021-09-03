@@ -949,13 +949,12 @@ void WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent) {
 }
 
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
-                                       WebRenderBackend aBackend,
-                                       layers::DisplayItemCache* aCache)
+                                       WebRenderBackend aBackend)
     : mCurrentSpaceAndClipChain(wr::RootScrollNodeWithChain()),
       mActiveFixedPosTracker(nullptr),
       mPipelineId(aId),
       mBackend(aBackend),
-      mDisplayItemCache(aCache) {
+      mDisplayItemCache(nullptr) {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId);
 
@@ -983,7 +982,7 @@ void DisplayListBuilder::DumpSerializedDisplayList() {
   wr_dump_serialized_display_list(mWrState);
 }
 
-void DisplayListBuilder::Begin() {
+void DisplayListBuilder::Begin(layers::DisplayItemCache* aCache) {
   wr_api_begin_builder(mWrState);
 
   mScrollIds.clear();
@@ -994,7 +993,7 @@ void DisplayListBuilder::Begin() {
   mCachedTextDT = nullptr;
   mCachedContext = nullptr;
   mActiveFixedPosTracker = nullptr;
-  mDisplayItemCache = nullptr;
+  mDisplayItemCache = aCache;
   mCurrentCacheSlot = Nothing();
   mRemotePipelineIds.Clear();
 }
@@ -1003,6 +1002,8 @@ void DisplayListBuilder::End(BuiltDisplayList& aOutDisplayList) {
   wr_api_end_builder(
       mWrState, &aOutDisplayList.dl_desc, &aOutDisplayList.dl_items.inner,
       &aOutDisplayList.dl_cache.inner, &aOutDisplayList.dl_spatial_tree.inner);
+
+  mDisplayItemCache = nullptr;
 }
 
 void DisplayListBuilder::End(layers::DisplayListData& aOutTransaction) {

@@ -121,8 +121,7 @@ bool WebRenderLayerManager::Initialize(
   *aTextureFactoryIdentifier = textureFactoryIdentifier;
 
   mDLBuilder = MakeUnique<wr::DisplayListBuilder>(
-      WrBridge()->GetPipeline(), WrBridge()->GetWebRenderBackend(),
-      &mDisplayItemCache);
+      WrBridge()->GetPipeline(), WrBridge()->GetWebRenderBackend());
 
   hasInitialized = true;
   return true;
@@ -346,7 +345,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
 
-  mDLBuilder->Begin();
+  mDLBuilder->Begin(&mDisplayItemCache);
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
