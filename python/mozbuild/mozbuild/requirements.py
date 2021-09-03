@@ -70,7 +70,7 @@ def _parse_mach_env_requirements(
 ):
     def _parse_requirements_line(line):
         line = line.strip()
-        if line.startswith("#"):
+        if not line or line.startswith("#"):
             return
 
         action, params = line.rstrip().split(":", maxsplit=1)
