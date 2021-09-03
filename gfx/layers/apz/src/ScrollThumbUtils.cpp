@@ -7,7 +7,6 @@
 #include "ScrollThumbUtils.h"
 #include "AsyncPanZoomController.h"
 #include "FrameMetrics.h"
-#include "gfxPlatform.h"
 #include "mozilla/gfx/Matrix.h"
 
 namespace mozilla {

@@ -23,6 +23,7 @@ namespace mozilla {
 
 namespace layers {
 
+class CanvasLayer;
 class ImageClient;
 class ImageContainer;
 class WebRenderBridgeChild;
