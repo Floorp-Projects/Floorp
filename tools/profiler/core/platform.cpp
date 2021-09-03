@@ -2810,8 +2810,7 @@ struct JavaMarkerWithDetails {
     schema.SetTooltipLabel("{marker.name}");
     schema.SetChartLabel("{marker.data.details}");
     schema.SetTableLabel("{marker.name} - {marker.data.details}");
-    schema.AddKeyLabelFormat("details", "Details",
-                             MarkerSchema::Format::string);
+    schema.AddKeyLabelFormat("details", "Details", MS::Format::String);
     return schema;
   }
 };

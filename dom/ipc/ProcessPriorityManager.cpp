@@ -109,9 +109,9 @@ struct SubProcessPriorityChange {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyFormat("pid", MS::Format::integer);
-    schema.AddKeyFormat("Before", MS::Format::string);
-    schema.AddKeyFormat("After", MS::Format::string);
+    schema.AddKeyFormat("pid", MS::Format::Integer);
+    schema.AddKeyFormat("Before", MS::Format::String);
+    schema.AddKeyFormat("After", MS::Format::String);
     schema.SetAllLabels(
         "priority of child {marker.data.pid}:"
         " {marker.data.Before} -> {marker.data.After}");
@@ -136,9 +136,9 @@ struct SubProcessPriority {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyFormat("pid", MS::Format::integer);
-    schema.AddKeyFormat("Priority", MS::Format::string);
-    schema.AddKeyFormat("Marker cause", MS::Format::string);
+    schema.AddKeyFormat("pid", MS::Format::Integer);
+    schema.AddKeyFormat("Priority", MS::Format::String);
+    schema.AddKeyFormat("Marker cause", MS::Format::String);
     schema.SetAllLabels(
         "priority of child {marker.data.pid}: {marker.data.Priority}");
     return schema;
