@@ -72,13 +72,9 @@ class NativeInputTrack : public ProcessedMediaTrack {
   nsTArray<RefPtr<AudioDataListener>> mDataUsers;
 
  private:
-  typedef AudioDataListenerInterface::BufferInfo BufferInfo;
-  // Storing the audio output data coming from NotifyOutputData. Used in graph
+  // Queue the audio input data coming from NotifyInputData. Used in graph
   // thread only.
-  Maybe<BufferInfo> mOutputData;
-  // Storing the audio input data coming from NotifyInputData. Used in graph
-  // thread only.
-  Maybe<BufferInfo> mInputData;
+  AudioInputSamples mInputData;
 
   // Only accessed on the graph thread.
   uint32_t mInputChannels = 0;
