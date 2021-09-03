@@ -20,7 +20,6 @@
 include the word "toolbar" or such, because screen readers already know that
 this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY navbar.accessibleLabel "Navigation">
-<!ENTITY fullScreenCmd.label "Full Screen">
 
 
 <!-- LOCALIZATION NOTE (fxa.menu) Used to define the different labels
