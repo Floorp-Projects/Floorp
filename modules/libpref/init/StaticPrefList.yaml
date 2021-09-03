@@ -6821,6 +6821,13 @@
   mirror: always
   rust: true
 
+# Whether @layer is enabled
+- name: layout.css.cascade-layers.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether Constructable Stylesheets are enabled in script.
 - name: layout.css.constructable-stylesheets.enabled
   type: bool
