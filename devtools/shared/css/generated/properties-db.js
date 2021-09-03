@@ -6995,7 +6995,9 @@ exports.CSS_PROPERTIES = {
       "initial",
       "optimizequality",
       "optimizespeed",
+      "pixelated",
       "revert",
+      "smooth",
       "unset"
     ]
   },

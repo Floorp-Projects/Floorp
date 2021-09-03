@@ -727,8 +727,8 @@ struct DIGroup {
     wr::LayoutRect dest = wr::ToLayoutRect(bounds);
     GP("PushImage: %f %f %f %f\n", dest.min.x, dest.min.y, dest.max.x,
        dest.max.y);
-    gfx::SamplingFilter sampleFilter = gfx::SamplingFilter::
-        LINEAR;  // nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
+    // wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
+    auto rendering = wr::ImageRendering::Auto;
     bool backfaceHidden = false;
 
     // We don't really know the exact shape of this blob because it may contain
@@ -746,8 +746,7 @@ struct DIGroup {
     aBuilder.PushHitTest(dest, dest, !backfaceHidden, mScrollId, hitInfo,
                          SideBits::eNone);
 
-    aBuilder.PushImage(dest, dest, !backfaceHidden,
-                       wr::ToImageRendering(sampleFilter),
+    aBuilder.PushImage(dest, dest, !backfaceHidden, rendering,
                        wr::AsImageKey(*mKey));
   }
 
@@ -1966,8 +1965,7 @@ bool WebRenderCommandBuilder::PushImage(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, const LayoutDeviceRect& aRect,
     const LayoutDeviceRect& aClip) {
-  mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
-      nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
+  auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   gfx::IntSize size;
   Maybe<wr::ImageKey> key =
       CreateImageKey(aItem, aContainer, aBuilder, aResources, rendering, aSc,
@@ -2010,8 +2008,7 @@ bool WebRenderCommandBuilder::PushBlobImage(
     return false;
   }
 
-  mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
-      nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
+  auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   auto r = wr::ToLayoutRect(aRect);
   auto c = wr::ToLayoutRect(aClip);
   aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering,
@@ -2622,10 +2619,8 @@ bool WebRenderCommandBuilder::PushItemAsImage(
   }
 
   wr::LayoutRect dest = wr::ToLayoutRect(imageRect);
-  gfx::SamplingFilter sampleFilter =
-      nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
-  aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(),
-                     wr::ToImageRendering(sampleFilter),
+  auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
+  aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(), rendering,
                      fallbackData->GetImageKey().value());
   return true;
 }

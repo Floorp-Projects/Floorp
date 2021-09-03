@@ -25,6 +25,7 @@ namespace mozilla {
 
 enum class StyleBorderStyle : uint8_t;
 enum class StyleBorderImageRepeat : uint8_t;
+enum class StyleImageRendering : uint8_t;
 
 namespace ipc {
 class ByteBuf;
@@ -239,10 +240,7 @@ inline PipelineId AsPipelineId(const mozilla::layers::LayersId& aId) {
   return AsPipelineId(uint64_t(aId));
 }
 
-inline ImageRendering ToImageRendering(gfx::SamplingFilter aFilter) {
-  return aFilter == gfx::SamplingFilter::POINT ? ImageRendering::Pixelated
-                                               : ImageRendering::Auto;
-}
+ImageRendering ToImageRendering(StyleImageRendering);
 
 static inline FontRenderMode ToFontRenderMode(gfx::AntialiasMode aMode,
                                               bool aPermitSubpixelAA = true) {
