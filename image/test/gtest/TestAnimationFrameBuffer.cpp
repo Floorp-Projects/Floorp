@@ -25,7 +25,6 @@ static already_AddRefed<imgFrame> CreateEmptyFrame(
                             Some(animParams), aCanRecycle);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   RawAccessFrameRef frameRef = frame->RawAccessRef();
-  frame->SetRawAccessOnly();
   // Normally the blend animation filter would set the dirty rect, but since
   // we aren't producing an actual animation here, we need to fake it.
   frame->SetDirtyRect(aFrameRect);
