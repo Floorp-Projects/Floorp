@@ -20,6 +20,9 @@ interface WindowContext {
 
   readonly attribute WindowContext topWindowContext;
 
+  // True if this WindowContext is currently frozen in the BFCache.
+  readonly attribute boolean isInBFCache;
+
   // True if this window has registered a "beforeunload" event handler.
   readonly attribute boolean hasBeforeUnload;
 

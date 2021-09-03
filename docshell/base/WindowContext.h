@@ -89,7 +89,11 @@ class BrowsingContextGroup;
   FIELD(HadLazyLoadImage, bool)                                          \
   /* Whether we can execute scripts in this WindowContext. Has no effect \
    * unless scripts are also allowed in the BrowsingContext. */          \
-  FIELD(AllowJavascript, bool)
+  FIELD(AllowJavascript, bool)                                           \
+  /* If this field is `true`, it means that this WindowContext's         \
+   * WindowState was saved to be stored in the legacy (non-SHIP) BFCache \
+   * implementation. Always false for SHIP */                            \
+  FIELD(WindowStateSaved, bool)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -112,6 +116,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   // Returns `true` if this WindowContext is the current WindowContext in its
   // BrowsingContext.
   bool IsCurrent() const;
+
+  // Returns `true` if this WindowContext is currently in the BFCache.
+  bool IsInBFCache();
 
   bool IsInProcess() const { return mIsInProcess; }
 
@@ -286,6 +293,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>, bool aOldValue);
 
   void DidSet(FieldIndex<IDX_SHEntryHasUserInteraction>, bool aOldValue);
+
+  bool CanSet(FieldIndex<IDX_WindowStateSaved>, bool aValue,
+              ContentParent* aSource);
 
   // Overload `DidSet` to get notifications for a particular field being set.
   //
