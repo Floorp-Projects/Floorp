@@ -37,6 +37,7 @@ class SourceSurface;
 namespace layers {
 
 class BasicLayerManager;
+class CanvasLayer;
 class ImageClient;
 class ImageContainer;
 class WebRenderBridgeChild;
