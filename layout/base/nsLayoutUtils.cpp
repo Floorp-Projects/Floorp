@@ -2821,7 +2821,7 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
       nsLayoutUtils::CalculateCompositionSizeForFrame(frame);
   LayoutDeviceToParentLayerScale2D compBoundsScale;
   if (frame == presShell->GetRootScrollFrame() &&
-      presContext->IsRootContentDocument()) {
+      presContext->IsRootContentDocumentCrossProcess()) {
     if (presContext->GetParentPresContext()) {
       float res = presContext->GetParentPresContext()
                       ->PresShell()
