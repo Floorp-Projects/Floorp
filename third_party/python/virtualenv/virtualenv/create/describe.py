@@ -30,15 +30,15 @@ class Describe(object):
 
     @property
     def script_dir(self):
-        return self.dest / self.interpreter.install_path("scripts")
+        return self.dest / Path(self.interpreter.distutils_install["scripts"])
 
     @property
     def purelib(self):
-        return self.dest / self.interpreter.install_path("purelib")
+        return self.dest / self.interpreter.distutils_install["purelib"]
 
     @property
     def platlib(self):
-        return self.dest / self.interpreter.install_path("platlib")
+        return self.dest / self.interpreter.distutils_install["platlib"]
 
     @property
     def libs(self):

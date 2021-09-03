@@ -15,7 +15,7 @@ from .common import CPython, CPythonPosix, CPythonWindows, is_mac_os_framework
 
 @add_metaclass(abc.ABCMeta)
 class CPython3(CPython, Python3Supports):
-    """ """
+    """"""
 
 
 class CPython3Posix(CPythonPosix, CPython3):
@@ -43,7 +43,7 @@ class CPython3Posix(CPythonPosix, CPython3):
 
 
 class CPython3Windows(CPythonWindows, CPython3):
-    """ """
+    """"""
 
     @classmethod
     def setup_meta(cls, interpreter):
@@ -55,27 +55,20 @@ class CPython3Windows(CPythonWindows, CPython3):
     def sources(cls, interpreter):
         for src in super(CPython3Windows, cls).sources(interpreter):
             yield src
-        if not cls.has_shim(interpreter):
+        if not cls.venv_37p(interpreter):
             for src in cls.include_dll_and_pyd(interpreter):
                 yield src
 
-    @classmethod
-    def has_shim(cls, interpreter):
-        return interpreter.version_info.minor >= 7 and cls.shim(interpreter) is not None
-
-    @classmethod
-    def shim(cls, interpreter):
-        shim = Path(interpreter.system_stdlib) / "venv" / "scripts" / "nt" / "python.exe"
-        if shim.exists():
-            return shim
-        return None
+    @staticmethod
+    def venv_37p(interpreter):
+        return interpreter.version_info.minor >= 7
 
     @classmethod
     def host_python(cls, interpreter):
-        if cls.has_shim(interpreter):
+        if cls.venv_37p(interpreter):
             # starting with CPython 3.7 Windows ships with a venvlauncher.exe that avoids the need for dll/pyd copies
             # it also means the wrapper must be copied to avoid bugs such as https://bugs.python.org/issue42013
-            return cls.shim(interpreter)
+            return Path(interpreter.system_stdlib) / "venv" / "scripts" / "nt" / "python.exe"
         return super(CPython3Windows, cls).host_python(interpreter)
 
     @classmethod
