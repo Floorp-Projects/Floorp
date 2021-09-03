@@ -73,7 +73,7 @@ const ExperimentAPI = {
    * or feature = a stable identifier for a type of experiment
    * @returns {{slug: string, active: bool}} A matching experiment if one is found.
    */
-  getExperiment({ slug, featureId, sendExposureEvent } = {}) {
+  getExperiment({ slug, featureId } = {}) {
     if (!slug && !featureId) {
       throw new Error(
         "getExperiment(options) must include a slug or a feature."
@@ -93,7 +93,7 @@ const ExperimentAPI = {
       return {
         slug: experimentData.slug,
         active: experimentData.active,
-        branch: this.activateBranch({ slug, featureId, sendExposureEvent }),
+        branch: this.activateBranch({ slug, featureId }),
       };
     }
 
@@ -134,10 +134,10 @@ const ExperimentAPI = {
 
   /**
    * Return FeatureConfig from first active experiment where it can be found
-   * @param {{slug: string, featureId: string, sendExposureEvent: bool}}
+   * @param {{slug: string, featureId: string }}
    * @returns {Branch | null}
    */
-  activateBranch({ slug, featureId, sendExposureEvent }) {
+  activateBranch({ slug, featureId }) {
     let experiment = null;
     try {
       if (slug) {
@@ -151,14 +151,6 @@ const ExperimentAPI = {
 
     if (!experiment) {
       return null;
-    }
-
-    if (sendExposureEvent) {
-      this.recordExposureEvent({
-        experimentSlug: experiment.slug,
-        branchSlug: experiment.branch.slug,
-        featureId,
-      });
     }
 
     // Default to null for feature-less experiments where we're only
@@ -407,19 +399,11 @@ class _ExperimentFeature {
   /**
    * Lookup feature in active experiments and return enabled.
    * By default, this will send an exposure event.
-   * @param {{sendExposureEvent: boolean, defaultValue?: any}} options
+   * @param {{defaultValue?: any}} options
    * @returns {obj} The feature value
    */
-  isEnabled({ sendExposureEvent, defaultValue = null } = {}) {
-    const branch = ExperimentAPI.activateBranch({
-      featureId: this.featureId,
-      sendExposureEvent: sendExposureEvent && this._sendExposureEventOnce,
-    });
-
-    // Prevent future exposure events if user is enrolled in an experiment
-    if (branch && sendExposureEvent) {
-      this._sendExposureEventOnce = false;
-    }
+  isEnabled({ defaultValue = null } = {}) {
+    const branch = ExperimentAPI.activateBranch({ featureId: this.featureId });
 
     // First, try to return an experiment value if it exists.
     if (isBooleanValueDefined(branch?.feature.enabled)) {
@@ -432,7 +416,7 @@ class _ExperimentFeature {
 
     let enabled;
     try {
-      enabled = this.getVariable("enabled", { sendExposureEvent });
+      enabled = this.getVariable("enabled");
     } catch (e) {
       /* This is expected not all features have an enabled flag defined */
     }
@@ -445,21 +429,13 @@ class _ExperimentFeature {
 
   /**
    * Lookup feature variables in experiments, prefs, and remote defaults.
-   * @param {{sendExposureEvent: boolean, defaultValues?: {[variableName: string]: any}}} options
+   * @param {{defaultValues?: {[variableName: string]: any}}} options
    * @returns {{[variableName: string]: any}} The feature value
    */
-  getAllVariables({ sendExposureEvent, defaultValues = null } = {}) {
+  getAllVariables({ defaultValues = null } = {}) {
     // Any user pref will override any other configuration
     let userPrefs = this._getUserPrefsValues();
-    const branch = ExperimentAPI.activateBranch({
-      featureId: this.featureId,
-      sendExposureEvent: sendExposureEvent && this._sendExposureEventOnce,
-    });
-
-    // Prevent future exposure events if user is enrolled in an experiment
-    if (branch && sendExposureEvent) {
-      this._sendExposureEventOnce = false;
-    }
+    const branch = ExperimentAPI.activateBranch({ featureId: this.featureId });
 
     return {
       ...this.prefGetters,
@@ -470,7 +446,7 @@ class _ExperimentFeature {
     };
   }
 
-  getVariable(variable, { sendExposureEvent } = {}) {
+  getVariable(variable) {
     const prefName = this.getPreferenceName(variable);
     const prefValue = prefName ? this.prefGetters[variable] : undefined;
 
@@ -491,13 +467,7 @@ class _ExperimentFeature {
     // Next, check if an experiment is defined
     const experimentValue = ExperimentAPI.activateBranch({
       featureId: this.featureId,
-      sendExposureEvent: sendExposureEvent && this._sendExposureEventOnce,
     })?.feature?.value?.[variable];
-
-    // Prevent future exposure events if user is enrolled in an experiment
-    if (typeof experimentValue !== "undefined" && sendExposureEvent) {
-      this._sendExposureEventOnce = false;
-    }
 
     if (typeof experimentValue !== "undefined") {
       return experimentValue;
@@ -523,13 +493,16 @@ class _ExperimentFeature {
 
   recordExposureEvent() {
     if (this._sendExposureEventOnce) {
-      let experimentData = ExperimentAPI.activateBranch({
+      let experimentData = ExperimentAPI.getExperiment({
         featureId: this.featureId,
-        sendExposureEvent: true,
       });
-
       // Exposure only sent if user is enrolled in an experiment
       if (experimentData) {
+        ExperimentAPI.recordExposureEvent({
+          featureId: this.featureId,
+          experimentSlug: experimentData.slug,
+          branchSlug: experimentData.branch?.slug,
+        });
         this._sendExposureEventOnce = false;
       }
     }
