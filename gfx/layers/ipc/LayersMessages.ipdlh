@@ -11,6 +11,7 @@ include protocol PTexture;
 
 include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/GfxMessageUtils.h";
+include "ImageLayers.h";
 
 using mozilla::gfx::Glyph from "mozilla/gfx/2D.h";
 using mozilla::gfx::SamplingFilter from "mozilla/gfx/2D.h";
@@ -81,7 +82,9 @@ struct TargetConfig {
 // Create a shadow layer for |layer|
 struct OpCreatePaintedLayer    { LayerHandle layer; };
 struct OpCreateContainerLayer  { LayerHandle layer; };
+struct OpCreateImageLayer      { LayerHandle layer; };
 struct OpCreateColorLayer      { LayerHandle layer; };
+struct OpCreateCanvasLayer     { LayerHandle layer; };
 struct OpCreateRefLayer        { LayerHandle layer; };
 
 struct OpAttachCompositable {

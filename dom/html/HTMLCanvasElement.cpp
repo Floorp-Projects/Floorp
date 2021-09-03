@@ -7,6 +7,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 
 #include "ImageEncoder.h"
+#include "ImageLayers.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "Layers.h"
@@ -1075,7 +1076,11 @@ void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
     }
 
     if (layer) {
-      layer->SetInvalidRectToVisibleRegion();
+      if (CanvasLayer* canvas = layer->AsCanvasLayer()) {
+        canvas->Updated();
+      } else {
+        layer->SetInvalidRectToVisibleRegion();
+      }
     } else {
       // This path is taken in two situations:
       // 1) WebRender is enabled and has not yet processed a display list.
@@ -1124,6 +1129,19 @@ CanvasContextType HTMLCanvasElement::GetCurrentContextType() {
   return mCurrentContextType;
 }
 
+already_AddRefed<Layer> HTMLCanvasElement::GetCanvasLayer(
+    nsDisplayListBuilder* aBuilder, Layer* aOldLayer, LayerManager* aManager) {
+  if (mCurrentContext) {
+    return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
+  }
+
+  if (mOffscreenCanvas) {
+    MOZ_CRASH("todo");
+  }
+
+  return nullptr;
+}
+
 already_AddRefed<Image> HTMLCanvasElement::GetAsImage() {
   if (mCurrentContext) {
     return mCurrentContext->GetAsImage();
@@ -1161,6 +1179,19 @@ bool HTMLCanvasElement::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
   }
 
   return false;
+}
+
+bool HTMLCanvasElement::ShouldForceInactiveLayer(LayerManager* aManager) {
+  if (mCurrentContext) {
+    return mCurrentContext->ShouldForceInactiveLayer(aManager);
+  }
+
+  if (mOffscreenCanvas) {
+    // TODO: We should handle offscreen canvas case.
+    return false;
+  }
+
+  return true;
 }
 
 void HTMLCanvasElement::MarkContextClean() {
