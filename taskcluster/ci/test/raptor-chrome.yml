@@ -25,55 +25,6 @@ job-defaults:
                     - raptor/linux_config.py
     python-3: true
 
-raptor-youtube-playback-av1-sfr-chrome:
-    description: "Raptor YouTube Playback AV1 SFR on Chrome"
-    try-name: raptor-youtube-playback-av1-sfr-chrome
-    treeherder-symbol: Rap-ChR(ytp-av1-sfr)
-    max-run-time: 3600
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback-av1-sfr
-            - --app=chrome
-
-raptor-youtube-playback-h264-sfr-chrome:
-    description: "Raptor YouTube Playback H264 SFR on Chrome"
-    try-name: raptor-youtube-playback-h264-sfr-chrome
-    treeherder-symbol: Rap-ChR(ytp-h264-sfr)
-    max-run-time:
-        by-test-platform:
-            windows10-aarch64-qr/opt: 3600
-            default: 2700
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback-h264-sfr
-            - --app=chrome
-
-raptor-youtube-playback-hfr-chrome:
-    description: "Raptor YouTube Playback HFR on Chrome"
-    try-name: raptor-youtube-playback-hfr-chrome
-    treeherder-symbol: Rap-ChR(ytp-hfr)
-    max-run-time:
-        by-test-platform:
-            windows10-aarch64-qr/opt: 3600
-            default: 2700
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback-hfr
-            - --app=chrome
-
-raptor-youtube-playback-vp9-sfr-chrome:
-    description: "Raptor YouTube Playback VP9 SFR on Chrome"
-    try-name: raptor-youtube-playback-vp9-sfr-chrome
-    treeherder-symbol: Rap-ChR(ytp-vp9-sfr)
-    max-run-time:
-        by-test-platform:
-            windows10-aarch64-qr/opt: 3600
-            default: 2700
-    mozharness:
-        extra-options:
-            - --test=raptor-youtube-playback-vp9-sfr
-            - --app=chrome
-
 raptor-youtube-playback-widevine-hfr-chrome:
     description: "Raptor YouTube Playback Widevine HFR on Chrome"
     try-name: raptor-youtube-playback-widevine-hfr-chrome
