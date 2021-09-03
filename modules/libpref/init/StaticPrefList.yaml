@@ -6960,9 +6960,9 @@
   mirror: always
   rust: true
 
-# Whether the bloom filter optimization is applied to attribute names too, not
+# Whether the rule hash is applied to attribute names too, not
 # only classes / id / namespaces / etc.
-- name: layout.css.bloom-filter-attribute-names.enabled
+- name: layout.css.bucket-attribute-names.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
