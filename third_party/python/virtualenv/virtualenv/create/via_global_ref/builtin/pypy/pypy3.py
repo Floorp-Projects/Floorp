@@ -17,6 +17,14 @@ class PyPy3(PyPy, Python3Supports):
     def exe_stem(cls):
         return "pypy3"
 
+    @property
+    def stdlib(self):
+        """
+        PyPy3 seems to respect sysconfig only for the host python...
+        virtual environments purelib is instead lib/pythonx.y
+        """
+        return self.dest / "lib" / "python{}".format(self.interpreter.version_release_str) / "site-packages"
+
     @classmethod
     def exe_names(cls, interpreter):
         return super(PyPy3, cls).exe_names(interpreter) | {"pypy"}
@@ -24,11 +32,6 @@ class PyPy3(PyPy, Python3Supports):
 
 class PyPy3Posix(PyPy3, PosixSupports):
     """PyPy 2 on POSIX"""
-
-    @property
-    def stdlib(self):
-        """PyPy3 respects sysconfig only for the host python, virtual envs is instead lib/pythonx.y/site-packages"""
-        return self.dest / "lib" / "python{}".format(self.interpreter.version_release_str) / "site-packages"
 
     @classmethod
     def _shared_libs(cls):
@@ -51,15 +54,10 @@ class Pypy3Windows(PyPy3, WindowsSupports):
     """PyPy 2 on Windows"""
 
     @property
-    def stdlib(self):
-        """PyPy3 respects sysconfig only for the host python, virtual envs is instead Lib/site-packages"""
-        return self.dest / "Lib" / "site-packages"
-
-    @property
     def bin_dir(self):
         """PyPy3 needs to fallback to pypy definition"""
         return self.dest / "Scripts"
 
     @classmethod
     def _shared_libs(cls):
-        return ["libpypy3-c.dll", "libffi-7.dll"]
+        return ["libpypy3-c.dll"]

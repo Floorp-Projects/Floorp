@@ -19,7 +19,7 @@ class PipInvoke(BaseEmbed):
             return
         for_py_version = creator.interpreter.version_release_str
         with self.get_pip_install_cmd(creator.exe, for_py_version) as cmd:
-            env = pip_wheel_env_run(self.extra_search_dir, self.app_data, self.env)
+            env = pip_wheel_env_run(self.extra_search_dir, self.app_data)
             self._execute(cmd, env)
 
     @staticmethod
@@ -46,7 +46,6 @@ class PipInvoke(BaseEmbed):
                 download=False,
                 app_data=self.app_data,
                 do_periodic_update=self.periodic_update,
-                env=self.env,
             )
             if wheel is None:
                 raise RuntimeError("could not get wheel for distribution {}".format(dist))

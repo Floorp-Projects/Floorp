@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import shutil
 import subprocess
-from pathlib import Path
 
 import mozfile
 import mozpack.path as mozpath
@@ -32,11 +31,6 @@ class VendorPython(MozbuildObject):
             shutil.copyfile(spec, tmpspec_absolute)
             self._update_packages(tmpspec_absolute)
 
-            tmp_requirements_absolute = os.path.join(spec_dir, "requirements.txt")
-            # Copy the existing "requirements.txt" file so that the versions
-            # of transitive dependencies aren't implicitly changed.
-            shutil.copy(requirements, tmp_requirements_absolute)
-
             # resolve the dependencies and update requirements.txt
             subprocess.check_output(
                 [
@@ -48,7 +42,7 @@ class VendorPython(MozbuildObject):
                     "--no-header",
                     "--no-index",
                     "--output-file",
-                    tmp_requirements_absolute,
+                    requirements,
                     "--generate-hashes",
                 ],
                 # Run pip-compile from within the temporary directory so that the "via"
@@ -62,7 +56,7 @@ class VendorPython(MozbuildObject):
                     [
                         "download",
                         "-r",
-                        tmp_requirements_absolute,
+                        requirements,
                         "--no-deps",
                         "--dest",
                         tmp,
@@ -72,11 +66,9 @@ class VendorPython(MozbuildObject):
                         "any",
                     ]
                 )
-                _purge_vendor_dir(vendor_dir)
                 self._extract(tmp, vendor_dir, keep_extra_files)
 
             shutil.copyfile(tmpspec_absolute, spec)
-            shutil.copy(tmp_requirements_absolute, requirements)
             self.repository.add_remove_files(vendor_dir)
 
     def _update_packages(self, spec):
@@ -103,7 +95,7 @@ class VendorPython(MozbuildObject):
 
         ignore = ()
         if not keep_extra_files:
-            ignore = ("*/doc", "*/docs", "*/test", "*/tests", "**/.git")
+            ignore = ("*/doc", "*/docs", "*/test", "*/tests")
         finder = FileFinder(src)
         for archive, _ in finder.find("*"):
             _, ext = os.path.splitext(archive)
@@ -115,6 +107,7 @@ class VendorPython(MozbuildObject):
                     "-", 4
                 )
                 target_package_dir = os.path.join(dest, package_name)
+                mozfile.remove(target_package_dir)
                 os.mkdir(target_package_dir)
 
                 # Extract all the contents of the wheel into the package subdirectory.
@@ -128,6 +121,7 @@ class VendorPython(MozbuildObject):
                 # specifier.
                 package_name, archive_postfix = archive.rsplit("-", 1)
                 package_dir = os.path.join(dest, package_name)
+                mozfile.remove(package_dir)
 
                 # The archive should only contain one top-level directory, which has
                 # the source files. We extract this directory directly to
@@ -140,25 +134,6 @@ class VendorPython(MozbuildObject):
                 # which we don't we don't want.
                 mozfile.move(extracted_package_dir, package_dir)
                 _denormalize_symlinks(package_dir)
-
-
-def _purge_vendor_dir(vendor_dir):
-    excluded_packages = [
-        # dlmanager's package on PyPI only has metadata, but is missing the code.
-        # https://github.com/parkouss/dlmanager/issues/1
-        "dlmanager",
-        # gyp's package on PyPI doesn't have any downloadable files.
-        "gyp",
-        # We manage installing "virtualenv" package manually, and we have a custom
-        # "virtualenv.py" entry module.
-        "virtualenv",
-        # The moz.build file isn't a vendored module, so don't delete it.
-        "moz.build",
-    ]
-
-    for child in Path(vendor_dir).iterdir():
-        if child.name not in excluded_packages:
-            mozfile.remove(str(child))
 
 
 def _denormalize_symlinks(target):

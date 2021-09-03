@@ -8,7 +8,7 @@ if [ "${BASH_SOURCE-}" = "$0" ]; then
 fi
 
 deactivate () {
-    unset -f pydoc >/dev/null 2>&1 || true
+    unset -f pydoc >/dev/null 2>&1
 
     # reset old environment variables
     # ! [ -z ${VAR+_} ] returns true if VAR is declared at all
@@ -23,10 +23,12 @@ deactivate () {
         unset _OLD_VIRTUAL_PYTHONHOME
     fi
 
-    # The hash command must be called to get it to forget past
-    # commands. Without forgetting past commands the $PATH changes
-    # we made may not be respected
-    hash -r 2>/dev/null
+    # This should detect bash and zsh, which have a hash command that must
+    # be called to get it to forget past commands.  Without forgetting
+    # past commands the $PATH changes we made may not be respected
+    if [ -n "${BASH-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
+        hash -r 2>/dev/null
+    fi
 
     if ! [ -z "${_OLD_VIRTUAL_PS1+_}" ] ; then
         PS1="$_OLD_VIRTUAL_PS1"
@@ -77,7 +79,9 @@ pydoc () {
     python -m pydoc "$@"
 }
 
-# The hash command must be called to get it to forget past
-# commands. Without forgetting past commands the $PATH changes
-# we made may not be respected
-hash -r 2>/dev/null
+# This should detect bash and zsh, which have a hash command that must
+# be called to get it to forget past commands.  Without forgetting
+# past commands the $PATH changes we made may not be respected
+if [ -n "${BASH-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
+    hash -r 2>/dev/null
+fi

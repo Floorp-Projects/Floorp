@@ -1,13 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import os
 import sys
 from datetime import datetime
 
 
-def run(args=None, options=None, env=None):
-    env = os.environ if env is None else env
+def run(args=None, options=None):
     start = datetime.now()
     from virtualenv.run import cli_run
     from virtualenv.util.error import ProcessCallFailed
@@ -15,7 +13,7 @@ def run(args=None, options=None, env=None):
     if args is None:
         args = sys.argv[1:]
     try:
-        session = cli_run(args, options, env)
+        session = cli_run(args, options)
         logging.warning(LogSession(session, start))
     except ProcessCallFailed as exception:
         print("subprocess call failed for {} with code {}".format(exception.cmd, exception.code))
@@ -56,13 +54,12 @@ class LogSession(object):
         return "\n".join(lines)
 
 
-def run_with_catch(args=None, env=None):
+def run_with_catch(args=None):
     from virtualenv.config.cli.parser import VirtualEnvOptions
 
-    env = os.environ if env is None else env
     options = VirtualEnvOptions()
     try:
-        run(args, options, env)
+        run(args, options)
     except (KeyboardInterrupt, SystemExit, Exception) as exception:
         try:
             if getattr(options, "with_traceback", False):
