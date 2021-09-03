@@ -2953,6 +2953,8 @@ class nsDisplayItem : public nsDisplayItemLink {
     return GetPaintRect();
   }
 
+  nsRect GetPaintRect(nsDisplayListBuilder* aBuilder, gfxContext* aCtx);
+
   virtual const HitTestInfo& GetHitTestInfo() { return HitTestInfo::Empty(); }
 
   nsIFrame* mFrame;  // 8
@@ -3850,9 +3852,10 @@ class nsDisplayGeneric : public nsPaintedDisplayItem {
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     MOZ_ASSERT(!!mPaint != !!mOldPaint);
     if (mPaint) {
-      mPaint(mFrame, aCtx->GetDrawTarget(), GetPaintRect(), ToReferenceFrame());
+      mPaint(mFrame, aCtx->GetDrawTarget(), GetPaintRect(aBuilder, aCtx),
+             ToReferenceFrame());
     } else {
-      mOldPaint(mFrame, aCtx, GetPaintRect(), ToReferenceFrame());
+      mOldPaint(mFrame, aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame());
     }
   }
 

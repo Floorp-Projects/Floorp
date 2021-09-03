@@ -522,7 +522,7 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
 
   ImgDrawResult result = static_cast<nsImageBoxFrame*>(mFrame)->PaintImage(
-      *aCtx, GetPaintRect(), ToReferenceFrame(), flags);
+      *aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame(), flags);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }

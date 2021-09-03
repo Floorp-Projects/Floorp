@@ -2938,6 +2938,18 @@ nsDisplayContainer::nsDisplayContainer(
   nsDisplayItem::SetClipChain(nullptr, true);
 }
 
+nsRect nsDisplayItem::GetPaintRect(nsDisplayListBuilder* aBuilder,
+                                   gfxContext* aCtx) {
+  nsRect result = GetClippedBounds(aBuilder);
+  if (aCtx) {
+    result.IntersectRect(result,
+                         nsLayoutUtils::RoundGfxRectToAppRect(
+                             aCtx->GetClipExtents(),
+                             mFrame->PresContext()->AppUnitsPerDevPixel()));
+  }
+  return result;
+}
+
 bool nsDisplayContainer::CreateWebRenderCommands(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
@@ -3002,8 +3014,8 @@ void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
                                 gfxContext* aCtx) {
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
-  Rect rect =
-      NSRectToSnappedRect(GetPaintRect(), appUnitsPerDevPixel, *drawTarget);
+  Rect rect = NSRectToSnappedRect(GetPaintRect(aBuilder, aCtx),
+                                  appUnitsPerDevPixel, *drawTarget);
   drawTarget->FillRect(rect, ColorPattern(ToDeviceColor(mColor)));
 }
 
@@ -3820,7 +3832,7 @@ bool nsDisplayBackgroundImage::RenderingMightDependOnPositioningAreaSizeChange()
 
 void nsDisplayBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                      gfxContext* aCtx) {
-  PaintInternal(aBuilder, aCtx, GetPaintRect(), &mBounds);
+  PaintInternal(aBuilder, aCtx, GetPaintRect(aBuilder, aCtx), &mBounds);
 }
 
 void nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
@@ -4015,7 +4027,7 @@ nsRect nsDisplayThemedBackground::GetPositioningArea() const {
 
 void nsDisplayThemedBackground::Paint(nsDisplayListBuilder* aBuilder,
                                       gfxContext* aCtx) {
-  PaintInternal(aBuilder, aCtx, GetPaintRect(), nullptr);
+  PaintInternal(aBuilder, aCtx, GetPaintRect(aBuilder, aCtx), nullptr);
 }
 
 void nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
@@ -4322,13 +4334,14 @@ void nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   nsPresContext* pc = mFrame->PresContext();
   if (IsThemedOutline()) {
     rect.Inflate(mFrame->StyleOutline()->mOutlineOffset.ToAppUnits());
-    pc->Theme()->DrawWidgetBackground(
-        aCtx, mFrame, StyleAppearance::FocusOutline, rect, GetPaintRect());
+    pc->Theme()->DrawWidgetBackground(aCtx, mFrame,
+                                      StyleAppearance::FocusOutline, rect,
+                                      GetPaintRect(aBuilder, aCtx));
     return;
   }
 
-  nsCSSRendering::PaintNonThemedOutline(pc, *aCtx, mFrame, GetPaintRect(), rect,
-                                        mFrame->Style());
+  nsCSSRendering::PaintNonThemedOutline(
+      pc, *aCtx, mFrame, GetPaintRect(aBuilder, aCtx), rect, mFrame->Style());
 }
 
 bool nsDisplayOutline::IsThemedOutline() const {
@@ -4555,7 +4568,7 @@ void nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
                                : PaintBorderFlags();
 
   ImgDrawResult result = nsCSSRendering::PaintBorder(
-      mFrame->PresContext(), *aCtx, mFrame, GetPaintRect(),
+      mFrame->PresContext(), *aCtx, mFrame, GetPaintRect(aBuilder, aCtx),
       nsRect(offset, mFrame->GetSize()), mFrame->Style(), flags,
       mFrame->GetSkipSides());
 
@@ -4577,7 +4590,7 @@ void nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
   AUTO_PROFILER_LABEL("nsDisplayBoxShadowOuter::Paint", GRAPHICS);
 
   nsCSSRendering::PaintBoxShadowOuter(presContext, *aCtx, mFrame, borderRect,
-                                      GetPaintRect(), mOpacity);
+                                      GetPaintRect(aBuilder, aCtx), mOpacity);
 }
 
 nsRect nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder,
@@ -5401,7 +5414,7 @@ void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
   // been implemented for all DrawTarget backends.
   DrawTarget* dt = aCtx->GetDrawTarget();
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  Rect rect = NSRectToRect(GetPaintRect(), appUnitsPerDevPixel);
+  Rect rect = NSRectToRect(GetPaintRect(aBuilder, aCtx), appUnitsPerDevPixel);
   rect.RoundOut();
 
   // Create a temporary DrawTarget that is clipped to the area that
@@ -8935,8 +8948,8 @@ bool nsDisplayForeignObject::CreateWebRenderCommands(
 
 void nsDisplayLink::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   auto appPerDev = mFrame->PresContext()->AppUnitsPerDevPixel();
-  aCtx->GetDrawTarget()->Link(mLinkSpec.get(),
-                              NSRectToRect(GetPaintRect(), appPerDev));
+  aCtx->GetDrawTarget()->Link(
+      mLinkSpec.get(), NSRectToRect(GetPaintRect(aBuilder, aCtx), appPerDev));
 }
 
 void nsDisplayDestination::Paint(nsDisplayListBuilder* aBuilder,
@@ -8944,7 +8957,7 @@ void nsDisplayDestination::Paint(nsDisplayListBuilder* aBuilder,
   auto appPerDev = mFrame->PresContext()->AppUnitsPerDevPixel();
   aCtx->GetDrawTarget()->Destination(
       mDestinationName.get(),
-      NSPointToPoint(GetPaintRect().TopLeft(), appPerDev));
+      NSPointToPoint(GetPaintRect(aBuilder, aCtx).TopLeft(), appPerDev));
 }
 
 void nsDisplayListCollection::SerializeWithCorrectZOrder(
